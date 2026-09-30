@@ -11,5 +11,8 @@ thiserror.workspace = true
 serde.workspace = true
 stencil-model = { path = "../stencil-model" }
 
+[dev-dependencies]
+serde_json.workspace = true
+
 [lints]
 workspace = true
