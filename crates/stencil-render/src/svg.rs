@@ -1,26 +1,30 @@
 //! The section 5.2 SVG writer.
 
-use stencil_layout::styles::badge_fill;
+use std::collections::BTreeSet;
 use stencil_layout::{BoxRect, NodeGeometry, PageGeometry, Part, PartName, TextAlign, TextRun};
 use stencil_model::pointer::NodePointer;
+use stencil_model::text::TextStyleName;
+
 use stencil_model::{
-    Canvas, IconName, LEGEND_ENTRIES_MAX, LegendEntry, Node, NodeRef, Page, PipeDir, PipeKind,
-    ZoneKind, body_nodes,
+    Arrow, Canvas, IconName, LEGEND_ENTRIES_MAX, LegendEntry, Node, NodeRef, NoteKind, Page, Pipe,
+    PipeDir, PipeKind, ZoneKind, body_nodes,
 };
 
 use crate::icons::icon_data_uri;
-use crate::palette::{self, LineStyle, Stroke};
+use crate::palette::{self, BoxPaint, DotStyle, LineStyle, Palette, Stroke};
 use crate::{RenderError, SvgDocument, format_number};
 
 const SVG_NAMESPACE: &str = "http://www.w3.org/2000/svg";
-const WIRE_WIDTH_PX: f32 = 2.0;
 const DOT_RADIUS_PX: f32 = 4.0;
 const BADGE_RADIUS_PX: f32 = 4.0;
 const CARD_RADIUS_PX: f32 = 8.0;
-const CARD_BORDER_PX: f32 = 1.5;
 const FACT_RADIUS_PX: f32 = 4.0;
 const TAG_RADIUS_PX: f32 = 6.0;
-const TAG_BORDER_PX: f32 = 1.5;
+const ICON_CHIP_SIZE_PX: f32 = 36.0;
+const ICON_CHIP_RADIUS_PX: f32 = 6.0;
+/// Arrowhead triangle along the run axis and across it (section 11.2).
+const ARROW_LENGTH_PX: f32 = 10.0;
+const ARROW_WIDTH_PX: f32 = 8.0;
 /// Corner radii of the gcp frame in CSS order: top-left, top-right, bottom-right, bottom-left.
 const GCP_RADII_PX: [f32; 4] = [4.0, 4.0, 10.0, 10.0];
 
@@ -45,7 +49,7 @@ pub fn render_svg(page: &Page, geometry: &PageGeometry) -> Result<SvgDocument, R
         return Err(mismatch);
     }
 
-    let mut writer = SvgWriter::new(page.canvas);
+    let mut writer = SvgWriter::new(page.canvas, Palette::new(page.theme));
     let width = format_number(geometry.canvas.width);
     let height = format_number(geometry.canvas.height);
     writer.line(
@@ -58,9 +62,13 @@ pub fn render_svg(page: &Page, geometry: &PageGeometry) -> Result<SvgDocument, R
         1,
         &format!(
             r#"<rect x="0" y="0" width="{width}" height="{height}" fill="{}"/>"#,
-            palette::CANVAS_FILL
+            writer.palette.page_background()
         ),
     );
+    let arrow_kinds = arrow_kinds(&expected);
+    if !arrow_kinds.is_empty() {
+        writer.write_arrow_markers(1, &arrow_kinds);
+    }
 
     // Geometry order is pre-order, so a stack of open groups reproduces the nesting.
     let mut open_groups: Vec<usize> = Vec::new();
@@ -119,6 +127,48 @@ fn geometry_order(page: &Page) -> Vec<(NodePointer, DocumentNode<'_>)> {
         order.push((root.child("foot"), DocumentNode::Foot));
     }
     order
+}
+
+/// Kinds of the Pipes and Tee arms that draw an arrowhead, one marker each.
+fn arrow_kinds(expected: &[(NodePointer, DocumentNode<'_>)]) -> BTreeSet<PipeKind> {
+    expected
+        .iter()
+        .filter_map(|(_, document_node)| match *document_node {
+            DocumentNode::Content(NodeRef::Node(Node::Pipe(pipe)) | NodeRef::TeeArm(pipe)) => {
+                Some(pipe)
+            }
+            _ => None,
+        })
+        .filter(|pipe| pipe.arrow != Arrow::None)
+        .map(|pipe| pipe.kind)
+        .collect()
+}
+
+/// Which ends of a pipe carry an arrowhead instead of a dot.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+struct ArrowEnds {
+    start: bool,
+    end: bool,
+}
+
+impl ArrowEnds {
+    fn of(pipe: &Pipe) -> Self {
+        match pipe.arrow {
+            Arrow::None => ArrowEnds::default(),
+            Arrow::Start => ArrowEnds {
+                start: true,
+                end: false,
+            },
+            Arrow::End => ArrowEnds {
+                start: false,
+                end: true,
+            },
+            Arrow::Both => ArrowEnds {
+                start: true,
+                end: true,
+            },
+        }
+    }
 }
 
 /// Pointer used in a mismatch when one side has no node at that position.
@@ -215,6 +265,7 @@ fn group_open_tag(node: &NodeGeometry) -> String {
 struct PartContext {
     pipe_kind: Option<PipeKind>,
     pipe_dir: Option<PipeDir>,
+    arrows: ArrowEnds,
     icon: Option<IconName>,
 }
 
@@ -222,14 +273,16 @@ struct SvgWriter {
     output: String,
     text_elements: usize,
     canvas: Canvas,
+    palette: Palette,
 }
 
 impl SvgWriter {
-    fn new(canvas: Canvas) -> Self {
+    fn new(canvas: Canvas, palette: Palette) -> Self {
         SvgWriter {
             output: String::new(),
             text_elements: 0,
             canvas,
+            palette,
         }
     }
 
@@ -259,7 +312,12 @@ impl SvgWriter {
         }
         for part in &node.parts {
             if let Some(run) = &part.text {
-                self.write_text_run(depth, &node.pointer, part.bounds, run)?;
+                let style_name = text_style_name(document_node, part.name)
+                    .ok_or_else(|| part_mismatch(node, part))?;
+                let fill = self
+                    .palette
+                    .text_ink(style_name, self.canvas, context.pipe_kind);
+                self.write_text_run(depth, &node.pointer, part.bounds, run, fill)?;
             }
         }
         Ok(())
@@ -287,6 +345,7 @@ impl SvgWriter {
             DocumentNode::Content(NodeRef::TeeArm(pipe)) => PartContext {
                 pipe_kind: Some(pipe.kind),
                 pipe_dir: Some(pipe.dir),
+                arrows: ArrowEnds::of(pipe),
                 icon: None,
             },
             DocumentNode::Content(NodeRef::Node(content)) => match content {
@@ -301,36 +360,22 @@ impl SvgWriter {
                     PartContext::default()
                 }
                 Node::Pcard(card) => {
-                    let border = Stroke {
-                        width_px: CARD_BORDER_PX,
-                        line: LineStyle::Solid,
-                        color: palette::CARD_BORDER,
-                    };
-                    self.write_rect(
-                        depth,
-                        node.bounds,
-                        CARD_RADIUS_PX,
-                        Some(palette::CARD_FILL),
-                        Some(border),
-                    );
+                    let card_paint = self.palette.card();
+                    self.write_box(depth, node.bounds, CARD_RADIUS_PX, card_paint);
                     PartContext {
                         icon: card.icon,
                         ..PartContext::default()
                     }
                 }
                 Node::Fact(_) => {
-                    self.write_rect(
-                        depth,
-                        node.bounds,
-                        FACT_RADIUS_PX,
-                        Some(palette::FACT_FILL),
-                        None,
-                    );
+                    let fill = self.palette.fact_fill();
+                    self.write_rect(depth, node.bounds, FACT_RADIUS_PX, Some(fill), None);
                     PartContext::default()
                 }
                 Node::Pipe(pipe) => PartContext {
                     pipe_kind: Some(pipe.kind),
                     pipe_dir: Some(pipe.dir),
+                    arrows: ArrowEnds::of(pipe),
                     icon: None,
                 },
                 Node::Tee(tee) => PartContext {
@@ -343,9 +388,9 @@ impl SvgWriter {
     }
 
     fn write_zone_box(&mut self, depth: usize, bounds: BoxRect, kind: ZoneKind) {
-        let style = palette::zone_style(kind);
+        let style = self.palette.zone_style(kind);
         if kind == ZoneKind::Gcp {
-            let fill = style.fill.unwrap_or(palette::GCP_FRAME_FILL);
+            let fill = style.fill.unwrap_or("none");
             let path = rounded_path(bounds, GCP_RADII_PX);
             self.line(depth, &format!(r#"<path d="{path}" fill="{fill}"/>"#));
             return;
@@ -355,7 +400,7 @@ impl SvgWriter {
 
     /// The frame stroke goes over the bar and body fills, as a CSS border would.
     fn write_gcp_frame_stroke(&mut self, depth: usize, bounds: BoxRect) {
-        let Some(border) = palette::zone_style(ZoneKind::Gcp).border else {
+        let Some(border) = self.palette.zone_style(ZoneKind::Gcp).border else {
             return;
         };
         let inset = border.width_px / 2.0;
@@ -381,17 +426,25 @@ impl SvgWriter {
         let bounds = part.bounds;
         match part.name {
             PartName::Badge => {
-                let fill = badge_fill(self.canvas);
-                self.write_rect(depth, bounds, BADGE_RADIUS_PX, Some(fill), None);
+                let badge_paint = self.palette.badge(self.canvas);
+                self.write_box(depth, bounds, BADGE_RADIUS_PX, badge_paint);
             }
             PartName::Bar => {
-                self.write_rect(depth, bounds, 0.0, Some(palette::GCP_BAR_FILL), None);
+                let fill = self.palette.gcp_bar_fill();
+                self.write_rect(depth, bounds, 0.0, Some(fill), None);
+                if let Some(rule) = self.palette.gcp_bar_rule() {
+                    self.write_bottom_rule(depth, bounds, rule);
+                }
             }
             PartName::Body => {
-                self.write_rect(depth, bounds, 0.0, Some(palette::GCP_BODY_FILL), None);
+                let fill = self.palette.gcp_body_fill();
+                self.write_rect(depth, bounds, 0.0, Some(fill), None);
             }
             PartName::Icon => {
                 let icon = context.icon.ok_or_else(|| part_mismatch(node, part))?;
+                if let Some(chip_fill) = self.palette.icon_chip() {
+                    self.write_icon_chip(depth, bounds, chip_fill);
+                }
                 self.line(
                     depth,
                     &format!(
@@ -405,29 +458,29 @@ impl SvgWriter {
                 );
             }
             PartName::FactBox => {
-                self.write_rect(
-                    depth,
-                    bounds,
-                    FACT_RADIUS_PX,
-                    Some(palette::FACT_FILL),
-                    None,
-                );
+                let fill = self.palette.fact_fill();
+                self.write_rect(depth, bounds, FACT_RADIUS_PX, Some(fill), None);
             }
             PartName::AskBox => {
-                self.write_rect(depth, bounds, FACT_RADIUS_PX, Some(palette::ASK_FILL), None);
+                let fill = self.palette.ask_fill();
+                self.write_rect(depth, bounds, FACT_RADIUS_PX, Some(fill), None);
             }
             PartName::DotStart | PartName::DotEnd => {
                 let kind = context.pipe_kind.ok_or_else(|| part_mismatch(node, part))?;
-                let (color, _) = palette::wire_style(kind);
-                self.line(
-                    depth,
-                    &format!(
-                        r#"<circle cx="{}" cy="{}" r="{}" fill="{color}"/>"#,
-                        format_number(bounds.x + bounds.width / 2.0),
-                        format_number(bounds.y + bounds.height / 2.0),
-                        format_number(DOT_RADIUS_PX)
-                    ),
-                );
+                let at_start = part.name == PartName::DotStart;
+                let arrow_here = if at_start {
+                    context.arrows.start
+                } else {
+                    context.arrows.end
+                };
+                if arrow_here {
+                    let dir = context.pipe_dir.ok_or_else(|| part_mismatch(node, part))?;
+                    self.write_arrowhead(depth, bounds, dir, at_start, kind);
+                } else {
+                    let center_x = bounds.x + bounds.width / 2.0;
+                    let center_y = bounds.y + bounds.height / 2.0;
+                    self.write_dot(depth, center_x, center_y, kind);
+                }
             }
             PartName::WireStart | PartName::WireEnd => {
                 let kind = context.pipe_kind.ok_or_else(|| part_mismatch(node, part))?;
@@ -437,6 +490,13 @@ impl SvgWriter {
             PartName::Swatch => {
                 let kind = context.pipe_kind.ok_or_else(|| part_mismatch(node, part))?;
                 self.write_wire(depth, bounds, PipeDir::Horizontal, kind);
+                // A kind told apart by its hollow dots shows them on its swatch too, inset
+                // so they stay within the swatch's width.
+                if self.palette.wire_style(kind).dot == DotStyle::Hollow {
+                    let center_y = bounds.y + bounds.height / 2.0;
+                    self.write_dot(depth, bounds.x + DOT_RADIUS_PX, center_y, kind);
+                    self.write_dot(depth, bounds.right() - DOT_RADIUS_PX, center_y, kind);
+                }
             }
             PartName::Spine => {
                 let kind = context.pipe_kind.ok_or_else(|| part_mismatch(node, part))?;
@@ -444,18 +504,8 @@ impl SvgWriter {
             }
             PartName::Tag | PartName::Hub => {
                 let kind = context.pipe_kind.ok_or_else(|| part_mismatch(node, part))?;
-                let border = Stroke {
-                    width_px: TAG_BORDER_PX,
-                    line: LineStyle::Solid,
-                    color: palette::tag_border(kind),
-                };
-                self.write_rect(
-                    depth,
-                    bounds,
-                    TAG_RADIUS_PX,
-                    Some(palette::TAG_FILL),
-                    Some(border),
-                );
+                let tag_paint = self.palette.tag(kind);
+                self.write_box(depth, bounds, TAG_RADIUS_PX, tag_paint);
             }
             PartName::BadgeText
             | PartName::Text
@@ -473,9 +523,105 @@ impl SvgWriter {
         Ok(())
     }
 
+    /// One `<marker>` per arrow kind in this theme: a triangle 10 long and 8 wide in the wire
+    /// color, its tip on the carrier line's last point.
+    fn write_arrow_markers(&mut self, depth: usize, kinds: &BTreeSet<PipeKind>) {
+        let length = format_number(ARROW_LENGTH_PX);
+        let width = format_number(ARROW_WIDTH_PX);
+        let half_width = format_number(ARROW_WIDTH_PX / 2.0);
+        self.line(depth, "<defs>");
+        for kind in kinds {
+            let color = self.palette.wire_style(*kind).stroke.color;
+            let marker = format!(
+                r#"<marker id="{}" viewBox="0 0 {length} {width}" refX="{length}" refY="{half_width}" markerWidth="{length}" markerHeight="{width}" markerUnits="userSpaceOnUse" orient="auto"><path d="M 0 0 L {length} {half_width} L 0 {width} Z" fill="{color}"/></marker>"#,
+                self.arrow_marker_id(*kind)
+            );
+            self.line(depth + 1, &marker);
+        }
+        self.line(depth, "</defs>");
+    }
+
+    fn arrow_marker_id(&self, kind: PipeKind) -> String {
+        format!("arrow-{}-{}", self.palette.theme_name(), kind.as_str())
+    }
+
+    /// An arrowhead in place of an end dot, pointing out of the pipe with its tip on the dot
+    /// box's outer edge. The carrier line is unstroked and only places the marker.
+    fn write_arrowhead(
+        &mut self,
+        depth: usize,
+        dot_bounds: BoxRect,
+        dir: PipeDir,
+        at_start: bool,
+        kind: PipeKind,
+    ) {
+        let center_x = dot_bounds.x + dot_bounds.width / 2.0;
+        let center_y = dot_bounds.y + dot_bounds.height / 2.0;
+        let ((base_x, base_y), (tip_x, tip_y)) = match (dir, at_start) {
+            (PipeDir::Horizontal, true) => (
+                (dot_bounds.x + ARROW_LENGTH_PX, center_y),
+                (dot_bounds.x, center_y),
+            ),
+            (PipeDir::Horizontal, false) => (
+                (dot_bounds.right() - ARROW_LENGTH_PX, center_y),
+                (dot_bounds.right(), center_y),
+            ),
+            (PipeDir::Vertical, true) => (
+                (center_x, dot_bounds.y + ARROW_LENGTH_PX),
+                (center_x, dot_bounds.y),
+            ),
+            (PipeDir::Vertical, false) => (
+                (center_x, dot_bounds.bottom() - ARROW_LENGTH_PX),
+                (center_x, dot_bounds.bottom()),
+            ),
+        };
+        let marker_id = self.arrow_marker_id(kind);
+        self.line(
+            depth,
+            &format!(
+                r#"<line x1="{}" y1="{}" x2="{}" y2="{}" stroke="none" marker-end="url(#{marker_id})"/>"#,
+                format_number(base_x),
+                format_number(base_y),
+                format_number(tip_x),
+                format_number(tip_y),
+            ),
+        );
+    }
+
+    /// An end dot of a wire, filled or hollow as the palette says.
+    fn write_dot(&mut self, depth: usize, center_x: f32, center_y: f32, kind: PipeKind) {
+        let wire = self.palette.wire_style(kind);
+        let circle = match wire.dot {
+            DotStyle::Filled => format!(
+                r#"<circle cx="{}" cy="{}" r="{}" fill="{}"/>"#,
+                format_number(center_x),
+                format_number(center_y),
+                format_number(DOT_RADIUS_PX),
+                wire.stroke.color
+            ),
+            DotStyle::Hollow => {
+                let ring = Stroke {
+                    width_px: palette::HOLLOW_DOT_RING_PX,
+                    line: LineStyle::Solid,
+                    color: wire.stroke.color,
+                };
+                // The ring is inset like a border so the dot keeps its 4 px outer radius.
+                format!(
+                    r#"<circle cx="{}" cy="{}" r="{}" fill="{}"{}/>"#,
+                    format_number(center_x),
+                    format_number(center_y),
+                    format_number(DOT_RADIUS_PX - ring.width_px / 2.0),
+                    self.palette.page_background(),
+                    stroke_attributes(ring)
+                )
+            }
+        };
+        self.line(depth, &circle);
+    }
+
     /// A `<line>` along the box's center line in the run direction.
     fn write_wire(&mut self, depth: usize, bounds: BoxRect, dir: PipeDir, kind: PipeKind) {
-        let (color, line_style) = palette::wire_style(kind);
+        let stroke = self.palette.wire_style(kind).stroke;
         let (x1, y1, x2, y2) = match dir {
             PipeDir::Horizontal => {
                 let center_y = bounds.y + bounds.height / 2.0;
@@ -486,11 +632,6 @@ impl SvgWriter {
                 (center_x, bounds.y, center_x, bounds.bottom())
             }
         };
-        let stroke = Stroke {
-            width_px: WIRE_WIDTH_PX,
-            line: line_style,
-            color,
-        };
         self.line(
             depth,
             &format!(
@@ -500,6 +641,40 @@ impl SvgWriter {
                 format_number(x2),
                 format_number(y2),
                 stroke_attributes(stroke)
+            ),
+        );
+    }
+
+    /// The rounded square under an icon, centered on the icon part. The icon part is 28 by
+    /// 28 (section 2.5), so the 36 px chip reaches 4 px into the card padding on each side.
+    fn write_icon_chip(&mut self, depth: usize, icon_bounds: BoxRect, fill: &str) {
+        let center_x = icon_bounds.x + icon_bounds.width / 2.0;
+        let center_y = icon_bounds.y + icon_bounds.height / 2.0;
+        let chip = BoxRect {
+            x: center_x - ICON_CHIP_SIZE_PX / 2.0,
+            y: center_y - ICON_CHIP_SIZE_PX / 2.0,
+            width: ICON_CHIP_SIZE_PX,
+            height: ICON_CHIP_SIZE_PX,
+        };
+        self.write_rect(depth, chip, ICON_CHIP_RADIUS_PX, Some(fill), None);
+    }
+
+    fn write_box(&mut self, depth: usize, bounds: BoxRect, radius_px: f32, paint: BoxPaint) {
+        self.write_rect(depth, bounds, radius_px, Some(paint.fill), paint.border);
+    }
+
+    /// A horizontal rule along the bottom edge of `bounds`, inside the box.
+    fn write_bottom_rule(&mut self, depth: usize, bounds: BoxRect, rule: Stroke) {
+        let center_y = bounds.bottom() - rule.width_px / 2.0;
+        self.line(
+            depth,
+            &format!(
+                r#"<line x1="{}" y1="{}" x2="{}" y2="{}"{}/>"#,
+                format_number(bounds.x),
+                format_number(center_y),
+                format_number(bounds.right()),
+                format_number(center_y),
+                stroke_attributes(rule)
             ),
         );
     }
@@ -545,6 +720,7 @@ impl SvgWriter {
         pointer: &NodePointer,
         bounds: BoxRect,
         run: &TextRun,
+        fill: &str,
     ) -> Result<(), RenderError> {
         let style = run.style;
         let letter_spacing_px = style.letter_spacing_em * style.size_px;
@@ -578,13 +754,73 @@ impl SvgWriter {
                     style.family.css_name(),
                     format_number(style.size_px),
                     style.weight.css_value(),
-                    run.color,
+                    fill,
                     escape_xml(content)
                 ),
             );
             self.text_elements += 1;
         }
         Ok(())
+    }
+}
+
+/// The section 2.9 style of a text part, from the node that owns it. Layout resolves the
+/// center color into each run; the other themes pick theirs by the style's role.
+fn text_style_name(document_node: DocumentNode<'_>, part: PartName) -> Option<TextStyleName> {
+    match (document_node, part) {
+        (DocumentNode::Kicker, PartName::BadgeText) => Some(TextStyleName::Badge),
+        (DocumentNode::Kicker, PartName::Text) => Some(TextStyleName::Kicker),
+        (DocumentNode::Title, PartName::Text) => Some(TextStyleName::Title),
+        (DocumentNode::Lede, PartName::Text) => Some(TextStyleName::Lede),
+        (DocumentNode::Foot, PartName::Text) => Some(TextStyleName::Foot),
+        (DocumentNode::LegendEntry(_), PartName::LegendLabel) => Some(TextStyleName::LegendLabel),
+        (DocumentNode::LegendEntry(_), PartName::LegendText) => Some(TextStyleName::LegendText),
+        (DocumentNode::Content(NodeRef::TeeArm(_)), part) => pipe_text_style_name(part),
+        (DocumentNode::Content(NodeRef::Node(content)), part) => {
+            content_text_style_name(content, part)
+        }
+        _ => None,
+    }
+}
+
+fn content_text_style_name(content: &Node, part: PartName) -> Option<TextStyleName> {
+    match (content, part) {
+        (Node::Note(note), PartName::Text) => Some(match note.kind {
+            NoteKind::Kicker => TextStyleName::Kicker,
+            NoteKind::H1 => TextStyleName::Title,
+            NoteKind::Lede => TextStyleName::Lede,
+            NoteKind::Legend => TextStyleName::NoteLegend,
+            NoteKind::Foot => TextStyleName::Foot,
+        }),
+        (Node::Zone(zone), PartName::Label) => Some(match zone.kind {
+            ZoneKind::Gcp => TextStyleName::GcpBar,
+            ZoneKind::Perimeter => TextStyleName::PerimeterLabel,
+            ZoneKind::Vpc
+            | ZoneKind::RegionA
+            | ZoneKind::RegionB
+            | ZoneKind::Subnet
+            | ZoneKind::OnpremA
+            | ZoneKind::OnpremB
+            | ZoneKind::Project
+            | ZoneKind::Optional
+            | ZoneKind::K8s => TextStyleName::ZoneLabel,
+        }),
+        (Node::Pcard(_), PartName::FunctionName) => Some(TextStyleName::CardFunction),
+        (Node::Pcard(_), PartName::ProductName) => Some(TextStyleName::CardProduct),
+        (Node::Pcard(_), PartName::Fact) => Some(TextStyleName::Fact),
+        (Node::Fact(_), PartName::Text) => Some(TextStyleName::Fact),
+        (Node::Pcard(_), PartName::Ask) => Some(TextStyleName::Ask),
+        (Node::Pipe(_), part) => pipe_text_style_name(part),
+        (Node::Tee(_), PartName::HubText) => Some(TextStyleName::TagLabel),
+        _ => None,
+    }
+}
+
+fn pipe_text_style_name(part: PartName) -> Option<TextStyleName> {
+    match part {
+        PartName::TagLabel => Some(TextStyleName::TagLabel),
+        PartName::TagSub => Some(TextStyleName::TagSub),
+        _ => None,
     }
 }
 
@@ -599,6 +835,7 @@ fn stroke_attributes(stroke: Stroke) -> String {
     let dash = match stroke.line {
         LineStyle::Solid => String::new(),
         LineStyle::Dashed => format!(r#" stroke-dasharray="{}""#, palette::DASH_ARRAY),
+        LineStyle::Dotted => format!(r#" stroke-dasharray="{}""#, palette::DOT_ARRAY),
     };
     format!(
         r#" stroke="{}" stroke-width="{}"{dash}"#,

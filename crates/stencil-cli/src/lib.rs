@@ -11,18 +11,18 @@ use std::ffi::OsString;
 use std::io::{self, Write};
 use std::path::{Path, PathBuf};
 
-use clap::{Parser, Subcommand};
+use clap::{Parser, Subcommand, ValueEnum};
 use stencil_layout::LayoutError;
-use stencil_model::ModelError;
 use stencil_model::checks::CheckReport;
+use stencil_model::{ModelError, Theme};
 use stencil_render::DeviceScale;
 
 pub use exit::ExitCode;
 
 use exit::{clap_exit_code, failure_exit_code, reports_exit_code};
 use pipeline::{
-    Failure, OutputPaths, all_checks, load_document, model_checks, output_names, read_input,
-    render_page, write_outputs,
+    Failure, LoadedDocument, OutputPaths, all_checks, load_document, model_checks, output_names,
+    read_input, render_page, write_outputs,
 };
 use report::{check_counts_text, report_lines, violation_count_text, violation_line};
 
@@ -57,14 +57,51 @@ enum Command {
         /// PNG device scale, 1 to 4
         #[arg(long, default_value_t = DeviceScale::DEFAULT.get())]
         scale: u8,
+        /// Color theme, overriding the document's `theme`
+        #[arg(long, value_enum)]
+        theme: Option<ThemeArgument>,
     },
     /// Lay out and render in memory, then run all five checks
     Check {
         /// Document to check
         json: PathBuf,
+        /// Color theme, overriding the document's `theme`
+        #[arg(long, value_enum)]
+        theme: Option<ThemeArgument>,
     },
     /// Print the document JSON Schema
     Schema,
+}
+
+/// The `--theme` values, one per `Theme` variant (section 11.4).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, ValueEnum)]
+enum ThemeArgument {
+    Center,
+    Dusk,
+    Wire,
+}
+
+impl From<ThemeArgument> for Theme {
+    fn from(argument: ThemeArgument) -> Self {
+        match argument {
+            ThemeArgument::Center => Theme::Center,
+            ThemeArgument::Dusk => Theme::Dusk,
+            ThemeArgument::Wire => Theme::Wire,
+        }
+    }
+}
+
+/// Parses and vets the input, then applies a `--theme` override to the page. The JSON value
+/// that the measured JSON carries stays the input as written.
+fn load_themed_document(
+    path: &Path,
+    theme: Option<ThemeArgument>,
+) -> Result<LoadedDocument, Failure> {
+    let mut loaded = load_document(&read_input(path)?)?;
+    if let Some(theme) = theme {
+        loaded.page.theme = Theme::from(theme);
+    }
+    Ok(loaded)
 }
 
 pub fn run(arguments: Vec<OsString>, stdout: &mut dyn Write, stderr: &mut dyn Write) -> ExitCode {
@@ -97,8 +134,9 @@ fn run_command(
             json,
             out_dir,
             scale,
-        } => render(&json, &out_dir, scale, stdout, stderr),
-        Command::Check { json } => check(&json, stdout, stderr),
+            theme,
+        } => render(&json, &out_dir, scale, theme, stdout, stderr),
+        Command::Check { json, theme } => check(&json, theme, stdout, stderr),
         Command::Schema => schema(stdout, stderr),
     }
 }
@@ -141,10 +179,11 @@ fn render(
     path: &Path,
     out_dir: &Path,
     scale: u8,
+    theme: Option<ThemeArgument>,
     stdout: &mut dyn Write,
     stderr: &mut dyn Write,
 ) -> io::Result<ExitCode> {
-    match render_to_disk(path, out_dir, scale) {
+    match render_to_disk(path, out_dir, scale, theme) {
         Ok(paths) => {
             for written in [&paths.svg, &paths.png, &paths.measured] {
                 writeln!(stdout, "{}", written.display())?;
@@ -156,16 +195,26 @@ fn render(
 }
 
 /// Everything is computed before the first write, so a failing document leaves no files.
-fn render_to_disk(path: &Path, out_dir: &Path, scale: u8) -> Result<OutputPaths, Failure> {
+fn render_to_disk(
+    path: &Path,
+    out_dir: &Path,
+    scale: u8,
+    theme: Option<ThemeArgument>,
+) -> Result<OutputPaths, Failure> {
     let scale = DeviceScale::new(scale)?;
     let names = output_names(path)?;
-    let loaded = load_document(&read_input(path)?)?;
+    let loaded = load_themed_document(path, theme)?;
     let rendered = render_page(&loaded, scale)?;
     write_outputs(out_dir, &names, &rendered, path)
 }
 
-fn check(path: &Path, stdout: &mut dyn Write, stderr: &mut dyn Write) -> io::Result<ExitCode> {
-    let reports = match check_in_memory(path) {
+fn check(
+    path: &Path,
+    theme: Option<ThemeArgument>,
+    stdout: &mut dyn Write,
+    stderr: &mut dyn Write,
+) -> io::Result<ExitCode> {
+    let reports = match check_in_memory(path, theme) {
         Ok(reports) => reports,
         Err(failure) => return report_failure("check", &failure, stdout, stderr),
     };
@@ -176,8 +225,8 @@ fn check(path: &Path, stdout: &mut dyn Write, stderr: &mut dyn Write) -> io::Res
     Ok(reports_exit_code(&reports))
 }
 
-fn check_in_memory(path: &Path) -> Result<[CheckReport; 5], Failure> {
-    let loaded = load_document(&read_input(path)?)?;
+fn check_in_memory(path: &Path, theme: Option<ThemeArgument>) -> Result<[CheckReport; 5], Failure> {
+    let loaded = load_themed_document(path, theme)?;
     let rendered = render_page(&loaded, DeviceScale::DEFAULT)?;
     Ok(all_checks(&loaded.page, &rendered.geometry))
 }
