@@ -4,7 +4,9 @@ mod common;
 
 use common::{STRESS_JSON, layout};
 use serde_json::{Value, json};
-use stencil_layout::checks::{child_inside_container, siblings_do_not_overlap, text_fits_box};
+use stencil_layout::checks::{
+    child_inside_container, pipes_land, siblings_do_not_overlap, text_fits_box,
+};
 use stencil_layout::{NodeTag, PartName};
 use stencil_model::checks::{legend_consistency, remembered_constants};
 use stencil_model::{Page, body_nodes, parse_page};
@@ -87,16 +89,21 @@ fn stress_document_matches_section_10() {
     assert_eq!(document, section_10_stress_document());
 }
 
+/// pipes-land examines 22 pipe ends: two Pipe h per Row with a card on each side (5 by 2 by
+/// 2) and the Pipe v between Row 1 and Row 2 (2). The Tee arms have no Row ancestor.
 #[test]
-fn stress_layout_passes_all_five_checks() {
+fn stress_layout_passes_every_check_on_the_page() {
     let page = stress_page();
     let geometry = layout(&page);
+    let landing = pipes_land(&page, &geometry);
+    assert_eq!(landing.examined, 22);
     let reports = [
         child_inside_container(&geometry),
         siblings_do_not_overlap(&geometry),
         text_fits_box(&geometry),
         remembered_constants(&page),
         legend_consistency(&page),
+        landing,
     ];
     for report in &reports {
         assert!(

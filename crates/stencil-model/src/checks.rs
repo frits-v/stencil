@@ -14,6 +14,7 @@ pub enum CheckName {
     LegendConsistency,
     LinksRouted,
     LinksAvoidBoxes,
+    PipesLand,
 }
 
 impl CheckName {
@@ -27,6 +28,7 @@ impl CheckName {
             CheckName::LegendConsistency => "legend-consistency",
             CheckName::LinksRouted => "links-routed",
             CheckName::LinksAvoidBoxes => "links-avoid-boxes",
+            CheckName::PipesLand => "pipes-land",
         }
     }
 
@@ -44,6 +46,8 @@ impl CheckName {
             (CheckName::TextFitsBox, false) => "text runs",
             (CheckName::RememberedConstants, true) => "text field",
             (CheckName::RememberedConstants, false) => "text fields",
+            (CheckName::PipesLand, true) => "pipe end",
+            (CheckName::PipesLand, false) => "pipe ends",
         }
     }
 }

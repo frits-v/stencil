@@ -12,6 +12,7 @@
       "children": [
         {
           "tag": "Col",
+          "grow": [1, 1],
           "children": [
             {
               "tag": "Zone",

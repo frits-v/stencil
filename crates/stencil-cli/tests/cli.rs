@@ -506,7 +506,7 @@ fn render_stops_on_a_violation_and_writes_nothing() {
 }
 
 #[test]
-fn check_g7_passes_five_checks_and_skips_the_link_checks() {
+fn check_g7_passes_six_checks_and_skips_the_link_checks() {
     let outcome = run_stencil(&["check", &g7_path()]);
     assert_eq!(outcome.code, ExitCode::Clean, "{}", outcome.stderr);
     assert_eq!(
@@ -519,14 +519,16 @@ fn check_g7_passes_five_checks_and_skips_the_link_checks() {
             "check legend-consistency: examined 8 relations, 0 defects",
             "check links-routed: examined 0 links, not applicable: page has no links",
             "check links-avoid-boxes: examined 0 pairs, not applicable: page has no links",
-            "stencil check: 7 checks, 5 passed, 0 failed, 2 not applicable",
+            "check pipes-land: examined 8 pipe ends, 0 defects",
+            "stencil check: 8 checks, 6 passed, 0 failed, 2 not applicable",
         ]
     );
     assert_eq!(outcome.stderr, "");
 }
 
 /// One Pipe and its legend entry make legend-consistency pass, so the overflow is the only
-/// failing check and the exit code depends on it.
+/// failing check and the exit code depends on it. The Pipe sits in the body with no Row or
+/// Col sibling, so pipes-land does not apply.
 #[test]
 fn check_reports_overflowing_text_with_its_pointer() {
     let long_word = "x".repeat(120);
@@ -556,7 +558,7 @@ fn check_reports_overflowing_text_with_its_pointer() {
         .copied()
         .filter(|line| line.starts_with("check "))
         .collect();
-    assert_eq!(check_lines.len(), 7, "{}", outcome.stdout);
+    assert_eq!(check_lines.len(), 8, "{}", outcome.stdout);
     assert!(
         check_lines[0].starts_with("check child-inside-container: examined "),
         "{}",
@@ -570,13 +572,19 @@ fn check_reports_overflowing_text_with_its_pointer() {
     for passing in &check_lines[1..5] {
         assert!(passing.ends_with(", 0 defects"), "{}", outcome.stdout);
     }
-    for skipped in &check_lines[5..] {
+    for skipped in &check_lines[5..7] {
         assert!(
             skipped.ends_with("not applicable: page has no links"),
             "{}",
             outcome.stdout
         );
     }
+    assert_eq!(
+        check_lines[7],
+        "check pipes-land: examined 0 pipe ends, not applicable: no pipe has a neighbor",
+        "{}",
+        outcome.stdout
+    );
     assert!(
         lines
             .iter()
@@ -586,7 +594,7 @@ fn check_reports_overflowing_text_with_its_pointer() {
     );
     assert_eq!(
         lines.last().copied(),
-        Some("stencil check: 7 checks, 4 passed, 1 failed, 2 not applicable"),
+        Some("stencil check: 8 checks, 4 passed, 1 failed, 3 not applicable"),
         "{}",
         outcome.stdout
     );
