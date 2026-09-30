@@ -4,16 +4,25 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 use resvg::tiny_skia::{Color, Pixmap, Transform};
-use resvg::usvg::{self, FontResolver, FontStretch, FontStyle, fontdb};
+use resvg::usvg::{self, FontResolver, FontStretch, FontStyle, ImageHrefResolver, fontdb};
+use stencil_model::NODES_MAX;
 use stencil_text::{BUNDLED_FONTS, FontError, verify_bundled_fonts};
 
 use crate::{DeviceScale, RenderError};
 
 const DEFAULT_FONT_FAMILY: &str = "Inter";
 
+/// Largest pixmap render_png allocates, in pixels (section 5.3, step 5): 512 MiB of RGBA.
+pub const PNG_PIXELS_MAX: u64 = 1 << 27;
+
+/// Upper bound on the groups `count_text_nodes` visits. A vetted page writes one `<g>` per
+/// geometry node: at most NODES_MAX body nodes plus the page-level nodes.
+const TEXT_NODE_VISITS_MAX: usize = 16 * NODES_MAX;
+
 /// Calls verify_bundled_fonts, parses the SVG with a usvg fontdb that holds only
 /// BUNDLED_FONTS, asserts the tree holds exactly `expected_text_elements` text nodes
-/// (section 5.3), renders at `scale`, and encodes PNG.
+/// and that every font lookup resolved (section 5.3), renders at `scale` within
+/// PNG_PIXELS_MAX, and encodes PNG.
 pub fn render_png(
     svg: &str,
     expected_text_elements: usize,
@@ -28,6 +37,7 @@ pub fn render_png(
         font_family: DEFAULT_FONT_FAMILY.to_string(),
         resources_dir: None,
         font_resolver: strict_font_resolver(Arc::clone(&font_misses)),
+        image_href_resolver: data_only_image_resolver(),
         ..usvg::Options::default()
     };
 
@@ -35,7 +45,7 @@ pub fn render_png(
         message: error.to_string(),
     })?;
 
-    let found = count_text_nodes(tree.root());
+    let found = count_text_nodes(tree.root())?;
     if found < expected_text_elements {
         return Err(RenderError::TextNotRendered {
             count: expected_text_elements - found,
@@ -49,17 +59,16 @@ pub fn render_png(
     }
     // A span whose family or glyph did not resolve inside a text node that still placed
     // other glyphs leaves the count intact, so the resolver's own tally is checked too.
-    let misses = font_misses.load(Ordering::SeqCst);
-    if misses > 0 {
-        return Err(RenderError::TextNotRendered { count: misses });
+    let lookups = font_misses.load(Ordering::SeqCst);
+    if lookups > 0 {
+        return Err(RenderError::FontNotResolved { lookups });
     }
 
-    let scale_factor = f32::from(scale.get());
     let size = tree.size();
-    let width = pixel_extent(size.width(), scale_factor);
-    let height = pixel_extent(size.height(), scale_factor);
+    let (width, height) = pixmap_size(size.width(), size.height(), scale)?;
     let mut pixmap =
         Pixmap::new(width, height).ok_or(RenderError::PixmapAllocation { width, height })?;
+    let scale_factor = f32::from(scale.get());
     // The SVG paints a white canvas rect; filling first also whitens the partial last
     // row or column that ceil adds when the canvas size has a fractional part.
     pixmap.fill(Color::WHITE);
@@ -73,9 +82,41 @@ pub fn render_png(
     })
 }
 
-/// ceil(extent * scale). The tree size is already rounded to 2 decimals by section 5.1.
-fn pixel_extent(extent: f32, scale: f32) -> u32 {
-    (extent * scale).ceil() as u32
+/// ceil(extent * scale) on both axes, computed in f64. The tree size is already rounded to
+/// 2 decimals by section 5.1. tiny-skia's `Pixmap::new` accepts any size whose byte count
+/// fits a usize, so this budget is the only guard before the allocation.
+fn pixmap_size(width: f32, height: f32, scale: DeviceScale) -> Result<(u32, u32), RenderError> {
+    let scale = f64::from(scale.get());
+    let width_px = saturating_pixels((f64::from(width) * scale).ceil());
+    let height_px = saturating_pixels((f64::from(height) * scale).ceil());
+    let pixels = u64::from(width_px) * u64::from(height_px);
+    if width_px == 0 || height_px == 0 || pixels > PNG_PIXELS_MAX {
+        return Err(RenderError::PixmapAllocation {
+            width: width_px,
+            height: height_px,
+        });
+    }
+    Ok((width_px, height_px))
+}
+
+/// NaN and negative extents become 0 and extents above u32::MAX become u32::MAX; both land
+/// outside the budget that `pixmap_size` checks next.
+#[allow(
+    clippy::cast_possible_truncation,
+    clippy::cast_sign_loss,
+    reason = "a float-to-int `as` cast saturates, and every saturated value fails the budget"
+)]
+fn saturating_pixels(extent: f64) -> u32 {
+    extent as u32
+}
+
+/// Decodes `data:` hrefs, which is how the SVG writer embeds icons, and resolves every other
+/// href to nothing, so parsing never reads a file.
+fn data_only_image_resolver() -> ImageHrefResolver<'static> {
+    ImageHrefResolver {
+        resolve_data: ImageHrefResolver::default_data_resolver(),
+        resolve_string: Box::new(|_href, _options| None),
+    }
 }
 
 /// A usvg database holding the four bundled faces and nothing else. System fonts are
@@ -157,10 +198,13 @@ fn to_fontdb_style(style: FontStyle) -> fontdb::Style {
 /// Counts `Node::Text` through `Node::Group` children only: not into a text node's
 /// flattened group and not into an image's subtree. usvg drops a `<text>` whose font does
 /// not resolve without an error, so a missing node is the only signal.
-fn count_text_nodes(root: &usvg::Group) -> usize {
+fn count_text_nodes(root: &usvg::Group) -> Result<usize, RenderError> {
     let mut count = 0;
     let mut pending: Vec<&usvg::Group> = vec![root];
-    while let Some(group) = pending.pop() {
+    for _ in 0..TEXT_NODE_VISITS_MAX {
+        let Some(group) = pending.pop() else {
+            return Ok(count);
+        };
         for node in group.children() {
             match node {
                 usvg::Node::Group(child) => pending.push(child),
@@ -169,5 +213,67 @@ fn count_text_nodes(root: &usvg::Group) -> usize {
             }
         }
     }
-    count
+    if pending.is_empty() {
+        Ok(count)
+    } else {
+        Err(RenderError::Svg {
+            message: format!("parsed SVG holds more than {TEXT_NODE_VISITS_MAX} groups"),
+        })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn scale(value: u8) -> DeviceScale {
+        DeviceScale::new(value).unwrap()
+    }
+
+    #[test]
+    fn pixmap_size_is_the_ceiled_scaled_extent() {
+        assert_eq!(pixmap_size(1320.0, 652.0, scale(2)).unwrap(), (2640, 1304));
+        assert_eq!(pixmap_size(1320.0, 652.4, scale(1)).unwrap(), (1320, 653));
+    }
+
+    #[test]
+    fn pixmap_size_accepts_the_budget_and_rejects_one_row_past_it() {
+        assert_eq!(
+            pixmap_size(8192.0, 16384.0, scale(1)).unwrap(),
+            (8192, 16384)
+        );
+        assert!(matches!(
+            pixmap_size(8192.0, 16385.0, scale(1)),
+            Err(RenderError::PixmapAllocation {
+                width: 8192,
+                height: 16385
+            })
+        ));
+        assert!(matches!(
+            pixmap_size(4096.0, 8193.0, scale(2)),
+            Err(RenderError::PixmapAllocation {
+                width: 8192,
+                height: 16386
+            })
+        ));
+    }
+
+    #[test]
+    fn pixmap_size_rejects_empty_and_non_finite_extents() {
+        for (width, height) in [
+            (0.0, 10.0),
+            (10.0, -5.0),
+            (f32::NAN, 10.0),
+            (10.0, f32::INFINITY),
+            (f32::MAX, f32::MAX),
+        ] {
+            assert!(
+                matches!(
+                    pixmap_size(width, height, scale(4)),
+                    Err(RenderError::PixmapAllocation { .. })
+                ),
+                "{width}x{height}"
+            );
+        }
+    }
 }

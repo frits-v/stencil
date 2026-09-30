@@ -75,6 +75,7 @@ pub fn render_exit_code(error: &RenderError) -> ExitCode {
         | RenderError::Svg { .. }
         | RenderError::TextNotRendered { .. }
         | RenderError::TextCountExceeded { .. }
+        | RenderError::FontNotResolved { .. }
         | RenderError::PixmapAllocation { .. }
         | RenderError::PngEncode { .. } => ExitCode::CouldNotRun,
     }
@@ -215,6 +216,7 @@ mod tests {
                 expected: 0,
                 found: 1,
             },
+            RenderError::FontNotResolved { lookups: 2 },
             RenderError::PixmapAllocation {
                 width: 0,
                 height: 0,

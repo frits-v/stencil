@@ -14,7 +14,7 @@ use stencil_text::FontError;
 
 pub use icons::{icon_data_uri, icon_svg_bytes};
 pub use measured::measured_json;
-pub use png::render_png;
+pub use png::{PNG_PIXELS_MAX, render_png};
 pub use svg::render_svg;
 
 #[derive(Debug, Clone, PartialEq)]
@@ -27,6 +27,7 @@ pub struct SvgDocument {
 /// Section 5.1 rounding. The SVG writer and measured_json both call it.
 /// Callers pass finite values only; layout returns NonFinite otherwise.
 pub fn format_number(value: f32) -> NumberRepr {
+    debug_assert!(value.is_finite(), "format_number got {value}");
     let rounded = (f64::from(value) * 100.0).round() / 100.0;
     // -0.0 has no fractional part, so it lands in Integer(0) and never prints as "-0".
     if rounded.fract() == 0.0 {
@@ -102,6 +103,8 @@ pub enum RenderError {
     TextNotRendered { count: usize },
     #[error("parsed SVG holds {found} text node(s), more than the {expected} expected")]
     TextCountExceeded { expected: usize, found: usize },
+    #[error("{lookups} font or glyph lookup(s) found no bundled face")]
+    FontNotResolved { lookups: usize },
     #[error("cannot allocate a {width}x{height} pixmap")]
     PixmapAllocation { width: u32, height: u32 },
     #[error("PNG encoding failed: {message}")]
