@@ -594,7 +594,9 @@
             "body": {
               "type": "array",
               "items": {
-                "type": "string"
+                "type": "string",
+                "maxLength": 400,
+                "minLength": 1
               },
               "maxItems": 64,
               "minItems": 1
