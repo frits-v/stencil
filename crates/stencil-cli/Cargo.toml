@@ -12,6 +12,7 @@ path = "src/main.rs"
 [dependencies]
 clap.workspace = true
 serde_json.workspace = true
+thiserror.workspace = true
 stencil-model = { path = "../stencil-model" }
 stencil-text = { path = "../stencil-text" }
 stencil-layout = { path = "../stencil-layout" }

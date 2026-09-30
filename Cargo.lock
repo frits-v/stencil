@@ -1247,6 +1247,7 @@ dependencies = [
  "stencil-model",
  "stencil-render",
  "stencil-text",
+ "thiserror",
 ]
 
 [[package]]
