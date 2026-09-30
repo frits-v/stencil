@@ -776,8 +776,8 @@ publish = false
 
 [workspace.dependencies]
 taffy = "=0.14.0"
-cosmic-text = "=0.19.0"
-resvg = "=0.48.1"
+cosmic-text = { version = "=0.19.0", default-features = false, features = ["std", "swash"] }
+resvg = { version = "=0.48.1", default-features = false, features = ["text"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 schemars = "1.2"
@@ -804,6 +804,8 @@ Each member's `Cargo.toml` opts in to the workspace lints. `[workspace.lints]` a
 [lints]
 workspace = true
 ```
+
+cosmic-text and resvg are built without their default features. cosmic-text keeps `std` and `swash` and drops `fontconfig`. resvg keeps `text` and drops `system-fonts`, `memmap-fonts`, `raster-images` and `svgz`, so usvg's fontdb 0.24 has no file-system or system-font code at all and the icons, which are plain SVG in data URIs, still decode. cosmic-text's `std` feature still enables `fs` and `memmap` on its own fontdb 0.23, so on the cosmic-text side the no-system-font rule (section 3.2) rests on never calling `load_system_fonts`.
 
 `jsonschema` is a dev-dependency of stencil-model only. Its default features pull in HTTP remote-reference resolution and a TLS stack, so they are off and the schema tests never reach the network. `sha2` 0.11 returns a hybrid-array digest, so hex encoding is written out explicitly: two lowercase hex digits per byte (`format!("{byte:02x}")` over the digest bytes), never a `{:x}` implementation on the digest type.
 
