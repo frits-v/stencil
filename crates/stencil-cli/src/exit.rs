@@ -4,7 +4,7 @@
 use clap::error::ErrorKind;
 use stencil_layout::LayoutError;
 use stencil_model::ModelError;
-use stencil_model::checks::CheckReport;
+use stencil_model::checks::{CheckOutcome, CheckReport};
 use stencil_model::text::MeasureError;
 use stencil_render::RenderError;
 use stencil_text::FontError;
@@ -90,10 +90,17 @@ pub fn clap_exit_code(kind: ErrorKind) -> ExitCode {
     }
 }
 
-/// Clean only when there is at least one report and every report passed; a report that
-/// examined nothing fails, and so does an empty list.
+/// Clean only when at least one report passed and no report failed. A report that examined
+/// nothing fails unless its surface does not exist on the page; a list with no passing
+/// report, the empty list included, is not clean.
 pub fn reports_exit_code(reports: &[CheckReport]) -> ExitCode {
-    if !reports.is_empty() && reports.iter().all(CheckReport::passed) {
+    let any_passed = reports
+        .iter()
+        .any(|report| report.outcome() == CheckOutcome::Passed);
+    let any_failed = reports
+        .iter()
+        .any(|report| report.outcome() == CheckOutcome::Failed);
+    if any_passed && !any_failed {
         ExitCode::Clean
     } else {
         ExitCode::Defects
@@ -285,6 +292,7 @@ mod tests {
             check: CheckName::TextFitsBox,
             examined,
             defects,
+            not_applicable: None,
         };
         let defect = Defect {
             pointer: NodePointer::root().child("title"),
@@ -300,5 +308,21 @@ mod tests {
             reports_exit_code(&[report(3, vec![defect])]),
             ExitCode::Defects
         );
+    }
+
+    #[test]
+    fn not_applicable_reports_neither_pass_nor_fail_the_run() {
+        let passed = CheckReport {
+            check: CheckName::TextFitsBox,
+            examined: 3,
+            defects: Vec::new(),
+            not_applicable: None,
+        };
+        let no_links = CheckReport::not_applicable(CheckName::LinksRouted, "page has no links");
+        assert_eq!(
+            reports_exit_code(&[passed, no_links.clone()]),
+            ExitCode::Clean
+        );
+        assert_eq!(reports_exit_code(&[no_links]), ExitCode::Defects);
     }
 }

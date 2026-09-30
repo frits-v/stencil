@@ -8,7 +8,9 @@ use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU64, Ordering};
 
 use serde_json::Value;
-use stencil_layout::checks::{child_inside_container, siblings_do_not_overlap, text_fits_box};
+use stencil_layout::checks::{
+    child_inside_container, links_avoid_boxes, links_routed, siblings_do_not_overlap, text_fits_box,
+};
 use stencil_layout::{LayoutError, PageGeometry, layout_page};
 use stencil_model::checks::{CheckReport, legend_consistency, remembered_constants};
 use stencil_model::{ModelError, Page, parse_page};
@@ -181,8 +183,8 @@ pub fn model_checks(page: &Page) -> [CheckReport; 2] {
     [remembered_constants(page), legend_consistency(page)]
 }
 
-/// All five checks, in `CheckName` order.
-pub fn all_checks(page: &Page, geometry: &PageGeometry) -> [CheckReport; 5] {
+/// All seven checks, in `CheckName` order.
+pub fn all_checks(page: &Page, geometry: &PageGeometry) -> [CheckReport; 7] {
     let [remembered, legend] = model_checks(page);
     [
         child_inside_container(geometry),
@@ -190,6 +192,8 @@ pub fn all_checks(page: &Page, geometry: &PageGeometry) -> [CheckReport; 5] {
         text_fits_box(geometry),
         remembered,
         legend,
+        links_routed(geometry),
+        links_avoid_boxes(geometry),
     ]
 }
 
