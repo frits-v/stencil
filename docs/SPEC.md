@@ -1527,7 +1527,7 @@ The eight tags in section 1, layout by taffy, measurement by cosmic-text over bu
 
 | Cut | Where it stands |
 |---|---|
-| Connection router, and `from`/`to` links between nodes | A pipe is a laid-out element in a gutter. A router that draws lines between arbitrary nodes has to keep every segment off tags and zone borders, which the MVP does not attempt. |
+| Connection router, and `from`/`to` links between nodes | Superseded by section 11.2, which adds routed links with a `links-avoid-boxes` check. A pipe stays a laid-out element in a gutter. |
 | CUE evaluation in Rust | `cue export` produces the JSON, and CUE-side rules (tint pairing, cards without pn, fact or ask) stay in `cue/stencil.cue`. |
 | HTML output | The PNG is the deliverable. The SVG is its source. |
 | Cross-row column alignment, spanning zone backgrounds, expanded cards with chips, step badges in tags | Section 2.10. |
@@ -1774,6 +1774,216 @@ All tests except the wrap-epsilon regression use `FixedMetricsMeasurer::default(
 - `render` on a document whose legend omits a used kind writes its three files and exits 0, because render runs `validate_page` only.
 - `schema` prints JSON equal to `schema/stencil.schema.json`.
 - The golden g7 test in section 9.4.
+
+## 11. Themes, links and document blocks
+
+This section extends the MVP with three features. Every rule in sections 1 to 10 still holds unless this section names the change. The router entry in the section 9.2 cut list is superseded by section 11.2.
+
+### 11.1 Themes
+
+`Page` gains an optional `theme` field. The CLI `--theme` flag overrides it. The theme decides colors only: layout, type sizes, icons and geometry are identical across themes, so `measured.json` is byte-identical for the same document under every theme, and a test asserts it.
+
+```rust
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema, Default)]
+#[serde(rename_all = "lowercase")]
+pub enum Theme {
+    #[default]
+    Center,
+    Dusk,
+    Wire,
+}
+```
+
+`center` is the Architecture Center stencil as rendered today, and its tables in `stencil-render/src/palette.rs` do not change. `dusk` is the dark theme. `wire` is a monochrome wireframe for design documents. `stencil-render` keys every color lookup by theme through one `Palette` value built from the theme, so no drawing code names a color literal.
+
+Dusk palette:
+
+| Role | Value |
+|---|---|
+| page background | `#0B1220` |
+| text primary, text secondary | `#E6EDF7`, `#9AA7BD` |
+| kicker, badge customer | `#5B9CFF`; badge fill `#16305C`, badge ink `#9CC3FF` |
+| badge internal | fill `#2E1A4A`, ink `#D6B4FF` |
+| card fill, card border | `#111A2E`, `#2A3550` |
+| fact and ask box fill, ink | `#182238`, `#B7C2D6` |
+| gcp frame border and bar | `#1A73E8`; bar ink `#FFFFFF`; gcp body fill `#0F172A` |
+| vpc border | dashed `#6B7A99`, no fill |
+| region-a fill and border | `#14213A`, `#2F4A7A` |
+| region-b fill and border | `#2A1626`, `#6A2A47` |
+| subnet fill and border | `#1D1836`, dashed `#4A3F7A` |
+| onprem-a, onprem-b fill and border | `#14213A` / `#2A1626`, `#3A3532` |
+| project fill and border | `#1F1B10`, `#5A4A1A` |
+| optional fill and border | `#10203A`, dashed `#4284F3` |
+| k8s fill | `#2A1626`, no border |
+| perimeter fill and border | `#17130B`, dashed `#E37400`; label ink `#F2A44B` |
+| zone label ink | `#B7C2D6` |
+| wire gray, blue, pink | `#9AA7BD`, `#5B9CFF`, `#FF5C8A` |
+| wire dash | dashed `#5B9CFF` |
+| wire deny | dashed `#FF6B6B`; deny tag ink `#FF8A8A`, deny tag border `#5A2A2A` |
+| tag fill, border, ink, sub ink | `#111A2E`, `#2A3550`, `#E6EDF7`, `#9AA7BD` |
+| legend ink, foot ink | `#9AA7BD` |
+| icon chip | `#FFFFFF`, radius 6, 36 by 36 behind every 28 by 28 icon |
+
+The icon chip exists because the Google icons are drawn unaltered (section 8.2) and several of them are dark gray on transparent; on a dark card they would vanish. The chip is a rounded white square drawn under the icon, inside the icon part's box, which is 36 by 36 in every theme so geometry stays theme-independent. In `center` and `wire` the chip is drawn in the card fill color and is invisible.
+
+Wire palette: page background `#FFFFFF`, every ink `#222222`, secondary ink `#555555`, every border `#222222` at 1.25 px, no fills anywhere except `#FFFFFF`. Zone borders: gcp 2 px solid, vpc, optional and perimeter dashed, subnet dotted, every other kind 1.25 px solid; the gcp bar is white with a 2 px bottom border and `#222222` ink. Wire kinds are told apart by line style alone: gray thin solid 1.25 px, blue solid 2 px, pink solid 2 px with round end dots drawn hollow, dash dashed, deny dotted. Tags are white with a `#222222` border. Badges are white with a border. Icons keep their bytes and colors.
+
+### 11.2 Links
+
+Any node may carry an `id`. `Page` gains `links`. A link is a routed orthogonal line between two nodes, drawn after layout. It is not a node, takes no layout space, and never moves anything.
+
+```rust
+pub const LINKS_MAX: usize = 256;
+pub const LINK_VIA_MAX: usize = 8;
+pub const LINK_SEGMENTS_MAX: usize = 12;
+pub const ROUTER_GRID_LINES_MAX: usize = 512;
+
+// On Row, Col, Zone, Pcard, Fact, Note, Pipe, Tee, Text, Callout, Frame:
+#[serde(default, skip_serializing_if = "Option::is_none")]
+#[schemars(regex(pattern = r"^[a-z0-9][a-z0-9-]{0,63}$"))]
+pub id: Option<String>,
+
+// On Page:
+#[serde(default, skip_serializing_if = "Vec::is_empty")]
+#[schemars(length(max = 256))]
+pub links: Vec<Link>,
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct Link {
+    pub from: String,
+    pub to: String,
+    pub kind: PipeKind,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(length(min = 1, max = 400))]
+    pub label: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(length(min = 1, max = 400))]
+    pub sub: Option<String>,
+    #[serde(default)]
+    pub arrow: Arrow,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub from_side: Option<Side>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub to_side: Option<Side>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[schemars(length(max = 8))]
+    pub via: Vec<PagePoint>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema, Default)]
+#[serde(rename_all = "lowercase")]
+pub enum Arrow { None, #[default] End, Start, Both }
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "lowercase")]
+pub enum Side { Top, Right, Bottom, Left }
+
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct PagePoint { pub x: f32, pub y: f32 }
+```
+
+`Pipe` gains `arrow: Arrow` with default `None`. With an arrow at an end, the arrowhead replaces that end's dot; the wire ends at the arrowhead's base.
+
+Vet rules, in `stencil-model`: `id` values are unique across the document (`id-duplicate`), every `from` and `to` resolves to a node id (`link-unknown-id`), `from` and `to` differ (`link-self`), a link's `via` points lie inside the page (`link-via-outside`), and `links` and `via` respect their limits. The legend rule of section 6 counts link kinds together with pipe kinds.
+
+Routing, in `stencil-layout`, after `layout_page` and before the checks, producing `PageGeometry.links: Vec<LinkRoute>`:
+
+```rust
+pub struct LinkRoute {
+    pub index: usize,
+    pub kind: PipeKind,
+    /// Border-box polyline in page coordinates, first point on the from box edge, last on the to box edge. 2 to LINK_SEGMENTS_MAX + 1 points.
+    pub points: Vec<PagePoint>,
+    /// The tag box for label and sub, centered on the longest segment; None without a label.
+    pub tag: Option<BoxRect>,
+    pub status: RouteStatus,
+}
+pub enum RouteStatus { Routed, Fallback }
+```
+
+- Attach points. With `from_side` or `to_side` given, the midpoint of that side of the node's border box. Otherwise the pair of facing sides whose midpoints are closest, ties broken in the order right, bottom, left, top.
+- Obstacles. The border boxes of every leaf node (Pcard, Fact, Note, Text, Callout, Frame, the tag of every Pipe and Tee, and the whole Tee), and the label part of every Zone, except the from node, the to node, and any node that contains either endpoint. Container boxes are not obstacles: a link may cross a zone border, which is how an architecture figure shows a path entering a zone.
+- Grid. The x set is every obstacle's left and right edge offset outward by 8 px plus both attach x values; the y set likewise. Each set is capped at `ROUTER_GRID_LINES_MAX`; a document that exceeds the cap gets `RouteStatus::Fallback` for every link.
+- Search. A* over grid intersections with Manhattan moves, cost 1 per pixel plus 40 per turn, expanding no node inside an obstacle. The result is simplified to its corner points. Without `via`, a route has at most `LINK_SEGMENTS_MAX` segments. With `via`, the route passes each via point in order, each leg searched separately.
+- Fallback. No route found, or the grid cap exceeded: an L from the from attach point to the to attach point, horizontal leg first, with `status: Fallback`. Fallback is a defect in the `links-routed` check, never a silent success.
+- Tag. Centered on the midpoint of the longest segment, sized like a pipe tag (section 2.7) from the measured label and sub, with the segment masked under it as for pipes.
+- Determinism: the search is exhaustive over a bounded grid with a fixed tie-break (lower x, then lower y), so the route is a pure function of the geometry.
+
+Checks, in section 6 terms, examined counts included:
+
+| Check | Examined | Defect |
+|---|---|---|
+| `links-routed` | one per link | `status: Fallback` |
+| `links-avoid-boxes` | one per segment and obstacle pair | a segment crosses an obstacle box, or a tag overlaps a node box other than an ancestor of an endpoint |
+
+Rendering: each route is a `<polyline>` (or `<path>` with `L` commands) in the wire color and line style of its kind, with an arrowhead as a filled triangle, 10 px long and 8 px wide, at each end the `arrow` value names, drawn with a `<marker>` per kind and theme. The tag is drawn exactly like a pipe tag. Links are drawn after every node, so they paint over zone fills and never under them. The measured JSON gains `links` with the routed points, tag box and status.
+
+### 11.3 Document blocks
+
+Three node tags for one-page design documents. They are leaf blocks: width from the container as for Fact, height from their wrapped text.
+
+```rust
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct Text {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(length(min = 1, max = 400))]
+    pub heading: Option<String>,
+    #[schemars(length(min = 1, max = 64))]
+    pub body: Vec<String>,
+    #[serde(default)]
+    pub list: ListKind,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema, Default)]
+#[serde(rename_all = "lowercase")]
+pub enum ListKind { #[default] Plain, Numbered, Bulleted }
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct Callout {
+    pub kind: CalloutKind,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(length(min = 1, max = 400))]
+    pub title: Option<String>,
+    #[schemars(length(min = 1, max = 400))]
+    pub text: String,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "lowercase")]
+pub enum CalloutKind { Note, Risk, Decision, Open }
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct Frame {
+    #[schemars(length(min = 1, max = 400))]
+    pub label: String,
+    #[serde(default = "frame_height_default")]
+    #[schemars(range(min = 40, max = 1200))]
+    pub height: u16,
+}
+```
+
+Layout and paint:
+
+- `Text`: 12 px padding, 1.25 px border in the card border color, radius 8, card fill. Heading 13 px bold with 6 px below it. Body lines 12 px regular at 1.45 line height, each line wrapped to the content width; `numbered` prefixes `1.`, `2.`, ... in a 22 px hanging indent; `bulleted` prefixes a 4 px dot at the same indent. Each body line is its own text run in the measured output (`/body/…/body/i`), so `text-fits-box` examines it.
+- `Callout`: as `Text` with a 4 px left accent bar and a tinted fill. Accent and fill by kind in `center`: note `#1A73E8` on `#E8F0FE`, risk `#C5221F` on `#FCE8E6`, decision `#188038` on `#E6F4EA`, open `#B06000` on `#FEF7E0`. Dusk: the same accents on `#16305C`, `#3A1A1A`, `#143024`, `#3A2A10`. Wire: accent `#222222`, fill white, and the kind word in small capitals as a prefix to the title. Title 13 px bold, text 12 px regular.
+- `Frame`: a wireframe placeholder. Dashed 1.25 px border, radius 4, no fill, two diagonal 1 px lines corner to corner in the secondary ink, and the label centered in a white (page background) chip so the diagonals do not cross the words. Height is authored; width comes from the container.
+
+Every block may carry `id` and be a link endpoint.
+
+### 11.4 CLI and CUE
+
+`stencil render` and `stencil check` accept `--theme center|dusk|wire`, which overrides `Page.theme`. `stencil schema` includes the new types. `cue/stencil.cue` gains `theme`, `id`, `links`, `arrow` and the three block tags with the same constraints, and `cue/check.sh` gains negative cases for a duplicate id, an unknown link endpoint, a self link and a link kind missing from the legend.
+
+### 11.5 Example and tests
+
+`examples/onepager.json` is a one-page design document at width 1440: title, kicker and lede; a left column of `Text` blocks (Problem, Goals numbered, Non-goals, Interfaces) and two `Callout` blocks (a risk and a decision); a right column holding a `gcp` zone whose cards carry ids and are connected by six numbered `links` with arrows that trace one request through gateway, API, queue, worker and database, plus one `deny` link; and a bottom row of two `Frame` blocks for the console screens. The legend names every kind used.
+
+Tests: `stencil-model` vets each new rule with a failing fixture; `stencil-layout` routes a link around one obstacle and asserts the polyline never enters it, routes with `via`, and produces `Fallback` for an endpoint fully enclosed by obstacles; `stencil-render` renders the same document under the three themes and asserts the measured JSON bytes are identical while the SVG bytes differ; `stencil-cli` renders `examples/onepager.json` under every theme with `check` exiting 0.
 
 ## Conventions
 
