@@ -188,3 +188,90 @@ fn sub_sits_2_px_under_the_label_and_the_tag_grows() {
     assert_eq!(label.text.as_ref().unwrap().color, "#C5221F");
     assert_eq!(sub.text.as_ref().unwrap().color, "#5F6368");
 }
+
+fn arrow_pipe(dir: &str, arrow: &str) -> Value {
+    json!({ "tag": "Pipe", "dir": dir, "kind": "blue", "label": "VLAN 1", "arrow": arrow })
+}
+
+#[test]
+fn an_arrowhead_end_shortens_its_wire_to_the_arrowhead_base_and_keeps_the_dot() {
+    let geometry = layout(&page_with_body(
+        640,
+        json!([{ "tag": "Col", "children": [
+            pipe("h", "blue", "VLAN 1"),
+            arrow_pipe("h", "end"),
+            arrow_pipe("h", "both")
+        ]}]),
+    ));
+    let plain = node(&geometry, "/body/0/children/0");
+    let ending = node(&geometry, "/body/0/children/1");
+    let both = node(&geometry, "/body/0/children/2");
+    for name in [PartName::DotStart, PartName::DotEnd, PartName::Tag] {
+        let plain_box = part(plain, name).bounds;
+        for arrowed in [ending, both] {
+            let arrowed_box = part(arrowed, name).bounds;
+            assert_close(arrowed_box.x, plain_box.x, "dot and tag keep x");
+            assert_close(arrowed_box.width, plain_box.width, "dot and tag keep width");
+        }
+    }
+    let plain_end = part(plain, PartName::WireEnd).bounds;
+    let end_wire = part(ending, PartName::WireEnd).bounds;
+    let dot_end = part(ending, PartName::DotEnd).bounds;
+    assert_close(
+        end_wire.width,
+        plain_end.width - 2.0,
+        "end wire shortened by 2",
+    );
+    assert_close(end_wire.x, plain_end.x, "end wire keeps its tag side");
+    assert_close(
+        end_wire.right(),
+        dot_end.right() - 10.0,
+        "wire stops at the base",
+    );
+    assert_close(
+        part(ending, PartName::WireStart).bounds.width,
+        part(plain, PartName::WireStart).bounds.width,
+        "the start wire of an end arrow is untouched",
+    );
+
+    let both_start = part(both, PartName::WireStart).bounds;
+    let dot_start = part(both, PartName::DotStart).bounds;
+    assert_close(
+        both_start.x,
+        dot_start.x + 10.0,
+        "start wire begins at the base",
+    );
+    assert_close(
+        both_start.right(),
+        part(plain, PartName::WireStart).bounds.right(),
+        "start wire keeps its tag side",
+    );
+}
+
+#[test]
+fn a_vertical_start_arrowhead_shortens_the_start_wire_from_the_top() {
+    let geometry = layout(&page_with_body(
+        640,
+        json!([{ "tag": "Col", "children": [
+            card("Upper"),
+            pipe("v", "blue", "failover"),
+            card("Lower"),
+            arrow_pipe("v", "start")
+        ]}]),
+    ));
+    let plain = node(&geometry, "/body/0/children/1");
+    let arrowed = node(&geometry, "/body/0/children/3");
+    let wire = part(arrowed, PartName::WireStart).bounds;
+    let dot = part(arrowed, PartName::DotStart).bounds;
+    assert_close(wire.y, dot.y + 10.0, "start wire begins at the base");
+    assert_close(
+        wire.height,
+        part(plain, PartName::WireStart).bounds.height - 2.0,
+        "start wire shortened by 2",
+    );
+    assert_close(
+        part(arrowed, PartName::WireEnd).bounds.height,
+        part(plain, PartName::WireEnd).bounds.height,
+        "end wire untouched",
+    );
+}

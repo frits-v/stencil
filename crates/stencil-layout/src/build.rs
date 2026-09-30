@@ -4,13 +4,14 @@
 use stencil_model::pointer::NodePointer;
 use stencil_model::text::TextStyleName;
 use stencil_model::{
-    Canvas, DEPTH_MAX, Fact, GAP_DEFAULT_PX, Justify, LegendEntry, Node, Note, NoteKind, Page,
-    Pcard, Pipe, PipeDir, PipeKind, Tee, TeeArm, VetRule, Violation, Zone, ZoneKind,
+    Arrow, Callout, Canvas, DEPTH_MAX, Fact, Frame, GAP_DEFAULT_PX, Justify, LegendEntry, ListKind,
+    Node, Note, NoteKind, Page, Pcard, Pipe, PipeDir, PipeKind, Tee, TeeArm, Text, VetRule,
+    Violation, Zone, ZoneKind,
 };
 use taffy::prelude::{
     AlignItems, AlignSelf, Dimension, Display, FlexDirection, FlexWrap, JustifyContent,
-    LengthPercentage, LengthPercentageAuto, Line, NodeId, Rect, Style, TaffyTree, auto, fr, length,
-    line,
+    LengthPercentage, LengthPercentageAuto, Line, NodeId, Position, Rect, Style, TaffyTree, auto,
+    fr, length, line,
 };
 
 use crate::styles::text_color;
@@ -43,7 +44,26 @@ pub(crate) struct NodeRecord {
     /// The taffy node whose content box children must stay inside.
     pub content_node: NodeId,
     pub parts: Vec<PartRecord>,
+    /// For a Pipe, which ends carry an arrowhead and along which axis it runs.
+    pub arrow_ends: Option<ArrowEnds>,
 }
+
+/// The ends of a Pipe whose dot an arrowhead replaces (section 11.2).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) struct ArrowEnds {
+    pub start: bool,
+    pub end: bool,
+    pub horizontal: bool,
+}
+
+/// Box sizes of the section 11.3 blocks, in px.
+const BLOCK_BORDER_PX: f32 = 1.25;
+const BLOCK_PADDING_PX: f32 = 12.0;
+const CALLOUT_ACCENT_PX: f32 = 4.0;
+const BLOCK_HEADING_GAP_PX: f32 = 6.0;
+const BLOCK_LINE_GAP_PX: f32 = 4.0;
+const LIST_INDENT_PX: f32 = 22.0;
+const FRAME_PADDING_PX: f32 = 8.0;
 
 pub(crate) struct BuiltPage {
     pub tree: LayoutTree,
@@ -190,6 +210,7 @@ fn default_weight(container: NodeTag, child: &Node) -> u16 {
     };
     match container {
         NodeTag::Row => row_weight,
+        NodeTag::Text | NodeTag::Callout | NodeTag::Frame => 0,
         NodeTag::Col
         | NodeTag::Page
         | NodeTag::Kicker
@@ -373,6 +394,7 @@ impl Builder {
             taffy_node,
             content_node: taffy_node,
             parts: Vec::new(),
+            arrow_ends: None,
         }
     }
 
@@ -746,10 +768,15 @@ impl Builder {
                 self.add_pipe(pipe, pointer, parent_index, parent_container, placement)
             }
             Node::Tee(tee) => self.add_tee(tee, pointer, parent_index, parent_container, placement),
-            Node::Text(_) | Node::Callout(_) | Node::Frame(_) => Err(LayoutError::Taffy {
-                message: format!("tag {} has no layout", node.tag_name()),
-                pointer,
-            }),
+            Node::Text(text) => {
+                self.add_text(text, pointer, parent_index, parent_container, placement)
+            }
+            Node::Callout(callout) => {
+                self.add_callout(callout, pointer, parent_index, parent_container, placement)
+            }
+            Node::Frame(frame) => {
+                self.add_frame(frame, pointer, parent_index, parent_container, placement)
+            }
         }
     }
 
@@ -1339,6 +1366,7 @@ impl Builder {
             pipe_node,
         );
         record.parts = parts;
+        record.arrow_ends = arrow_ends(pipe.arrow, horizontal);
         self.push_record(record);
         Ok(())
     }
@@ -1444,6 +1472,329 @@ impl Builder {
         }
         Ok(())
     }
+
+    /// Text block (section 11.3): an optional heading, then one row per body line. A list
+    /// line holds a 22 px marker cell and the wrapped line; a plain line is the text leaf.
+    fn add_text(
+        &mut self,
+        text: &Text,
+        pointer: NodePointer,
+        parent_index: usize,
+        parent_container: NodeId,
+        placement: Placement,
+    ) -> Result<(), LayoutError> {
+        let mut style = block_style(BLOCK_PADDING_PX);
+        apply_flex_placement(&mut style, placement);
+        let block = self.container(style, parent_container, &pointer)?;
+        let mut parts = Vec::new();
+        if let Some(heading) = &text.heading {
+            self.add_block_heading(block, &mut parts, heading, pointer.child("heading"))?;
+        }
+        let body_pointer = pointer.child("body");
+        for (line_index, line_text) in text.body.iter().enumerate() {
+            let line_pointer = body_pointer.index(line_index);
+            let margin_top = if line_index == 0 {
+                0.0
+            } else {
+                BLOCK_LINE_GAP_PX
+            };
+            match text.list {
+                ListKind::Plain => {
+                    let (leaf, leaf_index) = self.text_leaf(
+                        Style {
+                            margin: margins(margin_top, 0.0, 0.0, 0.0),
+                            ..base_style()
+                        },
+                        Some(block),
+                        TextSpec {
+                            text: line_text,
+                            style_name: TextStyleName::BlockBody,
+                            pipe_kind: None,
+                            align: TextAlign::Start,
+                            source: line_pointer,
+                        },
+                    )?;
+                    parts.push(PartRecord {
+                        name: PartName::BodyLine,
+                        taffy_node: leaf,
+                        text_leaf: Some(leaf_index),
+                    });
+                }
+                ListKind::Numbered | ListKind::Bulleted => {
+                    let row = self.container(
+                        Style {
+                            margin: margins(margin_top, 0.0, 0.0, 0.0),
+                            ..flex_row(AlignItems::START)
+                        },
+                        block,
+                        &line_pointer,
+                    )?;
+                    let marker_style = Style {
+                        size: taffy::Size {
+                            width: length(LIST_INDENT_PX),
+                            height: length(
+                                TextStyleName::BlockBody.text_style().style.line_height_px,
+                            ),
+                        },
+                        ..base_style()
+                    };
+                    let marker = if text.list == ListKind::Numbered {
+                        let number = format!("{}.", line_index + 1);
+                        let (marker_node, marker_leaf) = self.text_leaf(
+                            marker_style,
+                            Some(row),
+                            TextSpec {
+                                text: &number,
+                                style_name: TextStyleName::BlockBody,
+                                pipe_kind: None,
+                                align: TextAlign::Start,
+                                source: line_pointer.clone(),
+                            },
+                        )?;
+                        PartRecord {
+                            name: PartName::Marker,
+                            taffy_node: marker_node,
+                            text_leaf: Some(marker_leaf),
+                        }
+                    } else {
+                        PartRecord {
+                            name: PartName::Marker,
+                            taffy_node: self.plain_leaf(marker_style, row, &line_pointer)?,
+                            text_leaf: None,
+                        }
+                    };
+                    parts.push(marker);
+                    let (leaf, leaf_index) = self.text_leaf(
+                        Style {
+                            flex_grow: 1.0,
+                            flex_basis: length(0.0),
+                            ..base_style()
+                        },
+                        Some(row),
+                        TextSpec {
+                            text: line_text,
+                            style_name: TextStyleName::BlockBody,
+                            pipe_kind: None,
+                            align: TextAlign::Start,
+                            source: line_pointer,
+                        },
+                    )?;
+                    parts.push(PartRecord {
+                        name: PartName::BodyLine,
+                        taffy_node: leaf,
+                        text_leaf: Some(leaf_index),
+                    });
+                }
+            }
+        }
+        let mut record = Self::record(pointer, NodeTag::Text, None, Some(parent_index), block);
+        record.parts = parts;
+        self.push_record(record);
+        Ok(())
+    }
+
+    /// Callout block (section 11.3): the Text box with a 4 px accent bar along the inside
+    /// of the left border. The bar is absolutely placed in the left padding, which is 4 px
+    /// wider than the other sides, so it takes no flow space.
+    fn add_callout(
+        &mut self,
+        callout: &Callout,
+        pointer: NodePointer,
+        parent_index: usize,
+        parent_container: NodeId,
+        placement: Placement,
+    ) -> Result<(), LayoutError> {
+        let mut style = block_style(BLOCK_PADDING_PX);
+        style.padding = sides(
+            BLOCK_PADDING_PX,
+            BLOCK_PADDING_PX,
+            BLOCK_PADDING_PX,
+            BLOCK_PADDING_PX + CALLOUT_ACCENT_PX,
+        );
+        apply_flex_placement(&mut style, placement);
+        let block = self.container(style, parent_container, &pointer)?;
+        let accent = self.plain_leaf(
+            Style {
+                position: Position::Absolute,
+                inset: Rect {
+                    left: length(0.0),
+                    right: auto(),
+                    top: length(0.0),
+                    bottom: length(0.0),
+                },
+                size: taffy::Size {
+                    width: length(CALLOUT_ACCENT_PX),
+                    height: auto(),
+                },
+                ..base_style()
+            },
+            block,
+            &pointer,
+        )?;
+        let mut parts = vec![PartRecord {
+            name: PartName::Accent,
+            taffy_node: accent,
+            text_leaf: None,
+        }];
+        if let Some(title) = &callout.title {
+            self.add_block_heading(block, &mut parts, title, pointer.child("title"))?;
+        }
+        let (leaf, leaf_index) = self.text_leaf(
+            base_style(),
+            Some(block),
+            TextSpec {
+                text: &callout.text,
+                style_name: TextStyleName::BlockBody,
+                pipe_kind: None,
+                align: TextAlign::Start,
+                source: pointer.child("text"),
+            },
+        )?;
+        parts.push(PartRecord {
+            name: PartName::Text,
+            taffy_node: leaf,
+            text_leaf: Some(leaf_index),
+        });
+        let mut record = Self::record(pointer, NodeTag::Callout, None, Some(parent_index), block);
+        record.parts = parts;
+        self.push_record(record);
+        Ok(())
+    }
+
+    /// Frame block (section 11.3): authored height, width from the container, and the
+    /// label in a chip centered on both axes.
+    fn add_frame(
+        &mut self,
+        frame: &Frame,
+        pointer: NodePointer,
+        parent_index: usize,
+        parent_container: NodeId,
+        placement: Placement,
+    ) -> Result<(), LayoutError> {
+        let mut style = Style {
+            border: sides(
+                BLOCK_BORDER_PX,
+                BLOCK_BORDER_PX,
+                BLOCK_BORDER_PX,
+                BLOCK_BORDER_PX,
+            ),
+            padding: sides(
+                FRAME_PADDING_PX,
+                FRAME_PADDING_PX,
+                FRAME_PADDING_PX,
+                FRAME_PADDING_PX,
+            ),
+            justify_content: Some(JustifyContent::CENTER),
+            ..flex_column(AlignItems::CENTER)
+        };
+        apply_flex_placement(&mut style, placement);
+        // The authored height holds against a grow weight in a column and against stretch
+        // in a Row alike.
+        let height_px = f32::from(frame.height);
+        style.size.height = length(height_px);
+        style.min_size.height = length(height_px);
+        style.max_size.height = length(height_px);
+        let frame_node = self.container(style, parent_container, &pointer)?;
+        let chip_style = Style {
+            padding: sides(4.0, 8.0, 4.0, 8.0),
+            max_size: taffy::Size {
+                width: LengthPercentageAuto::percent(1.0),
+                height: auto(),
+            },
+            ..flex_column(AlignItems::STRETCH)
+        };
+        let chip = self.container(chip_style, frame_node, &pointer)?;
+        let (label, label_leaf) = self.text_leaf(
+            base_style(),
+            Some(chip),
+            TextSpec {
+                text: &frame.label,
+                style_name: TextStyleName::ZoneLabel,
+                pipe_kind: None,
+                align: TextAlign::Center,
+                source: pointer.child("label"),
+            },
+        )?;
+        let mut record = Self::record(
+            pointer,
+            NodeTag::Frame,
+            None,
+            Some(parent_index),
+            frame_node,
+        );
+        record.parts = vec![
+            PartRecord {
+                name: PartName::LabelChip,
+                taffy_node: chip,
+                text_leaf: None,
+            },
+            PartRecord {
+                name: PartName::Label,
+                taffy_node: label,
+                text_leaf: Some(label_leaf),
+            },
+        ];
+        self.push_record(record);
+        Ok(())
+    }
+
+    /// The Text heading and the Callout title: 13 px bold with 6 px below it.
+    fn add_block_heading(
+        &mut self,
+        block: NodeId,
+        parts: &mut Vec<PartRecord>,
+        text: &str,
+        source: NodePointer,
+    ) -> Result<(), LayoutError> {
+        let (leaf, leaf_index) = self.text_leaf(
+            Style {
+                margin: margins(0.0, 0.0, BLOCK_HEADING_GAP_PX, 0.0),
+                ..base_style()
+            },
+            Some(block),
+            TextSpec {
+                text,
+                style_name: TextStyleName::CardFunction,
+                pipe_kind: None,
+                align: TextAlign::Start,
+                source,
+            },
+        )?;
+        parts.push(PartRecord {
+            name: PartName::Heading,
+            taffy_node: leaf,
+            text_leaf: Some(leaf_index),
+        });
+        Ok(())
+    }
+}
+
+/// The Text and Callout box: a stretched column with the 1.25 px block border.
+fn block_style(padding: f32) -> Style {
+    Style {
+        border: sides(
+            BLOCK_BORDER_PX,
+            BLOCK_BORDER_PX,
+            BLOCK_BORDER_PX,
+            BLOCK_BORDER_PX,
+        ),
+        padding: sides(padding, padding, padding, padding),
+        ..flex_column(AlignItems::STRETCH)
+    }
+}
+
+fn arrow_ends(arrow: Arrow, horizontal: bool) -> Option<ArrowEnds> {
+    let (start, end) = match arrow {
+        Arrow::None => return None,
+        Arrow::Start => (true, false),
+        Arrow::End => (false, true),
+        Arrow::Both => (true, true),
+    };
+    Some(ArrowEnds {
+        start,
+        end,
+        horizontal,
+    })
 }
 
 struct FlexContainer<'a> {

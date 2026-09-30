@@ -28,9 +28,10 @@ pub fn text_color(
             Canvas::Internal => BADGE_TEXT_INTERNAL,
         },
         TextStyleName::Kicker => TEXT_BLUE,
-        TextStyleName::Title | TextStyleName::CardFunction | TextStyleName::LegendLabel => {
-            TEXT_DARK
-        }
+        TextStyleName::Title
+        | TextStyleName::CardFunction
+        | TextStyleName::LegendLabel
+        | TextStyleName::BlockBody => TEXT_DARK,
         TextStyleName::TagLabel => match pipe_kind {
             Some(PipeKind::Deny) => TEXT_DENY,
             Some(PipeKind::Gray | PipeKind::Blue | PipeKind::Pink | PipeKind::Dash) | None => {
@@ -112,6 +113,7 @@ mod tests {
             ("legend_label", "#202124"),
             ("legend_text", "#5F6368"),
             ("foot", "#5F6368"),
+            ("block_body", "#202124"),
         ];
         for (named, (name, color)) in TEXT_STYLES.iter().zip(expected) {
             assert_eq!(named.name.as_str(), name);
