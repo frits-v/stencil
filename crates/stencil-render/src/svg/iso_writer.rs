@@ -1,29 +1,40 @@
 //! The section 12.5 SVG: page-level nodes flat, body nodes as faces and surfaces in
 //! geometry order, links on their planes, then every billboard upright on top.
 
-use stencil_layout::{BoxRect, LinkRoute, NodeGeometry, NodeTag, PageGeometry, Part, PartName};
+use stencil_layout::{
+    BoxRect, LinkRoute, NodeGeometry, NodeTag, PageGeometry, Part, PartName, TextRun,
+};
 use stencil_model::pointer::NodePointer;
-use stencil_model::{LINKS_MAX, Link, Node, NodeRef, Page, PipeDir, PipeKind, ZoneKind};
+use stencil_model::text::{TextMeasurer, TextStyleName};
+use stencil_model::{LINKS_MAX, Link, Node, NodeRef, Page, PipeDir, PipeKind, Projection};
+use stencil_text::CosmicTextMeasurer;
 
 use super::DOT_RADIUS_PX;
 use super::{
-    ArrowEnds, DocumentNode, PartContext, SvgWriter, TAG_RADIUS_PX, close_groups_until_parent,
-    escape_xml, frame_diagonal_box, group_open_tag, link_mismatch, part_mismatch,
-    pipe_text_style_name, stroke_attributes, text_style_name, trim_end, trim_start,
+    ArrowEnds, DocumentNode, ICON_CHIP_RADIUS_PX, PartContext, SvgWriter, TAG_RADIUS_PX,
+    close_groups_until_parent, escape_xml, frame_diagonal_box, group_open_tag, icon_chip_box,
+    link_mismatch, part_mismatch, pipe_text_style_name, stroke_attributes, text_style_name,
 };
 use crate::iso::{
-    Billboard, ISO_DOT_RADIUS_X_PX, ISO_DOT_RADIUS_Y_PX, ScreenPoint, Solid, SolidShape,
-    arrowhead_vertices, billboard_member, project_page, project_point, unit_direction,
+    Billboard, ISO_DOT_RADIUS_X_PX, ISO_DOT_RADIUS_Y_PX, ISO_SLAB_THICKNESS_PX, IsoPoint,
+    ScreenPoint, Solid, SolidShape, arrowhead_vertices, billboard_member, end_direction,
+    member_box, project_page, project_point, start_direction,
 };
-use crate::palette::{DotStyle, Face, LineStyle, Stroke};
+use crate::palette::{
+    DotStyle, FacePaint, ISO_ICON_CHIP_SHADOW_OPACITY, LineStyle, Palette, Stroke,
+};
 use crate::{RenderError, SvgDocument, format_number};
 
 /// Radius of the chip behind a gcp label billboard (section 12.4).
 const GCP_CHIP_RADIUS_PX: f32 = 4.0;
-/// Width of the page-background outline behind billboard text that has no chip of its own.
-/// Upright text crosses slab edges, dashed zone borders and the gcp bar band; the outline
-/// keeps each glyph on a clean ground in every theme.
-const TEXT_HALO_PX: f32 = 3.0;
+/// Padding of the plate behind billboard text that has no box of its own, across and down.
+/// The plate is the color of the surface the text stands on, so it is invisible there and
+/// stops every stroke that runs under the text.
+const TEXT_PLATE_PADDING_X_PX: f32 = 3.0;
+const TEXT_PLATE_PADDING_Y_PX: f32 = 1.0;
+const TEXT_PLATE_RADIUS_PX: f32 = 3.0;
+/// How far the shadow under an iso icon chip drops.
+const ICON_CHIP_SHADOW_DROP_PX: f32 = 1.5;
 
 pub(super) fn render_iso(
     page: &Page,
@@ -31,7 +42,8 @@ pub(super) fn render_iso(
     expected: &[(NodePointer, DocumentNode<'_>)],
 ) -> Result<SvgDocument, RenderError> {
     let scene = project_page(geometry)?;
-    let mut writer = SvgWriter::new(page.canvas, crate::palette::Palette::new(page.theme));
+    let palette = Palette::for_projection(page.theme, Projection::Iso);
+    let mut writer = SvgWriter::new(page.canvas, palette);
     let width = format_number(scene.canvas.width);
     let height = format_number(scene.canvas.height);
     writer.line(
@@ -55,6 +67,10 @@ pub(super) fn render_iso(
             *slot = Some(solid);
         }
     }
+    // The fill of the surface each node stands on or is, so billboard text can be haloed in
+    // it. Parents precede children, so a node without a filled top inherits its parent's.
+    let mut surfaces: Vec<Option<String>> = vec![None; geometry.nodes.len()];
+    let mut measurer: Option<CosmicTextMeasurer> = None;
 
     let mut open_groups: Vec<usize> = Vec::new();
     for (index, (node, (_, document_node))) in geometry.nodes.iter().zip(expected).enumerate() {
@@ -72,16 +88,41 @@ pub(super) fn render_iso(
         } else {
             writer.line(depth, &group_open_tag(node));
         }
+        let inherited = node
+            .parent
+            .and_then(|parent| surfaces.get(parent).cloned().flatten());
         let solid = solids.get(index).copied().flatten();
-        match (node.tag, solid) {
-            (NodeTag::Legend | NodeTag::LegendEntry | NodeTag::Foot, _) => {
+        let surface = match (node.tag, solid, document_node) {
+            (NodeTag::LegendEntry, _, DocumentNode::LegendEntry(entry)) => {
+                let shifted = shifted_node(node, 0.0, scene.footer_shift);
+                let relabeled = match writer.palette.iso_legend_label(entry.kind) {
+                    Some(label) => {
+                        let measurer = match measurer.as_mut() {
+                            Some(measurer) => measurer,
+                            None => measurer.insert(CosmicTextMeasurer::new()?),
+                        };
+                        relabel_legend_entry(&shifted, label, measurer)?
+                    }
+                    None => shifted,
+                };
+                writer.write_node(depth + 1, &relabeled, *document_node)?;
+                None
+            }
+            (NodeTag::Legend | NodeTag::LegendEntry | NodeTag::Foot, _, _) => {
                 let shifted = shifted_node(node, 0.0, scene.footer_shift);
                 writer.write_node(depth + 1, &shifted, *document_node)?;
+                None
             }
-            (_, Some(solid)) => {
-                writer.write_solid(depth + 1, node, *document_node, solid, scene.offset)?;
+            (_, Some(solid), _) => {
+                writer.write_solid(depth + 1, node, *document_node, solid, scene.offset)?
             }
-            (_, None) => writer.write_node(depth + 1, node, *document_node)?,
+            (_, None, _) => {
+                writer.write_node(depth + 1, node, *document_node)?;
+                None
+            }
+        };
+        if let Some(slot) = surfaces.get_mut(index) {
+            *slot = surface.or(inherited);
         }
         open_groups.push(index);
     }
@@ -89,22 +130,20 @@ pub(super) fn render_iso(
         writer.line(depth, "</g>");
     }
 
-    for (route, plane) in geometry
-        .links
-        .iter()
-        .zip(&scene.link_planes)
-        .take(LINKS_MAX)
-    {
+    for (route, path) in geometry.links.iter().zip(&scene.link_paths).take(LINKS_MAX) {
         let link = page
             .links
             .get(route.index)
             .ok_or_else(|| link_mismatch(route))?;
-        writer.write_iso_link(1, route, link, *plane, scene.offset);
+        writer.write_iso_link(1, route, link, path, scene.offset);
     }
 
     writer.line(1, r#"<g data-layer="billboards">"#);
     for billboard in &scene.billboards {
-        writer.write_billboard(2, billboard, geometry, expected)?;
+        let ground = billboard
+            .node
+            .and_then(|index| surfaces.get(index).cloned().flatten());
+        writer.write_billboard(2, billboard, geometry, expected, ground.as_deref())?;
     }
     writer.line(1, "</g>");
     writer.line(0, "</svg>");
@@ -145,6 +184,45 @@ fn shifted_node(node: &NodeGeometry, delta_x: f32, delta_y: f32) -> NodeGeometry
     }
 }
 
+/// A legend entry whose label run reads `label`, measured in the run's style, with the
+/// description moved by the change in label width so the gap between them keeps its size.
+fn relabel_legend_entry(
+    entry: &NodeGeometry,
+    label: &str,
+    measurer: &mut CosmicTextMeasurer,
+) -> Result<NodeGeometry, RenderError> {
+    let mut relabeled = entry.clone();
+    let mut width_change = 0.0;
+    for part in &mut relabeled.parts {
+        if part.name == PartName::LegendLabel
+            && let Some(run) = &part.text
+        {
+            let metrics =
+                measurer
+                    .measure(label, &run.style, None)
+                    .map_err(|error| RenderError::Svg {
+                        message: format!(
+                            "legend label {label:?} at {} could not be measured: {error}",
+                            entry.pointer
+                        ),
+                    })?;
+            width_change = metrics.width_px - run.metrics.width_px;
+            part.bounds.width += width_change;
+            part.text = Some(TextRun {
+                text: label.to_string(),
+                metrics,
+                ..run.clone()
+            });
+        }
+    }
+    for part in &mut relabeled.parts {
+        if part.name == PartName::LegendText {
+            part.bounds.x += width_change;
+        }
+    }
+    Ok(relabeled)
+}
+
 /// `x,y x,y ...` for a polygon's `points`.
 fn points_attribute(points: &[ScreenPoint]) -> String {
     points
@@ -154,73 +232,74 @@ fn points_attribute(points: &[ScreenPoint]) -> String {
         .join(" ")
 }
 
-/// The flat fill and border of a slab or block (section 12.3, rule 2).
-#[derive(Debug, Clone, Copy)]
-struct SolidPaint {
-    fill: Option<&'static str>,
-    border: Option<Stroke>,
+/// Moves the end of a path back by `length` along its last horizontal stretch, or drops
+/// the last point when that stretch is shorter, so an arrowhead of that length covers it.
+fn shorten_end(path: &mut Vec<IsoPoint>, length: f32) {
+    let count = path.len();
+    let (Some(&tip), Some(&previous)) = (
+        path.last(),
+        count.checked_sub(2).and_then(|index| path.get(index)),
+    ) else {
+        return;
+    };
+    let run = ((tip.x - previous.x).powi(2) + (tip.y - previous.y).powi(2)).sqrt();
+    if run > length {
+        let keep = (run - length) / run;
+        if let Some(slot) = path.last_mut() {
+            *slot = IsoPoint {
+                x: previous.x + (tip.x - previous.x) * keep,
+                y: previous.y + (tip.y - previous.y) * keep,
+                z: tip.z,
+            };
+        }
+    } else if count > 2 {
+        path.pop();
+    }
 }
 
 impl SvgWriter {
-    fn solid_paint(&self, document_node: DocumentNode<'_>) -> SolidPaint {
+    /// The face paint of a slab or block, or None for a node that draws no faces.
+    fn face_paint(
+        &self,
+        document_node: DocumentNode<'_>,
+        solid: &Solid,
+    ) -> Result<Option<FacePaint>, RenderError> {
         let DocumentNode::Content(NodeRef::Node(content)) = document_node else {
-            return SolidPaint {
-                fill: None,
-                border: None,
-            };
+            return Ok(None);
         };
-        match content {
+        let block = |fill: Option<&'static str>, border: Option<Stroke>| {
+            self.palette.block_faces(fill, border)
+        };
+        let paint = match content {
             Node::Zone(zone) => {
-                let style = self.palette.zone_style(zone.kind);
-                let fill = if zone.kind == ZoneKind::Gcp {
-                    Some(self.palette.gcp_body_fill())
-                } else {
-                    style.fill
-                };
-                SolidPaint {
-                    fill,
-                    border: style.border,
-                }
+                let level = (solid.base_z / ISO_SLAB_THICKNESS_PX).round() as usize;
+                self.palette.slab_faces(zone.kind, level)
             }
             Node::Pcard(_) => {
                 let card = self.palette.card();
-                SolidPaint {
-                    fill: Some(card.fill),
-                    border: card.border,
-                }
+                block(Some(card.fill), card.border)
             }
             Node::Text(_) => {
-                let block = self.palette.block();
-                SolidPaint {
-                    fill: Some(block.fill),
-                    border: block.border,
-                }
+                let text_block = self.palette.block();
+                block(Some(text_block.fill), text_block.border)
             }
-            Node::Fact(_) => SolidPaint {
-                fill: Some(self.palette.fact_fill()),
-                border: None,
-            },
+            Node::Fact(_) => block(Some(self.palette.fact_fill()), None),
             Node::Callout(callout) => {
                 let paint = self.palette.callout(callout.kind);
-                SolidPaint {
-                    fill: Some(paint.fill),
-                    border: Some(paint.border),
-                }
+                block(Some(paint.fill), Some(paint.border))
             }
-            Node::Frame(_) => SolidPaint {
-                fill: None,
-                border: Some(self.palette.frame_border()),
-            },
+            Node::Frame(_) => block(None, Some(self.palette.frame_border())),
             Node::Note(_) | Node::Row(_) | Node::Col(_) | Node::Pipe(_) | Node::Tee(_) => {
-                SolidPaint {
-                    fill: None,
-                    border: None,
-                }
+                return Ok(None);
             }
-        }
+        };
+        paint.map(Some).ok_or_else(|| RenderError::Svg {
+            message: format!("a face color of {} is not a #RRGGBB color", solid.pointer),
+        })
     }
 
     /// Faces and top-face drawing of a slab or block, or the primitives of a surface.
+    /// Returns the fill of the top face, if any.
     fn write_solid(
         &mut self,
         depth: usize,
@@ -228,7 +307,7 @@ impl SvgWriter {
         document_node: DocumentNode<'_>,
         solid: &Solid,
         offset: ScreenPoint,
-    ) -> Result<(), RenderError> {
+    ) -> Result<Option<String>, RenderError> {
         let context = self.part_context(document_node);
         if solid.shape == SolidShape::Surface {
             let kind = context.pipe_kind.ok_or_else(|| surface_mismatch(node))?;
@@ -237,33 +316,36 @@ impl SvgWriter {
             } else {
                 self.write_iso_pipe(depth, node, context, solid.base_z, offset)?;
             }
-            return Ok(());
+            return Ok(None);
         }
-        let paint = self.solid_paint(document_node);
+        let Some(paint) = self.face_paint(document_node, solid)? else {
+            return Ok(None);
+        };
         let top_z = solid.base_z + solid.height;
-        self.write_faces(depth, node.bounds, solid.base_z, top_z, paint, offset)?;
+        self.write_faces(depth, node.bounds, solid.base_z, top_z, &paint, offset);
         self.write_top_face_drawing(depth, node, document_node, top_z, offset);
-        Ok(())
+        Ok(paint.top)
     }
 
-    /// Left, right and top face, in that order (section 12.3, rule 1).
+    /// Left, right and top face, in that order (section 12.3, rule 1). A slab with no
+    /// height draws its top face only.
     fn write_faces(
         &mut self,
         depth: usize,
         bounds: BoxRect,
         base_z: f32,
         top_z: f32,
-        paint: SolidPaint,
+        paint: &FacePaint,
         offset: ScreenPoint,
-    ) -> Result<(), RenderError> {
-        if paint.fill.is_none() && paint.border.is_none() {
-            return Ok(());
-        }
+    ) {
         let (left, top, right, bottom) = (bounds.x, bounds.y, bounds.right(), bounds.bottom());
         let at = |x: f32, y: f32, z: f32| project_point(x, y, z, offset);
+        let has_sides = top_z > base_z;
         let faces = [
             (
-                Face::Left,
+                has_sides,
+                paint.left.as_deref(),
+                paint.side_stroke,
                 [
                     at(left, bottom, base_z),
                     at(right, bottom, base_z),
@@ -272,7 +354,9 @@ impl SvgWriter {
                 ],
             ),
             (
-                Face::Right,
+                has_sides,
+                paint.right.as_deref(),
+                paint.side_stroke,
                 [
                     at(right, top, base_z),
                     at(right, bottom, base_z),
@@ -281,7 +365,9 @@ impl SvgWriter {
                 ],
             ),
             (
-                Face::Top,
+                true,
+                paint.top.as_deref(),
+                paint.top_stroke,
                 [
                     at(left, top, top_z),
                     at(right, top, top_z),
@@ -290,35 +376,27 @@ impl SvgWriter {
                 ],
             ),
         ];
-        let stroke = self
-            .palette
-            .face_outline(paint.border)
-            .map(stroke_attributes)
-            .unwrap_or_default();
-        for (face, corners) in faces {
-            let fill = match paint.fill {
-                Some(base) => {
-                    self.palette
-                        .face_fill(base, face)
-                        .ok_or_else(|| RenderError::Svg {
-                            message: format!("face fill {base} is not a #RRGGBB color"),
-                        })?
-                }
-                None => "none".to_string(),
-            };
+        for (drawn, fill, stroke, corners) in faces {
+            if !drawn || (fill.is_none() && stroke.is_none()) {
+                continue;
+            }
+            let stroke_part = stroke
+                .map(|stroke| format!(r#"{} stroke-linejoin="round""#, stroke_attributes(stroke)))
+                .unwrap_or_default();
             self.line(
                 depth,
                 &format!(
-                    r#"<polygon points="{}" fill="{fill}"{stroke}/>"#,
-                    points_attribute(&corners)
+                    r#"<polygon points="{}" fill="{}"{stroke_part}/>"#,
+                    points_attribute(&corners),
+                    fill.unwrap_or("none")
                 ),
             );
         }
-        Ok(())
     }
 
-    /// The gcp bar band, the Callout accent and the Frame diagonals, projected onto the top
-    /// face in their flat paint (section 12.3, rule 4).
+    /// The Callout accent and the Frame diagonals, projected onto the top face in their
+    /// flat paint (section 12.3, rule 4). The gcp bar is not drawn: the brand blue side
+    /// faces and the label chip carry the frame.
     fn write_top_face_drawing(
         &mut self,
         depth: usize,
@@ -331,18 +409,6 @@ impl SvgWriter {
             return;
         };
         match content {
-            Node::Zone(zone) if zone.kind == ZoneKind::Gcp => {
-                if let Some(bar) = node.part(PartName::Bar) {
-                    let fill = self.palette.gcp_bar_fill();
-                    self.write_top_rectangle(depth, bar.bounds, top_z, fill, offset);
-                    if let Some(rule) = self.palette.gcp_bar_rule() {
-                        let rule_y = bar.bounds.bottom() - rule.width_px / 2.0;
-                        let start = project_point(bar.bounds.x, rule_y, top_z, offset);
-                        let end = project_point(bar.bounds.right(), rule_y, top_z, offset);
-                        self.write_screen_line(depth, start, end, rule);
-                    }
-                }
-            }
             Node::Callout(callout) => {
                 if let Some(accent) = node.part(PartName::Accent) {
                     let fill = self.palette.callout(callout.kind).accent;
@@ -415,6 +481,28 @@ impl SvgWriter {
                 stroke_attributes(stroke)
             ),
         );
+    }
+
+    /// The chip under an icon under iso (section 12.4): a soft shadow in center, then the
+    /// tile with its ring.
+    pub(super) fn write_iso_icon_chip(&mut self, depth: usize, icon_bounds: BoxRect) {
+        let chip = icon_chip_box(icon_bounds);
+        if let Some(shadow) = self.palette.iso_icon_chip_shadow() {
+            self.line(
+                depth,
+                &format!(
+                    r#"<rect x="{}" y="{}" width="{}" height="{}" rx="{}" fill="{shadow}" fill-opacity="{}"/>"#,
+                    format_number(chip.x),
+                    format_number(chip.y + ICON_CHIP_SHADOW_DROP_PX),
+                    format_number(chip.width),
+                    format_number(chip.height),
+                    format_number(ICON_CHIP_RADIUS_PX),
+                    format_number(ISO_ICON_CHIP_SHADOW_OPACITY),
+                ),
+            );
+        }
+        let paint = self.palette.iso_icon_chip();
+        self.write_box(depth, chip, ICON_CHIP_RADIUS_PX, paint);
     }
 
     /// One wire from dot center to dot center, stopping at an arrowhead base, then the two
@@ -554,14 +642,15 @@ impl SvgWriter {
         );
     }
 
-    /// The routed polyline on the link's plane, trimmed under each arrowhead as in flat, and
-    /// the arrowheads as projected polygons. The tag is a billboard.
+    /// The link path of section 12.3 rule 7 as one `<path>`, shortened under each arrowhead
+    /// as in flat, and the arrowheads as projected polygons at the height of their tip. The
+    /// tag is a billboard.
     fn write_iso_link(
         &mut self,
         depth: usize,
         route: &LinkRoute,
         link: &Link,
-        plane: f32,
+        path: &[IsoPoint],
         offset: ScreenPoint,
     ) {
         let pointer = NodePointer::root().child("links").index(route.index);
@@ -574,22 +663,31 @@ impl SvgWriter {
             ),
         );
         let arrows = ArrowEnds::from_arrow(link.arrow);
-        let mut points = route.points.clone();
-        let start_arrow = if arrows.start {
-            trim_start(&mut points)
+        let arrow_length = stencil_layout::ARROWHEAD_LENGTH_PX;
+        let mut points = path.to_vec();
+        let start_head = if arrows.start {
+            start_direction(&points)
         } else {
             None
         };
-        let end_arrow = if arrows.end {
-            trim_end(&mut points)
+        let end_head = if arrows.end {
+            end_direction(&points)
         } else {
             None
         };
-        let mut path = String::new();
+        if end_head.is_some() {
+            shorten_end(&mut points, arrow_length);
+        }
+        if start_head.is_some() {
+            points.reverse();
+            shorten_end(&mut points, arrow_length);
+            points.reverse();
+        }
+        let mut data = String::new();
         for (index, point) in points.iter().enumerate() {
             let command = if index == 0 { "M" } else { " L" };
-            let screen = project_point(point.x, point.y, plane, offset);
-            path.push_str(&format!(
+            let screen = project_point(point.x, point.y, point.z, offset);
+            data.push_str(&format!(
                 "{command} {} {}",
                 format_number(screen.x),
                 format_number(screen.y)
@@ -599,21 +697,19 @@ impl SvgWriter {
         self.line(
             depth + 1,
             &format!(
-                r#"<path d="{path}" fill="none"{} stroke-linejoin="round"/>"#,
+                r#"<path d="{data}" fill="none"{} stroke-linejoin="round"/>"#,
                 stroke_attributes(stroke)
             ),
         );
-        for (base, tip) in [start_arrow, end_arrow].into_iter().flatten() {
-            if let Some(direction) = unit_direction((base.x, base.y), (tip.x, tip.y)) {
-                self.write_arrowhead_polygon(
-                    depth + 1,
-                    (tip.x, tip.y),
-                    direction,
-                    plane,
-                    route.kind,
-                    offset,
-                );
-            }
+        for (tip, direction) in [start_head, end_head].into_iter().flatten() {
+            self.write_arrowhead_polygon(
+                depth + 1,
+                (tip.x, tip.y),
+                direction,
+                tip.z,
+                route.kind,
+                offset,
+            );
         }
         self.line(depth, "</g>");
     }
@@ -626,6 +722,7 @@ impl SvgWriter {
         billboard: &Billboard,
         geometry: &PageGeometry,
         expected: &[(NodePointer, DocumentNode<'_>)],
+        ground: Option<&str>,
     ) -> Result<(), RenderError> {
         self.line(
             depth,
@@ -652,8 +749,8 @@ impl SvgWriter {
                     node,
                     document_node,
                     billboard,
-                    delta_x,
-                    delta_y,
+                    (delta_x, delta_y),
+                    ground,
                 )?;
             }
             None => {
@@ -672,15 +769,18 @@ impl SvgWriter {
         Ok(())
     }
 
+    /// `ground` is the fill of the surface the node stands on or is; chipless runs are drawn
+    /// on a plate of it, or of the page background when there is none.
     fn write_node_billboard(
         &mut self,
         depth: usize,
         node: &NodeGeometry,
         document_node: DocumentNode<'_>,
         billboard: &Billboard,
-        delta_x: f32,
-        delta_y: f32,
+        delta: (f32, f32),
+        ground: Option<&str>,
     ) -> Result<(), RenderError> {
+        let (delta_x, delta_y) = delta;
         let context = self.part_context(document_node);
         if node.tag == NodeTag::Zone && node.kind == Some("gcp") {
             let chip = shifted_box(billboard.flat, delta_x, delta_y);
@@ -693,34 +793,37 @@ impl SvgWriter {
             .filter(|part| billboard_member(node.tag, part.name))
             .map(|part| shifted_part(part, delta_x, delta_y))
             .collect();
+        let plate = ground.unwrap_or(self.palette.page_background());
+        for part in members
+            .iter()
+            .filter(|part| part.text.is_some() && needs_plate(node, part.name))
+        {
+            let ink = member_box(part);
+            let bounds = BoxRect {
+                x: ink.x - TEXT_PLATE_PADDING_X_PX,
+                y: ink.y - TEXT_PLATE_PADDING_Y_PX,
+                width: ink.width + 2.0 * TEXT_PLATE_PADDING_X_PX,
+                height: ink.height + 2.0 * TEXT_PLATE_PADDING_Y_PX,
+            };
+            self.write_rect(depth, bounds, TEXT_PLATE_RADIUS_PX, Some(plate), None);
+        }
         for part in &members {
             self.write_part_shape(depth, node, part, context)?;
         }
-        let halo = format!(
-            r#" stroke="{}" stroke-width="{}" stroke-linejoin="round" paint-order="stroke""#,
-            self.palette.text_halo(),
-            format_number(TEXT_HALO_PX)
-        );
         for part in &members {
             if let Some(run) = &part.text {
                 let style_name = text_style_name(document_node, part.name)
                     .ok_or_else(|| part_mismatch(node, part))?;
+                // Zone names read as labels of the figure, not captions: primary ink.
+                let ink_name = if style_name == TextStyleName::ZoneLabel {
+                    TextStyleName::CardFunction
+                } else {
+                    style_name
+                };
                 let fill = self
                     .palette
-                    .text_ink(style_name, self.canvas, context.pipe_kind);
-                let attributes = if needs_halo(node, part.name) {
-                    halo.as_str()
-                } else {
-                    ""
-                };
-                self.write_text_run_with_halo(
-                    depth,
-                    &node.pointer,
-                    part.bounds,
-                    run,
-                    fill,
-                    attributes,
-                )?;
+                    .text_ink(ink_name, self.canvas, context.pipe_kind);
+                self.write_text_run(depth, &node.pointer, part.bounds, run, fill)?;
             }
         }
         Ok(())
@@ -759,7 +862,7 @@ impl SvgWriter {
 /// Billboard runs that are not drawn on a box of their own: every content run except the
 /// gcp label on its chip, a card's fact and ask in their boxes, and a Frame label on its
 /// chip. Tag runs sit on their tag box.
-fn needs_halo(node: &NodeGeometry, part: PartName) -> bool {
+fn needs_plate(node: &NodeGeometry, part: PartName) -> bool {
     match node.tag {
         NodeTag::Zone => node.kind != Some("gcp"),
         NodeTag::Pcard => matches!(part, PartName::FunctionName | PartName::ProductName),

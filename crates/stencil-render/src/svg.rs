@@ -543,7 +543,9 @@ impl SvgWriter {
             }
             PartName::Icon => {
                 let icon = context.icon.ok_or_else(|| part_mismatch(node, part))?;
-                if let Some(chip_fill) = self.palette.icon_chip() {
+                if self.palette.projection() == Projection::Iso {
+                    self.write_iso_icon_chip(depth, bounds);
+                } else if let Some(chip_fill) = self.palette.icon_chip() {
                     self.write_icon_chip(depth, bounds, chip_fill);
                 }
                 self.line(
@@ -855,15 +857,13 @@ impl SvgWriter {
     /// The rounded square under an icon, centered on the icon part. The icon part is 28 by
     /// 28 (section 2.5), so the 36 px chip reaches 4 px into the card padding on each side.
     fn write_icon_chip(&mut self, depth: usize, icon_bounds: BoxRect, fill: &str) {
-        let center_x = icon_bounds.x + icon_bounds.width / 2.0;
-        let center_y = icon_bounds.y + icon_bounds.height / 2.0;
-        let chip = BoxRect {
-            x: center_x - ICON_CHIP_SIZE_PX / 2.0,
-            y: center_y - ICON_CHIP_SIZE_PX / 2.0,
-            width: ICON_CHIP_SIZE_PX,
-            height: ICON_CHIP_SIZE_PX,
-        };
-        self.write_rect(depth, chip, ICON_CHIP_RADIUS_PX, Some(fill), None);
+        self.write_rect(
+            depth,
+            icon_chip_box(icon_bounds),
+            ICON_CHIP_RADIUS_PX,
+            Some(fill),
+            None,
+        );
     }
 
     fn write_box(&mut self, depth: usize, bounds: BoxRect, radius_px: f32, paint: BoxPaint) {
@@ -929,19 +929,6 @@ impl SvgWriter {
         run: &TextRun,
         fill: &str,
     ) -> Result<(), RenderError> {
-        self.write_text_run_with_halo(depth, pointer, bounds, run, fill, "")
-    }
-
-    /// `write_text_run` with extra attributes on every `<text>`, empty in the flat render.
-    fn write_text_run_with_halo(
-        &mut self,
-        depth: usize,
-        pointer: &NodePointer,
-        bounds: BoxRect,
-        run: &TextRun,
-        fill: &str,
-        halo: &str,
-    ) -> Result<(), RenderError> {
         let style = run.style;
         let letter_spacing_px = style.letter_spacing_em * style.size_px;
         let letter_spacing = if format_number(letter_spacing_px) == crate::NumberRepr::Integer(0) {
@@ -968,7 +955,7 @@ impl SvgWriter {
             self.line(
                 depth,
                 &format!(
-                    r#"<text x="{}" y="{}" xml:space="preserve" font-family="{}" font-size="{}" font-weight="{}"{letter_spacing} fill="{}"{halo}>{}</text>"#,
+                    r#"<text x="{}" y="{}" xml:space="preserve" font-family="{}" font-size="{}" font-weight="{}"{letter_spacing} fill="{}">{}</text>"#,
                     format_number(x),
                     format_number(y),
                     style.family.css_name(),
@@ -1052,6 +1039,18 @@ fn part_mismatch(node: &NodeGeometry, part: &Part) -> RenderError {
     RenderError::GeometryMismatch {
         expected: node.pointer.clone(),
         found: node.pointer.child(part.name.as_str()),
+    }
+}
+
+/// The 36 px square centered on an icon part.
+fn icon_chip_box(icon_bounds: BoxRect) -> BoxRect {
+    let center_x = icon_bounds.x + icon_bounds.width / 2.0;
+    let center_y = icon_bounds.y + icon_bounds.height / 2.0;
+    BoxRect {
+        x: center_x - ICON_CHIP_SIZE_PX / 2.0,
+        y: center_y - ICON_CHIP_SIZE_PX / 2.0,
+        width: ICON_CHIP_SIZE_PX,
+        height: ICON_CHIP_SIZE_PX,
     }
 }
 
