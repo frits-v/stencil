@@ -11,7 +11,7 @@ in that vocabulary; a view (`eraser.cue`) derives renderer input from it.
 | `stencil.cue` | `#Page` and the node vocabulary: `Row`, `Col`, `Zone`, `Pcard`, `Fact`, `Note`, `Pipe`, `Tee`, plus `#LegendEntry` |
 | `g7.cue` | g7, Dedicated Interconnect at 99.99%: `customer` and `internal: customer & {...}` |
 | `eraser.cue` | `#EraserG7`, the view that turns a g7-shaped page into eraser-diagrams JSON; `eraserCustomer`, `eraserInternal` |
-| `check.sh` | vet, export both views, then the negative cases |
+| `check.sh` | vet, export both views, compare the `customer` export with `examples/g7.json`, then the negative cases |
 | `out/` | exported JSON and renders |
 
 ## Vet, export, render
@@ -22,7 +22,7 @@ The pinned CUE version is 0.17.1. From the repository root:
 cue vet -c ./cue
 cue export ./cue -e eraserCustomer --out json -o cue/out/g7-eraser.json --force
 cue export ./cue -e eraserInternal --out json -o cue/out/g7-eraser-internal.json --force
-cue export ./cue -e customer --out json      # the structural form, for other renderers
+cue export ./cue -e customer --out json      # the structural form; equals examples/g7.json
 ```
 
 `-c` reports each non-concrete field by path (for example a figure with no `canvas`); without
@@ -40,9 +40,15 @@ node g7-stencil.mjs /path/to/stencil/cue/out/g7-eraser.json /path/to/stencil/cue
 It writes `g7-eraser.png`, `.html` and `.measured.json`.
 
 `./cue/check.sh` runs vet and both exports, reports the entity and connection count of each
-view, and then runs every negative case: a copy of the package with one edit to `g7.cue` that
-vet must reject with a named error. It fails if an edit does not apply, if vet passes, or if vet
-fails for a different reason. Set `CUE` to the binary path if the `cue` shim is not active.
+view, exports `customer` to `out/g7-customer.json` and compares it with `examples/g7.json`, and
+then runs every negative case: a copy of the package with one edit to `g7.cue` that vet must
+reject with a named error. The comparison normalizes key order only; any other difference
+prints a unified diff and fails. The script fails if the `cue` binary is missing, if an edit
+does not apply, if vet passes, or if vet fails for a different reason. Set `CUE` to the binary
+path if the `cue` shim is not active, for example `CUE="$(mise which cue)" ./cue/check.sh`.
+
+`examples/g7.json` is maintained by hand and is the Rust renderer's golden input. A change to
+`g7.cue` that alters the customer canvas needs the same change in `examples/g7.json`.
 
 ## What the schema enforces
 
@@ -59,14 +65,25 @@ Every rule below is a CUE constraint; `cue vet -c` fails when one is broken.
 - Region tint. `region-a` and `onprem-a` are tint a, `region-b` and `onprem-b` tint b, `blue`
   pipes tint a and `pink` pipes tint b. A tinted zone may not contain, at any depth, a pipe, tee
   arm or zone of the other tint (`_otherTintInsideZone`). A pipe that sits between two sibling
-  zones in a `Row` or `Col` may not touch a zone of the other tint
+  zones in a `Row`, `Col` or `Zone` may not touch a zone of the other tint
   (`_pipeBesideZoneOfOtherTint`). The zone colours themselves come from the zone kind in the
   renderer, so a figure cannot tint a region by hand.
 - Gutter pairing, in the g7 view. Gutter pipe p leaves card p of the left column. A blue pipe
   must leave a card in an `onprem-a` zone and lands in the `region-a` zone; pink pairs with
-  `onprem-b` and `region-b` (`_leavesCardInItsMetro`). The view also asserts one pipe per card.
+  `onprem-b` and `region-b` (`_leavesCardInItsMetro`). The gutter carries one pipe per card
+  (`_onePipePerCard`) and one half per on-prem zone (`_oneHalfPerMetro`); half i sits beside
+  left zone i and holds only that metro's pipes (`_halfBesideItsMetro`). The view checks sit
+  inside `out`, because vet evaluates only what an exported view reaches.
 - Canvas. `canvas` is `"customer"` or `"internal"` and must be concrete, so each exported
   figure has exactly one.
+- Page and container fields. `width` is optional, 640 to 2560; the renderer defaults it to
+  1280, so the export omits it unless a figure sets it. On a `Row` or `Col`, `gap` is 0 to 64,
+  `justify` is `start`, `center`, `end` or `space-between`, and `grow` carries one weight from
+  0 to 100 per child (`_growLengthMatchesChildren`).
+- Sizes, matching the Rust model in `crates/stencil-model/src/document.rs`. Every text field is
+  1 to 400 characters. A page body and the children of a `Row`, `Col` or `Zone` hold 1 to 256
+  nodes, so an empty container is rejected. Unique legend kinds bound the legend at five
+  entries, inside the Rust model's limit of 16.
 - Closed vocabulary. Tags, zone kinds, pipe kinds, note kinds and icon stems are enumerations;
   an unknown field on a node is rejected.
 
@@ -85,9 +102,12 @@ every `_workshop` label must be empty, so workshop text cannot reach the custome
 
 ```
 Row [ Col [ onprem Zones of Pcards ],
-      Col [ h Pipes, one per card, in card order ],
-      Zone gcp [ Zone vpc [ Col [ Zone, v Pipe, Zone ] ] ] ]
+      Col [ Col [ h Pipes ], Col [ h Pipes ] ],
+      Zone gcp [ Zone vpc [ Zone, v Pipe, Zone ] ] ]
 ```
+
+There is one gutter half per on-prem zone, in the same order. The halves are read in order as
+one list of pipes, one per card, in card order.
 
 Coordinates come from the parameters in `P` (column widths, zone headers, item heights, gaps)
 and from index arithmetic: a zone's height is its label, its items and its gaps; items stack

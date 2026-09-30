@@ -29,10 +29,11 @@ customer: #Page & {
 
 	body: [{
 		tag: "Row"
+		gap: 8
+		grow: [0, 0, 1]
 		children: [
 			{
 				tag: "Col"
-				gap: 20
 				children: [
 					{
 						tag:   "Zone"
@@ -55,13 +56,29 @@ customer: #Page & {
 				]
 			},
 			{
-				// One pipe per VLAN attachment, in router order.
+				// One pipe per VLAN attachment, in router order. Each half sits
+				// beside its metro, so the halves share the column height.
 				tag: "Col"
+				grow: [1, 1]
 				children: [
-					{tag: "Pipe", dir: "h", kind: "blue", label: "VLAN 1", sub: "EAD 1 · BGP"},
-					{tag: "Pipe", dir: "h", kind: "blue", label: "VLAN 2", sub: "EAD 2 · BGP"},
-					{tag: "Pipe", dir: "h", kind: "pink", label: "VLAN 3", sub: "EAD 1 · BGP"},
-					{tag: "Pipe", dir: "h", kind: "pink", label: "VLAN 4", sub: "EAD 2 · BGP"},
+					{
+						tag:     "Col"
+						gap:     12
+						justify: "center"
+						children: [
+							{tag: "Pipe", dir: "h", kind: "blue", label: "VLAN 1", sub: "EAD 1 · BGP"},
+							{tag: "Pipe", dir: "h", kind: "blue", label: "VLAN 2", sub: "EAD 2 · BGP"},
+						]
+					},
+					{
+						tag:     "Col"
+						gap:     12
+						justify: "center"
+						children: [
+							{tag: "Pipe", dir: "h", kind: "pink", label: "VLAN 3", sub: "EAD 1 · BGP"},
+							{tag: "Pipe", dir: "h", kind: "pink", label: "VLAN 4", sub: "EAD 2 · BGP"},
+						]
+					},
 				]
 			},
 			{
@@ -72,38 +89,35 @@ customer: #Page & {
 					tag:   "Zone"
 					kind:  "vpc"
 					label: "Transit VPC · one network, two regions" + _workshop.vpc
-					children: [{
-						tag: "Col"
-						children: [
-							{
-								tag:   "Zone"
-								kind:  "region-a"
-								label: "Region A" + _workshop.regionA
-								children: [
-									{tag: "Pcard", icon: "networking", fn: "Cloud Router A", pn: "private ASN · RFC 6996"},
-									{tag: "Fact", text: "BGP peering · link-local /29 · keepalive and hold from the Cloud Router BGP-timer doc"},
-								]
-							},
-							{
-								tag:   "Pipe"
-								dir:   "v"
-								kind:  "dash"
-								label: "failover · Region A ↔ Region B"
-								if _workshop.failover != "" {
-									sub: _workshop.failover
-								}
-							},
-							{
-								tag:   "Zone"
-								kind:  "region-b"
-								label: "Region B" + _workshop.regionB
-								children: [
-									{tag: "Pcard", icon: "networking", fn: "Cloud Router B", pn: "same private ASN as Region A"},
-									{tag: "Fact", text: "Advertise the Google VIP ranges named on the Private Google Access doc"},
-								]
-							},
-						]
-					}]
+					children: [
+						{
+							tag:   "Zone"
+							kind:  "region-a"
+							label: "Region A" + _workshop.regionA
+							children: [
+								{tag: "Pcard", icon: "networking", fn: "Cloud Router A", pn: "private ASN · RFC 6996"},
+								{tag: "Fact", text: "BGP peering · link-local /29 · keepalive and hold from the Cloud Router BGP-timer doc"},
+							]
+						},
+						{
+							tag:   "Pipe"
+							dir:   "v"
+							kind:  "dash"
+							label: "failover · Region A ↔ Region B"
+							if _workshop.failover != "" {
+								sub: _workshop.failover
+							}
+						},
+						{
+							tag:   "Zone"
+							kind:  "region-b"
+							label: "Region B" + _workshop.regionB
+							children: [
+								{tag: "Pcard", icon: "networking", fn: "Cloud Router B", pn: "same private ASN as Region A"},
+								{tag: "Fact", text: "Advertise the Google VIP ranges named on the Private Google Access doc"},
+							]
+						},
+					]
 				}]
 			},
 		]
