@@ -3,7 +3,9 @@
 mod common;
 
 use stencil_model::text::{TEXT_STYLES, TextMeasurer};
-use stencil_render::{DeviceScale, RenderError, format_number, render_png, render_svg};
+use stencil_render::{
+    DeviceScale, PNG_PIXELS_MAX, RenderError, format_number, render_png, render_svg,
+};
 use stencil_text::CosmicTextMeasurer;
 
 fn one_line_svg(family: &str) -> String {
@@ -89,7 +91,7 @@ fn missing_family_is_text_not_rendered() {
 fn missing_family_is_an_error_even_when_the_count_matches() {
     let error = render_png(&one_line_svg("Helvetica Neue"), 0, scale(1)).unwrap_err();
     assert!(
-        matches!(error, RenderError::TextNotRendered { count: 1 }),
+        matches!(error, RenderError::FontNotResolved { lookups: 1 }),
         "{error:?}"
     );
 }
@@ -137,9 +139,49 @@ fn a_glyph_inter_lacks_is_not_substituted() {
     let svg = r#"<svg xmlns="http://www.w3.org/2000/svg" width="200" height="40" viewBox="0 0 200 40"><text x="0" y="20" font-family="Inter" font-size="12" font-weight="400">Hello 一</text></svg>"#;
     let error = render_png(svg, 1, scale(1)).unwrap_err();
     assert!(
-        matches!(error, RenderError::TextNotRendered { .. }),
+        matches!(error, RenderError::FontNotResolved { lookups: 1 }),
         "{error:?}"
     );
+}
+
+/// 1320 x 60000 at scale 2 is 316.8 million pixels, above the 2^27 budget. The same SVG at
+/// scale 1, 79.2 million pixels, is under it, so the rejection comes from the scale.
+#[test]
+fn a_canvas_above_the_pixel_budget_is_rejected_before_allocation() {
+    let svg = r##"<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="60000" viewBox="0 0 1320 60000"><rect x="0" y="0" width="1320" height="60000" fill="#FFFFFF"/></svg>"##;
+    let error = render_png(svg, 0, scale(2)).unwrap_err();
+    assert!(
+        matches!(
+            error,
+            RenderError::PixmapAllocation {
+                width: 2640,
+                height: 120000
+            }
+        ),
+        "{error:?}"
+    );
+    const { assert!(2640 * 120_000 > PNG_PIXELS_MAX) };
+    const { assert!(1320 * 60_000 <= PNG_PIXELS_MAX) };
+}
+
+/// usvg's default string resolver reads a non-data href from disk. The SVG writer only
+/// embeds `data:` URIs, and render_png resolves nothing else.
+#[test]
+fn an_image_href_to_a_file_is_not_read() {
+    let directory =
+        std::path::Path::new(env!("CARGO_TARGET_TMPDIR")).join("stencil-render-image-href");
+    std::fs::create_dir_all(&directory).unwrap();
+    let image_path = directory.join("red.png");
+    let mut red = resvg::tiny_skia::Pixmap::new(8, 8).unwrap();
+    red.fill(resvg::tiny_skia::Color::from_rgba8(255, 0, 0, 255));
+    std::fs::write(&image_path, red.encode_png().unwrap()).unwrap();
+    let svg = format!(
+        r##"<svg xmlns="http://www.w3.org/2000/svg" width="8" height="8" viewBox="0 0 8 8"><rect x="0" y="0" width="8" height="8" fill="#FFFFFF"/><image x="0" y="0" width="8" height="8" href="{}"/></svg>"##,
+        image_path.display()
+    );
+    let png = render_png(&svg, 0, scale(1)).unwrap();
+    let pixmap = common::decode_png(&png);
+    assert!(pixmap.pixels().iter().all(common::white_pixel));
 }
 
 #[test]

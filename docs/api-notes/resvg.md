@@ -280,20 +280,36 @@ CJK codepoint appended still rendered the ASCII part and produced no
 substitution for the missing glyph), rather than picked up from another
 loaded face.
 
-### The method stencil uses: counting text nodes
+### The method stencil uses: text-node count plus a strict resolver
 
-Stencil keeps the default resolver and detects a dropped `<text>` by
-counting `usvg::Node::Text` nodes in the parsed tree (SPEC section 5.3).
-When a `<text>` element's family does not resolve, usvg 0.48 drops the
-element without an error and pushes no `Node::Text`, so a missing family
-shows up as one node fewer than the number of `<text>` elements written.
-Verified with usvg 0.48.1 on a fontdb holding only the bundled Inter
-faces: a one-line SVG naming `Inter` parsed to 1 text node, and the same
-SVG naming `Helvetica Neue` parsed to 0. The generic-family footgun above
-still applies: the count works only while no generic family is pointed at
-Inter (`set_serif_family` and its siblings are never called), because the
-Serif fallback would then resolve the missing family. The custom resolver
-in this section is an alternative stencil does not build.
+Stencil combines both signals (SPEC section 5.3). It counts
+`usvg::Node::Text` nodes in the parsed tree: when a `<text>` element's
+family does not resolve, usvg 0.48 drops the element without an error and
+pushes no `Node::Text`, so a missing family shows up as one node fewer than
+the number of `<text>` elements written. Verified with usvg 0.48.1 on a
+fontdb holding only the bundled Inter faces: a one-line SVG naming `Inter`
+parsed to 1 text node, and the same SVG naming `Helvetica Neue` parsed
+to 0.
+
+The count alone misses two cases, so stencil also installs the custom
+resolver from this section, with two differences from the sketch above:
+
+- `select_fallback` is `Box::new(|_, _, _| None)` instead of
+  `default_fallback_selector()`. Stencil loads four Inter faces, so the
+  default fallback is live: it would draw a character missing from one
+  weight in another weight's face.
+- Both closures increment one shared `AtomicUsize` instead of recording
+  family names. After the count matches, a nonzero tally fails the render
+  with `RenderError::FontNotResolved { lookups }`. The tally counts
+  resolver calls, not `<text>` elements: one span with two unresolvable
+  characters counts 2.
+
+The two cases the count misses are a span whose family does not resolve
+inside a `<text>` that still places other glyphs, and a character with no
+glyph in the selected face. Both leave the `Node::Text` in the tree.
+Neither resolver closure appends a generic family, so the
+`set_serif_family` footgun above cannot reopen the hole; stencil still never
+calls `set_serif_family` or its siblings.
 
 ## Feature flags
 
@@ -346,10 +362,11 @@ Two non-blocking constraints to carry into the design:
 - Missing-family detection must not rely on string-matching `log::warn!`
   output, because the default resolver's generic-family fallback (`Serif`
   appended to every query) can silently match a missing family if the
-  fontdb's generic-family aliases are ever pointed at a loaded font. A
-  custom `Options::font_resolver` is one fix; stencil instead counts
-  `Node::Text` nodes with the default resolver and never sets a generic
-  family (see "The method stencil uses: counting text nodes").
+  fontdb's generic-family aliases are ever pointed at a loaded font.
+  Stencil counts `Node::Text` nodes and installs a strict
+  `Options::font_resolver` that appends no generic family and returns
+  `None` from `select_fallback` (see "The method stencil uses: text-node
+  count plus a strict resolver").
 - `load_system_fonts()` cannot be structurally removed via Cargo features on
   macOS; avoiding it is an invariant to enforce in code (or via a lint/test
   on `Options` construction), not something the dependency graph can

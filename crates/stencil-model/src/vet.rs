@@ -219,7 +219,7 @@ fn check_gap_and_grow(
                 ),
             );
         }
-        for (index, &weight) in weights.iter().enumerate() {
+        for (index, &weight) in weights.iter().enumerate().take(CHILDREN_MAX + 1) {
             if weight > GROW_WEIGHT_MAX {
                 violations.push(
                     grow_pointer.index(index),

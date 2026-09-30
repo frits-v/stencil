@@ -1,0 +1,3 @@
+# Replaces semgrep's default ignore list, which skips tests/ directories.
+target/
+cue/out/

@@ -181,8 +181,7 @@ fn root_only_geometry_examines_nothing_and_fails() {
 
 /// Section 2.5 keeps the widest word as the text column's floor, so the card grows to fit
 /// the word and overflows the Row: child-inside-container reports it, and the run still fits
-/// its own part box. The section 10 bullet for this document also names text-fits-box; the
-/// min-content floor of sections 2.3 and 2.5 rules that out.
+/// its own part box, so text-fits-box does not.
 #[test]
 fn card_with_a_120_character_word_overflows_its_row() {
     let word = "w".repeat(120);
@@ -272,12 +271,12 @@ fn title_with_a_200_character_word_overflows_its_text_box() {
     let fits = text_fits_box(&geometry);
     assert_eq!(fits.defects.len(), 1, "{:?}", fits.defects);
     assert_eq!(fits.defects[0].pointer.as_str(), "/title");
-    assert!(
-        fits.defects[0]
-            .message
-            .ends_with("measured 1920.00x24.00 in box 640.00x24.00"),
-        "{}",
-        fits.defects[0].message
+    assert_eq!(
+        fits.defects[0].message,
+        format!(
+            "text {:?} measured 1920.00x24.00 in box 640.00x24.00",
+            page.title
+        )
     );
 
     let inside = child_inside_container(&geometry);

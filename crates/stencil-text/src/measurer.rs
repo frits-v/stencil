@@ -104,6 +104,17 @@ impl CosmicTextMeasurer {
                     })?;
             check_glyphs(text, style, &run, paragraph_start)?;
             let extent = line_extent(text, &run, paragraph_start)?;
+            // f32::max below skips a NaN, so each line is checked before it is kept.
+            if !extent.width_px.is_finite() || !run.line_y.is_finite() {
+                return Err(MeasureError::Backend {
+                    message: format!(
+                        "cosmic-text reported line {} with width {} and baseline {}",
+                        lines.len(),
+                        extent.width_px,
+                        run.line_y
+                    ),
+                });
+            }
             lines.push(TextLine {
                 byte_start: extent.byte_start,
                 byte_end: extent.byte_end,
@@ -123,11 +134,6 @@ impl CosmicTextMeasurer {
         let width_px = lines
             .iter()
             .fold(0.0_f32, |widest, line| widest.max(line.width_px));
-        if !width_px.is_finite() {
-            return Err(MeasureError::Backend {
-                message: format!("cosmic-text reported a non-finite line width {width_px}"),
-            });
-        }
 
         Ok(TextMetrics {
             width_px,

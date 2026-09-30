@@ -7,9 +7,11 @@ publish.workspace = true
 
 [dependencies]
 cosmic-text.workspace = true
-sha2.workspace = true
 thiserror.workspace = true
 stencil-model = { path = "../stencil-model" }
+
+[dev-dependencies]
+sha2.workspace = true
 
 [lints]
 workspace = true
