@@ -1,0 +1,135 @@
+{
+  "title": "Plain-language event triggers, evaluated over video clips",
+  "kicker": "Design one-pager · trigger evaluation service",
+  "lede": "An operator describes an event in their own words. The service turns the description into an evaluation plan, runs the plan over each new clip, and stores a verdict with the frames that support it.",
+  "foot": "The numbered links follow one request from the console to a stored verdict.",
+  "width": 1440,
+  "canvas": "internal",
+  "body": [
+    {
+      "tag": "Row",
+      "gap": 16,
+      "children": [
+        {
+          "tag": "Col",
+          "children": [
+            {
+              "tag": "Text",
+              "id": "problem",
+              "heading": "Problem",
+              "body": [
+                "Operators review long stretches of video to find a few events. Rules written as code need an engineer for every change.",
+                "Operators need to describe an event in plain language and get a verdict per clip, with the frames that support it."
+              ]
+            },
+            {
+              "tag": "Text",
+              "id": "goals",
+              "heading": "Goals",
+              "list": "numbered",
+              "body": [
+                "Accept a trigger written in plain language and show its evaluation plan before it runs.",
+                "Evaluate every new clip against each active trigger.",
+                "Store each verdict with its evidence frames and the plan version that produced it.",
+                "Let an operator replay a trigger over earlier clips."
+              ]
+            },
+            {
+              "tag": "Text",
+              "id": "non-goals",
+              "heading": "Non-goals",
+              "list": "bulleted",
+              "body": [
+                "Live stream analysis: the service works on finished clips.",
+                "Identifying people.",
+                "Training or tuning a model per customer."
+              ]
+            },
+            {
+              "tag": "Text",
+              "id": "interfaces",
+              "heading": "Interfaces",
+              "list": "bulleted",
+              "body": [
+                "Create trigger: takes the description, returns the trigger and its plan.",
+                "Replay trigger: queues an evaluation over a range of stored clips.",
+                "List verdicts: filters by trigger, clip and capture time.",
+                "Clip arrival event: carries the clip location and capture time."
+              ]
+            },
+            {
+              "tag": "Callout",
+              "id": "risk-plan-drift",
+              "kind": "risk",
+              "title": "Plan drift",
+              "text": "A model update can change how a description is read. Each verdict records the plan version, and a changed plan waits for operator approval before it runs."
+            },
+            {
+              "tag": "Callout",
+              "id": "decision-queue",
+              "kind": "decision",
+              "title": "Queue between API and worker",
+              "text": "Evaluation runs asynchronously. The API returns once the plan is queued, so a slow clip never holds an operator request open."
+            }
+          ]
+        },
+        {
+          "tag": "Col",
+          "children": [
+            { "tag": "Pcard", "id": "console", "icon": "devops", "fn": "Operator console", "pn": "web client" },
+            {
+              "tag": "Zone",
+              "id": "cloud",
+              "kind": "gcp",
+              "label": "Google Cloud",
+              "children": [
+                {
+                  "tag": "Row",
+                  "children": [
+                    { "tag": "Pcard", "id": "gateway", "icon": "networking", "fn": "Gateway", "pn": "API Gateway" },
+                    { "tag": "Pcard", "id": "api", "icon": "cloud-run", "fn": "Trigger API", "pn": "Cloud Run" }
+                  ]
+                },
+                {
+                  "tag": "Row",
+                  "children": [
+                    { "tag": "Pcard", "id": "queue", "icon": "integration", "fn": "Evaluation queue", "pn": "Pub/Sub" },
+                    { "tag": "Pcard", "id": "worker", "icon": "cloud-run", "fn": "Clip worker", "pn": "Cloud Run" }
+                  ]
+                },
+                {
+                  "tag": "Row",
+                  "children": [
+                    { "tag": "Pcard", "id": "evaluator", "icon": "vertex-ai", "fn": "Clip evaluator", "pn": "Vertex AI" },
+                    { "tag": "Pcard", "id": "database", "icon": "cloud-sql", "fn": "Verdict store", "pn": "Cloud SQL" }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "Row",
+      "gap": 16,
+      "children": [
+        { "tag": "Frame", "id": "screen-editor", "label": "Trigger editor: description, generated plan, approve", "height": 240 },
+        { "tag": "Frame", "id": "screen-review", "label": "Verdict review: clip, evidence frames, verdict", "height": 240 }
+      ]
+    }
+  ],
+  "legend": [
+    { "kind": "blue", "text": "request path, numbered in order" },
+    { "kind": "deny", "text": "blocked path" }
+  ],
+  "links": [
+    { "from": "console", "to": "gateway", "kind": "blue", "label": "1 submit trigger" },
+    { "from": "gateway", "to": "api", "kind": "blue", "label": "2 authorized call" },
+    { "from": "api", "to": "queue", "kind": "blue", "label": "3 queue plan" },
+    { "from": "queue", "to": "worker", "kind": "blue", "label": "4 deliver job" },
+    { "from": "worker", "to": "evaluator", "kind": "blue", "label": "5 evaluate clip" },
+    { "from": "worker", "to": "database", "kind": "blue", "label": "6 write verdict" },
+    { "from": "gateway", "to": "database", "kind": "deny", "label": "no direct path" }
+  ]
+}

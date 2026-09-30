@@ -39,6 +39,16 @@
       },
       "maxItems": 16
     },
+    "links": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Link"
+      },
+      "maxItems": 256
+    },
+    "theme": {
+      "$ref": "#/$defs/Theme"
+    },
     "title": {
       "type": "string",
       "maxLength": 400,
@@ -62,6 +72,24 @@
     "legend"
   ],
   "$defs": {
+    "Arrow": {
+      "type": "string",
+      "enum": [
+        "none",
+        "end",
+        "start",
+        "both"
+      ]
+    },
+    "CalloutKind": {
+      "type": "string",
+      "enum": [
+        "note",
+        "risk",
+        "decision",
+        "open"
+      ]
+    },
     "Canvas": {
       "type": "string",
       "enum": [
@@ -124,6 +152,81 @@
         "text"
       ]
     },
+    "Link": {
+      "type": "object",
+      "properties": {
+        "arrow": {
+          "$ref": "#/$defs/Arrow",
+          "default": "end"
+        },
+        "from": {
+          "type": "string"
+        },
+        "from_side": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Side"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "kind": {
+          "$ref": "#/$defs/PipeKind"
+        },
+        "label": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 400,
+          "minLength": 1
+        },
+        "sub": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 400,
+          "minLength": 1
+        },
+        "to": {
+          "type": "string"
+        },
+        "to_side": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Side"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "via": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PagePoint"
+          },
+          "maxItems": 8
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "from",
+        "to",
+        "kind"
+      ]
+    },
+    "ListKind": {
+      "type": "string",
+      "enum": [
+        "plain",
+        "numbered",
+        "bulleted"
+      ]
+    },
     "Node": {
       "oneOf": [
         {
@@ -157,6 +260,13 @@
                 "maximum": 65535,
                 "minimum": 0
               }
+            },
+            "id": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "pattern": "^[a-z0-9][a-z0-9-]{0,63}$"
             },
             "justify": {
               "anyOf": [
@@ -211,6 +321,13 @@
                 "minimum": 0
               }
             },
+            "id": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "pattern": "^[a-z0-9][a-z0-9-]{0,63}$"
+            },
             "justify": {
               "anyOf": [
                 {
@@ -242,6 +359,13 @@
               },
               "maxItems": 256,
               "minItems": 1
+            },
+            "id": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "pattern": "^[a-z0-9][a-z0-9-]{0,63}$"
             },
             "kind": {
               "$ref": "#/$defs/ZoneKind"
@@ -298,6 +422,13 @@
                 }
               ]
             },
+            "id": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "pattern": "^[a-z0-9][a-z0-9-]{0,63}$"
+            },
             "pn": {
               "type": [
                 "string",
@@ -320,6 +451,13 @@
         {
           "type": "object",
           "properties": {
+            "id": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "pattern": "^[a-z0-9][a-z0-9-]{0,63}$"
+            },
             "tag": {
               "type": "string",
               "const": "Fact"
@@ -339,6 +477,13 @@
         {
           "type": "object",
           "properties": {
+            "id": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "pattern": "^[a-z0-9][a-z0-9-]{0,63}$"
+            },
             "kind": {
               "$ref": "#/$defs/NoteKind"
             },
@@ -362,8 +507,18 @@
         {
           "type": "object",
           "properties": {
+            "arrow": {
+              "$ref": "#/$defs/Arrow"
+            },
             "dir": {
               "$ref": "#/$defs/PipeDir"
+            },
+            "id": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "pattern": "^[a-z0-9][a-z0-9-]{0,63}$"
             },
             "kind": {
               "$ref": "#/$defs/PipeKind"
@@ -410,6 +565,13 @@
               "maxLength": 400,
               "minLength": 1
             },
+            "id": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "pattern": "^[a-z0-9][a-z0-9-]{0,63}$"
+            },
             "kind": {
               "$ref": "#/$defs/PipeKind"
             },
@@ -425,6 +587,118 @@
             "hub",
             "arms"
           ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "body": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "maxItems": 64,
+              "minItems": 1
+            },
+            "heading": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 400,
+              "minLength": 1
+            },
+            "id": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "pattern": "^[a-z0-9][a-z0-9-]{0,63}$"
+            },
+            "list": {
+              "$ref": "#/$defs/ListKind",
+              "default": "plain"
+            },
+            "tag": {
+              "type": "string",
+              "const": "Text"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "tag",
+            "body"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "pattern": "^[a-z0-9][a-z0-9-]{0,63}$"
+            },
+            "kind": {
+              "$ref": "#/$defs/CalloutKind"
+            },
+            "tag": {
+              "type": "string",
+              "const": "Callout"
+            },
+            "text": {
+              "type": "string",
+              "maxLength": 400,
+              "minLength": 1
+            },
+            "title": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 400,
+              "minLength": 1
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "tag",
+            "kind",
+            "text"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "height": {
+              "type": "integer",
+              "format": "uint16",
+              "default": 200,
+              "maximum": 1200,
+              "minimum": 40
+            },
+            "id": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "pattern": "^[a-z0-9][a-z0-9-]{0,63}$"
+            },
+            "label": {
+              "type": "string",
+              "maxLength": 400,
+              "minLength": 1
+            },
+            "tag": {
+              "type": "string",
+              "const": "Frame"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "tag",
+            "label"
+          ]
         }
       ]
     },
@@ -436,6 +710,24 @@
         "lede",
         "legend",
         "foot"
+      ]
+    },
+    "PagePoint": {
+      "type": "object",
+      "properties": {
+        "x": {
+          "type": "number",
+          "format": "float"
+        },
+        "y": {
+          "type": "number",
+          "format": "float"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y"
       ]
     },
     "PipeDir": {
@@ -455,14 +747,33 @@
         "deny"
       ]
     },
+    "Side": {
+      "type": "string",
+      "enum": [
+        "top",
+        "right",
+        "bottom",
+        "left"
+      ]
+    },
     "TeeArm": {
       "description": "A Tee arm is written with `\"tag\": \"Pipe\"`, the same object shape as a Pipe node.",
       "oneOf": [
         {
           "type": "object",
           "properties": {
+            "arrow": {
+              "$ref": "#/$defs/Arrow"
+            },
             "dir": {
               "$ref": "#/$defs/PipeDir"
+            },
+            "id": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "pattern": "^[a-z0-9][a-z0-9-]{0,63}$"
             },
             "kind": {
               "$ref": "#/$defs/PipeKind"
@@ -493,6 +804,14 @@
             "label"
           ]
         }
+      ]
+    },
+    "Theme": {
+      "type": "string",
+      "enum": [
+        "center",
+        "dusk",
+        "wire"
       ]
     },
     "ZoneKind": {

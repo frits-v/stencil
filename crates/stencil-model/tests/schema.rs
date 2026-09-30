@@ -100,3 +100,79 @@ fn tee_arm_tagged_zone_fails() {
     ] });
     assert!(!validator().is_valid(&document));
 }
+
+fn page_with_blocks() -> serde_json::Value {
+    serde_json::json!({
+        "title": "t", "kicker": "k", "lede": "l", "canvas": "internal", "theme": "dusk",
+        "legend": [ { "kind": "blue", "text": "b" } ],
+        "body": [
+            { "tag": "Text", "id": "goals", "heading": "Goals", "body": ["a", "b"], "list": "numbered" },
+            { "tag": "Callout", "id": "risk", "kind": "risk", "title": "Risk", "text": "c" },
+            { "tag": "Frame", "label": "Screen", "height": 240 },
+            { "tag": "Pipe", "id": "hop", "dir": "h", "kind": "blue", "label": "p", "arrow": "end" }
+        ],
+        "links": [ {
+            "from": "goals", "to": "risk", "kind": "blue", "label": "1", "sub": "s",
+            "arrow": "both", "from_side": "bottom", "to_side": "top",
+            "via": [ { "x": 10, "y": 20.5 } ]
+        } ]
+    })
+}
+
+#[test]
+fn section_11_fields_and_tags_validate() {
+    let errors: Vec<String> = validator()
+        .iter_errors(&page_with_blocks())
+        .map(|error| error.to_string())
+        .collect();
+    assert_eq!(errors, Vec::<String>::new());
+}
+
+#[test]
+fn malformed_id_fails_schema_validation() {
+    for id in ["Goals", "-goals", "", "goals_1"] {
+        let mut document = page_with_blocks();
+        document["body"][0]["id"] = serde_json::json!(id);
+        assert!(!validator().is_valid(&document), "{id:?}");
+    }
+    let mut document = page_with_blocks();
+    document["body"][0]["id"] = serde_json::json!(format!("a{}", "-".repeat(63)));
+    assert!(validator().is_valid(&document));
+    document["body"][0]["id"] = serde_json::json!(format!("a{}", "-".repeat(64)));
+    assert!(!validator().is_valid(&document));
+}
+
+#[test]
+fn section_11_limits_and_enums_fail_schema_validation() {
+    let edits: [(&str, serde_json::Value); 7] = [
+        ("/theme", serde_json::json!("night")),
+        ("/body/0/list", serde_json::json!("lettered")),
+        ("/body/0/body", serde_json::json!([])),
+        ("/body/1/kind", serde_json::json!("warning")),
+        ("/body/2/height", serde_json::json!(39)),
+        ("/body/3/arrow", serde_json::json!("tail")),
+        ("/links/0/to_side", serde_json::json!("north")),
+    ];
+    for (pointer, value) in edits {
+        let mut document = page_with_blocks();
+        *document.pointer_mut(pointer).unwrap() = value;
+        assert!(!validator().is_valid(&document), "{pointer}");
+    }
+    let mut document = page_with_blocks();
+    document["links"][0]["via"] = serde_json::json!(vec![serde_json::json!({ "x": 1, "y": 1 }); 9]);
+    assert!(!validator().is_valid(&document));
+    let mut document = page_with_blocks();
+    document["body"][0]["body"] = serde_json::json!(vec!["line"; 65]);
+    assert!(!validator().is_valid(&document));
+}
+
+#[test]
+fn onepager_validates() {
+    let onepager: serde_json::Value =
+        serde_json::from_str(include_str!("../../../examples/onepager.json")).unwrap();
+    let errors: Vec<String> = validator()
+        .iter_errors(&onepager)
+        .map(|error| error.to_string())
+        .collect();
+    assert_eq!(errors, Vec::<String>::new());
+}

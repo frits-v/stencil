@@ -8,10 +8,10 @@ in that vocabulary; a view (`eraser.cue`) derives renderer input from it.
 
 | File | Contents |
 |---|---|
-| `stencil.cue` | `#Page` and the node vocabulary: `Row`, `Col`, `Zone`, `Pcard`, `Fact`, `Note`, `Pipe`, `Tee`, plus `#LegendEntry` |
+| `stencil.cue` | `#Page` and the node vocabulary: `Row`, `Col`, `Zone`, `Pcard`, `Fact`, `Note`, `Pipe`, `Tee`, `Text`, `Callout`, `Frame`, plus `#LegendEntry` and `#Link` |
 | `g7.cue` | g7, Dedicated Interconnect at 99.99%: `customer` and `internal: customer & {...}` |
 | `eraser.cue` | `#EraserG7`, the view that turns a g7-shaped page into eraser-diagrams JSON; `eraserCustomer`, `eraserInternal` |
-| `check.sh` | vet, export both views, compare the `customer` export with `examples/g7.json`, then the negative cases |
+| `check.sh` | vet, export both views, compare the `customer` export with `examples/g7.json`, vet `examples/onepager.json` against `#Page`, then the negative cases |
 | `out/` | exported JSON and renders |
 
 ## Vet, export, render
@@ -40,8 +40,9 @@ node g7-stencil.mjs /path/to/stencil/cue/out/g7-eraser.json /path/to/stencil/cue
 It writes `g7-eraser.png`, `.html` and `.measured.json`.
 
 `./cue/check.sh` runs vet and both exports, reports the entity and connection count of each
-view, exports `customer` to `out/g7-customer.json` and compares it with `examples/g7.json`, and
-then runs every negative case: a copy of the package with one edit to `g7.cue` that vet must
+view, exports `customer` to `out/g7-customer.json` and compares it with `examples/g7.json`,
+vets `examples/onepager.json` against `#Page` (`cue vet -c -d '#Page' . ../examples/onepager.json`),
+and then runs every negative case: a copy of the package with one edit to `g7.cue` that vet must
 reject with a named error. The comparison normalizes key order only; any other difference
 prints a unified diff and fails. The script fails if the `cue` binary is missing, if an edit
 does not apply, if vet passes, or if vet fails for a different reason. Set `CUE` to the binary
@@ -60,8 +61,15 @@ Every rule below is a CUE constraint; `cue vet -c` fails when one is broken.
   rule covers every card, which includes the cards on hops and in regions. It is checked at
   the page (`_pcardsWithoutPnFactOrAsk`), keyed by the card's `fn`.
 - Legend consistency. The set of pipe kinds used anywhere in the body, including tee spines and
-  arms, equals the set of legend kinds. `_pipeKindsMissingFromLegend.<kind>` and
+  arms, together with the kinds of the page's links, equals the set of legend kinds.
+  `_pipeKindsMissingFromLegend.<kind>`, `_linkKindsMissingFromLegend.<kind>` and
   `_legendKindsUnusedInBody.<kind>` name the offender. Legend kinds are unique.
+- Ids and links. Every node, tee arms included, may carry an `id` matching
+  `^[a-z0-9][a-z0-9-]{0,63}$`, and ids are unique across the page (`_idsUsedTwice.<id>`). A
+  link's `from` and `to` name node ids (`_linkEndpointsUnknown.<id>`) and differ
+  (`_linkToItself.<id>`). A page holds at most 256 links and a link at most 8 `via` points.
+  Each point has x from 0 to the canvas width (`_viaOutsidePage`) and y of 0 or more; the
+  canvas height is known only after layout.
 - Region tint. `region-a` and `onprem-a` are tint a, `region-b` and `onprem-b` tint b, `blue`
   pipes tint a and `pink` pipes tint b. A tinted zone may not contain, at any depth, a pipe, tee
   arm or zone of the other tint (`_otherTintInsideZone`). A pipe that sits between two sibling
@@ -82,10 +90,12 @@ Every rule below is a CUE constraint; `cue vet -c` fails when one is broken.
   0 to 100 per child (`_growLengthMatchesChildren`).
 - Sizes, matching the Rust model in `crates/stencil-model/src/document.rs`. Every text field is
   1 to 400 characters. A page body and the children of a `Row`, `Col` or `Zone` hold 1 to 256
-  nodes, so an empty container is rejected. Unique legend kinds bound the legend at five
-  entries, inside the Rust model's limit of 16.
-- Closed vocabulary. Tags, zone kinds, pipe kinds, note kinds and icon stems are enumerations;
-  an unknown field on a node is rejected.
+  nodes, so an empty container is rejected. A `Text` block holds 1 to 64 body lines, and a
+  `Frame` height is 40 to 1200. Unique legend kinds bound the legend at five entries, inside
+  the Rust model's limit of 16.
+- Closed vocabulary. Tags, zone kinds, pipe kinds, note kinds, icon stems, themes, arrows,
+  link sides, list kinds and callout kinds are enumerations; an unknown field on a node is
+  rejected.
 
 ## Two canvases
 

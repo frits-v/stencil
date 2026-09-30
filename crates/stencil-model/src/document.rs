@@ -12,9 +12,53 @@ pub const CHILDREN_MAX: usize = 256;
 pub const LEGEND_ENTRIES_MAX: usize = 16;
 pub const DEPTH_MAX: usize = 24;
 pub const NODES_MAX: usize = 4096;
+pub const LINKS_MAX: usize = 256;
+pub const LINK_VIA_MAX: usize = 8;
+pub const LINK_SEGMENTS_MAX: usize = 12;
+pub const ROUTER_GRID_LINES_MAX: usize = 512;
+pub const TEXT_BODY_LINES_MAX: usize = 64;
+pub const FRAME_HEIGHT_DEFAULT: u16 = 200;
+pub const FRAME_HEIGHT_MIN: u16 = 40;
+pub const FRAME_HEIGHT_MAX: u16 = 1200;
+/// Scalar values in an `id`, the `{0,63}` repetition plus the first character.
+pub const ID_SCALARS_MAX: usize = 64;
+/// The JSON Schema and CUE pattern for `id`. `is_valid_id` is its Rust twin.
+pub const ID_PATTERN: &str = r"^[a-z0-9][a-z0-9-]{0,63}$";
 
 fn page_width_default() -> u32 {
     PAGE_WIDTH_DEFAULT
+}
+
+fn frame_height_default() -> u16 {
+    FRAME_HEIGHT_DEFAULT
+}
+
+fn pipe_arrow_default() -> Arrow {
+    Arrow::None
+}
+
+fn is_pipe_arrow_default(arrow: &Arrow) -> bool {
+    *arrow == Arrow::None
+}
+
+fn is_default_theme(theme: &Theme) -> bool {
+    *theme == Theme::Center
+}
+
+/// True when `id` matches ID_PATTERN: 1 to 64 characters, lowercase ASCII letters, digits
+/// and `-`, not starting with `-`.
+pub fn is_valid_id(id: &str) -> bool {
+    let mut characters = id.chars();
+    let Some(first) = characters.next() else {
+        return false;
+    };
+    let is_id_character = |character: char| {
+        character.is_ascii_lowercase() || character.is_ascii_digit() || character == '-'
+    };
+    first != '-'
+        && is_id_character(first)
+        && id.len() <= ID_SCALARS_MAX
+        && characters.all(is_id_character)
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
@@ -33,10 +77,15 @@ pub struct Page {
     #[schemars(range(min = 640, max = 2560))]
     pub width: u32,
     pub canvas: Canvas,
+    #[serde(default, skip_serializing_if = "is_default_theme")]
+    pub theme: Theme,
     #[schemars(length(min = 1, max = 256))]
     pub body: Vec<Node>,
     #[schemars(length(max = 16))]
     pub legend: Vec<LegendEntry>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[schemars(length(max = 256))]
+    pub links: Vec<Link>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
@@ -44,6 +93,15 @@ pub struct Page {
 pub enum Canvas {
     Customer,
     Internal,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema, Default)]
+#[serde(rename_all = "lowercase")]
+pub enum Theme {
+    #[default]
+    Center,
+    Dusk,
+    Wire,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
@@ -65,6 +123,9 @@ pub enum Node {
     Note(Note),
     Pipe(Pipe),
     Tee(Tee),
+    Text(Text),
+    Callout(Callout),
+    Frame(Frame),
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
@@ -80,6 +141,9 @@ pub enum Justify {
 #[serde(deny_unknown_fields)]
 pub struct Row {
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(regex(pattern = ID_PATTERN))]
+    pub id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     #[schemars(range(max = 64))]
     pub gap: Option<u16>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -93,6 +157,9 @@ pub struct Row {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct Col {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(regex(pattern = ID_PATTERN))]
+    pub id: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[schemars(range(max = 64))]
     pub gap: Option<u16>,
@@ -123,6 +190,9 @@ pub enum ZoneKind {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct Zone {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(regex(pattern = ID_PATTERN))]
+    pub id: Option<String>,
     pub kind: ZoneKind,
     #[schemars(length(min = 1, max = 400))]
     pub label: String,
@@ -133,6 +203,9 @@ pub struct Zone {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct Pcard {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(regex(pattern = ID_PATTERN))]
+    pub id: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub icon: Option<IconName>,
     #[serde(rename = "fn")]
@@ -152,6 +225,9 @@ pub struct Pcard {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct Fact {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(regex(pattern = ID_PATTERN))]
+    pub id: Option<String>,
     #[schemars(length(min = 1, max = 400))]
     pub text: String,
 }
@@ -169,6 +245,9 @@ pub enum NoteKind {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct Note {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(regex(pattern = ID_PATTERN))]
+    pub id: Option<String>,
     pub kind: NoteKind,
     #[schemars(length(min = 1, max = 400))]
     pub text: String,
@@ -197,6 +276,9 @@ pub enum PipeKind {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct Pipe {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(regex(pattern = ID_PATTERN))]
+    pub id: Option<String>,
     pub dir: PipeDir,
     pub kind: PipeKind,
     #[schemars(length(min = 1, max = 400))]
@@ -204,6 +286,11 @@ pub struct Pipe {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[schemars(length(min = 1, max = 400))]
     pub sub: Option<String>,
+    #[serde(
+        default = "pipe_arrow_default",
+        skip_serializing_if = "is_pipe_arrow_default"
+    )]
+    pub arrow: Arrow,
 }
 
 /// A Tee arm is written with `"tag": "Pipe"`, the same object shape as a Pipe node.
@@ -216,10 +303,122 @@ pub enum TeeArm {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct Tee {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(regex(pattern = ID_PATTERN))]
+    pub id: Option<String>,
     pub kind: PipeKind,
     #[schemars(length(min = 1, max = 400))]
     pub hub: String,
     pub arms: [TeeArm; 2],
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct Text {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(regex(pattern = ID_PATTERN))]
+    pub id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(length(min = 1, max = 400))]
+    pub heading: Option<String>,
+    #[schemars(length(min = 1, max = 64))]
+    pub body: Vec<String>,
+    #[serde(default)]
+    pub list: ListKind,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema, Default)]
+#[serde(rename_all = "lowercase")]
+pub enum ListKind {
+    #[default]
+    Plain,
+    Numbered,
+    Bulleted,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct Callout {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(regex(pattern = ID_PATTERN))]
+    pub id: Option<String>,
+    pub kind: CalloutKind,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(length(min = 1, max = 400))]
+    pub title: Option<String>,
+    #[schemars(length(min = 1, max = 400))]
+    pub text: String,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "lowercase")]
+pub enum CalloutKind {
+    Note,
+    Risk,
+    Decision,
+    Open,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct Frame {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(regex(pattern = ID_PATTERN))]
+    pub id: Option<String>,
+    #[schemars(length(min = 1, max = 400))]
+    pub label: String,
+    #[serde(default = "frame_height_default")]
+    #[schemars(range(min = 40, max = 1200))]
+    pub height: u16,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct Link {
+    pub from: String,
+    pub to: String,
+    pub kind: PipeKind,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(length(min = 1, max = 400))]
+    pub label: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(length(min = 1, max = 400))]
+    pub sub: Option<String>,
+    #[serde(default)]
+    pub arrow: Arrow,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub from_side: Option<Side>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub to_side: Option<Side>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[schemars(length(max = 8))]
+    pub via: Vec<PagePoint>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema, Default)]
+#[serde(rename_all = "lowercase")]
+pub enum Arrow {
+    None,
+    #[default]
+    End,
+    Start,
+    Both,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "lowercase")]
+pub enum Side {
+    Top,
+    Right,
+    Bottom,
+    Left,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct PagePoint {
+    pub x: f32,
+    pub y: f32,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
@@ -262,7 +461,28 @@ impl Node {
             Node::Note(_) => "Note",
             Node::Pipe(_) => "Pipe",
             Node::Tee(_) => "Tee",
+            Node::Text(_) => "Text",
+            Node::Callout(_) => "Callout",
+            Node::Frame(_) => "Frame",
         }
+    }
+
+    /// The node's `id`, when it has one.
+    pub fn id(&self) -> Option<&str> {
+        let id = match self {
+            Node::Row(row) => &row.id,
+            Node::Col(col) => &col.id,
+            Node::Zone(zone) => &zone.id,
+            Node::Pcard(pcard) => &pcard.id,
+            Node::Fact(fact) => &fact.id,
+            Node::Note(note) => &note.id,
+            Node::Pipe(pipe) => &pipe.id,
+            Node::Tee(tee) => &tee.id,
+            Node::Text(text) => &text.id,
+            Node::Callout(callout) => &callout.id,
+            Node::Frame(frame) => &frame.id,
+        };
+        id.as_deref()
     }
 }
 

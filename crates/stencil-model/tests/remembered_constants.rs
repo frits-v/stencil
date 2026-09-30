@@ -7,8 +7,8 @@ mod common;
 use common::{g7_page, legend_entry, page_with_body, pipe_value};
 use stencil_model::checks::{CheckName, REMEMBERED_CONSTANTS, remembered_constants};
 use stencil_model::{
-    Node, Note, NoteKind, Page, Pcard, Pipe, PipeDir, PipeKind, Tee, TeeArm, Zone, ZoneKind,
-    text_fields,
+    Arrow, Callout, CalloutKind, Frame, Link, ListKind, Node, Note, NoteKind, Page, Pcard, Pipe,
+    PipeDir, PipeKind, Tee, TeeArm, Text, Zone, ZoneKind, text_fields,
 };
 
 const FILLER: &str = "x";
@@ -24,9 +24,11 @@ fn page_with_field(field: &str, text: &str) -> (Page, &'static str) {
     };
     let mut page = page_with_body(vec![
         Node::Zone(Zone {
+            id: None,
             kind: ZoneKind::RegionA,
             label: pick("zone label"),
             children: vec![Node::Pcard(Pcard {
+                id: None,
                 icon: None,
                 function_name: pick("fn"),
                 product_name: Some(pick("pn")),
@@ -35,16 +37,20 @@ fn page_with_field(field: &str, text: &str) -> (Page, &'static str) {
             })],
         }),
         Node::Note(Note {
+            id: None,
             kind: NoteKind::Lede,
             text: pick("note"),
         }),
         Node::Pipe(Pipe {
+            id: None,
+            arrow: stencil_model::Arrow::None,
             dir: PipeDir::Horizontal,
             kind: PipeKind::Blue,
             label: pick("pipe label"),
             sub: Some(pick("sub")),
         }),
         Node::Tee(Tee {
+            id: None,
             kind: PipeKind::Blue,
             hub: pick("hub"),
             arms: [
@@ -52,11 +58,39 @@ fn page_with_field(field: &str, text: &str) -> (Page, &'static str) {
                 TeeArm::Pipe(pipe_value(PipeDir::Horizontal, PipeKind::Blue, FILLER)),
             ],
         }),
+        Node::Text(Text {
+            id: Some("text".to_string()),
+            heading: Some(pick("heading")),
+            body: vec![FILLER.to_string(), pick("body line")],
+            list: ListKind::Numbered,
+        }),
+        Node::Callout(Callout {
+            id: None,
+            kind: CalloutKind::Risk,
+            title: Some(pick("callout title")),
+            text: pick("callout text"),
+        }),
+        Node::Frame(Frame {
+            id: Some("frame".to_string()),
+            label: pick("frame label"),
+            height: 200,
+        }),
     ]);
     page.title = pick("title");
     page.lede = pick("lede");
     page.foot = Some(pick("foot"));
     page.legend = vec![legend_entry(PipeKind::Blue, &pick("legend text"))];
+    page.links = vec![Link {
+        from: "text".to_string(),
+        to: "frame".to_string(),
+        kind: PipeKind::Blue,
+        label: Some(pick("link label")),
+        sub: Some(pick("link sub")),
+        arrow: Arrow::End,
+        from_side: None,
+        to_side: None,
+        via: Vec::new(),
+    }];
     let pointer = match field {
         "title" => "/title",
         "lede" => "/lede",
@@ -71,12 +105,19 @@ fn page_with_field(field: &str, text: &str) -> (Page, &'static str) {
         "pipe label" => "/body/2/label",
         "sub" => "/body/2/sub",
         "hub" => "/body/3/hub",
+        "heading" => "/body/4/heading",
+        "body line" => "/body/4/body/1",
+        "callout title" => "/body/5/title",
+        "callout text" => "/body/5/text",
+        "frame label" => "/body/6/label",
+        "link label" => "/links/0/label",
+        "link sub" => "/links/0/sub",
         _ => panic!("unknown field {field}"),
     };
     (page, pointer)
 }
 
-const FIELD_KINDS: [&str; 13] = [
+const FIELD_KINDS: [&str; 20] = [
     "title",
     "lede",
     "foot",
@@ -90,6 +131,13 @@ const FIELD_KINDS: [&str; 13] = [
     "pipe label",
     "sub",
     "hub",
+    "heading",
+    "body line",
+    "callout title",
+    "callout text",
+    "frame label",
+    "link label",
+    "link sub",
 ];
 
 #[test]

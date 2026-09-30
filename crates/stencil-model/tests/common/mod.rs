@@ -1,8 +1,8 @@
 #![allow(dead_code, clippy::expect_used)]
 
 use stencil_model::{
-    Canvas, Col, Fact, LegendEntry, Node, Page, Pcard, Pipe, PipeDir, PipeKind, Row, Tee, TeeArm,
-    Zone, ZoneKind,
+    Arrow, Callout, CalloutKind, Canvas, Col, FRAME_HEIGHT_DEFAULT, Fact, Frame, LegendEntry, Link,
+    ListKind, Node, Page, Pcard, Pipe, PipeDir, PipeKind, Row, Tee, TeeArm, Text, Zone, ZoneKind,
 };
 
 pub const G7_JSON: &str = include_str!("../../../../examples/g7.json");
@@ -17,6 +17,7 @@ pub fn g7_page() -> Page {
 
 pub fn pcard(function_name: &str) -> Node {
     Node::Pcard(Pcard {
+        id: None,
         icon: None,
         function_name: function_name.to_string(),
         product_name: None,
@@ -27,12 +28,15 @@ pub fn pcard(function_name: &str) -> Node {
 
 pub fn fact(text: &str) -> Node {
     Node::Fact(Fact {
+        id: None,
         text: text.to_string(),
     })
 }
 
 pub fn pipe_value(dir: PipeDir, kind: PipeKind, label: &str) -> Pipe {
     Pipe {
+        id: None,
+        arrow: stencil_model::Arrow::None,
         dir,
         kind,
         label: label.to_string(),
@@ -46,6 +50,7 @@ pub fn pipe(kind: PipeKind, label: &str) -> Node {
 
 pub fn tee(kind: PipeKind, first_arm: Pipe, second_arm: Pipe) -> Node {
     Node::Tee(Tee {
+        id: None,
         kind,
         hub: "hub".to_string(),
         arms: [TeeArm::Pipe(first_arm), TeeArm::Pipe(second_arm)],
@@ -54,6 +59,7 @@ pub fn tee(kind: PipeKind, first_arm: Pipe, second_arm: Pipe) -> Node {
 
 pub fn row(children: Vec<Node>) -> Node {
     Node::Row(Row {
+        id: None,
         gap: None,
         grow: None,
         justify: None,
@@ -63,6 +69,7 @@ pub fn row(children: Vec<Node>) -> Node {
 
 pub fn col(children: Vec<Node>) -> Node {
     Node::Col(Col {
+        id: None,
         gap: None,
         grow: None,
         justify: None,
@@ -72,6 +79,7 @@ pub fn col(children: Vec<Node>) -> Node {
 
 pub fn zone(kind: ZoneKind, label: &str, children: Vec<Node>) -> Node {
     Node::Zone(Zone {
+        id: None,
         kind,
         label: label.to_string(),
         children,
@@ -94,8 +102,10 @@ pub fn page_with_body(body: Vec<Node>) -> Page {
         foot: None,
         width: 1280,
         canvas: Canvas::Customer,
+        theme: stencil_model::Theme::Center,
         body,
         legend: vec![legend_entry(PipeKind::Blue, "request path")],
+        links: Vec::new(),
     }
 }
 
@@ -106,4 +116,68 @@ pub fn nested_cols(levels: usize) -> Node {
         node = col(vec![node]);
     }
     node
+}
+
+/// A Pcard carrying `id`.
+pub fn pcard_with_id(id: &str, function_name: &str) -> Node {
+    Node::Pcard(Pcard {
+        id: Some(id.to_string()),
+        icon: None,
+        function_name: function_name.to_string(),
+        product_name: None,
+        fact: None,
+        ask: None,
+    })
+}
+
+pub fn text_block(heading: Option<&str>, lines: &[&str], list: ListKind) -> Node {
+    Node::Text(Text {
+        id: None,
+        heading: heading.map(str::to_string),
+        body: lines.iter().map(|line| line.to_string()).collect(),
+        list,
+    })
+}
+
+pub fn callout(kind: CalloutKind, title: Option<&str>, text: &str) -> Node {
+    Node::Callout(Callout {
+        id: None,
+        kind,
+        title: title.map(str::to_string),
+        text: text.to_string(),
+    })
+}
+
+pub fn frame(label: &str) -> Node {
+    Node::Frame(Frame {
+        id: None,
+        label: label.to_string(),
+        height: FRAME_HEIGHT_DEFAULT,
+    })
+}
+
+/// A blue link with no label, sides or via points.
+pub fn link(from: &str, to: &str) -> Link {
+    Link {
+        from: from.to_string(),
+        to: to.to_string(),
+        kind: PipeKind::Blue,
+        label: None,
+        sub: None,
+        arrow: Arrow::End,
+        from_side: None,
+        to_side: None,
+        via: Vec::new(),
+    }
+}
+
+/// A valid page of two cards with ids `api` and `worker`, one blue link between them and a
+/// legend entry for blue, so every section 11.2 rule starts from zero violations.
+pub fn page_with_link() -> Page {
+    let mut page = page_with_body(vec![
+        pcard_with_id("api", "API"),
+        pcard_with_id("worker", "Worker"),
+    ]);
+    page.links = vec![link("api", "worker")];
+    page
 }
