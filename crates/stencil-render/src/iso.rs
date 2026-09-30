@@ -10,6 +10,7 @@ use stencil_model::pointer::NodePointer;
 use stencil_model::{LINKS_MAX, NODES_MAX};
 
 use crate::RenderError;
+use crate::svg::DOT_RADIUS_PX;
 
 /// Slab thickness of a Zone, and the rise of each nested Zone over its parent.
 pub const ISO_SLAB_THICKNESS_PX: f32 = 6.0;
@@ -25,8 +26,7 @@ pub const ISO_MARGIN_PX: f32 = 20.0;
 /// (section 12.2, rule 6).
 pub const ISO_DOT_RADIUS_X_PX: f32 = 4.898_979_5;
 pub const ISO_DOT_RADIUS_Y_PX: f32 = 2.828_427;
-/// Flat radius of a pipe end dot and half the width of an arrowhead (sections 5.2, 11.2).
-const DOT_RADIUS_PX: f32 = 4.0;
+/// Arrowhead length and half width, shared with the flat writer (section 11.2).
 const ARROWHEAD_LENGTH_PX: f32 = stencil_layout::ARROWHEAD_LENGTH_PX;
 const ARROWHEAD_HALF_WIDTH_PX: f32 = stencil_layout::ARROWHEAD_WIDTH_PX / 2.0;
 /// The gcp label chip grows the Label run box by the bar padding (section 12.4).
@@ -355,15 +355,28 @@ fn billboard_placement(
     }
 }
 
-/// The plane of a link: the slab top of the innermost Zone that strictly contains both
-/// endpoints, or the ground.
+/// The plane of a link: the slab top of the innermost Zone that contains both endpoints, or
+/// the ground. An endpoint that is itself a Zone contains itself, so a link from a zone to
+/// one of its own descendants lies on that zone's top.
 fn link_plane(geometry: &PageGeometry, facts: &NodeFacts, from: usize, to: usize) -> f32 {
-    let from_zones = zone_ancestors(geometry, from);
-    zone_ancestors(geometry, to)
+    let from_zones = containing_zones(geometry, from);
+    containing_zones(geometry, to)
         .into_iter()
         .find(|zone| from_zones.contains(zone))
         .and_then(|zone| facts.zone_depth.get(zone))
         .map_or(0.0, |depth| ISO_SLAB_THICKNESS_PX * (*depth + 1) as f32)
+}
+
+/// The Zones that contain a node, innermost first: the node itself when it is a Zone, then
+/// its strict Zone ancestors.
+fn containing_zones(geometry: &PageGeometry, index: usize) -> Vec<usize> {
+    let is_zone = geometry
+        .nodes
+        .get(index)
+        .is_some_and(|node| node.tag == NodeTag::Zone);
+    let mut zones = if is_zone { vec![index] } else { Vec::new() };
+    zones.extend(zone_ancestors(geometry, index));
+    zones
 }
 
 /// Strict Zone ancestors of a node, innermost first. Parents precede children, so the walk
@@ -470,9 +483,10 @@ pub(crate) fn unit_direction(from: (f32, f32), to: (f32, f32)) -> Option<(f32, f
 }
 
 /// Adds a pipe's or tee's surface primitives. The geometry does not record which ends carry
-/// an arrowhead, so both the dot and the arrowhead extent of each end are added; an
-/// arrowhead lies within 10 px of a pipe end, which the wire and slab already bound in
-/// every figure where a pipe sits between two boxes.
+/// an arrowhead, so both the dot and the arrowhead extent of each end are added. The extra
+/// vertices do not move the extent: an arrowhead on a pipe end lies inside the pipe's own
+/// box, and that box lies inside a zone top face or the body at z=0, whose vertices are
+/// already in the extent.
 fn add_surface_extent(extent: &mut Extent, node: &NodeGeometry, z: f32) {
     let dots = (node.part(PartName::DotStart), node.part(PartName::DotEnd));
     if let (Some(start), Some(end)) = dots {
@@ -597,7 +611,9 @@ pub fn project_page(geometry: &PageGeometry) -> Result<IsoScene, RenderError> {
         for point in &route.points {
             extent.add(project_point(point.x, point.y, plane, ZERO_OFFSET));
         }
-        // LinkRoute does not carry the arrow value, so both ends get an arrowhead extent.
+        // LinkRoute does not carry the arrow value, so both ends get an arrowhead extent. The
+        // extra vertices do not move the extent: they stay inside the endpoint box or the gap
+        // beside it, which lies inside the plane's zone top face or the body at z=0.
         let first_two = (route.points.first(), route.points.get(1));
         let last_two = (
             route.points.last(),
@@ -740,6 +756,10 @@ pub fn iso_labels_clear(scene: Option<&IsoScene>) -> CheckReport {
         return CheckReport::not_applicable(CheckName::IsoLabelsClear, "projection is flat");
     };
     let billboard_limit = NODES_MAX + LINKS_MAX;
+    debug_assert!(
+        scene.billboards.len() <= billboard_limit,
+        "iso-labels-clear would drop billboards past {billboard_limit}"
+    );
     let billboards: Vec<&Billboard> = scene.billboards.iter().take(billboard_limit).collect();
     let blocks: Vec<&Solid> = scene
         .solids
@@ -747,6 +767,15 @@ pub fn iso_labels_clear(scene: Option<&IsoScene>) -> CheckReport {
         .filter(|solid| solid.shape == SolidShape::Block)
         .take(NODES_MAX)
         .collect();
+    debug_assert!(
+        scene
+            .solids
+            .iter()
+            .filter(|solid| solid.shape == SolidShape::Block)
+            .count()
+            <= NODES_MAX,
+        "iso-labels-clear would drop blocks past {NODES_MAX}"
+    );
     let mut examined: u64 = 0;
     let mut defects = Vec::new();
     for (later_index, later) in billboards.iter().enumerate() {

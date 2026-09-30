@@ -19,7 +19,8 @@ use crate::palette::{self, BoxPaint, DotStyle, LineStyle, Palette, Stroke};
 use crate::{RenderError, SvgDocument, format_number};
 
 const SVG_NAMESPACE: &str = "http://www.w3.org/2000/svg";
-const DOT_RADIUS_PX: f32 = 4.0;
+/// Flat radius of a pipe end dot; an arrowhead's tip sits this far out from the dot center.
+pub(crate) const DOT_RADIUS_PX: f32 = 4.0;
 const BADGE_RADIUS_PX: f32 = 4.0;
 const CARD_RADIUS_PX: f32 = 8.0;
 const FACT_RADIUS_PX: f32 = 4.0;
@@ -27,8 +28,8 @@ const TAG_RADIUS_PX: f32 = 6.0;
 const ICON_CHIP_SIZE_PX: f32 = 36.0;
 const ICON_CHIP_RADIUS_PX: f32 = 6.0;
 /// Arrowhead triangle along the run axis and across it (section 11.2).
-const ARROW_LENGTH_PX: f32 = 10.0;
-const ARROW_WIDTH_PX: f32 = 8.0;
+const ARROW_LENGTH_PX: f32 = stencil_layout::ARROWHEAD_LENGTH_PX;
+const ARROW_WIDTH_PX: f32 = stencil_layout::ARROWHEAD_WIDTH_PX;
 const FRAME_RADIUS_PX: f32 = 4.0;
 const FRAME_CHIP_RADIUS_PX: f32 = 4.0;
 /// Radius of the dot of a bulleted Text line, and its center's offset into the 22 px

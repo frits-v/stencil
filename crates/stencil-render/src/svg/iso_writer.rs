@@ -5,6 +5,7 @@ use stencil_layout::{BoxRect, LinkRoute, NodeGeometry, NodeTag, PageGeometry, Pa
 use stencil_model::pointer::NodePointer;
 use stencil_model::{LINKS_MAX, Link, Node, NodeRef, Page, PipeDir, PipeKind, ZoneKind};
 
+use super::DOT_RADIUS_PX;
 use super::{
     ArrowEnds, DocumentNode, PartContext, SvgWriter, TAG_RADIUS_PX, close_groups_until_parent,
     escape_xml, frame_diagonal_box, group_open_tag, link_mismatch, part_mismatch,
@@ -23,8 +24,6 @@ const GCP_CHIP_RADIUS_PX: f32 = 4.0;
 /// Upright text crosses slab edges, dashed zone borders and the gcp bar band; the outline
 /// keeps each glyph on a clean ground in every theme.
 const TEXT_HALO_PX: f32 = 3.0;
-/// Flat radius of a pipe end dot; an arrowhead's tip sits this far out from the dot center.
-const DOT_RADIUS_PX: f32 = 4.0;
 
 pub(super) fn render_iso(
     page: &Page,

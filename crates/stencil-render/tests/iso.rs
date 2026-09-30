@@ -211,6 +211,25 @@ fn a_link_lies_on_the_slab_top_of_the_innermost_zone_holding_both_ends() {
 }
 
 #[test]
+fn a_link_from_a_zone_to_its_own_child_lies_on_that_zone_top() {
+    let mut document = common::page_document(
+        json!([
+            { "tag": "Zone", "kind": "gcp", "label": "Google Cloud", "children": [
+                { "tag": "Zone", "kind": "region-a", "id": "reg", "label": "europe-west4",
+                  "children": [
+                    { "tag": "Pcard", "id": "wh", "fn": "Warehouse" } ] } ] }
+        ]),
+        json!([{ "kind": "blue", "text": "request path" }]),
+    );
+    document["links"] = json!([{ "from": "reg", "to": "wh", "kind": "blue" }]);
+    document["projection"] = json!("iso");
+    let page: Page = serde_json::from_value(document).unwrap();
+    let geometry = common::layout_with_fixed_metrics(&page);
+    let scene = project_page(&geometry).unwrap();
+    assert_eq!(scene.link_planes, vec![12.0]);
+}
+
+#[test]
 fn project_page_asserts_the_root_and_the_body() {
     let page = hero_page();
     let mut geometry = common::layout_with_fixed_metrics(&page);
