@@ -276,4 +276,33 @@ mod tests {
             );
         }
     }
+
+    /// Root plus `sibling_groups` groups, each kept by usvg because it has an id.
+    fn tree_with_groups(sibling_groups: usize) -> usvg::Tree {
+        let mut svg = String::from(
+            r#"<svg xmlns="http://www.w3.org/2000/svg" width="8" height="8" viewBox="0 0 8 8">"#,
+        );
+        for index in 0..sibling_groups {
+            svg.push_str(&format!(
+                r#"<g id="g{index}"><rect width="1" height="1"/></g>"#
+            ));
+        }
+        svg.push_str("</svg>");
+        usvg::Tree::from_str(&svg, &usvg::Options::default()).unwrap()
+    }
+
+    #[test]
+    fn text_node_count_visits_up_to_the_group_bound() {
+        let tree = tree_with_groups(TEXT_NODE_VISITS_MAX - 1);
+        assert_eq!(count_text_nodes(tree.root()).unwrap(), 0);
+    }
+
+    #[test]
+    fn text_node_count_past_the_group_bound_is_an_svg_error() {
+        let tree = tree_with_groups(TEXT_NODE_VISITS_MAX);
+        assert!(matches!(
+            count_text_nodes(tree.root()),
+            Err(RenderError::Svg { .. })
+        ));
+    }
 }
