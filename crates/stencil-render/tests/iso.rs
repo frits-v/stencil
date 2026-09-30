@@ -667,3 +667,26 @@ fn a_wire_fact_block_is_outlined_although_its_flat_box_has_no_border() {
         assert_eq!(face.attribute("stroke"), None);
     }
 }
+
+/// The blocks, Tee hub and spine, Callout accent and Frame diagonals take paths the hero
+/// does not; every example renders under iso with the flat text count.
+#[test]
+fn every_example_renders_under_iso_in_every_theme() {
+    for document in [
+        include_str!("../../../examples/onepager.json"),
+        include_str!("../../../examples/stress-dense.json"),
+        include_str!("../../../examples/hybrid-ai.json"),
+        include_str!("../../../examples/network-hub-spoke.json"),
+    ] {
+        for theme in THEMES {
+            let mut page: Page = serde_json::from_str(document).unwrap();
+            page.theme = theme;
+            let geometry = common::layout_with_cosmic_text(&page);
+            let flat = render_svg(&page, &geometry).unwrap();
+            page.projection = stencil_model::Projection::Iso;
+            let iso = render_svg(&page, &geometry).unwrap();
+            assert_eq!(iso.text_elements, flat.text_elements);
+            render_png(&iso.svg, iso.text_elements, DeviceScale::new(1).unwrap()).unwrap();
+        }
+    }
+}
