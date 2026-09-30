@@ -165,16 +165,20 @@ fn a_canvas_above_the_pixel_budget_is_rejected_before_allocation() {
 }
 
 /// usvg's default string resolver reads a non-data href from disk. The SVG writer only
-/// embeds `data:` URIs, and render_png resolves nothing else.
+/// embeds `data:` URIs, and render_png resolves nothing else. The file is an SVG because
+/// resvg is built without `raster-images`, so a PNG file would render white whichever
+/// resolver ran, while usvg decodes an SVG sub-image itself.
 #[test]
 fn an_image_href_to_a_file_is_not_read() {
     let directory =
         std::path::Path::new(env!("CARGO_TARGET_TMPDIR")).join("stencil-render-image-href");
     std::fs::create_dir_all(&directory).unwrap();
-    let image_path = directory.join("red.png");
-    let mut red = resvg::tiny_skia::Pixmap::new(8, 8).unwrap();
-    red.fill(resvg::tiny_skia::Color::from_rgba8(255, 0, 0, 255));
-    std::fs::write(&image_path, red.encode_png().unwrap()).unwrap();
+    let image_path = directory.join("red.svg");
+    std::fs::write(
+        &image_path,
+        r##"<svg xmlns="http://www.w3.org/2000/svg" width="8" height="8" viewBox="0 0 8 8"><rect x="0" y="0" width="8" height="8" fill="#FF0000"/></svg>"##,
+    )
+    .unwrap();
     let svg = format!(
         r##"<svg xmlns="http://www.w3.org/2000/svg" width="8" height="8" viewBox="0 0 8 8"><rect x="0" y="0" width="8" height="8" fill="#FFFFFF"/><image x="0" y="0" width="8" height="8" href="{}"/></svg>"##,
         image_path.display()

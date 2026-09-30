@@ -3,8 +3,9 @@
 
 use std::ffi::OsString;
 use std::fs;
-use std::io::{self, Write};
+use std::io::{self, Read, Write};
 use std::path::{Path, PathBuf};
+use std::sync::atomic::{AtomicU64, Ordering};
 
 use serde_json::Value;
 use stencil_layout::checks::{child_inside_container, siblings_do_not_overlap, text_fits_box};
@@ -90,13 +91,29 @@ pub struct OutputPaths {
     pub measured: PathBuf,
 }
 
-/// Reads the input file. Bytes that are not UTF-8 are a document defect, not a read
-/// failure, because RFC 8259 requires JSON text to be UTF-8 (section 7).
+/// Largest input `read_input` accepts, in bytes (section 7). A vetted page holds at most
+/// NODES_MAX nodes of a few 400-scalar texts each, far below this.
+pub const INPUT_BYTES_MAX: u64 = 64 * 1024 * 1024;
+
+/// Reads the input file, at most INPUT_BYTES_MAX bytes. Bytes that are not UTF-8 are a
+/// document defect, not a read failure, because RFC 8259 requires JSON text to be UTF-8
+/// (section 7).
 pub fn read_input(path: &Path) -> Result<String, Failure> {
-    let bytes = fs::read(path).map_err(|source| Failure::ReadInput {
+    let read_error = |source| Failure::ReadInput {
         path: path.to_path_buf(),
         source,
-    })?;
+    };
+    let file = fs::File::open(path).map_err(read_error)?;
+    let mut bytes = Vec::new();
+    file.take(INPUT_BYTES_MAX + 1)
+        .read_to_end(&mut bytes)
+        .map_err(read_error)?;
+    if u64::try_from(bytes.len()).unwrap_or(u64::MAX) > INPUT_BYTES_MAX {
+        return Err(read_error(io::Error::new(
+            io::ErrorKind::FileTooLarge,
+            format!("input is larger than {INPUT_BYTES_MAX} bytes"),
+        )));
+    }
     String::from_utf8(bytes).map_err(|error| {
         let valid_up_to = error.utf8_error().valid_up_to();
         invalid_utf8(error.as_bytes(), valid_up_to)
@@ -178,8 +195,9 @@ pub fn all_checks(page: &Page, geometry: &PageGeometry) -> [CheckReport; 5] {
 
 /// Creates `out_dir` when missing and writes SVG, PNG and measured JSON, replacing existing
 /// files. The measured JSON is serialized before anything touches the disk, an output that
-/// resolves to `input` is refused, and the three files are staged under temporary names and
-/// renamed only after every write succeeded (section 7).
+/// resolves to `input` or an output name that is a directory is refused, and the three files
+/// are staged under temporary names and renamed only after every write succeeded
+/// (section 7).
 pub fn write_outputs(
     out_dir: &Path,
     names: &OutputNames,
@@ -225,12 +243,32 @@ pub fn write_outputs(
         }
     }
 
+    // A rename onto a directory fails only after the earlier renames already replaced their
+    // outputs, so every final name is checked before anything is staged.
+    for (_, path, _) in &outputs {
+        match fs::symlink_metadata(path) {
+            Ok(metadata) if metadata.is_dir() => {
+                return Err(Failure::WriteOutput {
+                    path: path.to_path_buf(),
+                    source: io::Error::from(io::ErrorKind::IsADirectory),
+                });
+            }
+            Ok(_) => {}
+            Err(error) if error.kind() == io::ErrorKind::NotFound => {}
+            Err(source) => {
+                return Err(Failure::WriteOutput {
+                    path: path.to_path_buf(),
+                    source,
+                });
+            }
+        }
+    }
+
     let mut staged: Vec<(PathBuf, &Path)> = Vec::with_capacity(outputs.len());
     for (name, path, bytes) in &outputs {
         let temporary = directory.join(temporary_name(name));
         if let Err(source) = write_new_file(&temporary, bytes) {
             remove_staged(&staged);
-            let _ = fs::remove_file(&temporary);
             return Err(Failure::WriteOutput {
                 path: path.to_path_buf(),
                 source,
@@ -250,34 +288,72 @@ pub fn write_outputs(
     Ok(paths)
 }
 
-/// `.<name>.<process id>.tmp`, in the output directory so the rename stays on one file
-/// system.
+/// Distinguishes the temporary names of `write_outputs` calls within one process.
+static STAGING_SEQUENCE: AtomicU64 = AtomicU64::new(0);
+
+/// `.<name>.<process id>.<sequence>.tmp`, in the output directory so the rename stays on
+/// one file system.
 fn temporary_name(name: &OsString) -> OsString {
+    let sequence = STAGING_SEQUENCE.fetch_add(1, Ordering::Relaxed);
     let mut temporary = OsString::from(".");
     temporary.push(name);
-    temporary.push(format!(".{}.tmp", std::process::id()));
+    temporary.push(format!(".{}.{sequence}.tmp", std::process::id()));
     temporary
 }
 
-/// `create_new` refuses to open through a link planted at the temporary name; a leftover
-/// file from an earlier run of the same process id is removed first.
+/// `create_new` refuses to open through a link planted at the temporary name, and a file
+/// left there by an interrupted run fails the write instead of being overwritten. Only a
+/// file this call created is removed when the write fails.
 fn write_new_file(path: &Path, bytes: &[u8]) -> io::Result<()> {
-    match fs::remove_file(path) {
-        Ok(()) => {}
-        Err(error) if error.kind() == io::ErrorKind::NotFound => {}
-        Err(error) => return Err(error),
-    }
     let mut file = fs::File::options()
         .write(true)
         .create_new(true)
         .open(path)?;
-    file.write_all(bytes)?;
-    file.sync_all()
+    let written = file.write_all(bytes).and_then(|()| file.sync_all());
+    if written.is_err() {
+        let _ = fs::remove_file(path);
+    }
+    written
 }
 
 /// Best effort: the write error that led here is the one reported.
 fn remove_staged(staged: &[(PathBuf, &Path)]) {
     for (temporary, _) in staged {
         let _ = fs::remove_file(temporary);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn temporary_names_differ_within_one_process() {
+        let name = OsString::from("g7.svg");
+        let first = temporary_name(&name);
+        let second = temporary_name(&name);
+        assert_ne!(first, second);
+        let prefix = format!(".g7.svg.{}.", std::process::id());
+        for temporary in [&first, &second] {
+            let text = temporary.to_str().unwrap();
+            assert!(text.starts_with(&prefix), "{text}");
+            assert!(text.ends_with(".tmp"), "{text}");
+        }
+    }
+
+    #[test]
+    fn a_leftover_at_the_temporary_name_fails_the_write_and_is_kept() {
+        // CARGO_TARGET_TMPDIR is set for integration tests only.
+        let directory =
+            Path::new(env!("CARGO_MANIFEST_DIR")).join("../../target/tmp/stencil-cli-leftover");
+        fs::create_dir_all(&directory).unwrap();
+        let path = directory.join(".g7.svg.leftover.tmp");
+        fs::write(&path, b"leftover").unwrap();
+
+        let error = write_new_file(&path, b"new").unwrap_err();
+
+        assert_eq!(error.kind(), io::ErrorKind::AlreadyExists);
+        assert_eq!(fs::read(&path).unwrap(), b"leftover");
+        fs::remove_file(&path).unwrap();
     }
 }
