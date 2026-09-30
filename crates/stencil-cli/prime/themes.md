@@ -4,7 +4,7 @@ A theme sets colors only. Layout, text sizes, icons and the measured JSON are id
 
 | Theme | Use for | Look |
 |---|---|---|
-| center | customer decks, SOWs, docs on white | Google Cloud Architecture Center stencil: white page, blue gcp bar, tinted zones |
+| center | customer-facing slides and documents on white | Google Cloud Architecture Center stencil: white page, blue gcp bar, tinted zones |
 | dusk | dark slides and screens | navy page, light ink, darkened tints; each icon sits on a white 36 px chip so dark icons stay visible |
 | wire | design docs, reviews, print | white page, #222222 ink and borders, no fills; kinds differ by line style only |
 

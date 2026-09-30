@@ -55,8 +55,8 @@ fn section_10_stress_document() -> Value {
         ]
     });
     json!({
-        "title": "Dense stress figure",
-        "kicker": "Stress · dense layout",
+        "title": "Fifteen Cloud Run services in five rows behind one service perimeter",
+        "kicker": "Service perimeter · Cloud Run",
         "lede": "Five rows of cards and pipes inside a service perimeter.",
         "canvas": "internal",
         "body": [{

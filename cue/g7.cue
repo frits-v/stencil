@@ -22,10 +22,10 @@ customer: #Page & {
 		_workshop: [string]: ""
 	}
 
-	title: "Four lines. Two metros. Two regions. Failover sits between the regions."
-	kicker: "Type 5 · Dedicated Interconnect 99.99% · " + {customer: "SOW / deck / exec", internal: "workshop / runbook"}[canvas]
-	lede: "Same topology as the \({customer: "internal", internal: "customer"}[canvas]) canvas. VLAN IDs, EAD, and BGP sit on the hops. A stakeholder following the lines still sees four attachments, not one bundled cable."
-	foot: "\({customer: "Customer", internal: "Internal"}[canvas]) canvas of g7 · same stencil · VLAN, EAD, BGP on both canvases"
+	title:  "Four lines. Two metros. Two regions. Failover sits between the regions."
+	kicker: "Dedicated Interconnect 99.99% · two metros, two regions"
+	lede:   "VLAN IDs, EAD, and BGP sit on the hops. A reader following the lines sees four attachments, not one bundled cable."
+	foot:   "Illustrative topology · each metro has one VLAN in each EAD"
 
 	body: [{
 		tag: "Row"

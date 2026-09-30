@@ -37,7 +37,7 @@ Every node object carries "tag". * required, =default. A field with no type is t
 
 # Rules no check enforces
 
-- Every product on a hop carries a fact read from the live doc this session, or an explicit ask; never a remembered value.
+- Every product on a hop carries a fact read from the live doc at authoring time, or an explicit ask; never a remembered value.
 - One audience per figure: canvas customer or internal.
 - Official product names in pn: Cloud Run, Cloud SQL, Pub/Sub.
 

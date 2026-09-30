@@ -1,8 +1,8 @@
 {
   "title": "Four lines. Two metros. Two regions. Failover sits between the regions.",
-  "kicker": "Type 5 · Dedicated Interconnect 99.99% · SOW / deck / exec",
-  "lede": "Same topology as the internal canvas. VLAN IDs, EAD, and BGP sit on the hops. A stakeholder following the lines still sees four attachments, not one bundled cable.",
-  "foot": "Customer canvas of g7 · same stencil · VLAN, EAD, BGP on both canvases",
+  "kicker": "Dedicated Interconnect 99.99% · two metros, two regions",
+  "lede": "VLAN IDs, EAD, and BGP sit on the hops. A reader following the lines sees four attachments, not one bundled cable.",
+  "foot": "Illustrative topology · each metro has one VLAN in each EAD",
   "canvas": "customer",
   "body": [
     {

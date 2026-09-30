@@ -1284,7 +1284,7 @@ Rounding is off during layout, so coordinates can be fractional. Every number wr
     <g data-id="/kicker" data-tag="Kicker">
       <rect x="20" y="20" width="74.6" height="16" rx="4" fill="#E8F0FE"/>
       <text x="27" y="32.6" xml:space="preserve" font-family="Inter" font-size="10" font-weight="800" letter-spacing="0.7" fill="#174EA6">CUSTOMER</text>
-      <text x="100.6" y="33.1" xml:space="preserve" font-family="Inter" font-size="11" font-weight="700" letter-spacing="0.88" fill="#1A73E8">TYPE 5 · DEDICATED INTERCONNECT 99.99% · SOW / DECK / EXEC</text>
+      <text x="100.6" y="33.1" xml:space="preserve" font-family="Inter" font-size="11" font-weight="700" letter-spacing="0.88" fill="#1A73E8">DEDICATED INTERCONNECT 99.99% · TWO METROS, TWO REGIONS</text>
     </g>
     <g data-id="/body" data-tag="Body">
       <g data-id="/body/0" data-tag="Row">
@@ -1603,9 +1603,9 @@ This is the g7 customer canvas as data. `examples/g7.json` is maintained by hand
 ```json
 {
   "title": "Four lines. Two metros. Two regions. Failover sits between the regions.",
-  "kicker": "Type 5 · Dedicated Interconnect 99.99% · SOW / deck / exec",
-  "lede": "Same topology as the internal canvas. VLAN IDs, EAD, and BGP sit on the hops. A stakeholder following the lines still sees four attachments, not one bundled cable.",
-  "foot": "Customer canvas of g7 · same stencil · VLAN, EAD, BGP on both canvases",
+  "kicker": "Dedicated Interconnect 99.99% · two metros, two regions",
+  "lede": "VLAN IDs, EAD, and BGP sit on the hops. A reader following the lines sees four attachments, not one bundled cable.",
+  "foot": "Illustrative topology · each metro has one VLAN in each EAD",
   "canvas": "customer",
   "body": [
     {
@@ -1743,7 +1743,8 @@ Known differences between the stencil render and the gold, which a reviewer of t
 - On-prem fills: Metro 1 blue and Metro 2 pink against the gold's two neutral warm-gray zones (section 2.4).
 - Legend: stencil draws a 26 by 2 swatch, the kind label and the entry text for each entry, with no separator between label and text (section 2.2). The gold writes each entry as one string with no swatch and an `=` separator, such as "Solid blue = Metro 1 ↔ Region A", and labels the `dash` kind "Dashed" where the section 2.2 table says "Dashed blue".
 - Metro zone height: stencil gives each on-prem zone half the Row height so it sits level with its gutter half. The gold keeps both zones at content height, Metro 1 about 152 px tall, so its VLAN 3 and VLAN 4 point at the empty space below Metro 2.
-- Foot: g7's `foot` is one string drawn as one left-aligned text leaf, "Customer canvas of g7 · same stencil · VLAN, EAD, BGP on both canvases". The gold splits it into "Customer canvas of g7 · same stencil" aligned left and "VLAN, EAD, BGP on both canvases" aligned right against the Google Cloud frame's right edge. The Page model has a single `foot` text and no way to express the right-aligned segment; a split foot is a model change outside the MVP.
+- Foot: g7's `foot` is one string drawn as one left-aligned text leaf. The gold's foot has two segments, one aligned left and one aligned right against the Google Cloud frame's right edge. The Page model has a single `foot` text and no way to express the right-aligned segment; a split foot is a model change outside the MVP.
+- Wording: the kicker, lede and foot of `examples/g7.json` differ from the gold's text. The gold is a layout reference, not a text reference.
 
 ## 10. Test plan
 
@@ -1795,7 +1796,7 @@ All tests except the wrap-epsilon regression use `FixedMetricsMeasurer::default(
 - Checks on hand-built `PageGeometry`: overlap by 0.02 px is a defect and touching edges are not; a child 0.02 px outside its parent is a defect; a text run 0.02 px wider than its part is a defect; geometry with only the root gives examined 0 and fails for each geometry check.
 - Checks on laid-out documents: a Pcard with a single 120-character word in a Row of three at width 640 produces `child-inside-container` defects for the three cards and no `text-fits-box` defect, because the min-content floor of section 2.5 widens the card to the word. A `/title` of one 200-character word at width 640 produces one `text-fits-box` defect at `/title` and no `child-inside-container` defect, because the root stretches the title leaf to the content width with no min-content floor. A small document of five nodes has hand-derived examined counts.
 - Dense stress (`examples/stress-dense.json`, written by the stencil-layout implementer). Layout completes, all five checks and `pipes-land` pass, `pipes-land` examining 22 pipe ends (two Pipe h per Row with a card on each side, and the Pipe v between Row 1 and Row 2; the Tee arms have no Row ancestor), and `body_nodes(page).len()` is 37. A test compares the file, parsed as a `serde_json::Value`, with the document below built field for field, so any drift fails. The document is exactly:
-  - Page: title `Dense stress figure`, kicker `Stress · dense layout`, lede `Five rows of cards and pipes inside a service perimeter.`, canvas `internal`, no `foot`, no `width`, and legend entries `gray` `internal call`, `blue` `request path`, `pink` `reply path`, `dash` `failover` and `deny` `blocked egress`, in that order.
+  - Page: title `Fifteen Cloud Run services in five rows behind one service perimeter`, kicker `Service perimeter · Cloud Run`, lede `Five rows of cards and pipes inside a service perimeter.`, canvas `internal`, no `foot`, no `width`, and legend entries `gray` `internal call`, `blue` `request path`, `pink` `reply path`, `dash` `failover` and `deny` `blocked egress`, in that order.
   - `body` holds one Zone, kind `gcp`, label `Google Cloud`. Its one child is a Zone of kind `perimeter`, label `Service perimeter`. Its one child is a Col with no `gap`, `grow` or `justify` and seven children in this order: Row 1, the Pipe v, Row 2, Row 3, the Tee, Row 4, Row 5.
   - Row r, for r from 1 to 5, has no `gap`, `grow` or `justify` and five children: Pcard, Pipe h, Pcard, Pipe h, Pcard. Card c, for c from 1 to 3, has icon `cloud-run`, fn `Service r.c` with r and c as digits (`Service 2.3`), pn `Cloud Run` and fact `Reads its config from a bucket in the same project`. The first Pipe h has kind `blue` and label `step r.1`, the second kind `gray` and label `step r.2`. Neither has a `sub`.
   - The Pipe v has kind `dash` and label `failover`.

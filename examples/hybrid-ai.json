@@ -1,8 +1,8 @@
 {
   "title": "Training stays on-prem. Tuning, serving and evidence run on Google Cloud. AWS and Azure feed data over private paths only.",
-  "kicker": "Hybrid multi-cloud AI platform · stress figure · SOW / deck",
+  "kicker": "Hybrid multi-cloud AI platform",
   "lede": "Three producers outside the frame, one Shared VPC across two regions, one service perimeter around every AI service. Every hop is a labeled line; the public internet is drawn once, as the prohibited path.",
-  "foot": "Stress figure for the stencil renderer · hop facts are illustrative and were not looked up this session",
+  "foot": "Illustrative topology · hop facts are placeholders, not looked-up values",
   "canvas": "customer",
   "body": [
     {
