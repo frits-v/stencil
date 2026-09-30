@@ -18,8 +18,9 @@ use stencil_render::{DeviceScale, measured_json, render_png, render_svg};
 
 const THEMES: [Theme; 3] = [Theme::Center, Theme::Dusk, Theme::Wire];
 
-const EXAMPLES: [(&str, &str); 3] = [
+const EXAMPLES: [(&str, &str); 4] = [
     ("g7", include_str!("../../../examples/g7.json")),
+    ("onepager", include_str!("../../../examples/onepager.json")),
     (
         "hybrid-ai",
         include_str!("../../../examples/hybrid-ai.json"),

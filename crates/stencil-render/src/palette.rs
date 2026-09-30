@@ -6,7 +6,7 @@
 
 use stencil_layout::styles::{badge_fill, text_color};
 use stencil_model::text::TextStyleName;
-use stencil_model::{Canvas, PipeKind, Theme, ZoneKind};
+use stencil_model::{CalloutKind, Canvas, PipeKind, Theme, ZoneKind};
 
 pub use stencil_layout::styles::{
     BADGE_FILL_CUSTOMER, BADGE_FILL_INTERNAL, BADGE_TEXT_CUSTOMER, BADGE_TEXT_INTERNAL, TEXT_AMBER,
@@ -48,7 +48,21 @@ pub const WIRE_BLUE: &str = "#1A73E8";
 pub const WIRE_PINK: &str = "#C2185B";
 pub const WIRE_DENY: &str = "#C5221F";
 
+pub const CALLOUT_NOTE_ACCENT: &str = "#1A73E8";
+pub const CALLOUT_NOTE_FILL: &str = "#E8F0FE";
+pub const CALLOUT_RISK_ACCENT: &str = "#C5221F";
+pub const CALLOUT_RISK_FILL: &str = "#FCE8E6";
+pub const CALLOUT_DECISION_ACCENT: &str = "#188038";
+pub const CALLOUT_DECISION_FILL: &str = "#E6F4EA";
+pub const CALLOUT_OPEN_ACCENT: &str = "#B06000";
+pub const CALLOUT_OPEN_FILL: &str = "#FEF7E0";
+pub const FRAME_BORDER: &str = "#9AA0A6";
+
 pub const CARD_BORDER_PX: f32 = 1.5;
+/// Border of the section 11.3 blocks, which layout reserves.
+pub const BLOCK_BORDER_PX: f32 = 1.25;
+/// The Frame's corner-to-corner diagonals.
+pub const FRAME_DIAGONAL_PX: f32 = 1.0;
 pub const TAG_BORDER_PX: f32 = 1.5;
 pub const WIRE_WIDTH_PX: f32 = 2.0;
 
@@ -186,6 +200,24 @@ pub enum DotStyle {
     Hollow,
 }
 
+/// Accent bar color and fill of a Callout kind (section 11.3).
+pub fn callout_colors(kind: CalloutKind) -> (&'static str, &'static str) {
+    match kind {
+        CalloutKind::Note => (CALLOUT_NOTE_ACCENT, CALLOUT_NOTE_FILL),
+        CalloutKind::Risk => (CALLOUT_RISK_ACCENT, CALLOUT_RISK_FILL),
+        CalloutKind::Decision => (CALLOUT_DECISION_ACCENT, CALLOUT_DECISION_FILL),
+        CalloutKind::Open => (CALLOUT_OPEN_ACCENT, CALLOUT_OPEN_FILL),
+    }
+}
+
+/// A Callout box and its accent bar.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct CalloutPaint {
+    pub accent: &'static str,
+    pub fill: &'static str,
+    pub border: Stroke,
+}
+
 /// Paint of a wire, a Tee spine and a legend swatch of one kind, and of that kind's end dots
 /// and arrowheads, which take the wire color.
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -267,11 +299,7 @@ impl Palette {
     }
 
     pub fn card(self) -> BoxPaint {
-        let (fill, color, width_px) = match self.theme {
-            Theme::Center => (CARD_FILL, CARD_BORDER, CARD_BORDER_PX),
-            Theme::Dusk => (dusk::CARD_FILL, dusk::CARD_BORDER, CARD_BORDER_PX),
-            Theme::Wire => (wire::WHITE, wire::INK, wire::BORDER_PX),
-        };
+        let (fill, color, width_px) = self.card_colors();
         BoxPaint {
             fill,
             border: Some(Stroke {
@@ -366,6 +394,83 @@ impl Palette {
         }
     }
 
+    /// A Text block: card fill and card border color at the 1.25 px block border.
+    pub fn block(self) -> BoxPaint {
+        let card = self.card();
+        BoxPaint {
+            fill: card.fill,
+            border: card.border.map(|stroke| Stroke {
+                width_px: BLOCK_BORDER_PX,
+                ..stroke
+            }),
+        }
+    }
+
+    /// A Callout of this kind: the Text box border with the kind's tint and accent.
+    pub fn callout(self, kind: CalloutKind) -> CalloutPaint {
+        let (accent, fill) = match self.theme {
+            Theme::Center => callout_colors(kind),
+            Theme::Dusk => dusk::callout_colors(kind),
+            Theme::Wire => (wire::INK, wire::WHITE),
+        };
+        let (_, border_color, _) = self.card_colors();
+        CalloutPaint {
+            accent,
+            fill,
+            border: Stroke {
+                width_px: BLOCK_BORDER_PX,
+                line: LineStyle::Solid,
+                color: border_color,
+            },
+        }
+    }
+
+    /// The dashed border of a Frame.
+    pub fn frame_border(self) -> Stroke {
+        let color = match self.theme {
+            Theme::Center => FRAME_BORDER,
+            Theme::Dusk => dusk::VPC_BORDER,
+            Theme::Wire => wire::INK,
+        };
+        Stroke {
+            width_px: BLOCK_BORDER_PX,
+            line: LineStyle::Dashed,
+            color,
+        }
+    }
+
+    /// The two corner-to-corner lines of a Frame, in the secondary ink.
+    pub fn frame_diagonal(self) -> Stroke {
+        let color = match self.theme {
+            Theme::Center => TEXT_MUTED,
+            Theme::Dusk => dusk::TEXT_SECONDARY,
+            Theme::Wire => wire::SECONDARY_INK,
+        };
+        Stroke {
+            width_px: FRAME_DIAGONAL_PX,
+            line: LineStyle::Solid,
+            color,
+        }
+    }
+
+    /// The chip under a Frame label, so the diagonals stop at the words.
+    pub fn frame_label_chip(self) -> &'static str {
+        self.page_background()
+    }
+
+    /// The dot of a bulleted Text line, in the body ink.
+    pub fn list_bullet(self, canvas: Canvas) -> &'static str {
+        self.text_ink(TextStyleName::BlockBody, canvas, None)
+    }
+
+    fn card_colors(self) -> (&'static str, &'static str, f32) {
+        match self.theme {
+            Theme::Center => (CARD_FILL, CARD_BORDER, CARD_BORDER_PX),
+            Theme::Dusk => (dusk::CARD_FILL, dusk::CARD_BORDER, CARD_BORDER_PX),
+            Theme::Wire => (wire::WHITE, wire::INK, wire::BORDER_PX),
+        }
+    }
+
     /// Fill of the rounded square under every icon (section 11.1). The center chip would be
     /// card fill on card fill, invisible, so center draws none and its output stays the
     /// pre-theme output.
@@ -397,7 +502,7 @@ impl Palette {
 mod dusk {
     use super::{LineStyle, Stroke, ZoneStyle};
     use stencil_model::text::TextStyleName;
-    use stencil_model::{Canvas, PipeKind, ZoneKind};
+    use stencil_model::{CalloutKind, Canvas, PipeKind, ZoneKind};
 
     pub const PAGE_BACKGROUND: &str = "#0B1220";
     pub const TEXT_PRIMARY: &str = "#E6EDF7";
@@ -441,6 +546,10 @@ mod dusk {
     pub const LEGEND_INK: &str = "#9AA7BD";
     pub const FOOT_INK: &str = "#9AA7BD";
     pub const ICON_CHIP: &str = "#FFFFFF";
+    pub const CALLOUT_NOTE_FILL: &str = "#16305C";
+    pub const CALLOUT_RISK_FILL: &str = "#3A1A1A";
+    pub const CALLOUT_DECISION_FILL: &str = "#143024";
+    pub const CALLOUT_OPEN_FILL: &str = "#3A2A10";
 
     /// Center's border widths, line styles and radii with the dusk colors.
     pub fn zone_style(kind: ZoneKind) -> ZoneStyle {
@@ -491,6 +600,18 @@ mod dusk {
             Canvas::Customer => BADGE_FILL_CUSTOMER,
             Canvas::Internal => BADGE_FILL_INTERNAL,
         }
+    }
+
+    /// The center accents on dark tints (section 11.3).
+    pub fn callout_colors(kind: CalloutKind) -> (&'static str, &'static str) {
+        let (accent, _) = super::callout_colors(kind);
+        let fill = match kind {
+            CalloutKind::Note => CALLOUT_NOTE_FILL,
+            CalloutKind::Risk => CALLOUT_RISK_FILL,
+            CalloutKind::Decision => CALLOUT_DECISION_FILL,
+            CalloutKind::Open => CALLOUT_OPEN_FILL,
+        };
+        (accent, fill)
     }
 
     pub fn text_ink(
