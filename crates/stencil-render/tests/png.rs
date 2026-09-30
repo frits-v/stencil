@@ -169,7 +169,7 @@ fn a_canvas_above_the_pixel_budget_is_rejected_before_allocation() {
 #[test]
 fn an_image_href_to_a_file_is_not_read() {
     let directory =
-        std::env::temp_dir().join(format!("stencil-render-image-href-{}", std::process::id()));
+        std::path::Path::new(env!("CARGO_TARGET_TMPDIR")).join("stencil-render-image-href");
     std::fs::create_dir_all(&directory).unwrap();
     let image_path = directory.join("red.png");
     let mut red = resvg::tiny_skia::Pixmap::new(8, 8).unwrap();
