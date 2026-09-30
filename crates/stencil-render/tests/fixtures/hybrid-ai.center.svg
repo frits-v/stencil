@@ -16,7 +16,7 @@
       <g data-id="/body/0" data-tag="Row">
         <g data-id="/body/0/children/0" data-tag="Col">
           <g data-id="/body/0/children/0/children/0" data-tag="Zone" data-kind="onprem-a">
-            <rect x="20.75" y="102.35" width="282.1" height="246.3" rx="7.25" fill="#D2E3FC" stroke="#D7CCC8" stroke-width="1.5"/>
+            <rect x="20.75" y="102.35" width="282.1" height="281.37" rx="7.25" fill="#D2E3FC" stroke="#D7CCC8" stroke-width="1.5"/>
             <text x="33.5" y="126.67" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#5F6368">On-prem · GPU data center</text>
             <g data-id="/body/0/children/0/children/0/children/0" data-tag="Pcard">
               <rect x="34.25" y="138.25" width="255.1" height="88.9" rx="7.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
@@ -41,102 +41,100 @@
             </g>
           </g>
           <g data-id="/body/0/children/0/children/1" data-tag="Zone" data-kind="onprem-b">
-            <rect x="20.75" y="358.15" width="282.1" height="147.9" rx="7.25" fill="#FCE4EC" stroke="#D7CCC8" stroke-width="1.5"/>
-            <text x="33.5" y="382.47" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#5F6368">AWS · us-east-1</text>
+            <rect x="20.75" y="393.22" width="282.1" height="281.37" rx="7.25" fill="#FCE4EC" stroke="#D7CCC8" stroke-width="1.5"/>
+            <text x="33.5" y="417.53" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#5F6368">AWS · us-east-1</text>
             <g data-id="/body/0/children/0/children/1/children/0" data-tag="Pcard">
-              <rect x="34.25" y="394.05" width="255.1" height="44.5" rx="7.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
-              <image x="45" y="402.3" width="28" height="28" href="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyBpZD0ic3RhbmRhcmRfcHJvZHVjdF9pY29uIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZlcnNpb249IjEuMSIgdmlld0JveD0iMCAwIDUxMiA1MTIiPgogIDwhLS0gR2VuZXJhdG9yOiBBZG9iZSBJbGx1c3RyYXRvciAyOS4xLjAsIFNWRyBFeHBvcnQgUGx1Zy1JbiAuIFNWRyBWZXJzaW9uOiAyLjEuMCBCdWlsZCAxNDIpICAtLT4KICA8ZyBpZD0iYm91bmRpbmdfYm94Ij4KICAgIDxyZWN0IHdpZHRoPSI1MTIiIGhlaWdodD0iNTEyIiBmaWxsPSJub25lIi8+CiAgPC9nPgogIDxnIGlkPSJhcnQiPgogICAgPHBhdGggZD0iTTQxMCwyNzJIMTAyYy04LjgzNywwLTE2LTcuMTYzLTE2LTE2VjUzYzAtMTcuMTIxLDEzLjg3OS0zMSwzMS0zMWgyNzhjMTcuMTIxLDAsMzEsMTMuODc5LDMxLDMxdjIwM2MwLDguODM3LTcuMTYzLDE2LTE2LDE2Wk0xMTgsMjQwaDI3NlY1NEgxMTh2MTg2WiIgZmlsbD0iIzlhYTBhNiIvPgogICAgPHBhdGggZD0iTTM5NSw0OTBIMTE3Yy0xNy4xMjEsMC0zMS0xMy44NzktMzEtMzF2LTIwM2MwLTguODM3LDcuMTYzLTE2LDE2LTE2aDMwOGM4LjgzNywwLDE2LDcuMTYzLDE2LDE2djIwM2MwLDE3LjEyMS0xMy44NzksMzEtMzEsMzFaTTExOCw0NThoMjc2di0xODZIMTE4djE4NloiIGZpbGw9IiM5YWEwYTYiLz4KICAgIDxwYXRoIGQ9Ik00MjYsMjQwSDg2djMyaDE1NHY3NGMwLDguODM3LDcuMTYzLDE2LDE2LDE2czE2LTcuMTYzLDE2LTE2di03NGgxNTR2LTMyWiIgZmlsbD0iIzQyODVmNCIvPgogICAgPHBhdGggZD0iTTQyNiw1M2MwLTE3LjEyMS0xMy44NzktMzEtMzEtMzFIMTE3Yy0xNy4xMjEsMC0zMSwxMy44NzktMzEsMzF2MWgxNTR2NzRjMCw4LjgzNyw3LjE2MywxNiwxNiwxNnMxNi03LjE2MywxNi0xNlY1NGgxNTR2LTFaIiBmaWxsPSIjNDI4NWY0Ii8+CiAgPC9nPgo8L3N2Zz4="/>
-              <text x="83" y="413.33" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#202124">Telemetry landing</text>
-              <text x="83" y="428.97" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">S3 bucket · event stream</text>
+              <rect x="34.25" y="429.12" width="255.1" height="44.5" rx="7.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
+              <image x="45" y="437.37" width="28" height="28" href="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyBpZD0ic3RhbmRhcmRfcHJvZHVjdF9pY29uIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZlcnNpb249IjEuMSIgdmlld0JveD0iMCAwIDUxMiA1MTIiPgogIDwhLS0gR2VuZXJhdG9yOiBBZG9iZSBJbGx1c3RyYXRvciAyOS4xLjAsIFNWRyBFeHBvcnQgUGx1Zy1JbiAuIFNWRyBWZXJzaW9uOiAyLjEuMCBCdWlsZCAxNDIpICAtLT4KICA8ZyBpZD0iYm91bmRpbmdfYm94Ij4KICAgIDxyZWN0IHdpZHRoPSI1MTIiIGhlaWdodD0iNTEyIiBmaWxsPSJub25lIi8+CiAgPC9nPgogIDxnIGlkPSJhcnQiPgogICAgPHBhdGggZD0iTTQxMCwyNzJIMTAyYy04LjgzNywwLTE2LTcuMTYzLTE2LTE2VjUzYzAtMTcuMTIxLDEzLjg3OS0zMSwzMS0zMWgyNzhjMTcuMTIxLDAsMzEsMTMuODc5LDMxLDMxdjIwM2MwLDguODM3LTcuMTYzLDE2LTE2LDE2Wk0xMTgsMjQwaDI3NlY1NEgxMTh2MTg2WiIgZmlsbD0iIzlhYTBhNiIvPgogICAgPHBhdGggZD0iTTM5NSw0OTBIMTE3Yy0xNy4xMjEsMC0zMS0xMy44NzktMzEtMzF2LTIwM2MwLTguODM3LDcuMTYzLTE2LDE2LTE2aDMwOGM4LjgzNywwLDE2LDcuMTYzLDE2LDE2djIwM2MwLDE3LjEyMS0xMy44NzksMzEtMzEsMzFaTTExOCw0NThoMjc2di0xODZIMTE4djE4NloiIGZpbGw9IiM5YWEwYTYiLz4KICAgIDxwYXRoIGQ9Ik00MjYsMjQwSDg2djMyaDE1NHY3NGMwLDguODM3LDcuMTYzLDE2LDE2LDE2czE2LTcuMTYzLDE2LTE2di03NGgxNTR2LTMyWiIgZmlsbD0iIzQyODVmNCIvPgogICAgPHBhdGggZD0iTTQyNiw1M2MwLTE3LjEyMS0xMy44NzktMzEtMzEtMzFIMTE3Yy0xNy4xMjEsMC0zMSwxMy44NzktMzEsMzF2MWgxNTR2NzRjMCw4LjgzNyw3LjE2MywxNiwxNiwxNnMxNi03LjE2MywxNi0xNlY1NGgxNTR2LTFaIiBmaWxsPSIjNDI4NWY0Ii8+CiAgPC9nPgo8L3N2Zz4="/>
+              <text x="83" y="448.4" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#202124">Telemetry landing</text>
+              <text x="83" y="464.03" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">S3 bucket · event stream</text>
             </g>
             <g data-id="/body/0/children/0/children/1/children/1" data-tag="Pcard">
-              <rect x="34.25" y="448.05" width="255.1" height="44.5" rx="7.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
-              <image x="45" y="456.3" width="28" height="28" href="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyBpZD0ic3RhbmRhcmRfcHJvZHVjdF9pY29uIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZlcnNpb249IjEuMSIgdmlld0JveD0iMCAwIDUxMiA1MTIiPgogIDwhLS0gR2VuZXJhdG9yOiBBZG9iZSBJbGx1c3RyYXRvciAyOS4xLjAsIFNWRyBFeHBvcnQgUGx1Zy1JbiAuIFNWRyBWZXJzaW9uOiAyLjEuMCBCdWlsZCAxNDIpICAtLT4KICA8ZyBpZD0iYm91bmRpbmdfYm94Ij4KICAgIDxyZWN0IHdpZHRoPSI1MTIiIGhlaWdodD0iNTEyIiBmaWxsPSJub25lIi8+CiAgPC9nPgogIDxnIGlkPSJhcnQiPgogICAgPHBhdGggZD0iTTI1Niw0OTAuMjQ1aC0uMTE4Yy0uMDExLS4wMDMtLjAxOCwwLS4wMjUsMGgtLjA2NmMtLjAxLS4wMDItLjAyMiwwLS4wMzQsMGgtLjAzMmMtLjAxMi0uMDAzLS4wMjItLjAwMi0uMDMzLDAtLjAxMiwwLS4wMjMtLjAwMi0uMDM1LDBoLS4xMzRjLS4wMS4wMDItLjAyMSwwLS4wMzMsMC0uMDA1LjAwMi0uMDIxLDAtLjAzNC0uMDAyaDBjLS4wMTEsMC0uMDI1LS4wMDMtLjAzMywwLS4wMTEsMC0uMDI1LS4wMDItLjAzMiwwLTIuNTYyLS4wOTgtNS4xMDQtLjgxMi03LjQtMi4xNHEtMS41MzEtLjg4NS0uMDAyLDBsLTE4NS45OTMtMTA2Ljg4Yy00Ljk2Ny0yLjg1NC04LjAyOC04LjE0Ni04LjAyOC0xMy44NzN2LTIyMy41Yy0uMDItMS4wNzUuMDY5LTIuMTQ3LjI2Mi0zLjE5Ny4xNTQtLjgzOS4zNzQtMS42Ni42NTYtMi40NTYsMS4yMDYtMy40MSwzLjU2OC02LjQzLDYuOTA5LTguNDEzLjA5OC0uMDU5LjE5Ny0uMTE2LjI5OC0uMTczaDBMMjQ4LjA5MiwyMy44NDZjNC45MTktMi43OTcsMTAuOTQ5LTIuNzg4LDE1Ljg1OC4wMjRsMTgzLjk2MywxMDUuMzM4YzUuOTMsMi4zNDIsMTAuMTI0LDguMTI0LDEwLjEyNCwxNC44ODd2MjIzLjI0NWMwLDUuNzI4LTMuMDYyLDExLjAxOS04LjAyOCwxMy44NzNsLTE4NS45OTMsMTA2Ljg4aC0uMDAyYy0yLjMwNSwxLjMzNC00Ljg2LDIuMDQ4LTcuNDM0LDIuMTQxaC0uMDMyYy0uMDEyLDAtLjAxMi4wMDItLjAzNC4wMDJoLS4wMzRjLS4wMTEsMC0uMDIxLjAwMi0uMDMyLDBoLS4wMzJjLS4wMTIuMDAyLS4wMjUsMC0uMDMzLDBoLS4wNjljLS4wMTIsMC0uMDIzLS4wMDItLjAzNSwwaC0uMTMyYy0uMDA4LDAtLjAxNS0uMDAyLS4wMjUsMGgtLjExOGwtLjAwNC4wMDlaTTI3MiwyNjQuNDk2djE4Mi4xMDJsMTU0LjAzNy04OC41MTh2LTE4NS45MzNsLTE1NC4wMzcsOTIuMzQ5aDBaTTg1Ljk2MywzNTguMDhsMTU0LjAzNyw4OC41MTh2LTE4Mi4xMTdsLTE1NC4wMzctOTIuNjU2djE4Ni4yNTZoMFpNMTAxLjY1LDE0My45MTdsMTU0LjM2Myw5Mi44NTQsMTU0LjA1My05Mi4zNThMMjU1Ljk3Miw1Ni4xNzZsLTE1NC4zMjEsODcuNzQxaDBaIiBmaWxsPSIjOWFhMGE2Ii8+CiAgICA8cGF0aCBkPSJNNDQ3Ljk5LDEyOS4yNTFsLTYuNjE0LTMuNzg3LTEyLjk2NSw3Ljk0OS0xNzIuMzk3LDEwMy4zNTYtMTcwLjA1MS0xMDIuMjg5aDBsLTE1LjcwOC05LjUyNC03LjA0Niw0LjA2NmMtLjc5NS4zNy0xLjU1NS44MTktMi4yODUsMS4zMTlsLS4xMy4wNzUuMDEzLjAwMmMtMS43ODksMS4yNDgtMy4zNTYsMi44NzMtNC41NTQsNC44NjMtMS42MTUsMi42ODQtMi4zMzMsNS42NTItMi4yNzEsOC41NjhsLS4wMi0uMDF2OC44OTlsMTIuMTgsNy4xNjIsMTgxLjYxMiwxMDkuMjQ0Yy4wNS4wMy4xMDMuMDU1LjE1My4wODUuMjExLjEyNC40MjQuMjQyLjY0LjM1Ni4xMjEuMDY0LjI0Mi4xMjYuMzY0LjE4Ny4xNzcuMDg3LjM1NS4xNy41MzQuMjUuMTYyLjA3My4zMjQuMTQ1LjQ4OC4yMTMuMTMzLjA1NC4yNjcuMTA0LjQuMTU1LjIwNy4wNzkuNDE0LjE1Ni42MjIuMjI1LjA4Ny4wMjkuMTc0LjA1NC4yNjEuMDgxLjI1Mi4wNzkuNTA0LjE1NS43NTguMjIxLjA0MS4wMTEuMDgyLjAxOS4xMjMuMDI5LjI5NS4wNzQuNTkxLjE0My44ODguMi4wMDIsMCwuMDA0LDAsLjAwNy4wMDEuNjY2LjEyNywxLjMzNC4yMTQsMi4wMDQuMjU1LjA0My4wMDMuMDg3LjAwMi4xMy4wMDQuMjg2LjAxNS41NzMuMDI4Ljg1OC4wMjhoLjAzMmMuMjg4LDAsLjU3Ni0uMDEzLjg2NC0uMDI4LjA0MS0uMDAyLjA4Mi0uMDAxLjEyMy0uMDA0Ljk2OS0uMDYsMS45MzgtLjIxNCwyLjg5Ni0uNDU1LjA0LS4wMS4wODEtLjAxOC4xMjItLjAyOS4yNTMtLjA2Ni41MDUtLjE0Mi43NTYtLjIyMS4wODctLjAyNy4xNzQtLjA1Mi4yNi0uMDguMjA3LS4wNjkuNDEzLS4xNDYuNjE4LS4yMjMuMTM1LS4wNTEuMjctLjEwMS40MDQtLjE1Ni4xNjItLjA2Ni4zMjMtLjEzOC40ODMtLjIxLjE4LS4wOC4zNTgtLjE2My41MzUtLjI1LjEyMS0uMDYuMjQyLS4xMjIuMzYyLS4xODUuMjE2LS4xMTMuNDI5LS4yMzEuNjQtLjM1NC4wNS0uMDI5LjEwMS0uMDUzLjE1LS4wODNsMTYxLjgxLTk3LjAwOXYxODUuOTM0bC0xNzAuMDM3LDk3LjcxLTE3MC4wMzctOTcuNzExaDBsLS4wMTEtLjAwNi0zMS45ODktMTcuOTU4djI3LjIyNGguMDExYy4wMDYsNS41MzYsMi44NzMsMTAuOTE3LDguMDE3LDEzLjg3M2wxODYuMDM3LDEwNi45MDVjLjI5Ni4xNy41OTcuMzMuOTAzLjQ4LjAxOC4wMDkuMDM2LjAyLjA1NC4wMjkuMjAzLjA5OS40MTEuMTg3LjYxNy4yNzcsMi4wNjMuOTAzLDQuMjMzLDEuMzQ1LDYuMzgzLDEuMzQ1aC4wM2MyLjE4NiwwLDQuMzk0LS40NTcsNi40ODgtMS4zOTIuMTY5LS4wNzUuMzM5LS4xNDYuNTA1LS4yMjcuMDQ2LS4wMjMuMDkxLS4wNDkuMTM3LS4wNzIuMjc3LS4xMzguNTUxLS4yODEuODItLjQzNS4wMDItLjAwMS4wMDUtLjAwMi4wMDctLjAwNGwxODYuMDM3LTEwNi45MDVjNC45NjctMi44NTQsOC4wMjgtOC4xNDYsOC4wMjgtMTMuODczdi0yMjMuMjQ1YzAtNi43MzEtNC4xNjEtMTIuNDgtMTAuMDQ3LTE0Ljg0M2wtLjAwMi0uMDAyWiIgZmlsbD0iIzQyODVmNCIvPgogIDwvZz4KPC9zdmc+"/>
-              <text x="83" y="467.33" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#202124">Feature service</text>
-              <text x="83" y="482.97" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">EKS · federated role, no keys</text>
+              <rect x="34.25" y="483.12" width="255.1" height="44.5" rx="7.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
+              <image x="45" y="491.37" width="28" height="28" href="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyBpZD0ic3RhbmRhcmRfcHJvZHVjdF9pY29uIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZlcnNpb249IjEuMSIgdmlld0JveD0iMCAwIDUxMiA1MTIiPgogIDwhLS0gR2VuZXJhdG9yOiBBZG9iZSBJbGx1c3RyYXRvciAyOS4xLjAsIFNWRyBFeHBvcnQgUGx1Zy1JbiAuIFNWRyBWZXJzaW9uOiAyLjEuMCBCdWlsZCAxNDIpICAtLT4KICA8ZyBpZD0iYm91bmRpbmdfYm94Ij4KICAgIDxyZWN0IHdpZHRoPSI1MTIiIGhlaWdodD0iNTEyIiBmaWxsPSJub25lIi8+CiAgPC9nPgogIDxnIGlkPSJhcnQiPgogICAgPHBhdGggZD0iTTI1Niw0OTAuMjQ1aC0uMTE4Yy0uMDExLS4wMDMtLjAxOCwwLS4wMjUsMGgtLjA2NmMtLjAxLS4wMDItLjAyMiwwLS4wMzQsMGgtLjAzMmMtLjAxMi0uMDAzLS4wMjItLjAwMi0uMDMzLDAtLjAxMiwwLS4wMjMtLjAwMi0uMDM1LDBoLS4xMzRjLS4wMS4wMDItLjAyMSwwLS4wMzMsMC0uMDA1LjAwMi0uMDIxLDAtLjAzNC0uMDAyaDBjLS4wMTEsMC0uMDI1LS4wMDMtLjAzMywwLS4wMTEsMC0uMDI1LS4wMDItLjAzMiwwLTIuNTYyLS4wOTgtNS4xMDQtLjgxMi03LjQtMi4xNHEtMS41MzEtLjg4NS0uMDAyLDBsLTE4NS45OTMtMTA2Ljg4Yy00Ljk2Ny0yLjg1NC04LjAyOC04LjE0Ni04LjAyOC0xMy44NzN2LTIyMy41Yy0uMDItMS4wNzUuMDY5LTIuMTQ3LjI2Mi0zLjE5Ny4xNTQtLjgzOS4zNzQtMS42Ni42NTYtMi40NTYsMS4yMDYtMy40MSwzLjU2OC02LjQzLDYuOTA5LTguNDEzLjA5OC0uMDU5LjE5Ny0uMTE2LjI5OC0uMTczaDBMMjQ4LjA5MiwyMy44NDZjNC45MTktMi43OTcsMTAuOTQ5LTIuNzg4LDE1Ljg1OC4wMjRsMTgzLjk2MywxMDUuMzM4YzUuOTMsMi4zNDIsMTAuMTI0LDguMTI0LDEwLjEyNCwxNC44ODd2MjIzLjI0NWMwLDUuNzI4LTMuMDYyLDExLjAxOS04LjAyOCwxMy44NzNsLTE4NS45OTMsMTA2Ljg4aC0uMDAyYy0yLjMwNSwxLjMzNC00Ljg2LDIuMDQ4LTcuNDM0LDIuMTQxaC0uMDMyYy0uMDEyLDAtLjAxMi4wMDItLjAzNC4wMDJoLS4wMzRjLS4wMTEsMC0uMDIxLjAwMi0uMDMyLDBoLS4wMzJjLS4wMTIuMDAyLS4wMjUsMC0uMDMzLDBoLS4wNjljLS4wMTIsMC0uMDIzLS4wMDItLjAzNSwwaC0uMTMyYy0uMDA4LDAtLjAxNS0uMDAyLS4wMjUsMGgtLjExOGwtLjAwNC4wMDlaTTI3MiwyNjQuNDk2djE4Mi4xMDJsMTU0LjAzNy04OC41MTh2LTE4NS45MzNsLTE1NC4wMzcsOTIuMzQ5aDBaTTg1Ljk2MywzNTguMDhsMTU0LjAzNyw4OC41MTh2LTE4Mi4xMTdsLTE1NC4wMzctOTIuNjU2djE4Ni4yNTZoMFpNMTAxLjY1LDE0My45MTdsMTU0LjM2Myw5Mi44NTQsMTU0LjA1My05Mi4zNThMMjU1Ljk3Miw1Ni4xNzZsLTE1NC4zMjEsODcuNzQxaDBaIiBmaWxsPSIjOWFhMGE2Ii8+CiAgICA8cGF0aCBkPSJNNDQ3Ljk5LDEyOS4yNTFsLTYuNjE0LTMuNzg3LTEyLjk2NSw3Ljk0OS0xNzIuMzk3LDEwMy4zNTYtMTcwLjA1MS0xMDIuMjg5aDBsLTE1LjcwOC05LjUyNC03LjA0Niw0LjA2NmMtLjc5NS4zNy0xLjU1NS44MTktMi4yODUsMS4zMTlsLS4xMy4wNzUuMDEzLjAwMmMtMS43ODksMS4yNDgtMy4zNTYsMi44NzMtNC41NTQsNC44NjMtMS42MTUsMi42ODQtMi4zMzMsNS42NTItMi4yNzEsOC41NjhsLS4wMi0uMDF2OC44OTlsMTIuMTgsNy4xNjIsMTgxLjYxMiwxMDkuMjQ0Yy4wNS4wMy4xMDMuMDU1LjE1My4wODUuMjExLjEyNC40MjQuMjQyLjY0LjM1Ni4xMjEuMDY0LjI0Mi4xMjYuMzY0LjE4Ny4xNzcuMDg3LjM1NS4xNy41MzQuMjUuMTYyLjA3My4zMjQuMTQ1LjQ4OC4yMTMuMTMzLjA1NC4yNjcuMTA0LjQuMTU1LjIwNy4wNzkuNDE0LjE1Ni42MjIuMjI1LjA4Ny4wMjkuMTc0LjA1NC4yNjEuMDgxLjI1Mi4wNzkuNTA0LjE1NS43NTguMjIxLjA0MS4wMTEuMDgyLjAxOS4xMjMuMDI5LjI5NS4wNzQuNTkxLjE0My44ODguMi4wMDIsMCwuMDA0LDAsLjAwNy4wMDEuNjY2LjEyNywxLjMzNC4yMTQsMi4wMDQuMjU1LjA0My4wMDMuMDg3LjAwMi4xMy4wMDQuMjg2LjAxNS41NzMuMDI4Ljg1OC4wMjhoLjAzMmMuMjg4LDAsLjU3Ni0uMDEzLjg2NC0uMDI4LjA0MS0uMDAyLjA4Mi0uMDAxLjEyMy0uMDA0Ljk2OS0uMDYsMS45MzgtLjIxNCwyLjg5Ni0uNDU1LjA0LS4wMS4wODEtLjAxOC4xMjItLjAyOS4yNTMtLjA2Ni41MDUtLjE0Mi43NTYtLjIyMS4wODctLjAyNy4xNzQtLjA1Mi4yNi0uMDguMjA3LS4wNjkuNDEzLS4xNDYuNjE4LS4yMjMuMTM1LS4wNTEuMjctLjEwMS40MDQtLjE1Ni4xNjItLjA2Ni4zMjMtLjEzOC40ODMtLjIxLjE4LS4wOC4zNTgtLjE2My41MzUtLjI1LjEyMS0uMDYuMjQyLS4xMjIuMzYyLS4xODUuMjE2LS4xMTMuNDI5LS4yMzEuNjQtLjM1NC4wNS0uMDI5LjEwMS0uMDUzLjE1LS4wODNsMTYxLjgxLTk3LjAwOXYxODUuOTM0bC0xNzAuMDM3LDk3LjcxLTE3MC4wMzctOTcuNzExaDBsLS4wMTEtLjAwNi0zMS45ODktMTcuOTU4djI3LjIyNGguMDExYy4wMDYsNS41MzYsMi44NzMsMTAuOTE3LDguMDE3LDEzLjg3M2wxODYuMDM3LDEwNi45MDVjLjI5Ni4xNy41OTcuMzMuOTAzLjQ4LjAxOC4wMDkuMDM2LjAyLjA1NC4wMjkuMjAzLjA5OS40MTEuMTg3LjYxNy4yNzcsMi4wNjMuOTAzLDQuMjMzLDEuMzQ1LDYuMzgzLDEuMzQ1aC4wM2MyLjE4NiwwLDQuMzk0LS40NTcsNi40ODgtMS4zOTIuMTY5LS4wNzUuMzM5LS4xNDYuNTA1LS4yMjcuMDQ2LS4wMjMuMDkxLS4wNDkuMTM3LS4wNzIuMjc3LS4xMzguNTUxLS4yODEuODItLjQzNS4wMDItLjAwMS4wMDUtLjAwMi4wMDctLjAwNGwxODYuMDM3LTEwNi45MDVjNC45NjctMi44NTQsOC4wMjgtOC4xNDYsOC4wMjgtMTMuODczdi0yMjMuMjQ1YzAtNi43MzEtNC4xNjEtMTIuNDgtMTAuMDQ3LTE0Ljg0M2wtLjAwMi0uMDAyWiIgZmlsbD0iIzQyODVmNCIvPgogIDwvZz4KPC9zdmc+"/>
+              <text x="83" y="502.4" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#202124">Feature service</text>
+              <text x="83" y="518.03" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">EKS · federated role, no keys</text>
             </g>
           </g>
           <g data-id="/body/0/children/0/children/2" data-tag="Zone" data-kind="project">
-            <rect x="20.75" y="515.55" width="282.1" height="147.9" rx="7.25" fill="#FFF8E1" stroke="#FFE082" stroke-width="1.5"/>
-            <text x="33.5" y="539.87" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#5F6368">Azure · East US</text>
+            <rect x="20.75" y="684.08" width="282.1" height="281.37" rx="7.25" fill="#FFF8E1" stroke="#FFE082" stroke-width="1.5"/>
+            <text x="33.5" y="708.4" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#5F6368">Azure · East US</text>
             <g data-id="/body/0/children/0/children/2/children/0" data-tag="Pcard">
-              <rect x="34.25" y="551.45" width="255.1" height="44.5" rx="7.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
-              <image x="45" y="559.7" width="28" height="28" href="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyBpZD0ic3RhbmRhcmRfcHJvZHVjdF9pY29uIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZlcnNpb249IjEuMSIgdmlld0JveD0iMCAwIDUxMiA1MTIiPgogIDwhLS0gR2VuZXJhdG9yOiBBZG9iZSBJbGx1c3RyYXRvciAyOS4xLjAsIFNWRyBFeHBvcnQgUGx1Zy1JbiAuIFNWRyBWZXJzaW9uOiAyLjEuMCBCdWlsZCAxNDIpICAtLT4KICA8ZyBpZD0iYm91bmRpbmdfYm94Ij4KICAgIDxyZWN0IHdpZHRoPSI1MTIiIGhlaWdodD0iNTEyIiBmaWxsPSJub25lIi8+CiAgPC9nPgogIDxnIGlkPSJhcnQiPgogICAgPHBhdGggZD0iTTQxMCwyNzJIMTAyYy04LjgzNywwLTE2LTcuMTYzLTE2LTE2VjUzYzAtMTcuMTIxLDEzLjg3OS0zMSwzMS0zMWgyNzhjMTcuMTIxLDAsMzEsMTMuODc5LDMxLDMxdjIwM2MwLDguODM3LTcuMTYzLDE2LTE2LDE2Wk0xMTgsMjQwaDI3NlY1NEgxMTh2MTg2WiIgZmlsbD0iIzlhYTBhNiIvPgogICAgPHBhdGggZD0iTTM5NSw0OTBIMTE3Yy0xNy4xMjEsMC0zMS0xMy44NzktMzEtMzF2LTIwM2MwLTguODM3LDcuMTYzLTE2LDE2LTE2aDMwOGM4LjgzNywwLDE2LDcuMTYzLDE2LDE2djIwM2MwLDE3LjEyMS0xMy44NzksMzEtMzEsMzFaTTExOCw0NThoMjc2di0xODZIMTE4djE4NloiIGZpbGw9IiM5YWEwYTYiLz4KICAgIDxwYXRoIGQ9Ik00MjYsMjQwSDg2djMyaDE1NHY3NGMwLDguODM3LDcuMTYzLDE2LDE2LDE2czE2LTcuMTYzLDE2LTE2di03NGgxNTR2LTMyWiIgZmlsbD0iIzQyODVmNCIvPgogICAgPHBhdGggZD0iTTQyNiw1M2MwLTE3LjEyMS0xMy44NzktMzEtMzEtMzFIMTE3Yy0xNy4xMjEsMC0zMSwxMy44NzktMzEsMzF2MWgxNTR2NzRjMCw4LjgzNyw3LjE2MywxNiwxNiwxNnMxNi03LjE2MywxNi0xNlY1NGgxNTR2LTFaIiBmaWxsPSIjNDI4NWY0Ii8+CiAgPC9nPgo8L3N2Zz4="/>
-              <text x="83" y="570.73" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#202124">Document corpus</text>
-              <text x="83" y="586.37" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">Blob Storage · contracts</text>
+              <rect x="34.25" y="719.98" width="255.1" height="44.5" rx="7.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
+              <image x="45" y="728.23" width="28" height="28" href="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyBpZD0ic3RhbmRhcmRfcHJvZHVjdF9pY29uIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZlcnNpb249IjEuMSIgdmlld0JveD0iMCAwIDUxMiA1MTIiPgogIDwhLS0gR2VuZXJhdG9yOiBBZG9iZSBJbGx1c3RyYXRvciAyOS4xLjAsIFNWRyBFeHBvcnQgUGx1Zy1JbiAuIFNWRyBWZXJzaW9uOiAyLjEuMCBCdWlsZCAxNDIpICAtLT4KICA8ZyBpZD0iYm91bmRpbmdfYm94Ij4KICAgIDxyZWN0IHdpZHRoPSI1MTIiIGhlaWdodD0iNTEyIiBmaWxsPSJub25lIi8+CiAgPC9nPgogIDxnIGlkPSJhcnQiPgogICAgPHBhdGggZD0iTTQxMCwyNzJIMTAyYy04LjgzNywwLTE2LTcuMTYzLTE2LTE2VjUzYzAtMTcuMTIxLDEzLjg3OS0zMSwzMS0zMWgyNzhjMTcuMTIxLDAsMzEsMTMuODc5LDMxLDMxdjIwM2MwLDguODM3LTcuMTYzLDE2LTE2LDE2Wk0xMTgsMjQwaDI3NlY1NEgxMTh2MTg2WiIgZmlsbD0iIzlhYTBhNiIvPgogICAgPHBhdGggZD0iTTM5NSw0OTBIMTE3Yy0xNy4xMjEsMC0zMS0xMy44NzktMzEtMzF2LTIwM2MwLTguODM3LDcuMTYzLTE2LDE2LTE2aDMwOGM4LjgzNywwLDE2LDcuMTYzLDE2LDE2djIwM2MwLDE3LjEyMS0xMy44NzksMzEtMzEsMzFaTTExOCw0NThoMjc2di0xODZIMTE4djE4NloiIGZpbGw9IiM5YWEwYTYiLz4KICAgIDxwYXRoIGQ9Ik00MjYsMjQwSDg2djMyaDE1NHY3NGMwLDguODM3LDcuMTYzLDE2LDE2LDE2czE2LTcuMTYzLDE2LTE2di03NGgxNTR2LTMyWiIgZmlsbD0iIzQyODVmNCIvPgogICAgPHBhdGggZD0iTTQyNiw1M2MwLTE3LjEyMS0xMy44NzktMzEtMzEtMzFIMTE3Yy0xNy4xMjEsMC0zMSwxMy44NzktMzEsMzF2MWgxNTR2NzRjMCw4LjgzNyw3LjE2MywxNiwxNiwxNnMxNi03LjE2MywxNi0xNlY1NGgxNTR2LTFaIiBmaWxsPSIjNDI4NWY0Ii8+CiAgPC9nPgo8L3N2Zz4="/>
+              <text x="83" y="739.26" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#202124">Document corpus</text>
+              <text x="83" y="754.9" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">Blob Storage · contracts</text>
             </g>
             <g data-id="/body/0/children/0/children/2/children/1" data-tag="Pcard">
-              <rect x="34.25" y="605.45" width="255.1" height="44.5" rx="7.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
-              <image x="45" y="613.7" width="28" height="28" href="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyBpZD0ic3RhbmRhcmRfcHJvZHVjdF9pY29uIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZlcnNpb249IjEuMSIgdmlld0JveD0iMCAwIDUxMiA1MTIiPgogIDwhLS0gR2VuZXJhdG9yOiBBZG9iZSBJbGx1c3RyYXRvciAyOS4xLjAsIFNWRyBFeHBvcnQgUGx1Zy1JbiAuIFNWRyBWZXJzaW9uOiAyLjEuMCBCdWlsZCAxNDIpICAtLT4KICA8ZyBpZD0iYm91bmRpbmdfYm94Ij4KICAgIDxyZWN0IHdpZHRoPSI1MTIiIGhlaWdodD0iNTEyIiBmaWxsPSJub25lIi8+CiAgPC9nPgogIDxnIGlkPSJhcnQiPgogICAgPHBhdGggZD0iTTM0Ni42ODMsMTEyLjYxMWwtLjAzOS03NS4xNzFjLS4wMDUtOC44MzQtNy4xNjctMTUuOTkyLTE2LTE1Ljk5MmgtLjAwOGMtOC44MzcuMDA0LTE1Ljk5Nyw3LjE3Mi0xNS45OTIsMTYuMDA4bC4wMzksNzUuMTU1SDExOGMtMTcuNjczLDAtMzIsMTQuMzI3LTMyLDMydjExMS44NjVjMCw4OS4wODUsNzYuMjYyLDE2MS41NjIsMTcwLDE2MS41NjJzMTcwLTcyLjQ3NywxNzAtMTYxLjU2MnYtMTExLjg2NWMwLTE3LjY3My0xNC4zMjctMzItMzItMzJoLTQ3LjMxN1pNMzk0LDI1Ni40NzdjMCw3MS40NC02MS45MDYsMTI5LjU2Mi0xMzgsMTI5LjU2MnMtMTM4LTU4LjEyMS0xMzgtMTI5LjU2MnYtMTExLjg2NWgyNzZ2MTExLjg2NVoiIGZpbGw9IiM0Mjg1ZjQiLz4KICAgIDxwYXRoIGQ9Ik0zMTQuNjQ0LDE0NC42MTF2LTMyaC0xMTcuMjk0bC0uMDM5LTc1LjE3MWMtLjAwNS04LjgzNC03LjE2Ny0xNS45OTItMTYtMTUuOTkyaC0uMDA4Yy04LjgzNy4wMDQtMTUuOTk3LDcuMTcyLTE1Ljk5MiwxNi4wMDhsLjAzOSw3NS4xNTVoLTQ3LjM1Yy0xNy42NzMsMC0zMiwxNC4zMjctMzIsMzJ2MTExLjg2NWMwLDgzLjk1OSw2Ny43NDEsMTUzLjE1NSwxNTQuMDA3LDE2MC44NDF2NTYuNjc5YzAsOC42MTYsNi42MjEsMTYuMDI5LDE1LjIyOCwxNi40MzMsOS4xODguNDMyLDE2Ljc3Mi02Ljg4OSwxNi43NzItMTUuOTgydi04OS4yNzdjLTYuNTk0LjYyNy04LjAxNC42NTItMTYsLjg2N2gtLjAwN2MtNzYuMDk0LDAtMTM4LTU4LjEyMS0xMzgtMTI5LjU2MnYtMTExLjg2NWgxOTYuNjQ0LDBaIiBmaWxsPSIjOWFhMGE2Ii8+CiAgPC9nPgo8L3N2Zz4="/>
-              <text x="83" y="624.73" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#202124">Copilot integration</text>
-              <text x="83" y="640.37" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">Azure OpenAI · retrieval calls</text>
+              <rect x="34.25" y="773.98" width="255.1" height="44.5" rx="7.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
+              <image x="45" y="782.23" width="28" height="28" href="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyBpZD0ic3RhbmRhcmRfcHJvZHVjdF9pY29uIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZlcnNpb249IjEuMSIgdmlld0JveD0iMCAwIDUxMiA1MTIiPgogIDwhLS0gR2VuZXJhdG9yOiBBZG9iZSBJbGx1c3RyYXRvciAyOS4xLjAsIFNWRyBFeHBvcnQgUGx1Zy1JbiAuIFNWRyBWZXJzaW9uOiAyLjEuMCBCdWlsZCAxNDIpICAtLT4KICA8ZyBpZD0iYm91bmRpbmdfYm94Ij4KICAgIDxyZWN0IHdpZHRoPSI1MTIiIGhlaWdodD0iNTEyIiBmaWxsPSJub25lIi8+CiAgPC9nPgogIDxnIGlkPSJhcnQiPgogICAgPHBhdGggZD0iTTM0Ni42ODMsMTEyLjYxMWwtLjAzOS03NS4xNzFjLS4wMDUtOC44MzQtNy4xNjctMTUuOTkyLTE2LTE1Ljk5MmgtLjAwOGMtOC44MzcuMDA0LTE1Ljk5Nyw3LjE3Mi0xNS45OTIsMTYuMDA4bC4wMzksNzUuMTU1SDExOGMtMTcuNjczLDAtMzIsMTQuMzI3LTMyLDMydjExMS44NjVjMCw4OS4wODUsNzYuMjYyLDE2MS41NjIsMTcwLDE2MS41NjJzMTcwLTcyLjQ3NywxNzAtMTYxLjU2MnYtMTExLjg2NWMwLTE3LjY3My0xNC4zMjctMzItMzItMzJoLTQ3LjMxN1pNMzk0LDI1Ni40NzdjMCw3MS40NC02MS45MDYsMTI5LjU2Mi0xMzgsMTI5LjU2MnMtMTM4LTU4LjEyMS0xMzgtMTI5LjU2MnYtMTExLjg2NWgyNzZ2MTExLjg2NVoiIGZpbGw9IiM0Mjg1ZjQiLz4KICAgIDxwYXRoIGQ9Ik0zMTQuNjQ0LDE0NC42MTF2LTMyaC0xMTcuMjk0bC0uMDM5LTc1LjE3MWMtLjAwNS04LjgzNC03LjE2Ny0xNS45OTItMTYtMTUuOTkyaC0uMDA4Yy04LjgzNy4wMDQtMTUuOTk3LDcuMTcyLTE1Ljk5MiwxNi4wMDhsLjAzOSw3NS4xNTVoLTQ3LjM1Yy0xNy42NzMsMC0zMiwxNC4zMjctMzIsMzJ2MTExLjg2NWMwLDgzLjk1OSw2Ny43NDEsMTUzLjE1NSwxNTQuMDA3LDE2MC44NDF2NTYuNjc5YzAsOC42MTYsNi42MjEsMTYuMDI5LDE1LjIyOCwxNi40MzMsOS4xODguNDMyLDE2Ljc3Mi02Ljg4OSwxNi43NzItMTUuOTgydi04OS4yNzdjLTYuNTk0LjYyNy04LjAxNC42NTItMTYsLjg2N2gtLjAwN2MtNzYuMDk0LDAtMTM4LTU4LjEyMS0xMzgtMTI5LjU2MnYtMTExLjg2NWgxOTYuNjQ0LDBaIiBmaWxsPSIjOWFhMGE2Ii8+CiAgPC9nPgo8L3N2Zz4="/>
+              <text x="83" y="793.26" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#202124">Copilot integration</text>
+              <text x="83" y="808.9" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">Azure OpenAI · retrieval calls</text>
             </g>
           </g>
         </g>
         <g data-id="/body/0/children/1" data-tag="Col">
           <g data-id="/body/0/children/1/children/0" data-tag="Col">
             <g data-id="/body/0/children/1/children/0/children/0" data-tag="Pipe" data-kind="blue">
-              <circle cx="315.6" cy="176.57" r="4" fill="#1A73E8"/>
-              <line x1="319.6" y1="176.57" x2="333.6" y2="176.57" stroke="#1A73E8" stroke-width="2"/>
-              <rect x="334.35" y="145.42" width="167.2" height="62.3" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
-              <line x1="502.3" y1="176.57" x2="516.3" y2="176.57" stroke="#1A73E8" stroke-width="2"/>
-              <circle cx="520.3" cy="176.57" r="4" fill="#1A73E8"/>
-              <text x="380.54" y="164.34" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">Interconnect</text>
-              <text x="380.59" y="181.94" xml:space="preserve" font-family="Inter" font-size="12" font-weight="600" fill="#5F6368">VLAN · BGP ·</text>
-              <text x="365.22" y="197.54" xml:space="preserve" font-family="Inter" font-size="12" font-weight="600" fill="#5F6368">checkpoints, clips</text>
+              <circle cx="315.6" cy="212.93" r="4" fill="#1A73E8"/>
+              <line x1="319.6" y1="212.93" x2="333.6" y2="212.93" stroke="#1A73E8" stroke-width="2"/>
+              <rect x="334.35" y="181.78" width="167.2" height="62.3" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
+              <line x1="502.3" y1="212.93" x2="516.3" y2="212.93" stroke="#1A73E8" stroke-width="2"/>
+              <circle cx="520.3" cy="212.93" r="4" fill="#1A73E8"/>
+              <text x="380.54" y="200.7" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">Interconnect</text>
+              <text x="380.59" y="218.3" xml:space="preserve" font-family="Inter" font-size="12" font-weight="600" fill="#5F6368">VLAN · BGP ·</text>
+              <text x="365.22" y="233.9" xml:space="preserve" font-family="Inter" font-size="12" font-weight="600" fill="#5F6368">checkpoints, clips</text>
             </g>
             <g data-id="/body/0/children/1/children/0/children/1" data-tag="Pipe" data-kind="dash">
-              <circle cx="315.6" cy="244.58" r="4" fill="#1A73E8"/>
-              <line x1="319.6" y1="244.58" x2="345.71" y2="244.58" stroke="#1A73E8" stroke-width="2" stroke-dasharray="6 5"/>
-              <rect x="346.46" y="221.23" width="142.97" height="46.7" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
-              <line x1="490.19" y1="244.58" x2="516.3" y2="244.58" stroke="#1A73E8" stroke-width="2" stroke-dasharray="6 5"/>
-              <circle cx="520.3" cy="244.58" r="4" fill="#1A73E8"/>
-              <text x="363.08" y="240.14" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">Workforce identity</text>
-              <text x="355.21" y="257.74" xml:space="preserve" font-family="Inter" font-size="12" font-weight="600" fill="#5F6368">SAML · groups to IAM</text>
+              <circle cx="315.6" cy="280.93" r="4" fill="#1A73E8"/>
+              <line x1="319.6" y1="280.93" x2="345.71" y2="280.93" stroke="#1A73E8" stroke-width="2" stroke-dasharray="6 5"/>
+              <rect x="346.46" y="257.58" width="142.97" height="46.7" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
+              <line x1="490.19" y1="280.93" x2="516.3" y2="280.93" stroke="#1A73E8" stroke-width="2" stroke-dasharray="6 5"/>
+              <circle cx="520.3" cy="280.93" r="4" fill="#1A73E8"/>
+              <text x="363.08" y="276.5" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">Workforce identity</text>
+              <text x="355.21" y="294.1" xml:space="preserve" font-family="Inter" font-size="12" font-weight="600" fill="#5F6368">SAML · groups to IAM</text>
             </g>
           </g>
           <g data-id="/body/0/children/1/children/1" data-tag="Col">
             <g data-id="/body/0/children/1/children/1/children/0" data-tag="Pipe" data-kind="pink">
-              <circle cx="315.6" cy="394.73" r="4" fill="#C2185B"/>
-              <line x1="319.6" y1="394.73" x2="333.6" y2="394.73" stroke="#C2185B" stroke-width="2"/>
-              <rect x="334.35" y="363.58" width="167.2" height="62.3" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
-              <line x1="502.3" y1="394.73" x2="516.3" y2="394.73" stroke="#C2185B" stroke-width="2"/>
-              <circle cx="520.3" cy="394.73" r="4" fill="#C2185B"/>
-              <text x="394.63" y="382.49" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">HA VPN</text>
-              <text x="343.4" y="400.09" xml:space="preserve" font-family="Inter" font-size="12" font-weight="600" fill="#5F6368">IPsec · BGP · S3 to Region</text>
-              <text x="413.99" y="415.69" xml:space="preserve" font-family="Inter" font-size="12" font-weight="600" fill="#5F6368">B</text>
+              <circle cx="315.6" cy="503.8" r="4" fill="#C2185B"/>
+              <line x1="319.6" y1="503.8" x2="333.6" y2="503.8" stroke="#C2185B" stroke-width="2"/>
+              <rect x="334.35" y="472.65" width="167.2" height="62.3" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
+              <line x1="502.3" y1="503.8" x2="516.3" y2="503.8" stroke="#C2185B" stroke-width="2"/>
+              <circle cx="520.3" cy="503.8" r="4" fill="#C2185B"/>
+              <text x="394.63" y="491.57" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">HA VPN</text>
+              <text x="343.4" y="509.17" xml:space="preserve" font-family="Inter" font-size="12" font-weight="600" fill="#5F6368">IPsec · BGP · S3 to Region</text>
+              <text x="413.99" y="524.77" xml:space="preserve" font-family="Inter" font-size="12" font-weight="600" fill="#5F6368">B</text>
             </g>
             <g data-id="/body/0/children/1/children/1/children/1" data-tag="Pipe" data-kind="dash">
-              <circle cx="315.6" cy="462.73" r="4" fill="#1A73E8"/>
-              <line x1="319.6" y1="462.73" x2="351.32" y2="462.73" stroke="#1A73E8" stroke-width="2" stroke-dasharray="6 5"/>
-              <rect x="352.07" y="439.38" width="131.76" height="46.7" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
-              <line x1="484.58" y1="462.73" x2="516.3" y2="462.73" stroke="#1A73E8" stroke-width="2" stroke-dasharray="6 5"/>
-              <circle cx="520.3" cy="462.73" r="4" fill="#1A73E8"/>
-              <text x="365.79" y="458.29" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">Workload identity</text>
-              <text x="360.82" y="475.89" xml:space="preserve" font-family="Inter" font-size="12" font-weight="600" fill="#5F6368">federation · no keys</text>
+              <circle cx="315.6" cy="571.8" r="4" fill="#1A73E8"/>
+              <line x1="319.6" y1="571.8" x2="351.32" y2="571.8" stroke="#1A73E8" stroke-width="2" stroke-dasharray="6 5"/>
+              <rect x="352.07" y="548.45" width="131.76" height="46.7" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
+              <line x1="484.58" y1="571.8" x2="516.3" y2="571.8" stroke="#1A73E8" stroke-width="2" stroke-dasharray="6 5"/>
+              <circle cx="520.3" cy="571.8" r="4" fill="#1A73E8"/>
+              <text x="365.79" y="567.37" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">Workload identity</text>
+              <text x="360.82" y="584.97" xml:space="preserve" font-family="Inter" font-size="12" font-weight="600" fill="#5F6368">federation · no keys</text>
             </g>
           </g>
           <g data-id="/body/0/children/1/children/2" data-tag="Col">
             <g data-id="/body/0/children/1/children/2/children/0" data-tag="Pipe" data-kind="blue">
-              <circle cx="315.6" cy="642.97" r="4" fill="#1A73E8"/>
-              <line x1="319.6" y1="642.97" x2="333.6" y2="642.97" stroke="#1A73E8" stroke-width="2"/>
-              <rect x="334.35" y="611.82" width="167.2" height="62.3" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
-              <line x1="502.3" y1="642.97" x2="516.3" y2="642.97" stroke="#1A73E8" stroke-width="2"/>
-              <circle cx="520.3" cy="642.97" r="4" fill="#1A73E8"/>
-              <text x="380.75" y="630.74" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">Cross-Cloud</text>
-              <text x="380.54" y="646.34" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">Interconnect</text>
-              <text x="357.89" y="663.94" xml:space="preserve" font-family="Inter" font-size="12" font-weight="600" fill="#5F6368">private path · corpus</text>
+              <circle cx="315.6" cy="794.67" r="4" fill="#1A73E8"/>
+              <line x1="319.6" y1="794.67" x2="333.6" y2="794.67" stroke="#1A73E8" stroke-width="2"/>
+              <rect x="334.35" y="763.52" width="167.2" height="62.3" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
+              <line x1="502.3" y1="794.67" x2="516.3" y2="794.67" stroke="#1A73E8" stroke-width="2"/>
+              <circle cx="520.3" cy="794.67" r="4" fill="#1A73E8"/>
+              <text x="380.75" y="782.43" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">Cross-Cloud</text>
+              <text x="380.54" y="798.03" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">Interconnect</text>
+              <text x="357.89" y="815.63" xml:space="preserve" font-family="Inter" font-size="12" font-weight="600" fill="#5F6368">private path · corpus</text>
             </g>
-          </g>
-          <g data-id="/body/0/children/1/children/3" data-tag="Col">
-            <g data-id="/body/0/children/1/children/3/children/0" data-tag="Pipe" data-kind="deny">
-              <circle cx="315.6" cy="861.12" r="4" fill="#C5221F"/>
-              <line x1="319.6" y1="861.12" x2="347.46" y2="861.12" stroke="#C5221F" stroke-width="2" stroke-dasharray="6 5"/>
-              <rect x="348.21" y="837.77" width="139.49" height="46.7" rx="5.25" fill="#FFFFFF" stroke="#F4C7C3" stroke-width="1.5"/>
-              <line x1="488.44" y1="861.12" x2="516.3" y2="861.12" stroke="#C5221F" stroke-width="2" stroke-dasharray="6 5"/>
-              <circle cx="520.3" cy="861.12" r="4" fill="#C5221F"/>
-              <text x="375.27" y="856.69" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#C5221F">Public internet</text>
-              <text x="356.96" y="874.29" xml:space="preserve" font-family="Inter" font-size="12" font-weight="600" fill="#5F6368">no public IP · no keys</text>
+            <g data-id="/body/0/children/1/children/2/children/1" data-tag="Pipe" data-kind="deny">
+              <circle cx="315.6" cy="862.67" r="4" fill="#C5221F"/>
+              <line x1="319.6" y1="862.67" x2="347.46" y2="862.67" stroke="#C5221F" stroke-width="2" stroke-dasharray="6 5"/>
+              <rect x="348.21" y="839.32" width="139.49" height="46.7" rx="5.25" fill="#FFFFFF" stroke="#F4C7C3" stroke-width="1.5"/>
+              <line x1="488.44" y1="862.67" x2="516.3" y2="862.67" stroke="#C5221F" stroke-width="2" stroke-dasharray="6 5"/>
+              <circle cx="520.3" cy="862.67" r="4" fill="#C5221F"/>
+              <text x="375.27" y="858.23" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#C5221F">Public internet</text>
+              <text x="356.96" y="875.83" xml:space="preserve" font-family="Inter" font-size="12" font-weight="600" fill="#5F6368">no public IP · no keys</text>
             </g>
           </g>
         </g>
