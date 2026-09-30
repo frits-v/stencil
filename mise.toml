@@ -1,2 +1,6 @@
 [tools]
 cue = "0.17.1"
+
+[tasks.land]
+description = "Merge a pull request only after CI passes: mise run land -- <number>"
+run = "gh pr checks \"$1\" --watch --fail-fast && gh pr merge \"$1\" --merge --delete-branch"
