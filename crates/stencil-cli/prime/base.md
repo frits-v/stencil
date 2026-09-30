@@ -22,7 +22,7 @@ Every node object carries "tag". * required, =default. A field with no type is t
 
 # Checks
 
-`check` prints one line per check with its examined count, then `defect <check> <pointer>: <message>` lines. Examined 0 fails. Link checks on a page without links are not applicable.
+`check` prints one line per check with its examined count, then `defect <check> <pointer>: <message>` lines. Examined 0 fails. Link checks on a page without links, and pipes-land on a page whose pipes have no Row or Col neighbor, are not applicable.
 
 | Check | Examines | Defect | Fix |
 |---|---|---|---|
@@ -33,6 +33,7 @@ Every node object carries "tag". * required, =default. A field with no type is t
 | legend-consistency | each kind use and legend entry | kind without an entry, unused entry, or a kind listed twice | add or drop the entry |
 | links-routed | each link | no clear route; drawn as a fallback L | set from_side and to_side, add via, or move an endpoint |
 | links-avoid-boxes | each segment-obstacle and tag-node pair | the line crosses a box or its tag covers one | same as links-routed; raise gap where links run |
+| pipes-land | each h or v pipe end that faces a Row or Col sibling | the pipe's center is outside every box in the neighbor's subtree, so it points at empty space | give the producer column the gutter's grow weights, or move the pipe to the slot beside its zone |
 
 # Rules no check enforces
 
