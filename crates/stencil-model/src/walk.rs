@@ -1,6 +1,6 @@
-use crate::document::{Node, Page, Pipe, TeeArm};
+use crate::document::{Link, Node, Page, Pipe, TeeArm};
 use crate::pointer::NodePointer;
-use crate::{LEGEND_ENTRIES_MAX, NODES_MAX};
+use crate::{LEGEND_ENTRIES_MAX, LINKS_MAX, NODES_MAX, TEXT_BODY_LINES_MAX};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct NodeEntry<'a> {
@@ -26,6 +26,16 @@ impl NodeRef<'_> {
         match self {
             NodeRef::Node(node) => node.tag_name(),
             NodeRef::TeeArm(_) => "Pipe",
+        }
+    }
+}
+
+impl<'a> NodeRef<'a> {
+    /// The node's `id`, when it has one; a Tee arm carries the Pipe `id` field.
+    pub fn id(self) -> Option<&'a str> {
+        match self {
+            NodeRef::Node(node) => node.id(),
+            NodeRef::TeeArm(pipe) => pipe.id.as_deref(),
         }
     }
 }
@@ -97,7 +107,15 @@ fn push_children_reversed<'a>(entry: &NodeEntry<'a>, pending: &mut Vec<NodeEntry
                 });
             }
         }
-        NodeRef::Node(Node::Pcard(_) | Node::Fact(_) | Node::Note(_) | Node::Pipe(_))
+        NodeRef::Node(
+            Node::Pcard(_)
+            | Node::Fact(_)
+            | Node::Note(_)
+            | Node::Pipe(_)
+            | Node::Text(_)
+            | Node::Callout(_)
+            | Node::Frame(_),
+        )
         | NodeRef::TeeArm(_) => {}
     }
 }
@@ -110,6 +128,7 @@ pub fn text_fields(page: &Page) -> Vec<TextField<'_>> {
         push_node_text_fields(&entry, &mut fields);
     }
     push_legend_text_fields(page, &mut fields);
+    push_link_text_fields(page, &mut fields);
     fields
 }
 
@@ -148,6 +167,34 @@ pub(crate) fn push_legend_text_fields<'a>(page: &'a Page, fields: &mut Vec<TextF
     }
 }
 
+/// `label` and `sub` of the first LINKS_MAX + 1 links, the bound vet reports
+/// `links-too-many` at. `from` and `to` are identifiers, not text.
+pub(crate) fn push_link_text_fields<'a>(page: &'a Page, fields: &mut Vec<TextField<'a>>) {
+    let links_pointer = NodePointer::root().child("links");
+    for (index, link) in page.links.iter().enumerate().take(LINKS_MAX + 1) {
+        push_one_link_text_fields(link, &links_pointer.index(index), fields);
+    }
+}
+
+pub(crate) fn push_one_link_text_fields<'a>(
+    link: &'a Link,
+    link_pointer: &NodePointer,
+    fields: &mut Vec<TextField<'a>>,
+) {
+    if let Some(label) = &link.label {
+        fields.push(TextField {
+            pointer: link_pointer.child("label"),
+            text: label,
+        });
+    }
+    if let Some(sub) = &link.sub {
+        fields.push(TextField {
+            pointer: link_pointer.child("sub"),
+            text: sub,
+        });
+    }
+}
+
 /// The text fields a node itself holds, in struct declaration order. Children are separate
 /// entries of the walk.
 pub(crate) fn push_node_text_fields<'a>(entry: &NodeEntry<'a>, fields: &mut Vec<TextField<'a>>) {
@@ -181,5 +228,25 @@ pub(crate) fn push_node_text_fields<'a>(entry: &NodeEntry<'a>, fields: &mut Vec<
             }
         }
         NodeRef::Node(Node::Tee(tee)) => push("hub", &tee.hub),
+        NodeRef::Node(Node::Text(text)) => {
+            if let Some(heading) = &text.heading {
+                push("heading", heading);
+            }
+            let body_pointer = entry.pointer.child("body");
+            // One line past the limit is enough for vet to report `text-body-too-long`.
+            for (index, line) in text.body.iter().enumerate().take(TEXT_BODY_LINES_MAX + 1) {
+                fields.push(TextField {
+                    pointer: body_pointer.index(index),
+                    text: line,
+                });
+            }
+        }
+        NodeRef::Node(Node::Callout(callout)) => {
+            if let Some(title) = &callout.title {
+                push("title", title);
+            }
+            push("text", &callout.text);
+        }
+        NodeRef::Node(Node::Frame(frame)) => push("label", &frame.label),
     }
 }
