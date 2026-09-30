@@ -1,10 +1,9 @@
 #!/usr/bin/env bash
-# Vets the package, exports both eraser views, compares the customer export
-# with examples/g7.json, vets examples/onepager.json against #Page, then runs
-# each negative case: a copy of the package with one edit to g7.cue that vet
-# must reject with the named error. Exits non-zero if the cue binary is
-# missing, if any positive step fails, or if any negative case passes or fails
-# for a different reason.
+# Vets the package, compares the customer export with examples/g7.json, vets
+# examples/onepager.json against #Page, then runs each negative case: a copy
+# of the package with one edit to g7.cue that vet must reject with the named
+# error. Exits non-zero if the cue binary is missing, if any positive step
+# fails, or if any negative case passes or fails for a different reason.
 set -euo pipefail
 
 CUE="${CUE:-cue}"
@@ -21,17 +20,6 @@ fi
 # cue reads an absolute directory argument as an import path; run from inside.
 cd "$here"
 "$CUE" vet -c .
-"$CUE" export . -e eraserCustomer --out json -o "$out/g7-eraser.json" --force
-"$CUE" export . -e eraserInternal --out json -o "$out/g7-eraser-internal.json" --force
-for view in g7-eraser g7-eraser-internal; do
-	counts="$(python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); print(len(d["entities"]), len(d["connections"]))' "$out/$view.json")"
-	read -r entities connections <<<"$counts"
-	if [[ "$entities" -eq 0 || "$connections" -eq 0 ]]; then
-		echo "FAIL $view: $entities entities, $connections connections" >&2
-		exit 1
-	fi
-	echo "ok   $view: $entities entities, $connections connections"
-done
 
 # Key order may differ between the export and the hand-maintained file;
 # values and list order may not.
@@ -82,9 +70,7 @@ cases=(
 	'card-without-fact|s/{tag: "Pcard", icon: "networking", fn: "Cloud Router A", pn: "private ASN · RFC 6996"}/{tag: "Pcard", icon: "networking", fn: "Cloud Router A"}/|_pcardsWithoutPnFactOrAsk'
 	'empty-ask|s/pn: "same private ASN as Region A"/ask: ""/|.ask: invalid value ""'
 	'pink-pipe-beside-region-a|s/kind:  "dash"/kind:  "pink"/|_pipeBesideZoneOfOtherTint'
-	'blue-vlan-from-metro-2|s/kind: "pink", label: "VLAN 3"/kind: "blue", label: "VLAN 3"/|_leavesCardInItsMetro'
 	'pink-tee-arm-inside-region-a|s/{tag: "Fact", text: "BGP peering[^}]*},/&\n{tag: "Tee", kind: "blue", hub: "hub", arms: [{tag: "Pipe", dir: "h", kind: "blue", label: "arm 1"}, {tag: "Pipe", dir: "h", kind: "pink", label: "arm 2"}]},/|_otherTintInsideZone.pink'
-	'gray-pipe-in-gutter|s/kind: "blue", label: "VLAN 1"/kind: "gray", label: "VLAN 1"/|_leavesCardInItsMetro: undefined field: gray'
 	'workshop-label-on-customer-canvas|s/canvas: "internal"$/canvas: "customer"/|internal._workshop'
 	'grow-length-mismatch|s/grow: \[0, 0, 1\]/grow: [0, 1]/|customer.body.0._growLengthMatchesChildren'
 	'grow-weight-above-100|/halves share the column height/,/grow:/s/grow: \[1, 1\]/grow: [1, 101]/|.grow.1: invalid value 101'
@@ -95,9 +81,6 @@ cases=(
 	'width-below-640|s/^\ttitle: /\twidth: 600\n&/|customer.width: invalid value 600'
 	'width-above-2560|s/^\ttitle: /\twidth: 2600\n&/|customer.width: invalid value 2600'
 	'pink-pipe-between-metros|/sits level with metro i/,/grow:/s/grow: \[1, 1\]/grow: [1, 0, 1]/; /fn: "On-prem router 2"/,/^\t\t\t\t\t},$/s/^\t\t\t\t\t},$/&\n\t\t\t\t\t{tag: "Pipe", dir: "h", kind: "pink", label: "stray"},/|customer.body.0.children.0._pipeBesideZoneOfOtherTint.stray'
-	'drop-vlan-4|/label: "VLAN 4"/d|eraserCustomer._onePipePerCard: conflicting values 4 and 3'
-	'pink-vlan-in-blue-half|/label: "VLAN 3"/d; s/\(.*\)\({tag: "Pipe", dir: "h", kind: "blue", label: "VLAN 2", sub: "EAD 2 · BGP"},\)/&\n\1{tag: "Pipe", dir: "h", kind: "pink", label: "VLAN 3", sub: "EAD 1 · BGP"},/|eraserCustomer._halfBesideItsMetro."VLAN 3"'
-	'third-gutter-half|/halves share the column height/,/grow:/s/grow: \[1, 1\]/grow: [1, 1, 1]/; s/{tag: "Pipe", dir: "h", kind: "pink", label: "VLAN 3"[^}]*},/&\n]}, {tag: "Col", children: [/|eraserCustomer._oneHalfPerMetro: conflicting values 2 and 3'
 	'empty-gutter-half|/halves share the column height/,/grow:/s/grow: \[1, 1\]/grow: [1, 1, 0]/; s/{tag: "Pipe", dir: "h", kind: "pink", label: "VLAN 4"[^}]*},/&\n]}, {tag: "Col", children: [/|customer.body.0.children.1.children.2.children: invalid value []|list.MinItems(1)'
 	"text-above-400|s/fn: \"Cloud Router A\"/fn: \"$long_text\"/|customer.body.0.children.2.children.0.children.0.children.0.fn: invalid value|strings.MaxRunes(400)"
 	"children-above-256|s/{tag: \"Fact\", text: \"BGP peering[^}]*},/&$many_facts/|customer.body.0.children.2.children.0.children.0.children: invalid value|list.MaxItems(256)"

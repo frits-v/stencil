@@ -1,6 +1,6 @@
 // Structural schema for architecture figures. A #Page describes what a figure
 // shows: zones, product cards, facts and the pipes between them. It carries no
-// coordinates; renderers and derived views (eraser.cue) decide geometry.
+// coordinates; the renderer decides geometry.
 package stencil
 
 import (
