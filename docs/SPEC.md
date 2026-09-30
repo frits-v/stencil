@@ -1756,7 +1756,11 @@ All tests except the wrap-epsilon regression use `FixedMetricsMeasurer::default(
 - `vet` on malformed JSON exits 1. `vet` on a missing file exits 2. An unknown subcommand or flag exits 2. `--help` and `--version` exit 0, write the text to stdout and write nothing to stderr.
 - `render` writes the three files to a temporary directory and prints exactly their three absolute paths in the order SVG, PNG, measured JSON. `--scale 5` exits 2. An `--out-dir` under a read-only directory exits 2.
 - `check examples/g7.json` exits 0 and prints the five lines in `CheckName` order with the counts from section 9.4 and the summary `5 checks, 5 passed, 0 failed`.
-- `check` on a document whose text overflows exits 1 and names the pointer. `check` on a document with U+4E00 in a Pcard `fn` exits 1 (`MissingGlyph` through `LayoutError::Measure`) and prints an `error` line followed by `stencil check: checks not run`.
+- `check` on a document whose text overflows exits 1 and names the pointer. The document has one Pipe and a matching legend entry, so child-inside-container is the only failing check and the summary is `5 checks, 4 passed, 1 failed`.
+- `vet` and `check` on a file whose bytes are not UTF-8 exit 1 and print the `error` line with the line and column of the first invalid byte and `document does not parse, checks not run`.
+- `render d/figure.svg --out-dir d` exits 2 and leaves the input unchanged. A symlink planted at `<out-dir>/g7.svg` is replaced by the rendered file, its target keeps its bytes, and no temporary file is left behind.
+- A vetted page of 160 stacked Pcards exits 2 from `render --scale 4` with a `PixmapAllocation` message and writes nothing, and renders at `--scale 1`.
+- Two separate `stencil render` processes on g7 write byte-identical SVG, PNG and measured JSON. `check` on a document with U+4E00 in a Pcard `fn` exits 1 (`MissingGlyph` through `LayoutError::Measure`) and prints an `error` line followed by `stencil check: checks not run`.
 - `render` on a document whose legend omits a used kind writes its three files and exits 0, because render runs `validate_page` only.
 - `schema` prints JSON equal to `schema/stencil.schema.json`.
 - The golden g7 test in section 9.4.

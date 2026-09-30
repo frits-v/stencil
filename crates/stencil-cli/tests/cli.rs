@@ -433,27 +433,47 @@ fn check_g7_passes_all_five_checks() {
     assert_eq!(outcome.stderr, "");
 }
 
+/// One Pipe and its legend entry make legend-consistency pass, so the overflow is the only
+/// failing check and the exit code depends on it.
 #[test]
 fn check_reports_overflowing_text_with_its_pointer() {
     let long_word = "x".repeat(120);
     let mut document = minimal_page(
-        json!([{
-            "tag": "Row",
-            "children": [
-                { "tag": "Pcard", "fn": long_word, "pn": "Cloud Run" },
-                { "tag": "Pcard", "fn": "Second", "pn": "Cloud Run" },
-                { "tag": "Pcard", "fn": "Third", "pn": "Cloud Run" }
-            ]
-        }]),
-        json!([]),
+        json!([
+            {
+                "tag": "Row",
+                "children": [
+                    { "tag": "Pcard", "fn": long_word, "pn": "Cloud Run" },
+                    { "tag": "Pcard", "fn": "Second", "pn": "Cloud Run" },
+                    { "tag": "Pcard", "fn": "Third", "pn": "Cloud Run" }
+                ]
+            },
+            { "tag": "Pipe", "dir": "h", "kind": "blue", "label": "request" }
+        ]),
+        json!([{ "kind": "blue", "text": "request path" }]),
     );
     document["width"] = json!(640);
     let path = write_document("check_overflow", "overflow.json", &document);
 
     let outcome = run_stencil(&["check", &path]);
 
-    assert_eq!(outcome.code, ExitCode::Defects);
+    assert_eq!(outcome.code, ExitCode::Defects, "{}", outcome.stdout);
     let lines = outcome.stdout_lines();
+    let check_lines: Vec<&str> = lines
+        .iter()
+        .copied()
+        .filter(|line| line.starts_with("check "))
+        .collect();
+    assert_eq!(check_lines.len(), 5, "{}", outcome.stdout);
+    assert!(
+        check_lines[0].starts_with("check child-inside-container: examined "),
+        "{}",
+        outcome.stdout
+    );
+    assert!(!check_lines[0].ends_with(", 0 defects"), "{}", outcome.stdout);
+    for passing in &check_lines[1..] {
+        assert!(passing.ends_with(", 0 defects"), "{}", outcome.stdout);
+    }
     assert!(
         lines
             .iter()
@@ -461,11 +481,9 @@ fn check_reports_overflowing_text_with_its_pointer() {
         "{}",
         outcome.stdout
     );
-    assert!(
-        lines
-            .last()
-            .unwrap()
-            .starts_with("stencil check: 5 checks, "),
+    assert_eq!(
+        lines.last().copied(),
+        Some("stencil check: 5 checks, 4 passed, 1 failed"),
         "{}",
         outcome.stdout
     );
@@ -549,4 +567,123 @@ fn schema_prints_the_committed_schema() {
     assert_eq!(outcome.code, ExitCode::Clean);
     assert_eq!(outcome.stdout, committed);
     assert_eq!(outcome.stderr, "");
+}
+
+#[test]
+fn input_that_is_not_utf8_is_a_parse_defect() {
+    let directory = scratch_directory("not_utf8");
+    let path = directory.join("latin1.json");
+    fs::write(&path, b"{\n  \"title\": \"\xff\"}").unwrap();
+    let path_text = path.to_str().unwrap();
+
+    for command in ["vet", "check"] {
+        let outcome = run_stencil(&[command, path_text]);
+        assert_eq!(outcome.code, ExitCode::Defects, "{command}: {}", outcome.stderr);
+        assert_eq!(
+            outcome.stdout_lines(),
+            vec![
+                "error document is not valid stencil JSON at line 2, column 13: input is not valid UTF-8".to_string(),
+                format!("stencil {command}: document does not parse, checks not run"),
+            ]
+        );
+        assert_eq!(outcome.stderr, "");
+    }
+}
+
+#[test]
+fn render_refuses_to_overwrite_its_input() {
+    let directory = scratch_directory("render_over_input");
+    let input = directory.join("figure.svg");
+    let original = fs::read(g7_path()).unwrap();
+    fs::write(&input, &original).unwrap();
+
+    let outcome = run_stencil(&[
+        "render",
+        input.to_str().unwrap(),
+        "--out-dir",
+        directory.to_str().unwrap(),
+    ]);
+
+    assert_eq!(outcome.code, ExitCode::CouldNotRun);
+    assert_eq!(outcome.stdout, "");
+    assert!(outcome.stderr.contains("is the input file"), "{}", outcome.stderr);
+    assert_eq!(fs::read(&input).unwrap(), original);
+    assert!(!directory.join("figure.png").exists());
+    assert!(!directory.join("figure.measured.json").exists());
+}
+
+#[cfg(unix)]
+#[test]
+fn render_replaces_a_symlink_at_an_output_name_instead_of_following_it() {
+    let directory = scratch_directory("render_symlink");
+    let outside = directory.join("outside.txt");
+    fs::write(&outside, "keep").unwrap();
+    let out_dir = directory.join("out");
+    fs::create_dir_all(&out_dir).unwrap();
+    std::os::unix::fs::symlink(&outside, out_dir.join("g7.svg")).unwrap();
+
+    let outcome = run_stencil(&["render", &g7_path(), "--out-dir", out_dir.to_str().unwrap()]);
+
+    assert_eq!(outcome.code, ExitCode::Clean, "{}", outcome.stderr);
+    assert_eq!(fs::read_to_string(&outside).unwrap(), "keep");
+    let svg_metadata = fs::symlink_metadata(out_dir.join("g7.svg")).unwrap();
+    assert!(svg_metadata.file_type().is_file());
+    let leftovers: Vec<_> = fs::read_dir(&out_dir)
+        .unwrap()
+        .map(|entry| entry.unwrap().file_name())
+        .filter(|name| name.to_string_lossy().ends_with(".tmp"))
+        .collect();
+    assert!(leftovers.is_empty(), "{leftovers:?}");
+}
+
+/// 160 stacked cards give a canvas of about 8400 px: under the 2^27 pixel budget at
+/// scale 1 (1320 wide) and above it at scale 4 (5280 wide, about 33,600 tall).
+#[test]
+fn a_vetted_tall_document_is_rejected_above_the_pixel_budget() {
+    let cards: Vec<Value> = (0..160)
+        .map(|index| json!({ "tag": "Pcard", "fn": format!("Card {index}") }))
+        .collect();
+    let document = minimal_page(Value::Array(cards), json!([]));
+    let path = write_document("tall_budget", "tall.json", &document);
+    let out_dir = scratch_directory("tall_budget_out").join("out");
+    let out_dir_text = out_dir.to_str().unwrap();
+
+    let too_large = run_stencil(&["render", &path, "--out-dir", out_dir_text, "--scale", "4"]);
+    assert_eq!(too_large.code, ExitCode::CouldNotRun, "{}", too_large.stdout);
+    assert_eq!(too_large.stdout, "");
+    assert!(
+        too_large.stderr.contains("cannot allocate a 5280x"),
+        "{}",
+        too_large.stderr
+    );
+    assert!(!out_dir.exists());
+
+    let within = run_stencil(&["render", &path, "--out-dir", out_dir_text, "--scale", "1"]);
+    assert_eq!(within.code, ExitCode::Clean, "{}", within.stderr);
+    let png = resvg::tiny_skia::Pixmap::load_png(out_dir.join("tall.png")).unwrap();
+    assert_eq!(png.width(), 1320);
+    assert!(png.height() > 8000, "{}", png.height());
+}
+
+/// Two separate processes, so a per-process hash seed or map order would show up here.
+#[test]
+fn two_processes_render_byte_identical_outputs() {
+    let binary = env!("CARGO_BIN_EXE_stencil");
+    let mut outputs = Vec::new();
+    for run_index in 0..2 {
+        let out_dir = scratch_directory(&format!("two_processes_{run_index}"));
+        let status = std::process::Command::new(binary)
+            .args(["render", &g7_path(), "--out-dir"])
+            .arg(&out_dir)
+            .args(["--scale", "1"])
+            .output()
+            .unwrap();
+        assert!(status.status.success(), "{:?}", status);
+        let bytes: Vec<Vec<u8>> = ["g7.svg", "g7.png", "g7.measured.json"]
+            .iter()
+            .map(|name| fs::read(out_dir.join(name)).unwrap())
+            .collect();
+        outputs.push(bytes);
+    }
+    assert_eq!(outputs[0], outputs[1]);
 }

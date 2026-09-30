@@ -2,16 +2,6 @@
 
 use stencil_model::Violation;
 use stencil_model::checks::{CheckName, CheckReport, Defect};
-use stencil_model::pointer::NodePointer;
-
-/// The root pointer is empty, so it prints as `""` to stay visible in a line.
-pub fn pointer_text(pointer: &NodePointer) -> String {
-    if pointer.as_str().is_empty() {
-        "\"\"".to_string()
-    } else {
-        pointer.as_str().to_string()
-    }
-}
 
 pub fn count_text(count: u64, singular: &str, plural: &str) -> String {
     if count == 1 {
@@ -29,7 +19,7 @@ pub fn violation_line(violation: &Violation) -> String {
     format!(
         "violation {} {}: {}",
         violation.rule.as_str(),
-        pointer_text(&violation.pointer),
+        violation.pointer,
         violation.message
     )
 }
@@ -50,7 +40,7 @@ pub fn defect_line(check: CheckName, defect: &Defect) -> String {
     format!(
         "defect {} {}: {}",
         check.as_str(),
-        pointer_text(&defect.pointer),
+        defect.pointer,
         defect.message
     )
 }
@@ -81,6 +71,7 @@ pub fn check_counts_text(reports: &[CheckReport]) -> String {
 mod tests {
     use super::*;
     use stencil_model::VetRule;
+    use stencil_model::pointer::NodePointer;
 
     fn report(check: CheckName, examined: u64, defect_count: usize) -> CheckReport {
         let defects = (0..defect_count)
@@ -97,11 +88,14 @@ mod tests {
     }
 
     #[test]
-    fn the_root_pointer_prints_as_two_quotes() {
-        assert_eq!(pointer_text(&NodePointer::root()), "\"\"");
+    fn the_root_pointer_prints_as_two_quotes_in_a_defect_line() {
+        let at_root = Defect {
+            pointer: NodePointer::root(),
+            message: "overlaps /title".to_string(),
+        };
         assert_eq!(
-            pointer_text(&NodePointer::root().child("body").index(0)),
-            "/body/0"
+            defect_line(CheckName::SiblingsDoNotOverlap, &at_root),
+            "defect siblings-do-not-overlap \"\": overlaps /title"
         );
     }
 

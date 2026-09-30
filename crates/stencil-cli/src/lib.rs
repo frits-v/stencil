@@ -161,7 +161,7 @@ fn render_to_disk(path: &Path, out_dir: &Path, scale: u8) -> Result<OutputPaths,
     let names = output_names(path)?;
     let loaded = load_document(&read_input(path)?)?;
     let rendered = render_page(&loaded, scale)?;
-    write_outputs(out_dir, &names, &rendered)
+    write_outputs(out_dir, &names, &rendered, path)
 }
 
 fn check(path: &Path, stdout: &mut dyn Write, stderr: &mut dyn Write) -> io::Result<ExitCode> {
