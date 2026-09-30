@@ -10,7 +10,7 @@ Line formats, stable for scripts:
     defect <name> <pointer>: <message>
     violation <rule> <pointer>: <message>
     error document is not valid stencil JSON at line <l>, column <c>: <cause>
-    stencil check: <n> checks, <p> passed, <f> failed, <a> not applicable
+    stencil check: <n> checks, <p> passed, <f> failed[, <a> not applicable]
     stencil vet: <v> violations, checks not run
 
 A pointer is an RFC 6901 JSON pointer into your document, such as /body/0/children/2 or /links/3; the page root prints as "". Violations stop vet, check and render before any check runs; fix them first.
@@ -27,7 +27,7 @@ Examined counts: each check reports how many units it looked at, and a check tha
 | links-routed | link | /links/i | no route from A to B avoids every obstacle; drawn as a fallback L |
 | links-avoid-boxes | pair: segment and obstacle, tag and node | /links/i | segment N from (X, Y) to (X, Y) enters NODE box WxH at (X, Y); tag WxH at (X, Y) overlaps NODE box WxH at (X, Y) |
 
-Numbers carry 2 decimals; the tolerance is 0.01 px, and touching edges pass. text-fits-box also checks the tag of every labeled link. PART is a snake_case part name: function_name, product_name, fact, ask, tag_label, tag_sub, hub_text, label, text, heading, body_line.
+Numbers carry 2 decimals; the tolerance is 0.01 px, and touching edges pass. text-fits-box also checks the tag of every labeled link. PART is a snake_case part name: function_name, product_name, fact, ask, tag_label, tag_sub, hub_text, label, text, badge_text, legend_label, legend_text, heading, marker, body_line.
 
 Reading defects:
 
