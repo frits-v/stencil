@@ -1,0 +1,16 @@
+[package]
+name = "stencil-render"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+resvg.workspace = true
+usvg.workspace = true
+tiny-skia.workspace = true
+fontdb.workspace = true
+base64.workspace = true
+thiserror.workspace = true
+stencil-model = { path = "../stencil-model" }
+stencil-layout = { path = "../stencil-layout" }

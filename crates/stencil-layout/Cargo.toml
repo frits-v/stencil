@@ -1,0 +1,11 @@
+[package]
+name = "stencil-layout"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+taffy.workspace = true
+thiserror.workspace = true
+stencil-model = { path = "../stencil-model" }

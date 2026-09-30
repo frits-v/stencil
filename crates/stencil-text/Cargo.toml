@@ -1,0 +1,11 @@
+[package]
+name = "stencil-text"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+cosmic-text.workspace = true
+thiserror.workspace = true
+stencil-model = { path = "../stencil-model" }
