@@ -1256,7 +1256,7 @@ pub enum RenderError {
 
 `src/lib.rs` exposes `pub fn run(arguments: Vec<std::ffi::OsString>, stdout: &mut dyn Write, stderr: &mut dyn Write) -> ExitCode`, and integration tests call it directly. `src/main.rs` collects `std::env::args_os()`, calls `run` and exits with the returned code. Argument parsing uses clap derive. Section 7 has the commands.
 
-`src/lib.rs` also exposes `pub mod pipeline`, the steps `run` composes, so the section 9.4 golden test drives the same code path without the argument parser: `read_input` (at most `INPUT_BYTES_MAX` bytes), `load_document` (parse, vet, then the input as a `serde_json::Value`), `output_names`, `render_page` (layout with `CosmicTextMeasurer`, SVG, PNG and measured JSON in memory), `model_checks`, `all_checks` (the eight reports in `CheckName` order), `write_outputs`, and the `Failure` enum that section 7 maps to exit codes.
+`src/lib.rs` also exposes `pub mod pipeline`, the steps `run` composes, so the section 9.4 golden test drives the same code path without the argument parser: `read_input` (at most `INPUT_BYTES_MAX` bytes), `load_document` (parse, vet, then the input as a `serde_json::Value`), `output_names`, `render_page` (layout with `CosmicTextMeasurer`, SVG, PNG and measured JSON in memory), `model_checks`, `all_checks` (the nine reports in `CheckName` order, section 12.9), `write_outputs`, and the `Failure` enum that section 7 maps to exit codes.
 
 ```rust
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -1440,10 +1440,10 @@ stencil gallery <out-dir> [--examples <dir>]
 |---|---|---|
 | `vet` | parse, `validate_page`, then, only when there is no violation, `remembered-constants` and `legend-consistency` | one line per violation, or one line per check and one line per defect; one summary line |
 | `render` | parse and `validate_page` only (violations stop the command with exit 1; the two model checks do not run, so a legend inconsistency does not stop a render), layout with `CosmicTextMeasurer`, SVG, PNG at `--scale` (default 2), measured JSON; creates `--out-dir` if missing and overwrites existing outputs | the three written paths, absolute |
-| `check` | everything `render` does, held in memory without writing files, then all eight checks | one line per check, one line per defect, one summary line; or an `error` line and the summary line when layout or render fails with exit 1 |
+| `check` | everything `render` does, held in memory without writing files, then all nine checks | one line per check, one line per defect, one summary line; or an `error` line and the summary line when layout or render fails with exit 1 |
 | `schema` | prints `page_schema()` as pretty JSON | the schema |
 | `prime` | prints the authoring briefing for an agent: `crates/stencil-cli/prime/base.md` with the vocabulary table rendered from `page_schema()`, so tag names, field names, bounds and enum values come from the model; at most 6,000 bytes. With a topic (`themes`, `links`, `blocks`, `layout`, `checks`, `cue`, `example`), that topic's text instead, each at most 4,000 bytes except `example`, which is `examples/g7.json` verbatim. An unknown topic writes one line to stderr naming the topics and exits 2 | the briefing or the topic |
-| `gallery` | for every regular `.json` file directly inside `--examples` (default `examples`), in file-name order and at most 256 of them: parse and `validate_page` once, then for every theme in `--theme` order (center, dusk, wire) layout, SVG, PNG at scale 2 and measured JSON written to `<out-dir>/<stem>/<theme>/` as `render` writes them, followed by all eight checks. Then writes `<out-dir>/index.html` and `<out-dir>/gallery.json` | per render its failing check and defect lines, then `gallery <stem> <theme>: <check counts>`; the two index paths, absolute; one summary line |
+| `gallery` | for every regular `.json` file directly inside `--examples` (default `examples`), in file-name order and at most 256 of them: parse and `validate_page` once, then for every theme in `--theme` order (center, dusk, wire) layout, SVG, PNG at scale 2 and measured JSON written to `<out-dir>/<stem>/<theme>/` as `render` writes them, followed by all nine checks. Then writes `<out-dir>/index.html` and `<out-dir>/gallery.json` | per render its failing check and defect lines, then `gallery <stem> <theme>: <check counts>`; the two index paths, absolute; one summary line |
 
 Line formats, stable for scripts:
 
@@ -1453,7 +1453,7 @@ check text-fits-box: examined 40 text runs, 1 defect
 defect text-fits-box /body/0/children/2/children/0/children/0/children/1: fact "BGP peering · link-local /29" measured 571.20x16.20 in box 560.00x16.20
 check legend-consistency: examined 0 relations, FAILED: nothing examined
 check links-routed: examined 0 links, not applicable: page has no links
-stencil check: 8 checks, 3 passed, 2 failed, 3 not applicable
+stencil check: 9 checks, 3 passed, 2 failed, 4 not applicable
 violation gap-out-of-range /body/0/gap: gap 65 is above 64
 violation text-untrimmed /title: text starts or ends with whitespace
 stencil vet: 2 violations, checks not run
@@ -1468,7 +1468,7 @@ stencil vet: document does not parse, checks not run
 - A defect line is `defect <check> <pointer>: <message>`, and a violation line is `violation <rule> <pointer>: <message>`, with the rule in kebab-case as in section 1.3. An empty pointer prints as `""`.
 - The `vet` summary always starts with the violation count, `1 violation` or `<n> violations`, 0 included. A `render` or `check` summary carries a violation count only when violations stopped the run; otherwise `check` prints `stencil check: <n> checks, <p> passed, <f> failed`, followed by `, <a> not applicable` when a report did not apply. A document with violations or a parse failure prints `checks not run` in place of the check counts.
 - `render` and `check` print violations and parse errors in the same formats, followed by the summary line `stencil <command>: …`.
-- `check` prints the eight check lines in `CheckName` declaration order (child-inside-container, siblings-do-not-overlap, text-fits-box, remembered-constants, legend-consistency, links-routed, links-avoid-boxes, pipes-land), and `vet` prints its two in the same relative order. Each check's defect lines follow its check line directly, in the order the `CheckReport` lists them.
+- `check` prints the nine check lines in `CheckName` declaration order (child-inside-container, siblings-do-not-overlap, text-fits-box, remembered-constants, legend-consistency, links-routed, links-avoid-boxes, pipes-land, iso-labels-clear), and `vet` prints its two in the same relative order. Each check's defect lines follow its check line directly, in the order the `CheckReport` lists them.
 - On success `render` prints the three absolute paths, one per line, in the order SVG, PNG, measured JSON, and nothing after them.
 - `gallery` prints, for each render, the check and defect lines of the checks that failed (none when every check passed or did not apply) followed by `gallery <stem> <theme>: <n> checks, <p> passed, <f> failed[, <a> not applicable]`. A document that does not parse or has violations prints its `error` or `violation` lines and `gallery <stem>: not rendered`; a render that fails with exit 1 (`MissingGlyph`) prints its `error` line and `gallery <stem> <theme>: not rendered`. After the renders come the absolute paths of `index.html` and `gallery.json`, then `stencil gallery: <r> renders of <e> examples in <t> themes, <f> failed`, where r counts the renders whose three files were written and f counts the renders that failed a check or were not rendered.
 - `index.html` is a static page with no script: one anchor per theme (`<a href="#center">`) leading to one `<section id="<theme>">` per theme, which lists every example with its kicker and title read from the document, the PNG as a thumbnail linking to the full PNG, links to the SVG and the measured JSON, and the check counts line. Every link is relative to the gallery directory, so the page works from a download, a zip or a static host. `gallery.json` holds the same data: `themes`, `examples` (each with `name`, `source`, `title`, `kicker` and one entry per theme holding `theme`, `passed`, `summary` and, when the render was written, `files` with the relative `png`, `svg` and `measured` paths), `renders` and `failed`. A document that does not load is listed under its file name with every render not rendered. Neither file carries a timestamp, so two runs over the same examples write the same bytes.
@@ -2088,7 +2088,7 @@ Tests: `stencil-model` vets each new rule with a failing fixture; `stencil-layou
 
 ## 12. Isometric projection
 
-`Page` gains an optional `projection` field, and the CLI `--projection` flag overrides it. Projection is a render option. `layout_page`, `PageGeometry`, the seven checks of sections 6 and 11.2 and the measured JSON `nodes` are the same for `flat` and `iso`. An `iso` render draws the laid-out body as a 2:1 isometric scene: zones become slabs, leaf blocks become boxes, pipes and links lie on the slab they belong to, and every text run and icon stays upright and screen-aligned so type remains legible. Every rule in sections 1 to 11 still holds unless this section names the change.
+`Page` gains an optional `projection` field, and the CLI `--projection` flag overrides it. Projection is a render option. `layout_page`, `PageGeometry`, the eight checks of sections 6 and 11.2 and the measured JSON `nodes` are the same for `flat` and `iso`. An `iso` render draws the laid-out body as a 2:1 isometric scene: zones become slabs, leaf blocks become boxes, pipes and links lie on the slab they belong to, and every text run and icon stays upright and screen-aligned so type remains legible. Every rule in sections 1 to 11 still holds unless this section names the change.
 
 `flat` is the default, and a page without the field renders exactly as before this section: the Chrome golden comparison of section 9.4 and the center identity fixtures under `crates/stencil-render/tests/fixtures/` stay byte-identical.
 
@@ -2157,14 +2157,19 @@ pub struct IsoScene {
     pub link_planes: Vec<f32>,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+/// Carries the node's pointer and screen silhouette so that `iso_labels_clear` reads the
+/// scene alone; the pointer makes it Clone but not Copy.
+#[derive(Debug, Clone, PartialEq)]
 pub struct Solid {
     /// Geometry index of the node.
     pub node: usize,
+    pub pointer: NodePointer,
     pub shape: SolidShape,
     pub base_z: f32,
     /// ISO_SLAB_THICKNESS_PX for a slab, ISO_BLOCK_HEIGHT_PX for a block, 0 for a surface.
     pub height: f32,
+    /// The six section 12.3 silhouette vertices in canvas px, offset included.
+    pub silhouette: [ScreenPoint; 6],
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -2200,7 +2205,7 @@ Rules:
 
 1. A flat point (x, y) at height z projects to `x' = (x - y) * ISO_COS_30 + offset.x` and `y' = (x + y) * ISO_SIN_30 - z + offset.y`, computed in f32 in that order. With this map a larger x runs down and to the right on screen, a larger y runs down and to the left, and a larger z runs straight up.
 2. Only `/body` and its descendants are projected. `/kicker`, `/title` and `/lede` are drawn flat at their layout positions. `/legend`, its entries and `/foot` are drawn flat with `footer_shift` added to every y. The page root is the ground plane, z = 0, and draws nothing of its own. Projecting the page-level nodes would put the title on the ground behind the figure and slide the legend into it: text drawn horizontally from a point on the body's front edge enters the body's projection after about 10 px, because that edge descends at 30 degrees.
-3. The extent set E holds, before any offset: the four corners of the `/body` border box at z = 0; the six silhouette vertices of every slab and block (section 12.3); both ends of every wire, spine and link segment and every arrowhead vertex; the extreme points of every dot ellipse; and the four corners of every billboard's screen box. Let `min_x`, `max_x`, `min_y` and `max_y` bound E.
+3. The extent set E holds, before any offset: the four corners of the `/body` border box at z = 0; the six silhouette vertices of every slab and block (section 12.3); both ends of every wire, spine and link segment and the arrowhead vertices at both ends of every pipe and link (the geometry does not record which ends are arrowed; the vertices of an unarrowed end lie inside the pipe box or the gap beside the endpoint, which a zone top face or the body at z = 0 already bounds, so they do not move the extent); the extreme points of every dot ellipse; and the four corners of every billboard's screen box. Let `min_x`, `max_x`, `min_y` and `max_y` bound E.
 4. `offset.x = ISO_MARGIN_PX - min_x` and `offset.y = body.y - min_y`, where `body.y` is the `/body` border box top. The projected body therefore starts at the page margin on the left and at the flat body top.
 5. `footer_shift = (max_y - min_y) - body.height`. `canvas.width = max(PageGeometry.canvas.width, (max_x - min_x) + 2 * ISO_MARGIN_PX)` and `canvas.height = PageGeometry.canvas.height + footer_shift`. The header keeps the width it was laid out at, so the drawn canvas is never narrower than the flat one. This is the only place the drawn canvas differs from `PageGeometry.canvas`.
 6. The map sends a circle of radius r on a horizontal plane to an axis-aligned ellipse with semi-axes `r * sqrt(1.5)` across and `r * sqrt(0.5)` down, because the map's linear part M has M·Mᵀ = diag(1.5, 0.5).
@@ -2224,7 +2229,7 @@ The page-level nodes draw no solid. Nested zones stack: a top-level zone spans z
 4. Top-face drawing. The gcp Bar part, the Callout Accent part and the Frame diagonals are projected onto the top face as polygons and lines at `base_z + height`, in their flat paint.
 5. Pipe. The wire is one `<line>` from the start dot center to the end dot center, both at the Pipe's base_z, with the section 5.2 stroke of its kind. It runs under the tag billboard, which masks its middle, so no gap opens between a wire end and an upright tag. At an arrowed end the line stops at the arrowhead base, as in section 2.7. A dot is an `<ellipse>` at the projected dot center with `rx` 4.9 and `ry` 2.83 (r = 4, rule 6 of section 12.2, rounded by section 5.1), painted as the flat dot. An arrowhead is a `<polygon>` of the three projected vertices of the flat arrowhead, filled with the wire color.
 6. Tee. The spine is a `<line>` along the projected spine center line at the Tee's base_z. The hub is a billboard.
-7. Links. A link lies on the plane at the nearest slab top of the innermost Zone that contains both endpoints, and on the ground (z = 0) when no Zone contains both; `IsoScene.link_planes` holds that z. The routed polyline of section 11.2 is projected point by point and drawn as a `<path>` with the flat stroke. Arrowheads are projected `<polygon>` elements as for pipes. An iso SVG writes no `<marker>` and no `<defs>`, because a marker draws its triangle unprojected. A link is drawn after every node, as in flat, so it paints over faces; its tag is a billboard.
+7. Links. A link lies on the plane at the nearest slab top of the innermost Zone that contains both endpoints, and on the ground (z = 0) when no Zone contains both; `IsoScene.link_planes` holds that z. A Zone endpoint contains itself: a link from a zone to one of its descendants lies on that zone's top, which is also the base of a direct child block. The routed polyline of section 11.2 is projected point by point and drawn as a `<path>` with the flat stroke. Arrowheads are projected `<polygon>` elements as for pipes. An iso SVG writes no `<marker>` and no `<defs>`, because a marker draws its triangle unprojected. A link is drawn after every node, as in flat, so it paints over faces; its tag is a billboard.
 
 ### 12.4 Billboards
 
@@ -2246,7 +2251,7 @@ A billboard is part of the flat drawing, drawn upright and screen-aligned at a p
 1. Flat box. A run's box is `(part.x + align offset, part.y, metrics.width_px, metrics.height_px)`, where the align offset is `(part.width - metrics.width_px) / 2` for `TextAlign::Center` and 0 otherwise. The ink width, not the part width, matters for a zone label, whose Label part spans the zone. Every other member contributes its part box. The billboard's flat box is the union of its members' boxes.
 2. Anchor. A top-left billboard's screen box has its top-left corner at the projection of the flat box's top-left corner at z. A center billboard's screen box is centered on the projection of the flat box's center at z. In both, the screen box has the flat box's width and height. Text groups anchor top-left because a run drawn horizontally from there moves away from the block's back edge, which descends at 30 degrees. Tags anchor on the center because the wire passes through the projected center.
 3. Lift. A zone's billboard sits 18 px above its slab top, at the height of the block tops of its children. At the slab top, the label band's 8 px gap projects to 4 px while the first child block rises 18 px, so the label would cover that block's top face in every zone whose first child is a block.
-4. Drawing. Every member is drawn with its section 5.2 flat drawing, translated by `(screen.x - flat.x, screen.y - flat.y)`. Coordinates stay absolute, and no `<g>` carries a transform. The number of `<text>` elements is the same as in the flat render of the same page.
+4. Drawing. Every member is drawn with its section 5.2 flat drawing, translated by `(screen.x - flat.x, screen.y - flat.y)`. Coordinates stay absolute, and no `<g>` carries a transform. The number of `<text>` elements is the same as in the flat render of the same page. One addition: a run that is not drawn on a box of its own (a non-gcp zone label, a Pcard's FunctionName and ProductName, and every run of a Fact, Note, Text or Callout) carries a 3 px page-background stroke with `stroke-linejoin="round"` and `paint-order="stroke"`, so the upright glyphs stay legible where they cross slab edges, dashed borders and the gcp band. The halo covers glyphs only, not the space between words.
 5. The gcp chip exists because the bar band descends at 30 degrees on screen while its label runs horizontally, so white label ink would leave the band within about 30 px. In `wire` the chip is white with a 1.25 px ink border, like a wire tag.
 6. The kicker badge and every page-level run are drawn flat (section 12.2, rule 2) and are not billboards.
 
@@ -2339,7 +2344,7 @@ Test vectors, all exact under rule 1:
 4. Defect pointer: for two billboards, the owner of the later one in `IsoScene.billboards` order; for a billboard and a block, the billboard's owner. Messages give the screen box with 2 decimals, for example `iso-labels-clear /body/0/children/0/children/1: content billboard 112.40,260.80 179.00x28.00 overlaps content billboard /body/0/children/0/children/0` and `iso-labels-clear /body/0/children/1: tag billboard 79.20,164.90 60.87x30.60 covers block /body/0/children/0/children/1`. The numbers in these two messages are illustrative.
 5. Pairs are visited in billboard order, then block order, so the defect list is deterministic. The loops are bounded by NODES_MAX + LINKS_MAX billboards and NODES_MAX blocks.
 
-The seven checks of sections 6 and 11.2 run on the flat geometry in both projections.
+The eight checks of sections 6 and 11.2 run on the flat geometry in both projections.
 
 ### 12.8 Outputs
 
@@ -2381,12 +2386,12 @@ The numbers in this example are illustrative.
 | Command | Change |
 |---|---|
 | `render` | accepts `--projection flat` or `--projection iso`, which overrides `Page.projection` as `--theme` overrides `Page.theme` |
-| `check` | accepts the same flag; runs eight checks, `iso-labels-clear` last |
+| `check` | accepts the same flag; runs nine checks, `iso-labels-clear` last |
 | `vet` | unchanged; `--projection` is an unknown flag and exits 2 |
 
 - `pipeline::render_page` calls `project_page` once when the effective projection is `Iso` and keeps the result in `RenderedPage.scene: Option<IsoScene>`, which `measured_json` and the check read.
-- `pipeline::all_checks(page, geometry, scene: Option<&IsoScene>) -> [CheckReport; 8]`, in `CheckName` order.
-- `check` prints eight check lines. A flat page prints `check iso-labels-clear: examined 0 pairs, not applicable: projection is flat`, so the g7 summary becomes `stencil check: 8 checks, 5 passed, 0 failed, 3 not applicable`. Check stdout changes for every document; render outputs do not.
+- `pipeline::all_checks(page, geometry, scene: Option<&IsoScene>) -> [CheckReport; 9]`, in `CheckName` order.
+- `check` prints nine check lines. A flat page prints `check iso-labels-clear: examined 0 pairs, not applicable: projection is flat`, so the g7 summary becomes `stencil check: 9 checks, 6 passed, 0 failed, 3 not applicable`. Check stdout changes for every document; render outputs do not.
 - `cue/stencil.cue` gains `projection?: "flat" | "iso"`.
 
 ### 12.10 Example and tests
@@ -2466,19 +2471,19 @@ The numbers in this example are illustrative.
 }
 ```
 
-Its `iso-labels-clear` count is 81: 10 billboards (4 zones, 4 cards, 2 pipe tags; the link has no label) give 45 billboard pairs, and 10 billboards against 4 blocks less the 4 own-block pairs give 36. Without `projection` the document passes all seven flat checks. Sections 12.2 to 12.7 applied to its flat geometry give no `iso-labels-clear` defect even with each card's run boxes widened to their part boxes; without the lift of section 12.4 rule 3 they give four, one per zone whose label sits above a card.
+Its `iso-labels-clear` count is 81: 10 billboards (4 zones, 4 cards, 2 pipe tags; the link has no label) give 45 billboard pairs, and 10 billboards against 4 blocks less the 4 own-block pairs give 36. Without `projection` the document passes the eight flat checks that apply to it. Sections 12.2 to 12.7 applied to its flat geometry give no `iso-labels-clear` defect even with each card's run boxes widened to their part boxes; without the lift of section 12.4 rule 3 they give four, one per zone whose label sits above a card.
 
 Tests:
 
 - stencil-model: `"projection": "iso"` and `"flat"` parse and an absent field gives `Flat`; `"oblique"` is a `ModelError::Json`; a page with `Flat` serializes without the field, so the g7 round trip is unchanged; the schema test passes against the regenerated file and a copy with `"projection": "oblique"` fails schema validation; `CheckName::IsoLabelsClear.as_str()` is `iso-labels-clear` and `unit` gives `pair` and `pairs`.
 - stencil-render, projection: with zero offset, (100, 0, 0) projects to (86.60254, 50), (0, 100, 0) to (-86.60254, 50) and (0, 0, 18) to (0, -18). For a one-zone document laid out with `FixedMetricsMeasurer`, `canvas.width` equals the formula of section 12.2 rule 5, the smallest billboard or silhouette x equals 20 within 0.01 px, and the smallest y equals the `/body` top.
-- stencil-render, solids: a zone inside a zone has base_z 6; a Pcard in that inner zone has base_z 12 and height 18; a Pipe in a Col in the Row of the body has base_z 0; a Row produces no solid. A link between two cards in one region has plane 18 in the hero; a link between cards in two top-level zones has plane 0.
+- stencil-render, solids: a zone inside a zone has base_z 6; a Pcard in that inner zone has base_z 12 and height 18; a Pipe in a Col in the Row of the body has base_z 0; a Row produces no solid. A link between two cards in one region has plane 18 in the hero; a link between cards in two top-level zones has plane 0; a link from a region zone inside a gcp zone to a Pcard in that region has plane 12.
 - stencil-render, flat identity: `render_svg` of g7, `hybrid-ai` and `network-hub-spoke` with the field absent equals the existing center fixtures (the existing test), and with `"projection": "flat"` written in the document the SVG bytes are equal to the absent case. `measured_json(…, None)` is byte-identical to the section 5.4 output.
 - stencil-render, SVG: an iso render parses with usvg; it has one `<g data-id>` per geometry node and one `<g data-billboard>` per billboard, in order; no `<marker>` and no `<defs>`; every dot is an `<ellipse>` with `rx="4.9"` and `ry="2.83"`; the billboard layer is the last child of `<svg>`; `text_elements` equals the flat render's; each zone group's first `<polygon>` precedes every descendant group.
 - stencil-render, shading: the five test vectors above; a step of 0 returns the input; `shade("#12345", -8)` and `shade("red", -8)` are None; every color constant in `palette.rs` parses; in `wire` every face polygon's fill is `#FFFFFF` or `none`.
 - stencil-render, check: a region-a zone holding a Row (gap 32) of two Pcards with icon and one-word `fn` examines 7 pairs (3 billboards give 3 pairs, and 3 billboards against 2 blocks less 2 own give 4) and passes. The same cards in a Col with gap 8 examine 7 and give two defects at the second card: its billboard overlaps the first card's billboard and covers the first card's block. The flat render of either returns the not-applicable report. A hand-built `IsoScene` with two billboards overlapping by 0.02 px is a defect, and touching edges are not.
 - stencil-render, measured JSON: for the hero, `nodes` is byte-identical between flat and iso, `projection.billboards` has 10 entries, and the whole output is byte-identical under the three themes while the SVG bytes differ.
-- stencil-cli: `check examples/hero-iso.json` under `--theme center`, `dusk` and `wire` exits 0 with `check iso-labels-clear: examined 81 pairs, 0 defects` and `stencil check: 8 checks, 8 passed, 0 failed`. With `--projection flat` it prints the not-applicable line and `8 checks, 7 passed, 0 failed, 1 not applicable`. `render examples/hero-iso.json` under each theme writes three files, and the PNG width is `ceil(projection.canvas.width * 2)`. `render examples/g7.json --projection iso` writes an iso SVG whose measured JSON `nodes` equal the flat run's. `vet --projection iso` exits 2. The existing expectations of section 10 and 11.5 that name `7 checks` become `8 checks` with one more not applicable: the g7 summary in `cli.rs`, the overflow summary (`8 checks, 4 passed, 1 failed, 3 not applicable`), the onepager summary in `golden_onepager.rs` (`8 checks, 7 passed, 0 failed, 1 not applicable`) and any assertion in `theme.rs` that names the check count.
+- stencil-cli: `check examples/hero-iso.json` under `--theme center`, `dusk` and `wire` exits 0 with `check iso-labels-clear: examined 81 pairs, 0 defects` and `stencil check: 9 checks, 9 passed, 0 failed`. With `--projection flat` it prints the not-applicable line and `9 checks, 8 passed, 0 failed, 1 not applicable`. `render examples/hero-iso.json` under each theme writes three files, and the PNG width is `ceil(projection.canvas.width * 2)`. `render examples/g7.json --projection iso` writes an iso SVG whose measured JSON `nodes` equal the flat run's. `vet --projection iso` exits 2. The existing expectations of sections 10 and 11.5 that name `8 checks` become `9 checks` with one more not applicable: the g7 summary in `cli.rs`, the overflow summary (`9 checks, 4 passed, 1 failed, 4 not applicable`), the onepager summary in `golden_onepager.rs` (`9 checks, 7 passed, 0 failed, 2 not applicable`) and any assertion in `theme.rs` that names the check count.
 
 ## Conventions
 

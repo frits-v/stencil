@@ -329,7 +329,7 @@ fn render_theme(
             });
         }
     };
-    let reports = all_checks(&themed.page, &rendered.geometry);
+    let reports = all_checks(&themed.page, &rendered.geometry, rendered.scene.as_ref());
     write_outputs(&out_dir.join(name).join(theme_name), names, &rendered, path)?;
 
     let passed = reports_exit_code(&reports) == ExitCode::Clean;

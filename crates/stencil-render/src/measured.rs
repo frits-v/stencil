@@ -5,9 +5,10 @@ use stencil_layout::{BoxRect, LinkRoute, NodeGeometry, PageGeometry, Part, PartN
 use stencil_model::pointer::NodePointer;
 
 use crate::format_number;
+use crate::iso::IsoScene;
 
-/// Section 5.4 shape. `document` is the input parsed as serde_json::Value.
-pub fn measured_json(document: &Value, geometry: &PageGeometry) -> Value {
+/// Section 5.4 shape; with Some(scene) the output also carries `projection` (section 12.8).
+pub fn measured_json(document: &Value, geometry: &PageGeometry, scene: Option<&IsoScene>) -> Value {
     debug_assert!(
         geometry
             .nodes
@@ -40,7 +41,53 @@ pub fn measured_json(document: &Value, geometry: &PageGeometry) -> Value {
         root.insert("links".to_string(), Value::Array(links));
     }
     root.insert("nodes".to_string(), Value::Array(nodes));
+    if let Some(scene) = scene {
+        root.insert("projection".to_string(), projection_json(scene));
+    }
     Value::Object(root)
+}
+
+/// The drawn canvas, the offset and footer shift, and every billboard's screen box in
+/// painter order.
+fn projection_json(scene: &IsoScene) -> Value {
+    let billboards: Vec<Value> = scene
+        .billboards
+        .iter()
+        .map(|billboard| {
+            let mut object = box_json(billboard.screen);
+            object.insert(
+                "id".to_string(),
+                Value::String(billboard.owner.as_str().to_string()),
+            );
+            object.insert(
+                "role".to_string(),
+                Value::String(billboard.role.as_str().to_string()),
+            );
+            Value::Object(object)
+        })
+        .collect();
+    let mut canvas = Map::new();
+    canvas.insert(
+        "height".to_string(),
+        format_number(scene.canvas.height).to_json(),
+    );
+    canvas.insert(
+        "width".to_string(),
+        format_number(scene.canvas.width).to_json(),
+    );
+    let mut offset = Map::new();
+    offset.insert("x".to_string(), format_number(scene.offset.x).to_json());
+    offset.insert("y".to_string(), format_number(scene.offset.y).to_json());
+    let mut object = Map::new();
+    object.insert("billboards".to_string(), Value::Array(billboards));
+    object.insert("canvas".to_string(), Value::Object(canvas));
+    object.insert(
+        "footer_shift".to_string(),
+        format_number(scene.footer_shift).to_json(),
+    );
+    object.insert("kind".to_string(), Value::String("iso".to_string()));
+    object.insert("offset".to_string(), Value::Object(offset));
+    Value::Object(object)
 }
 
 /// One routed link: its pointer, endpoint node pointers, kind, points, tag box, tag parts

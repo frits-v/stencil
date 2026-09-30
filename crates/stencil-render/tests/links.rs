@@ -272,7 +272,7 @@ fn a_fallback_route_is_still_drawn() {
 fn measured_json_lists_links_with_points_tag_and_status() {
     let document = linked_document("center");
     let rendered = common::render_document_with_fixed_metrics(document.clone());
-    let measured = measured_json(&document, &rendered.geometry);
+    let measured = measured_json(&document, &rendered.geometry, None);
     let links = measured["links"].as_array().unwrap();
     assert_eq!(links.len(), 3);
     for (entry, routed) in links.iter().zip(&rendered.geometry.links) {
@@ -306,7 +306,7 @@ fn measured_json_lists_links_with_points_tag_and_status() {
 #[test]
 fn a_page_without_links_writes_no_links_key() {
     let rendered = common::render_g7();
-    let measured = measured_json(&common::g7_document(), &rendered.geometry);
+    let measured = measured_json(&common::g7_document(), &rendered.geometry, None);
     assert!(measured.get("links").is_none());
 }
 

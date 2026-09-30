@@ -36,6 +36,7 @@ Every node object carries "tag". * required, =default. A field with no type is t
 | links-routed | each link | no clear route; drawn as a fallback L | set from_side and to_side, add via, or move an endpoint |
 | links-avoid-boxes | each segment-obstacle and tag-node pair | the line crosses a box or its tag covers one | same as links-routed; raise gap where links run |
 | pipes-land | each h or v pipe end that faces a Row or Col sibling | the pipe's center is outside every box in the neighbor's subtree, so it points at empty space | give the producer column the gutter's grow weights, or move the pipe to the slot beside its zone |
+| iso-labels-clear | iso only: label pairs, label and block | overlap on screen | cards side by side, no pn |
 
 # Rules no check enforces
 

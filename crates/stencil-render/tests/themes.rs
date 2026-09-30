@@ -125,7 +125,8 @@ fn measured_json_is_identical_and_svg_differs_across_themes() {
             page.theme = theme;
             let geometry = common::layout_with_cosmic_text(&page);
             let svg = render_svg(&page, &geometry).unwrap();
-            let measured = serde_json::to_vec_pretty(&measured_json(&document, &geometry)).unwrap();
+            let measured =
+                serde_json::to_vec_pretty(&measured_json(&document, &geometry, None)).unwrap();
             measured_outputs.push(measured);
             svg_outputs.push(svg.svg);
         }

@@ -1,5 +1,6 @@
 //! SVG writer, PNG through resvg, and the measured JSON (SPEC sections 4.5 and 5).
 
+pub mod iso;
 pub mod palette;
 
 mod icons;

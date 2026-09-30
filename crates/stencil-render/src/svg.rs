@@ -1,4 +1,6 @@
-//! The section 5.2 SVG writer.
+//! The section 5.2 SVG writer, and through `iso_writer` the section 12.5 one.
+
+mod iso_writer;
 
 use std::collections::BTreeSet;
 use stencil_layout::{
@@ -9,7 +11,7 @@ use stencil_model::text::TextStyleName;
 
 use stencil_model::{
     Arrow, Canvas, IconName, LEGEND_ENTRIES_MAX, LINKS_MAX, LegendEntry, Link, Node, NodeRef,
-    NoteKind, Page, PagePoint, Pipe, PipeDir, PipeKind, ZoneKind, body_nodes,
+    NoteKind, Page, PagePoint, Pipe, PipeDir, PipeKind, Projection, ZoneKind, body_nodes,
 };
 
 use crate::icons::icon_data_uri;
@@ -17,7 +19,8 @@ use crate::palette::{self, BoxPaint, DotStyle, LineStyle, Palette, Stroke};
 use crate::{RenderError, SvgDocument, format_number};
 
 const SVG_NAMESPACE: &str = "http://www.w3.org/2000/svg";
-const DOT_RADIUS_PX: f32 = 4.0;
+/// Flat radius of a pipe end dot; an arrowhead's tip sits this far out from the dot center.
+pub(crate) const DOT_RADIUS_PX: f32 = 4.0;
 const BADGE_RADIUS_PX: f32 = 4.0;
 const CARD_RADIUS_PX: f32 = 8.0;
 const FACT_RADIUS_PX: f32 = 4.0;
@@ -25,8 +28,8 @@ const TAG_RADIUS_PX: f32 = 6.0;
 const ICON_CHIP_SIZE_PX: f32 = 36.0;
 const ICON_CHIP_RADIUS_PX: f32 = 6.0;
 /// Arrowhead triangle along the run axis and across it (section 11.2).
-const ARROW_LENGTH_PX: f32 = 10.0;
-const ARROW_WIDTH_PX: f32 = 8.0;
+const ARROW_LENGTH_PX: f32 = stencil_layout::ARROWHEAD_LENGTH_PX;
+const ARROW_WIDTH_PX: f32 = stencil_layout::ARROWHEAD_WIDTH_PX;
 const FRAME_RADIUS_PX: f32 = 4.0;
 const FRAME_CHIP_RADIUS_PX: f32 = 4.0;
 /// Radius of the dot of a bulleted Text line, and its center's offset into the 22 px
@@ -55,6 +58,9 @@ pub fn render_svg(page: &Page, geometry: &PageGeometry) -> Result<SvgDocument, R
     let expected = geometry_order(page);
     if let Some(mismatch) = first_mismatch(&expected, geometry) {
         return Err(mismatch);
+    }
+    if page.projection == Projection::Iso {
+        return iso_writer::render_iso(page, geometry, &expected);
     }
 
     let mut writer = SvgWriter::new(page.canvas, Palette::new(page.theme));
@@ -366,7 +372,41 @@ impl SvgWriter {
         node: &NodeGeometry,
         document_node: DocumentNode<'_>,
     ) -> Result<PartContext, RenderError> {
-        let context = match document_node {
+        if let DocumentNode::Content(NodeRef::Node(content)) = document_node {
+            match content {
+                Node::Text(_) => {
+                    let block_paint = self.palette.block();
+                    self.write_box(depth, node.bounds, CARD_RADIUS_PX, block_paint);
+                }
+                Node::Callout(callout) => {
+                    let paint = self.palette.callout(callout.kind);
+                    self.write_rect(
+                        depth,
+                        node.bounds,
+                        CARD_RADIUS_PX,
+                        Some(paint.fill),
+                        Some(paint.border),
+                    );
+                }
+                Node::Frame(_) => self.write_frame_box(depth, node.bounds),
+                Node::Zone(zone) => self.write_zone_box(depth, node.bounds, zone.kind),
+                Node::Pcard(_) => {
+                    let card_paint = self.palette.card();
+                    self.write_box(depth, node.bounds, CARD_RADIUS_PX, card_paint);
+                }
+                Node::Fact(_) => {
+                    let fill = self.palette.fact_fill();
+                    self.write_rect(depth, node.bounds, FACT_RADIUS_PX, Some(fill), None);
+                }
+                Node::Row(_) | Node::Col(_) | Node::Note(_) | Node::Pipe(_) | Node::Tee(_) => {}
+            }
+        }
+        Ok(self.part_context(document_node))
+    }
+
+    /// The document facts the parts of a node need, without drawing anything.
+    fn part_context(&self, document_node: DocumentNode<'_>) -> PartContext {
+        match document_node {
             DocumentNode::Page
             | DocumentNode::Kicker
             | DocumentNode::Title
@@ -385,47 +425,21 @@ impl SvgWriter {
                 ..PartContext::default()
             },
             DocumentNode::Content(NodeRef::Node(content)) => match content {
-                Node::Row(_) | Node::Col(_) | Node::Note(_) => PartContext::default(),
-                Node::Text(_) => {
-                    let block_paint = self.palette.block();
-                    self.write_box(depth, node.bounds, CARD_RADIUS_PX, block_paint);
-                    PartContext::default()
-                }
-                Node::Callout(callout) => {
-                    let paint = self.palette.callout(callout.kind);
-                    self.write_rect(
-                        depth,
-                        node.bounds,
-                        CARD_RADIUS_PX,
-                        Some(paint.fill),
-                        Some(paint.border),
-                    );
-                    PartContext {
-                        accent: Some(paint.accent),
-                        ..PartContext::default()
-                    }
-                }
-                Node::Frame(_) => {
-                    self.write_frame_box(depth, node.bounds);
-                    PartContext::default()
-                }
-                Node::Zone(zone) => {
-                    self.write_zone_box(depth, node.bounds, zone.kind);
-                    PartContext::default()
-                }
-                Node::Pcard(card) => {
-                    let card_paint = self.palette.card();
-                    self.write_box(depth, node.bounds, CARD_RADIUS_PX, card_paint);
-                    PartContext {
-                        icon: card.icon,
-                        ..PartContext::default()
-                    }
-                }
-                Node::Fact(_) => {
-                    let fill = self.palette.fact_fill();
-                    self.write_rect(depth, node.bounds, FACT_RADIUS_PX, Some(fill), None);
-                    PartContext::default()
-                }
+                Node::Row(_)
+                | Node::Col(_)
+                | Node::Note(_)
+                | Node::Text(_)
+                | Node::Frame(_)
+                | Node::Zone(_)
+                | Node::Fact(_) => PartContext::default(),
+                Node::Callout(callout) => PartContext {
+                    accent: Some(self.palette.callout(callout.kind).accent),
+                    ..PartContext::default()
+                },
+                Node::Pcard(card) => PartContext {
+                    icon: card.icon,
+                    ..PartContext::default()
+                },
                 Node::Pipe(pipe) => PartContext {
                     pipe_kind: Some(pipe.kind),
                     pipe_dir: Some(pipe.dir),
@@ -437,8 +451,7 @@ impl SvgWriter {
                     ..PartContext::default()
                 },
             },
-        };
-        Ok(context)
+        }
     }
 
     fn write_zone_box(&mut self, depth: usize, bounds: BoxRect, kind: ZoneKind) {
@@ -457,9 +470,7 @@ impl SvgWriter {
     /// of the rounded corner crosses a 45 degree line, so no end shows through a dash gap.
     fn write_frame_box(&mut self, depth: usize, bounds: BoxRect) {
         let border = self.palette.frame_border();
-        let inner_radius = (FRAME_RADIUS_PX - border.width_px).max(0.0);
-        let corner_pull = inner_radius * (1.0 - std::f32::consts::FRAC_1_SQRT_2);
-        let inner = inset_rect(bounds, border.width_px + corner_pull);
+        let inner = frame_diagonal_box(bounds, border.width_px);
         let diagonal = self.palette.frame_diagonal();
         for (x1, y1, x2, y2) in [
             (inner.x, inner.y, inner.right(), inner.bottom()),
@@ -918,6 +929,19 @@ impl SvgWriter {
         run: &TextRun,
         fill: &str,
     ) -> Result<(), RenderError> {
+        self.write_text_run_with_halo(depth, pointer, bounds, run, fill, "")
+    }
+
+    /// `write_text_run` with extra attributes on every `<text>`, empty in the flat render.
+    fn write_text_run_with_halo(
+        &mut self,
+        depth: usize,
+        pointer: &NodePointer,
+        bounds: BoxRect,
+        run: &TextRun,
+        fill: &str,
+        halo: &str,
+    ) -> Result<(), RenderError> {
         let style = run.style;
         let letter_spacing_px = style.letter_spacing_em * style.size_px;
         let letter_spacing = if format_number(letter_spacing_px) == crate::NumberRepr::Integer(0) {
@@ -944,7 +968,7 @@ impl SvgWriter {
             self.line(
                 depth,
                 &format!(
-                    r#"<text x="{}" y="{}" xml:space="preserve" font-family="{}" font-size="{}" font-weight="{}"{letter_spacing} fill="{}">{}</text>"#,
+                    r#"<text x="{}" y="{}" xml:space="preserve" font-family="{}" font-size="{}" font-weight="{}"{letter_spacing} fill="{}"{halo}>{}</text>"#,
                     format_number(x),
                     format_number(y),
                     style.family.css_name(),
@@ -1042,6 +1066,14 @@ fn stroke_attributes(stroke: Stroke) -> String {
         stroke.color,
         format_number(stroke.width_px)
     )
+}
+
+/// The box whose corners the Frame diagonals join: inside the border, pulled in to where
+/// the inner edge of the rounded corner crosses a 45 degree line.
+fn frame_diagonal_box(bounds: BoxRect, border_width_px: f32) -> BoxRect {
+    let inner_radius = (FRAME_RADIUS_PX - border_width_px).max(0.0);
+    let corner_pull = inner_radius * (1.0 - std::f32::consts::FRAC_1_SQRT_2);
+    inset_rect(bounds, border_width_px + corner_pull)
 }
 
 fn inset_rect(bounds: BoxRect, inset: f32) -> BoxRect {

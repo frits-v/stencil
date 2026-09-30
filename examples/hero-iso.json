@@ -1,0 +1,70 @@
+{
+  "title": "On-prem data reaches three managed services over two private paths.",
+  "kicker": "Hybrid platform · cover figure",
+  "lede": "One on-prem site, one Google Cloud region, two Interconnect attachments.",
+  "width": 1040,
+  "canvas": "customer",
+  "projection": "iso",
+  "body": [
+    {
+      "tag": "Row",
+      "gap": 8,
+      "grow": [0, 0, 1],
+      "children": [
+        {
+          "tag": "Zone",
+          "kind": "onprem-a",
+          "label": "On-prem",
+          "children": [
+            { "tag": "Pcard", "icon": "hybrid", "fn": "Edge router" }
+          ]
+        },
+        {
+          "tag": "Col",
+          "justify": "space-between",
+          "children": [
+            { "tag": "Pipe", "dir": "h", "kind": "blue", "label": "VLAN 1" },
+            { "tag": "Pipe", "dir": "h", "kind": "dash", "label": "VLAN 2" }
+          ]
+        },
+        {
+          "tag": "Zone",
+          "kind": "gcp",
+          "label": "Google Cloud",
+          "children": [
+            {
+              "tag": "Zone",
+              "kind": "vpc",
+              "label": "Shared VPC",
+              "children": [
+                {
+                  "tag": "Zone",
+                  "kind": "region-a",
+                  "label": "europe-west4",
+                  "children": [
+                    {
+                      "tag": "Row",
+                      "gap": 32,
+                      "children": [
+                        { "tag": "Pcard", "id": "gateway", "icon": "cloud-run", "fn": "API gateway" },
+                        { "tag": "Pcard", "id": "warehouse", "icon": "bigquery", "fn": "Warehouse" },
+                        { "tag": "Pcard", "icon": "vertex-ai", "fn": "Model serving" }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "legend": [
+    { "kind": "blue", "text": "primary attachment" },
+    { "kind": "dash", "text": "failover attachment" }
+  ],
+  "links": [
+    { "from": "gateway", "to": "warehouse", "kind": "blue", "arrow": "end" }
+  ]
+}

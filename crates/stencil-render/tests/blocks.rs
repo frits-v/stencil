@@ -314,7 +314,7 @@ fn a_frame_draws_two_diagonals_under_a_dashed_border_and_a_label_chip() {
 fn measured_parts_key_each_body_line_and_marker_by_line() {
     let document = block_document("center");
     let rendered = common::render_document_with_fixed_metrics(document.clone());
-    let measured = measured_json(&document, &rendered.geometry);
+    let measured = measured_json(&document, &rendered.geometry, None);
     let nodes = measured["nodes"].as_array().unwrap();
     let parts_of = |pointer: &str| {
         nodes.iter().find(|node| node["id"] == pointer).unwrap()["parts"]
@@ -364,7 +364,7 @@ fn measured_parts_key_each_body_line_and_marker_by_line() {
 fn every_block_part_is_accounted_for_in_measured_json() {
     let document = block_document("center");
     let rendered = common::render_document_with_fixed_metrics(document.clone());
-    let measured = measured_json(&document, &rendered.geometry);
+    let measured = measured_json(&document, &rendered.geometry, None);
     let nodes = measured["nodes"].as_array().unwrap();
     let mut examined = 0;
     for (node, geometry_node) in nodes.iter().zip(&rendered.geometry.nodes) {

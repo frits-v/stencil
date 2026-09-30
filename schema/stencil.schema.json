@@ -46,6 +46,9 @@
       },
       "maxItems": 256
     },
+    "projection": {
+      "$ref": "#/$defs/Projection"
+    },
     "theme": {
       "$ref": "#/$defs/Theme"
     },
@@ -747,6 +750,13 @@
         "pink",
         "dash",
         "deny"
+      ]
+    },
+    "Projection": {
+      "type": "string",
+      "enum": [
+        "flat",
+        "iso"
       ]
     },
     "Side": {

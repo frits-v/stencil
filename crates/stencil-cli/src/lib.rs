@@ -16,7 +16,7 @@ use std::path::{Path, PathBuf};
 use clap::{Parser, Subcommand, ValueEnum};
 use stencil_layout::LayoutError;
 use stencil_model::checks::CheckReport;
-use stencil_model::{ModelError, Theme};
+use stencil_model::{ModelError, Projection, Theme};
 use stencil_render::DeviceScale;
 
 pub use exit::ExitCode;
@@ -62,14 +62,20 @@ enum Command {
         /// Color theme, overriding the document's `theme`
         #[arg(long, value_enum)]
         theme: Option<ThemeArgument>,
+        /// Projection, overriding the document's `projection`
+        #[arg(long, value_enum)]
+        projection: Option<ProjectionArgument>,
     },
-    /// Lay out and render in memory, then run all eight checks
+    /// Lay out and render in memory, then run all nine checks
     Check {
         /// Document to check
         json: PathBuf,
         /// Color theme, overriding the document's `theme`
         #[arg(long, value_enum)]
         theme: Option<ThemeArgument>,
+        /// Projection, overriding the document's `projection`
+        #[arg(long, value_enum)]
+        projection: Option<ProjectionArgument>,
     },
     /// Print the document JSON Schema
     Schema,
@@ -106,15 +112,38 @@ impl From<ThemeArgument> for Theme {
     }
 }
 
-/// Parses and vets the input, then applies a `--theme` override to the page. The JSON value
-/// that the measured JSON carries stays the input as written.
-fn load_themed_document(
-    path: &Path,
+/// The `--projection` values, one per `Projection` variant (section 12.9).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, ValueEnum)]
+enum ProjectionArgument {
+    Flat,
+    Iso,
+}
+
+impl From<ProjectionArgument> for Projection {
+    fn from(argument: ProjectionArgument) -> Self {
+        match argument {
+            ProjectionArgument::Flat => Projection::Flat,
+            ProjectionArgument::Iso => Projection::Iso,
+        }
+    }
+}
+
+/// The `--theme` and `--projection` overrides of `render` and `check`.
+#[derive(Debug, Clone, Copy, Default)]
+struct Overrides {
     theme: Option<ThemeArgument>,
-) -> Result<LoadedDocument, Failure> {
+    projection: Option<ProjectionArgument>,
+}
+
+/// Parses and vets the input, then applies the overrides to the page. The JSON value that
+/// the measured JSON carries stays the input as written.
+fn load_overridden_document(path: &Path, overrides: Overrides) -> Result<LoadedDocument, Failure> {
     let mut loaded = load_document(&read_input(path)?)?;
-    if let Some(theme) = theme {
+    if let Some(theme) = overrides.theme {
         loaded.page.theme = Theme::from(theme);
+    }
+    if let Some(projection) = overrides.projection {
+        loaded.page.projection = Projection::from(projection);
     }
     Ok(loaded)
 }
@@ -150,8 +179,20 @@ fn run_command(
             out_dir,
             scale,
             theme,
-        } => render(&json, &out_dir, scale, theme, stdout, stderr),
-        Command::Check { json, theme } => check(&json, theme, stdout, stderr),
+            projection,
+        } => render(
+            &json,
+            &out_dir,
+            scale,
+            Overrides { theme, projection },
+            stdout,
+            stderr,
+        ),
+        Command::Check {
+            json,
+            theme,
+            projection,
+        } => check(&json, Overrides { theme, projection }, stdout, stderr),
         Command::Schema => schema(stdout, stderr),
         Command::Prime { topic } => prime(topic.as_deref(), stdout, stderr),
         Command::Gallery { out_dir, examples } => {
@@ -198,11 +239,11 @@ fn render(
     path: &Path,
     out_dir: &Path,
     scale: u8,
-    theme: Option<ThemeArgument>,
+    overrides: Overrides,
     stdout: &mut dyn Write,
     stderr: &mut dyn Write,
 ) -> io::Result<ExitCode> {
-    match render_to_disk(path, out_dir, scale, theme) {
+    match render_to_disk(path, out_dir, scale, overrides) {
         Ok(paths) => {
             for written in [&paths.svg, &paths.png, &paths.measured] {
                 writeln!(stdout, "{}", written.display())?;
@@ -218,22 +259,22 @@ fn render_to_disk(
     path: &Path,
     out_dir: &Path,
     scale: u8,
-    theme: Option<ThemeArgument>,
+    overrides: Overrides,
 ) -> Result<OutputPaths, Failure> {
     let scale = DeviceScale::new(scale)?;
     let names = output_names(path)?;
-    let loaded = load_themed_document(path, theme)?;
+    let loaded = load_overridden_document(path, overrides)?;
     let rendered = render_page(&loaded, scale)?;
     write_outputs(out_dir, &names, &rendered, path)
 }
 
 fn check(
     path: &Path,
-    theme: Option<ThemeArgument>,
+    overrides: Overrides,
     stdout: &mut dyn Write,
     stderr: &mut dyn Write,
 ) -> io::Result<ExitCode> {
-    let reports = match check_in_memory(path, theme) {
+    let reports = match check_in_memory(path, overrides) {
         Ok(reports) => reports,
         Err(failure) => return report_failure("check", &failure, stdout, stderr),
     };
@@ -244,10 +285,14 @@ fn check(
     Ok(reports_exit_code(&reports))
 }
 
-fn check_in_memory(path: &Path, theme: Option<ThemeArgument>) -> Result<[CheckReport; 8], Failure> {
-    let loaded = load_themed_document(path, theme)?;
+fn check_in_memory(path: &Path, overrides: Overrides) -> Result<[CheckReport; 9], Failure> {
+    let loaded = load_overridden_document(path, overrides)?;
     let rendered = render_page(&loaded, DeviceScale::DEFAULT)?;
-    Ok(all_checks(&loaded.page, &rendered.geometry))
+    Ok(all_checks(
+        &loaded.page,
+        &rendered.geometry,
+        rendered.scene.as_ref(),
+    ))
 }
 
 fn schema(stdout: &mut dyn Write, stderr: &mut dyn Write) -> io::Result<ExitCode> {

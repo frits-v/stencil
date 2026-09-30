@@ -27,6 +27,7 @@ Examined counts: each check reports how many units it looked at, and a check tha
 | links-routed | link | /links/i | no route from A to B avoids every obstacle; drawn as a fallback L |
 | links-avoid-boxes | pair: segment and obstacle, tag and node | /links/i | segment N from (X, Y) to (X, Y) enters NODE box WxH at (X, Y); tag WxH at (X, Y) overlaps NODE box WxH at (X, Y) |
 | pipes-land | each pipe end with a neighbor | /body/... (the pipe) | center Y outside every box of neighbor NODE on the left or right (top or bottom for dir v) |
+| iso-labels-clear | pair: label and label, label and block (iso only) | the later label's owner | ROLE billboard X,Y WxH overlaps ROLE billboard OWNER; or covers block NODE |
 
 Numbers carry 2 decimals; the tolerance is 0.01 px, and touching edges pass. text-fits-box also checks the tag of every labeled link. PART is a snake_case part name: function_name, product_name, fact, ask, tag_label, tag_sub, hub_text, label, text, badge_text, legend_label, legend_text, heading, marker, body_line.
 

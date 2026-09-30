@@ -506,7 +506,7 @@ fn render_stops_on_a_violation_and_writes_nothing() {
 }
 
 #[test]
-fn check_g7_passes_six_checks_and_skips_the_link_checks() {
+fn check_g7_passes_six_checks_and_skips_the_link_and_iso_checks() {
     let outcome = run_stencil(&["check", &g7_path()]);
     assert_eq!(outcome.code, ExitCode::Clean, "{}", outcome.stderr);
     assert_eq!(
@@ -520,7 +520,8 @@ fn check_g7_passes_six_checks_and_skips_the_link_checks() {
             "check links-routed: examined 0 links, not applicable: page has no links",
             "check links-avoid-boxes: examined 0 pairs, not applicable: page has no links",
             "check pipes-land: examined 8 pipe ends, 0 defects",
-            "stencil check: 8 checks, 6 passed, 0 failed, 2 not applicable",
+            "check iso-labels-clear: examined 0 pairs, not applicable: projection is flat",
+            "stencil check: 9 checks, 6 passed, 0 failed, 3 not applicable",
         ]
     );
     assert_eq!(outcome.stderr, "");
@@ -528,7 +529,8 @@ fn check_g7_passes_six_checks_and_skips_the_link_checks() {
 
 /// One Pipe and its legend entry make legend-consistency pass, so the overflow is the only
 /// failing check and the exit code depends on it. The Pipe sits in the body with no Row or
-/// Col sibling, so pipes-land does not apply.
+/// Col sibling, so pipes-land does not apply, and the page is flat, so iso-labels-clear
+/// does not apply either.
 #[test]
 fn check_reports_overflowing_text_with_its_pointer() {
     let long_word = "x".repeat(120);
@@ -558,7 +560,7 @@ fn check_reports_overflowing_text_with_its_pointer() {
         .copied()
         .filter(|line| line.starts_with("check "))
         .collect();
-    assert_eq!(check_lines.len(), 8, "{}", outcome.stdout);
+    assert_eq!(check_lines.len(), 9, "{}", outcome.stdout);
     assert!(
         check_lines[0].starts_with("check child-inside-container: examined "),
         "{}",
@@ -585,6 +587,12 @@ fn check_reports_overflowing_text_with_its_pointer() {
         "{}",
         outcome.stdout
     );
+    assert_eq!(
+        check_lines[8],
+        "check iso-labels-clear: examined 0 pairs, not applicable: projection is flat",
+        "{}",
+        outcome.stdout
+    );
     assert!(
         lines
             .iter()
@@ -594,7 +602,7 @@ fn check_reports_overflowing_text_with_its_pointer() {
     );
     assert_eq!(
         lines.last().copied(),
-        Some("stencil check: 8 checks, 4 passed, 1 failed, 3 not applicable"),
+        Some("stencil check: 9 checks, 4 passed, 1 failed, 4 not applicable"),
         "{}",
         outcome.stdout
     );
