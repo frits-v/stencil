@@ -489,6 +489,8 @@ Internal structure, in order along the run axis: `dot_start`, `wire_start`, `tag
 
 Both wires take an equal share of the free run length, so the tag sits in the middle of the gutter. Tag border color is #DADCE0. For `deny` the tag border is #F4C7C3 and the label color is #C5221F.
 
+A Pipe with `arrow` (section 11.2) draws an arrowhead in place of the dot at each end it names. The tip lies on the dot box's outer edge along the run axis and the base `ARROWHEAD_LENGTH_PX` (10) inward, so the wire on that end stops at the base: after layout, `wire_start` or `wire_end` gives up 2 px on its dot side. The dot part keeps its 8 by 8 box, which is where the arrowhead is drawn, and no other box moves.
+
 How a pipe fills its gutter depends on how its run axis relates to the parent's axes.
 
 - The run axis is the parent's cross axis (h inside a column container, v inside a Row). `align_self` is `AlignSelf::STRETCH`, so the pipe spans the full gutter and the wires take up the length.
@@ -530,6 +532,9 @@ Every string on the canvas uses one of these styles. Family, weight, size, line 
 | legend_label | 700 | 12 | 14.4 | 0 | #202124 | |
 | legend_text | 400 | 12 | 14.4 | 0 | #5F6368 | |
 | foot | 400 | 11 | 13.2 | 0 | #5F6368 | |
+| block_body | 400 | 12 | 17.4 | 0 | #202124 | |
+
+The section 11.3 blocks reuse three of these: the Text heading and the Callout title are `card_function`, the Frame label is `zone_label`, and the Text body lines, numbered list markers and Callout text are `block_body`.
 
 All styles use family Inter. Uppercasing uses `str::to_uppercase` and runs before measurement, so the measured string is the rendered string. The remembered-constants check reads the untransformed input.
 
@@ -551,7 +556,7 @@ The golden stress test (section 10, stencil-layout) builds a document shaped lik
 
 ### 2.11 Parts per node
 
-Layout emits each node's parts in the order below, and render, the measured JSON and the text-fits-box check read them from `NodeGeometry.parts`. A part in brackets is present only when its field is set. Parts in the last column carry a `TextRun`, and every other part has `text: None`. The TagLabel, TagSub and HubText runs have `TextAlign::Center`, and every other run has `TextAlign::Start`.
+Layout emits each node's parts in the order below, and render, the measured JSON and the text-fits-box check read them from `NodeGeometry.parts`. A part in brackets is present only when its field is set. Parts in the last column carry a `TextRun`, and every other part has `text: None`. The TagLabel, TagSub and HubText runs and the Frame Label run have `TextAlign::Center`, and every other run has `TextAlign::Start`.
 
 | NodeTag | Parts, in order | Parts carrying a TextRun |
 |---|---|---|
@@ -565,12 +570,18 @@ Layout emits each node's parts in the order below, and render, the measured JSON
 | Fact | Text | Text (style `fact`) |
 | Pipe, as a body node or a Tee arm | DotStart, WireStart, Tag, TagLabel, [TagSub], WireEnd, DotEnd | TagLabel, [TagSub] |
 | Tee | Spine, Hub, HubText | HubText |
+| Text | [Heading], then for each body line [Marker], BodyLine | [Heading], [Marker] for `numbered`, BodyLine |
+| Callout | Accent, [Heading], Text | [Heading], Text |
+| Frame | LabelChip, Label | Label |
 
 - A text-leaf node (Title, Lede, Foot, Note) is itself the taffy text leaf. It carries one `Text` part whose bounds equal its border box.
 - The Fact node's `Text` part is its text leaf, with bounds equal to the Fact's content box.
 - The Pcard `Text` part is the flex column that holds the other text parts. It carries no run.
 - The Zone `Label` part is the label band's text leaf. In a gcp zone it lies inside `Bar`.
 - The two arms of a Tee are child nodes with tag Pipe, not parts of the Tee.
+- A Text block repeats Marker and BodyLine once per body line, in line order, so the i-th BodyLine part, and the i-th Marker when the list is `numbered` or `bulleted`, belong to `/…/body/i`. A `plain` Text has no Marker parts. A numbered Marker carries the run `1.`, `2.` and so on; a bulleted Marker carries no run and is the 22 by 17.4 cell the 4 px dot is centered in.
+- The Callout Accent is the 4 px bar along the inside of the left border, as tall as the border box minus the top and bottom borders.
+- The Frame LabelChip is the page-background box behind the label, so the diagonals stop at its edges.
 
 The text-fits-box check examines exactly the present parts in the last column, so the g7 count of 40 in section 9.4 follows from this table.
 
@@ -613,7 +624,7 @@ pub struct TextStyle {
 /// Added to every definite width layout passes to a measurer (section 2.1).
 pub const WRAP_EPSILON_PX: f32 = 0.01;
 
-/// The 17 styles of section 2.9, in table order.
+/// The 18 styles of section 2.9, in table order.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum TextStyleName {
     Badge,
@@ -633,6 +644,7 @@ pub enum TextStyleName {
     LegendLabel,
     LegendText,
     Foot,
+    BlockBody,
 }
 
 impl TextStyleName {
@@ -651,9 +663,9 @@ pub struct NamedTextStyle {
     pub uppercase: bool,
 }
 
-/// The 17 styles of section 2.9, in table order, which is TextStyleName order:
+/// The 18 styles of section 2.9, in table order, which is TextStyleName order:
 /// TEXT_STYLES[i].name as usize == i.
-pub const TEXT_STYLES: [NamedTextStyle; 17];
+pub const TEXT_STYLES: [NamedTextStyle; 18];
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct TextLine {
@@ -929,6 +941,8 @@ pub enum CheckName {
     TextFitsBox,
     RememberedConstants,
     LegendConsistency,
+    LinksRouted,
+    LinksAvoidBoxes,
 }
 
 impl CheckName {
@@ -949,10 +963,25 @@ pub struct CheckReport {
     pub check: CheckName,
     pub examined: u64,
     pub defects: Vec<Defect>,
+    /// Why the surface this check examines does not exist on the page, for example
+    /// "page has no links". None for every report that looked at the page.
+    pub not_applicable: Option<&'static str>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum CheckOutcome {
+    Passed,
+    Failed,
+    NotApplicable,
 }
 
 impl CheckReport {
-    /// examined > 0 and no defects.
+    /// examined 0, no defects, `not_applicable: Some(reason)`.
+    pub fn not_applicable(check: CheckName, reason: &'static str) -> Self;
+    /// Passed: no reason, examined > 0, no defects. NotApplicable: a reason, examined 0,
+    /// no defects. Every other combination is Failed.
+    pub fn outcome(&self) -> CheckOutcome;
+    /// outcome() == Passed.
     pub fn passed(&self) -> bool;
 }
 
@@ -1021,9 +1050,13 @@ pub mod checks;
 
 pub use stencil_model::text::WRAP_EPSILON_PX;
 pub const GEOMETRY_EPSILON_PX: f32 = 0.01;
+/// Arrowhead of a link or pipe end (section 11.2): length from base to tip, width at the base.
+pub const ARROWHEAD_LENGTH_PX: f32 = 10.0;
+pub const ARROWHEAD_WIDTH_PX: f32 = 8.0;
 
 /// Asserts validate_page(page) is empty, builds the taffy tree, computes layout,
-/// re-measures text at final widths, and returns absolute geometry in canvas px.
+/// re-measures text at final widths, routes the links, and returns absolute geometry in
+/// canvas px.
 pub fn layout_page(
     page: &Page,
     measurer: &mut dyn TextMeasurer,
@@ -1034,6 +1067,8 @@ pub struct PageGeometry {
     pub canvas: Size,
     /// In geometry order (below). nodes[0] is the page root (pointer "").
     pub nodes: Vec<NodeGeometry>,
+    /// One route per `Page.links` entry, in link order (section 11.2).
+    pub links: Vec<LinkRoute>,
 }
 
 impl PageGeometry {
@@ -1062,6 +1097,7 @@ pub struct NodeGeometry {
 pub enum NodeTag {
     Page, Kicker, Title, Lede, Body, Legend, LegendEntry, Foot,
     Row, Col, Zone, Pcard, Fact, Note, Pipe, Tee,
+    Text, Callout, Frame,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -1085,6 +1121,7 @@ pub enum PartName {
     DotStart, WireStart, Tag, TagLabel, TagSub, WireEnd, DotEnd,
     Spine, Hub, HubText,
     Swatch, LegendLabel, LegendText,
+    Heading, Marker, BodyLine, Accent, LabelChip,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -1116,6 +1153,8 @@ pub enum LayoutError {
 pub fn child_inside_container(geometry: &PageGeometry) -> CheckReport;
 pub fn siblings_do_not_overlap(geometry: &PageGeometry) -> CheckReport;
 pub fn text_fits_box(geometry: &PageGeometry) -> CheckReport;
+pub fn links_routed(geometry: &PageGeometry) -> CheckReport;
+pub fn links_avoid_boxes(geometry: &PageGeometry) -> CheckReport;
 ```
 
 `LayoutError::Taffy` and `LayoutError::NonFinite` carry the pointer of the node whose box failed when there is one: a taffy node not attached to the tree, or a non-finite border or content box, reports its record's pointer. A failure of `compute_layout_with_measure`, which computes the whole tree at once, a failure while walking the tree for absolute origins, and a non-finite canvas size are page-level and carry the root pointer `""`.
@@ -1214,7 +1253,7 @@ pub enum RenderError {
 
 `src/lib.rs` exposes `pub fn run(arguments: Vec<std::ffi::OsString>, stdout: &mut dyn Write, stderr: &mut dyn Write) -> ExitCode`, and integration tests call it directly. `src/main.rs` collects `std::env::args_os()`, calls `run` and exits with the returned code. Argument parsing uses clap derive. Section 7 has the commands.
 
-`src/lib.rs` also exposes `pub mod pipeline`, the steps `run` composes, so the section 9.4 golden test drives the same code path without the argument parser: `read_input` (at most `INPUT_BYTES_MAX` bytes), `load_document` (parse, vet, then the input as a `serde_json::Value`), `output_names`, `render_page` (layout with `CosmicTextMeasurer`, SVG, PNG and measured JSON in memory), `model_checks`, `all_checks` (the five reports in `CheckName` order), `write_outputs`, and the `Failure` enum that section 7 maps to exit codes.
+`src/lib.rs` also exposes `pub mod pipeline`, the steps `run` composes, so the section 9.4 golden test drives the same code path without the argument parser: `read_input` (at most `INPUT_BYTES_MAX` bytes), `load_document` (parse, vet, then the input as a `serde_json::Value`), `output_names`, `render_page` (layout with `CosmicTextMeasurer`, SVG, PNG and measured JSON in memory), `model_checks`, `all_checks` (the seven reports in `CheckName` order), `write_outputs`, and the `Failure` enum that section 7 maps to exit codes.
 
 ```rust
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -1327,7 +1366,7 @@ The default scale is 2, so the default canvas renders 2640 px wide, the same siz
 
 ## 6. Checks
 
-Every check returns a `CheckReport` with the number of units it examined. A report passes only when `examined > 0` and there are no defects. A check that examined nothing is a failure, and the CLI prints it as one.
+Every check returns a `CheckReport` with the number of units it examined. A report passes only when `examined > 0` and there are no defects. A check that examined nothing is a failure, and the CLI prints it as one. The one exception is a check whose surface does not exist on the page: the two link checks on a page without links return `CheckReport::not_applicable` with the reason `page has no links`, and that report neither passes nor fails. A page with links whose link checks examine nothing still fails. The legend check has no such exception (section 1.3).
 
 | Check | Crate | Unit examined | Defect when | Epsilon |
 |---|---|---|---|---|
@@ -1336,6 +1375,8 @@ Every check returns a `CheckReport` with the number of units it examined. A repo
 | `text-fits-box` | layout | each text part (every `TextRun`) | measured width exceeds the part's width, or measured height exceeds the part's height, or the part box extends outside its node's border box | 0.01 px |
 | `remembered-constants` | model | each authored text field (`text_fields`) | the field contains a listed literal at a word boundary | |
 | `legend-consistency` | model | each pipe-kind use (every Pipe, every Tee arm, every Tee spine) plus each of the first LEGEND_ENTRIES_MAX + 1 legend entries | a used kind has no legend entry, a legend entry's kind is never used, or a kind appears twice in the legend | |
+| `links-routed` | layout | each link | the route has `status: Fallback` | |
+| `links-avoid-boxes` | layout | each (segment, obstacle) pair of every link, with the link's section 11.2 obstacles, plus each (tag, node) pair for every geometry node that is not a strict ancestor of an endpoint | a segment enters an obstacle's interior by more than the epsilon, or the tag overlaps the node box with both overlap width and height above the epsilon | 0.01 px |
 
 `CheckName::unit(count)` returns the noun printed after the examined count:
 
@@ -1346,6 +1387,10 @@ Every check returns a `CheckReport` with the number of units it examined. A repo
 | `text-fits-box` | text run | text runs |
 | `remembered-constants` | text field | text fields |
 | `legend-consistency` | relation | relations |
+| `links-routed` | link | links |
+| `links-avoid-boxes` | pair | pairs |
+
+`text-fits-box` also examines the TagLabel and TagSub runs of every link tag, with `/links/<i>` as the owner and the tag box as the box the run must stay inside.
 
 Defect pointers:
 
@@ -1353,6 +1398,7 @@ Defect pointers:
 - `siblings-do-not-overlap`: the later sibling of the pair in section 4.4 geometry order, so for `/kicker` and `/title` it is `/title`. The message names the other.
 - `text-fits-box`: the node that owns the part. The message names the part.
 - `remembered-constants`: the text field. A field yields one defect per listed literal it contains, so one literal occurring twice is one defect and two different literals are two.
+- `links-routed` and `links-avoid-boxes`: the link, `/links/<i>`. The message names the endpoint or obstacle pointers.
 - `legend-consistency`: for a used kind with no legend entry, one defect per use, at the pointer of every Pipe, Tee arm or Tee (for its spine) using that kind. For a legend entry whose kind is never used, `/legend/i`. For a kind listed twice, one defect at each later entry `/legend/j`.
 
 Defect messages name the pointer and the numbers involved. A `text-fits-box` size defect is `<part> <text> measured <w>x<h> in box <w>x<h>`, where `<part>` is the snake_case part name, `<text>` is the run's string as Rust `{:?}` prints it (double-quoted, with `"` and `\` escaped), and each number has exactly 2 decimals (`{:.2}`), the precision of the 0.01 px epsilon, for example `text-fits-box /body/0/children/1/children/0/children/0: tag_label "VLAN 1" measured 41.30x15.60 in box 38.00x15.60`.
@@ -1383,7 +1429,7 @@ stencil schema
 |---|---|---|
 | `vet` | parse, `validate_page`, then, only when there is no violation, `remembered-constants` and `legend-consistency` | one line per violation, or one line per check and one line per defect; one summary line |
 | `render` | parse and `validate_page` only (violations stop the command with exit 1; the two model checks do not run, so a legend inconsistency does not stop a render), layout with `CosmicTextMeasurer`, SVG, PNG at `--scale` (default 2), measured JSON; creates `--out-dir` if missing and overwrites existing outputs | the three written paths, absolute |
-| `check` | everything `render` does, held in memory without writing files, then all five checks | one line per check, one line per defect, one summary line; or an `error` line and the summary line when layout or render fails with exit 1 |
+| `check` | everything `render` does, held in memory without writing files, then all seven checks | one line per check, one line per defect, one summary line; or an `error` line and the summary line when layout or render fails with exit 1 |
 | `schema` | prints `page_schema()` as pretty JSON | the schema |
 
 Line formats, stable for scripts:
@@ -1393,7 +1439,8 @@ check child-inside-container: examined 33 relations, 0 defects
 check text-fits-box: examined 40 text runs, 1 defect
 defect text-fits-box /body/0/children/2/children/0/children/0/children/1: fact "BGP peering · link-local /29" measured 571.20x16.20 in box 560.00x16.20
 check legend-consistency: examined 0 relations, FAILED: nothing examined
-stencil check: 5 checks, 3 passed, 2 failed
+check links-routed: examined 0 links, not applicable: page has no links
+stencil check: 7 checks, 3 passed, 2 failed, 2 not applicable
 violation gap-out-of-range /body/0/gap: gap 65 is above 64
 violation text-untrimmed /title: text starts or ends with whitespace
 stencil vet: 2 violations, checks not run
@@ -1404,11 +1451,11 @@ error document is not valid stencil JSON at line 3, column 7: missing field `kin
 stencil vet: document does not parse, checks not run
 ```
 
-- A check line is `check <name>: examined <n> <unit(n)>, <d> defect` when d is 1 and `defects` otherwise, 0 included. A check that examined nothing prints `FAILED: nothing examined` in place of the defect count.
+- A check line is `check <name>: examined <n> <unit(n)>, <d> defect` when d is 1 and `defects` otherwise, 0 included. A check that examined nothing prints `FAILED: nothing examined` in place of the defect count, and a not-applicable report prints `not applicable: <reason>` there instead.
 - A defect line is `defect <check> <pointer>: <message>`, and a violation line is `violation <rule> <pointer>: <message>`, with the rule in kebab-case as in section 1.3. An empty pointer prints as `""`.
-- The `vet` summary always starts with the violation count, `1 violation` or `<n> violations`, 0 included. A `render` or `check` summary carries a violation count only when violations stopped the run; otherwise `check` prints `stencil check: <n> checks, <p> passed, <f> failed`. A document with violations or a parse failure prints `checks not run` in place of the check counts.
+- The `vet` summary always starts with the violation count, `1 violation` or `<n> violations`, 0 included. A `render` or `check` summary carries a violation count only when violations stopped the run; otherwise `check` prints `stencil check: <n> checks, <p> passed, <f> failed`, followed by `, <a> not applicable` when a report did not apply. A document with violations or a parse failure prints `checks not run` in place of the check counts.
 - `render` and `check` print violations and parse errors in the same formats, followed by the summary line `stencil <command>: …`.
-- `check` prints the five check lines in `CheckName` declaration order (child-inside-container, siblings-do-not-overlap, text-fits-box, remembered-constants, legend-consistency), and `vet` prints its two in the same relative order. Each check's defect lines follow its check line directly, in the order the `CheckReport` lists them.
+- `check` prints the seven check lines in `CheckName` declaration order (child-inside-container, siblings-do-not-overlap, text-fits-box, remembered-constants, legend-consistency, links-routed, links-avoid-boxes), and `vet` prints its two in the same relative order. Each check's defect lines follow its check line directly, in the order the `CheckReport` lists them.
 - On success `render` prints the three absolute paths, one per line, in the order SVG, PNG, measured JSON, and nothing after them.
 - A `MissingGlyph` layout failure (exit 1) prints `error <LayoutError display>` on stdout, followed by `stencil <command>: checks not run`. `render` writes no files in this case, because layout runs before any write.
 
@@ -1433,7 +1480,7 @@ Every error variant maps to one code. The mapping is an exhaustive `match` with 
 | `LayoutError::Taffy`, `LayoutError::NonFinite` | 2 |
 | `FontError`, any variant, and `RenderError::Fonts` | 2 |
 | `RenderError::ScaleOutOfRange`, `GeometryMismatch`, `Svg`, `TextNotRendered`, `TextCountExceeded`, `FontNotResolved`, `PixmapAllocation`, `PngEncode` | 2 |
-| a failing `CheckReport`, zero examined included | 1 |
+| a failing `CheckReport`, zero examined included; a not-applicable report does not fail, and a run is clean only when at least one report passed | 1 |
 
 An input file that reads but is not UTF-8 is a `ModelError::Json` (exit 1) at the line and column of the first invalid byte, with the message `input is not valid UTF-8`, because RFC 8259 requires JSON text to be UTF-8. "Unreadable" means an I/O failure only.
 
@@ -1453,7 +1500,7 @@ Family: Inter, SIL Open Font License 1.1. Four static instances from the Inter 4
 
 | File | Weight | Used by | SHA-256 |
 |---|---|---|---|
-| `Inter-Regular.ttf` | 400 | lede, card_product, note_legend, legend_text, foot | in `FONTS.md` |
+| `Inter-Regular.ttf` | 400 | lede, card_product, note_legend, legend_text, foot, block_body | in `FONTS.md` |
 | `Inter-SemiBold.ttf` | 600 | fact, ask, tag_sub | in `FONTS.md` |
 | `Inter-Bold.ttf` | 700 | kicker, title, zone_label, gcp_bar, perimeter_label, card_function, tag_label, legend_label | in `FONTS.md` |
 | `Inter-ExtraBold.ttf` | 800 | badge | in `FONTS.md` |
@@ -1765,8 +1812,8 @@ All tests except the wrap-epsilon regression use `FixedMetricsMeasurer::default(
 - `vet` on a document with one vet violation prints its `violation` line and `stencil vet: 1 violation, checks not run`, and exits 1.
 - `vet` on malformed JSON exits 1. `vet`, `check` and `render` on a missing file exit 2 with empty stdout, and `render` creates no out-dir. `vet /dev/zero` exits 2 naming the 67,108,864-byte limit, and an input of exactly that many bytes (g7 padded with spaces) is read and vets clean. `vet` and `check` on a 4097-node document exit 1 with `violation nodes-exceeded /body: more than 4096 nodes`. An unknown subcommand or flag exits 2. `--help` and `--version` exit 0, write the text to stdout and write nothing to stderr.
 - `render` writes the three files to a temporary directory and prints exactly their three absolute paths in the order SVG, PNG, measured JSON. `--scale 5` exits 2. An `--out-dir` under a read-only directory exits 2.
-- `check examples/g7.json` exits 0 and prints the five lines in `CheckName` order with the counts from section 9.4 and the summary `5 checks, 5 passed, 0 failed`.
-- `check` on a document whose text overflows exits 1 and names the pointer. The document has one Pipe and a matching legend entry, so child-inside-container is the only failing check and the summary is `5 checks, 4 passed, 1 failed`.
+- `check examples/g7.json` exits 0 and prints the seven lines in `CheckName` order: the five with the counts from section 9.4, then both link checks as not applicable, and the summary `7 checks, 5 passed, 0 failed, 2 not applicable`.
+- `check` on a document whose text overflows exits 1 and names the pointer. The document has one Pipe and a matching legend entry, so child-inside-container is the only failing check and the summary is `7 checks, 4 passed, 1 failed, 2 not applicable`.
 - `vet` and `check` on a file whose bytes are not UTF-8 exit 1 and print the `error` line with the line and column of the first invalid byte and `document does not parse, checks not run`.
 - `render d/figure.svg --out-dir d` exits 2 and leaves the input unchanged. A symlink planted at `<out-dir>/g7.svg` is replaced by the rendered file, its target keeps its bytes, and no temporary file is left behind. With an old `g7.svg` and a directory at `<out-dir>/g7.png`, `render` exits 2, `g7.svg` keeps its old bytes, no `g7.measured.json` appears and no temporary file is left behind. Two temporary names from one process differ, and a file already at a temporary name fails the write and keeps its bytes.
 - A vetted page of 160 stacked Pcards exits 2 from `render --scale 4` with a `PixmapAllocation` message and writes nothing, and renders at `--scale 1`.
@@ -1891,25 +1938,33 @@ Vet rules, in `stencil-model`: `id` values are unique across the document (`id-d
 Routing, in `stencil-layout`, after `layout_page` and before the checks, producing `PageGeometry.links: Vec<LinkRoute>`:
 
 ```rust
+#[derive(Debug, Clone, PartialEq)]
 pub struct LinkRoute {
+    /// Position in `Page.links`; the link's pointer is `/links/<index>`.
     pub index: usize,
     pub kind: PipeKind,
+    /// Geometry indices of the nodes named by `from` and `to`.
+    pub from_node: usize,
+    pub to_node: usize,
     /// Border-box polyline in page coordinates, first point on the from box edge, last on the to box edge. 2 to LINK_SEGMENTS_MAX + 1 points.
     pub points: Vec<PagePoint>,
     /// The tag box for label and sub, centered on the longest segment; None without a label.
     pub tag: Option<BoxRect>,
+    /// Tag, TagLabel and [TagSub], boxed as in a pipe tag; empty without a label.
+    pub parts: Vec<Part>,
     pub status: RouteStatus,
 }
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum RouteStatus { Routed, Fallback }
 ```
 
-- Attach points. With `from_side` or `to_side` given, the midpoint of that side of the node's border box. Otherwise the pair of facing sides whose midpoints are closest, ties broken in the order right, bottom, left, top.
-- Obstacles. The border boxes of every leaf node (Pcard, Fact, Note, Text, Callout, Frame, the tag of every Pipe and Tee, and the whole Tee), and the label part of every Zone, except the from node, the to node, and any node that contains either endpoint. Container boxes are not obstacles: a link may cross a zone border, which is how an architecture figure shows a path entering a zone.
-- Grid. The x set is every obstacle's left and right edge offset outward by 8 px plus both attach x values; the y set likewise. Each set is capped at `ROUTER_GRID_LINES_MAX`; a document that exceeds the cap gets `RouteStatus::Fallback` for every link.
-- Search. A* over grid intersections with Manhattan moves, cost 1 per pixel plus 40 per turn, expanding no node inside an obstacle. The result is simplified to its corner points. Without `via`, a route has at most `LINK_SEGMENTS_MAX` segments. With `via`, the route passes each via point in order, each leg searched separately.
-- Fallback. No route found, or the grid cap exceeded: an L from the from attach point to the to attach point, horizontal leg first, with `status: Fallback`. Fallback is a defect in the `links-routed` check, never a silent success.
-- Tag. Centered on the midpoint of the longest segment, sized like a pipe tag (section 2.7) from the measured label and sub, with the segment masked under it as for pipes.
-- Determinism: the search is exhaustive over a bounded grid with a fixed tie-break (lower x, then lower y), so the route is a pure function of the geometry.
+- Attach points. Each end attaches at the midpoint of one side of its node's border box. With both `from_side` and `to_side` given, those sides. With neither and no `via`, the pair of facing sides (right to left, bottom to top, left to right, top to bottom) whose midpoints are closest, ties broken in the order right, bottom, left, top. Otherwise each end without a side takes the side whose midpoint is closest to what that end faces: the first via point for the from end, the last via point for the to end, or without `via` the other end's attach point; ties in the same order.
+- Obstacles. The border boxes of every leaf node (Pcard, Fact, Note, Text, Callout, Frame, the tag of every Pipe and Tee, and the whole Tee), the label part of every Zone, and the page-level text nodes (`/kicker`, `/title`, `/lede`, each legend entry, `/foot`), except the from node, the to node, and any node that contains either endpoint. Container boxes are not obstacles: a link may cross a zone border, which is how an architecture figure shows a path entering a zone. A segment or grid intersection is blocked when it reaches into an obstacle's open interior by more than `GEOMETRY_EPSILON_PX`; running along an edge is allowed.
+- Grid. The x set is every obstacle's left and right edge offset outward by 8 px, the from and to boxes' edges offset the same way, both attach x values and every via x; the y set likewise. Each set is capped at `ROUTER_GRID_LINES_MAX` per link; a link whose set exceeds the cap gets `RouteStatus::Fallback`.
+- Search. A* over grid intersections with Manhattan moves between neighboring lines, cost 1 per pixel plus 40 per turn, with no move that reaches into an obstacle and no node inside one. The first move leaves the from box through its attach side and the last move enters the to box through its attach side, so a route never runs back across its own endpoint boxes. The result is simplified to its corner points. A route with more than `LINK_SEGMENTS_MAX` segments after simplification falls back. With `via`, the route passes each via point in order, each leg searched separately; the side rule applies to the first and last leg.
+- Fallback. No route found, the grid cap exceeded, or too many segments: an L from the from attach point to the to attach point, horizontal leg first, with `status: Fallback`. Fallback is a defect in the `links-routed` check, never a silent success.
+- Tag. Centered on the midpoint of the longest segment (the first on a tie), sized like a pipe tag (section 2.7) from the label and sub measured at max-content in `tag_label` and `tag_sub`, with the segment masked under it as for pipes.
+- Determinism: the search is exhaustive over a bounded grid with a fixed tie-break (lower estimate, then lower x, then lower y, then the direction order right, down, left, up), so the route is a pure function of the geometry.
 
 Checks, in section 6 terms, examined counts included:
 
@@ -1969,9 +2024,9 @@ pub struct Frame {
 
 Layout and paint:
 
-- `Text`: 12 px padding, 1.25 px border in the card border color, radius 8, card fill. Heading 13 px bold with 6 px below it. Body lines 12 px regular at 1.45 line height, each line wrapped to the content width; `numbered` prefixes `1.`, `2.`, ... in a 22 px hanging indent; `bulleted` prefixes a 4 px dot at the same indent. Each body line is its own text run in the measured output (`/body/…/body/i`), so `text-fits-box` examines it.
-- `Callout`: as `Text` with a 4 px left accent bar and a tinted fill. Accent and fill by kind in `center`: note `#1A73E8` on `#E8F0FE`, risk `#C5221F` on `#FCE8E6`, decision `#188038` on `#E6F4EA`, open `#B06000` on `#FEF7E0`. Dusk: the same accents on `#16305C`, `#3A1A1A`, `#143024`, `#3A2A10`. Wire: accent `#222222`, fill white, and the kind word in small capitals as a prefix to the title. Title 13 px bold, text 12 px regular.
-- `Frame`: a wireframe placeholder. Dashed 1.25 px border, radius 4, no fill, two diagonal 1 px lines corner to corner in the secondary ink, and the label centered in a white (page background) chip so the diagonals do not cross the words. Height is authored; width comes from the container.
+- `Text`: 12 px padding, 1.25 px border in the card border color, radius 8, card fill. Heading 13 px bold with 6 px below it. Body lines 12 px regular at 1.45 line height, each line wrapped to the content width, 4 px apart; `numbered` prefixes `1.`, `2.`, ... in a 22 px hanging indent; `bulleted` prefixes a 4 px dot at the same indent. Each body line is its own text run in the measured output (`/body/…/body/i`), so `text-fits-box` examines it. A list line is a flex row: the Marker cell, 22 px wide and one body line tall, then the line's text leaf with `flex_grow` 1 and `flex_basis` 0, so wrapped lines keep the indent.
+- `Callout`: as `Text` with a 4 px left accent bar and a tinted fill. The bar is an absolutely placed part at inset left 0, top 0 and bottom 0 inside the border, and the left padding is 12 + 4 = 16 px, so the bar takes no flow space and the content starts 12 px right of it. Accent and fill by kind in `center`: note `#1A73E8` on `#E8F0FE`, risk `#C5221F` on `#FCE8E6`, decision `#188038` on `#E6F4EA`, open `#B06000` on `#FEF7E0`. Dusk: the same accents on `#16305C`, `#3A1A1A`, `#143024`, `#3A2A10`. Wire: accent `#222222`, fill white, and the kind word in small capitals as a prefix to the title. Title 13 px bold, text 12 px regular.
+- `Frame`: a wireframe placeholder. Dashed 1.25 px border, radius 4, no fill, two diagonal 1 px lines corner to corner in the secondary ink, and the label centered in a white (page background) chip so the diagonals do not cross the words. Height is authored; width comes from the container. The Frame is a flex column with padding 8 that centers the chip on both axes; its `size`, `min_size` and `max_size` heights all equal `height`, so neither a grow weight nor a Row's stretch changes it. The chip has padding 4/8 and `max_size.width` 100%, and holds the label in `zone_label`, centered, wrapping inside the Frame's content width.
 
 Every block may carry `id` and be a link endpoint.
 
