@@ -1424,6 +1424,7 @@ stencil vet <json>
 stencil render <json> --out-dir <dir> [--scale <1-4>]
 stencil check <json>
 stencil schema
+stencil prime [<topic>]
 ```
 
 | Command | Does | Output on stdout |
@@ -1432,6 +1433,7 @@ stencil schema
 | `render` | parse and `validate_page` only (violations stop the command with exit 1; the two model checks do not run, so a legend inconsistency does not stop a render), layout with `CosmicTextMeasurer`, SVG, PNG at `--scale` (default 2), measured JSON; creates `--out-dir` if missing and overwrites existing outputs | the three written paths, absolute |
 | `check` | everything `render` does, held in memory without writing files, then all seven checks | one line per check, one line per defect, one summary line; or an `error` line and the summary line when layout or render fails with exit 1 |
 | `schema` | prints `page_schema()` as pretty JSON | the schema |
+| `prime` | prints the authoring briefing for an agent: `crates/stencil-cli/prime/base.md` with the vocabulary table rendered from `page_schema()`, so tag names, field names, bounds and enum values come from the model; at most 6,000 bytes. With a topic (`themes`, `links`, `blocks`, `layout`, `checks`, `cue`, `example`), that topic's text instead, each at most 4,000 bytes except `example`, which is `examples/g7.json` verbatim. An unknown topic writes one line to stderr naming the topics and exits 2 | the briefing or the topic |
 
 Line formats, stable for scripts:
 
@@ -1464,9 +1466,9 @@ Exit codes:
 
 | Code | Meaning | Examples |
 |---|---|---|
-| 0 | clean | every check passed; render wrote its files; schema printed; `--help` or `--version` printed |
+| 0 | clean | every check passed; render wrote its files; schema or prime printed; `--help` or `--version` printed |
 | 1 | defects in the document | invalid JSON, a serde type error, a vet violation, a failing check, a zero-examined check, `MissingGlyph`, content that overflows |
-| 2 | could not run | bad arguments or unknown subcommand (clap usage errors), unreadable input file, output directory not creatable or not writable, bundled font verification failure, resvg rejecting generated SVG, `TextNotRendered`, a canvas above the PNG pixel budget (section 5.3), any internal fault in the table below |
+| 2 | could not run | bad arguments, unknown subcommand or unknown prime topic, unreadable input file, output directory not creatable or not writable, bundled font verification failure, resvg rejecting generated SVG, `TextNotRendered`, a canvas above the PNG pixel budget (section 5.3), any internal fault in the table below |
 
 Every error variant maps to one code. The mapping is an exhaustive `match` with no wildcard arm, so a new variant does not compile until it has a code. The one exception is clap's `ErrorKind`, which is `#[non_exhaustive]`: its match names `DisplayHelp` and `DisplayVersion` and sends every other kind to 2 through a wildcard arm.
 
@@ -1481,6 +1483,7 @@ Every error variant maps to one code. The mapping is an exhaustive `match` with 
 | `LayoutError::Taffy`, `LayoutError::NonFinite` | 2 |
 | `FontError`, any variant, and `RenderError::Fonts` | 2 |
 | `RenderError::ScaleOutOfRange`, `GeometryMismatch`, `Svg`, `TextNotRendered`, `TextCountExceeded`, `FontNotResolved`, `PixmapAllocation`, `PngEncode` | 2 |
+| `PrimeError`, any variant: the briefing is built from the binary's own schema and texts, so a failure is an internal fault | 2 |
 | a failing `CheckReport`, zero examined included; a not-applicable report does not fail, and a run is clean only when at least one report passed | 1 |
 
 An input file that reads but is not UTF-8 is a `ModelError::Json` (exit 1) at the line and column of the first invalid byte, with the message `input is not valid UTF-8`, because RFC 8259 requires JSON text to be UTF-8. "Unreadable" means an I/O failure only.
