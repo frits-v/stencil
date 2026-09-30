@@ -4,6 +4,26 @@ Stencil turns a JSON description of an architecture figure into an SVG, a PNG an
 
 Build the binary with `cargo build --release`; it lands at `target/release/stencil`.
 
+## Examples
+
+![Four Dedicated Interconnect lines across two metros and two regions](docs/gallery/g7.png)
+
+`examples/g7.json`: four Dedicated Interconnect VLAN attachments from two metros into two regions, with failover between the regions.
+
+![Hybrid multi-cloud AI platform](docs/gallery/hybrid-ai.png)
+
+`examples/hybrid-ai.json`: training on-prem, tuning and serving on Google Cloud, AWS and Azure feeding data over private paths.
+
+![Hub-and-spoke landing zone](docs/gallery/network-hub-spoke.png)
+
+`examples/network-hub-spoke.json`: a transit hub with one Shared VPC per environment and every path between them labeled.
+
+![Design one-pager for a trigger evaluation service](docs/gallery/onepager.png)
+
+`examples/onepager.json`: a design one-pager with text blocks, callouts and numbered links tracing one request.
+
+These PNGs are the center theme at scale 1, regenerated with `mise run gallery-docs`; CI fails when they drift from the examples. The full gallery, every example in all three themes with its SVG, 2x PNG and measured JSON, is the `gallery` artifact of the CI run on main, and `gallery.zip` plus the center PNGs are attached to the release of every `v*` tag.
+
 ## Commands
 
 An agent runs `stencil prime` first. It prints a briefing of about 1,500 tokens: the authoring loop, the vocabulary with every field and enum value taken from the model, the layout rules, the checks and how to fix each defect. `stencil prime <topic>` prints one deeper section: `themes`, `links`, `blocks`, `layout`, `checks`, `cue`, or `example` (the g7 document).
@@ -35,6 +55,12 @@ stencil check examples/g7.json
 
 ```bash
 stencil schema > stencil.schema.json
+```
+
+`stencil gallery <out-dir> [--examples <dir>]` renders every `.json` document in `examples/` (or `--examples`) under every theme into `<out-dir>/<example>/<theme>/`, runs the checks on each render, and writes `index.html`, a static page with one section per theme, and `gallery.json` with the same data. It prints one check summary per render and the number of renders; it exits 1 when any check fails and 2 when the examples directory holds no document.
+
+```bash
+stencil gallery target/gallery
 ```
 
 Every check line reports how many units it examined, and a check that examined nothing fails. The exit code is 0 when everything passed, 1 when the document has a defect (invalid JSON, a vet violation, a failing check, a character Inter lacks) and 2 when stencil could not run (bad arguments, an unreadable input, an unwritable output directory, a font or renderer fault).
