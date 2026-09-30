@@ -21,3 +21,26 @@ jobs:
         with:
           version: v0.17.1
       - run: CUE=cue ./cue/check.sh
+  gallery:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo build --release
+      - run: ./target/release/stencil gallery target/gallery
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: gallery
+          path: target/gallery
+          if-no-files-found: error
+      - name: docs/gallery matches the examples
+        if: ${{ !cancelled() }}
+        run: scripts/check-gallery-docs.sh target/release/stencil "$RUNNER_TEMP/gallery-docs"
+      - uses: actions/upload-artifact@v4
+        if: ${{ failure() }}
+        with:
+          name: gallery-docs
+          path: ${{ runner.temp }}/gallery-docs
+          if-no-files-found: ignore
