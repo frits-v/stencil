@@ -678,10 +678,11 @@ fn every_example_renders_under_iso_in_every_theme() {
         include_str!("../../../examples/hybrid-ai.json"),
         include_str!("../../../examples/network-hub-spoke.json"),
     ] {
+        // Geometry is theme-independent (section 11.1), so one layout serves every theme.
+        let geometry = common::layout_with_cosmic_text(&serde_json::from_str(document).unwrap());
         for theme in THEMES {
             let mut page: Page = serde_json::from_str(document).unwrap();
             page.theme = theme;
-            let geometry = common::layout_with_cosmic_text(&page);
             let flat = render_svg(&page, &geometry).unwrap();
             page.projection = stencil_model::Projection::Iso;
             let iso = render_svg(&page, &geometry).unwrap();
