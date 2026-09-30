@@ -70,13 +70,20 @@ Every rule below is a CUE constraint; `cue vet -c` fails when one is broken.
   renderer, so a figure cannot tint a region by hand.
 - Gutter pairing, in the g7 view. Gutter pipe p leaves card p of the left column. A blue pipe
   must leave a card in an `onprem-a` zone and lands in the `region-a` zone; pink pairs with
-  `onprem-b` and `region-b` (`_leavesCardInItsMetro`). The view also asserts one pipe per card.
+  `onprem-b` and `region-b` (`_leavesCardInItsMetro`). The gutter carries one pipe per card
+  (`_onePipePerCard`) and one half per on-prem zone (`_oneHalfPerMetro`); half i sits beside
+  left zone i and holds only that metro's pipes (`_halfBesideItsMetro`). The view checks sit
+  inside `out`, because vet evaluates only what an exported view reaches.
 - Canvas. `canvas` is `"customer"` or `"internal"` and must be concrete, so each exported
   figure has exactly one.
 - Page and container fields. `width` is optional, 640 to 2560; the renderer defaults it to
   1280, so the export omits it unless a figure sets it. On a `Row` or `Col`, `gap` is 0 to 64,
   `justify` is `start`, `center`, `end` or `space-between`, and `grow` carries one weight from
   0 to 100 per child (`_growLengthMatchesChildren`).
+- Sizes, matching the Rust model in `crates/stencil-model/src/document.rs`. Every text field is
+  1 to 400 characters. A page body and the children of a `Row`, `Col` or `Zone` hold 1 to 256
+  nodes, so an empty container is rejected. Unique legend kinds bound the legend at five
+  entries, inside the Rust model's limit of 16.
 - Closed vocabulary. Tags, zone kinds, pipe kinds, note kinds and icon stems are enumerations;
   an unknown field on a node is rejected.
 
@@ -99,7 +106,8 @@ Row [ Col [ onprem Zones of Pcards ],
       Zone gcp [ Zone vpc [ Zone, v Pipe, Zone ] ] ]
 ```
 
-The gutter halves are read in order as one list of pipes, one per card, in card order.
+There is one gutter half per on-prem zone, in the same order. The halves are read in order as
+one list of pipes, one per card, in card order.
 
 Coordinates come from the parameters in `P` (column widths, zone headers, item heights, gaps)
 and from index arithmetic: a zone's height is its label, its items and its gaps; items stack
