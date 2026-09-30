@@ -6,6 +6,8 @@ stencil turns structural JSON (zones, cards, facts, pipes, links; no coordinates
 
 Write fig.json, `stencil vet fig.json`, `stencil check fig.json`, `stencil render fig.json --out-dir out --scale 2`, Read out/fig.png, fix, repeat until check shows 0 failed and the PNG reads right. Exit 0 clean; 1 defect in the document (the line names a JSON pointer such as /body/0/children/2; fix the JSON); 2 could not run (arguments, paths, fonts). `stencil schema` prints the JSON Schema.
 
+`stencil gallery out [--examples dir]` renders every .json in examples/ under every theme into out/ with index.html, gallery.json and each render's check summary; exit 1 if any check fails.
+
 # Vocabulary
 
 Every node object carries "tag". * required, =default. A field with no type is text: 1-400 chars, no leading or trailing space, no control characters. Any node may carry id (a-z, 0-9, -; unique), which Link from and to name. Unknown fields and values are rejected.

@@ -1,10 +1,11 @@
-//! The `stencil` command line (SPEC sections 4.6 and 7): `vet`, `render`, `check`, `schema`
-//! and `prime`. `run` holds the whole program so integration tests call it directly.
+//! The `stencil` command line (SPEC sections 4.6 and 7): `vet`, `render`, `check`, `schema`,
+//! `prime` and `gallery`. `run` holds the whole program so integration tests call it directly.
 
 pub mod pipeline;
 pub mod prime;
 
 mod exit;
+mod gallery;
 mod report;
 
 use std::error::Error;
@@ -77,6 +78,14 @@ enum Command {
         /// themes, links, blocks, layout, checks, cue or example
         topic: Option<String>,
     },
+    /// Render and check every example under every theme, with index.html and gallery.json
+    Gallery {
+        /// Directory for the gallery, created when missing
+        out_dir: PathBuf,
+        /// Directory whose .json files are rendered
+        #[arg(long, value_name = "DIR", default_value = "examples")]
+        examples: PathBuf,
+    },
 }
 
 /// The `--theme` values, one per `Theme` variant (section 11.4).
@@ -145,6 +154,9 @@ fn run_command(
         Command::Check { json, theme } => check(&json, theme, stdout, stderr),
         Command::Schema => schema(stdout, stderr),
         Command::Prime { topic } => prime(topic.as_deref(), stdout, stderr),
+        Command::Gallery { out_dir, examples } => {
+            gallery::gallery(&out_dir, &examples, stdout, stderr)
+        }
     }
 }
 

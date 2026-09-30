@@ -1433,6 +1433,7 @@ stencil render <json> --out-dir <dir> [--scale <1-4>]
 stencil check <json>
 stencil schema
 stencil prime [<topic>]
+stencil gallery <out-dir> [--examples <dir>]
 ```
 
 | Command | Does | Output on stdout |
@@ -1442,6 +1443,7 @@ stencil prime [<topic>]
 | `check` | everything `render` does, held in memory without writing files, then all eight checks | one line per check, one line per defect, one summary line; or an `error` line and the summary line when layout or render fails with exit 1 |
 | `schema` | prints `page_schema()` as pretty JSON | the schema |
 | `prime` | prints the authoring briefing for an agent: `crates/stencil-cli/prime/base.md` with the vocabulary table rendered from `page_schema()`, so tag names, field names, bounds and enum values come from the model; at most 6,000 bytes. With a topic (`themes`, `links`, `blocks`, `layout`, `checks`, `cue`, `example`), that topic's text instead, each at most 4,000 bytes except `example`, which is `examples/g7.json` verbatim. An unknown topic writes one line to stderr naming the topics and exits 2 | the briefing or the topic |
+| `gallery` | for every regular `.json` file directly inside `--examples` (default `examples`), in file-name order and at most 256 of them: parse and `validate_page` once, then for every theme in `--theme` order (center, dusk, wire) layout, SVG, PNG at scale 2 and measured JSON written to `<out-dir>/<stem>/<theme>/` as `render` writes them, followed by all eight checks. Then writes `<out-dir>/index.html` and `<out-dir>/gallery.json` | per render its failing check and defect lines, then `gallery <stem> <theme>: <check counts>`; the two index paths, absolute; one summary line |
 
 Line formats, stable for scripts:
 
@@ -1468,15 +1470,17 @@ stencil vet: document does not parse, checks not run
 - `render` and `check` print violations and parse errors in the same formats, followed by the summary line `stencil <command>: …`.
 - `check` prints the eight check lines in `CheckName` declaration order (child-inside-container, siblings-do-not-overlap, text-fits-box, remembered-constants, legend-consistency, links-routed, links-avoid-boxes, pipes-land), and `vet` prints its two in the same relative order. Each check's defect lines follow its check line directly, in the order the `CheckReport` lists them.
 - On success `render` prints the three absolute paths, one per line, in the order SVG, PNG, measured JSON, and nothing after them.
+- `gallery` prints, for each render, the check and defect lines of the checks that failed (none when every check passed or did not apply) followed by `gallery <stem> <theme>: <n> checks, <p> passed, <f> failed[, <a> not applicable]`. A document that does not parse or has violations prints its `error` or `violation` lines and `gallery <stem>: not rendered`; a render that fails with exit 1 (`MissingGlyph`) prints its `error` line and `gallery <stem> <theme>: not rendered`. After the renders come the absolute paths of `index.html` and `gallery.json`, then `stencil gallery: <r> renders of <e> examples in <t> themes, <f> failed`, where r counts the renders whose three files were written and f counts the renders that failed a check or were not rendered.
+- `index.html` is a static page with no script: one anchor per theme (`<a href="#center">`) leading to one `<section id="<theme>">` per theme, which lists every example with its kicker and title read from the document, the PNG as a thumbnail linking to the full PNG, links to the SVG and the measured JSON, and the check counts line. Every link is relative to the gallery directory, so the page works from a download, a zip or a static host. `gallery.json` holds the same data: `themes`, `examples` (each with `name`, `source`, `title`, `kicker` and one entry per theme holding `theme`, `passed`, `summary` and, when the render was written, `files` with the relative `png`, `svg` and `measured` paths), `renders` and `failed`. A document that does not load is listed under its file name with every render not rendered. Neither file carries a timestamp, so two runs over the same examples write the same bytes.
 - A `MissingGlyph` layout failure (exit 1) prints `error <LayoutError display>` on stdout, followed by `stencil <command>: checks not run`. `render` writes no files in this case, because layout runs before any write.
 
 Exit codes:
 
 | Code | Meaning | Examples |
 |---|---|---|
-| 0 | clean | every check passed; render wrote its files; schema or prime printed; `--help` or `--version` printed |
-| 1 | defects in the document | invalid JSON, a serde type error, a vet violation, a failing check, a zero-examined check, `MissingGlyph`, content that overflows |
-| 2 | could not run | bad arguments, unknown subcommand or unknown prime topic, unreadable input file, output directory not creatable or not writable, bundled font verification failure, resvg rejecting generated SVG, `TextNotRendered`, a canvas above the PNG pixel budget (section 5.3), any internal fault in the table below |
+| 0 | clean | every check passed; render wrote its files; schema or prime printed; `--help` or `--version` printed; gallery wrote every render and every render passed |
+| 1 | defects in the document | invalid JSON, a serde type error, a vet violation, a failing check, a zero-examined check, `MissingGlyph`, content that overflows; for gallery, any example with one of these, while the other renders and both index files are still written |
+| 2 | could not run | bad arguments, unknown subcommand or unknown prime topic, unreadable input file, output directory not creatable or not writable, an examples directory that cannot be read, holds no `.json` document or holds more than 256 (a gallery with nothing to render is never a clean run), bundled font verification failure, resvg rejecting generated SVG, `TextNotRendered`, a canvas above the PNG pixel budget (section 5.3), any internal fault in the table below |
 
 Every error variant maps to one code. The mapping is an exhaustive `match` with no wildcard arm, so a new variant does not compile until it has a code. The one exception is clap's `ErrorKind`, which is `#[non_exhaustive]`: its match names `DisplayHelp` and `DisplayVersion` and sends every other kind to 2 through a wildcard arm.
 
@@ -1484,6 +1488,7 @@ Every error variant maps to one code. The mapping is an exhaustive `match` with 
 |---|---|
 | clap error of kind `DisplayHelp` or `DisplayVersion` (returned by `try_parse` for `--help` and `--version`); the rendered text (`err.render()`) is written to the `stdout` argument of `run`, never through `err.print()` | 0 |
 | clap error of any other kind, unreadable input file (an input over `INPUT_BYTES_MAX` included), `--out-dir` not creatable or not writable, any output write failure (a directory at an output name included) | 2 |
+| gallery: an examples directory that cannot be read (`ReadExamples`), holds no `.json` file (`NoExamples`) or holds more than 256 (`ExamplesExceeded`) | 2 |
 | CLI failures outside the document: an input path with no file stem (`InputStem`), an output path that is the input file (`OutputIsInput`), the second parse of a vetted input into `serde_json::Value` (`DocumentValue`), serializing the measured JSON or the schema (`Serialize`) | 2 |
 | `ModelError::Json`, `ModelError::Invalid`, `LayoutError::Invalid` | 1 |
 | `LayoutError::Measure` with source `MeasureError::MissingGlyph` | 1 |
@@ -1837,6 +1842,8 @@ All tests except the wrap-epsilon regression use `FixedMetricsMeasurer::default(
 - Two separate `stencil render` processes on g7 at the default scale write byte-identical SVG, PNG and measured JSON. `check` on a document with U+4E00 in a Pcard `fn` exits 1 (`MissingGlyph` through `LayoutError::Measure`) and prints an `error` line followed by `stencil check: checks not run`.
 - `render` on a document whose legend omits a used kind writes its three files and exits 0, because render runs `validate_page` only.
 - `schema` prints JSON equal to `schema/stencil.schema.json`.
+- `gallery` over `examples/` into a temporary directory exits 0; `index.html` has a tab and a section for every theme and links the PNG, SVG and measured JSON of every example in every theme; `gallery.json` parses, lists every example with its title and kicker, and its render count, like the summary line, equals the number of examples times the number of themes.
+- `gallery` over a directory holding one document whose text overflows and one clean document exits 1, prints the failing check with its defect, writes all six renders and both index files, and marks the three overflowing renders failed. A document that does not parse is listed as not rendered in every theme and exits 1. A directory with no `.json` file, or no directory at all, exits 2 with empty stdout and creates no output directory.
 - The golden g7 test in section 9.4.
 
 ## 11. Themes, links and document blocks
