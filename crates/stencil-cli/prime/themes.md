@@ -35,3 +35,5 @@ Under wire:
 - A legend entry's label is fixed per kind ("Solid blue", "Dashed red") and still reads that way next to a black swatch, so write the legend text as meaning ("request path"), never as color.
 - Links have no end dots, so a blue and a pink link draw the same. Tell them apart by label.
 - A Callout shows its kind only through the title you write: "Risk: ...", "Decision: ...".
+
+Projection: "projection": "iso" (or render and check with --projection iso) draws the body as a 2:1 isometric scene: zones become slabs, cards become blocks, and every label stays upright. Layout and the flat checks do not change; check adds iso-labels-clear. A flat pitch of p gives only p / 2 of screen height, so iso suits cover figures with few cards side by side in a Row, no pn or facts, and gutter pipes at the two ends (justify space-between).

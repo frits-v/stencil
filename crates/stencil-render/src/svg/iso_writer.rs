@@ -6,9 +6,9 @@ use stencil_model::pointer::NodePointer;
 use stencil_model::{LINKS_MAX, Link, Node, NodeRef, Page, PipeDir, PipeKind, ZoneKind};
 
 use super::{
-    ArrowEnds, DocumentNode, SvgWriter, TAG_RADIUS_PX, close_groups_until_parent, escape_xml,
-    frame_diagonal_box, group_open_tag, link_mismatch, part_mismatch, pipe_text_style_name,
-    stroke_attributes, text_style_name, trim_end, trim_start,
+    ArrowEnds, DocumentNode, PartContext, SvgWriter, TAG_RADIUS_PX, close_groups_until_parent,
+    escape_xml, frame_diagonal_box, group_open_tag, link_mismatch, part_mismatch,
+    pipe_text_style_name, stroke_attributes, text_style_name, trim_end, trim_start,
 };
 use crate::iso::{
     Billboard, ISO_DOT_RADIUS_X_PX, ISO_DOT_RADIUS_Y_PX, ScreenPoint, Solid, SolidShape,
@@ -236,8 +236,7 @@ impl SvgWriter {
             if let Some(spine) = node.part(PartName::Spine) {
                 self.write_spine(depth, spine.bounds, kind, solid.base_z, offset);
             } else {
-                let dir = context.pipe_dir.ok_or_else(|| surface_mismatch(node))?;
-                self.write_iso_pipe(depth, node, dir, kind, context.arrows, solid.base_z, offset)?;
+                self.write_iso_pipe(depth, node, context, solid.base_z, offset)?;
             }
             return Ok(());
         }
@@ -417,17 +416,17 @@ impl SvgWriter {
 
     /// One wire from dot center to dot center, stopping at an arrowhead base, then the two
     /// ends: an ellipse per dot or a projected arrowhead (section 12.3, rule 5).
-    #[allow(clippy::too_many_arguments)]
     fn write_iso_pipe(
         &mut self,
         depth: usize,
         node: &NodeGeometry,
-        dir: PipeDir,
-        kind: PipeKind,
-        arrows: ArrowEnds,
+        context: PartContext,
         z: f32,
         offset: ScreenPoint,
     ) -> Result<(), RenderError> {
+        let kind = context.pipe_kind.ok_or_else(|| surface_mismatch(node))?;
+        let dir = context.pipe_dir.ok_or_else(|| surface_mismatch(node))?;
+        let arrows = context.arrows;
         let dot_start = node
             .part(PartName::DotStart)
             .ok_or_else(|| surface_mismatch(node))?;
