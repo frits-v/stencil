@@ -1,0 +1,163 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="627" viewBox="0 0 1320 627">
+  <rect x="0" y="0" width="1320" height="627" fill="#FFFFFF"/>
+  <g data-id="" data-tag="Page">
+    <g data-id="/kicker" data-tag="Kicker">
+      <rect x="20" y="20" width="77.14" height="16" rx="4" fill="#E8F0FE"/>
+      <text x="27" y="31.64" xml:space="preserve" font-family="Inter" font-size="10" font-weight="800" letter-spacing="0.7" fill="#174EA6">CUSTOMER</text>
+      <text x="103.14" y="32" xml:space="preserve" font-family="Inter" font-size="11" font-weight="700" letter-spacing="0.88" fill="#1A73E8">TYPE 5 · DEDICATED INTERCONNECT 99.99% · SOW / DECK / EXEC</text>
+    </g>
+    <g data-id="/title" data-tag="Title">
+      <text x="20" y="61.28" xml:space="preserve" font-family="Inter" font-size="20" font-weight="700" letter-spacing="-0.4" fill="#202124">Four lines. Two metros. Two regions. Failover sits between the regions.</text>
+    </g>
+    <g data-id="/lede" data-tag="Lede">
+      <text x="20" y="82.53" xml:space="preserve" font-family="Inter" font-size="13" font-weight="400" fill="#5F6368">Same topology as the internal canvas. VLAN IDs, EAD, and BGP sit on the hops. A stakeholder following the lines still sees four attachments, not one bundled cable.</text>
+    </g>
+    <g data-id="/body" data-tag="Body">
+      <g data-id="/body/0" data-tag="Row">
+        <g data-id="/body/0/children/0" data-tag="Col">
+          <g data-id="/body/0/children/0/children/0" data-tag="Zone" data-kind="onprem-a">
+            <rect x="20.75" y="102.35" width="197.13" height="147.9" rx="7.25" fill="#D2E3FC" stroke="#D7CCC8" stroke-width="1.5"/>
+            <text x="33.5" y="126.67" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#5F6368">On-prem · Metro 1</text>
+            <g data-id="/body/0/children/0/children/0/children/0" data-tag="Pcard">
+              <rect x="34.25" y="138.25" width="170.13" height="44.5" rx="7.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
+              <image x="45" y="146.5" width="28" height="28" href="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyBpZD0ic3RhbmRhcmRfcHJvZHVjdF9pY29uIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZlcnNpb249IjEuMSIgdmlld0JveD0iMCAwIDUxMiA1MTIiPgogIDwhLS0gR2VuZXJhdG9yOiBBZG9iZSBJbGx1c3RyYXRvciAyOS4yLjEsIFNWRyBFeHBvcnQgUGx1Zy1JbiAuIFNWRyBWZXJzaW9uOiAyLjEuMCBCdWlsZCAxMTYpICAtLT4KICA8ZyBpZD0iYm91bmRpbmdfYm94Ij4KICAgIDxyZWN0IHdpZHRoPSI1MTIiIGhlaWdodD0iNTEyIiBmaWxsPSJub25lIi8+CiAgPC9nPgogIDxnIGlkPSJhcnQiPgogICAgPHBhdGggZD0iTTQ1OC4zMjksMjM1LjEyOWMwLTE3LjY0NS0xNC4zNTUtMzItMzItMzJoLTE3MC42Yy0xNy42NDUsMC0zMiwxNC4zNTUtMzIsMzJ2OTUuMjcxYzAsLjExMS4wMTQuMjE5LjAxNy4zMy0uMDAyLjExMS0uMDE3LjIxOS0uMDE3LjMzdjk1LjI3YzAsMTcuNjQ1LDE0LjM1NSwzMiwzMiwzMmgxNzAuNmMxNy42NDUsMCwzMi0xNC4zNTUsMzItMzJ2LTk1LjI3YzAtLjExMS0uMDE0LS4yMTktLjAxNy0uMzMuMDAyLS4xMTEuMDE3LS4yMTkuMDE3LS4zM3YtOTUuMjcxWk0yNTUuNzI5LDIzNS4xMjloMTcwLjZ2NzkuMjcxaC0xNzAuNnYtNzkuMjcxWk00MjYuMzI5LDQyNi4zMjloLTE3MC42di03OS4yN2gxNzAuNjA0bC4wMTcsNzkuMjY5aC0uMDIxWiIgZmlsbD0iIzlhYTBhNiIvPgogICAgPHBhdGggZD0iTTE0My4yOTksMjMyLjI2OGMtOC44MzcsMC0xNi03LjE2My0xNi0xNiwwLTg5LjI5Myw3Mi42NDYtMTYxLjkzOCwxNjEuOTM4LTE2MS45MzgsMjguOTI4LDAsNTcuMzI0LDcuNzI1LDgyLjEyLDIyLjM0LDI0LjA1MywxNC4xNzcsNDQuMTU2LDM0LjQ0Miw1OC4xMzcsNTguNjA2LDQuNDI2LDcuNjQ4LDEuODEyLDE3LjQzNy01LjgzNiwyMS44NjEtNy42NDYsNC40MjUtMTcuNDM2LDEuODEzLTIxLjg2MS01LjgzNi0yMy4xODgtNDAuMDc2LTY2LjMxOC02NC45NzItMTEyLjU2LTY0Ljk3Mi03MS42NDgsMC0xMjkuOTM4LDU4LjI5LTEyOS45MzgsMTI5LjkzOCwwLDguODM3LTcuMTYzLDE2LTE2LDE2aDBaIiBmaWxsPSIjOWFhMGE2Ii8+CiAgICA8cGF0aCBkPSJNMjU1LjcyOSw0NTguMzI1aDBjLTE3LjY3MywwLTMyLTE0LjMyNy0zMi0zMnYtMTExLjkyNmgyMDIuNnYtMTExLjI3M2gwYzE3LjY3MywwLDMyLDE0LjMyNywzMiwzMnYxMTEuMjczaC0yMDIuNnYxMTEuOTI2WiIgZmlsbD0iIzJiODBmOCIvPgogICAgPHBhdGggZD0iTTE2My41MzUsMzcwLjUyOWgtOC4wM2MtMzguMTQ0LDAtNjkuMTc2LTMxLjAxMi02OS4xNzYtNjkuMTMxLDAtMzQuMTY0LDI1LjQ2OS02My41OCw1OS4yNDEtNjguNDI1LDguMjcxLTEuMTg3LDE0LjE0My04LjUwMiwxMy42OTctMTYuNjlsLjAzMS0uMDE2Yy4wMTItOC44OTUsMS4yNDgtMTguMDM1LDEuMjQ4LTE4LjAzNS04LjMxNy44OTYtMjkuMzExLDQuOTA2LTMyLjc2OSw1Ljg5MS0uMDEyLjAwMy0uMDI4LjAwNy0uMDI4LjAwN2gwYy0xOC42NTIsNS4zMTktMzUuNTIxLDE1Ljk1Ny00OC40NTIsMzAuNzQ3LTE2LjEwMSwxOC40MTYtMjQuOTY4LDQyLjA0LTI0Ljk2OCw2Ni41MjEsMCw1NS43NjQsNDUuMzg4LDEwMS4xMzEsMTAxLjE3NiwxMDEuMTMxaDguMDNjOC44MzcsMCwxNi03LjE2MywxNi0xNnMtNy4xNjMtMTYtMTYtMTZoMFoiIGZpbGw9IiMyYjgwZjgiLz4KICA8L2c+Cjwvc3ZnPg=="/>
+              <text x="83" y="157.53" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#202124">On-prem router 1</text>
+              <text x="83" y="173.17" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">port toward Google</text>
+            </g>
+            <g data-id="/body/0/children/0/children/0/children/1" data-tag="Pcard">
+              <rect x="34.25" y="192.25" width="170.13" height="44.5" rx="7.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
+              <image x="45" y="200.5" width="28" height="28" href="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyBpZD0ic3RhbmRhcmRfcHJvZHVjdF9pY29uIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZlcnNpb249IjEuMSIgdmlld0JveD0iMCAwIDUxMiA1MTIiPgogIDwhLS0gR2VuZXJhdG9yOiBBZG9iZSBJbGx1c3RyYXRvciAyOS4yLjEsIFNWRyBFeHBvcnQgUGx1Zy1JbiAuIFNWRyBWZXJzaW9uOiAyLjEuMCBCdWlsZCAxMTYpICAtLT4KICA8ZyBpZD0iYm91bmRpbmdfYm94Ij4KICAgIDxyZWN0IHdpZHRoPSI1MTIiIGhlaWdodD0iNTEyIiBmaWxsPSJub25lIi8+CiAgPC9nPgogIDxnIGlkPSJhcnQiPgogICAgPHBhdGggZD0iTTQ1OC4zMjksMjM1LjEyOWMwLTE3LjY0NS0xNC4zNTUtMzItMzItMzJoLTE3MC42Yy0xNy42NDUsMC0zMiwxNC4zNTUtMzIsMzJ2OTUuMjcxYzAsLjExMS4wMTQuMjE5LjAxNy4zMy0uMDAyLjExMS0uMDE3LjIxOS0uMDE3LjMzdjk1LjI3YzAsMTcuNjQ1LDE0LjM1NSwzMiwzMiwzMmgxNzAuNmMxNy42NDUsMCwzMi0xNC4zNTUsMzItMzJ2LTk1LjI3YzAtLjExMS0uMDE0LS4yMTktLjAxNy0uMzMuMDAyLS4xMTEuMDE3LS4yMTkuMDE3LS4zM3YtOTUuMjcxWk0yNTUuNzI5LDIzNS4xMjloMTcwLjZ2NzkuMjcxaC0xNzAuNnYtNzkuMjcxWk00MjYuMzI5LDQyNi4zMjloLTE3MC42di03OS4yN2gxNzAuNjA0bC4wMTcsNzkuMjY5aC0uMDIxWiIgZmlsbD0iIzlhYTBhNiIvPgogICAgPHBhdGggZD0iTTE0My4yOTksMjMyLjI2OGMtOC44MzcsMC0xNi03LjE2My0xNi0xNiwwLTg5LjI5Myw3Mi42NDYtMTYxLjkzOCwxNjEuOTM4LTE2MS45MzgsMjguOTI4LDAsNTcuMzI0LDcuNzI1LDgyLjEyLDIyLjM0LDI0LjA1MywxNC4xNzcsNDQuMTU2LDM0LjQ0Miw1OC4xMzcsNTguNjA2LDQuNDI2LDcuNjQ4LDEuODEyLDE3LjQzNy01LjgzNiwyMS44NjEtNy42NDYsNC40MjUtMTcuNDM2LDEuODEzLTIxLjg2MS01LjgzNi0yMy4xODgtNDAuMDc2LTY2LjMxOC02NC45NzItMTEyLjU2LTY0Ljk3Mi03MS42NDgsMC0xMjkuOTM4LDU4LjI5LTEyOS45MzgsMTI5LjkzOCwwLDguODM3LTcuMTYzLDE2LTE2LDE2aDBaIiBmaWxsPSIjOWFhMGE2Ii8+CiAgICA8cGF0aCBkPSJNMjU1LjcyOSw0NTguMzI1aDBjLTE3LjY3MywwLTMyLTE0LjMyNy0zMi0zMnYtMTExLjkyNmgyMDIuNnYtMTExLjI3M2gwYzE3LjY3MywwLDMyLDE0LjMyNywzMiwzMnYxMTEuMjczaC0yMDIuNnYxMTEuOTI2WiIgZmlsbD0iIzJiODBmOCIvPgogICAgPHBhdGggZD0iTTE2My41MzUsMzcwLjUyOWgtOC4wM2MtMzguMTQ0LDAtNjkuMTc2LTMxLjAxMi02OS4xNzYtNjkuMTMxLDAtMzQuMTY0LDI1LjQ2OS02My41OCw1OS4yNDEtNjguNDI1LDguMjcxLTEuMTg3LDE0LjE0My04LjUwMiwxMy42OTctMTYuNjlsLjAzMS0uMDE2Yy4wMTItOC44OTUsMS4yNDgtMTguMDM1LDEuMjQ4LTE4LjAzNS04LjMxNy44OTYtMjkuMzExLDQuOTA2LTMyLjc2OSw1Ljg5MS0uMDEyLjAwMy0uMDI4LjAwNy0uMDI4LjAwN2gwYy0xOC42NTIsNS4zMTktMzUuNTIxLDE1Ljk1Ny00OC40NTIsMzAuNzQ3LTE2LjEwMSwxOC40MTYtMjQuOTY4LDQyLjA0LTI0Ljk2OCw2Ni41MjEsMCw1NS43NjQsNDUuMzg4LDEwMS4xMzEsMTAxLjE3NiwxMDEuMTMxaDguMDNjOC44MzcsMCwxNi03LjE2MywxNi0xNnMtNy4xNjMtMTYtMTYtMTZoMFoiIGZpbGw9IiMyYjgwZjgiLz4KICA8L2c+Cjwvc3ZnPg=="/>
+              <text x="83" y="211.53" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#202124">On-prem router 2</text>
+              <text x="83" y="227.17" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">port toward Google</text>
+            </g>
+          </g>
+          <g data-id="/body/0/children/0/children/1" data-tag="Zone" data-kind="onprem-b">
+            <rect x="20.75" y="259.75" width="197.13" height="147.9" rx="7.25" fill="#FCE4EC" stroke="#D7CCC8" stroke-width="1.5"/>
+            <text x="33.5" y="284.07" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#5F6368">On-prem · Metro 2</text>
+            <g data-id="/body/0/children/0/children/1/children/0" data-tag="Pcard">
+              <rect x="34.25" y="295.65" width="170.13" height="44.5" rx="7.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
+              <image x="45" y="303.9" width="28" height="28" href="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyBpZD0ic3RhbmRhcmRfcHJvZHVjdF9pY29uIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZlcnNpb249IjEuMSIgdmlld0JveD0iMCAwIDUxMiA1MTIiPgogIDwhLS0gR2VuZXJhdG9yOiBBZG9iZSBJbGx1c3RyYXRvciAyOS4yLjEsIFNWRyBFeHBvcnQgUGx1Zy1JbiAuIFNWRyBWZXJzaW9uOiAyLjEuMCBCdWlsZCAxMTYpICAtLT4KICA8ZyBpZD0iYm91bmRpbmdfYm94Ij4KICAgIDxyZWN0IHdpZHRoPSI1MTIiIGhlaWdodD0iNTEyIiBmaWxsPSJub25lIi8+CiAgPC9nPgogIDxnIGlkPSJhcnQiPgogICAgPHBhdGggZD0iTTQ1OC4zMjksMjM1LjEyOWMwLTE3LjY0NS0xNC4zNTUtMzItMzItMzJoLTE3MC42Yy0xNy42NDUsMC0zMiwxNC4zNTUtMzIsMzJ2OTUuMjcxYzAsLjExMS4wMTQuMjE5LjAxNy4zMy0uMDAyLjExMS0uMDE3LjIxOS0uMDE3LjMzdjk1LjI3YzAsMTcuNjQ1LDE0LjM1NSwzMiwzMiwzMmgxNzAuNmMxNy42NDUsMCwzMi0xNC4zNTUsMzItMzJ2LTk1LjI3YzAtLjExMS0uMDE0LS4yMTktLjAxNy0uMzMuMDAyLS4xMTEuMDE3LS4yMTkuMDE3LS4zM3YtOTUuMjcxWk0yNTUuNzI5LDIzNS4xMjloMTcwLjZ2NzkuMjcxaC0xNzAuNnYtNzkuMjcxWk00MjYuMzI5LDQyNi4zMjloLTE3MC42di03OS4yN2gxNzAuNjA0bC4wMTcsNzkuMjY5aC0uMDIxWiIgZmlsbD0iIzlhYTBhNiIvPgogICAgPHBhdGggZD0iTTE0My4yOTksMjMyLjI2OGMtOC44MzcsMC0xNi03LjE2My0xNi0xNiwwLTg5LjI5Myw3Mi42NDYtMTYxLjkzOCwxNjEuOTM4LTE2MS45MzgsMjguOTI4LDAsNTcuMzI0LDcuNzI1LDgyLjEyLDIyLjM0LDI0LjA1MywxNC4xNzcsNDQuMTU2LDM0LjQ0Miw1OC4xMzcsNTguNjA2LDQuNDI2LDcuNjQ4LDEuODEyLDE3LjQzNy01LjgzNiwyMS44NjEtNy42NDYsNC40MjUtMTcuNDM2LDEuODEzLTIxLjg2MS01LjgzNi0yMy4xODgtNDAuMDc2LTY2LjMxOC02NC45NzItMTEyLjU2LTY0Ljk3Mi03MS42NDgsMC0xMjkuOTM4LDU4LjI5LTEyOS45MzgsMTI5LjkzOCwwLDguODM3LTcuMTYzLDE2LTE2LDE2aDBaIiBmaWxsPSIjOWFhMGE2Ii8+CiAgICA8cGF0aCBkPSJNMjU1LjcyOSw0NTguMzI1aDBjLTE3LjY3MywwLTMyLTE0LjMyNy0zMi0zMnYtMTExLjkyNmgyMDIuNnYtMTExLjI3M2gwYzE3LjY3MywwLDMyLDE0LjMyNywzMiwzMnYxMTEuMjczaC0yMDIuNnYxMTEuOTI2WiIgZmlsbD0iIzJiODBmOCIvPgogICAgPHBhdGggZD0iTTE2My41MzUsMzcwLjUyOWgtOC4wM2MtMzguMTQ0LDAtNjkuMTc2LTMxLjAxMi02OS4xNzYtNjkuMTMxLDAtMzQuMTY0LDI1LjQ2OS02My41OCw1OS4yNDEtNjguNDI1LDguMjcxLTEuMTg3LDE0LjE0My04LjUwMiwxMy42OTctMTYuNjlsLjAzMS0uMDE2Yy4wMTItOC44OTUsMS4yNDgtMTguMDM1LDEuMjQ4LTE4LjAzNS04LjMxNy44OTYtMjkuMzExLDQuOTA2LTMyLjc2OSw1Ljg5MS0uMDEyLjAwMy0uMDI4LjAwNy0uMDI4LjAwN2gwYy0xOC42NTIsNS4zMTktMzUuNTIxLDE1Ljk1Ny00OC40NTIsMzAuNzQ3LTE2LjEwMSwxOC40MTYtMjQuOTY4LDQyLjA0LTI0Ljk2OCw2Ni41MjEsMCw1NS43NjQsNDUuMzg4LDEwMS4xMzEsMTAxLjE3NiwxMDEuMTMxaDguMDNjOC44MzcsMCwxNi03LjE2MywxNi0xNnMtNy4xNjMtMTYtMTYtMTZoMFoiIGZpbGw9IiMyYjgwZjgiLz4KICA8L2c+Cjwvc3ZnPg=="/>
+              <text x="83" y="314.93" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#202124">On-prem router 3</text>
+              <text x="83" y="330.57" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">port toward Google</text>
+            </g>
+            <g data-id="/body/0/children/0/children/1/children/1" data-tag="Pcard">
+              <rect x="34.25" y="349.65" width="170.13" height="44.5" rx="7.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
+              <image x="45" y="357.9" width="28" height="28" href="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyBpZD0ic3RhbmRhcmRfcHJvZHVjdF9pY29uIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZlcnNpb249IjEuMSIgdmlld0JveD0iMCAwIDUxMiA1MTIiPgogIDwhLS0gR2VuZXJhdG9yOiBBZG9iZSBJbGx1c3RyYXRvciAyOS4yLjEsIFNWRyBFeHBvcnQgUGx1Zy1JbiAuIFNWRyBWZXJzaW9uOiAyLjEuMCBCdWlsZCAxMTYpICAtLT4KICA8ZyBpZD0iYm91bmRpbmdfYm94Ij4KICAgIDxyZWN0IHdpZHRoPSI1MTIiIGhlaWdodD0iNTEyIiBmaWxsPSJub25lIi8+CiAgPC9nPgogIDxnIGlkPSJhcnQiPgogICAgPHBhdGggZD0iTTQ1OC4zMjksMjM1LjEyOWMwLTE3LjY0NS0xNC4zNTUtMzItMzItMzJoLTE3MC42Yy0xNy42NDUsMC0zMiwxNC4zNTUtMzIsMzJ2OTUuMjcxYzAsLjExMS4wMTQuMjE5LjAxNy4zMy0uMDAyLjExMS0uMDE3LjIxOS0uMDE3LjMzdjk1LjI3YzAsMTcuNjQ1LDE0LjM1NSwzMiwzMiwzMmgxNzAuNmMxNy42NDUsMCwzMi0xNC4zNTUsMzItMzJ2LTk1LjI3YzAtLjExMS0uMDE0LS4yMTktLjAxNy0uMzMuMDAyLS4xMTEuMDE3LS4yMTkuMDE3LS4zM3YtOTUuMjcxWk0yNTUuNzI5LDIzNS4xMjloMTcwLjZ2NzkuMjcxaC0xNzAuNnYtNzkuMjcxWk00MjYuMzI5LDQyNi4zMjloLTE3MC42di03OS4yN2gxNzAuNjA0bC4wMTcsNzkuMjY5aC0uMDIxWiIgZmlsbD0iIzlhYTBhNiIvPgogICAgPHBhdGggZD0iTTE0My4yOTksMjMyLjI2OGMtOC44MzcsMC0xNi03LjE2My0xNi0xNiwwLTg5LjI5Myw3Mi42NDYtMTYxLjkzOCwxNjEuOTM4LTE2MS45MzgsMjguOTI4LDAsNTcuMzI0LDcuNzI1LDgyLjEyLDIyLjM0LDI0LjA1MywxNC4xNzcsNDQuMTU2LDM0LjQ0Miw1OC4xMzcsNTguNjA2LDQuNDI2LDcuNjQ4LDEuODEyLDE3LjQzNy01LjgzNiwyMS44NjEtNy42NDYsNC40MjUtMTcuNDM2LDEuODEzLTIxLjg2MS01LjgzNi0yMy4xODgtNDAuMDc2LTY2LjMxOC02NC45NzItMTEyLjU2LTY0Ljk3Mi03MS42NDgsMC0xMjkuOTM4LDU4LjI5LTEyOS45MzgsMTI5LjkzOCwwLDguODM3LTcuMTYzLDE2LTE2LDE2aDBaIiBmaWxsPSIjOWFhMGE2Ii8+CiAgICA8cGF0aCBkPSJNMjU1LjcyOSw0NTguMzI1aDBjLTE3LjY3MywwLTMyLTE0LjMyNy0zMi0zMnYtMTExLjkyNmgyMDIuNnYtMTExLjI3M2gwYzE3LjY3MywwLDMyLDE0LjMyNywzMiwzMnYxMTEuMjczaC0yMDIuNnYxMTEuOTI2WiIgZmlsbD0iIzJiODBmOCIvPgogICAgPHBhdGggZD0iTTE2My41MzUsMzcwLjUyOWgtOC4wM2MtMzguMTQ0LDAtNjkuMTc2LTMxLjAxMi02OS4xNzYtNjkuMTMxLDAtMzQuMTY0LDI1LjQ2OS02My41OCw1OS4yNDEtNjguNDI1LDguMjcxLTEuMTg3LDE0LjE0My04LjUwMiwxMy42OTctMTYuNjlsLjAzMS0uMDE2Yy4wMTItOC44OTUsMS4yNDgtMTguMDM1LDEuMjQ4LTE4LjAzNS04LjMxNy44OTYtMjkuMzExLDQuOTA2LTMyLjc2OSw1Ljg5MS0uMDEyLjAwMy0uMDI4LjAwNy0uMDI4LjAwN2gwYy0xOC42NTIsNS4zMTktMzUuNTIxLDE1Ljk1Ny00OC40NTIsMzAuNzQ3LTE2LjEwMSwxOC40MTYtMjQuOTY4LDQyLjA0LTI0Ljk2OCw2Ni41MjEsMCw1NS43NjQsNDUuMzg4LDEwMS4xMzEsMTAxLjE3NiwxMDEuMTMxaDguMDNjOC44MzcsMCwxNi03LjE2MywxNi0xNnMtNy4xNjMtMTYtMTYtMTZoMFoiIGZpbGw9IiMyYjgwZjgiLz4KICA8L2c+Cjwvc3ZnPg=="/>
+              <text x="83" y="368.93" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#202124">On-prem router 4</text>
+              <text x="83" y="384.57" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">port toward Google</text>
+            </g>
+          </g>
+        </g>
+        <g data-id="/body/0/children/1" data-tag="Col">
+          <g data-id="/body/0/children/1/children/0" data-tag="Col">
+            <g data-id="/body/0/children/1/children/0/children/0" data-tag="Pipe" data-kind="blue">
+              <circle cx="230.63" cy="184.45" r="4" fill="#1A73E8"/>
+              <line x1="234.63" y1="184.45" x2="249.83" y2="184.45" stroke="#1A73E8" stroke-width="2"/>
+              <rect x="250.58" y="161.1" width="84.77" height="46.7" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
+              <line x1="336.11" y1="184.45" x2="351.31" y2="184.45" stroke="#1A73E8" stroke-width="2"/>
+              <circle cx="355.31" cy="184.45" r="4" fill="#1A73E8"/>
+              <text x="272.04" y="180.02" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">VLAN 1</text>
+              <text x="259.33" y="197.62" xml:space="preserve" font-family="Inter" font-size="12" font-weight="600" fill="#5F6368">EAD 1 · BGP</text>
+            </g>
+            <g data-id="/body/0/children/1/children/0/children/1" data-tag="Pipe" data-kind="blue">
+              <circle cx="230.63" cy="244.65" r="4" fill="#1A73E8"/>
+              <line x1="234.63" y1="244.65" x2="248.63" y2="244.65" stroke="#1A73E8" stroke-width="2"/>
+              <rect x="249.38" y="221.3" width="87.17" height="46.7" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
+              <line x1="337.31" y1="244.65" x2="351.31" y2="244.65" stroke="#1A73E8" stroke-width="2"/>
+              <circle cx="355.31" cy="244.65" r="4" fill="#1A73E8"/>
+              <text x="270.85" y="240.22" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">VLAN 2</text>
+              <text x="258.13" y="257.82" xml:space="preserve" font-family="Inter" font-size="12" font-weight="600" fill="#5F6368">EAD 2 · BGP</text>
+            </g>
+          </g>
+          <g data-id="/body/0/children/1/children/1" data-tag="Col">
+            <g data-id="/body/0/children/1/children/1/children/0" data-tag="Pipe" data-kind="pink">
+              <circle cx="230.63" cy="418.35" r="4" fill="#C2185B"/>
+              <line x1="234.63" y1="418.35" x2="249.83" y2="418.35" stroke="#C2185B" stroke-width="2"/>
+              <rect x="250.58" y="395" width="84.77" height="46.7" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
+              <line x1="336.11" y1="418.35" x2="351.31" y2="418.35" stroke="#C2185B" stroke-width="2"/>
+              <circle cx="355.31" cy="418.35" r="4" fill="#C2185B"/>
+              <text x="270.75" y="413.92" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">VLAN 3</text>
+              <text x="259.33" y="431.52" xml:space="preserve" font-family="Inter" font-size="12" font-weight="600" fill="#5F6368">EAD 1 · BGP</text>
+            </g>
+            <g data-id="/body/0/children/1/children/1/children/1" data-tag="Pipe" data-kind="pink">
+              <circle cx="230.63" cy="478.55" r="4" fill="#C2185B"/>
+              <line x1="234.63" y1="478.55" x2="248.63" y2="478.55" stroke="#C2185B" stroke-width="2"/>
+              <rect x="249.38" y="455.2" width="87.17" height="46.7" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
+              <line x1="337.31" y1="478.55" x2="351.31" y2="478.55" stroke="#C2185B" stroke-width="2"/>
+              <circle cx="355.31" cy="478.55" r="4" fill="#C2185B"/>
+              <text x="270.57" y="474.12" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">VLAN 4</text>
+              <text x="258.13" y="491.72" xml:space="preserve" font-family="Inter" font-size="12" font-weight="600" fill="#5F6368">EAD 2 · BGP</text>
+            </g>
+          </g>
+        </g>
+        <g data-id="/body/0/children/2" data-tag="Zone" data-kind="gcp">
+          <path d="M 371.31 101.6 H 1296 A 4 4 0 0 1 1300 105.6 V 551.4 A 10 10 0 0 1 1290 561.4 H 377.31 A 10 10 0 0 1 367.31 551.4 V 105.6 A 4 4 0 0 1 371.31 101.6 Z" fill="#FFFFFF"/>
+          <rect x="370.31" y="104.6" width="926.69" height="35.6" fill="#1A73E8"/>
+          <rect x="370.31" y="140.2" width="926.69" height="418.2" fill="#FAFBFC"/>
+          <path d="M 371.31 103.1 H 1296 A 2.5 2.5 0 0 1 1298.5 105.6 V 551.4 A 8.5 8.5 0 0 1 1290 559.9 H 377.31 A 8.5 8.5 0 0 1 368.81 551.4 V 105.6 A 2.5 2.5 0 0 1 371.31 103.1 Z" fill="none" stroke="#1A73E8" stroke-width="3"/>
+          <text x="386.31" y="128.95" xml:space="preserve" font-family="Inter" font-size="18" font-weight="700" letter-spacing="0.18" fill="#FFFFFF">Google Cloud</text>
+          <g data-id="/body/0/children/2/children/0" data-tag="Zone" data-kind="vpc">
+            <rect x="385.31" y="157.2" width="896.69" height="386.2" rx="7" fill="none" stroke="#5F6368" stroke-width="2" stroke-dasharray="6 5"/>
+            <text x="396.31" y="179.77" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#5F6368">Transit VPC · one network, two regions</text>
+            <g data-id="/body/0/children/2/children/0/children/0" data-tag="Zone" data-kind="region-a">
+              <rect x="397.06" y="191.35" width="873.19" height="126.1" rx="7.25" fill="#D2E3FC" stroke="#BDC1C6" stroke-width="1.5"/>
+              <text x="409.81" y="215.67" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#5F6368">Region A</text>
+              <g data-id="/body/0/children/2/children/0/children/0/children/0" data-tag="Pcard">
+                <rect x="410.56" y="227.25" width="846.19" height="44.5" rx="7.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
+                <image x="421.31" y="235.5" width="28" height="28" href="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyBpZD0ic3RhbmRhcmRfcHJvZHVjdF9pY29uIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZlcnNpb249IjEuMSIgdmlld0JveD0iMCAwIDUxMiA1MTIiPgogIDwhLS0gR2VuZXJhdG9yOiBBZG9iZSBJbGx1c3RyYXRvciAyOS4yLjEsIFNWRyBFeHBvcnQgUGx1Zy1JbiAuIFNWRyBWZXJzaW9uOiAyLjEuMCBCdWlsZCAxMTYpICAtLT4KICA8ZyBpZD0iYm91bmRpbmdfYm94Ij4KICAgIDxyZWN0IHdpZHRoPSI1MTIiIGhlaWdodD0iNTEyIiBmaWxsPSJub25lIi8+CiAgPC9nPgogIDxnIGlkPSJhcnQiPgogICAgPHBhdGggZD0iTTMzMS42NiwzMzEuNjZsLTIyLjYyNy0yMi42MjdjMjkuMjQyLTI5LjI0MywyOS4yNDItNzYuODIzLDAtMTA2LjA2NmwyMi42MjctMjIuNjI3YzQxLjcyLDQxLjcxOSw0MS43MiwxMDkuNjAyLDAsMTUxLjMyaDBaIiBmaWxsPSIjOWFhMGE2Ii8+CiAgICA8cGF0aCBkPSJNMTgwLjM0LDMzMS42NmMtNDEuNzItNDEuNzE5LTQxLjcyLTEwOS42MDIsMC0xNTEuMzJsMjIuNjI3LDIyLjYyN2MtMjkuMjQyLDI5LjI0My0yOS4yNDIsNzYuODIzLDAsMTA2LjA2NmwtMjIuNjI3LDIyLjYyN1oiIGZpbGw9IiM5YWEwYTYiLz4KICAgIDxwYXRoIGQ9Ik0zMDkuMDMzLDIwMi45NjdjLTI5LjI0Mi0yOS4yNDItNzYuODI0LTI5LjI0Mi0xMDYuMDY2LDBsLTIyLjYyNy0yMi42MjdjMjAuMjEtMjAuMjEsNDcuMDgtMzEuMzQsNzUuNjYtMzEuMzRzNTUuNDUsMTEuMTMsNzUuNjYsMzEuMzRsLTIyLjYyNywyMi42MjdoMFoiIGZpbGw9IiM0Mjg1ZjQiLz4KICAgIDxwYXRoIGQ9Ik0yNTYsMzYzYy0yOC41OCwwLTU1LjQ1LTExLjEzLTc1LjY2LTMxLjM0bDIyLjYyNy0yMi42MjdjMjkuMjQyLDI5LjI0Miw3Ni44MjQsMjkuMjQyLDEwNi4wNjYsMGwyMi42MjcsMjIuNjI3Yy0yMC4yMSwyMC4yMS00Ny4wOCwzMS4zNC03NS42NiwzMS4zNFoiIGZpbGw9IiM0Mjg1ZjQiLz4KICAgIDxwYXRoIGQ9Ik0xNzAuMjI5LDE0Ny42MDNjNS40MDYtOS4yNTYsOC41MjEtMjAuMDA3LDguNTIxLTMxLjQ3OCwwLTM0LjUzMS0yOC4wOTQtNjIuNjI1LTYyLjYyNS02Mi42MjVzLTYyLjYyNSwyOC4wOTQtNjIuNjI1LDYyLjYyNSwyOC4wOTQsNjIuNjI1LDYyLjYyNSw2Mi42MjVjMTEuNDcxLDAsMjIuMjIyLTMuMTE0LDMxLjQ3OC04LjUybDQ1LjI4MSw0NS4yODFjNS44MzEtOS4wNywxMy41NTctMTYuNzk2LDIyLjYyNy0yMi42MjdsLTQ1LjI4MS00NS4yODFoLS4wMDFaTTExNi4xMjUsMTQ2Ljc1Yy0xNi44ODcsMC0zMC42MjUtMTMuNzM4LTMwLjYyNS0zMC42MjVzMTMuNzM4LTMwLjYyNSwzMC42MjUtMzAuNjI1LDMwLjYyNSwxMy43MzgsMzAuNjI1LDMwLjYyNS0xMy43MzgsMzAuNjI1LTMwLjYyNSwzMC42MjVaIiBmaWxsPSIjNDI4NWY0Ii8+CiAgICA8cGF0aCBkPSJNMjE1LjUxLDMxOS4xMTdjLTkuMDctNS44MzEtMTYuNzk2LTEzLjU1Ny0yMi42MjctMjIuNjI3bC00NS4yODEsNDUuMjgxYy05LjI1Ni01LjQwNi0yMC4wMDctOC41Mi0zMS40NzgtOC41Mi0zNC41MzEsMC02Mi42MjUsMjguMDk0LTYyLjYyNSw2Mi42MjVzMjguMDk0LDYyLjYyNSw2Mi42MjUsNjIuNjI1LDYyLjYyNS0yOC4wOTQsNjIuNjI1LTYyLjYyNWMwLTExLjQ3MS0zLjExNC0yMi4yMjItOC41MjEtMzEuNDc4bDQ1LjI4MS00NS4yODFoMFpNMTE2LjEyNSw0MjYuNWMtMTYuODg3LDAtMzAuNjI1LTEzLjczOC0zMC42MjUtMzAuNjI1czEzLjczOC0zMC42MjUsMzAuNjI1LTMwLjYyNSwzMC42MjUsMTMuNzM4LDMwLjYyNSwzMC42MjUtMTMuNzM4LDMwLjYyNS0zMC42MjUsMzAuNjI1WiIgZmlsbD0iIzlhYTBhNiIvPgogICAgPHBhdGggZD0iTTM5NS44NzUsMzMzLjI1Yy0xMS40NzEsMC0yMi4yMjIsMy4xMTQtMzEuNDc4LDguNTJsLTQ1LjI4MS00NS4yODFjLTUuODMxLDkuMDctMTMuNTU3LDE2Ljc5Ni0yMi42MjcsMjIuNjI3bDQ1LjI4MSw0NS4yODFjLTUuNDA2LDkuMjU2LTguNTIxLDIwLjAwNy04LjUyMSwzMS40NzgsMCwzNC41MzEsMjguMDk0LDYyLjYyNSw2Mi42MjUsNjIuNjI1czYyLjYyNS0yOC4wOTQsNjIuNjI1LTYyLjYyNS0yOC4wOTQtNjIuNjI1LTYyLjYyNS02Mi42MjVoLjAwMVpNMzk1Ljg3NSw0MjYuNWMtMTYuODg3LDAtMzAuNjI1LTEzLjczOC0zMC42MjUtMzAuNjI1czEzLjczOC0zMC42MjUsMzAuNjI1LTMwLjYyNSwzMC42MjUsMTMuNzM4LDMwLjYyNSwzMC42MjUtMTMuNzM4LDMwLjYyNS0zMC42MjUsMzAuNjI1WiIgZmlsbD0iIzQyODVmNCIvPgogICAgPHBhdGggZD0iTTM5NS44NzUsNTMuNWMtMzQuNTMxLDAtNjIuNjI1LDI4LjA5NC02Mi42MjUsNjIuNjI1LDAsMTEuNjQ1LDMuMjA1LDIyLjU1MSw4Ljc2NCwzMS45MDJsLTQ1LjExOCw0NS4xMThjOS4wMyw1Ljg4NywxNi43MDcsMTMuNjYzLDIyLjQ4MSwyMi43NzNsNDUuNDQ0LTQ1LjQ0NGM5LjE2LDUuMjU1LDE5Ljc1OCw4LjI3NiwzMS4wNTQsOC4yNzYsMzQuNTMxLDAsNjIuNjI1LTI4LjA5NCw2Mi42MjUtNjIuNjI1cy0yOC4wOTQtNjIuNjI1LTYyLjYyNS02Mi42MjVaTTM5NS44NzUsMTQ2Ljc1Yy0xNi44ODcsMC0zMC42MjUtMTMuNzM4LTMwLjYyNS0zMC42MjVzMTMuNzM4LTMwLjYyNSwzMC42MjUtMzAuNjI1LDMwLjYyNSwxMy43MzgsMzAuNjI1LDMwLjYyNS0xMy43MzgsMzAuNjI1LTMwLjYyNSwzMC42MjVaIiBmaWxsPSIjOWFhMGE2Ii8+CiAgPC9nPgo8L3N2Zz4="/>
+                <text x="459.31" y="246.53" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#202124">Cloud Router A</text>
+                <text x="459.31" y="262.17" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">private ASN · RFC 6996</text>
+              </g>
+              <g data-id="/body/0/children/2/children/0/children/0/children/1" data-tag="Fact">
+                <rect x="409.81" y="280.5" width="847.69" height="24.2" rx="4" fill="#F1F3F4"/>
+                <text x="417.81" y="296.97" xml:space="preserve" font-family="Inter" font-size="12" font-weight="600" fill="#5F6368">BGP peering · link-local /29 · keepalive and hold from the Cloud Router BGP-timer doc</text>
+              </g>
+            </g>
+            <g data-id="/body/0/children/2/children/0/children/1" data-tag="Pipe" data-kind="dash">
+              <circle cx="833.65" cy="330.2" r="4" fill="#1A73E8"/>
+              <line x1="833.65" y1="334.2" x2="833.65" y2="346.2" stroke="#1A73E8" stroke-width="2" stroke-dasharray="6 5"/>
+              <rect x="735.25" y="346.95" width="196.81" height="29.1" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
+              <line x1="833.65" y1="376.8" x2="833.65" y2="388.8" stroke="#1A73E8" stroke-width="2" stroke-dasharray="6 5"/>
+              <circle cx="833.65" cy="392.8" r="4" fill="#1A73E8"/>
+              <text x="744" y="365.87" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">failover · Region A ↔ Region B</text>
+            </g>
+            <g data-id="/body/0/children/2/children/0/children/2" data-tag="Zone" data-kind="region-b">
+              <rect x="397.06" y="405.55" width="873.19" height="126.1" rx="7.25" fill="#FCE4EC" stroke="#BDC1C6" stroke-width="1.5"/>
+              <text x="409.81" y="429.87" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#5F6368">Region B</text>
+              <g data-id="/body/0/children/2/children/0/children/2/children/0" data-tag="Pcard">
+                <rect x="410.56" y="441.45" width="846.19" height="44.5" rx="7.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
+                <image x="421.31" y="449.7" width="28" height="28" href="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyBpZD0ic3RhbmRhcmRfcHJvZHVjdF9pY29uIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZlcnNpb249IjEuMSIgdmlld0JveD0iMCAwIDUxMiA1MTIiPgogIDwhLS0gR2VuZXJhdG9yOiBBZG9iZSBJbGx1c3RyYXRvciAyOS4yLjEsIFNWRyBFeHBvcnQgUGx1Zy1JbiAuIFNWRyBWZXJzaW9uOiAyLjEuMCBCdWlsZCAxMTYpICAtLT4KICA8ZyBpZD0iYm91bmRpbmdfYm94Ij4KICAgIDxyZWN0IHdpZHRoPSI1MTIiIGhlaWdodD0iNTEyIiBmaWxsPSJub25lIi8+CiAgPC9nPgogIDxnIGlkPSJhcnQiPgogICAgPHBhdGggZD0iTTMzMS42NiwzMzEuNjZsLTIyLjYyNy0yMi42MjdjMjkuMjQyLTI5LjI0MywyOS4yNDItNzYuODIzLDAtMTA2LjA2NmwyMi42MjctMjIuNjI3YzQxLjcyLDQxLjcxOSw0MS43MiwxMDkuNjAyLDAsMTUxLjMyaDBaIiBmaWxsPSIjOWFhMGE2Ii8+CiAgICA8cGF0aCBkPSJNMTgwLjM0LDMzMS42NmMtNDEuNzItNDEuNzE5LTQxLjcyLTEwOS42MDIsMC0xNTEuMzJsMjIuNjI3LDIyLjYyN2MtMjkuMjQyLDI5LjI0My0yOS4yNDIsNzYuODIzLDAsMTA2LjA2NmwtMjIuNjI3LDIyLjYyN1oiIGZpbGw9IiM5YWEwYTYiLz4KICAgIDxwYXRoIGQ9Ik0zMDkuMDMzLDIwMi45NjdjLTI5LjI0Mi0yOS4yNDItNzYuODI0LTI5LjI0Mi0xMDYuMDY2LDBsLTIyLjYyNy0yMi42MjdjMjAuMjEtMjAuMjEsNDcuMDgtMzEuMzQsNzUuNjYtMzEuMzRzNTUuNDUsMTEuMTMsNzUuNjYsMzEuMzRsLTIyLjYyNywyMi42MjdoMFoiIGZpbGw9IiM0Mjg1ZjQiLz4KICAgIDxwYXRoIGQ9Ik0yNTYsMzYzYy0yOC41OCwwLTU1LjQ1LTExLjEzLTc1LjY2LTMxLjM0bDIyLjYyNy0yMi42MjdjMjkuMjQyLDI5LjI0Miw3Ni44MjQsMjkuMjQyLDEwNi4wNjYsMGwyMi42MjcsMjIuNjI3Yy0yMC4yMSwyMC4yMS00Ny4wOCwzMS4zNC03NS42NiwzMS4zNFoiIGZpbGw9IiM0Mjg1ZjQiLz4KICAgIDxwYXRoIGQ9Ik0xNzAuMjI5LDE0Ny42MDNjNS40MDYtOS4yNTYsOC41MjEtMjAuMDA3LDguNTIxLTMxLjQ3OCwwLTM0LjUzMS0yOC4wOTQtNjIuNjI1LTYyLjYyNS02Mi42MjVzLTYyLjYyNSwyOC4wOTQtNjIuNjI1LDYyLjYyNSwyOC4wOTQsNjIuNjI1LDYyLjYyNSw2Mi42MjVjMTEuNDcxLDAsMjIuMjIyLTMuMTE0LDMxLjQ3OC04LjUybDQ1LjI4MSw0NS4yODFjNS44MzEtOS4wNywxMy41NTctMTYuNzk2LDIyLjYyNy0yMi42MjdsLTQ1LjI4MS00NS4yODFoLS4wMDFaTTExNi4xMjUsMTQ2Ljc1Yy0xNi44ODcsMC0zMC42MjUtMTMuNzM4LTMwLjYyNS0zMC42MjVzMTMuNzM4LTMwLjYyNSwzMC42MjUtMzAuNjI1LDMwLjYyNSwxMy43MzgsMzAuNjI1LDMwLjYyNS0xMy43MzgsMzAuNjI1LTMwLjYyNSwzMC42MjVaIiBmaWxsPSIjNDI4NWY0Ii8+CiAgICA8cGF0aCBkPSJNMjE1LjUxLDMxOS4xMTdjLTkuMDctNS44MzEtMTYuNzk2LTEzLjU1Ny0yMi42MjctMjIuNjI3bC00NS4yODEsNDUuMjgxYy05LjI1Ni01LjQwNi0yMC4wMDctOC41Mi0zMS40NzgtOC41Mi0zNC41MzEsMC02Mi42MjUsMjguMDk0LTYyLjYyNSw2Mi42MjVzMjguMDk0LDYyLjYyNSw2Mi42MjUsNjIuNjI1LDYyLjYyNS0yOC4wOTQsNjIuNjI1LTYyLjYyNWMwLTExLjQ3MS0zLjExNC0yMi4yMjItOC41MjEtMzEuNDc4bDQ1LjI4MS00NS4yODFoMFpNMTE2LjEyNSw0MjYuNWMtMTYuODg3LDAtMzAuNjI1LTEzLjczOC0zMC42MjUtMzAuNjI1czEzLjczOC0zMC42MjUsMzAuNjI1LTMwLjYyNSwzMC42MjUsMTMuNzM4LDMwLjYyNSwzMC42MjUtMTMuNzM4LDMwLjYyNS0zMC42MjUsMzAuNjI1WiIgZmlsbD0iIzlhYTBhNiIvPgogICAgPHBhdGggZD0iTTM5NS44NzUsMzMzLjI1Yy0xMS40NzEsMC0yMi4yMjIsMy4xMTQtMzEuNDc4LDguNTJsLTQ1LjI4MS00NS4yODFjLTUuODMxLDkuMDctMTMuNTU3LDE2Ljc5Ni0yMi42MjcsMjIuNjI3bDQ1LjI4MSw0NS4yODFjLTUuNDA2LDkuMjU2LTguNTIxLDIwLjAwNy04LjUyMSwzMS40NzgsMCwzNC41MzEsMjguMDk0LDYyLjYyNSw2Mi42MjUsNjIuNjI1czYyLjYyNS0yOC4wOTQsNjIuNjI1LTYyLjYyNS0yOC4wOTQtNjIuNjI1LTYyLjYyNS02Mi42MjVoLjAwMVpNMzk1Ljg3NSw0MjYuNWMtMTYuODg3LDAtMzAuNjI1LTEzLjczOC0zMC42MjUtMzAuNjI1czEzLjczOC0zMC42MjUsMzAuNjI1LTMwLjYyNSwzMC42MjUsMTMuNzM4LDMwLjYyNSwzMC42MjUtMTMuNzM4LDMwLjYyNS0zMC42MjUsMzAuNjI1WiIgZmlsbD0iIzQyODVmNCIvPgogICAgPHBhdGggZD0iTTM5NS44NzUsNTMuNWMtMzQuNTMxLDAtNjIuNjI1LDI4LjA5NC02Mi42MjUsNjIuNjI1LDAsMTEuNjQ1LDMuMjA1LDIyLjU1MSw4Ljc2NCwzMS45MDJsLTQ1LjExOCw0NS4xMThjOS4wMyw1Ljg4NywxNi43MDcsMTMuNjYzLDIyLjQ4MSwyMi43NzNsNDUuNDQ0LTQ1LjQ0NGM5LjE2LDUuMjU1LDE5Ljc1OCw4LjI3NiwzMS4wNTQsOC4yNzYsMzQuNTMxLDAsNjIuNjI1LTI4LjA5NCw2Mi42MjUtNjIuNjI1cy0yOC4wOTQtNjIuNjI1LTYyLjYyNS02Mi42MjVaTTM5NS44NzUsMTQ2Ljc1Yy0xNi44ODcsMC0zMC42MjUtMTMuNzM4LTMwLjYyNS0zMC42MjVzMTMuNzM4LTMwLjYyNSwzMC42MjUtMzAuNjI1LDMwLjYyNSwxMy43MzgsMzAuNjI1LDMwLjYyNS0xMy43MzgsMzAuNjI1LTMwLjYyNSwzMC42MjVaIiBmaWxsPSIjOWFhMGE2Ii8+CiAgPC9nPgo8L3N2Zz4="/>
+                <text x="459.31" y="460.73" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#202124">Cloud Router B</text>
+                <text x="459.31" y="476.37" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">same private ASN as Region A</text>
+              </g>
+              <g data-id="/body/0/children/2/children/0/children/2/children/1" data-tag="Fact">
+                <rect x="409.81" y="494.7" width="847.69" height="24.2" rx="4" fill="#F1F3F4"/>
+                <text x="417.81" y="511.17" xml:space="preserve" font-family="Inter" font-size="12" font-weight="600" fill="#5F6368">Advertise the Google VIP ranges named on the Private Google Access doc</text>
+              </g>
+            </g>
+          </g>
+        </g>
+      </g>
+    </g>
+    <g data-id="/legend" data-tag="Legend">
+      <g data-id="/legend/0" data-tag="LegendEntry" data-kind="blue">
+        <line x1="20" y1="578.6" x2="46" y2="578.6" stroke="#1A73E8" stroke-width="2"/>
+        <text x="52" y="582.97" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">Solid blue</text>
+        <text x="115.56" y="582.97" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">Metro 1 ↔ Region A</text>
+      </g>
+      <g data-id="/legend/1" data-tag="LegendEntry" data-kind="pink">
+        <line x1="246.68" y1="578.6" x2="272.68" y2="578.6" stroke="#C2185B" stroke-width="2"/>
+        <text x="278.68" y="582.97" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">Solid pink</text>
+        <text x="342.06" y="582.97" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">Metro 2 ↔ Region B</text>
+      </g>
+      <g data-id="/legend/2" data-tag="LegendEntry" data-kind="dash">
+        <line x1="475.19" y1="578.6" x2="501.19" y2="578.6" stroke="#1A73E8" stroke-width="2" stroke-dasharray="6 5"/>
+        <text x="507.19" y="582.97" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">Dashed blue</text>
+        <text x="586" y="582.97" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">region failover, not a fifth line</text>
+      </g>
+    </g>
+    <g data-id="/foot" data-tag="Foot">
+      <text x="20" y="604.4" xml:space="preserve" font-family="Inter" font-size="11" font-weight="400" fill="#5F6368">Customer canvas of g7 · same stencil · VLAN, EAD, BGP on both canvases</text>
+    </g>
+  </g>
+</svg>
