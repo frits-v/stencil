@@ -173,12 +173,35 @@ fn justify_content(justify: Option<Justify>) -> JustifyContent {
     }
 }
 
-/// Default weight of a Row or Col child when `grow` is absent (section 2.3).
+/// Default weight of a Row or Col child when `grow` is absent (section 2.3). Every tag is
+/// named so a new container or node tag has to choose its weight.
 fn default_weight(container: NodeTag, child: &Node) -> u16 {
-    match (container, child) {
-        (NodeTag::Row, Node::Pipe(_) | Node::Tee(_)) => 0,
-        (NodeTag::Row, _) => 1,
-        _ => 0,
+    let row_weight = match child {
+        Node::Pipe(_) | Node::Tee(_) => 0,
+        Node::Row(_)
+        | Node::Col(_)
+        | Node::Zone(_)
+        | Node::Pcard(_)
+        | Node::Fact(_)
+        | Node::Note(_) => 1,
+    };
+    match container {
+        NodeTag::Row => row_weight,
+        NodeTag::Col
+        | NodeTag::Page
+        | NodeTag::Kicker
+        | NodeTag::Title
+        | NodeTag::Lede
+        | NodeTag::Body
+        | NodeTag::Legend
+        | NodeTag::LegendEntry
+        | NodeTag::Foot
+        | NodeTag::Zone
+        | NodeTag::Pcard
+        | NodeTag::Fact
+        | NodeTag::Note
+        | NodeTag::Pipe
+        | NodeTag::Tee => 0,
     }
 }
 
@@ -765,12 +788,27 @@ impl Builder {
             Some(parent_index),
             node,
         ));
+        let weights: Vec<u16> = match container.grow {
+            Some(weights) if weights.len() == container.children.len() => weights.to_vec(),
+            Some(weights) => {
+                return Err(LayoutError::Invalid(vec![Violation {
+                    message: format!(
+                        "grow has {} weights for {} children",
+                        weights.len(),
+                        container.children.len()
+                    ),
+                    pointer: pointer.child("grow"),
+                    rule: VetRule::GrowLengthMismatch,
+                }]));
+            }
+            None => container
+                .children
+                .iter()
+                .map(|child| default_weight(container.tag, child))
+                .collect(),
+        };
         let children_pointer = pointer.child("children");
-        for (child_index, child) in container.children.iter().enumerate() {
-            let weight = match container.grow {
-                Some(weights) => weights.get(child_index).copied().unwrap_or(0),
-                None => default_weight(container.tag, child),
-            };
+        for (child_index, (child, &weight)) in container.children.iter().zip(&weights).enumerate() {
             let child_placement = if container.tag == NodeTag::Row {
                 Placement::RowItem { weight }
             } else {
