@@ -1360,7 +1360,8 @@ The default scale is 2, so the default canvas renders 2640 px wide, the same siz
 
 - `document` is the input parsed into a `serde_json::Value`, with no defaults applied and no fields added. It is value-equal to the input.
 - `nodes` lists every node in section 4.4 geometry order. `id` is the node pointer, and each id resolves in `document` with `Value::pointer`. `kind` appears on Zone, Pipe (Tee arms included), Tee and LegendEntry, taken from `NodeGeometry.kind`. Coordinates are the absolute border box.
-- `parts` maps each snake_case `PartName` (section 2.11; `FunctionName` is `function_name`) to its box. Parts that carry a `TextRun` add `line_count`.
+- `parts` maps each snake_case `PartName` (section 2.11; `FunctionName` is `function_name`) to its box. Parts that carry a `TextRun` add `line_count`. A Text block repeats `body_line` and `marker` once per body line, so those two names are keyed `body_line/<i>` and `marker/<i>` with the zero-based line index; byte order puts `body_line/10` before `body_line/2`.
+- `links` is present only when `Page.links` is not empty, so a page without links writes the same bytes as before section 11.2. Each entry has `id` (`/links/<i>`), `from` and `to` (the endpoint node pointers), `kind`, `points` (the routed polyline as `{x, y}` objects), `status` (`routed` or `fallback`), `tag` (the tag box, absent without a label) and `parts` (`tag`, `tag_label` and `tag_sub`, keyed and boxed as node parts).
 - Every number follows section 5.1.
 - Object keys are in ascending byte order at every level, `document` included, because serde_json's default `Map` is a `BTreeMap`. The output is deterministic but follows neither the input's key order nor the section 2.11 part order. This depends on `preserve_order` staying off (section 4.1).
 
@@ -1873,7 +1874,12 @@ Dusk palette:
 
 The icon chip exists because the Google icons are drawn unaltered (section 8.2) and several of them are dark gray on transparent; on a dark card they would vanish. The chip is a rounded white square drawn under the icon, inside the icon part's box, which is 36 by 36 in every theme so geometry stays theme-independent. In `center` and `wire` the chip is drawn in the card fill color and is invisible.
 
-Wire palette: page background `#FFFFFF`, every ink `#222222`, secondary ink `#555555`, every border `#222222` at 1.25 px, no fills anywhere except `#FFFFFF`. Zone borders: gcp 2 px solid, vpc, optional and perimeter dashed, subnet dotted, every other kind 1.25 px solid; the gcp bar is white with a 2 px bottom border and `#222222` ink. Wire kinds are told apart by line style alone: gray thin solid 1.25 px, blue solid 2 px, pink solid 2 px with round end dots drawn hollow, dash dashed, deny dotted. Tags are white with a `#222222` border. Badges are white with a border. Icons keep their bytes and colors.
+Wire palette: page background `#FFFFFF`, every ink `#222222`, secondary ink `#555555`, every border `#222222` at 1.25 px, no fills anywhere except `#FFFFFF`. Zone borders: gcp 2 px solid, vpc, optional and perimeter dashed, subnet dotted, every other kind 1.25 px solid; the gcp bar is white with a 2 px bottom border and `#222222` ink. Wire kinds are told apart by line style alone: gray thin solid 1.25 px, blue solid 2 px, pink solid 2 px with round end dots drawn hollow, dash dashed, deny dotted. Legend swatches use the same styles, pink with its two hollow dots, so the swatch carries the meaning. Tags are white with a `#222222` border. Badges are white with a border. Icons keep their bytes and colors.
+
+Open items for `wire`:
+
+- Legend text is authored, so a wire page still reads "Solid blue" or "Dashed red" next to a black swatch. Layout text is theme-independent by design; a fix belongs in the document (neutral wording such as "request path") or in a future theme-aware legend label, not in the renderer.
+- A link has no end dots, so a blue and a pink link draw identically in `wire`. Pink links need a second cue, for example hollow dots at the non-arrow ends.
 
 ### 11.2 Links
 
@@ -1973,7 +1979,15 @@ Checks, in section 6 terms, examined counts included:
 | `links-routed` | one per link | `status: Fallback` |
 | `links-avoid-boxes` | one per segment and obstacle pair | a segment crosses an obstacle box, or a tag overlaps a node box other than an ancestor of an endpoint |
 
-Rendering: each route is a `<polyline>` (or `<path>` with `L` commands) in the wire color and line style of its kind, with an arrowhead as a filled triangle, 10 px long and 8 px wide, at each end the `arrow` value names, drawn with a `<marker>` per kind and theme. The tag is drawn exactly like a pipe tag. Links are drawn after every node, so they paint over zone fills and never under them. The measured JSON gains `links` with the routed points, tag box and status.
+Rendering: each route is a `<polyline>` (or `<path>` with `L` commands) in the wire color and line style of its kind, with an arrowhead as a filled triangle, 10 px long and 8 px wide, at each end the `arrow` value names, drawn with a `<marker>` per kind and theme. The tag is drawn exactly like a pipe tag. Links are drawn after every node, so they paint over zone fills and never under them. The measured JSON gains `links` with the routed points, tag box and status (section 5.4).
+
+SVG structure: after the page group closes, one `<g data-id="/links/<i>" data-tag="Link" data-kind="<kind>">` per route in link order. Inside it, in order:
+
+- A `<path d="M x y L x y ..." fill="none">` with the kind's stroke and `stroke-linejoin="round"`. At an arrowed end the path stops 10 px short of the attach point, or at the previous corner when the end segment is shorter, so the stroke ends under the arrowhead's base as a pipe wire does.
+- One unstroked `<line>` per arrowhead from its base to its tip on the endpoint box edge, carrying `marker-end` with the `arrow-<theme>-<kind>` marker that pipes use. The marker set in `<defs>` covers every kind used by an arrowed Pipe, Tee arm or link.
+- With a label, the tag `<rect>` (tag paint of the kind, radius 6) and the `tag_label` and `tag_sub` texts. The opaque tag fill masks the segment under it; the path itself is not split.
+
+A `Fallback` route is drawn the same way; the `links-routed` check reports it. The routed tag sits on the longest segment's midpoint even when that midpoint falls on a zone's label or gcp bar, which `links-avoid-boxes` does not examine. Moving the tag along its segment clear of zone label parts is an open item for the router; `examples/onepager.json` sets `from_side` and `to_side` on its first link so its longest segment runs inside the zone body.
 
 ### 11.3 Document blocks
 
@@ -2029,6 +2043,15 @@ Layout and paint:
 - `Frame`: a wireframe placeholder. Dashed 1.25 px border, radius 4, no fill, two diagonal 1 px lines corner to corner in the secondary ink, and the label centered in a white (page background) chip so the diagonals do not cross the words. Height is authored; width comes from the container. The Frame is a flex column with padding 8 that centers the chip on both axes; its `size`, `min_size` and `max_size` heights all equal `height`, so neither a grow weight nor a Row's stretch changes it. The chip has padding 4/8 and `max_size.width` 100%, and holds the label in `zone_label`, centered, wrapping inside the Frame's content width.
 
 Every block may carry `id` and be a link endpoint.
+
+Paint, as implemented in `stencil-render/src/palette.rs`:
+
+- The heading and Callout title use the `card_function` style (13 px bold); body lines, list numbers and Callout text use `block_body`; the Frame label uses `zone_label`. Inks follow those styles in each theme.
+- A `bulleted` marker is a filled circle of radius 2 in the body ink, centered 5 px into the 22 px marker cell and on the cell's vertical center.
+- The Callout box has the tint fill and the card border color at 1.25 px. The accent bar fills the Accent part and follows the inner curve of the rounded left corners (radius 8 minus the border), so it never covers the border stroke.
+- The Frame border color is `#9AA0A6` in `center`, `#6B7A99` in `dusk` and `#222222` in `wire`. The diagonals are drawn first, between the inner corners pulled in to the rounded corner's inner curve, then the dashed border, then the label chip in the page background with radius 4.
+
+Deviation, `wire` Callout: the kind word is not prefixed to the title. The prefix would be measured text that exists in one theme only, which changes geometry by theme and breaks the section 11.1 rule that measured JSON is identical across themes. A wire Callout shows its kind through the title the author writes; `examples/onepager.json` titles its callouts "Risk: ..." and "Decision: ...". A theme-independent kind label (drawn in every theme, measured once) is an open item.
 
 ### 11.4 CLI and CUE
 
