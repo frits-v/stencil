@@ -423,7 +423,7 @@ A LegendEntry node is a flex row, `AlignItems::CENTER`, gap 6, holding three par
 Grow weights distribute free space along the main axis the way CSS grid `fr` tracks do.
 
 - `grow` absent on a Row: every child that is not a Pipe or Tee gets weight 1, and Pipe and Tee children get weight 0. The rule looks at the child's own tag only. A Col or Row that holds only Pipes, such as the g7 VLAN gutter, gets weight 1 and takes an equal share of the width with the card columns, so a figure with that shape sets `grow` explicitly, as g7 does with `"grow": [0, 0, 1]`.
-- `grow` absent on a Col: every child gets weight 0, so each child keeps its content height and `justify` places the stack. This follows `_gcp.css`, where `.pair` (the Row analog) is `1fr 1fr` and `.stack` (the Col analog) does not grow its children. A Col that should split its height, like the VLAN column in g7, is written with explicit weights such as `"grow": [1, 1]`.
+- `grow` absent on a Col: every child gets weight 0, so each child keeps its content height and `justify` places the stack. This follows `_gcp.css`, where `.pair` (the Row analog) is `1fr 1fr` and `.stack` (the Col analog) does not grow its children. A Col that should split its height, like the VLAN column and the on-prem column in g7, is written with explicit weights such as `"grow": [1, 1]`.
 - Weight w > 0: `flex_grow = w`, `flex_basis = 0`, `min_size` main axis auto. The child's content-based minimum still applies, so it never goes below min-content.
 - Weight 0: `flex_grow = 0`, `flex_basis = auto`, so the child takes its max-content size.
 
@@ -943,6 +943,7 @@ pub enum CheckName {
     LegendConsistency,
     LinksRouted,
     LinksAvoidBoxes,
+    PipesLand,
 }
 
 impl CheckName {
@@ -1155,6 +1156,8 @@ pub fn siblings_do_not_overlap(geometry: &PageGeometry) -> CheckReport;
 pub fn text_fits_box(geometry: &PageGeometry) -> CheckReport;
 pub fn links_routed(geometry: &PageGeometry) -> CheckReport;
 pub fn links_avoid_boxes(geometry: &PageGeometry) -> CheckReport;
+/// Reads each pipe's `dir` from the page and every box from the geometry.
+pub fn pipes_land(page: &Page, geometry: &PageGeometry) -> CheckReport;
 ```
 
 `LayoutError::Taffy` and `LayoutError::NonFinite` carry the pointer of the node whose box failed when there is one: a taffy node not attached to the tree, or a non-finite border or content box, reports its record's pointer. A failure of `compute_layout_with_measure`, which computes the whole tree at once, a failure while walking the tree for absolute origins, and a non-finite canvas size are page-level and carry the root pointer `""`.
@@ -1253,7 +1256,7 @@ pub enum RenderError {
 
 `src/lib.rs` exposes `pub fn run(arguments: Vec<std::ffi::OsString>, stdout: &mut dyn Write, stderr: &mut dyn Write) -> ExitCode`, and integration tests call it directly. `src/main.rs` collects `std::env::args_os()`, calls `run` and exits with the returned code. Argument parsing uses clap derive. Section 7 has the commands.
 
-`src/lib.rs` also exposes `pub mod pipeline`, the steps `run` composes, so the section 9.4 golden test drives the same code path without the argument parser: `read_input` (at most `INPUT_BYTES_MAX` bytes), `load_document` (parse, vet, then the input as a `serde_json::Value`), `output_names`, `render_page` (layout with `CosmicTextMeasurer`, SVG, PNG and measured JSON in memory), `model_checks`, `all_checks` (the seven reports in `CheckName` order), `write_outputs`, and the `Failure` enum that section 7 maps to exit codes.
+`src/lib.rs` also exposes `pub mod pipeline`, the steps `run` composes, so the section 9.4 golden test drives the same code path without the argument parser: `read_input` (at most `INPUT_BYTES_MAX` bytes), `load_document` (parse, vet, then the input as a `serde_json::Value`), `output_names`, `render_page` (layout with `CosmicTextMeasurer`, SVG, PNG and measured JSON in memory), `model_checks`, `all_checks` (the eight reports in `CheckName` order), `write_outputs`, and the `Failure` enum that section 7 maps to exit codes.
 
 ```rust
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -1367,7 +1370,7 @@ The default scale is 2, so the default canvas renders 2640 px wide, the same siz
 
 ## 6. Checks
 
-Every check returns a `CheckReport` with the number of units it examined. A report passes only when `examined > 0` and there are no defects. A check that examined nothing is a failure, and the CLI prints it as one. The one exception is a check whose surface does not exist on the page: the two link checks on a page without links return `CheckReport::not_applicable` with the reason `page has no links`, and that report neither passes nor fails. A page with links whose link checks examine nothing still fails. The legend check has no such exception (section 1.3).
+Every check returns a `CheckReport` with the number of units it examined. A report passes only when `examined > 0` and there are no defects. A check that examined nothing is a failure, and the CLI prints it as one. The exceptions are checks whose surface does not exist on the page. The two link checks on a page without links return `CheckReport::not_applicable` with the reason `page has no links`. `pipes-land` returns it with `page has no pipes` on a page without a Pipe or Tee arm, and with `no pipe has a neighbor` when pipes exist but no pipe end faces a neighbor (the rule below). A not-applicable report neither passes nor fails. A page with links whose link checks examine nothing still fails, and so does a page whose pipes `pipes-land` could not look at: a pipe with no geometry node is examined and reported as a defect, never skipped. The legend check has no such exception (section 1.3).
 
 | Check | Crate | Unit examined | Defect when | Epsilon |
 |---|---|---|---|---|
@@ -1378,6 +1381,7 @@ Every check returns a `CheckReport` with the number of units it examined. A repo
 | `legend-consistency` | model | each pipe-kind use (every Pipe, every Tee arm, every Tee spine) plus each of the first LEGEND_ENTRIES_MAX + 1 legend entries | a used kind has no legend entry, a legend entry's kind is never used, or a kind appears twice in the legend | |
 | `links-routed` | layout | each link | the route has `status: Fallback` | |
 | `links-avoid-boxes` | layout | each (segment, obstacle) pair of every link, with the link's section 11.2 obstacles, plus each (tag, node) pair for every geometry node that is not a strict ancestor of an endpoint | a segment enters an obstacle's interior by more than the epsilon, or the tag overlaps the node box with both overlap width and height above the epsilon | 0.01 px |
+| `pipes-land` | layout | each pipe end that faces a neighbor: for every Pipe and Tee arm, one per side (left and right for h, above and below for v) that has a neighbor, as defined below | the pipe's center on the cross axis lies outside every box in the neighbor's subtree that is not a Row or Col | 0.01 px |
 
 `CheckName::unit(count)` returns the noun printed after the examined count:
 
@@ -1390,8 +1394,11 @@ Every check returns a `CheckReport` with the number of units it examined. A repo
 | `legend-consistency` | relation | relations |
 | `links-routed` | link | links |
 | `links-avoid-boxes` | pair | pairs |
+| `pipes-land` | pipe end | pipe ends |
 
 `text-fits-box` also examines the TagLabel and TagSub runs of every link tag, with `/links/<i>` as the owner and the tag box as the box the run must stay inside.
+
+`pipes-land` asks whether each pipe points at something on both sides of its gutter. A Pipe h, Tee arms included, is anchored at its nearest ancestor-or-self whose parent is a Row, and its neighbors are the anchor's siblings directly before it (left) and directly after it (right) in that Row. A Pipe v is anchored the same way in a Col, with neighbors above and below. Only a Row or Col parent anchors a pipe: a Pipe v whose column container is a Zone, like the g7 failover pipe, is not examined, and neither is a pipe with no Row (for h) or Col (for v) ancestor. Each side that has a neighbor is one examined pipe end, so a pipe between two neighbors counts 2 and a pipe with no neighbor on either side counts 0. The end lands when the pipe's center on the cross axis (y for h, x for v) lies within the extent on that axis, the epsilon included at both edges, of some node in the neighbor's subtree, the neighbor itself included, whose tag is not Row or Col: a Zone, Pcard, Fact, Note, Text, Callout, Frame, Pipe or Tee counts. A Row or Col only arranges its children, so a gutter beside a Col of zones at content height does not land on the Col's stretched box. The check reads each pipe's `dir` from the page and every box from the geometry.
 
 Defect pointers:
 
@@ -1400,6 +1407,7 @@ Defect pointers:
 - `text-fits-box`: the node that owns the part. The message names the part.
 - `remembered-constants`: the text field. A field yields one defect per listed literal it contains, so one literal occurring twice is one defect and two different literals are two.
 - `links-routed` and `links-avoid-boxes`: the link, `/links/<i>`. The message names the endpoint or obstacle pointers.
+- `pipes-land`: the pipe, a Pipe node or Tee arm. The message names the side and the neighbor's pointer, for example `defect pipes-land /body/0/children/1/children/1/children/0: left neighbor /body/0/children/0 has no box across the pipe's center y 418.35`.
 - `legend-consistency`: for a used kind with no legend entry, one defect per use, at the pointer of every Pipe, Tee arm or Tee (for its spine) using that kind. For a legend entry whose kind is never used, `/legend/i`. For a kind listed twice, one defect at each later entry `/legend/j`.
 
 Defect messages name the pointer and the numbers involved. A `text-fits-box` size defect is `<part> <text> measured <w>x<h> in box <w>x<h>`, where `<part>` is the snake_case part name, `<text>` is the run's string as Rust `{:?}` prints it (double-quoted, with `"` and `\` escaped), and each number has exactly 2 decimals (`{:.2}`), the precision of the 0.01 px epsilon, for example `text-fits-box /body/0/children/1/children/0/children/0: tag_label "VLAN 1" measured 41.30x15.60 in box 38.00x15.60`.
@@ -1431,7 +1439,7 @@ stencil prime [<topic>]
 |---|---|---|
 | `vet` | parse, `validate_page`, then, only when there is no violation, `remembered-constants` and `legend-consistency` | one line per violation, or one line per check and one line per defect; one summary line |
 | `render` | parse and `validate_page` only (violations stop the command with exit 1; the two model checks do not run, so a legend inconsistency does not stop a render), layout with `CosmicTextMeasurer`, SVG, PNG at `--scale` (default 2), measured JSON; creates `--out-dir` if missing and overwrites existing outputs | the three written paths, absolute |
-| `check` | everything `render` does, held in memory without writing files, then all seven checks | one line per check, one line per defect, one summary line; or an `error` line and the summary line when layout or render fails with exit 1 |
+| `check` | everything `render` does, held in memory without writing files, then all eight checks | one line per check, one line per defect, one summary line; or an `error` line and the summary line when layout or render fails with exit 1 |
 | `schema` | prints `page_schema()` as pretty JSON | the schema |
 | `prime` | prints the authoring briefing for an agent: `crates/stencil-cli/prime/base.md` with the vocabulary table rendered from `page_schema()`, so tag names, field names, bounds and enum values come from the model; at most 6,000 bytes. With a topic (`themes`, `links`, `blocks`, `layout`, `checks`, `cue`, `example`), that topic's text instead, each at most 4,000 bytes except `example`, which is `examples/g7.json` verbatim. An unknown topic writes one line to stderr naming the topics and exits 2 | the briefing or the topic |
 
@@ -1443,7 +1451,7 @@ check text-fits-box: examined 40 text runs, 1 defect
 defect text-fits-box /body/0/children/2/children/0/children/0/children/1: fact "BGP peering · link-local /29" measured 571.20x16.20 in box 560.00x16.20
 check legend-consistency: examined 0 relations, FAILED: nothing examined
 check links-routed: examined 0 links, not applicable: page has no links
-stencil check: 7 checks, 3 passed, 2 failed, 2 not applicable
+stencil check: 8 checks, 3 passed, 2 failed, 3 not applicable
 violation gap-out-of-range /body/0/gap: gap 65 is above 64
 violation text-untrimmed /title: text starts or ends with whitespace
 stencil vet: 2 violations, checks not run
@@ -1458,7 +1466,7 @@ stencil vet: document does not parse, checks not run
 - A defect line is `defect <check> <pointer>: <message>`, and a violation line is `violation <rule> <pointer>: <message>`, with the rule in kebab-case as in section 1.3. An empty pointer prints as `""`.
 - The `vet` summary always starts with the violation count, `1 violation` or `<n> violations`, 0 included. A `render` or `check` summary carries a violation count only when violations stopped the run; otherwise `check` prints `stencil check: <n> checks, <p> passed, <f> failed`, followed by `, <a> not applicable` when a report did not apply. A document with violations or a parse failure prints `checks not run` in place of the check counts.
 - `render` and `check` print violations and parse errors in the same formats, followed by the summary line `stencil <command>: …`.
-- `check` prints the seven check lines in `CheckName` declaration order (child-inside-container, siblings-do-not-overlap, text-fits-box, remembered-constants, legend-consistency, links-routed, links-avoid-boxes), and `vet` prints its two in the same relative order. Each check's defect lines follow its check line directly, in the order the `CheckReport` lists them.
+- `check` prints the eight check lines in `CheckName` declaration order (child-inside-container, siblings-do-not-overlap, text-fits-box, remembered-constants, legend-consistency, links-routed, links-avoid-boxes, pipes-land), and `vet` prints its two in the same relative order. Each check's defect lines follow its check line directly, in the order the `CheckReport` lists them.
 - On success `render` prints the three absolute paths, one per line, in the order SVG, PNG, measured JSON, and nothing after them.
 - A `MissingGlyph` layout failure (exit 1) prints `error <LayoutError display>` on stdout, followed by `stencil <command>: checks not run`. `render` writes no files in this case, because layout runs before any write.
 
@@ -1572,7 +1580,7 @@ Two more fixtures are created during crate work, each by one owner:
 
 ### 9.1 In scope
 
-The eight tags in section 1, layout by taffy, measurement by cosmic-text over bundled Inter, SVG, PNG and measured JSON output, the five checks, and the four CLI commands.
+The eight tags in section 1, layout by taffy, measurement by cosmic-text over bundled Inter, SVG, PNG and measured JSON output, the eight checks, and the five CLI commands.
 
 ### 9.2 Cut list
 
@@ -1607,6 +1615,7 @@ This is the g7 customer canvas as data. `examples/g7.json` is maintained by hand
       "children": [
         {
           "tag": "Col",
+          "grow": [1, 1],
           "children": [
             {
               "tag": "Zone",
@@ -1712,9 +1721,10 @@ The test lives in `crates/stencil-cli/tests/golden_g7.rs` and runs the library p
    | text-fits-box | 40 | runs per section 2.11: kicker BadgeText and Text 2, title 1, lede 1, legend LegendLabel and LegendText 3 by 2, foot 1, zone Label 6 (gcp included), cards FunctionName and ProductName 6 by 2, Fact nodes 2, VLAN TagLabel and TagSub 4 by 2, failover TagLabel 1 |
    | remembered-constants | 36 | title, kicker, lede, foot, 3 legend texts, 6 zone labels, 6 fn, 6 pn, 2 facts, 5 pipe labels, 4 pipe subs |
    | legend-consistency | 8 | 5 pipes, 3 legend entries |
+   | pipes-land | 8 | four VLAN pipes by two sides, the on-prem Col on the left and the gcp zone on the right; the failover pipe's column container is the VPC Zone, not a Col, so it is not examined |
 
-   Every report passes. If one of these counts changes, the test fails, and the new count is updated in the test with its derivation.
-3. Geometry assertions on the measured geometry. These encode the gold's structure, and each one holds in `g7-gold-chrome.png`:
+   Every report passes, and the two link checks are not applicable. If one of these counts changes, the test fails, and the new count is updated in the test with its derivation.
+3. Geometry assertions on the measured geometry. These encode the gold's structure, and each one holds in `g7-gold-chrome.png` except the metro zone heights, which the known differences below list:
    - The canvas width is 1320, and the canvas height is between 560 and 720.
    - The on-prem Col starts at x = 20 and is between 185 and 230 wide. The gold column is 200.
    - The VLAN Col starts 8 px right of the on-prem Col and is between 120 and 170 wide. The gold column is 150.
@@ -1723,7 +1733,7 @@ The test lives in `crates/stencil-cli/tests/golden_g7.rs` and runs the library p
    - Each VLAN pipe spans the full width of its half Col, and its two wires differ in length by at most 0.01 px.
    - The failover pipe's top is at or below Region A's bottom and its bottom is at or above Region B's top. Its center x is within 0.5 px of the VPC content box's center x.
    - Region A and Region B have the same x and width, equal to the VPC content box width.
-   - The on-prem zones keep their content height and do not stretch to the Row height. Each on-prem zone's height equals 3 (border) + 24 (padding) + 14.4 + 8 (label band) + its two card heights + 8 (gap), within 0.01 px. The Metro 2 zone's bottom is at least 150 px above the gcp zone's bottom. The test carries this derivation in a comment, so a miss reads as a layout bug and not as a tolerance to widen. With no wraps, the gcp zone is 6 (border) + 35.6 (bar) + 30 (body padding) + 388.2 (VPC) = 459.8 tall, and it is the Row's tallest child. The VPC is 4 + 20 + 14.4 + 8 + 127.6 (Region A) + 8 + 70.6 (failover pipe v: 8 + 12 + 30.6 + 12 + 8) + 8 + 127.6 (Region B). Region A is 3 + 24 + 22.4 (label band) + 46 (card) + 8 + 24.2 (one-line Fact). The on-prem Col's content is 149.4 + 8 + 149.4 = 306.8, and both start at the Row's top, so the margin is exactly 153.0, 3 px above the bound. In the gold, Metro 1 is about 152 px tall and Metro 2 ends about 190 px above the Google Cloud frame's bottom.
+   - The on-prem Col splits the Row height the way the VLAN Col does (`grow [1, 1]`, gap 8), so Metro 1 and the upper half share their top and height, and so do Metro 2 and the lower half, within 0.01 px. Each VLAN pipe's center y lies within the vertical extent of its metro zone: VLAN 1 and 2 in Metro 1, VLAN 3 and 4 in Metro 2. With no wraps the gcp zone is 6 (border) + 35.6 (bar) + 30 (body padding) + 388.2 (VPC) = 459.8 tall, and it is the Row's tallest child. The VPC is 4 + 20 + 14.4 + 8 + 127.6 (Region A) + 8 + 70.6 (failover pipe v: 8 + 12 + 30.6 + 12 + 8) + 8 + 127.6 (Region B). Region A is 3 + 24 + 22.4 (label band) + 46 (card) + 8 + 24.2 (one-line Fact). Each metro zone and each gutter half is therefore (459.8 - 8) / 2 = 225.9 tall, and the cards sit at the top of their zone. Without the on-prem weights each metro zone keeps its 149.4 px content height, Metro 2 ends above the lower half's pipes, and pipes-land reports VLAN 3 and VLAN 4.
 4. Visual artifact. The test composes `target/golden/g7-side-by-side.png`, with the reference on the left and the stencil render on the right. It uses `resvg::tiny_skia::Pixmap::decode_png` and `draw_pixmap`, through stencil-cli's `resvg` dev-dependency (section 4.1). No pixel metric is asserted, because the known differences below would dominate any pixel or SSIM score instead of structure. A person reviews the side-by-side at 200 percent zoom whenever the golden test's geometry changes.
 
 Known differences between the stencil render and the gold, which a reviewer of the side-by-side does not report:
@@ -1732,6 +1742,7 @@ Known differences between the stencil render and the gold, which a reviewer of t
 - Region fills: Region A blue and Region B pink against the gold's two neutral gray regions (section 2.4).
 - On-prem fills: Metro 1 blue and Metro 2 pink against the gold's two neutral warm-gray zones (section 2.4).
 - Legend: stencil draws a 26 by 2 swatch, the kind label and the entry text for each entry, with no separator between label and text (section 2.2). The gold writes each entry as one string with no swatch and an `=` separator, such as "Solid blue = Metro 1 ↔ Region A", and labels the `dash` kind "Dashed" where the section 2.2 table says "Dashed blue".
+- Metro zone height: stencil gives each on-prem zone half the Row height so it sits level with its gutter half. The gold keeps both zones at content height, Metro 1 about 152 px tall, so its VLAN 3 and VLAN 4 point at the empty space below Metro 2.
 - Foot: g7's `foot` is one string drawn as one left-aligned text leaf, "Customer canvas of g7 · same stencil · VLAN, EAD, BGP on both canvases". The gold splits it into "Customer canvas of g7 · same stencil" aligned left and "VLAN, EAD, BGP on both canvases" aligned right against the Google Cloud frame's right edge. The Page model has a single `foot` text and no way to express the right-aligned segment; a split foot is a model change outside the MVP.
 
 ## 10. Test plan
@@ -1779,10 +1790,11 @@ All tests except the wrap-epsilon regression use `FixedMetricsMeasurer::default(
 - Tee: the spine spans the grid height minus 36. The hub is centered horizontally and sits in the middle row. The arms occupy rows 1 and 3 in column 2. The Tee is at least 118 wide.
 - Text runs: every text leaf has a `TextRun` measured at final width. TagLabel, TagSub and HubText runs report `TextAlign::Center`, and every other run `TextAlign::Start`.
 - Wrap-epsilon regression. The measurer is `FixedMetricsMeasurer { advance_em, missing_glyphs: Vec::new() }` with `advance_em = 0.501 + k as f32 * 0.002` for k from 0 to 99. These advances are not exact in f32, unlike the default 0.5, which can never show the bug. For each advance and each n from 1 to 40, the page body is one Row with `grow: [0]` holding one Col holding one Pipe h (kind `blue`, no `sub`) whose label is `VLAN ` followed by n `x` characters. The Row weight 0 makes the Col its max-content width, and the pipe stretches to it, which is the section 2.7 tag round trip. Every one of the 4000 layouts must give a `TagLabel` run with `line_count` 1, a `TagLabel` part 15.6 tall and a `Tag` part 30.6 tall (15.6 + 12 padding + 3 border), within 0.01 px. A taffy 0.14.0 probe of this structure with the section 3.1 arithmetic wrapped 163 of the 4000 without the epsilon in the closure and 0 with it.
+- pipes-land: g7 without the on-prem Col's `grow` fails with two defects, at VLAN 3 and VLAN 4, each naming the left side and the on-prem Col. g7 as written passes with 8 pipe ends examined. A Row holding only a Col of pipes is not applicable with `no pipe has a neighbor`, and a page with no pipe is not applicable with `page has no pipes`. A page whose pipe has no geometry node fails. A Tee between two cards in a Row examines four arm ends and passes. A Pipe v in a Col below a Row of two cards and above one card examines two ends and misses above, because its center x falls in the gap between the cards and the Row's own box does not count.
 - Errors: a measurer returning `MissingGlyph` gives `LayoutError::Measure` with the text's pointer. An invalid page gives `LayoutError::Invalid`.
 - Checks on hand-built `PageGeometry`: overlap by 0.02 px is a defect and touching edges are not; a child 0.02 px outside its parent is a defect; a text run 0.02 px wider than its part is a defect; geometry with only the root gives examined 0 and fails for each geometry check.
 - Checks on laid-out documents: a Pcard with a single 120-character word in a Row of three at width 640 produces `child-inside-container` defects for the three cards and no `text-fits-box` defect, because the min-content floor of section 2.5 widens the card to the word. A `/title` of one 200-character word at width 640 produces one `text-fits-box` defect at `/title` and no `child-inside-container` defect, because the root stretches the title leaf to the content width with no min-content floor. A small document of five nodes has hand-derived examined counts.
-- Dense stress (`examples/stress-dense.json`, written by the stencil-layout implementer). Layout completes, all five checks pass, and `body_nodes(page).len()` is 37. A test compares the file, parsed as a `serde_json::Value`, with the document below built field for field, so any drift fails. The document is exactly:
+- Dense stress (`examples/stress-dense.json`, written by the stencil-layout implementer). Layout completes, all five checks and `pipes-land` pass, `pipes-land` examining 22 pipe ends (two Pipe h per Row with a card on each side, and the Pipe v between Row 1 and Row 2; the Tee arms have no Row ancestor), and `body_nodes(page).len()` is 37. A test compares the file, parsed as a `serde_json::Value`, with the document below built field for field, so any drift fails. The document is exactly:
   - Page: title `Dense stress figure`, kicker `Stress · dense layout`, lede `Five rows of cards and pipes inside a service perimeter.`, canvas `internal`, no `foot`, no `width`, and legend entries `gray` `internal call`, `blue` `request path`, `pink` `reply path`, `dash` `failover` and `deny` `blocked egress`, in that order.
   - `body` holds one Zone, kind `gcp`, label `Google Cloud`. Its one child is a Zone of kind `perimeter`, label `Service perimeter`. Its one child is a Col with no `gap`, `grow` or `justify` and seven children in this order: Row 1, the Pipe v, Row 2, Row 3, the Tee, Row 4, Row 5.
   - Row r, for r from 1 to 5, has no `gap`, `grow` or `justify` and five children: Pcard, Pipe h, Pcard, Pipe h, Pcard. Card c, for c from 1 to 3, has icon `cloud-run`, fn `Service r.c` with r and c as digits (`Service 2.3`), pn `Cloud Run` and fact `Reads its config from a bucket in the same project`. The first Pipe h has kind `blue` and label `step r.1`, the second kind `gray` and label `step r.2`. Neither has a `sub`.
@@ -1816,8 +1828,8 @@ All tests except the wrap-epsilon regression use `FixedMetricsMeasurer::default(
 - `vet` on a document with one vet violation prints its `violation` line and `stencil vet: 1 violation, checks not run`, and exits 1.
 - `vet` on malformed JSON exits 1. `vet`, `check` and `render` on a missing file exit 2 with empty stdout, and `render` creates no out-dir. `vet /dev/zero` exits 2 naming the 67,108,864-byte limit, and an input of exactly that many bytes (g7 padded with spaces) is read and vets clean. `vet` and `check` on a 4097-node document exit 1 with `violation nodes-exceeded /body: more than 4096 nodes`. An unknown subcommand or flag exits 2. `--help` and `--version` exit 0, write the text to stdout and write nothing to stderr.
 - `render` writes the three files to a temporary directory and prints exactly their three absolute paths in the order SVG, PNG, measured JSON. `--scale 5` exits 2. An `--out-dir` under a read-only directory exits 2.
-- `check examples/g7.json` exits 0 and prints the seven lines in `CheckName` order: the five with the counts from section 9.4, then both link checks as not applicable, and the summary `7 checks, 5 passed, 0 failed, 2 not applicable`.
-- `check` on a document whose text overflows exits 1 and names the pointer. The document has one Pipe and a matching legend entry, so child-inside-container is the only failing check and the summary is `7 checks, 4 passed, 1 failed, 2 not applicable`.
+- `check examples/g7.json` exits 0 and prints the eight lines in `CheckName` order: the five with the counts from section 9.4, both link checks as not applicable, pipes-land with 8 pipe ends and no defect, and the summary `8 checks, 6 passed, 0 failed, 2 not applicable`.
+- `check` on a document whose text overflows exits 1 and names the pointer. The document has one Pipe and a matching legend entry, so child-inside-container is the only failing check. The Pipe sits in the body with no Row or Col sibling, so pipes-land is not applicable, and the summary is `8 checks, 4 passed, 1 failed, 3 not applicable`.
 - `vet` and `check` on a file whose bytes are not UTF-8 exit 1 and print the `error` line with the line and column of the first invalid byte and `document does not parse, checks not run`.
 - `render d/figure.svg --out-dir d` exits 2 and leaves the input unchanged. A symlink planted at `<out-dir>/g7.svg` is replaced by the rendered file, its target keeps its bytes, and no temporary file is left behind. With an old `g7.svg` and a directory at `<out-dir>/g7.png`, `render` exits 2, `g7.svg` keeps its old bytes, no `g7.measured.json` appears and no temporary file is left behind. Two temporary names from one process differ, and a file already at a temporary name fails the write and keeps its bytes.
 - A vetted page of 160 stacked Pcards exits 2 from `render --scale 4` with a `PixmapAllocation` message and writes nothing, and renders at `--scale 1`.

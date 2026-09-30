@@ -70,9 +70,16 @@ fn check_passes_every_check_under_every_theme() {
             outcome.stdout
         );
         assert!(
+            outcome.stdout.contains(
+                "check pipes-land: examined 0 pipe ends, not applicable: page has no pipes"
+            ),
+            "{theme}: {}",
+            outcome.stdout
+        );
+        assert!(
             outcome
                 .stdout
-                .contains("stencil check: 7 checks, 7 passed, 0 failed"),
+                .contains("stencil check: 8 checks, 7 passed, 0 failed, 1 not applicable"),
             "{theme}: {}",
             outcome.stdout
         );

@@ -123,13 +123,20 @@ fn golden_g7() {
             (CheckName::LegendConsistency, 8),
             (CheckName::LinksRouted, 0),
             (CheckName::LinksAvoidBoxes, 0),
+            (CheckName::PipesLand, 8),
         ]
     );
-    for report in reports.iter().take(5) {
-        assert!(report.passed(), "{report:?}");
-    }
-    for report in reports.iter().skip(5) {
-        assert_eq!(report.outcome(), CheckOutcome::NotApplicable, "{report:?}");
+    for report in &reports {
+        let expected = match report.check {
+            CheckName::LinksRouted | CheckName::LinksAvoidBoxes => CheckOutcome::NotApplicable,
+            CheckName::ChildInsideContainer
+            | CheckName::SiblingsDoNotOverlap
+            | CheckName::TextFitsBox
+            | CheckName::RememberedConstants
+            | CheckName::LegendConsistency
+            | CheckName::PipesLand => CheckOutcome::Passed,
+        };
+        assert_eq!(report.outcome(), expected, "{report:?}");
     }
 
     // Step 3: the gold's structure.
@@ -198,25 +205,22 @@ fn golden_g7() {
         "region width against the VPC content box",
     );
 
-    // An on-prem zone keeps its content height: 1.5 border on each side (3), 12 padding on
-    // each side (24), the zone_label line (14.4) and the 8 px gap under it, then two cards
-    // with 8 between them. With no wraps the on-prem Col holds 149.4 + 8 + 149.4 = 306.8 and
-    // the gcp zone is 459.8 tall, both starting at the Row's top, so Metro 2 ends exactly
-    // 153.0 above the gcp zone's bottom. A miss here is a layout bug, not a tolerance to
-    // widen.
-    for zone_pointer in [METRO_1, METRO_2] {
+    // The on-prem Col and the VLAN Col both split the Row height with `grow [1, 1]` and gap
+    // 8, so metro zone i and gutter half i share their top and height, and each VLAN pipe's
+    // center y lies inside the metro zone its half sits beside.
+    for (zone_pointer, half) in [(METRO_1, &upper), (METRO_2, &lower)] {
         let zone = bounds(geometry, zone_pointer);
-        let first_card = bounds(geometry, &format!("{zone_pointer}/children/0"));
-        let second_card = bounds(geometry, &format!("{zone_pointer}/children/1"));
-        let expected = 3.0 + 24.0 + 14.4 + 8.0 + first_card.height + 8.0 + second_card.height;
-        assert_close(zone.height, expected, EPSILON_PX, zone_pointer);
+        assert_close(zone.y, half.y, EPSILON_PX, zone_pointer);
+        assert_close(zone.height, half.height, EPSILON_PX, zone_pointer);
     }
-    let metro_2 = bounds(geometry, METRO_2);
-    assert!(
-        gcp.bottom() - metro_2.bottom() >= 150.0,
-        "Metro 2 ends {} above the gcp zone's bottom",
-        gcp.bottom() - metro_2.bottom()
-    );
+    for (index, pointer) in VLAN_PIPES.iter().enumerate() {
+        let zone = bounds(geometry, if index < 2 { METRO_1 } else { METRO_2 });
+        let center = center_y(&bounds(geometry, pointer));
+        assert!(
+            center >= zone.y && center <= zone.bottom(),
+            "{pointer} center y {center} is outside its metro zone {zone:?}"
+        );
+    }
 
     // Step 4: the side-by-side for review at 200 percent.
     let side_by_side = compose_side_by_side(&reference_png, &rendered_png);

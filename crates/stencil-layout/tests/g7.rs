@@ -4,9 +4,14 @@ mod common;
 
 use common::{assert_close, layout, node, part};
 use stencil_layout::PartName;
+use stencil_layout::checks::pipes_land;
 
 const ON_PREM_COL: &str = "/body/0/children/0";
+const METRO_1: &str = "/body/0/children/0/children/0";
+const METRO_2: &str = "/body/0/children/0/children/1";
 const VLAN_COL: &str = "/body/0/children/1";
+const UPPER_HALF: &str = "/body/0/children/1/children/0";
+const LOWER_HALF: &str = "/body/0/children/1/children/1";
 const GCP_ZONE: &str = "/body/0/children/2";
 const VPC_ZONE: &str = "/body/0/children/2/children/0";
 
@@ -22,27 +27,56 @@ fn g7_columns_sit_side_by_side_across_the_page() {
     assert_close(gcp.bounds.right(), 1300.0, "gcp zone right edge");
 }
 
-/// On-prem zone: 3 border + 24 padding + 14.4 + 8 label band + two 46 px cards + 8 gap.
 /// gcp zone: 6 border + 35.6 bar + 30 body padding + 388.2 VPC. VPC: 4 + 20 + 14.4 + 8 +
 /// 127.6 region A + 8 + 70.6 failover pipe + 8 + 127.6 region B. Region: 3 + 24 + 22.4 +
-/// 46 card + 8 + 24.2 fact. None of these strings wrap under the fixed-metrics measurer.
+/// 46 card + 8 + 24.2 fact. None of these strings wrap under the fixed-metrics measurer. The
+/// gcp zone is the Row's tallest child, and the on-prem Col and the VLAN Col both split that
+/// height with `grow [1, 1]` and gap 8, so each metro zone and each gutter half is
+/// (459.8 - 8) / 2 = 225.9 tall.
 #[test]
 fn g7_heights_match_the_section_9_4_derivation() {
     let geometry = layout(&common::g7_page());
-    for zone in [
-        "/body/0/children/0/children/0",
-        "/body/0/children/0/children/1",
-    ] {
-        assert_close(
-            node(&geometry, zone).bounds.height,
-            3.0 + 24.0 + 14.4 + 8.0 + 46.0 + 8.0 + 46.0,
-            zone,
-        );
-    }
     assert_close(node(&geometry, GCP_ZONE).bounds.height, 459.8, "gcp zone");
     assert_close(node(&geometry, VPC_ZONE).bounds.height, 388.2, "VPC zone");
-    let metro_2 = node(&geometry, "/body/0/children/0/children/1");
-    assert!(node(&geometry, GCP_ZONE).bounds.bottom() - metro_2.bounds.bottom() >= 150.0);
+    for (zone, half) in [(METRO_1, UPPER_HALF), (METRO_2, LOWER_HALF)] {
+        let zone_bounds = node(&geometry, zone).bounds;
+        let half_bounds = node(&geometry, half).bounds;
+        assert_close(zone_bounds.height, (459.8 - 8.0) / 2.0, zone);
+        assert_close(
+            zone_bounds.y,
+            half_bounds.y,
+            "metro zone and gutter half top",
+        );
+        assert_close(
+            zone_bounds.height,
+            half_bounds.height,
+            "metro zone and gutter half height",
+        );
+    }
+}
+
+#[test]
+fn g7_each_vlan_pipe_points_into_its_metro_zone() {
+    let geometry = layout(&common::g7_page());
+    for (pipe_pointer, zone_pointer) in [
+        ("/body/0/children/1/children/0/children/0", METRO_1),
+        ("/body/0/children/1/children/0/children/1", METRO_1),
+        ("/body/0/children/1/children/1/children/0", METRO_2),
+        ("/body/0/children/1/children/1/children/1", METRO_2),
+    ] {
+        let pipe = node(&geometry, pipe_pointer).bounds;
+        let zone = node(&geometry, zone_pointer).bounds;
+        let center = pipe.y + pipe.height / 2.0;
+        assert!(
+            center >= zone.y && center <= zone.bottom(),
+            "{pipe_pointer} center y {center} is outside {zone_pointer} ({} to {})",
+            zone.y,
+            zone.bottom()
+        );
+    }
+    let report = pipes_land(&common::g7_page(), &geometry);
+    assert!(report.passed(), "{report:?}");
+    assert_eq!(report.examined, 8);
 }
 
 #[test]
