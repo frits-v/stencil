@@ -1,0 +1,101 @@
+{
+  "title": "Four lines. Two metros. Two regions. Failover sits between the regions.",
+  "kicker": "Type 5 · Dedicated Interconnect 99.99% · SOW / deck / exec",
+  "lede": "Same topology as the internal canvas. VLAN IDs, EAD, and BGP sit on the hops. A stakeholder following the lines still sees four attachments, not one bundled cable.",
+  "foot": "Customer canvas of g7 · same stencil · VLAN, EAD, BGP on both canvases",
+  "canvas": "customer",
+  "body": [
+    {
+      "tag": "Row",
+      "gap": 8,
+      "grow": [0, 0, 1],
+      "children": [
+        {
+          "tag": "Col",
+          "children": [
+            {
+              "tag": "Zone",
+              "kind": "onprem-a",
+              "label": "On-prem · Metro 1",
+              "children": [
+                { "tag": "Pcard", "icon": "hybrid", "fn": "On-prem router 1", "pn": "port toward Google" },
+                { "tag": "Pcard", "icon": "hybrid", "fn": "On-prem router 2", "pn": "port toward Google" }
+              ]
+            },
+            {
+              "tag": "Zone",
+              "kind": "onprem-b",
+              "label": "On-prem · Metro 2",
+              "children": [
+                { "tag": "Pcard", "icon": "hybrid", "fn": "On-prem router 3", "pn": "port toward Google" },
+                { "tag": "Pcard", "icon": "hybrid", "fn": "On-prem router 4", "pn": "port toward Google" }
+              ]
+            }
+          ]
+        },
+        {
+          "tag": "Col",
+          "grow": [1, 1],
+          "children": [
+            {
+              "tag": "Col",
+              "gap": 12,
+              "justify": "center",
+              "children": [
+                { "tag": "Pipe", "dir": "h", "kind": "blue", "label": "VLAN 1", "sub": "EAD 1 · BGP" },
+                { "tag": "Pipe", "dir": "h", "kind": "blue", "label": "VLAN 2", "sub": "EAD 2 · BGP" }
+              ]
+            },
+            {
+              "tag": "Col",
+              "gap": 12,
+              "justify": "center",
+              "children": [
+                { "tag": "Pipe", "dir": "h", "kind": "pink", "label": "VLAN 3", "sub": "EAD 1 · BGP" },
+                { "tag": "Pipe", "dir": "h", "kind": "pink", "label": "VLAN 4", "sub": "EAD 2 · BGP" }
+              ]
+            }
+          ]
+        },
+        {
+          "tag": "Zone",
+          "kind": "gcp",
+          "label": "Google Cloud",
+          "children": [
+            {
+              "tag": "Zone",
+              "kind": "vpc",
+              "label": "Transit VPC · one network, two regions",
+              "children": [
+                {
+                  "tag": "Zone",
+                  "kind": "region-a",
+                  "label": "Region A",
+                  "children": [
+                    { "tag": "Pcard", "icon": "networking", "fn": "Cloud Router A", "pn": "private ASN · RFC 6996" },
+                    { "tag": "Fact", "text": "BGP peering · link-local /29 · keepalive and hold from the Cloud Router BGP-timer doc" }
+                  ]
+                },
+                { "tag": "Pipe", "dir": "v", "kind": "dash", "label": "failover · Region A ↔ Region B" },
+                {
+                  "tag": "Zone",
+                  "kind": "region-b",
+                  "label": "Region B",
+                  "children": [
+                    { "tag": "Pcard", "icon": "networking", "fn": "Cloud Router B", "pn": "same private ASN as Region A" },
+                    { "tag": "Fact", "text": "Advertise the Google VIP ranges named on the Private Google Access doc" }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "legend": [
+    { "kind": "blue", "text": "Metro 1 ↔ Region A" },
+    { "kind": "pink", "text": "Metro 2 ↔ Region B" },
+    { "kind": "dash", "text": "region failover, not a fifth line" }
+  ]
+}
