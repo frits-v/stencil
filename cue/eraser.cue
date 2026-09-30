@@ -4,8 +4,8 @@
 //
 // The view accepts one shape, the g7 shape, and asserts it:
 //   body: [Row [ Col [onprem Zones of cards],
-//                Col [h Pipes, one per card, in card order],
-//                Zone gcp [ Zone vpc [ Col [Zone, v Pipe, Zone, ...] ] ] ]]
+//                Col [ Col [h Pipes], ... ], one pipe per card, in card order,
+//                Zone gcp [ Zone vpc [Zone, v Pipe, Zone, ...] ] ]]
 package stencil
 
 import (
@@ -48,7 +48,7 @@ import (
 		footGap:    22
 	}
 
-	let pageW = T.width - 2*P.margin
+	let pageW = [if T.width != _|_ {T.width}, 1280][0] - 2*P.margin
 	let y0 = P.margin + P.headerH
 
 	// Shape assertion: unifying T with this pattern fixes the list lengths
@@ -57,16 +57,16 @@ import (
 		tag: "Row"
 		children: [
 			{tag: "Col"},
-			{tag: "Col"},
-			{tag: "Zone", kind: "gcp", children: [{tag: "Zone", kind: "vpc", children: [{tag: "Col"}]}]},
+			{tag: "Col", children: [...{tag: "Col"}]},
+			{tag: "Zone", kind: "gcp", children: [{tag: "Zone", kind: "vpc"}]},
 		]
 	}]
-	_row:    T.body[0]
-	_left:   _row.children[0]
-	_gutter: _row.children[1]
-	_gcp:    _row.children[2]
-	_vpc:    _gcp.children[0]
-	_stack:  _vpc.children[0]
+	_row:  T.body[0]
+	_left: _row.children[0]
+	_gutter: [for half in _row.children[1].children for pipe in half.children {pipe}]
+	_gcp:   _row.children[2]
+	_vpc:   _gcp.children[0]
+	_stack: _vpc
 
 	// Left column: stacked on-prem zones.
 	_leftH: [for z in _left.children {(#Stack & {S: P.onprem, H: P.itemH, L: _labelFit, children: z.children, label: z.label, innerW: P.leftW - 2*P.onprem.inset}).height}]
@@ -89,7 +89,7 @@ import (
 		y:        _leftStacks[i].entities[k].y
 		zoneKind: z.kind
 	}]
-	_onePipePerCard: len(_gutter.children) & len(_cards)
+	_onePipePerCard: len(_gutter) & len(_cards)
 
 	// Google Cloud frame, VPC and the region stack.
 	let gcpX = P.margin + P.leftW + P.gutterW
@@ -168,7 +168,7 @@ import (
 		])
 
 		connections: [
-			for p, pipe in _gutter.children {
+			for p, pipe in _gutter {
 				let w = list.Max([104, P.tagCharW*list.Max([len(strings.Runes(pipe.label)), [if pipe.sub != _|_ {len(strings.Runes(pipe.sub))}, 0][0]]) + P.tagPadW])
 				tag:   "Pipe" & pipe.tag
 				id:    "vlan-\(p)"

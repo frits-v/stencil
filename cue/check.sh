@@ -1,14 +1,21 @@
 #!/usr/bin/env bash
-# Vets the package, exports both eraser views, then runs each negative case:
-# a copy of the package with one edit to g7.cue that vet must reject with the
-# named error. Exits non-zero if any positive step fails or any negative case
-# passes or fails for a different reason.
+# Vets the package, exports both eraser views, compares the customer export
+# with examples/g7.json, then runs each negative case: a copy of the package
+# with one edit to g7.cue that vet must reject with the named error. Exits
+# non-zero if the cue binary is missing, if any positive step fails, or if any
+# negative case passes or fails for a different reason.
 set -euo pipefail
 
 CUE="${CUE:-cue}"
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+golden="$here/../examples/g7.json"
 out="$here/out"
 mkdir -p "$out"
+
+if ! command -v "$CUE" >/dev/null 2>&1; then
+	echo "FAIL cue binary not found: $CUE" >&2
+	exit 1
+fi
 
 # cue reads an absolute directory argument as an import path; run from inside.
 cd "$here"
@@ -25,6 +32,37 @@ for view in g7-eraser g7-eraser-internal; do
 	echo "ok   $view: $entities entities, $connections connections"
 done
 
+# Key order may differ between the export and the hand-maintained file;
+# values and list order may not.
+"$CUE" export . -e customer --out json -o "$out/g7-customer.json" --force
+python3 - "$golden" "$out/g7-customer.json" <<'PY'
+import difflib, json, sys
+
+def canonical(path):
+    with open(path, encoding="utf-8") as handle:
+        return json.dumps(json.load(handle), indent=2, sort_keys=True, ensure_ascii=False).splitlines()
+
+def count_nodes(nodes, depth):
+    assert depth <= 24, "depth above 24"
+    total = 0
+    for node in nodes:
+        total += 1 + count_nodes(node.get("children", []), depth + 1) + len(node.get("arms", []))
+    return total
+
+golden_path, export_path = sys.argv[1], sys.argv[2]
+golden, exported = canonical(golden_path), canonical(export_path)
+if golden != exported:
+    sys.stderr.writelines(line + "\n" for line in difflib.unified_diff(golden, exported, golden_path, export_path, lineterm=""))
+    print("FAIL g7-customer: export differs from examples/g7.json", file=sys.stderr)
+    sys.exit(1)
+with open(export_path, encoding="utf-8") as handle:
+    nodes = count_nodes(json.load(handle)["body"], 1)
+if nodes == 0:
+    print("FAIL g7-customer: export has no body nodes", file=sys.stderr)
+    sys.exit(1)
+print(f"ok   g7-customer: equals examples/g7.json, {nodes} nodes, {len(golden)} canonical lines")
+PY
+
 # name | sed expression applied to g7.cue | text the vet error must contain
 cases=(
 	'asn-64512|s/pn: "private ASN · RFC 6996"/pn: "private ASN 64512"/|.pn: invalid value "private ASN 64512"'
@@ -37,6 +75,10 @@ cases=(
 	'pink-tee-arm-inside-region-a|s/{tag: "Fact", text: "BGP peering[^}]*},/&\n{tag: "Tee", kind: "blue", hub: "hub", arms: [{tag: "Pipe", dir: "h", kind: "blue", label: "arm 1"}, {tag: "Pipe", dir: "h", kind: "pink", label: "arm 2"}]},/|_otherTintInsideZone.pink'
 	'gray-pipe-in-gutter|s/kind: "blue", label: "VLAN 1"/kind: "gray", label: "VLAN 1"/|_leavesCardInItsMetro: undefined field: gray'
 	'workshop-label-on-customer-canvas|s/canvas: "internal"$/canvas: "customer"/|internal._workshop'
+	'grow-length-mismatch|s/grow: \[0, 0, 1\]/grow: [0, 1]/|customer.body.0._growLengthMatchesChildren'
+	'grow-weight-above-100|s/grow: \[1, 1\]/grow: [1, 101]/|.grow.1: invalid value 101'
+	'justify-unknown|s/justify: "center"/justify: "middle"/|.justify: conflicting values "start" and "middle"'
+	'gap-above-64|s/gap: 8$/gap: 65/|customer.body.0.gap: invalid value 65'
 )
 
 work="$(mktemp -d)"
