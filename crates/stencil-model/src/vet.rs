@@ -1,13 +1,20 @@
-use crate::document::{Node, Page, PipeDir};
+use std::collections::BTreeMap;
+
+use crate::document::{Link, Node, Page, PipeDir, Text, is_valid_id};
 use crate::pointer::NodePointer;
 use crate::walk::{
     NodeEntry, NodeRef, TextField, body_nodes, push_legend_text_fields, push_node_text_fields,
-    push_page_head_text_fields,
+    push_one_link_text_fields, push_page_head_text_fields,
 };
 use crate::{
-    CHILDREN_MAX, DEPTH_MAX, GAP_MAX_PX, GROW_WEIGHT_MAX, LEGEND_ENTRIES_MAX, NODES_MAX,
-    PAGE_WIDTH_MAX, PAGE_WIDTH_MIN, TEXT_SCALARS_MAX,
+    CHILDREN_MAX, DEPTH_MAX, FRAME_HEIGHT_MAX, FRAME_HEIGHT_MIN, GAP_MAX_PX, GROW_WEIGHT_MAX,
+    ID_PATTERN, LEGEND_ENTRIES_MAX, LINK_VIA_MAX, LINKS_MAX, NODES_MAX, PAGE_WIDTH_MAX,
+    PAGE_WIDTH_MIN, TEXT_BODY_LINES_MAX, TEXT_SCALARS_MAX,
 };
+
+/// Horizontal padding of the page root on both sides (section 2.2): the canvas is
+/// `width + 40` wide.
+const CANVAS_PADDING_TOTAL_PX: f32 = 40.0;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Violation {
@@ -33,6 +40,16 @@ pub enum VetRule {
     TeeArmNotHorizontal,
     DepthExceeded,
     NodesExceeded,
+    IdMalformed,
+    IdDuplicate,
+    TextBodyEmpty,
+    TextBodyTooLong,
+    FrameHeightOutOfRange,
+    LinksTooMany,
+    LinkSelf,
+    LinkUnknownId,
+    LinkViaTooMany,
+    LinkViaOutside,
 }
 
 impl VetRule {
@@ -54,6 +71,16 @@ impl VetRule {
             VetRule::TeeArmNotHorizontal => "tee-arm-not-horizontal",
             VetRule::DepthExceeded => "depth-exceeded",
             VetRule::NodesExceeded => "nodes-exceeded",
+            VetRule::IdMalformed => "id-malformed",
+            VetRule::IdDuplicate => "id-duplicate",
+            VetRule::TextBodyEmpty => "text-body-empty",
+            VetRule::TextBodyTooLong => "text-body-too-long",
+            VetRule::FrameHeightOutOfRange => "frame-height-out-of-range",
+            VetRule::LinksTooMany => "links-too-many",
+            VetRule::LinkSelf => "link-self",
+            VetRule::LinkUnknownId => "link-unknown-id",
+            VetRule::LinkViaTooMany => "link-via-too-many",
+            VetRule::LinkViaOutside => "link-via-outside",
         }
     }
 }
@@ -112,8 +139,11 @@ pub fn validate_page(page: &Page) -> Vec<Violation> {
             format!("more than {NODES_MAX} nodes"),
         );
     }
+    // Well-formed ids of the walked nodes, each with the pointer of the first node holding
+    // it. Bounded by the walk, like every other per-node rule.
+    let mut ids: BTreeMap<&str, NodePointer> = BTreeMap::new();
     for entry in &entries {
-        check_entry(entry, &mut violations);
+        check_entry(entry, &mut ids, &mut violations);
     }
 
     if page.legend.len() > LEGEND_ENTRIES_MAX {
@@ -130,20 +160,108 @@ pub fn validate_page(page: &Page) -> Vec<Violation> {
     push_legend_text_fields(page, &mut legend_fields);
     check_text_fields(&legend_fields, &mut violations);
 
+    check_links(page, &ids, &mut violations);
+
     violations.0
 }
 
+/// `links-too-many` once at `/links`, then each of the first LINKS_MAX + 1 links in field
+/// order: the link itself (`link-self`), `from`, `to`, the text fields, then `via`.
+fn check_links(page: &Page, ids: &BTreeMap<&str, NodePointer>, violations: &mut Violations) {
+    let links_pointer = NodePointer::root().child("links");
+    if page.links.len() > LINKS_MAX {
+        violations.push(
+            links_pointer.clone(),
+            VetRule::LinksTooMany,
+            format!("links has {} entries, above {LINKS_MAX}", page.links.len()),
+        );
+    }
+    let canvas_width = page.width as f32 + CANVAS_PADDING_TOTAL_PX;
+    for (index, link) in page.links.iter().enumerate().take(LINKS_MAX + 1) {
+        let link_pointer = links_pointer.index(index);
+        if link.from == link.to {
+            violations.push(
+                link_pointer.clone(),
+                VetRule::LinkSelf,
+                "from and to name the same node".to_string(),
+            );
+        }
+        for (field, value) in [("from", &link.from), ("to", &link.to)] {
+            if !ids.contains_key(value.as_str()) {
+                violations.push(
+                    link_pointer.child(field),
+                    VetRule::LinkUnknownId,
+                    unknown_id_message(value),
+                );
+            }
+        }
+        let mut text_fields = Vec::new();
+        push_one_link_text_fields(link, &link_pointer, &mut text_fields);
+        check_text_fields(&text_fields, violations);
+        check_via(link, &link_pointer, canvas_width, violations);
+    }
+}
+
+fn unknown_id_message(value: &str) -> String {
+    if is_valid_id(value) {
+        format!("no node has id \"{value}\"")
+    } else {
+        format!("no node has this id; it does not match {ID_PATTERN}")
+    }
+}
+
+/// `via` above LINK_VIA_MAX points, then each of the first LINK_VIA_MAX + 1 points outside
+/// the canvas. Layout alone knows the canvas height, so vet bounds y below only.
+fn check_via(
+    link: &Link,
+    link_pointer: &NodePointer,
+    canvas_width: f32,
+    violations: &mut Violations,
+) {
+    let via_pointer = link_pointer.child("via");
+    if link.via.len() > LINK_VIA_MAX {
+        violations.push(
+            via_pointer.clone(),
+            VetRule::LinkViaTooMany,
+            format!("via has {} points, above {LINK_VIA_MAX}", link.via.len()),
+        );
+    }
+    for (index, point) in link.via.iter().enumerate().take(LINK_VIA_MAX + 1) {
+        let x_inside = point.x.is_finite() && (0.0..=canvas_width).contains(&point.x);
+        let y_inside = point.y.is_finite() && point.y >= 0.0;
+        if !(x_inside && y_inside) {
+            violations.push(
+                via_pointer.index(index),
+                VetRule::LinkViaOutside,
+                format!(
+                    "via point ({}, {}) is outside the page: x 0 to {canvas_width}, y 0 or more",
+                    point.x, point.y
+                ),
+            );
+        }
+    }
+}
+
 /// A node's own violations in struct declaration order: depth first (it names the node
-/// itself), then a Tee arm's `dir`, then text fields, then the container rules for
-/// `gap`, `grow` and `children`, which Row and Col declare before `children` and Zone
-/// declares after `label`.
-fn check_entry(entry: &NodeEntry<'_>, violations: &mut Violations) {
+/// itself), then `id`, then a Tee arm's `dir`, then text fields, then the container rules
+/// for `gap`, `grow` and `children`, which Row and Col declare before `children` and Zone
+/// declares after `label`. A Text reports its `body` length between its heading and its
+/// lines, and a Frame its `height` after its label.
+fn check_entry<'a>(
+    entry: &NodeEntry<'a>,
+    ids: &mut BTreeMap<&'a str, NodePointer>,
+    violations: &mut Violations,
+) {
     if entry.depth == DEPTH_MAX + 1 {
         violations.push(
             entry.pointer.clone(),
             VetRule::DepthExceeded,
             format!("depth {} is above {DEPTH_MAX}", entry.depth),
         );
+    }
+
+    if let Some(id) = entry.node.id() {
+        check_id(id, entry, ids, violations);
     }
 
     if let NodeRef::TeeArm(pipe) = entry.node
@@ -158,7 +276,17 @@ fn check_entry(entry: &NodeEntry<'_>, violations: &mut Violations) {
 
     let mut fields = Vec::new();
     push_node_text_fields(entry, &mut fields);
-    check_text_fields(&fields, violations);
+    if let NodeRef::Node(Node::Text(text)) = entry.node {
+        let heading_count = usize::from(text.heading.is_some());
+        let (heading_fields, line_fields) = fields
+            .split_at_checked(heading_count)
+            .unwrap_or((&[], &fields));
+        check_text_fields(heading_fields, violations);
+        check_text_body_length(entry, text, violations);
+        check_text_fields(line_fields, violations);
+    } else {
+        check_text_fields(&fields, violations);
+    }
 
     match entry.node {
         NodeRef::Node(Node::Row(row)) => {
@@ -184,10 +312,74 @@ fn check_entry(entry: &NodeEntry<'_>, violations: &mut Violations) {
         NodeRef::Node(Node::Zone(zone)) => {
             check_children_count(entry, zone.children.len(), violations);
         }
+        NodeRef::Node(Node::Frame(frame)) => {
+            if !(FRAME_HEIGHT_MIN..=FRAME_HEIGHT_MAX).contains(&frame.height) {
+                violations.push(
+                    entry.pointer.child("height"),
+                    VetRule::FrameHeightOutOfRange,
+                    format!(
+                        "height {} is outside {FRAME_HEIGHT_MIN} to {FRAME_HEIGHT_MAX}",
+                        frame.height
+                    ),
+                );
+            }
+        }
         NodeRef::Node(
-            Node::Pcard(_) | Node::Fact(_) | Node::Note(_) | Node::Pipe(_) | Node::Tee(_),
+            Node::Pcard(_)
+            | Node::Fact(_)
+            | Node::Note(_)
+            | Node::Pipe(_)
+            | Node::Tee(_)
+            | Node::Text(_)
+            | Node::Callout(_),
         )
         | NodeRef::TeeArm(_) => {}
+    }
+}
+
+fn check_id<'a>(
+    id: &'a str,
+    entry: &NodeEntry<'a>,
+    ids: &mut BTreeMap<&'a str, NodePointer>,
+    violations: &mut Violations,
+) {
+    let id_pointer = entry.pointer.child("id");
+    if !is_valid_id(id) {
+        violations.push(
+            id_pointer,
+            VetRule::IdMalformed,
+            format!("id does not match {ID_PATTERN}"),
+        );
+        return;
+    }
+    if let Some(first_pointer) = ids.get(id) {
+        violations.push(
+            id_pointer,
+            VetRule::IdDuplicate,
+            format!("id \"{id}\" is already used at {first_pointer}"),
+        );
+    } else {
+        ids.insert(id, entry.pointer.clone());
+    }
+}
+
+fn check_text_body_length(entry: &NodeEntry<'_>, text: &Text, violations: &mut Violations) {
+    let body_pointer = entry.pointer.child("body");
+    if text.body.is_empty() {
+        violations.push(
+            body_pointer,
+            VetRule::TextBodyEmpty,
+            "body has no lines".to_string(),
+        );
+    } else if text.body.len() > TEXT_BODY_LINES_MAX {
+        violations.push(
+            body_pointer,
+            VetRule::TextBodyTooLong,
+            format!(
+                "body has {} lines, above {TEXT_BODY_LINES_MAX}",
+                text.body.len()
+            ),
+        );
     }
 }
 

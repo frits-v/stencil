@@ -488,6 +488,7 @@ fn every_text_field_is_vetted() {
             ZoneKind::RegionA,
             untrimmed,
             vec![Node::Pcard(Pcard {
+                id: None,
                 icon: None,
                 function_name: untrimmed.to_string(),
                 product_name: Some(untrimmed.to_string()),
@@ -496,16 +497,20 @@ fn every_text_field_is_vetted() {
             })],
         ),
         Node::Note(stencil_model::Note {
+            id: None,
             kind: stencil_model::NoteKind::Legend,
             text: untrimmed.to_string(),
         }),
         Node::Pipe(stencil_model::Pipe {
+            id: None,
+            arrow: stencil_model::Arrow::None,
             dir: PipeDir::Horizontal,
             kind: PipeKind::Blue,
             label: untrimmed.to_string(),
             sub: Some(untrimmed.to_string()),
         }),
         Node::Tee(stencil_model::Tee {
+            id: None,
             kind: PipeKind::Blue,
             hub: untrimmed.to_string(),
             arms: [
@@ -515,6 +520,8 @@ fn every_text_field_is_vetted() {
                     untrimmed,
                 )),
                 stencil_model::TeeArm::Pipe(stencil_model::Pipe {
+                    id: None,
+                    arrow: stencil_model::Arrow::None,
                     dir: PipeDir::Horizontal,
                     kind: PipeKind::Blue,
                     label: "a".to_string(),

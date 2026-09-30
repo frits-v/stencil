@@ -10,7 +10,7 @@
 mod common;
 
 use common::{G7_JSON, g7_page, g7_value};
-use stencil_model::{ModelError, Node, PAGE_WIDTH_DEFAULT, Pcard, parse_page};
+use stencil_model::{Arrow, ModelError, Node, PAGE_WIDTH_DEFAULT, Pcard, Theme, parse_page};
 
 fn assert_json_error(json_text: &str) {
     match parse_page(json_text) {
@@ -160,6 +160,7 @@ fn null_optional_fields_parse_as_absent() {
     assert_eq!(
         row.children.first(),
         Some(&Node::Pcard(Pcard {
+            id: None,
             icon: None,
             function_name: "Store".to_string(),
             product_name: None,
@@ -226,4 +227,100 @@ fn vet_violation_is_model_error_invalid() {
         Err(ModelError::Invalid(violations)) => assert_eq!(violations.len(), 1),
         other => panic!("expected ModelError::Invalid, got {other:?}"),
     }
+}
+
+#[test]
+fn g7_serializes_to_its_input_plus_the_width_default() {
+    // `width` is the one field serialized at its default; theme, links, id and a Pipe's
+    // arrow are skipped at theirs, so a document without them keeps its bytes.
+    let page = parse_page(G7_JSON).unwrap();
+    let mut expected = g7_value();
+    expected["width"] = serde_json::json!(PAGE_WIDTH_DEFAULT);
+    assert_eq!(serde_json::to_value(&page).unwrap(), expected);
+}
+
+#[test]
+fn theme_defaults_to_center_and_is_not_serialized_as_default() {
+    let page = parse_page(G7_JSON).unwrap();
+    assert_eq!(page.theme, Theme::Center);
+
+    for (name, theme) in [
+        ("center", Theme::Center),
+        ("dusk", Theme::Dusk),
+        ("wire", Theme::Wire),
+    ] {
+        let mut document = g7_value();
+        document["theme"] = serde_json::json!(name);
+        let page = parse_page(&document.to_string()).unwrap();
+        assert_eq!(page.theme, theme);
+        let serialized = serde_json::to_value(&page).unwrap();
+        let expected = (theme != Theme::Center).then(|| serde_json::json!(name));
+        assert_eq!(serialized.get("theme").cloned(), expected, "{name}");
+    }
+}
+
+#[test]
+fn unknown_or_null_theme_is_a_json_error() {
+    let mut document = g7_value();
+    document["theme"] = serde_json::json!("night");
+    assert_json_error(&document.to_string());
+    document["theme"] = serde_json::Value::Null;
+    assert_json_error(&document.to_string());
+}
+
+#[test]
+fn pipe_arrow_defaults_to_none_and_link_arrow_to_end() {
+    let page = parse_page(G7_JSON).unwrap();
+    let pipe_json = serde_json::json!({ "tag": "Pipe", "dir": "h", "kind": "blue", "label": "a" });
+    let pipe: Node = serde_json::from_value(pipe_json.clone()).unwrap();
+    let Node::Pipe(pipe_value) = &pipe else {
+        panic!("a Pipe node");
+    };
+    assert_eq!(pipe_value.arrow, Arrow::None);
+    assert_eq!(serde_json::to_value(&pipe).unwrap(), pipe_json);
+
+    let arrowed_json = serde_json::json!(
+        { "tag": "Pipe", "dir": "h", "kind": "blue", "label": "a", "arrow": "both" }
+    );
+    let arrowed: Node = serde_json::from_value(arrowed_json.clone()).unwrap();
+    assert_eq!(serde_json::to_value(&arrowed).unwrap(), arrowed_json);
+
+    let link: stencil_model::Link =
+        serde_json::from_value(serde_json::json!({ "from": "a", "to": "b", "kind": "blue" }))
+            .unwrap();
+    assert_eq!(link.arrow, Arrow::End);
+    assert!(page.links.is_empty());
+}
+
+#[test]
+fn unknown_arrow_side_or_link_field_is_a_json_error() {
+    for links in [
+        serde_json::json!([{ "from": "a", "to": "b", "kind": "blue", "arrow": "tail" }]),
+        serde_json::json!([{ "from": "a", "to": "b", "kind": "blue", "from_side": "north" }]),
+        serde_json::json!([{ "from": "a", "to": "b", "kind": "blue", "colour": "red" }]),
+        serde_json::json!([{ "from": "a", "to": "b", "kind": "blue", "via": [{ "x": 1, "y": 2, "z": 3 }] }]),
+        serde_json::json!([{ "from": "a", "kind": "blue" }]),
+        serde_json::Value::Null,
+    ] {
+        let mut document = g7_value();
+        document["links"] = links;
+        assert_json_error(&document.to_string());
+    }
+}
+
+#[test]
+fn links_with_sides_and_via_round_trip() {
+    let mut document = g7_value();
+    document["body"][0]["children"][0]["children"][0]["children"][0]["id"] =
+        serde_json::json!("router-1");
+    document["body"][0]["children"][2]["id"] = serde_json::json!("cloud");
+    document["links"] = serde_json::json!([{
+        "from": "router-1", "to": "cloud", "kind": "blue", "label": "1", "sub": "request",
+        "arrow": "both", "from_side": "right", "to_side": "left",
+        "via": [ { "x": 400.5, "y": 120.25 } ]
+    }]);
+    document["width"] = serde_json::json!(1440);
+    let page = parse_page(&document.to_string()).unwrap();
+    assert_eq!(page.links.len(), 1);
+    assert_eq!(serde_json::to_value(&page).unwrap(), document);
 }

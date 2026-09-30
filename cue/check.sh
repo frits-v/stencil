@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 # Vets the package, exports both eraser views, compares the customer export
-# with examples/g7.json, then runs each negative case: a copy of the package
-# with one edit to g7.cue that vet must reject with the named error. Exits
-# non-zero if the cue binary is missing, if any positive step fails, or if any
-# negative case passes or fails for a different reason.
+# with examples/g7.json, vets examples/onepager.json against #Page, then runs
+# each negative case: a copy of the package with one edit to g7.cue that vet
+# must reject with the named error. Exits non-zero if the cue binary is
+# missing, if any positive step fails, or if any negative case passes or fails
+# for a different reason.
 set -euo pipefail
 
 CUE="${CUE:-cue}"
@@ -63,6 +64,10 @@ if nodes == 0:
 print(f"ok   g7-customer: equals examples/g7.json, {nodes} nodes, {len(golden)} canonical lines")
 PY
 
+# A JSON document authored without CUE vets against #Page directly.
+"$CUE" vet -c -d '#Page' . "$here/../examples/onepager.json"
+echo "ok   onepager: examples/onepager.json vets against #Page"
+
 # Fillers for the length bounds: 401 characters for a text field, 255 facts
 # added beside the one in Region A for 257 children.
 long_text="$(printf 'x%.0s' {1..401})"
@@ -96,6 +101,11 @@ cases=(
 	'empty-gutter-half|s/grow: \[1, 1\]/grow: [1, 1, 0]/; s/{tag: "Pipe", dir: "h", kind: "pink", label: "VLAN 4"[^}]*},/&\n]}, {tag: "Col", children: [/|customer.body.0.children.1.children.2.children: invalid value []|list.MinItems(1)'
 	"text-above-400|s/fn: \"Cloud Router A\"/fn: \"$long_text\"/|customer.body.0.children.2.children.0.children.0.children.0.fn: invalid value|strings.MaxRunes(400)"
 	"children-above-256|s/{tag: \"Fact\", text: \"BGP peering[^}]*},/&$many_facts/|customer.body.0.children.2.children.0.children.0.children: invalid value|list.MaxItems(256)"
+	'duplicate-id|s/fn: "On-prem router 1"/id: "r1", &/; s/fn: "On-prem router 3"/id: "r1", &/|customer._idsUsedTwice.r1'
+	'link-unknown-endpoint|s/fn: "On-prem router 1"/id: "r1", &/; s/^\ttitle: /\tlinks: [{from: "r1", to: "nowhere", kind: "blue"}]\n&/|customer._linkEndpointsUnknown.nowhere'
+	'link-to-itself|s/fn: "On-prem router 1"/id: "r1", &/; s/^\ttitle: /\tlinks: [{from: "r1", to: "r1", kind: "blue"}]\n&/|customer._linkToItself.r1'
+	'link-kind-missing-from-legend|s/fn: "On-prem router 1"/id: "r1", &/; s/fn: "On-prem router 3"/id: "r3", &/; s/^\ttitle: /\tlinks: [{from: "r1", to: "r3", kind: "gray"}]\n&/|customer._linkKindsMissingFromLegend.gray'
+	'id-malformed|s/fn: "On-prem router 1"/id: "Router-1", &/|.id: invalid value "Router-1"'
 )
 
 work="$(mktemp -d)"

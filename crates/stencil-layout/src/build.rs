@@ -183,7 +183,10 @@ fn default_weight(container: NodeTag, child: &Node) -> u16 {
         | Node::Zone(_)
         | Node::Pcard(_)
         | Node::Fact(_)
-        | Node::Note(_) => 1,
+        | Node::Note(_)
+        | Node::Text(_)
+        | Node::Callout(_)
+        | Node::Frame(_) => 1,
     };
     match container {
         NodeTag::Row => row_weight,
@@ -743,6 +746,10 @@ impl Builder {
                 self.add_pipe(pipe, pointer, parent_index, parent_container, placement)
             }
             Node::Tee(tee) => self.add_tee(tee, pointer, parent_index, parent_container, placement),
+            Node::Text(_) | Node::Callout(_) | Node::Frame(_) => Err(LayoutError::Taffy {
+                message: format!("tag {} has no layout", node.tag_name()),
+                pointer,
+            }),
         }
     }
 

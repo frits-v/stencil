@@ -94,6 +94,9 @@ fn drawn_texts(page: &Page) -> (Vec<DrawnText>, usize) {
             NodeRef::Node(Node::Tee(tee)) => {
                 authored.push(drawn(&tee.hub, TextStyleName::TagLabel))
             }
+            // Section 11.3 blocks have no TextStyleName yet; the authored-count assertion
+            // below fails if g7 ever holds one.
+            NodeRef::Node(Node::Text(_) | Node::Callout(_) | Node::Frame(_)) => {}
         }
     }
     for entry in &page.legend {
