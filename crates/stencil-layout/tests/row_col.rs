@@ -4,6 +4,7 @@ mod common;
 
 use common::{assert_close, layout, node, page_with_body};
 use serde_json::{Value, json};
+use stencil_layout::checks::child_inside_container;
 
 fn card(function_name: &str) -> Value {
     json!({ "tag": "Pcard", "fn": function_name })
@@ -195,4 +196,33 @@ fn row_and_col_gap_default_to_8() {
     let upper = node(&geometry, "/body/0/children/0/children/0");
     let lower = node(&geometry, "/body/0/children/0/children/1");
     assert_close(lower.bounds.y - upper.bounds.bottom(), 8.0, "col gap");
+}
+
+/// Section 2.1: body nodes do not shrink. Two weight-0 cards whose max-content widths add up
+/// to more than the Row keep those widths, and the second one overflows the Row.
+#[test]
+fn weight_zero_cards_wider_than_the_row_keep_max_content_and_overflow() {
+    let long_name = "A function name long enough to need most of the page width";
+    let row =
+        json!([{ "tag": "Row", "grow": [0, 0], "children": [card(long_name), card(long_name)] }]);
+    let wide = layout(&page_with_body(1280, row.clone()));
+    let max_content = node(&wide, "/body/0/children/0").bounds.width;
+    assert!(2.0 * max_content + 8.0 < 1280.0, "both cards fit at 1280");
+    assert!(child_inside_container(&wide).passed());
+
+    let narrow_width = 640;
+    assert!(2.0 * max_content + 8.0 > narrow_width as f32);
+    let narrow = layout(&page_with_body(narrow_width, row));
+    let first = node(&narrow, "/body/0/children/0");
+    let second = node(&narrow, "/body/0/children/1");
+    assert_close(first.bounds.width, max_content, "first card");
+    assert_close(second.bounds.width, max_content, "second card");
+
+    let inside = child_inside_container(&narrow);
+    let pointers: Vec<&str> = inside
+        .defects
+        .iter()
+        .map(|defect| defect.pointer.as_str())
+        .collect();
+    assert_eq!(pointers, ["/body/0/children/1"]);
 }

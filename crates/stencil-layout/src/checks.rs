@@ -41,20 +41,29 @@ pub fn child_inside_container(geometry: &PageGeometry) -> CheckReport {
 }
 
 /// Each unordered pair of nodes with the same parent: the border boxes may touch but not
-/// overlap by more than the epsilon in both axes. The defect sits on the later sibling.
+/// overlap by more than the epsilon in both axes. The defect sits on the later sibling. A node
+/// whose parent index is not a geometry node is examined and reported, as in
+/// child-inside-container.
 pub fn siblings_do_not_overlap(geometry: &PageGeometry) -> CheckReport {
+    let mut examined: u64 = 0;
+    let mut defects = Vec::new();
     let mut children_by_parent: Vec<Vec<usize>> = vec![Vec::new(); geometry.nodes.len()];
     for (index, node) in geometry.nodes.iter().enumerate() {
-        if let Some(siblings) = node
-            .parent
-            .and_then(|parent_index| children_by_parent.get_mut(parent_index))
-        {
-            siblings.push(index);
+        let Some(parent_index) = node.parent else {
+            continue;
+        };
+        match children_by_parent.get_mut(parent_index) {
+            Some(siblings) => siblings.push(index),
+            None => {
+                examined += 1;
+                defects.push(Defect {
+                    pointer: node.pointer.clone(),
+                    message: format!("parent index {parent_index} is not a geometry node"),
+                });
+            }
         }
     }
 
-    let mut examined: u64 = 0;
-    let mut defects = Vec::new();
     for siblings in &children_by_parent {
         for (position, &earlier_index) in siblings.iter().enumerate() {
             for &later_index in siblings.iter().skip(position + 1) {

@@ -8,7 +8,6 @@ publish.workspace = true
 [dependencies]
 taffy.workspace = true
 thiserror.workspace = true
-serde.workspace = true
 stencil-model = { path = "../stencil-model" }
 
 [dev-dependencies]

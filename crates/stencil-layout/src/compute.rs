@@ -101,6 +101,11 @@ pub(crate) fn compute_geometry(
         width: root_layout.size.width,
         height: root_layout.size.height,
     };
+    if !canvas.width.is_finite() || !canvas.height.is_finite() {
+        return Err(LayoutError::NonFinite {
+            pointer: NodePointer::root(),
+        });
+    }
     Ok(PageGeometry { canvas, nodes })
 }
 
