@@ -181,8 +181,7 @@ fn root_only_geometry_examines_nothing_and_fails() {
 
 /// Section 2.5 keeps the widest word as the text column's floor, so the card grows to fit
 /// the word and overflows the Row: child-inside-container reports it, and the run still fits
-/// its own part box. The section 10 bullet for this document also names text-fits-box; the
-/// min-content floor of sections 2.3 and 2.5 rules that out.
+/// its own part box, so text-fits-box does not.
 #[test]
 fn card_with_a_120_character_word_overflows_its_row() {
     let word = "w".repeat(120);
