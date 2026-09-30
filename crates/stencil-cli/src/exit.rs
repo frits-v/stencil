@@ -26,6 +26,7 @@ pub fn failure_exit_code(failure: &Failure) -> ExitCode {
         Failure::Render(error) => render_exit_code(error),
         Failure::ReadInput { .. }
         | Failure::InputStem { .. }
+        | Failure::OutputIsInput { .. }
         | Failure::DocumentValue(_)
         | Failure::Serialize { .. }
         | Failure::CreateOutputDirectory { .. }
@@ -89,9 +90,10 @@ pub fn clap_exit_code(kind: ErrorKind) -> ExitCode {
     }
 }
 
-/// Clean only when every report passed; a report that examined nothing fails.
+/// Clean only when there is at least one report and every report passed; a report that
+/// examined nothing fails, and so does an empty list.
 pub fn reports_exit_code(reports: &[CheckReport]) -> ExitCode {
-    if reports.iter().all(CheckReport::passed) {
+    if !reports.is_empty() && reports.iter().all(CheckReport::passed) {
         ExitCode::Clean
     } else {
         ExitCode::Defects
@@ -238,6 +240,9 @@ mod tests {
                 source: io_error(),
             },
             Failure::InputStem { path: "/".into() },
+            Failure::OutputIsInput {
+                path: "out/g7.svg".into(),
+            },
             Failure::CreateOutputDirectory {
                 path: "out".into(),
                 source: io_error(),
@@ -286,6 +291,7 @@ mod tests {
             message: "title \"x\" measured 2.00x1.00 in box 1.00x1.00".to_string(),
         };
         assert_eq!(reports_exit_code(&[report(3, Vec::new())]), ExitCode::Clean);
+        assert_eq!(reports_exit_code(&[]), ExitCode::Defects);
         assert_eq!(
             reports_exit_code(&[report(3, Vec::new()), report(0, Vec::new())]),
             ExitCode::Defects
