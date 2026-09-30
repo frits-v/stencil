@@ -377,6 +377,11 @@ pub fn check_measure_input(
             reason: "line height is below the size",
         });
     }
+    if !style.line_height_px.is_finite() {
+        return Err(MeasureError::InvalidStyle {
+            reason: "line height is not finite",
+        });
+    }
     if !(LETTER_SPACING_MIN_EM..=LETTER_SPACING_MAX_EM).contains(&style.letter_spacing_em) {
         return Err(MeasureError::InvalidStyle {
             reason: "letter spacing is outside -0.2 to 0.5 em",

@@ -9,7 +9,7 @@ use common::{
     tee, zone,
 };
 use stencil_model::{
-    CHILDREN_MAX, NODES_MAX, Node, Page, Pcard, PipeDir, PipeKind, VetRule, ZoneKind, body_nodes,
+    CHILDREN_MAX, LEGEND_ENTRIES_MAX, NODES_MAX, Node, Page, Pcard, PipeDir, PipeKind, VetRule, ZoneKind, body_nodes,
     validate_page,
 };
 
@@ -612,6 +612,84 @@ fn node_fields_precede_children_and_container_rules_follow_zone_label() {
             "/body/0/label",
             "/body/0/children",
             "/body/1/children/0/label"
+        ]
+    );
+}
+
+#[test]
+fn legend_text_rules_stop_one_entry_past_the_legend_limit() {
+    let mut page = page_with_body(vec![pcard("a")]);
+    page.legend = vec![legend_entry(PipeKind::Blue, " untrimmed"); LEGEND_ENTRIES_MAX + 4];
+    let found = violations(&page);
+    assert_eq!(
+        found.first(),
+        Some(&(
+            "/legend".to_string(),
+            "legend-too-long",
+            "legend has 20 entries, above 16".to_string()
+        ))
+    );
+    let text_pointers: Vec<&str> = found
+        .iter()
+        .filter(|(_, rule, _)| *rule == "text-untrimmed")
+        .map(|(pointer, _, _)| pointer.as_str())
+        .collect();
+    let expected: Vec<String> = (0..=LEGEND_ENTRIES_MAX)
+        .map(|index| format!("/legend/{index}/text"))
+        .collect();
+    assert_eq!(text_pointers, expected);
+}
+
+#[test]
+fn grow_weights_are_checked_up_to_one_past_the_children_limit() {
+    let mut page = page_with_body(vec![row(vec![pcard("a")])]);
+    first_row_mut(&mut page).grow = Some(vec![101; CHILDREN_MAX + 1]);
+    let at_bound = violations(&page);
+    assert_eq!(at_bound.len(), 1 + CHILDREN_MAX + 1);
+    first_row_mut(&mut page).grow = Some(vec![101; 10_000]);
+    let found = violations(&page);
+    assert_eq!(
+        found.first(),
+        Some(&(
+            "/body/0/grow".to_string(),
+            "grow-length-mismatch",
+            "grow has 10000 weights for 1 children".to_string()
+        ))
+    );
+    let weight_violations = found
+        .iter()
+        .filter(|(_, rule, _)| *rule == "grow-out-of-range")
+        .count();
+    assert_eq!(weight_violations, CHILDREN_MAX + 1);
+    assert_eq!(
+        found.last().map(|(pointer, _, _)| pointer.as_str()),
+        Some("/body/0/grow/256")
+    );
+}
+
+#[test]
+fn a_huge_children_list_is_walked_only_to_the_node_limit() {
+    let page = page_with_body(vec![row(vec![pcard("a"); 200_000])]);
+    let entries = body_nodes(&page);
+    assert_eq!(entries.len(), NODES_MAX + 1);
+    assert_eq!(
+        entries.last().map(|entry| entry.pointer.as_str()),
+        Some("/body/0/children/4095")
+    );
+    let found = violations(&page);
+    assert_eq!(
+        found,
+        vec![
+            (
+                "/body".to_string(),
+                "nodes-exceeded",
+                "more than 4096 nodes".to_string()
+            ),
+            (
+                "/body/0/children".to_string(),
+                "children-too-many",
+                "200000 children, above 256".to_string()
+            ),
         ]
     );
 }
