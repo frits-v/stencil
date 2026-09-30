@@ -8,7 +8,7 @@ use stencil_render::measured_json;
 
 fn g7_measured() -> (common::Rendered, Value) {
     let rendered = common::render_g7();
-    let measured = measured_json(&common::g7_document(), &rendered.geometry);
+    let measured = measured_json(&common::g7_document(), &rendered.geometry, None);
     (rendered, measured)
 }
 
@@ -151,7 +151,7 @@ fn serialized_keys_are_in_ascending_byte_order() {
 #[test]
 fn measured_json_is_deterministic() {
     let (rendered, first) = g7_measured();
-    let second = measured_json(&common::g7_document(), &rendered.geometry);
+    let second = measured_json(&common::g7_document(), &rendered.geometry, None);
     assert_eq!(
         serde_json::to_string(&first).unwrap(),
         serde_json::to_string(&second).unwrap()

@@ -14,7 +14,8 @@ use stencil_layout::checks::{
 };
 use stencil_layout::{LayoutError, PageGeometry, layout_page};
 use stencil_model::checks::{CheckReport, legend_consistency, remembered_constants};
-use stencil_model::{ModelError, Page, parse_page};
+use stencil_model::{ModelError, Page, Projection, parse_page};
+use stencil_render::iso::{IsoScene, iso_labels_clear, project_page};
 use stencil_render::{
     DeviceScale, RenderError, SvgDocument, measured_json, render_png, render_svg,
 };
@@ -83,6 +84,8 @@ pub struct LoadedDocument {
 #[derive(Debug, Clone, PartialEq)]
 pub struct RenderedPage {
     pub geometry: PageGeometry,
+    /// The projected page when the effective projection is iso (section 12.9).
+    pub scene: Option<IsoScene>,
     pub svg: SvgDocument,
     pub png: Vec<u8>,
     pub measured: Value,
@@ -174,15 +177,21 @@ pub fn output_names(input: &Path) -> Result<OutputNames, Failure> {
     })
 }
 
-/// Lays out with `CosmicTextMeasurer` and renders all three outputs in memory.
+/// Lays out with `CosmicTextMeasurer`, projects the page once when its projection is iso,
+/// and renders all three outputs in memory.
 pub fn render_page(loaded: &LoadedDocument, scale: DeviceScale) -> Result<RenderedPage, Failure> {
     let mut measurer = CosmicTextMeasurer::new()?;
     let geometry = layout_page(&loaded.page, &mut measurer)?;
+    let scene = match loaded.page.projection {
+        Projection::Flat => None,
+        Projection::Iso => Some(project_page(&geometry)?),
+    };
     let svg = render_svg(&loaded.page, &geometry)?;
     let png = render_png(&svg.svg, svg.text_elements, scale)?;
-    let measured = measured_json(&loaded.document, &geometry);
+    let measured = measured_json(&loaded.document, &geometry, scene.as_ref());
     Ok(RenderedPage {
         geometry,
+        scene,
         svg,
         png,
         measured,
@@ -194,8 +203,13 @@ pub fn model_checks(page: &Page) -> [CheckReport; 2] {
     [remembered_constants(page), legend_consistency(page)]
 }
 
-/// All eight checks, in `CheckName` order.
-pub fn all_checks(page: &Page, geometry: &PageGeometry) -> [CheckReport; 8] {
+/// All nine checks, in `CheckName` order. `iso-labels-clear` reads the scene and is not
+/// applicable without one.
+pub fn all_checks(
+    page: &Page,
+    geometry: &PageGeometry,
+    scene: Option<&IsoScene>,
+) -> [CheckReport; 9] {
     let [remembered, legend] = model_checks(page);
     [
         child_inside_container(geometry),
@@ -206,6 +220,7 @@ pub fn all_checks(page: &Page, geometry: &PageGeometry) -> [CheckReport; 8] {
         links_routed(geometry),
         links_avoid_boxes(geometry),
         pipes_land(page, geometry),
+        iso_labels_clear(scene),
     ]
 }
 

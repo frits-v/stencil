@@ -108,7 +108,7 @@ fn golden_g7() {
     );
 
     // Step 2: exact examined counts, derived in SPEC section 9.4.
-    let reports = all_checks(&loaded.page, geometry);
+    let reports = all_checks(&loaded.page, geometry, rendered.scene.as_ref());
     let examined: Vec<(CheckName, u64)> = reports
         .iter()
         .map(|report| (report.check, report.examined))
@@ -124,11 +124,14 @@ fn golden_g7() {
             (CheckName::LinksRouted, 0),
             (CheckName::LinksAvoidBoxes, 0),
             (CheckName::PipesLand, 8),
+            (CheckName::IsoLabelsClear, 0),
         ]
     );
     for report in &reports {
         let expected = match report.check {
-            CheckName::LinksRouted | CheckName::LinksAvoidBoxes => CheckOutcome::NotApplicable,
+            CheckName::LinksRouted | CheckName::LinksAvoidBoxes | CheckName::IsoLabelsClear => {
+                CheckOutcome::NotApplicable
+            }
             CheckName::ChildInsideContainer
             | CheckName::SiblingsDoNotOverlap
             | CheckName::TextFitsBox

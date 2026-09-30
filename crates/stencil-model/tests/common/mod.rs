@@ -103,6 +103,7 @@ pub fn page_with_body(body: Vec<Node>) -> Page {
         width: 1280,
         canvas: Canvas::Customer,
         theme: stencil_model::Theme::Center,
+        projection: stencil_model::Projection::Flat,
         body,
         legend: vec![legend_entry(PipeKind::Blue, "request path")],
         links: Vec::new(),

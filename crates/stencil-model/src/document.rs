@@ -45,6 +45,10 @@ fn is_default_theme(theme: &Theme) -> bool {
     *theme == Theme::Center
 }
 
+fn is_default_projection(projection: &Projection) -> bool {
+    *projection == Projection::Flat
+}
+
 /// True when `id` matches ID_PATTERN: 1 to 64 characters, lowercase ASCII letters, digits
 /// and `-`, not starting with `-`.
 pub fn is_valid_id(id: &str) -> bool {
@@ -79,6 +83,8 @@ pub struct Page {
     pub canvas: Canvas,
     #[serde(default, skip_serializing_if = "is_default_theme")]
     pub theme: Theme,
+    #[serde(default, skip_serializing_if = "is_default_projection")]
+    pub projection: Projection,
     #[schemars(length(min = 1, max = 256))]
     pub body: Vec<Node>,
     #[schemars(length(max = 16))]
@@ -102,6 +108,14 @@ pub enum Theme {
     Center,
     Dusk,
     Wire,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema, Default)]
+#[serde(rename_all = "lowercase")]
+pub enum Projection {
+    #[default]
+    Flat,
+    Iso,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]

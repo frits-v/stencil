@@ -15,6 +15,7 @@ pub enum CheckName {
     LinksRouted,
     LinksAvoidBoxes,
     PipesLand,
+    IsoLabelsClear,
 }
 
 impl CheckName {
@@ -29,6 +30,7 @@ impl CheckName {
             CheckName::LinksRouted => "links-routed",
             CheckName::LinksAvoidBoxes => "links-avoid-boxes",
             CheckName::PipesLand => "pipes-land",
+            CheckName::IsoLabelsClear => "iso-labels-clear",
         }
     }
 
@@ -38,8 +40,18 @@ impl CheckName {
         match (self, singular) {
             (CheckName::ChildInsideContainer | CheckName::LegendConsistency, true) => "relation",
             (CheckName::ChildInsideContainer | CheckName::LegendConsistency, false) => "relations",
-            (CheckName::SiblingsDoNotOverlap | CheckName::LinksAvoidBoxes, true) => "pair",
-            (CheckName::SiblingsDoNotOverlap | CheckName::LinksAvoidBoxes, false) => "pairs",
+            (
+                CheckName::SiblingsDoNotOverlap
+                | CheckName::LinksAvoidBoxes
+                | CheckName::IsoLabelsClear,
+                true,
+            ) => "pair",
+            (
+                CheckName::SiblingsDoNotOverlap
+                | CheckName::LinksAvoidBoxes
+                | CheckName::IsoLabelsClear,
+                false,
+            ) => "pairs",
             (CheckName::LinksRouted, true) => "link",
             (CheckName::LinksRouted, false) => "links",
             (CheckName::TextFitsBox, true) => "text run",

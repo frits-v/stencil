@@ -34,6 +34,7 @@ import (
 #NoteKind:    "kicker" | "h1" | "lede" | "legend" | "foot"
 #Justify:     "start" | "center" | "end" | "space-between"
 #Theme:       "center" | "dusk" | "wire"
+#Projection:  "flat" | "iso"
 #Arrow:       "none" | "end" | "start" | "both"
 #Side:        "top" | "right" | "bottom" | "left"
 #ListKind:    "plain" | "numbered" | "bulleted"
@@ -72,14 +73,15 @@ import (
 }
 
 #Page: {
-	title:  #Text
-	kicker: #Text
-	lede:   #Text
-	foot?:  #Text
-	width?: int & >=640 & <=2560
-	canvas: #Canvas
-	theme?: #Theme
-	body:   #Children
+	title:       #Text
+	kicker:      #Text
+	lede:        #Text
+	foot?:       #Text
+	width?:      int & >=640 & <=2560
+	canvas:      #Canvas
+	theme?:      #Theme
+	projection?: #Projection
+	body:        #Children
 	// Unique kinds bound the legend at five entries, inside the Rust
 	// model's 16.
 	legend: [...#LegendEntry]

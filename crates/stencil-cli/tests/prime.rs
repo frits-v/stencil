@@ -313,7 +313,7 @@ fn the_base_briefing_lists_every_enum_value_from_the_model() {
 fn the_base_briefing_covers_every_check_the_pipeline_runs() {
     let loaded = load_document(&read_input(&g7_path()).unwrap()).unwrap();
     let rendered = render_page(&loaded, DeviceScale::DEFAULT).unwrap();
-    let reports = all_checks(&loaded.page, &rendered.geometry);
+    let reports = all_checks(&loaded.page, &rendered.geometry, rendered.scene.as_ref());
     let text = base_output();
     for report in &reports {
         let row = format!("| {} |", report.check.as_str());

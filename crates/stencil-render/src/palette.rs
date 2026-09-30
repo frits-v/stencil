@@ -498,6 +498,144 @@ impl Palette {
     }
 }
 
+/// A visible face of an isometric slab or block (section 12.3).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Face {
+    Top,
+    Left,
+    Right,
+}
+
+impl Palette {
+    /// HSL lightness step of a face in percentage points; None in wire (no shading).
+    pub fn face_lightness_step(self, face: Face) -> Option<i8> {
+        match (self.theme, face) {
+            (Theme::Wire, _) => None,
+            (Theme::Center | Theme::Dusk, Face::Top) => Some(0),
+            (Theme::Center, Face::Left) => Some(-8),
+            (Theme::Center, Face::Right) => Some(-16),
+            (Theme::Dusk, Face::Left) => Some(-4),
+            (Theme::Dusk, Face::Right) => Some(-8),
+        }
+    }
+
+    /// The fill of `face` for a node whose flat fill is `base`: base itself for Top, base
+    /// shaded by the step for Left and Right, and the page background for every face in wire.
+    /// None when `base` is not `#RRGGBB`.
+    pub fn face_fill(self, base: &'static str, face: Face) -> Option<String> {
+        parse_hex_color(base)?;
+        match self.face_lightness_step(face) {
+            Some(step_points) => shade(base, step_points),
+            None => Some(self.page_background().to_string()),
+        }
+    }
+
+    /// The outline behind upright billboard text that has no chip (section 12.4).
+    pub fn text_halo(self) -> &'static str {
+        self.page_background()
+    }
+
+    /// The chip behind a gcp zone label drawn upright over the slab (section 12.4): the bar
+    /// fill, and in wire a white chip with the tag border.
+    pub fn gcp_label_chip(self) -> BoxPaint {
+        match self.theme {
+            Theme::Center | Theme::Dusk => BoxPaint {
+                fill: self.gcp_bar_fill(),
+                border: None,
+            },
+            Theme::Wire => BoxPaint {
+                fill: wire::WHITE,
+                border: Some(Stroke {
+                    width_px: wire::BORDER_PX,
+                    line: LineStyle::Solid,
+                    color: wire::INK,
+                }),
+            },
+        }
+    }
+}
+
+/// `color` (`#RRGGBB`) with its HSL lightness moved by `step_points` percentage points.
+/// None when `color` is not `#` followed by six hex digits. A step of 0 returns the input.
+pub fn shade(color: &str, step_points: i8) -> Option<String> {
+    let [red, green, blue] = parse_hex_color(color)?;
+    if step_points == 0 {
+        return Some(color.to_string());
+    }
+    let (hue, saturation, lightness) = rgb_to_hsl(
+        f64::from(red) / 255.0,
+        f64::from(green) / 255.0,
+        f64::from(blue) / 255.0,
+    );
+    let shaded = (lightness + f64::from(step_points) / 100.0).clamp(0.0, 1.0);
+    let channels = hsl_to_rgb(hue, saturation, shaded).map(|channel| {
+        // The clamp keeps the cast in range, so `as` never saturates.
+        (channel * 255.0 + 0.5).floor().clamp(0.0, 255.0) as u8
+    });
+    let [red, green, blue] = channels;
+    Some(format!("#{red:02X}{green:02X}{blue:02X}"))
+}
+
+/// The three channels of `#RRGGBB`, or None for any other string.
+fn parse_hex_color(color: &str) -> Option<[u8; 3]> {
+    let digits = color.strip_prefix('#')?;
+    if digits.len() != 6 || !digits.bytes().all(|byte| byte.is_ascii_hexdigit()) {
+        return None;
+    }
+    let channel = |start: usize| {
+        digits
+            .get(start..start + 2)
+            .and_then(|pair| u8::from_str_radix(pair, 16).ok())
+    };
+    Some([channel(0)?, channel(2)?, channel(4)?])
+}
+
+/// Hue in degrees 0 to 360, saturation and lightness 0 to 1, from channels 0 to 1.
+fn rgb_to_hsl(red: f64, green: f64, blue: f64) -> (f64, f64, f64) {
+    let largest = red.max(green).max(blue);
+    let smallest = red.min(green).min(blue);
+    let lightness = (largest + smallest) / 2.0;
+    let spread = largest - smallest;
+    if spread == 0.0 {
+        return (0.0, 0.0, lightness);
+    }
+    let saturation = if lightness > 0.5 {
+        spread / (2.0 - largest - smallest)
+    } else {
+        spread / (largest + smallest)
+    };
+    let sector = if largest == red {
+        ((green - blue) / spread).rem_euclid(6.0)
+    } else if largest == green {
+        (blue - red) / spread + 2.0
+    } else {
+        (red - green) / spread + 4.0
+    };
+    (sector * 60.0, saturation, lightness)
+}
+
+/// Channels 0 to 1 from hue in degrees, saturation and lightness 0 to 1.
+fn hsl_to_rgb(hue: f64, saturation: f64, lightness: f64) -> [f64; 3] {
+    let chroma = (1.0 - (2.0 * lightness - 1.0).abs()) * saturation;
+    let sector = hue / 60.0;
+    let second = chroma * (1.0 - (sector.rem_euclid(2.0) - 1.0).abs());
+    let (red, green, blue) = if sector < 1.0 {
+        (chroma, second, 0.0)
+    } else if sector < 2.0 {
+        (second, chroma, 0.0)
+    } else if sector < 3.0 {
+        (0.0, chroma, second)
+    } else if sector < 4.0 {
+        (0.0, second, chroma)
+    } else if sector < 5.0 {
+        (second, 0.0, chroma)
+    } else {
+        (chroma, 0.0, second)
+    };
+    let lift = lightness - chroma / 2.0;
+    [red + lift, green + lift, blue + lift]
+}
+
 /// The dark theme of section 11.1.
 mod dusk {
     use super::{LineStyle, Stroke, ZoneStyle};
@@ -728,6 +866,31 @@ mod wire {
             | TextStyleName::TagLabel
             | TextStyleName::LegendLabel
             | TextStyleName::BlockBody => INK,
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn shade_matches_the_section_12_6_vectors() {
+        let vectors = [
+            ("#D2E3FC", ["#BFD7FB", "#ACCBF9", "#85B3F7"]),
+            ("#FFFFFF", ["#F5F5F5", "#EBEBEB", "#D6D6D6"]),
+            ("#FAFBFC", ["#EDF1F4", "#E0E7ED", "#C7D2DD"]),
+            ("#1A73E8", ["#166AD8", "#1461C5", "#104EA0"]),
+            ("#14213A", ["#0F182B", "#0A101C", "#000000"]),
+        ];
+        for (color, expected) in vectors {
+            for (step, shaded) in [-4, -8, -16].into_iter().zip(expected) {
+                assert_eq!(
+                    shade(color, step).as_deref(),
+                    Some(shaded),
+                    "{color} {step}"
+                );
+            }
         }
     }
 }
