@@ -3,7 +3,10 @@
 // coordinates; renderers and derived views (eraser.cue) decide geometry.
 package stencil
 
-import "list"
+import (
+	"list"
+	"strings"
+)
 
 // Values that read as plausible and are wrong often enough that no string in
 // a figure may carry them:
@@ -16,14 +19,20 @@ import "list"
 	!~"\\b35\\.191\\.0\\.0/16\\b" &
 	!~"\\b10\\.8\\.0\\.0/28\\b"
 
-// Every text field in the vocabulary.
-#Text: string & !="" & #NoRememberedConstant
+// Every text field in the vocabulary. The bounds match the Rust model
+// (crates/stencil-model/src/document.rs): 1 to 400 characters.
+#Text: string & !="" & strings.MaxRunes(400) & #NoRememberedConstant
+
+// A page body and the children of a Row, Col or Zone: 1 to 256 nodes, as in
+// the Rust model.
+#Children: [...#Node] & list.MinItems(1) & list.MaxItems(256)
 
 #Canvas:   "customer" | "internal"
 #PipeKind: "gray" | "blue" | "pink" | "dash" | "deny"
 #ZoneKind: "gcp" | "vpc" | "region-a" | "region-b" | "subnet" | "onprem-a" | "onprem-b" |
 		"project" | "optional" | "k8s" | "perimeter"
 #NoteKind: "kicker" | "h1" | "lede" | "legend" | "foot"
+#Justify:  "start" | "center" | "end" | "space-between"
 
 // Filename stems under drafting-diagrams/stencil/icons/.
 #Icon: "agents" | "ai-ml" | "bigquery" | "cloud-run-flat" | "cloud-run" | "cloud-sql" |
@@ -59,9 +68,11 @@ import "list"
 	kicker: #Text
 	lede:   #Text
 	foot?:  #Text
-	width:  *1280 | int & >=640
+	width?: int & >=640 & <=2560
 	canvas: #Canvas
-	body: [...#Node]
+	body:   #Children
+	// Unique kinds bound the legend at five entries, inside the Rust
+	// model's 16.
 	legend: [...#LegendEntry]
 
 	// Each check below is a struct keyed by the offending item, so a failure
@@ -101,17 +112,11 @@ import "list"
 	if tag == "Tee" {#Tee}
 }
 
-// Shared by Row and Col. _kinds is the set of pipe kinds in the subtree and
-// _zoneKinds the set of zone kinds; #Page and #Zone read them.
-//
 // A pipe that sits between two sibling zones must not touch a zone of the
-// other tint: a blue pipe beside a region-b or onprem-b zone is a bug.
-#Container: {
-	gap?: int & >=0
+// other tint: a blue pipe beside a region-b or onprem-b zone is a bug. Row,
+// Col and Zone embed this, so the check holds wherever siblings sit.
+#SiblingTint: {
 	children: [...#Node]
-	_kinds: {for c in children {c._kinds}}
-	_zoneKinds: {for c in children {c._zoneKinds}}
-	_nameless: {for c in children {c._nameless}}
 	_pipeBesideZoneOfOtherTint: {
 		for i, c in children if c.tag == "Pipe" {
 			for j in [i - 1, i + 1] if j >= 0 && j < len(children) {
@@ -127,6 +132,23 @@ import "list"
 	}
 }
 
+// Shared by Row and Col. _kinds is the set of pipe kinds in the subtree and
+// _zoneKinds the set of zone kinds; #Page and #Zone read them. grow carries
+// one weight per child.
+#Container: {
+	gap?: int & >=0 & <=64
+	grow?: [...int & >=0 & <=100]
+	justify?: #Justify
+	children: #Children
+	if grow != _|_ {
+		_growLengthMatchesChildren: len(grow) & len(children)
+	}
+	_kinds: {for c in children {c._kinds}}
+	_zoneKinds: {for c in children {c._zoneKinds}}
+	_nameless: {for c in children {c._nameless}}
+	#SiblingTint
+}
+
 #Row: {
 	tag: "Row"
 	#Container
@@ -140,14 +162,15 @@ import "list"
 // A tinted zone (region-a, region-b, onprem-a, onprem-b) must not contain a
 // pipe, tee arm or nested zone of the other tint anywhere below it.
 #Zone: {
-	tag:   "Zone"
-	kind:  #ZoneKind
-	label: #Text
-	children: [...#Node]
+	tag:      "Zone"
+	kind:     #ZoneKind
+	label:    #Text
+	children: #Children
 	_kinds: {for c in children {c._kinds}}
 	_below: {for c in children {c._zoneKinds}}
 	_zoneKinds: {(kind): true, _below}
 	_nameless: {for c in children {c._nameless}}
+	#SiblingTint
 	if #TintOf[kind] != "none" {
 		_otherTintInsideZone: {
 			for k, _ in _kinds
