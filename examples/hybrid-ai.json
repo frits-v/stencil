@@ -82,12 +82,16 @@
                 }
               ]
             }
+          ],
+          "grow": [
+            1,
+            1,
+            1
           ]
         },
         {
           "tag": "Col",
           "grow": [
-            1,
             1,
             1,
             1
@@ -146,14 +150,7 @@
                   "kind": "blue",
                   "label": "Cross-Cloud Interconnect",
                   "sub": "private path · corpus"
-                }
-              ]
-            },
-            {
-              "tag": "Col",
-              "gap": 12,
-              "justify": "center",
-              "children": [
+                },
                 {
                   "tag": "Pipe",
                   "dir": "h",
