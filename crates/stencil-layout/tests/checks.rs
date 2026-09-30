@@ -273,7 +273,10 @@ fn title_with_a_200_character_word_overflows_its_text_box() {
     assert_eq!(fits.defects[0].pointer.as_str(), "/title");
     assert_eq!(
         fits.defects[0].message,
-        format!("text {:?} measured 1920.00x24.00 in box 640.00x24.00", page.title)
+        format!(
+            "text {:?} measured 1920.00x24.00 in box 640.00x24.00",
+            page.title
+        )
     );
 
     let inside = child_inside_container(&geometry);

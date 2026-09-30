@@ -1,6 +1,6 @@
-use crate::{LEGEND_ENTRIES_MAX, NODES_MAX};
 use crate::document::{Node, Page, Pipe, TeeArm};
 use crate::pointer::NodePointer;
+use crate::{LEGEND_ENTRIES_MAX, NODES_MAX};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct NodeEntry<'a> {

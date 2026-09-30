@@ -145,7 +145,7 @@ fn a_glyph_inter_lacks_is_not_substituted() {
 }
 
 /// 1320 x 60000 at scale 2 is 316.8 million pixels, above the 2^27 budget. The same SVG at
-/// scale 1 is under it but still 79.2 million, so the rejection comes from the scale.
+/// scale 1, 79.2 million pixels, is under it, so the rejection comes from the scale.
 #[test]
 fn a_canvas_above_the_pixel_budget_is_rejected_before_allocation() {
     let svg = r##"<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="60000" viewBox="0 0 1320 60000"><rect x="0" y="0" width="1320" height="60000" fill="#FFFFFF"/></svg>"##;
@@ -160,18 +160,16 @@ fn a_canvas_above_the_pixel_budget_is_rejected_before_allocation() {
         ),
         "{error:?}"
     );
-    assert!(2640 * 120_000 > PNG_PIXELS_MAX);
-    assert!(1320 * 60_000 <= PNG_PIXELS_MAX);
+    const { assert!(2640 * 120_000 > PNG_PIXELS_MAX) };
+    const { assert!(1320 * 60_000 <= PNG_PIXELS_MAX) };
 }
 
 /// usvg's default string resolver reads a non-data href from disk. The SVG writer only
 /// embeds `data:` URIs, and render_png resolves nothing else.
 #[test]
 fn an_image_href_to_a_file_is_not_read() {
-    let directory = std::env::temp_dir().join(format!(
-        "stencil-render-image-href-{}",
-        std::process::id()
-    ));
+    let directory =
+        std::env::temp_dir().join(format!("stencil-render-image-href-{}", std::process::id()));
     std::fs::create_dir_all(&directory).unwrap();
     let image_path = directory.join("red.png");
     let mut red = resvg::tiny_skia::Pixmap::new(8, 8).unwrap();
