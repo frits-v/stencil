@@ -42,6 +42,10 @@ Every node object carries "tag". * required, =default. A field with no type is t
 
 # Themes
 
-center: Architecture Center light, the default. dusk: dark, for dark slides. wire: monochrome wireframe for design docs. Set theme on the page, or pass --theme to render and check; layout is identical under all three.
+- center: Architecture Center light, the default.
+- dusk: dark, for dark slides.
+- wire: monochrome wireframe for design docs.
+
+Set theme on the page, or pass --theme to render and check; layout is identical under all three.
 
 {{topics}}
