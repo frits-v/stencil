@@ -7,6 +7,13 @@ use crate::format_number;
 
 /// Section 5.4 shape. `document` is the input parsed as serde_json::Value.
 pub fn measured_json(document: &Value, geometry: &PageGeometry) -> Value {
+    debug_assert!(
+        geometry
+            .nodes
+            .iter()
+            .all(|node| document.pointer(node.pointer.as_str()).is_some()),
+        "a geometry pointer does not resolve in the document (section 5.4)"
+    );
     let mut canvas = Map::new();
     canvas.insert(
         "height".to_string(),

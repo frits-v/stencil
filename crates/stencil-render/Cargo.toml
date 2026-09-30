@@ -8,12 +8,14 @@ publish.workspace = true
 [dependencies]
 resvg.workspace = true
 base64.workspace = true
-sha2.workspace = true
 serde_json.workspace = true
 thiserror.workspace = true
 stencil-model = { path = "../stencil-model" }
 stencil-layout = { path = "../stencil-layout" }
 stencil-text = { path = "../stencil-text" }
+
+[dev-dependencies]
+sha2.workspace = true
 
 [lints]
 workspace = true
