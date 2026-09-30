@@ -164,6 +164,14 @@ fn section_11_limits_and_enums_fail_schema_validation() {
     let mut document = page_with_blocks();
     document["body"][0]["body"] = serde_json::json!(vec!["line"; 65]);
     assert!(!validator().is_valid(&document));
+    for line in [String::new(), "x".repeat(401)] {
+        let mut document = page_with_blocks();
+        document["body"][0]["body"] = serde_json::json!(["first", line]);
+        assert!(!validator().is_valid(&document));
+    }
+    let mut document = page_with_blocks();
+    document["body"][0]["body"] = serde_json::json!(["first", "x".repeat(400)]);
+    assert!(validator().is_valid(&document));
 }
 
 #[test]

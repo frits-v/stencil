@@ -321,7 +321,7 @@ pub struct Text {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[schemars(length(min = 1, max = 400))]
     pub heading: Option<String>,
-    #[schemars(length(min = 1, max = 64))]
+    #[schemars(length(min = 1, max = 64), inner(length(min = 1, max = 400)))]
     pub body: Vec<String>,
     #[serde(default)]
     pub list: ListKind,
