@@ -1,7 +1,7 @@
 //! Section 7 stdout line formats, stable for scripts.
 
 use stencil_model::Violation;
-use stencil_model::checks::{CheckName, CheckReport, Defect};
+use stencil_model::checks::{CheckName, CheckOutcome, CheckReport, Defect};
 
 pub fn count_text(count: u64, singular: &str, plural: &str) -> String {
     if count == 1 {
@@ -28,7 +28,9 @@ pub fn check_line(report: &CheckReport) -> String {
     let name = report.check.as_str();
     let examined = report.examined;
     let unit = report.check.unit(examined);
-    if examined == 0 {
+    if let (CheckOutcome::NotApplicable, Some(reason)) = (report.outcome(), report.not_applicable) {
+        format!("check {name}: examined {examined} {unit}, not applicable: {reason}")
+    } else if examined == 0 {
         format!("check {name}: examined {examined} {unit}, FAILED: nothing examined")
     } else {
         let defects = count_text(report.defects.len() as u64, "defect", "defects");
@@ -57,14 +59,26 @@ pub fn report_lines(reports: &[CheckReport]) -> Vec<String> {
     lines
 }
 
-/// `<n> checks, <p> passed, <f> failed`.
+/// `<n> checks, <p> passed, <f> failed`, followed by `, <a> not applicable` when a check
+/// did not apply.
 pub fn check_counts_text(reports: &[CheckReport]) -> String {
-    let passed = reports.iter().filter(|report| report.passed()).count();
-    let failed = reports.len() - passed;
-    format!(
+    let count = |outcome: CheckOutcome| {
+        reports
+            .iter()
+            .filter(|report| report.outcome() == outcome)
+            .count()
+    };
+    let passed = count(CheckOutcome::Passed);
+    let failed = count(CheckOutcome::Failed);
+    let not_applicable = count(CheckOutcome::NotApplicable);
+    let mut text = format!(
         "{}, {passed} passed, {failed} failed",
         count_text(reports.len() as u64, "check", "checks")
-    )
+    );
+    if not_applicable > 0 {
+        text.push_str(&format!(", {not_applicable} not applicable"));
+    }
+    text
 }
 
 #[cfg(test)]
@@ -84,6 +98,7 @@ mod tests {
             check,
             examined,
             defects,
+            not_applicable: None,
         }
     }
 
@@ -166,6 +181,24 @@ mod tests {
                 "defect text-fits-box /body/1: defect number 1".to_string(),
                 "check remembered-constants: examined 3 text fields, 0 defects".to_string(),
             ]
+        );
+    }
+
+    #[test]
+    fn a_check_without_its_surface_prints_not_applicable() {
+        let no_links = CheckReport::not_applicable(CheckName::LinksRouted, "page has no links");
+        assert_eq!(
+            check_line(&no_links),
+            "check links-routed: examined 0 links, not applicable: page has no links"
+        );
+        let reports = [
+            no_links,
+            report(CheckName::TextFitsBox, 4, 0),
+            CheckReport::not_applicable(CheckName::LinksAvoidBoxes, "page has no links"),
+        ];
+        assert_eq!(
+            check_counts_text(&reports),
+            "3 checks, 1 passed, 0 failed, 2 not applicable"
         );
     }
 

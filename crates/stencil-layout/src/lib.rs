@@ -6,17 +6,24 @@ pub mod styles;
 
 mod build;
 mod compute;
+mod route;
 
 use stencil_model::pointer::NodePointer;
 use stencil_model::text::{MeasureError, TextMeasurer, TextMetrics, TextStyle};
-use stencil_model::{Page, Violation, validate_page};
+use stencil_model::{Page, PagePoint, PipeKind, Violation, validate_page};
 
 pub use stencil_model::text::WRAP_EPSILON_PX;
 
 pub const GEOMETRY_EPSILON_PX: f32 = 0.01;
 
+/// Length of a link or pipe arrowhead along its line, from base to tip (section 11.2).
+pub const ARROWHEAD_LENGTH_PX: f32 = 10.0;
+/// Width of an arrowhead across its line, at the base.
+pub const ARROWHEAD_WIDTH_PX: f32 = 8.0;
+
 /// Asserts validate_page(page) is empty, builds the taffy tree, computes layout,
-/// re-measures text at final widths, and returns absolute geometry in canvas px.
+/// re-measures text at final widths, routes the links, and returns absolute geometry in
+/// canvas px.
 pub fn layout_page(
     page: &Page,
     measurer: &mut dyn TextMeasurer,
@@ -26,7 +33,9 @@ pub fn layout_page(
         return Err(LayoutError::Invalid(violations));
     }
     let built = build::build_page(page)?;
-    compute::compute_geometry(built, page.width, measurer)
+    let mut geometry = compute::compute_geometry(built, page.width, measurer)?;
+    geometry.links = route::route_links(page, &geometry, measurer)?;
+    Ok(geometry)
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -34,6 +43,35 @@ pub struct PageGeometry {
     pub canvas: Size,
     /// In geometry order (section 4.4). nodes[0] is the page root (pointer "").
     pub nodes: Vec<NodeGeometry>,
+    /// One route per `Page.links` entry, in link order (section 11.2).
+    pub links: Vec<LinkRoute>,
+}
+
+/// A routed link (section 11.2). A link is not a node: it takes no layout space.
+#[derive(Debug, Clone, PartialEq)]
+pub struct LinkRoute {
+    /// Position in `Page.links`; the link's pointer is `/links/<index>`.
+    pub index: usize,
+    pub kind: PipeKind,
+    /// Geometry index of the node named by `from`.
+    pub from_node: usize,
+    /// Geometry index of the node named by `to`.
+    pub to_node: usize,
+    /// Border-box polyline in page coordinates, first point on the from box edge, last on
+    /// the to box edge. 2 to LINK_SEGMENTS_MAX + 1 points.
+    pub points: Vec<PagePoint>,
+    /// The tag box for label and sub, centered on the longest segment; None without a label.
+    pub tag: Option<BoxRect>,
+    /// Tag, TagLabel and, with a sub, TagSub, laid out as in a pipe tag. Empty without a
+    /// label.
+    pub parts: Vec<Part>,
+    pub status: RouteStatus,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum RouteStatus {
+    Routed,
+    Fallback,
 }
 
 impl PageGeometry {
@@ -94,6 +132,9 @@ pub enum NodeTag {
     Note,
     Pipe,
     Tee,
+    Text,
+    Callout,
+    Frame,
 }
 
 impl NodeTag {
@@ -116,6 +157,9 @@ impl NodeTag {
             NodeTag::Note => "Note",
             NodeTag::Pipe => "Pipe",
             NodeTag::Tee => "Tee",
+            NodeTag::Text => "Text",
+            NodeTag::Callout => "Callout",
+            NodeTag::Frame => "Frame",
         }
     }
 }
@@ -179,6 +223,11 @@ pub enum PartName {
     Swatch,
     LegendLabel,
     LegendText,
+    Heading,
+    Marker,
+    BodyLine,
+    Accent,
+    LabelChip,
 }
 
 impl PartName {
@@ -211,6 +260,11 @@ impl PartName {
             PartName::Swatch => "swatch",
             PartName::LegendLabel => "legend_label",
             PartName::LegendText => "legend_text",
+            PartName::Heading => "heading",
+            PartName::Marker => "marker",
+            PartName::BodyLine => "body_line",
+            PartName::Accent => "accent",
+            PartName::LabelChip => "label_chip",
         }
     }
 }

@@ -8,8 +8,14 @@ use stencil_model::text::{MeasureError, TextMeasurer, WRAP_EPSILON_PX};
 use taffy::prelude::{AvailableSpace, NodeId};
 use taffy::{LayoutInput, LayoutOutput};
 
-use crate::build::{BuiltPage, LayoutTree, TextLeaf};
-use crate::{BoxRect, LayoutError, NodeGeometry, PageGeometry, Part, Size, TextRun};
+use crate::build::{ArrowEnds, BuiltPage, LayoutTree, TextLeaf};
+use crate::{
+    ARROWHEAD_LENGTH_PX, BoxRect, LayoutError, NodeGeometry, PageGeometry, Part, PartName, Size,
+    TextRun,
+};
+
+/// Side of the Pipe dot box that an arrowhead replaces (section 2.7).
+const PIPE_DOT_PX: f32 = 8.0;
 
 pub(crate) fn compute_geometry(
     built: BuiltPage,
@@ -85,6 +91,9 @@ pub(crate) fn compute_geometry(
                 text,
             });
         }
+        if let Some(ends) = record.arrow_ends {
+            shorten_wires_for_arrowheads(&mut parts, ends);
+        }
         nodes.push(NodeGeometry {
             pointer: record.pointer.clone(),
             tag: record.tag,
@@ -106,7 +115,40 @@ pub(crate) fn compute_geometry(
             pointer: NodePointer::root(),
         });
     }
-    Ok(PageGeometry { canvas, nodes })
+    Ok(PageGeometry {
+        canvas,
+        nodes,
+        links: Vec::new(),
+    })
+}
+
+/// An arrowhead has its tip on the outer edge of the dot box it replaces and its base
+/// ARROWHEAD_LENGTH_PX back along the run axis, so the wire on that end starts or stops at
+/// the base. The dot box itself keeps its place, and no other box moves.
+fn shorten_wires_for_arrowheads(parts: &mut [Part], ends: ArrowEnds) {
+    let overlap = ARROWHEAD_LENGTH_PX - PIPE_DOT_PX;
+    for part in parts.iter_mut() {
+        let bounds = &mut part.bounds;
+        match (part.name, ends.horizontal) {
+            (PartName::WireStart, true) if ends.start => {
+                let shortened = overlap.min(bounds.width);
+                bounds.x += shortened;
+                bounds.width -= shortened;
+            }
+            (PartName::WireStart, false) if ends.start => {
+                let shortened = overlap.min(bounds.height);
+                bounds.y += shortened;
+                bounds.height -= shortened;
+            }
+            (PartName::WireEnd, true) if ends.end => {
+                bounds.width -= overlap.min(bounds.width);
+            }
+            (PartName::WireEnd, false) if ends.end => {
+                bounds.height -= overlap.min(bounds.height);
+            }
+            _ => {}
+        }
+    }
 }
 
 /// Section 3: a known or definite width wraps at that width plus the epsilon, min-content

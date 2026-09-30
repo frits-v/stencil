@@ -39,6 +39,7 @@ fn page(nodes: Vec<NodeGeometry>) -> PageGeometry {
             height: 100.0,
         },
         nodes,
+        links: Vec::new(),
     }
 }
 

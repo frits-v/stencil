@@ -47,7 +47,13 @@ fn every_tag_geometry() -> PageGeometry {
                     { "tag": "Pipe", "dir": "h", "kind": "blue", "label": "allowed" },
                     { "tag": "Pipe", "dir": "h", "kind": "pink", "label": "reply" }
                 ]
-            }
+            },
+            {
+                "tag": "Text", "heading": "Goals", "list": "numbered",
+                "body": ["First goal", "Second goal"]
+            },
+            { "tag": "Callout", "kind": "risk", "title": "Drift", "text": "Plans change." },
+            { "tag": "Frame", "label": "Console screen", "height": 120 }
         ],
         "legend": [{ "kind": "blue", "text": "request path" }]
     }));
@@ -91,6 +97,9 @@ fn every_node_tag_is_present() {
         NodeTag::Note,
         NodeTag::Pipe,
         NodeTag::Tee,
+        NodeTag::Text,
+        NodeTag::Callout,
+        NodeTag::Frame,
     ];
     for tag in all {
         assert!(
@@ -148,6 +157,13 @@ fn parts_follow_section_2_11_order_and_text_runs() {
         ("/body/3", vec![Spine, Hub, HubText], vec![HubText]),
         ("/body/3/arms/0", pipe_without_sub.clone(), vec![TagLabel]),
         ("/body/3/arms/1", pipe_without_sub, vec![TagLabel]),
+        (
+            "/body/4",
+            vec![Heading, Marker, BodyLine, Marker, BodyLine],
+            vec![Heading, Marker, BodyLine, Marker, BodyLine],
+        ),
+        ("/body/5", vec![Accent, Heading, Text], vec![Heading, Text]),
+        ("/body/6", vec![LabelChip, Label], vec![Label]),
         ("/legend", vec![], vec![]),
         (
             "/legend/0",
@@ -228,17 +244,18 @@ fn every_text_run_is_measured_at_its_final_width() {
             );
         }
     }
-    assert_eq!(runs, 22);
+    assert_eq!(runs, 30);
 }
 
 #[test]
-fn tag_label_tag_sub_and_hub_text_are_centered() {
+fn tag_label_tag_sub_hub_text_and_frame_label_are_centered() {
     let geometry = every_tag_geometry();
     for geometry_node in &geometry.nodes {
         for part in &geometry_node.parts {
             let Some(run) = &part.text else { continue };
-            let expected = match part.name {
-                PartName::TagLabel | PartName::TagSub | PartName::HubText => TextAlign::Center,
+            let expected = match (part.name, geometry_node.tag) {
+                (PartName::TagLabel | PartName::TagSub | PartName::HubText, _)
+                | (PartName::Label, NodeTag::Frame) => TextAlign::Center,
                 _ => TextAlign::Start,
             };
             assert_eq!(
