@@ -61,14 +61,14 @@
               "tag": "Callout",
               "id": "risk-plan-drift",
               "kind": "risk",
-              "title": "Plan drift",
+              "title": "Risk: plan drift",
               "text": "A model update can change how a description is read. Each verdict records the plan version, and a changed plan waits for operator approval before it runs."
             },
             {
               "tag": "Callout",
               "id": "decision-queue",
               "kind": "decision",
-              "title": "Queue between API and worker",
+              "title": "Decision: queue between API and worker",
               "text": "Evaluation runs asynchronously. The API returns once the plan is queued, so a slow clip never holds an operator request open."
             }
           ]
@@ -79,7 +79,7 @@
           "children": [
             {
               "tag": "Row",
-              "justify": "center",
+              "justify": "end",
               "grow": [0],
               "children": [
                 { "tag": "Pcard", "id": "console", "icon": "devops", "fn": "Operator console", "pn": "web client" }
@@ -93,7 +93,7 @@
               "children": [
                 {
                   "tag": "Col",
-                  "gap": 48,
+                  "gap": 64,
                   "children": [
                     {
                       "tag": "Row",
@@ -148,8 +148,8 @@
       "tag": "Row",
       "gap": 16,
       "children": [
-        { "tag": "Frame", "id": "screen-editor", "label": "Trigger editor: description, generated plan, approve", "height": 240 },
-        { "tag": "Frame", "id": "screen-review", "label": "Verdict review: clip, evidence frames, verdict", "height": 240 }
+        { "tag": "Frame", "id": "screen-editor", "label": "Trigger editor: description, generated plan, approve", "height": 200 },
+        { "tag": "Frame", "id": "screen-review", "label": "Verdict review: clip, evidence frames, verdict", "height": 200 }
       ]
     }
   ],
@@ -158,7 +158,7 @@
     { "kind": "deny", "text": "blocked path" }
   ],
   "links": [
-    { "from": "console", "to": "gateway", "kind": "blue", "label": "1 submit trigger" },
+    { "from": "console", "to": "gateway", "kind": "blue", "label": "1 submit trigger", "from_side": "bottom", "to_side": "right" },
     { "from": "gateway", "to": "api", "kind": "blue", "label": "2 authorized call" },
     { "from": "api", "to": "queue", "kind": "blue", "label": "3 queue plan" },
     { "from": "queue", "to": "worker", "kind": "blue", "label": "4 deliver job" },
