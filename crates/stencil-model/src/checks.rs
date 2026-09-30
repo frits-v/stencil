@@ -1,9 +1,9 @@
 //! Check reports (section 6) and the two geometry-free checks.
 
-use crate::LEGEND_ENTRIES_MAX;
 use crate::document::{Node, Page, PipeKind};
 use crate::pointer::NodePointer;
 use crate::walk::{NodeRef, body_nodes, text_fields};
+use crate::{LEGEND_ENTRIES_MAX, LINKS_MAX};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum CheckName {
@@ -135,10 +135,10 @@ pub fn remembered_constants(page: &Page) -> CheckReport {
     }
 }
 
-/// Each pipe-kind use (every Pipe, Tee arm and Tee spine) and each of the first
-/// LEGEND_ENTRIES_MAX + 1 legend entries is one examined relation. Defects are listed uses
-/// first, in body order, then legend entries. The bound caps the duplicate scan on a page
-/// that was never vetted.
+/// Each pipe-kind use (every Pipe, Tee arm and Tee spine, and each of the first
+/// LINKS_MAX + 1 links) and each of the first LEGEND_ENTRIES_MAX + 1 legend entries is one
+/// examined relation. Defects are listed uses first, in body order and then link order,
+/// then legend entries. The bounds cap the scans on a page that was never vetted.
 pub fn legend_consistency(page: &Page) -> CheckReport {
     let mut uses: Vec<(NodePointer, PipeKind, &'static str)> = Vec::new();
     for entry in body_nodes(page) {
@@ -152,9 +152,16 @@ pub fn legend_consistency(page: &Page) -> CheckReport {
                 | Node::Zone(_)
                 | Node::Pcard(_)
                 | Node::Fact(_)
-                | Node::Note(_),
+                | Node::Note(_)
+                | Node::Text(_)
+                | Node::Callout(_)
+                | Node::Frame(_),
             ) => {}
         }
+    }
+    let links_pointer = NodePointer::root().child("links");
+    for (index, link) in page.links.iter().enumerate().take(LINKS_MAX + 1) {
+        uses.push((links_pointer.index(index), link.kind, "Link"));
     }
 
     let mut defects = Vec::new();

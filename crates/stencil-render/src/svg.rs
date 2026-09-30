@@ -290,7 +290,12 @@ impl SvgWriter {
                 icon: None,
             },
             DocumentNode::Content(NodeRef::Node(content)) => match content {
-                Node::Row(_) | Node::Col(_) | Node::Note(_) => PartContext::default(),
+                Node::Row(_)
+                | Node::Col(_)
+                | Node::Note(_)
+                | Node::Text(_)
+                | Node::Callout(_)
+                | Node::Frame(_) => PartContext::default(),
                 Node::Zone(zone) => {
                     self.write_zone_box(depth, node.bounds, zone.kind);
                     PartContext::default()
