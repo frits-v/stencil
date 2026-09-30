@@ -1,8 +1,8 @@
 {
   "title": "One transit hub, one Shared VPC per environment, every path between them named. Prod and nonprod never peer.",
-  "kicker": "Landing zone · hub and spoke · Dedicated Interconnect 99.99% · SOW / deck / exec",
+  "kicker": "Landing zone · hub and spoke · Dedicated Interconnect 99.99%",
   "lede": "Two metros land four VLAN attachments on two Cloud Routers in the transit hub. Spokes attach through Network Connectivity Center. Tiers sit in their own subnets with no public IPs; ingress enters through one load balancer with Cloud Armor and IAP in front.",
-  "foot": "Stress figure for the stencil renderer · hop facts are illustrative and were not looked up this session",
+  "foot": "Illustrative topology · hop facts are placeholders, not looked-up values",
   "width": 1440,
   "canvas": "customer",
   "body": [

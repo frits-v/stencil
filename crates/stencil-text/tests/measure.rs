@@ -14,8 +14,8 @@ const SAMPLE_STRINGS: [&str; 8] = [
     "Dedicated Interconnect",
     "failover · Region A ↔ Region B",
     "VLAN 100 · BGP 169.254.0.1",
-    "Type 5 · Dedicated Interconnect 99.99% · SOW / deck / exec",
-    "A stakeholder following the lines still sees four attachments, not one bundled cable.",
+    "Dedicated Interconnect 99.99% · two metros, two regions",
+    "A reader following the lines sees four attachments, not one bundled cable.",
     "x",
 ];
 
