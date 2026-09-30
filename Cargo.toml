@@ -1,25 +1,37 @@
 [workspace]
-resolver = "2"
-members = ["crates/stencil-model", "crates/stencil-text", "crates/stencil-layout", "crates/stencil-render", "crates/stencil-cli"]
+resolver = "3"
+members = [
+    "crates/stencil-model",
+    "crates/stencil-text",
+    "crates/stencil-layout",
+    "crates/stencil-render",
+    "crates/stencil-cli",
+]
 
 [workspace.package]
-version = "0.1.0"
-edition = "2021"
-license = "UNLICENSED"
+edition = "2024"
+rust-version = "1.94"
 publish = false
 
 [workspace.dependencies]
+taffy = "=0.14.0"
+cosmic-text = "=0.19.0"
+resvg = "=0.48.1"
 serde = { version = "1", features = ["derive"] }
-serde_json = "1.0"
+serde_json = "1"
 schemars = "1.2"
-thiserror = "2.0"
-anyhow = "1.0"
-taffy = "0.14"
-cosmic-text = "0.19"
-fontdb = "0.24"
-resvg = "0.48"
-usvg = "0.48"
-tiny-skia = "0.12"
-png = "0.18"
+thiserror = "2"
 clap = { version = "4.6", features = ["derive"] }
-base64 = "0.22"
+base64 = "0.23"
+sha2 = "0.11"
+jsonschema = { version = "0.58", default-features = false }
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+
+[workspace.lints.clippy]
+unwrap_used = "deny"
+expect_used = "deny"
+panic = "deny"
+todo = "deny"
+unimplemented = "deny"

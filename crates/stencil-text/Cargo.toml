@@ -1,11 +1,15 @@
 [package]
 name = "stencil-text"
-version.workspace = true
+version = "0.1.0"
 edition.workspace = true
-license.workspace = true
+rust-version.workspace = true
 publish.workspace = true
 
 [dependencies]
 cosmic-text.workspace = true
+sha2.workspace = true
 thiserror.workspace = true
 stencil-model = { path = "../stencil-model" }
+
+[lints]
+workspace = true
