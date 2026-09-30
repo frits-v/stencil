@@ -1,13 +1,15 @@
 //! The section 5.2 SVG writer.
 
 use std::collections::BTreeSet;
-use stencil_layout::{BoxRect, NodeGeometry, PageGeometry, Part, PartName, TextAlign, TextRun};
+use stencil_layout::{
+    BoxRect, LinkRoute, NodeGeometry, PageGeometry, Part, PartName, TextAlign, TextRun,
+};
 use stencil_model::pointer::NodePointer;
 use stencil_model::text::TextStyleName;
 
 use stencil_model::{
-    Arrow, Canvas, IconName, LEGEND_ENTRIES_MAX, LegendEntry, Node, NodeRef, NoteKind, Page, Pipe,
-    PipeDir, PipeKind, ZoneKind, body_nodes,
+    Arrow, Canvas, IconName, LEGEND_ENTRIES_MAX, LINKS_MAX, LegendEntry, Link, Node, NodeRef,
+    NoteKind, Page, PagePoint, Pipe, PipeDir, PipeKind, ZoneKind, body_nodes,
 };
 
 use crate::icons::icon_data_uri;
@@ -25,6 +27,12 @@ const ICON_CHIP_RADIUS_PX: f32 = 6.0;
 /// Arrowhead triangle along the run axis and across it (section 11.2).
 const ARROW_LENGTH_PX: f32 = 10.0;
 const ARROW_WIDTH_PX: f32 = 8.0;
+const FRAME_RADIUS_PX: f32 = 4.0;
+const FRAME_CHIP_RADIUS_PX: f32 = 4.0;
+/// Radius of the dot of a bulleted Text line, and its center's offset into the 22 px
+/// marker cell.
+const BULLET_RADIUS_PX: f32 = 2.0;
+const BULLET_CENTER_INSET_PX: f32 = 5.0;
 /// Corner radii of the gcp frame in CSS order: top-left, top-right, bottom-right, bottom-left.
 const GCP_RADII_PX: [f32; 4] = [4.0, 4.0, 10.0, 10.0];
 
@@ -65,7 +73,7 @@ pub fn render_svg(page: &Page, geometry: &PageGeometry) -> Result<SvgDocument, R
             writer.palette.page_background()
         ),
     );
-    let arrow_kinds = arrow_kinds(&expected);
+    let arrow_kinds = arrow_kinds(&expected, &page.links);
     if !arrow_kinds.is_empty() {
         writer.write_arrow_markers(1, &arrow_kinds);
     }
@@ -81,6 +89,14 @@ pub fn render_svg(page: &Page, geometry: &PageGeometry) -> Result<SvgDocument, R
     }
     for depth in (1..=open_groups.len()).rev() {
         writer.line(depth, "</g>");
+    }
+    // Links paint after every node, so zone fills never cover them (section 11.2).
+    for route in geometry.links.iter().take(LINKS_MAX) {
+        let link = page
+            .links
+            .get(route.index)
+            .ok_or_else(|| link_mismatch(route))?;
+        writer.write_link(1, route, link)?;
     }
     writer.line(0, "</svg>");
 
@@ -129,9 +145,9 @@ fn geometry_order(page: &Page) -> Vec<(NodePointer, DocumentNode<'_>)> {
     order
 }
 
-/// Kinds of the Pipes and Tee arms that draw an arrowhead, one marker each.
-fn arrow_kinds(expected: &[(NodePointer, DocumentNode<'_>)]) -> BTreeSet<PipeKind> {
-    expected
+/// Kinds of the Pipes, Tee arms and links that draw an arrowhead, one marker each.
+fn arrow_kinds(expected: &[(NodePointer, DocumentNode<'_>)], links: &[Link]) -> BTreeSet<PipeKind> {
+    let pipe_kinds = expected
         .iter()
         .filter_map(|(_, document_node)| match *document_node {
             DocumentNode::Content(NodeRef::Node(Node::Pipe(pipe)) | NodeRef::TeeArm(pipe)) => {
@@ -140,8 +156,22 @@ fn arrow_kinds(expected: &[(NodePointer, DocumentNode<'_>)]) -> BTreeSet<PipeKin
             _ => None,
         })
         .filter(|pipe| pipe.arrow != Arrow::None)
-        .map(|pipe| pipe.kind)
-        .collect()
+        .map(|pipe| pipe.kind);
+    let link_kinds = links
+        .iter()
+        .take(LINKS_MAX)
+        .filter(|link| link.arrow != Arrow::None)
+        .map(|link| link.kind);
+    pipe_kinds.chain(link_kinds).collect()
+}
+
+/// A route whose index names no `Page.links` entry, or whose tag parts do not match.
+fn link_mismatch(route: &LinkRoute) -> RenderError {
+    let pointer = NodePointer::root().child("links").index(route.index);
+    RenderError::GeometryMismatch {
+        expected: pointer.clone(),
+        found: pointer.child("<absent>"),
+    }
 }
 
 /// Which ends of a pipe carry an arrowhead instead of a dot.
@@ -153,7 +183,11 @@ struct ArrowEnds {
 
 impl ArrowEnds {
     fn of(pipe: &Pipe) -> Self {
-        match pipe.arrow {
+        Self::from_arrow(pipe.arrow)
+    }
+
+    fn from_arrow(arrow: Arrow) -> Self {
+        match arrow {
             Arrow::None => ArrowEnds::default(),
             Arrow::Start => ArrowEnds {
                 start: true,
@@ -267,6 +301,8 @@ struct PartContext {
     pipe_dir: Option<PipeDir>,
     arrows: ArrowEnds,
     icon: Option<IconName>,
+    /// Accent bar color of a Callout.
+    accent: Option<&'static str>,
 }
 
 struct SvgWriter {
@@ -346,15 +382,33 @@ impl SvgWriter {
                 pipe_kind: Some(pipe.kind),
                 pipe_dir: Some(pipe.dir),
                 arrows: ArrowEnds::of(pipe),
-                icon: None,
+                ..PartContext::default()
             },
             DocumentNode::Content(NodeRef::Node(content)) => match content {
-                Node::Row(_)
-                | Node::Col(_)
-                | Node::Note(_)
-                | Node::Text(_)
-                | Node::Callout(_)
-                | Node::Frame(_) => PartContext::default(),
+                Node::Row(_) | Node::Col(_) | Node::Note(_) => PartContext::default(),
+                Node::Text(_) => {
+                    let block_paint = self.palette.block();
+                    self.write_box(depth, node.bounds, CARD_RADIUS_PX, block_paint);
+                    PartContext::default()
+                }
+                Node::Callout(callout) => {
+                    let paint = self.palette.callout(callout.kind);
+                    self.write_rect(
+                        depth,
+                        node.bounds,
+                        CARD_RADIUS_PX,
+                        Some(paint.fill),
+                        Some(paint.border),
+                    );
+                    PartContext {
+                        accent: Some(paint.accent),
+                        ..PartContext::default()
+                    }
+                }
+                Node::Frame(_) => {
+                    self.write_frame_box(depth, node.bounds);
+                    PartContext::default()
+                }
                 Node::Zone(zone) => {
                     self.write_zone_box(depth, node.bounds, zone.kind);
                     PartContext::default()
@@ -376,7 +430,7 @@ impl SvgWriter {
                     pipe_kind: Some(pipe.kind),
                     pipe_dir: Some(pipe.dir),
                     arrows: ArrowEnds::of(pipe),
-                    icon: None,
+                    ..PartContext::default()
                 },
                 Node::Tee(tee) => PartContext {
                     pipe_kind: Some(tee.kind),
@@ -396,6 +450,42 @@ impl SvgWriter {
             return;
         }
         self.write_rect(depth, bounds, style.radius_px, style.fill, style.border);
+    }
+
+    /// The two diagonals first, then the dashed border over their ends. The diagonals run
+    /// between the corners of the box inside the border, pulled in to where the inner edge
+    /// of the rounded corner crosses a 45 degree line, so no end shows through a dash gap.
+    fn write_frame_box(&mut self, depth: usize, bounds: BoxRect) {
+        let border = self.palette.frame_border();
+        let inner_radius = (FRAME_RADIUS_PX - border.width_px).max(0.0);
+        let corner_pull = inner_radius * (1.0 - std::f32::consts::FRAC_1_SQRT_2);
+        let inner = inset_rect(bounds, border.width_px + corner_pull);
+        let diagonal = self.palette.frame_diagonal();
+        for (x1, y1, x2, y2) in [
+            (inner.x, inner.y, inner.right(), inner.bottom()),
+            (inner.x, inner.bottom(), inner.right(), inner.y),
+        ] {
+            self.line(
+                depth,
+                &format!(
+                    r#"<line x1="{}" y1="{}" x2="{}" y2="{}"{}/>"#,
+                    format_number(x1),
+                    format_number(y1),
+                    format_number(x2),
+                    format_number(y2),
+                    stroke_attributes(diagonal)
+                ),
+            );
+        }
+        self.write_rect(depth, bounds, FRAME_RADIUS_PX, None, Some(border));
+    }
+
+    /// The Callout accent bar fills the left 4 px of the box inside the border and follows
+    /// the inner curve of the rounded left corners, so it never covers the border stroke.
+    fn write_callout_accent(&mut self, depth: usize, bounds: BoxRect, fill: &str) {
+        let inner_radius = (CARD_RADIUS_PX - palette::BLOCK_BORDER_PX).max(0.0);
+        let path = left_rounded_strip_path(bounds, inner_radius);
+        self.line(depth, &format!(r#"<path d="{path}" fill="{fill}"/>"#));
     }
 
     /// The frame stroke goes over the bar and body fills, as a CSS border would.
@@ -507,6 +597,26 @@ impl SvgWriter {
                 let tag_paint = self.palette.tag(kind);
                 self.write_box(depth, bounds, TAG_RADIUS_PX, tag_paint);
             }
+            PartName::Accent => {
+                let fill = context.accent.ok_or_else(|| part_mismatch(node, part))?;
+                self.write_callout_accent(depth, bounds, fill);
+            }
+            PartName::LabelChip => {
+                let fill = self.palette.frame_label_chip();
+                self.write_rect(depth, bounds, FRAME_CHIP_RADIUS_PX, Some(fill), None);
+            }
+            PartName::Marker if part.text.is_none() => {
+                let fill = self.palette.list_bullet(self.canvas);
+                self.line(
+                    depth,
+                    &format!(
+                        r#"<circle cx="{}" cy="{}" r="{}" fill="{fill}"/>"#,
+                        format_number(bounds.x + BULLET_CENTER_INSET_PX),
+                        format_number(bounds.y + bounds.height / 2.0),
+                        format_number(BULLET_RADIUS_PX),
+                    ),
+                );
+            }
             PartName::BadgeText
             | PartName::Text
             | PartName::Label
@@ -521,9 +631,7 @@ impl SvgWriter {
             | PartName::LegendText
             | PartName::Heading
             | PartName::Marker
-            | PartName::BodyLine
-            | PartName::Accent
-            | PartName::LabelChip => {}
+            | PartName::BodyLine => {}
         }
         Ok(())
     }
@@ -589,6 +697,89 @@ impl SvgWriter {
                 format_number(base_y),
                 format_number(tip_x),
                 format_number(tip_y),
+            ),
+        );
+    }
+
+    /// One link: the routed path in the wire style of its kind, an arrowhead at each end the
+    /// `arrow` value names, then the tag, drawn like a pipe tag over the path under it.
+    fn write_link(
+        &mut self,
+        depth: usize,
+        route: &LinkRoute,
+        link: &Link,
+    ) -> Result<(), RenderError> {
+        let pointer = NodePointer::root().child("links").index(route.index);
+        self.line(
+            depth,
+            &format!(
+                r#"<g data-id="{}" data-tag="Link" data-kind="{}">"#,
+                escape_xml(pointer.as_str()),
+                route.kind.as_str()
+            ),
+        );
+        let arrows = ArrowEnds::from_arrow(link.arrow);
+        let mut points = route.points.clone();
+        let start_arrow = if arrows.start {
+            trim_start(&mut points)
+        } else {
+            None
+        };
+        let end_arrow = if arrows.end {
+            trim_end(&mut points)
+        } else {
+            None
+        };
+        let stroke = self.palette.wire_style(route.kind).stroke;
+        self.line(
+            depth + 1,
+            &format!(
+                r#"<path d="{}" fill="none"{} stroke-linejoin="round"/>"#,
+                polyline_path(&points),
+                stroke_attributes(stroke)
+            ),
+        );
+        for (base, tip) in [start_arrow, end_arrow].into_iter().flatten() {
+            self.write_arrow_carrier(depth + 1, base, tip, route.kind);
+        }
+        for part in &route.parts {
+            match (part.name, &part.text) {
+                (PartName::Tag, None) => {
+                    let tag_paint = self.palette.tag(route.kind);
+                    self.write_box(depth + 1, part.bounds, TAG_RADIUS_PX, tag_paint);
+                }
+                (PartName::TagLabel | PartName::TagSub, Some(run)) => {
+                    let style_name =
+                        pipe_text_style_name(part.name).ok_or_else(|| link_mismatch(route))?;
+                    let fill = self
+                        .palette
+                        .text_ink(style_name, self.canvas, Some(route.kind));
+                    self.write_text_run(depth + 1, &pointer, part.bounds, run, fill)?;
+                }
+                _ => return Err(link_mismatch(route)),
+            }
+        }
+        self.line(depth, "</g>");
+        Ok(())
+    }
+
+    /// An unstroked line from the arrowhead's base to its tip that only places the marker.
+    fn write_arrow_carrier(
+        &mut self,
+        depth: usize,
+        base: PagePoint,
+        tip: PagePoint,
+        kind: PipeKind,
+    ) {
+        let marker_id = self.arrow_marker_id(kind);
+        self.line(
+            depth,
+            &format!(
+                r#"<line x1="{}" y1="{}" x2="{}" y2="{}" stroke="none" marker-end="url(#{marker_id})"/>"#,
+                format_number(base.x),
+                format_number(base.y),
+                format_number(tip.x),
+                format_number(tip.y),
             ),
         );
     }
@@ -817,6 +1008,10 @@ fn content_text_style_name(content: &Node, part: PartName) -> Option<TextStyleNa
         (Node::Pcard(_), PartName::Ask) => Some(TextStyleName::Ask),
         (Node::Pipe(_), part) => pipe_text_style_name(part),
         (Node::Tee(_), PartName::HubText) => Some(TextStyleName::TagLabel),
+        (Node::Text(_) | Node::Callout(_), PartName::Heading) => Some(TextStyleName::CardFunction),
+        (Node::Text(_), PartName::BodyLine | PartName::Marker) => Some(TextStyleName::BlockBody),
+        (Node::Callout(_), PartName::Text) => Some(TextStyleName::BlockBody),
+        (Node::Frame(_), PartName::Label) => Some(TextStyleName::ZoneLabel),
         _ => None,
     }
 }
@@ -894,6 +1089,130 @@ fn rounded_path(bounds: BoxRect, radii: [f32; 4]) -> String {
     )
 }
 
+/// `M x y L x y ...` through every point.
+fn polyline_path(points: &[PagePoint]) -> String {
+    let mut path = String::new();
+    for (index, point) in points.iter().enumerate() {
+        let command = if index == 0 { "M" } else { " L" };
+        path.push_str(&format!(
+            "{command} {} {}",
+            format_number(point.x),
+            format_number(point.y)
+        ));
+    }
+    path
+}
+
+/// Pulls the last point back along the last segment by the arrowhead length, or to the
+/// previous corner when the segment is shorter, so the stroke ends under the arrowhead's
+/// base. Returns the (base, tip) of the arrowhead, which points along the last segment.
+fn trim_end(points: &mut [PagePoint]) -> Option<(PagePoint, PagePoint)> {
+    let count = points.len();
+    let tip = *points.last()?;
+    let previous = *points.get(count.checked_sub(2)?)?;
+    let base = arrow_base(previous, tip);
+    if let Some(last) = points.last_mut() {
+        *last = base.stroke_end;
+    }
+    Some((base.marker_base, tip))
+}
+
+/// `trim_end` for the first point, with the arrowhead pointing back along the first segment.
+fn trim_start(points: &mut [PagePoint]) -> Option<(PagePoint, PagePoint)> {
+    let tip = *points.first()?;
+    let next = *points.get(1)?;
+    let base = arrow_base(next, tip);
+    if let Some(first) = points.first_mut() {
+        *first = base.stroke_end;
+    }
+    Some((base.marker_base, tip))
+}
+
+#[derive(Debug, Clone, Copy)]
+struct ArrowBase {
+    /// Where the stroke stops: the arrowhead base, or the segment's far end when the
+    /// segment is shorter than the arrowhead.
+    stroke_end: PagePoint,
+    /// A point one arrowhead length back from the tip along the segment's direction, which
+    /// orients the marker.
+    marker_base: PagePoint,
+}
+
+/// The arrowhead base on the segment from `from` to the tip `tip`.
+fn arrow_base(from: PagePoint, tip: PagePoint) -> ArrowBase {
+    let delta_x = tip.x - from.x;
+    let delta_y = tip.y - from.y;
+    let length = (delta_x * delta_x + delta_y * delta_y).sqrt();
+    if length <= f32::EPSILON {
+        return ArrowBase {
+            stroke_end: tip,
+            marker_base: from,
+        };
+    }
+    let unit_x = delta_x / length;
+    let unit_y = delta_y / length;
+    let marker_base = PagePoint {
+        x: tip.x - unit_x * ARROW_LENGTH_PX,
+        y: tip.y - unit_y * ARROW_LENGTH_PX,
+    };
+    let trimmed = ARROW_LENGTH_PX.min(length);
+    ArrowBase {
+        stroke_end: PagePoint {
+            x: tip.x - unit_x * trimmed,
+            y: tip.y - unit_y * trimmed,
+        },
+        marker_base,
+    }
+}
+
+/// The left `bounds.width` px of a rounded rectangle whose left corners have `radius`,
+/// as a closed path: flat right edge, left corners following the curve.
+fn left_rounded_strip_path(bounds: BoxRect, radius: f32) -> String {
+    let left = bounds.x;
+    let right = bounds.right();
+    let top = bounds.y;
+    let bottom = bounds.bottom();
+    let radius = radius.min(bounds.height / 2.0).max(0.0);
+    // How far below the box top the corner curve meets the strip's right edge.
+    let reach = (radius - bounds.width).max(0.0);
+    let curve_drop = radius - (radius * radius - reach * reach).max(0.0).sqrt();
+    let number = format_number;
+    if bounds.width >= radius {
+        return format!(
+            "M {} {} H {} V {} H {} A {} {} 0 0 1 {} {} V {} A {} {} 0 0 1 {} {} Z",
+            number(left + radius),
+            number(top),
+            number(right),
+            number(bottom),
+            number(left + radius),
+            number(radius),
+            number(radius),
+            number(left),
+            number(bottom - radius),
+            number(top + radius),
+            number(radius),
+            number(radius),
+            number(left + radius),
+            number(top),
+        );
+    }
+    format!(
+        "M {} {} V {} A {} {} 0 0 1 {} {} V {} A {} {} 0 0 1 {} {} Z",
+        number(right),
+        number(top + curve_drop),
+        number(bottom - curve_drop),
+        number(radius),
+        number(radius),
+        number(left),
+        number(bottom - radius),
+        number(top + radius),
+        number(radius),
+        number(radius),
+        number(right),
+        number(top + curve_drop),
+    )
+}
+
 fn escape_xml(text: &str) -> String {
     let mut escaped = String::with_capacity(text.len());
     for character in text.chars() {
@@ -918,6 +1237,39 @@ mod tests {
         assert_eq!(
             escape_xml(r#"a < b & "c" > 'd'"#),
             "a &lt; b &amp; &quot;c&quot; &gt; &apos;d&apos;"
+        );
+    }
+
+    #[test]
+    fn a_short_end_segment_trims_to_its_corner_and_keeps_a_full_length_arrowhead() {
+        let mut points = vec![
+            PagePoint { x: 0.0, y: 0.0 },
+            PagePoint { x: 100.0, y: 0.0 },
+            PagePoint { x: 100.0, y: 6.0 },
+        ];
+        let (base, tip) = trim_end(&mut points).unwrap();
+        assert_eq!(tip, PagePoint { x: 100.0, y: 6.0 });
+        assert_eq!(base, PagePoint { x: 100.0, y: -4.0 });
+        assert_eq!(points[2], PagePoint { x: 100.0, y: 0.0 });
+
+        let mut long = vec![PagePoint { x: 0.0, y: 0.0 }, PagePoint { x: 50.0, y: 0.0 }];
+        let (base, tip) = trim_start(&mut long).unwrap();
+        assert_eq!(tip, PagePoint { x: 0.0, y: 0.0 });
+        assert_eq!(base, PagePoint { x: 10.0, y: 0.0 });
+        assert_eq!(long[0], base);
+    }
+
+    #[test]
+    fn left_rounded_strip_follows_the_corner_curve() {
+        let bounds = BoxRect {
+            x: 0.0,
+            y: 0.0,
+            width: 4.0,
+            height: 40.0,
+        };
+        assert_eq!(
+            left_rounded_strip_path(bounds, 6.75),
+            "M 4 0.59 V 39.41 A 6.75 6.75 0 0 1 0 33.25 V 6.75 A 6.75 6.75 0 0 1 4 0.59 Z"
         );
     }
 
