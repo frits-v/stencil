@@ -61,7 +61,7 @@ enum Command {
         #[arg(long, value_enum)]
         theme: Option<ThemeArgument>,
     },
-    /// Lay out and render in memory, then run all five checks
+    /// Lay out and render in memory, then run all seven checks
     Check {
         /// Document to check
         json: PathBuf,
@@ -225,7 +225,7 @@ fn check(
     Ok(reports_exit_code(&reports))
 }
 
-fn check_in_memory(path: &Path, theme: Option<ThemeArgument>) -> Result<[CheckReport; 5], Failure> {
+fn check_in_memory(path: &Path, theme: Option<ThemeArgument>) -> Result<[CheckReport; 7], Failure> {
     let loaded = load_themed_document(path, theme)?;
     let rendered = render_page(&loaded, DeviceScale::DEFAULT)?;
     Ok(all_checks(&loaded.page, &rendered.geometry))

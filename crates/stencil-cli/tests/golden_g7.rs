@@ -10,7 +10,7 @@ use std::path::{Path, PathBuf};
 use resvg::tiny_skia::{Color, Pixmap, PixmapPaint, Transform};
 use stencil_cli::pipeline::{LoadedDocument, RenderedPage, all_checks, load_document, render_page};
 use stencil_layout::{BoxRect, NodeGeometry, PageGeometry, PartName};
-use stencil_model::checks::CheckName;
+use stencil_model::checks::{CheckName, CheckOutcome};
 use stencil_render::DeviceScale;
 
 const EPSILON_PX: f32 = 0.01;
@@ -121,10 +121,15 @@ fn golden_g7() {
             (CheckName::TextFitsBox, 40),
             (CheckName::RememberedConstants, 36),
             (CheckName::LegendConsistency, 8),
+            (CheckName::LinksRouted, 0),
+            (CheckName::LinksAvoidBoxes, 0),
         ]
     );
-    for report in &reports {
+    for report in reports.iter().take(5) {
         assert!(report.passed(), "{report:?}");
+    }
+    for report in reports.iter().skip(5) {
+        assert_eq!(report.outcome(), CheckOutcome::NotApplicable, "{report:?}");
     }
 
     // Step 3: the gold's structure.

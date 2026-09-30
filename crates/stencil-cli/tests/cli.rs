@@ -506,7 +506,7 @@ fn render_stops_on_a_violation_and_writes_nothing() {
 }
 
 #[test]
-fn check_g7_passes_all_five_checks() {
+fn check_g7_passes_five_checks_and_skips_the_link_checks() {
     let outcome = run_stencil(&["check", &g7_path()]);
     assert_eq!(outcome.code, ExitCode::Clean, "{}", outcome.stderr);
     assert_eq!(
@@ -517,7 +517,9 @@ fn check_g7_passes_all_five_checks() {
             "check text-fits-box: examined 40 text runs, 0 defects",
             "check remembered-constants: examined 36 text fields, 0 defects",
             "check legend-consistency: examined 8 relations, 0 defects",
-            "stencil check: 5 checks, 5 passed, 0 failed",
+            "check links-routed: examined 0 links, not applicable: page has no links",
+            "check links-avoid-boxes: examined 0 pairs, not applicable: page has no links",
+            "stencil check: 7 checks, 5 passed, 0 failed, 2 not applicable",
         ]
     );
     assert_eq!(outcome.stderr, "");
@@ -554,7 +556,7 @@ fn check_reports_overflowing_text_with_its_pointer() {
         .copied()
         .filter(|line| line.starts_with("check "))
         .collect();
-    assert_eq!(check_lines.len(), 5, "{}", outcome.stdout);
+    assert_eq!(check_lines.len(), 7, "{}", outcome.stdout);
     assert!(
         check_lines[0].starts_with("check child-inside-container: examined "),
         "{}",
@@ -565,8 +567,15 @@ fn check_reports_overflowing_text_with_its_pointer() {
         "{}",
         outcome.stdout
     );
-    for passing in &check_lines[1..] {
+    for passing in &check_lines[1..5] {
         assert!(passing.ends_with(", 0 defects"), "{}", outcome.stdout);
+    }
+    for skipped in &check_lines[5..] {
+        assert!(
+            skipped.ends_with("not applicable: page has no links"),
+            "{}",
+            outcome.stdout
+        );
     }
     assert!(
         lines
@@ -577,7 +586,7 @@ fn check_reports_overflowing_text_with_its_pointer() {
     );
     assert_eq!(
         lines.last().copied(),
-        Some("stencil check: 5 checks, 4 passed, 1 failed"),
+        Some("stencil check: 7 checks, 4 passed, 1 failed, 2 not applicable"),
         "{}",
         outcome.stdout
     );
