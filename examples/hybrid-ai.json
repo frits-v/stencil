@@ -1,0 +1,420 @@
+{
+  "title": "Training stays on-prem. Tuning, serving and evidence run on Google Cloud. AWS and Azure feed data over private paths only.",
+  "kicker": "Hybrid multi-cloud AI platform · stress figure · SOW / deck",
+  "lede": "Three producers outside the frame, one Shared VPC across two regions, one service perimeter around every AI service. Every hop is a labeled line; the public internet is drawn once, as the prohibited path.",
+  "foot": "Stress figure for the stencil renderer · hop facts are illustrative and were not looked up this session",
+  "canvas": "customer",
+  "body": [
+    {
+      "tag": "Row",
+      "gap": 8,
+      "grow": [
+        4,
+        3,
+        13
+      ],
+      "children": [
+        {
+          "tag": "Col",
+          "gap": 8,
+          "children": [
+            {
+              "tag": "Zone",
+              "kind": "onprem-a",
+              "label": "On-prem · GPU data center",
+              "children": [
+                {
+                  "tag": "Pcard",
+                  "icon": "compute",
+                  "fn": "GPU training cluster",
+                  "pn": "Kubernetes on bare metal",
+                  "fact": "Checkpoints leave over the Interconnect only"
+                },
+                {
+                  "tag": "Pcard",
+                  "icon": "storage",
+                  "fn": "Data lake",
+                  "pn": "object storage · clips, telemetry"
+                },
+                {
+                  "tag": "Pcard",
+                  "icon": "security-identity",
+                  "fn": "Corporate identity",
+                  "pn": "SAML IdP · group sync"
+                }
+              ]
+            },
+            {
+              "tag": "Zone",
+              "kind": "onprem-b",
+              "label": "AWS · us-east-1",
+              "children": [
+                {
+                  "tag": "Pcard",
+                  "icon": "storage",
+                  "fn": "Telemetry landing",
+                  "pn": "S3 bucket · event stream"
+                },
+                {
+                  "tag": "Pcard",
+                  "icon": "containers",
+                  "fn": "Feature service",
+                  "pn": "EKS · federated role, no keys"
+                }
+              ]
+            },
+            {
+              "tag": "Zone",
+              "kind": "project",
+              "label": "Azure · East US",
+              "children": [
+                {
+                  "tag": "Pcard",
+                  "icon": "storage",
+                  "fn": "Document corpus",
+                  "pn": "Blob Storage · contracts"
+                },
+                {
+                  "tag": "Pcard",
+                  "icon": "integration",
+                  "fn": "Copilot integration",
+                  "pn": "Azure OpenAI · retrieval calls"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "tag": "Col",
+          "grow": [
+            1,
+            1,
+            1,
+            1
+          ],
+          "children": [
+            {
+              "tag": "Col",
+              "gap": 12,
+              "justify": "center",
+              "children": [
+                {
+                  "tag": "Pipe",
+                  "dir": "h",
+                  "kind": "blue",
+                  "label": "Interconnect",
+                  "sub": "VLAN · BGP · checkpoints, clips"
+                },
+                {
+                  "tag": "Pipe",
+                  "dir": "h",
+                  "kind": "dash",
+                  "label": "Workforce identity",
+                  "sub": "SAML · groups to IAM"
+                }
+              ]
+            },
+            {
+              "tag": "Col",
+              "gap": 12,
+              "justify": "center",
+              "children": [
+                {
+                  "tag": "Pipe",
+                  "dir": "h",
+                  "kind": "pink",
+                  "label": "HA VPN",
+                  "sub": "IPsec · BGP · S3 to Region B"
+                },
+                {
+                  "tag": "Pipe",
+                  "dir": "h",
+                  "kind": "dash",
+                  "label": "Workload identity",
+                  "sub": "federation · no keys"
+                }
+              ]
+            },
+            {
+              "tag": "Col",
+              "gap": 12,
+              "justify": "center",
+              "children": [
+                {
+                  "tag": "Pipe",
+                  "dir": "h",
+                  "kind": "blue",
+                  "label": "Cross-Cloud Interconnect",
+                  "sub": "private path · corpus"
+                }
+              ]
+            },
+            {
+              "tag": "Col",
+              "gap": 12,
+              "justify": "center",
+              "children": [
+                {
+                  "tag": "Pipe",
+                  "dir": "h",
+                  "kind": "deny",
+                  "label": "Public internet",
+                  "sub": "no public IP · no keys"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "tag": "Zone",
+          "kind": "gcp",
+          "label": "Google Cloud",
+          "children": [
+            {
+              "tag": "Zone",
+              "kind": "vpc",
+              "label": "Shared VPC · prod · one network, two regions",
+              "children": [
+                {
+                  "tag": "Zone",
+                  "kind": "perimeter",
+                  "label": "VPC Service Controls perimeter · every AI and data service",
+                  "children": [
+                    {
+                      "tag": "Zone",
+                      "kind": "region-a",
+                      "label": "Region A · tuning and serving",
+                      "children": [
+                        {
+                          "tag": "Row",
+                          "gap": 8,
+                          "grow": [
+                            1,
+                            0,
+                            1,
+                            0,
+                            1
+                          ],
+                          "children": [
+                            {
+                              "tag": "Col",
+                              "gap": 8,
+                              "children": [
+                                {
+                                  "tag": "Pcard",
+                                  "icon": "vertex-ai",
+                                  "fn": "Tuning",
+                                  "pn": "Vertex AI · tuning",
+                                  "fact": "CMEK · private endpoint"
+                                },
+                                {
+                                  "tag": "Pcard",
+                                  "icon": "bigquery",
+                                  "fn": "Feature store",
+                                  "pn": "BigQuery · vectors"
+                                }
+                              ]
+                            },
+                            {
+                              "tag": "Pipe",
+                              "dir": "h",
+                              "kind": "gray",
+                              "label": "register",
+                              "sub": "tuned adapters"
+                            },
+                            {
+                              "tag": "Col",
+                              "gap": 8,
+                              "children": [
+                                {
+                                  "tag": "Pcard",
+                                  "icon": "ai-ml",
+                                  "fn": "Model registry",
+                                  "pn": "Vertex AI Registry"
+                                },
+                                {
+                                  "tag": "Pcard",
+                                  "icon": "gke",
+                                  "fn": "Online inference",
+                                  "pn": "GKE · GPU node pool",
+                                  "fact": "Workload Identity Federation"
+                                }
+                              ]
+                            },
+                            {
+                              "tag": "Pipe",
+                              "dir": "h",
+                              "kind": "gray",
+                              "label": "serve",
+                              "sub": "internal load balancer"
+                            },
+                            {
+                              "tag": "Col",
+                              "gap": 8,
+                              "children": [
+                                {
+                                  "tag": "Pcard",
+                                  "icon": "agents",
+                                  "fn": "Agent runtime",
+                                  "pn": "Vertex AI Agent Engine"
+                                },
+                                {
+                                  "tag": "Pcard",
+                                  "icon": "networking",
+                                  "fn": "Gateway",
+                                  "pn": "External Application LB",
+                                  "fact": "Cloud Armor · IAP"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "tag": "Fact",
+                          "text": "Direct VPC egress for every serverless caller · Private Google Access on the subnet · restricted VIP from the Private Google Access doc"
+                        }
+                      ]
+                    },
+                    {
+                      "tag": "Pipe",
+                      "dir": "v",
+                      "kind": "dash",
+                      "label": "failover · Region A ↔ Region B",
+                      "sub": "checkpoints and adapters replicate"
+                    },
+                    {
+                      "tag": "Zone",
+                      "kind": "region-b",
+                      "label": "Region B · replica and batch",
+                      "children": [
+                        {
+                          "tag": "Row",
+                          "gap": 8,
+                          "grow": [
+                            1,
+                            0,
+                            1,
+                            0,
+                            1
+                          ],
+                          "children": [
+                            {
+                              "tag": "Pcard",
+                              "icon": "cloud-storage",
+                              "fn": "Checkpoint bucket",
+                              "pn": "Cloud Storage · dual-region",
+                              "fact": "CMEK · retention lock"
+                            },
+                            {
+                              "tag": "Pipe",
+                              "dir": "h",
+                              "kind": "gray",
+                              "label": "load",
+                              "sub": "on failover"
+                            },
+                            {
+                              "tag": "Pcard",
+                              "icon": "gke",
+                              "fn": "Serving replica",
+                              "pn": "GKE · GPU pool · warm"
+                            },
+                            {
+                              "tag": "Pipe",
+                              "dir": "h",
+                              "kind": "gray",
+                              "label": "batch",
+                              "sub": "nightly scoring"
+                            },
+                            {
+                              "tag": "Pcard",
+                              "icon": "cloud-run",
+                              "fn": "Batch inference",
+                              "pn": "Cloud Run jobs"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "tag": "Zone",
+                  "kind": "project",
+                  "label": "Evidence · common folder, outside the perimeter",
+                  "children": [
+                    {
+                      "tag": "Row",
+                      "gap": 8,
+                      "grow": [
+                        1,
+                        0,
+                        1,
+                        0,
+                        1
+                      ],
+                      "children": [
+                        {
+                          "tag": "Pcard",
+                          "icon": "observability",
+                          "fn": "Audit logs",
+                          "pn": "Cloud Logging · org sink"
+                        },
+                        {
+                          "tag": "Pipe",
+                          "dir": "h",
+                          "kind": "gray",
+                          "label": "findings"
+                        },
+                        {
+                          "tag": "Pcard",
+                          "icon": "scc",
+                          "fn": "Posture",
+                          "pn": "Security Command Center"
+                        },
+                        {
+                          "tag": "Pipe",
+                          "dir": "h",
+                          "kind": "gray",
+                          "label": "export"
+                        },
+                        {
+                          "tag": "Pcard",
+                          "icon": "data-analytics",
+                          "fn": "Cost and usage",
+                          "pn": "Billing export · BigQuery"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "legend": [
+    {
+      "kind": "blue",
+      "text": "private data path into Region A"
+    },
+    {
+      "kind": "pink",
+      "text": "private data path into Region B"
+    },
+    {
+      "kind": "dash",
+      "text": "identity, control plane and failover"
+    },
+    {
+      "kind": "gray",
+      "text": "east-west inside the VPC"
+    },
+    {
+      "kind": "deny",
+      "text": "prohibited path"
+    }
+  ],
+  "width": 1440
+}
