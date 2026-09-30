@@ -15,7 +15,7 @@ use stencil_layout::checks::{
 use stencil_layout::{LayoutError, PageGeometry, layout_page};
 use stencil_model::checks::{CheckReport, legend_consistency, remembered_constants};
 use stencil_model::{ModelError, Page, Projection, parse_page};
-use stencil_render::iso::{IsoScene, iso_labels_clear, project_page};
+use stencil_render::iso::{IsoScene, iso_labels_clear, iso_links_clear, project_page};
 use stencil_render::{
     DeviceScale, RenderError, SvgDocument, measured_json, render_png, render_svg,
 };
@@ -203,13 +203,13 @@ pub fn model_checks(page: &Page) -> [CheckReport; 2] {
     [remembered_constants(page), legend_consistency(page)]
 }
 
-/// All nine checks, in `CheckName` order. `iso-labels-clear` reads the scene and is not
-/// applicable without one.
+/// All ten checks, in `CheckName` order. `iso-labels-clear` and `iso-links-clear` read the
+/// scene and are not applicable without one.
 pub fn all_checks(
     page: &Page,
     geometry: &PageGeometry,
     scene: Option<&IsoScene>,
-) -> [CheckReport; 9] {
+) -> [CheckReport; 10] {
     let [remembered, legend] = model_checks(page);
     [
         child_inside_container(geometry),
@@ -221,6 +221,7 @@ pub fn all_checks(
         links_avoid_boxes(geometry),
         pipes_land(page, geometry),
         iso_labels_clear(scene),
+        iso_links_clear(scene),
     ]
 }
 

@@ -68,7 +68,12 @@ fn check_hero_passes_every_applicable_check_in_every_theme() {
         assert_eq!(outcome.code, ExitCode::Clean, "{theme}: {}", outcome.stdout);
         let lines = outcome.stdout_lines();
         assert!(
-            lines.contains(&"check iso-labels-clear: examined 86 pairs, 0 defects"),
+            lines.contains(&"check iso-labels-clear: examined 80 pairs, 0 defects"),
+            "{theme}: {}",
+            outcome.stdout
+        );
+        assert!(
+            lines.contains(&"check iso-links-clear: examined 6 link legs, 0 defects"),
             "{theme}: {}",
             outcome.stdout
         );
@@ -81,7 +86,7 @@ fn check_hero_passes_every_applicable_check_in_every_theme() {
         );
         assert_eq!(
             lines.last().copied(),
-            Some("stencil check: 9 checks, 8 passed, 0 failed, 1 not applicable"),
+            Some("stencil check: 10 checks, 9 passed, 0 failed, 1 not applicable"),
             "{theme}"
         );
         assert_eq!(outcome.stderr, "");
@@ -89,7 +94,7 @@ fn check_hero_passes_every_applicable_check_in_every_theme() {
 }
 
 #[test]
-fn check_hero_with_projection_flat_skips_the_iso_check() {
+fn check_hero_with_projection_flat_skips_the_iso_checks() {
     let outcome = run_stencil(&[
         "check",
         &example_path("hero-iso.json"),
@@ -103,22 +108,26 @@ fn check_hero_with_projection_flat_skips_the_iso_check() {
             &"check iso-labels-clear: examined 0 pairs, not applicable: projection is flat"
         )
     );
+    assert!(lines.contains(
+        &"check iso-links-clear: examined 0 link legs, not applicable: projection is flat"
+    ));
     assert_eq!(
         lines.last().copied(),
-        Some("stencil check: 9 checks, 7 passed, 0 failed, 2 not applicable")
+        Some("stencil check: 10 checks, 7 passed, 0 failed, 3 not applicable")
     );
 }
 
 #[test]
-fn check_prints_iso_labels_clear_last() {
+fn check_prints_the_two_iso_checks_last() {
     let outcome = run_stencil(&["check", &example_path("hero-iso.json")]);
     let check_lines: Vec<&str> = outcome
         .stdout_lines()
         .into_iter()
         .filter(|line| line.starts_with("check "))
         .collect();
-    assert_eq!(check_lines.len(), 9);
+    assert_eq!(check_lines.len(), 10);
     assert!(check_lines[8].starts_with("check iso-labels-clear: "));
+    assert!(check_lines[9].starts_with("check iso-links-clear: "));
 }
 
 #[test]

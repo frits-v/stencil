@@ -1,18 +1,12 @@
-//! Moves a billboard to the first clear spot on its surface (section 12.4, rule 3): a zone
-//! label onto open floor of its zone's top face, a card's icon and label to where no
-//! stroke runs through them.
+//! Moves a billboard to the first clear spot (section 12.4, rule 3): a card's icon and
+//! label over its block where no stroke runs through them, a link tag along its link.
 
 use stencil_layout::BoxRect;
 
-use super::shapes::{
-    grown, point_in_convex, rectangle_corners, rectangle_overlaps_polygon, rectangles_overlap,
-    segment_crosses_box,
-};
+use super::shapes::{grown, rectangle_overlaps_polygon, rectangles_overlap, segment_crosses_box};
 use super::{ScreenPoint, ZERO_OFFSET, project_point};
 
-/// Room kept between a placed zone label and every stroke, block and other label.
-pub const ISO_LABEL_CLEARANCE_PX: f32 = 6.0;
-/// Room kept between a card's marks and every stroke and other label.
+/// Room kept between a card's marks or a link tag and every stroke, block and other label.
 pub const ISO_CARD_CLEARANCE_PX: f32 = 3.0;
 /// Pitch of the flat grid of candidate billboard centers.
 const CANDIDATE_STEP_PX: f32 = 4.0;
@@ -30,15 +24,6 @@ pub(crate) struct Obstacles<'a> {
     pub boxes: Vec<BoxRect>,
 }
 
-/// Where the candidates are tried first.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub(crate) enum Order {
-    /// Nearest the region's back corner first, which is also top of the screen first.
-    FromBackCorner,
-    /// Nearest the region's center first.
-    FromCenter,
-}
-
 /// One billboard to place.
 #[derive(Debug)]
 pub(crate) struct Request<'a> {
@@ -48,24 +33,16 @@ pub(crate) struct Request<'a> {
     pub z: f32,
     /// Screen size of the billboard box.
     pub size: (f32, f32),
+    /// The point of the box that stands on a candidate, from the box's top-left corner.
+    pub anchor: (f32, f32),
     /// What the billboard inks, relative to its box's top-left corner.
     pub marks: &'a [BoxRect],
-    /// A convex screen polygon the grown box must lie in, if any.
-    pub within: Option<&'a [ScreenPoint]>,
     pub clearance: f32,
-    pub order: Order,
 }
 
 impl Request<'_> {
     fn fits(&self, candidate: BoxRect, obstacles: &Obstacles<'_>) -> bool {
         let padded = grown(candidate, self.clearance);
-        if let Some(polygon) = self.within
-            && !rectangle_corners(padded)
-                .into_iter()
-                .all(|corner| point_in_convex(corner, polygon))
-        {
-            return false;
-        }
         let clear_of_boxes = obstacles
             .boxes
             .iter()
@@ -93,8 +70,8 @@ impl Request<'_> {
     }
 }
 
-/// The candidate centers of a region in the request's order, at most CANDIDATES_MAX.
-fn candidates(region: BoxRect, order: Order) -> Vec<(f32, f32)> {
+/// The candidate centers of a region, nearest its center first, at most CANDIDATES_MAX.
+fn candidates(region: BoxRect) -> Vec<(f32, f32)> {
     let mut step = CANDIDATE_STEP_PX;
     let count = |step: f32| {
         (
@@ -114,14 +91,9 @@ fn candidates(region: BoxRect, order: Order) -> Vec<(f32, f32)> {
         region.x + region.width / 2.0,
         region.y + region.height / 2.0,
     );
-    // A centered grid holds the center itself; a corner grid holds the back corner.
-    let (origin_x, origin_y) = match order {
-        Order::FromBackCorner => (region.x, region.y),
-        Order::FromCenter => (
-            center_x - (region.width / 2.0 / step).floor() * step,
-            center_y - (region.height / 2.0 / step).floor() * step,
-        ),
-    };
+    // The grid holds the center itself.
+    let origin_x = center_x - (region.width / 2.0 / step).floor() * step;
+    let origin_y = center_y - (region.height / 2.0 / step).floor() * step;
     let mut points = Vec::with_capacity(columns.saturating_mul(rows).min(CANDIDATES_MAX));
     for row in 0..rows {
         for column in 0..columns {
@@ -134,10 +106,7 @@ fn candidates(region: BoxRect, order: Order) -> Vec<(f32, f32)> {
             }
         }
     }
-    let key = |point: &(f32, f32)| match order {
-        Order::FromBackCorner => (point.0 - region.x) + (point.1 - region.y),
-        Order::FromCenter => (point.0 - center_x).powi(2) + (point.1 - center_y).powi(2),
-    };
+    let key = |point: &(f32, f32)| (point.0 - center_x).powi(2) + (point.1 - center_y).powi(2);
     points.sort_by(|first, second| key(first).total_cmp(&key(second)));
     points
 }
@@ -145,13 +114,14 @@ fn candidates(region: BoxRect, order: Order) -> Vec<(f32, f32)> {
 /// The first candidate screen box that fits, or None when none does.
 pub(crate) fn place(request: &Request<'_>, obstacles: &Obstacles<'_>) -> Option<BoxRect> {
     let (width, height) = request.size;
-    candidates(request.region, request.order)
+    let (across, down) = request.anchor;
+    candidates(request.region)
         .into_iter()
         .map(|center| {
             let anchor = project_point(center.0, center.1, request.z, ZERO_OFFSET);
             BoxRect {
-                x: anchor.x - width / 2.0,
-                y: anchor.y - height / 2.0,
+                x: anchor.x - across,
+                y: anchor.y - down,
                 width,
                 height,
             }
@@ -159,60 +129,81 @@ pub(crate) fn place(request: &Request<'_>, obstacles: &Obstacles<'_>) -> Option<
         .find(|candidate| request.fits(*candidate, obstacles))
 }
 
-/// The four projected corners of a flat rectangle at `z`, back corner first.
-pub(crate) fn top_face(bounds: BoxRect, z: f32) -> [ScreenPoint; 4] {
-    [
-        project_point(bounds.x, bounds.y, z, ZERO_OFFSET),
-        project_point(bounds.right(), bounds.y, z, ZERO_OFFSET),
-        project_point(bounds.right(), bounds.bottom(), z, ZERO_OFFSET),
-        project_point(bounds.x, bounds.bottom(), z, ZERO_OFFSET),
-    ]
+/// The first opaque box of `size` centered on one of `centers`, in order, that clears every
+/// obstacle by ISO_CARD_CLEARANCE_PX, with the height stored beside that center; None when
+/// none does. A link tag is placed this way along its link.
+pub(crate) fn place_centered(
+    size: (f32, f32),
+    centers: &[(ScreenPoint, f32)],
+    obstacles: &Obstacles<'_>,
+) -> Option<(BoxRect, f32)> {
+    let (width, height) = size;
+    let whole = [BoxRect {
+        x: 0.0,
+        y: 0.0,
+        width,
+        height,
+    }];
+    let request = Request {
+        region: whole[0],
+        z: 0.0,
+        size,
+        anchor: (width / 2.0, height / 2.0),
+        marks: &whole,
+        clearance: ISO_CARD_CLEARANCE_PX,
+    };
+    centers.iter().find_map(|(center, z)| {
+        let candidate = BoxRect {
+            x: center.x - width / 2.0,
+            y: center.y - height / 2.0,
+            width,
+            height,
+        };
+        request
+            .fits(candidate, obstacles)
+            .then_some((candidate, *z))
+    })
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    const ZONE: BoxRect = BoxRect {
+    const REGION: BoxRect = BoxRect {
         x: 0.0,
         y: 0.0,
         width: 300.0,
         height: 200.0,
     };
 
-    fn zone_label(size: (f32, f32), face: &[ScreenPoint]) -> Request<'_> {
+    fn card(size: (f32, f32), marks: &[BoxRect]) -> Request<'_> {
         Request {
-            region: ZONE,
-            z: 6.0,
+            region: REGION,
+            z: 0.0,
             size,
-            marks: &[],
-            within: Some(face),
-            clearance: ISO_LABEL_CLEARANCE_PX,
-            order: Order::FromBackCorner,
+            anchor: (size.0 / 2.0, size.1 / 2.0),
+            marks,
+            clearance: ISO_CARD_CLEARANCE_PX,
         }
     }
 
     #[test]
-    fn an_empty_zone_takes_its_label_near_the_back_corner_and_inside_the_face() {
-        let face = top_face(ZONE, 6.0);
-        let placed = place(&zone_label((60.0, 16.0), &face), &Obstacles::default()).unwrap();
-        let back = project_point(0.0, 0.0, 6.0, ZERO_OFFSET);
-        assert!(placed.y > back.y, "{placed:?}");
-        assert!(placed.y - back.y < 80.0, "{placed:?}");
+    fn a_request_tries_the_region_center_first() {
+        let placed = place(&card((10.0, 10.0), &[]), &Obstacles::default()).unwrap();
+        let center = project_point(150.0, 100.0, 0.0, ZERO_OFFSET);
+        assert!((placed.x + 5.0 - center.x).abs() < 1e-3);
+        assert!((placed.y + 5.0 - center.y).abs() < 1e-3);
     }
 
     #[test]
-    fn a_label_moves_off_a_stroke_and_gives_up_when_none_is_clear() {
-        let face = top_face(ZONE, 6.0);
-        let request = Request {
-            marks: &[BoxRect {
-                x: 0.0,
-                y: 0.0,
-                width: 60.0,
-                height: 16.0,
-            }],
-            ..zone_label((60.0, 16.0), &face)
-        };
+    fn a_label_moves_off_a_stroke() {
+        let marks = [BoxRect {
+            x: 0.0,
+            y: 0.0,
+            width: 60.0,
+            height: 16.0,
+        }];
+        let request = card((60.0, 16.0), &marks);
         let free = place(&request, &Obstacles::default()).unwrap();
         let across = Obstacles {
             strokes: vec![(
@@ -228,24 +219,29 @@ mod tests {
             ..Obstacles::default()
         };
         let moved = place(&request, &across).unwrap();
-        assert!(moved.y > free.y + 8.0, "{moved:?}");
-        assert!(place(&zone_label((600.0, 16.0), &face), &Obstacles::default()).is_none());
+        assert!(
+            moved.y > free.y + 8.0 || moved.bottom() < free.y + 8.0,
+            "{moved:?}"
+        );
     }
 
     #[test]
-    fn a_centered_request_tries_the_region_center_first() {
-        let request = Request {
-            region: ZONE,
-            z: 0.0,
-            size: (10.0, 10.0),
-            marks: &[],
-            within: None,
-            clearance: 0.0,
-            order: Order::FromCenter,
+    fn a_tag_takes_the_first_clear_center_along_its_link() {
+        let centers = [
+            (ScreenPoint { x: 0.0, y: 0.0 }, 0.0),
+            (ScreenPoint { x: 100.0, y: 0.0 }, 6.0),
+        ];
+        let blocked = Obstacles {
+            boxes: vec![BoxRect {
+                x: -10.0,
+                y: -10.0,
+                width: 20.0,
+                height: 20.0,
+            }],
+            ..Obstacles::default()
         };
-        let placed = place(&request, &Obstacles::default()).unwrap();
-        let center = project_point(150.0, 100.0, 0.0, ZERO_OFFSET);
-        assert!((placed.x + 5.0 - center.x).abs() < 1e-3);
-        assert!((placed.y + 5.0 - center.y).abs() < 1e-3);
+        let (screen, z) = place_centered((40.0, 20.0), &centers, &blocked).unwrap();
+        assert_eq!((screen.x, screen.y, z), (80.0, -10.0, 6.0));
+        assert!(place_centered((40.0, 20.0), &centers[..1], &blocked).is_none());
     }
 }

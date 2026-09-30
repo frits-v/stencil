@@ -16,10 +16,11 @@ use stencil_model::checks::{CheckName, CheckOutcome};
 use stencil_model::pointer::NodePointer;
 use stencil_model::{Page, Theme};
 use stencil_render::iso::{
-    Billboard, BillboardRole, ISO_MARGIN_PX, IsoScene, ScreenPoint, Solid, SolidShape,
-    iso_labels_clear, project_page, project_point,
+    Billboard, BillboardRole, ISO_MARGIN_PX, ISO_ZOOM_MAX, IsoPoint, IsoScene, ScreenPoint, Solid,
+    SolidShape, iso_labels_clear, iso_links_clear, project_page, project_point, project_zoomed,
+    zoomed_geometry,
 };
-use stencil_render::palette::{self, Face, Palette, shade};
+use stencil_render::palette::{self, Face, Palette, ZoneTab, shade};
 use stencil_render::{DeviceScale, measured_json, render_png, render_svg};
 
 const HERO_JSON: &str = include_str!("../../../examples/hero-iso.json");
@@ -216,12 +217,12 @@ fn two_zone_link_page(to_side: &str) -> Page {
 #[test]
 fn a_link_between_two_zones_steps_down_to_the_ground_and_back_up() {
     let page = two_zone_link_page("bottom");
-    let geometry = common::layout_with_fixed_metrics(&page);
-    let scene = project_page(&geometry).unwrap();
+    let (geometry, zoom) = zoomed_geometry(&common::layout_with_fixed_metrics(&page)).unwrap();
+    let scene = project_zoomed(&geometry, zoom).unwrap();
     let path = &scene.link_paths[0];
     let heights: Vec<f32> = path.iter().map(|point| point.z).collect();
-    assert_eq!(heights.first(), Some(&6.0));
-    assert_eq!(heights.last(), Some(&6.0));
+    assert_eq!(heights.first(), Some(&(6.0 * zoom)));
+    assert_eq!(heights.last(), Some(&(6.0 * zoom)));
     assert!(heights.contains(&0.0), "{heights:?}");
     let risers = path
         .windows(2)
@@ -238,8 +239,8 @@ fn a_link_between_two_zones_steps_down_to_the_ground_and_back_up() {
 #[test]
 fn a_link_into_a_hidden_face_stops_where_it_meets_the_block_on_screen() {
     let page = two_zone_link_page("left");
-    let geometry = common::layout_with_fixed_metrics(&page);
-    let scene = project_page(&geometry).unwrap();
+    let (geometry, zoom) = zoomed_geometry(&common::layout_with_fixed_metrics(&page)).unwrap();
+    let scene = project_zoomed(&geometry, zoom).unwrap();
     let right = geometry
         .node(
             &NodePointer::root()
@@ -261,13 +262,14 @@ fn every_hero_link_reaches_its_endpoints_over_the_cloud_floor() {
     let hero = hero_page();
     let geometry = common::layout_with_cosmic_text(&hero);
     let scene = project_page(&geometry).unwrap();
+    let floor = 6.0 * scene.zoom;
     assert_eq!(scene.link_paths.len(), 4);
     for path in &scene.link_paths[2..] {
-        assert!(path.iter().all(|point| point.z == 6.0), "{path:?}");
+        assert!(path.iter().all(|point| point.z == floor), "{path:?}");
     }
     for path in &scene.link_paths[..2] {
-        assert_eq!(path.first().unwrap().z, 6.0);
-        assert_eq!(path.last().unwrap().z, 6.0);
+        assert_eq!(path.first().unwrap().z, floor);
+        assert_eq!(path.last().unwrap().z, floor);
         assert!(path.iter().any(|point| point.z == 0.0), "{path:?}");
     }
 }
@@ -567,7 +569,7 @@ fn cards_side_by_side_leave_their_labels_clear() {
 }
 
 /// Cards 8 px apart leave the second card's label no clear spot on its own top face, so it
-/// keeps its centered placement and the check reports it over the first block.
+/// keeps its first placement and the check reports it over the first block.
 #[test]
 fn stacked_cards_put_the_second_label_over_the_first_block() {
     let page = two_card_zone(json!({
@@ -580,13 +582,14 @@ fn stacked_cards_put_the_second_label_over_the_first_block() {
     assert_eq!(report.examined, 9);
     let second = "/body/0/children/0/children/1";
     let first = "/body/0/children/0/children/0";
-    assert_eq!(report.defects.len(), 1, "{report:?}");
-    assert_eq!(report.defects[0].pointer.as_str(), second);
-    assert!(report.defects[0].message.starts_with("content billboard "));
     assert!(
-        report.defects[0]
-            .message
-            .ends_with(&format!("covers block {first}"))
+        report
+            .defects
+            .iter()
+            .any(|defect| defect.pointer.as_str() == second
+                && defect.message.starts_with("content billboard ")
+                && defect.message.ends_with(&format!("covers block {first}"))),
+        "{report:?}"
     );
 }
 
@@ -607,6 +610,7 @@ fn a_zone_edge_through_a_label_is_a_defect_and_one_under_a_chip_is_not() {
             ScreenPoint { x: 0.0, y: 50.0 },
         ],
         opaque: false,
+        footprint: NO_FOOTPRINT,
     };
     let label = billboard_at("label", 20.0);
     let mut chip = billboard_at("chip", 60.0);
@@ -641,6 +645,7 @@ fn an_edge_hidden_behind_a_later_block_does_not_cross_a_label() {
         height: 0.0,
         silhouette: edge_row,
         opaque: false,
+        footprint: NO_FOOTPRINT,
     };
     let block = Solid {
         node: 1,
@@ -657,6 +662,7 @@ fn an_edge_hidden_behind_a_later_block_does_not_cross_a_label() {
             ScreenPoint { x: 15.0, y: 4.0 },
         ],
         opaque: true,
+        footprint: NO_FOOTPRINT,
     };
     let mut label = billboard_at("label", 20.0);
     label.node = Some(1);
@@ -697,8 +703,17 @@ fn billboard_at(owner: &str, x: f32) -> Billboard {
         screen,
         opaque: false,
         marks: vec![screen],
+        contained: false,
     }
 }
+
+/// A flat footprint far from every hand-built scene's links.
+const NO_FOOTPRINT: BoxRect = BoxRect {
+    x: -1000.0,
+    y: -1000.0,
+    width: 1.0,
+    height: 1.0,
+};
 
 fn scene_with(billboards: Vec<Billboard>) -> IsoScene {
     IsoScene {
@@ -711,6 +726,8 @@ fn scene_with(billboards: Vec<Billboard>) -> IsoScene {
         solids: Vec::new(),
         billboards,
         link_paths: Vec::new(),
+        link_kinds: Vec::new(),
+        zoom: 1.0,
     }
 }
 
@@ -790,8 +807,13 @@ fn billboard_parts<'a>(
     (first, texts)
 }
 
+const HERO_ON_PREM: &str = "/body/0/children/0/children/0";
+const HERO_ROUTER: &str = "/body/0/children/0/children/0/children/0";
+const HERO_GCP: &str = "/body/0/children/1";
+const HERO_VPC: &str = "/body/0/children/1/children/0";
+
 #[test]
-fn chipless_billboard_text_sits_on_a_plate_of_the_surface_under_it() {
+fn card_text_sits_on_a_plate_in_center_and_wire_and_on_none_in_dusk() {
     for theme in THEMES {
         let mut page = hero_page();
         page.theme = theme;
@@ -799,52 +821,84 @@ fn chipless_billboard_text_sits_on_a_plate_of_the_surface_under_it() {
         let svg = render_svg(&page, &geometry).unwrap();
         let parsed = common::parse_xml(&svg.svg);
         let palette = Palette::for_projection(theme, stencil_model::Projection::Iso);
-        let on_prem_top = palette
-            .slab_faces(stencil_model::ZoneKind::OnpremA, 0)
-            .unwrap()
-            .top
-            .unwrap();
         let card_top = palette
             .block_faces(Some(palette.card().fill), palette.card().border)
             .unwrap()
             .top
             .unwrap();
-        let gcp_top = palette
-            .slab_faces(stencil_model::ZoneKind::Gcp, 0)
-            .unwrap()
-            .top
-            .unwrap();
-        for (owner, ground) in [
-            ("/body/0/children/0", on_prem_top.as_str()),
-            ("/body/0/children/0/children/0", card_top.as_str()),
-            ("/body/0/children/1/children/0", gcp_top.as_str()),
-        ] {
-            let (first, texts) = billboard_parts(&parsed, owner);
-            assert!(first.has_tag_name("rect"), "{theme:?} {owner}");
-            assert_eq!(first.attribute("fill"), Some(ground), "{theme:?} {owner}");
-            assert!(!texts.is_empty());
-            assert!(texts.iter().all(|text| text.attribute("stroke").is_none()));
-        }
-        let (chip, _) = billboard_parts(&parsed, "/body/0/children/1");
-        assert_eq!(chip.attribute("fill"), Some(palette.gcp_label_chip().fill));
+        let (first, texts) = billboard_parts(&parsed, HERO_ROUTER);
+        assert!(!texts.is_empty());
+        assert!(texts.iter().all(|text| text.attribute("stroke").is_none()));
+        let plated =
+            first.has_tag_name("rect") && first.attribute("fill") == Some(card_top.as_str());
+        assert_eq!(plated, theme != Theme::Dusk, "{theme:?}");
+        assert_eq!(palette.iso_text_plates(), theme != Theme::Dusk);
     }
 }
 
 #[test]
-fn zone_labels_are_drawn_in_the_primary_ink() {
+fn zone_tabs_are_filled_at_the_top_level_and_outlined_when_nested() {
     for theme in THEMES {
         let mut page = hero_page();
         page.theme = theme;
         let geometry = common::layout_with_cosmic_text(&page);
         let svg = render_svg(&page, &geometry).unwrap();
         let parsed = common::parse_xml(&svg.svg);
-        let primary = Palette::new(theme).text_ink(
-            stencil_model::text::TextStyleName::CardFunction,
-            page.canvas,
-            None,
+        let palette = Palette::for_projection(theme, stencil_model::Projection::Iso);
+        for (owner, kind) in [
+            (HERO_ON_PREM, stencil_model::ZoneKind::OnpremA),
+            (HERO_GCP, stencil_model::ZoneKind::Gcp),
+        ] {
+            let ZoneTab::Filled { fill, ink } = palette.iso_zone_tab(kind, false) else {
+                panic!("a top-level tab is filled");
+            };
+            let (tab, texts) = billboard_parts(&parsed, owner);
+            assert!(tab.has_tag_name("rect"), "{theme:?} {owner}");
+            assert_eq!(tab.attribute("fill"), Some(fill), "{theme:?} {owner}");
+            assert!(tab.attribute("stroke").is_none(), "{theme:?} {owner}");
+            assert_eq!(texts[0].attribute("fill"), Some(ink), "{theme:?} {owner}");
+        }
+        let gcp_top = palette
+            .slab_faces(stencil_model::ZoneKind::Gcp, 0)
+            .unwrap()
+            .top
+            .unwrap();
+        let ZoneTab::Outline { border, ink } =
+            palette.iso_zone_tab(stencil_model::ZoneKind::Vpc, true)
+        else {
+            panic!("a nested tab is an outline");
+        };
+        let (tab, texts) = billboard_parts(&parsed, HERO_VPC);
+        assert_eq!(tab.attribute("fill"), Some(gcp_top.as_str()), "{theme:?}");
+        assert_eq!(tab.attribute("stroke"), Some(border.color), "{theme:?}");
+        assert_eq!(texts[0].attribute("fill"), Some(ink), "{theme:?}");
+    }
+}
+
+#[test]
+fn every_zone_tab_hangs_from_its_zone_back_corner() {
+    let page = hero_page();
+    let geometry = common::layout_with_cosmic_text(&page);
+    let scene = project_page(&geometry).unwrap();
+    for owner in [HERO_ON_PREM, HERO_GCP, HERO_VPC] {
+        let solid = scene
+            .solids
+            .iter()
+            .find(|solid| solid.pointer.as_str() == owner)
+            .unwrap();
+        let tab = scene
+            .billboards
+            .iter()
+            .find(|billboard| billboard.owner.as_str() == owner)
+            .unwrap();
+        let back = solid.silhouette[0];
+        assert!(
+            (tab.screen.x - back.x).abs() < 1e-3,
+            "{owner} {tab:?} {back:?}"
         );
-        let (_, texts) = billboard_parts(&parsed, "/body/0/children/0");
-        assert_eq!(texts[0].attribute("fill"), Some(primary), "{theme:?}");
+        let middle = tab.screen.y + tab.screen.height / 2.0;
+        assert!((middle - back.y).abs() < 1e-3, "{owner} {tab:?} {back:?}");
+        assert!(tab.opaque);
     }
 }
 
@@ -945,7 +999,7 @@ fn the_gcp_slab_carries_the_brand_on_its_sides_and_a_thin_outline_on_top() {
         assert_eq!(faces.left.as_deref(), Some(palette::GCP_BORDER));
         assert_eq!(
             faces.right.as_deref(),
-            shade(palette::GCP_BORDER, -8).as_deref()
+            shade(palette::GCP_BORDER, -12).as_deref()
         );
         assert_eq!(faces.side_stroke, None);
         let outline = faces.top_stroke.unwrap();
@@ -992,7 +1046,7 @@ fn every_theme_draws_a_ringed_icon_chip_under_iso_and_center_flat_draws_none() {
         let parsed = common::parse_xml(&svg.svg);
         let group = parsed
             .descendants()
-            .find(|node| node.attribute("data-billboard") == Some("/body/0/children/0/children/0"))
+            .find(|node| node.attribute("data-billboard") == Some(HERO_ROUTER))
             .unwrap();
         let children: Vec<_> = group.children().filter(|node| node.is_element()).collect();
         let image = children
@@ -1018,19 +1072,26 @@ fn every_theme_draws_a_ringed_icon_chip_under_iso_and_center_flat_draws_none() {
 }
 
 #[test]
-fn iso_links_are_heavier_than_zone_edges_and_the_wire_legend_names_the_line() {
-    let expected_width = [(Theme::Center, "3"), (Theme::Dusk, "3"), (Theme::Wire, "2")];
-    for (theme, width) in expected_width {
+fn iso_link_weights_rank_primary_failover_and_service_and_the_wire_legend_names_the_line() {
+    let expected_widths = [
+        (Theme::Center, ["3.75", "2.5", "2"]),
+        (Theme::Dusk, ["3.75", "2.5", "2"]),
+        (Theme::Wire, ["3.75", "2.5", "1.25"]),
+    ];
+    for (theme, widths) in expected_widths {
         let mut page = hero_page();
         page.theme = theme;
         let geometry = common::layout_with_cosmic_text(&page);
         let svg = render_svg(&page, &geometry).unwrap();
         let parsed = common::parse_xml(&svg.svg);
-        let link = common::group(&parsed, "/links/0");
-        let path = common::children_named(link, "path")[0];
-        assert_eq!(path.attribute("stroke-width"), Some(width), "{theme:?}");
-        let swatch = common::children_named(common::group(&parsed, "/legend/0"), "line")[0];
-        assert_eq!(swatch.attribute("stroke-width"), Some(width), "{theme:?}");
+        for (index, width) in widths.into_iter().enumerate() {
+            let link = common::group(&parsed, &format!("/links/{index}"));
+            let path = common::children_named(link, "path")[0];
+            assert_eq!(path.attribute("stroke-width"), Some(width), "{theme:?}");
+            let entry = common::group(&parsed, &format!("/legend/{index}"));
+            let swatch = common::children_named(entry, "line")[0];
+            assert_eq!(swatch.attribute("stroke-width"), Some(width), "{theme:?}");
+        }
         let labels: Vec<&str> = (0..3)
             .map(|index| {
                 let entry = common::group(&parsed, &format!("/legend/{index}"));
@@ -1084,4 +1145,330 @@ fn a_relabeled_wire_legend_keeps_the_gap_before_its_description() {
     let relabeled_gap = gap(&parsed, &label_run("Thin line"));
     let flat_gap = gap(&flat_parsed, &label_run("Solid gray"));
     assert_close(relabeled_gap, flat_gap, "gap after the legend label");
+}
+
+#[test]
+fn a_narrow_body_is_zoomed_to_the_cap_with_heights_and_text_sizes_kept_in_proportion() {
+    let page = iso_page(json!([
+        { "tag": "Row", "grow": [0], "children": [
+            { "tag": "Zone", "kind": "region-a", "label": "Region", "children": [
+                card("Gateway", "cloud-run") ] } ] }
+    ]));
+    let geometry = common::layout_with_cosmic_text(&page);
+    let scene = project_page(&geometry).unwrap();
+    assert_eq!(scene.zoom, ISO_ZOOM_MAX);
+    let card_pointer = "/body/0/children/0/children/0";
+    let block = scene
+        .solids
+        .iter()
+        .find(|solid| solid.pointer.as_str() == card_pointer)
+        .unwrap();
+    assert_close(block.height, 18.0 * ISO_ZOOM_MAX, "block height");
+    let flat_card = &geometry.nodes[index_of(&geometry, card_pointer)];
+    assert_close(
+        block.footprint.width,
+        flat_card.bounds.width * ISO_ZOOM_MAX,
+        "footprint width",
+    );
+    let billboard = scene
+        .billboards
+        .iter()
+        .find(|billboard| billboard.owner.as_str() == card_pointer)
+        .unwrap();
+    let icon = flat_card.part(stencil_layout::PartName::Icon).unwrap();
+    assert!(
+        billboard.screen.width < flat_card.bounds.width,
+        "{billboard:?}"
+    );
+    assert!(billboard.screen.width >= icon.bounds.width);
+    let (zoomed, _) = zoomed_geometry(&geometry).unwrap();
+    let zoomed_icon = zoomed.nodes[index_of(&zoomed, card_pointer)]
+        .part(stencil_layout::PartName::Icon)
+        .unwrap()
+        .bounds;
+    let top = project_point(
+        block.footprint.x + block.footprint.width / 2.0,
+        block.footprint.y + block.footprint.height / 2.0,
+        block.base_z + block.height,
+        scene.offset,
+    );
+    let icon_x = billboard.screen.x + zoomed_icon.x - billboard.flat.x + zoomed_icon.width / 2.0;
+    let icon_y = billboard.screen.y + zoomed_icon.y - billboard.flat.y + zoomed_icon.height / 2.0;
+    assert_close(icon_x, top.x, "icon center x on the top face center");
+    assert_close(icon_y, top.y, "icon center y on the top face center");
+}
+
+#[test]
+fn a_wide_body_is_not_zoomed() {
+    let page = two_zone_link_page("bottom");
+    let mut document = serde_json::to_value(&page).unwrap();
+    document["width"] = json!(640);
+    let page: Page = serde_json::from_value(document).unwrap();
+    let geometry = common::layout_with_fixed_metrics(&page);
+    let (zoomed, zoom) = zoomed_geometry(&geometry).unwrap();
+    if zoom == 1.0 {
+        assert_eq!(zoomed, geometry);
+    }
+    assert!((1.0..=ISO_ZOOM_MAX).contains(&zoom));
+}
+
+#[test]
+fn a_card_icon_stands_on_its_block_top_center_with_the_name_under_it() {
+    let hero = hero_page();
+    let geometry = common::layout_with_cosmic_text(&hero);
+    let (zoomed, zoom) = zoomed_geometry(&geometry).unwrap();
+    let scene = project_zoomed(&zoomed, zoom).unwrap();
+    for owner in [
+        "/body/0/children/1/children/0/children/0/children/0/children/0",
+        "/body/0/children/1/children/0/children/0/children/1/children/0",
+        "/body/0/children/1/children/0/children/0/children/1/children/1",
+    ] {
+        let node = &zoomed.nodes[index_of(&zoomed, owner)];
+        let block = scene
+            .solids
+            .iter()
+            .find(|solid| solid.pointer.as_str() == owner)
+            .unwrap();
+        let billboard = scene
+            .billboards
+            .iter()
+            .find(|billboard| billboard.owner.as_str() == owner)
+            .unwrap();
+        let icon = node.part(stencil_layout::PartName::Icon).unwrap().bounds;
+        let name = node
+            .part(stencil_layout::PartName::FunctionName)
+            .unwrap()
+            .bounds;
+        assert!(name.y > icon.bottom(), "{owner}");
+        let icon_center = (
+            billboard.screen.x + icon.x - billboard.flat.x + icon.width / 2.0,
+            billboard.screen.y + icon.y - billboard.flat.y + icon.height / 2.0,
+        );
+        let top_z = block.base_z + block.height;
+        let corner = |x: f32, y: f32| project_point(x, y, top_z, scene.offset);
+        let face = block.footprint;
+        let polygon = [
+            corner(face.x, face.y),
+            corner(face.right(), face.y),
+            corner(face.right(), face.bottom()),
+            corner(face.x, face.bottom()),
+        ];
+        let inside = (0..4).all(|index| {
+            let start = polygon[index];
+            let end = polygon[(index + 1) % 4];
+            (end.x - start.x) * (icon_center.1 - start.y)
+                - (end.y - start.y) * (icon_center.0 - start.x)
+                >= 0.0
+        });
+        assert!(
+            inside,
+            "{owner}: icon {icon_center:?} off the top face {polygon:?}"
+        );
+    }
+}
+
+#[test]
+fn the_hero_primary_is_one_straight_leg_with_its_tag_on_it() {
+    let hero = hero_page();
+    let geometry = common::layout_with_cosmic_text(&hero);
+    assert!(geometry.links[0].points.len() > 2);
+    let scene = project_page(&geometry).unwrap();
+    let primary = &scene.link_paths[0];
+    let first = primary.first().unwrap();
+    assert!(
+        primary.iter().all(|point| (point.y - first.y).abs() < 1e-3),
+        "{primary:?}"
+    );
+    let tag = scene
+        .billboards
+        .iter()
+        .find(|billboard| billboard.owner.as_str() == "/links/0")
+        .unwrap();
+    let center = ScreenPoint {
+        x: tag.screen.x + tag.screen.width / 2.0,
+        y: tag.screen.y + tag.screen.height / 2.0,
+    };
+    let on_path = primary.windows(2).any(|pair| {
+        let start = project_point(pair[0].x, pair[0].y, pair[0].z, scene.offset);
+        let end = project_point(pair[1].x, pair[1].y, pair[1].z, scene.offset);
+        let cross =
+            (end.x - start.x) * (center.y - start.y) - (end.y - start.y) * (center.x - start.x);
+        let length = (end.x - start.x).hypot(end.y - start.y);
+        length > 0.0
+            && (cross / length).abs() < 0.5
+            && center.x >= start.x.min(end.x) - 0.5
+            && center.x <= start.x.max(end.x) + 0.5
+    });
+    assert!(on_path, "{tag:?} {primary:?}");
+}
+
+#[test]
+fn the_hero_links_clear_every_zone_edge_and_end_on_long_legs() {
+    let hero = hero_page();
+    let geometry = common::layout_with_cosmic_text(&hero);
+    let scene = project_page(&geometry).unwrap();
+    let report = iso_links_clear(Some(&scene));
+    assert_eq!(report.check, CheckName::IsoLinksClear);
+    assert_eq!(report.examined, 6);
+    assert!(report.passed(), "{report:?}");
+    assert_eq!(
+        iso_links_clear(None).not_applicable,
+        Some("projection is flat")
+    );
+}
+
+fn link_scene(path: Vec<IsoPoint>, zone: BoxRect) -> IsoScene {
+    let mut scene = scene_with(Vec::new());
+    scene.solids = vec![Solid {
+        node: 0,
+        pointer: NodePointer::root().child("body").index(0),
+        shape: SolidShape::Slab,
+        base_z: 0.0,
+        height: 6.0,
+        silhouette: [ZERO; 6],
+        opaque: true,
+        footprint: zone,
+    }];
+    scene.link_paths = vec![path];
+    scene.link_kinds = vec![stencil_model::PipeKind::Blue];
+    scene
+}
+
+fn flat_point(x: f32, y: f32) -> IsoPoint {
+    IsoPoint { x, y, z: 0.0 }
+}
+
+#[test]
+fn a_leg_beside_a_zone_edge_a_leg_that_turns_back_and_a_short_last_leg_are_defects() {
+    let zone = BoxRect {
+        x: 100.0,
+        y: 0.0,
+        width: 200.0,
+        height: 200.0,
+    };
+    let beside = link_scene(
+        vec![
+            flat_point(0.0, 50.0),
+            flat_point(90.0, 50.0),
+            flat_point(90.0, 150.0),
+            flat_point(150.0, 150.0),
+        ],
+        zone,
+    );
+    let report = iso_links_clear(Some(&beside));
+    assert_eq!(report.examined, 3);
+    assert_eq!(report.defects.len(), 1, "{report:?}");
+    assert_eq!(report.defects[0].pointer.as_str(), "/links/0");
+    assert_eq!(
+        report.defects[0].message,
+        "leg 1 runs 10.00 px beside an edge of zone /body/0, closer than 24"
+    );
+
+    let hairpin = link_scene(
+        vec![
+            flat_point(0.0, 250.0),
+            flat_point(400.0, 250.0),
+            flat_point(360.0, 250.0),
+        ],
+        zone,
+    );
+    let report = iso_links_clear(Some(&hairpin));
+    let messages: Vec<&str> = report
+        .defects
+        .iter()
+        .map(|defect| defect.message.as_str())
+        .collect();
+    assert_eq!(messages, ["leg 1 turns back on the leg before it"]);
+
+    let short = link_scene(vec![flat_point(0.0, 250.0), flat_point(30.0, 250.0)], zone);
+    let report = iso_links_clear(Some(&short));
+    assert_eq!(
+        report.defects[0].message,
+        "last leg is 30.00 px, shorter than two arrowheads (36.00 px)"
+    );
+}
+
+#[test]
+fn text_that_leaves_its_block_is_a_defect() {
+    let block = Solid {
+        node: 0,
+        pointer: NodePointer::root().child("body").index(0),
+        shape: SolidShape::Block,
+        base_z: 0.0,
+        height: 18.0,
+        silhouette: [
+            ScreenPoint { x: 0.0, y: 0.0 },
+            ScreenPoint { x: 40.0, y: 0.0 },
+            ScreenPoint { x: 40.0, y: 20.0 },
+            ScreenPoint { x: 40.0, y: 40.0 },
+            ScreenPoint { x: 0.0, y: 40.0 },
+            ScreenPoint { x: 0.0, y: 20.0 },
+        ],
+        opaque: true,
+        footprint: NO_FOOTPRINT,
+    };
+    let mut inside = billboard_at("text", 5.0);
+    inside.node = Some(0);
+    inside.contained = true;
+    inside.marks = vec![BoxRect {
+        x: 5.0,
+        y: 5.0,
+        width: 20.0,
+        height: 10.0,
+    }];
+    let mut outside = inside.clone();
+    outside.marks[0].width = 50.0;
+    for (billboard, defects) in [(inside, 0), (outside, 1)] {
+        let mut scene = scene_with(vec![billboard]);
+        scene.solids = vec![block.clone()];
+        let report = iso_labels_clear(Some(&scene));
+        assert_eq!(report.defects.len(), defects, "{report:?}");
+        if defects == 1 {
+            assert!(report.defects[0].message.ends_with("leaves its block"));
+        }
+    }
+}
+
+#[test]
+fn a_dashed_link_skips_its_risers_and_a_solid_one_draws_them() {
+    let hero = hero_page();
+    let geometry = common::layout_with_cosmic_text(&hero);
+    let svg = render_svg(&hero, &geometry).unwrap();
+    let parsed = common::parse_xml(&svg.svg);
+    let data = |index: usize| {
+        let link = common::group(&parsed, &format!("/links/{index}"));
+        common::children_named(link, "path")[0]
+            .attribute("d")
+            .unwrap()
+            .to_string()
+    };
+    assert!(data(1).matches(" M ").count() >= 2, "{}", data(1));
+    assert_eq!(data(0).matches(" M ").count(), 0, "{}", data(0));
+    let heads = |index: usize| {
+        let link = common::group(&parsed, &format!("/links/{index}"));
+        common::children_named(link, "polygon").len()
+    };
+    assert_eq!(heads(0), 1);
+    assert_eq!(heads(1), 1);
+}
+
+#[test]
+fn the_wire_vpc_ring_is_dotted_light_gray_and_solid_slab_outlines_are_heavier() {
+    let palette = Palette::for_projection(Theme::Wire, stencil_model::Projection::Iso);
+    let ring = palette
+        .slab_faces(stencil_model::ZoneKind::Vpc, 1)
+        .unwrap()
+        .top_stroke
+        .unwrap();
+    assert_eq!(ring.line, palette::LineStyle::Dotted);
+    assert_eq!(ring.color, palette::ISO_WIRE_RING_INK);
+    let on_prem = palette
+        .slab_faces(stencil_model::ZoneKind::OnpremA, 0)
+        .unwrap();
+    assert_eq!(
+        on_prem.top_stroke.unwrap().width_px,
+        palette::ISO_WIRE_SLAB_OUTLINE_PX
+    );
+    let flat = Palette::new(Theme::Wire).zone_style(stencil_model::ZoneKind::Vpc);
+    assert_eq!(flat.border.unwrap().line, palette::LineStyle::Dashed);
 }

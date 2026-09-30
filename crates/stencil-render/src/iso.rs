@@ -3,21 +3,25 @@
 
 mod drape;
 mod placement;
+mod route;
 mod shapes;
+mod zoom;
 
 use stencil_layout::{
-    BoxRect, NodeGeometry, NodeTag, PageGeometry, Part, PartName, Size, TextAlign,
+    BoxRect, LinkRoute, NodeGeometry, NodeTag, PageGeometry, Part, PartName, Size, TextAlign,
 };
 use stencil_model::checks::{CheckName, CheckReport, Defect};
 use stencil_model::pointer::NodePointer;
-use stencil_model::{LINKS_MAX, NODES_MAX};
+use stencil_model::{LINKS_MAX, NODES_MAX, PagePoint, PipeKind};
 
 use crate::RenderError;
 use crate::svg::DOT_RADIUS_PX;
 
 pub(crate) use drape::{end_direction, start_direction};
-pub use placement::ISO_LABEL_CLEARANCE_PX;
+pub use placement::ISO_CARD_CLEARANCE_PX;
+pub use route::{ISO_LINK_CLEARANCE_PX, ISO_STRAIGHT_SHARED_MIN_PX};
 pub(crate) use shapes::unit_direction;
+pub use zoom::{ISO_FILL_FRACTION, ISO_ZOOM_MAX};
 
 use drape::Terrain;
 use placement::Obstacles;
@@ -37,12 +41,15 @@ pub const ISO_MARGIN_PX: f32 = 20.0;
 /// (section 12.2, rule 6).
 pub const ISO_DOT_RADIUS_X_PX: f32 = 4.898_979_5;
 pub const ISO_DOT_RADIUS_Y_PX: f32 = 2.828_427;
-/// Arrowhead length and half width, shared with the flat writer (section 11.2).
+/// Arrowhead length of a pipe, shared with the flat writer (section 11.2).
 const ARROWHEAD_LENGTH_PX: f32 = stencil_layout::ARROWHEAD_LENGTH_PX;
-const ARROWHEAD_HALF_WIDTH_PX: f32 = stencil_layout::ARROWHEAD_WIDTH_PX / 2.0;
-/// The gcp label chip grows the Label run box by the bar padding (section 12.4).
-const GCP_CHIP_PADDING_X_PX: f32 = 16.0;
-const GCP_CHIP_PADDING_Y_PX: f32 = 7.0;
+/// Half width over length of every arrowhead, as in flat.
+const ARROWHEAD_WIDTH_RATIO: f32 =
+    stencil_layout::ARROWHEAD_WIDTH_PX / 2.0 / stencil_layout::ARROWHEAD_LENGTH_PX;
+/// A zone tab grows the Label run box by this padding across and down (section 12.4): the
+/// gcp bar padding for gcp, a smaller one for every other zone.
+const GCP_TAB_PADDING_PX: (f32, f32) = (16.0, 7.0);
+const ZONE_TAB_PADDING_PX: (f32, f32) = (10.0, 5.0);
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct ScreenPoint {
@@ -74,9 +81,14 @@ pub struct IsoScene {
     /// Painter order (section 12.5): body nodes in geometry order, then link tags in link
     /// order.
     pub billboards: Vec<Billboard>,
-    /// One per `PageGeometry.links` entry: the routed polyline laid over the slabs and cut
-    /// back at its endpoint blocks (section 12.3, rule 7), in flat px.
+    /// One per `PageGeometry.links` entry: the routed polyline adjusted by section 12.3
+    /// rule 8, laid over the slabs and cut back at its endpoint blocks (rule 7), in zoomed
+    /// flat px.
     pub link_paths: Vec<Vec<IsoPoint>>,
+    /// The kind of each link, in `link_paths` order.
+    pub link_kinds: Vec<PipeKind>,
+    /// The body zoom of section 12.2, rule 7.
+    pub zoom: f32,
 }
 
 /// A body node's solid. Beyond the section 12.2 fields it carries the node's pointer and
@@ -96,6 +108,8 @@ pub struct Solid {
     /// True when the solid's faces are filled in every theme, so it hides what was drawn
     /// before it: a slab with height and every block except Note and Frame.
     pub opaque: bool,
+    /// The node's border box in zoomed flat px.
+    pub footprint: BoxRect,
 }
 
 impl Solid {
@@ -151,6 +165,9 @@ pub struct Billboard {
     /// The screen ink boxes of the billboard's text runs, offset included. The check of
     /// section 12.7 tests these against slab edges.
     pub marks: Vec<BoxRect>,
+    /// True when every mark must lie inside the owner block's silhouette: the text of a
+    /// Fact, Note, Text, Callout or Frame, which is laid out to fit its block.
+    pub contained: bool,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -203,6 +220,15 @@ pub fn is_ring_zone(node: &NodeGeometry) -> bool {
 
 fn is_gcp_zone(node: &NodeGeometry) -> bool {
     node.tag == NodeTag::Zone && node.kind == Some("gcp")
+}
+
+/// The padding of a zone's tab around its Label run.
+fn tab_padding(node: &NodeGeometry) -> (f32, f32) {
+    if is_gcp_zone(node) {
+        GCP_TAB_PADDING_PX
+    } else {
+        ZONE_TAB_PADDING_PX
+    }
 }
 
 /// The parts a node's billboard redraws (section 12.4), by the node's tag. The Zone label
@@ -272,8 +298,8 @@ fn union(first: BoxRect, second: BoxRect) -> BoxRect {
     }
 }
 
-/// The union of a node's member boxes, grown to the chip for a gcp zone; None when the node
-/// has no member part.
+/// The union of a node's member boxes, grown to the tab for a zone; None when the node has
+/// no member part.
 pub(crate) fn billboard_flat_box(node: &NodeGeometry) -> Option<BoxRect> {
     let flat = node
         .parts
@@ -281,12 +307,13 @@ pub(crate) fn billboard_flat_box(node: &NodeGeometry) -> Option<BoxRect> {
         .filter(|part| billboard_member(node.tag, part.name))
         .map(member_box)
         .reduce(union)?;
-    if is_gcp_zone(node) {
+    if node.tag == NodeTag::Zone {
+        let (across, down) = tab_padding(node);
         return Some(BoxRect {
-            x: flat.x - GCP_CHIP_PADDING_X_PX,
-            y: flat.y - GCP_CHIP_PADDING_Y_PX,
-            width: flat.width + 2.0 * GCP_CHIP_PADDING_X_PX,
-            height: flat.height + 2.0 * GCP_CHIP_PADDING_Y_PX,
+            x: flat.x - across,
+            y: flat.y - down,
+            width: flat.width + 2.0 * across,
+            height: flat.height + 2.0 * down,
         });
     }
     Some(flat)
@@ -347,6 +374,22 @@ struct NodeFacts {
     in_body: Vec<bool>,
     /// Top of the nearest enclosing Zone's solid, 0 without a Zone ancestor.
     slab_top: Vec<f32>,
+}
+
+/// True when a zone encloses node `index`. Parents precede children, so the walk ends
+/// within `nodes.len()` steps.
+pub(crate) fn has_zone_ancestor(geometry: &PageGeometry, index: usize) -> bool {
+    let mut current = geometry.nodes.get(index).and_then(|node| node.parent);
+    for _ in 0..geometry.nodes.len() {
+        let Some(parent) = current.and_then(|parent| geometry.nodes.get(parent)) else {
+            return false;
+        };
+        if parent.tag == NodeTag::Zone {
+            return true;
+        }
+        current = parent.parent;
+    }
+    false
 }
 
 /// The height of a zone's solid.
@@ -418,9 +461,20 @@ fn solid_shape(node: &NodeGeometry, slab_top: f32) -> Option<(SolidShape, f32, f
     }
 }
 
+/// The point of a card's billboard that stands on the projected center of its top face:
+/// the icon's center, or the box center for a card without an icon, relative to the flat
+/// box's top-left corner (section 12.4, rule 2).
+fn card_anchor(node: &NodeGeometry, flat: BoxRect) -> (f32, f32) {
+    match node.part(PartName::Icon) {
+        Some(icon) => {
+            let (icon_x, icon_y) = center(icon.bounds);
+            (icon_x - flat.x, icon_y - flat.y)
+        }
+        None => (flat.width / 2.0, flat.height / 2.0),
+    }
+}
+
 /// The billboard of a body node before any offset, or None for a node without members.
-/// A non-gcp zone gets the fallback placement of section 12.4 here; `place_zone_labels`
-/// moves it onto open floor when it can.
 fn node_billboard(
     index: usize,
     node: &NodeGeometry,
@@ -432,20 +486,28 @@ fn node_billboard(
     let top_z = base_z + height;
     let (z, screen, role) = match shape {
         SolidShape::Slab => {
-            let z = top_z + ISO_BLOCK_HEIGHT_PX;
-            let corner = project_point(flat.x, flat.y, z, ZERO_OFFSET);
+            let corner = project_point(node.bounds.x, node.bounds.y, top_z, ZERO_OFFSET);
+            let tab_corner = ScreenPoint {
+                x: corner.x,
+                y: corner.y - flat.height / 2.0,
+            };
             (
-                z,
-                box_at(corner, flat.width, flat.height),
+                top_z,
+                box_at(tab_corner, flat.width, flat.height),
                 BillboardRole::Content,
             )
         }
         SolidShape::Block if node.tag == NodeTag::Pcard => {
             let (center_x, center_y) = center(node.bounds);
             let anchor = project_point(center_x, center_y, top_z, ZERO_OFFSET);
+            let (across, down) = card_anchor(node, flat);
+            let corner = ScreenPoint {
+                x: anchor.x - across,
+                y: anchor.y - down,
+            };
             (
                 top_z,
-                box_around(anchor, flat.width, flat.height),
+                box_at(corner, flat.width, flat.height),
                 BillboardRole::Content,
             )
         }
@@ -475,8 +537,12 @@ fn node_billboard(
         flat,
         z,
         screen,
-        opaque: role == BillboardRole::Tag || is_gcp_zone(node),
+        opaque: role == BillboardRole::Tag || node.tag == NodeTag::Zone,
         marks,
+        contained: matches!(
+            node.tag,
+            NodeTag::Fact | NodeTag::Note | NodeTag::Text | NodeTag::Callout | NodeTag::Frame
+        ),
     })
 }
 
@@ -531,15 +597,31 @@ impl Extent {
 
 const ZERO_OFFSET: ScreenPoint = ScreenPoint { x: 0.0, y: 0.0 };
 
-/// The three flat vertices of an arrowhead whose tip is `tip` and which points along the
-/// unit vector (direction_x, direction_y): tip, then the two base corners.
-pub(crate) fn arrowhead_vertices(tip: (f32, f32), direction: (f32, f32)) -> [(f32, f32); 3] {
+/// Flat length of a link arrowhead under iso, by kind (section 12.3, rule 7). Each is at
+/// least four times the widest stroke the kind has in any theme, and it does not depend on
+/// the theme, so the drawn canvas does not either.
+pub fn iso_link_arrowhead_length(kind: PipeKind) -> f32 {
+    match kind {
+        PipeKind::Blue => 18.0,
+        PipeKind::Dash => 15.0,
+        PipeKind::Gray | PipeKind::Pink | PipeKind::Deny => 14.0,
+    }
+}
+
+/// The three flat vertices of an arrowhead of `length` whose tip is `tip` and which points
+/// along the unit vector (direction_x, direction_y): tip, then the two base corners.
+pub(crate) fn arrowhead_vertices(
+    tip: (f32, f32),
+    direction: (f32, f32),
+    length: f32,
+) -> [(f32, f32); 3] {
     let (tip_x, tip_y) = tip;
     let (direction_x, direction_y) = direction;
-    let base_x = tip_x - direction_x * ARROWHEAD_LENGTH_PX;
-    let base_y = tip_y - direction_y * ARROWHEAD_LENGTH_PX;
-    let across_x = -direction_y * ARROWHEAD_HALF_WIDTH_PX;
-    let across_y = direction_x * ARROWHEAD_HALF_WIDTH_PX;
+    let half_width = length * ARROWHEAD_WIDTH_RATIO;
+    let base_x = tip_x - direction_x * length;
+    let base_y = tip_y - direction_y * length;
+    let across_x = -direction_y * half_width;
+    let across_y = direction_x * half_width;
     [
         (tip_x, tip_y),
         (base_x + across_x, base_y + across_y),
@@ -582,7 +664,7 @@ fn add_surface_extent(extent: &mut Extent, node: &NodeGeometry, z: f32) {
                     dot_center.0 + outward.0 * DOT_RADIUS_PX,
                     dot_center.1 + outward.1 * DOT_RADIUS_PX,
                 );
-                for (x, y) in arrowhead_vertices(tip, outward) {
+                for (x, y) in arrowhead_vertices(tip, outward, ARROWHEAD_LENGTH_PX) {
                     extent.add(project_point(x, y, z, ZERO_OFFSET));
                 }
             }
@@ -609,12 +691,40 @@ fn path_strokes(path: &[IsoPoint]) -> Vec<(ScreenPoint, ScreenPoint)> {
         .collect()
 }
 
-/// Every link path, laid over the filled slabs and cut back at its endpoint blocks.
+/// A link's routed polyline with the adjustments of section 12.3 rule 8: one leg across two
+/// facing sides that share a span, then every inner leg moved clear of the zone edges.
+fn adjusted_route(route: &LinkRoute, geometry: &PageGeometry, solids: &[Solid]) -> Vec<PagePoint> {
+    let blocks: Vec<BoxRect> = solids
+        .iter()
+        .filter(|solid| solid.shape == SolidShape::Block)
+        .map(|solid| solid.footprint)
+        .collect();
+    let zones: Vec<BoxRect> = solids
+        .iter()
+        .filter(|solid| solid.shape == SolidShape::Slab)
+        .map(|solid| solid.footprint)
+        .collect();
+    let ends = (
+        geometry.nodes.get(route.from_node),
+        geometry.nodes.get(route.to_node),
+    );
+    let straight = match ends {
+        (Some(from), Some(to)) => {
+            route::straightened(&route.points, from.bounds, to.bounds, &blocks)
+        }
+        _ => None,
+    };
+    let points = straight.unwrap_or_else(|| route.points.clone());
+    route::kept_clear(&points, &zones, &blocks)
+}
+
+/// Every link: its adjusted flat route, and its path laid over the filled slabs and cut back
+/// at its endpoint blocks.
 fn link_paths(
     geometry: &PageGeometry,
     terrain: &[Terrain],
     solids: &[Solid],
-) -> Vec<Vec<IsoPoint>> {
+) -> Vec<(Vec<PagePoint>, Vec<IsoPoint>)> {
     let block_silhouette = |node: usize| {
         solids
             .iter()
@@ -626,71 +736,123 @@ fn link_paths(
         .iter()
         .take(LINKS_MAX)
         .map(|route| {
-            let mut path = drape::drape(&route.points, terrain);
+            let points = adjusted_route(route, geometry, solids);
+            let mut path = drape::drape(&points, terrain);
             if let Some(outline) = block_silhouette(route.from_node) {
                 drape::trim_start_at(&mut path, &outline);
             }
             if let Some(outline) = block_silhouette(route.to_node) {
                 drape::trim_end_at(&mut path, &outline);
             }
-            path
+            (points, path)
         })
         .collect()
 }
 
-/// True when `ancestor` is a strict ancestor of `index`. Parents precede children, so the
-/// walk ends within `nodes.len()` steps.
-fn is_ancestor(geometry: &PageGeometry, ancestor: usize, index: usize) -> bool {
-    let mut current = geometry.nodes.get(index).and_then(|node| node.parent);
-    for _ in 0..geometry.nodes.len() {
-        let Some(parent) = current else {
-            return false;
-        };
-        if parent == ancestor {
-            return true;
+/// Pitch of the candidate tag centers along a link.
+const TAG_CANDIDATE_STEP_PX: f32 = 4.0;
+/// The candidate pitch along a link is coarsened until it gives at most this many.
+const TAG_CANDIDATES_MAX: usize = 1024;
+
+/// Candidate screen centers for a link tag, before any offset, with the terrain height under
+/// each: points along the adjusted route, nearest the middle of its longest leg first
+/// (section 12.4, rule 3).
+fn tag_candidates(points: &[PagePoint], terrain: &[Terrain]) -> Vec<(ScreenPoint, f32)> {
+    let legs = route::legs(points);
+    let total: f32 = legs.iter().map(route::FlatSegment::length).sum();
+    let mut preferred = 0.0;
+    let mut longest = f32::NEG_INFINITY;
+    let mut walked = 0.0;
+    for leg in &legs {
+        let length = leg.length();
+        if length > longest + GEOMETRY_EPSILON {
+            longest = length;
+            preferred = walked + length / 2.0;
         }
-        current = geometry.nodes.get(parent).and_then(|node| node.parent);
+        walked += length;
     }
-    false
+    let mut step = TAG_CANDIDATE_STEP_PX;
+    for _ in 0..16 {
+        if ((total / step) as usize) < TAG_CANDIDATES_MAX {
+            break;
+        }
+        step *= 2.0;
+    }
+    let count = ((total / step) as usize + 1).min(TAG_CANDIDATES_MAX);
+    let mut distances: Vec<f32> = (0..count).map(|index| index as f32 * step).collect();
+    distances.push(preferred);
+    distances.sort_by(|first, second| {
+        (first - preferred)
+            .abs()
+            .total_cmp(&(second - preferred).abs())
+    });
+    distances
+        .into_iter()
+        .filter_map(|distance| {
+            let mut remaining = distance;
+            for leg in &legs {
+                let length = leg.length();
+                if remaining <= length + GEOMETRY_EPSILON {
+                    let fraction = if length > 0.0 {
+                        (remaining / length).clamp(0.0, 1.0)
+                    } else {
+                        0.0
+                    };
+                    let x = leg.start.x + fraction * (leg.end.x - leg.start.x);
+                    let y = leg.start.y + fraction * (leg.end.y - leg.start.y);
+                    let z = drape::ground_z(terrain, x, y);
+                    return Some((project_point(x, y, z, ZERO_OFFSET), z));
+                }
+                remaining -= length;
+            }
+            None
+        })
+        .collect()
 }
 
-/// What a pending billboard is placed on.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum Surface {
-    /// A Pcard's icon and label, somewhere over its block's top face.
-    Card,
-    /// A zone label, on open floor of the zone's top face.
-    Zone,
+const GEOMETRY_EPSILON: f32 = stencil_layout::GEOMETRY_EPSILON_PX;
+
+/// A link tag waiting for placement: its billboard index, its link index and the candidate
+/// centers along the link.
+struct PendingTag {
+    billboard: usize,
+    link: usize,
+    candidates: Vec<(ScreenPoint, f32)>,
 }
 
-/// Moves each pending billboard, in order, to the first clear spot on its surface
-/// (section 12.4, rule 3): clear of the other blocks, of the slabs nested in a zone, of
-/// every visible stroke and of every billboard already placed. A billboard with no clear
-/// spot keeps its first placement, which `iso-labels-clear` then reports.
+/// Everything the billboard placement of section 12.4 rule 3 reads.
+struct PlacementInput<'a> {
+    solids: &'a [Solid],
+    /// Visible slab edges, every link path and every wire and spine.
+    strokes: &'a [(ScreenPoint, ScreenPoint)],
+    /// The strokes of each link's path, in link order.
+    link_strokes: &'a [Vec<(ScreenPoint, ScreenPoint)>],
+    /// Wires and spines.
+    surface_strokes: &'a [(ScreenPoint, ScreenPoint)],
+}
+
+/// Moves each link tag along its link to the first spot clear of every block, every other
+/// link and every billboard placed before it, then each card billboard to the first clear
+/// spot over its block (section 12.4, rule 3). A billboard with no clear spot keeps its
+/// first placement, which `iso-labels-clear` then reports.
 fn place_billboards(
-    geometry: &PageGeometry,
-    solids: &[Solid],
+    input: &PlacementInput<'_>,
     billboards: &mut [Billboard],
-    pending: &[(usize, Surface)],
-    strokes: &[(ScreenPoint, ScreenPoint)],
+    tags: &[PendingTag],
+    cards: &[usize],
 ) {
-    for (position, &(billboard_index, surface)) in pending.iter().enumerate() {
-        let Some(billboard) = billboards.get(billboard_index) else {
-            continue;
-        };
-        let Some(owner) = billboard.node else {
-            continue;
-        };
-        let (Some(solid), Some(node)) = (
-            solids.iter().find(|solid| solid.node == owner),
-            geometry.nodes.get(owner),
-        ) else {
-            continue;
-        };
-        let unplaced: Vec<usize> = pending
+    let blocks: Vec<&[ScreenPoint]> = input
+        .solids
+        .iter()
+        .filter(|solid| solid.shape == SolidShape::Block)
+        .map(|solid| solid.silhouette.as_slice())
+        .collect();
+    for (position, tag) in tags.iter().enumerate() {
+        let unplaced: Vec<usize> = tags
             .iter()
             .skip(position)
-            .map(|(index, _)| *index)
+            .map(|pending| pending.billboard)
+            .chain(cards.iter().copied())
             .collect();
         let boxes: Vec<BoxRect> = billboards
             .iter()
@@ -698,46 +860,72 @@ fn place_billboards(
             .filter(|(index, _)| !unplaced.contains(index))
             .map(|(_, placed)| placed.screen)
             .collect();
-        let shapes: Vec<&[ScreenPoint]> = solids
+        let mut strokes: Vec<(ScreenPoint, ScreenPoint)> = input.surface_strokes.to_vec();
+        for (other, other_strokes) in input.link_strokes.iter().enumerate() {
+            if other != tag.link {
+                strokes.extend_from_slice(other_strokes);
+            }
+        }
+        let obstacles = Obstacles {
+            shapes: blocks.clone(),
+            strokes,
+            boxes,
+        };
+        let Some(billboard) = billboards.get(tag.billboard) else {
+            continue;
+        };
+        let size = (billboard.screen.width, billboard.screen.height);
+        let found = placement::place_centered(size, &tag.candidates, &obstacles);
+        if let (Some((screen, z)), Some(slot)) = (found, billboards.get_mut(tag.billboard)) {
+            slot.marks = vec![screen];
+            slot.screen = screen;
+            slot.z = z;
+        }
+    }
+    for (position, &billboard_index) in cards.iter().enumerate() {
+        let Some(billboard) = billboards.get(billboard_index) else {
+            continue;
+        };
+        let Some(owner) = billboard.node else {
+            continue;
+        };
+        let Some(solid) = input.solids.iter().find(|solid| solid.node == owner) else {
+            continue;
+        };
+        let unplaced: Vec<usize> = cards.iter().skip(position).copied().collect();
+        let boxes: Vec<BoxRect> = billboards
             .iter()
-            .filter(|other| match surface {
-                Surface::Card => other.shape == SolidShape::Block && other.node != owner,
-                Surface::Zone => {
-                    other.shape == SolidShape::Block
-                        || (other.shape == SolidShape::Slab
-                            && is_ancestor(geometry, owner, other.node))
-                }
-            })
+            .enumerate()
+            .filter(|(index, _)| !unplaced.contains(index))
+            .map(|(_, placed)| placed.screen)
+            .collect();
+        let shapes: Vec<&[ScreenPoint]> = input
+            .solids
+            .iter()
+            .filter(|other| other.shape == SolidShape::Block && other.node != owner)
             .map(|other| other.silhouette.as_slice())
             .collect();
         let obstacles = Obstacles {
             shapes,
-            strokes: strokes.to_vec(),
+            strokes: input.strokes.to_vec(),
             boxes,
         };
         let top_z = solid.base_z + solid.height;
         let origin = billboard.screen;
         let marks = moved(&billboard.marks, (-origin.x, -origin.y));
-        let face = placement::top_face(node.bounds, top_z);
-        let request = match surface {
-            Surface::Card => placement::Request {
-                region: node.bounds,
-                z: top_z,
-                size: (origin.width, origin.height),
-                marks: &marks,
-                within: None,
-                clearance: placement::ISO_CARD_CLEARANCE_PX,
-                order: placement::Order::FromCenter,
-            },
-            Surface::Zone => placement::Request {
-                region: node.bounds,
-                z: top_z,
-                size: (origin.width, origin.height),
-                marks: &marks,
-                within: Some(&face),
-                clearance: ISO_LABEL_CLEARANCE_PX,
-                order: placement::Order::FromBackCorner,
-            },
+        let anchor = project_point(
+            solid.footprint.x + solid.footprint.width / 2.0,
+            solid.footprint.y + solid.footprint.height / 2.0,
+            top_z,
+            ZERO_OFFSET,
+        );
+        let request = placement::Request {
+            region: solid.footprint,
+            z: top_z,
+            size: (origin.width, origin.height),
+            anchor: (anchor.x - origin.x, anchor.y - origin.y),
+            marks: &marks,
+            clearance: placement::ISO_CARD_CLEARANCE_PX,
         };
         if let Some(screen) = placement::place(&request, &obstacles)
             && let Some(slot) = billboards.get_mut(billboard_index)
@@ -765,8 +953,9 @@ fn visible_strokes(
     strokes
 }
 
-/// Asserts nodes[0] is the root and /body is present, then projects the body.
-pub fn project_page(geometry: &PageGeometry) -> Result<IsoScene, RenderError> {
+/// The body index and per-node facts, after asserting nodes[0] is the root and /body is
+/// present.
+fn body_facts(geometry: &PageGeometry) -> Result<(usize, NodeFacts), RenderError> {
     let root = NodePointer::root();
     match geometry.nodes.first() {
         Some(first) if first.pointer == root => {}
@@ -781,11 +970,10 @@ pub fn project_page(geometry: &PageGeometry) -> Result<IsoScene, RenderError> {
         }
     }
     let body_pointer = root.child("body");
-    let Some((body_index, body)) = geometry
+    let Some(body_index) = geometry
         .nodes
         .iter()
-        .enumerate()
-        .find(|(_, node)| node.pointer == body_pointer)
+        .position(|node| node.pointer == body_pointer)
     else {
         return Err(RenderError::GeometryMismatch {
             expected: body_pointer,
@@ -793,21 +981,91 @@ pub fn project_page(geometry: &PageGeometry) -> Result<IsoScene, RenderError> {
         });
     };
     let facts = node_facts(geometry, body_index)?;
+    Ok((body_index, facts))
+}
+
+/// The geometry the projection draws: the body zoomed by section 12.2 rule 7, and the zoom.
+/// The SVG writer draws faces and billboards from it, so they agree with the scene.
+pub fn zoomed_geometry(geometry: &PageGeometry) -> Result<(PageGeometry, f32), RenderError> {
+    let (body_index, facts) = body_facts(geometry)?;
+    let origin = geometry
+        .nodes
+        .get(body_index)
+        .map_or((0.0, 0.0), |body| (body.bounds.x, body.bounds.y));
+    let zoom = zoom::fit_zoom(geometry, &facts.in_body, geometry.canvas.width);
+    let mut zoomed = zoom::zoomed(geometry, &facts.in_body, origin, zoom);
+    for node in &mut zoomed.nodes {
+        if node.tag == NodeTag::Pcard {
+            stack_card(node);
+        }
+    }
+    Ok((zoomed, zoom))
+}
+
+/// Gap between a card's icon chip and the text stacked under it.
+const CARD_STACK_GAP_PX: f32 = 4.0;
+
+/// Moves a card's billboard text under its icon, centered on it (section 12.4, rule 2). The
+/// flat card puts the text beside the icon, which on a thin iso block reaches past the
+/// block's back edge and into the zone edge behind it.
+fn stack_card(node: &mut NodeGeometry) {
+    let Some(icon) = node.part(PartName::Icon).map(|part| part.bounds) else {
+        return;
+    };
+    let text = node
+        .parts
+        .iter()
+        .filter(|part| part.name != PartName::Icon && billboard_member(node.tag, part.name))
+        .map(member_box)
+        .reduce(union);
+    let Some(text) = text else {
+        return;
+    };
+    let delta = (
+        icon.x + icon.width / 2.0 - (text.x + text.width / 2.0),
+        icon.y + icon.height / 2.0 + crate::svg::ICON_CHIP_SIZE_PX / 2.0 + CARD_STACK_GAP_PX
+            - text.y,
+    );
+    for part in &mut node.parts {
+        if part.name != PartName::Icon && billboard_member(node.tag, part.name) {
+            part.bounds.x += delta.0;
+            part.bounds.y += delta.1;
+        }
+    }
+}
+
+/// Asserts nodes[0] is the root and /body is present, then zooms and projects the body.
+pub fn project_page(geometry: &PageGeometry) -> Result<IsoScene, RenderError> {
+    let (zoomed, zoom) = zoomed_geometry(geometry)?;
+    project_zoomed(&zoomed, zoom)
+}
+
+/// `project_page` over a geometry `zoomed_geometry` returned.
+pub fn project_zoomed(geometry: &PageGeometry, zoom: f32) -> Result<IsoScene, RenderError> {
+    let (body_index, facts) = body_facts(geometry)?;
+    let Some(body) = geometry.nodes.get(body_index) else {
+        return Err(RenderError::GeometryMismatch {
+            expected: NodePointer::root().child("body"),
+            found: NodePointer::root().child("<absent>"),
+        });
+    };
 
     let mut extent = Extent::empty();
     let mut solids = Vec::new();
     let mut billboards = Vec::new();
-    let mut pending_cards = Vec::new();
-    let mut pending_zones = Vec::new();
-    let mut drawn_over = Vec::new();
+    let mut cards = Vec::new();
+    let mut surface_strokes = Vec::new();
     for (index, node) in geometry.nodes.iter().enumerate() {
         if !facts.in_body.get(index).copied().unwrap_or(false) {
             continue;
         }
         let slab_top = facts.slab_top.get(index).copied().unwrap_or(0.0);
-        let Some((shape, base_z, height)) = solid_shape(node, slab_top) else {
+        let Some((shape, flat_base_z, flat_height)) = solid_shape(node, slab_top) else {
             continue;
         };
+        // Heights scale with the zoom, so a zoomed scene keeps the proportions of section
+        // 12.3.
+        let (base_z, height) = (flat_base_z * zoom, flat_height * zoom);
         let outline = silhouette(node.bounds, base_z, base_z + height, ZERO_OFFSET);
         match shape {
             SolidShape::Slab | SolidShape::Block => {
@@ -817,7 +1075,7 @@ pub fn project_page(geometry: &PageGeometry) -> Result<IsoScene, RenderError> {
             }
             SolidShape::Surface => {
                 add_surface_extent(&mut extent, node, base_z);
-                drawn_over.extend(surface_stroke(node, base_z));
+                surface_strokes.extend(surface_stroke(node, base_z));
             }
         }
         let opaque = match shape {
@@ -825,7 +1083,7 @@ pub fn project_page(geometry: &PageGeometry) -> Result<IsoScene, RenderError> {
             SolidShape::Block => !matches!(node.tag, NodeTag::Note | NodeTag::Frame),
             SolidShape::Surface => false,
         };
-        let solid = Solid {
+        solids.push(Solid {
             node: index,
             pointer: node.pointer.clone(),
             shape,
@@ -833,14 +1091,11 @@ pub fn project_page(geometry: &PageGeometry) -> Result<IsoScene, RenderError> {
             height,
             silhouette: outline,
             opaque,
-        };
-        solids.push(solid);
+            footprint: node.bounds,
+        });
         if let Some(billboard) = node_billboard(index, node, shape, base_z, height) {
-            if shape == SolidShape::Slab && !is_gcp_zone(node) {
-                pending_zones.push((billboards.len(), Surface::Zone));
-            }
             if node.tag == NodeTag::Pcard {
-                pending_cards.push((billboards.len(), Surface::Card));
+                cards.push(billboards.len());
             }
             billboards.push(billboard);
         }
@@ -849,33 +1104,42 @@ pub fn project_page(geometry: &PageGeometry) -> Result<IsoScene, RenderError> {
     let terrain: Vec<Terrain> = solids
         .iter()
         .filter(|solid| solid.shape == SolidShape::Slab && solid.height > 0.0)
-        .filter_map(|solid| {
-            geometry.nodes.get(solid.node).map(|node| Terrain {
-                bounds: node.bounds,
-                top: solid.base_z + solid.height,
-            })
+        .map(|solid| Terrain {
+            bounds: solid.footprint,
+            top: solid.base_z + solid.height,
         })
         .collect();
-    let paths = link_paths(geometry, &terrain, &solids);
-    for (route, path) in geometry.links.iter().zip(&paths) {
-        drawn_over.extend(path_strokes(path));
+    let routes = link_paths(geometry, &terrain, &solids);
+    let mut link_strokes = Vec::with_capacity(routes.len());
+    let mut tags = Vec::new();
+    for (position, (route, (points, path))) in geometry.links.iter().zip(&routes).enumerate() {
+        link_strokes.push(path_strokes(path));
         for point in path {
             extent.add(project_point(point.x, point.y, point.z, ZERO_OFFSET));
         }
         // LinkRoute does not carry the arrow value, so both ends get an arrowhead extent.
+        let head = iso_link_arrowhead_length(route.kind);
         for (tip, direction) in [start_direction(path), end_direction(path)]
             .into_iter()
             .flatten()
         {
-            for (x, y) in arrowhead_vertices((tip.x, tip.y), direction) {
+            for (x, y) in arrowhead_vertices((tip.x, tip.y), direction, head) {
                 extent.add(project_point(x, y, tip.z, ZERO_OFFSET));
             }
         }
         if let Some(tag) = route.tag {
-            let (center_x, center_y) = center(tag);
-            let z = drape::ground_z(&terrain, center_x, center_y);
-            let anchor = project_point(center_x, center_y, z, ZERO_OFFSET);
+            let candidates = tag_candidates(points, &terrain);
+            let (anchor, z) = candidates.first().copied().unwrap_or_else(|| {
+                let (center_x, center_y) = center(tag);
+                let z = drape::ground_z(&terrain, center_x, center_y);
+                (project_point(center_x, center_y, z, ZERO_OFFSET), z)
+            });
             let screen = box_around(anchor, tag.width, tag.height);
+            tags.push(PendingTag {
+                billboard: billboards.len(),
+                link: position,
+                candidates,
+            });
             billboards.push(Billboard {
                 owner: NodePointer::root().child("links").index(route.index),
                 node: None,
@@ -885,12 +1149,22 @@ pub fn project_page(geometry: &PageGeometry) -> Result<IsoScene, RenderError> {
                 screen,
                 opaque: true,
                 marks: vec![screen],
+                contained: false,
             });
         }
     }
+    let mut drawn_over = surface_strokes.clone();
+    for strokes in &link_strokes {
+        drawn_over.extend_from_slice(strokes);
+    }
     let strokes = visible_strokes(&solids, &drawn_over);
-    let pending: Vec<(usize, Surface)> = pending_cards.into_iter().chain(pending_zones).collect();
-    place_billboards(geometry, &solids, &mut billboards, &pending, &strokes);
+    let input = PlacementInput {
+        solids: &solids,
+        strokes: &strokes,
+        link_strokes: &link_strokes,
+        surface_strokes: &surface_strokes,
+    };
+    place_billboards(&input, &mut billboards, &tags, &cards);
     for billboard in &billboards {
         extent.add_box(billboard.screen);
     }
@@ -935,7 +1209,9 @@ pub fn project_page(geometry: &PageGeometry) -> Result<IsoScene, RenderError> {
         footer_shift,
         solids,
         billboards,
-        link_paths: paths,
+        link_paths: routes.into_iter().map(|(_, path)| path).collect(),
+        link_kinds: geometry.links.iter().map(|route| route.kind).collect(),
+        zoom,
     })
 }
 
@@ -1042,8 +1318,112 @@ pub fn iso_labels_clear(scene: Option<&IsoScene>) -> CheckReport {
             }
         }
     }
+    for billboard in billboards.iter().filter(|billboard| billboard.contained) {
+        let Some(block) = solids
+            .iter()
+            .find(|solid| Some(solid.node) == billboard.node && solid.shape == SolidShape::Block)
+        else {
+            continue;
+        };
+        examined += 1;
+        let leaves = billboard.marks.iter().any(|mark| {
+            !shapes::rectangle_corners(*mark)
+                .into_iter()
+                .all(|corner| shapes::point_in_convex(corner, &block.silhouette))
+        });
+        if leaves {
+            defects.push(Defect {
+                pointer: billboard.owner.clone(),
+                message: format!("{} leaves its block", describe(billboard)),
+            });
+        }
+    }
     CheckReport {
         check: CheckName::IsoLabelsClear,
+        examined,
+        defects,
+        not_applicable: None,
+    }
+}
+
+/// NotApplicable with reason "projection is flat" for None and "page has no links" for a
+/// scene without links; section 12.7 otherwise. Each leg of each drawn link path, taken in
+/// flat px with its risers dropped, is one examined unit.
+pub fn iso_links_clear(scene: Option<&IsoScene>) -> CheckReport {
+    let Some(scene) = scene else {
+        return CheckReport::not_applicable(CheckName::IsoLinksClear, "projection is flat");
+    };
+    if scene.link_paths.is_empty() {
+        return CheckReport::not_applicable(CheckName::IsoLinksClear, "page has no links");
+    }
+    debug_assert!(
+        scene.link_paths.len() <= LINKS_MAX,
+        "iso-links-clear would drop links past {LINKS_MAX}"
+    );
+    let zones: Vec<(&Solid, [route::FlatSegment; 4])> = scene
+        .solids
+        .iter()
+        .take(NODES_MAX)
+        .filter(|solid| solid.shape == SolidShape::Slab)
+        .map(|solid| (solid, route::footprint_edges(solid.footprint)))
+        .collect();
+    let mut examined: u64 = 0;
+    let mut defects = Vec::new();
+    for (index, (path, kind)) in scene
+        .link_paths
+        .iter()
+        .zip(&scene.link_kinds)
+        .take(LINKS_MAX)
+        .enumerate()
+    {
+        let pointer = NodePointer::root().child("links").index(index);
+        let flat: Vec<PagePoint> = path
+            .iter()
+            .map(|point| PagePoint {
+                x: point.x,
+                y: point.y,
+            })
+            .collect();
+        let legs = route::legs(&route::corners(&flat));
+        let least_last = 2.0 * iso_link_arrowhead_length(*kind);
+        for (leg_index, leg) in legs.iter().enumerate() {
+            examined += 1;
+            for (zone, edges) in &zones {
+                let closest = edges
+                    .iter()
+                    .filter_map(|edge| route::parallel_gap(*leg, *edge))
+                    .fold(f32::INFINITY, f32::min);
+                if closest < ISO_LINK_CLEARANCE_PX - GEOMETRY_EPSILON {
+                    defects.push(Defect {
+                        pointer: pointer.clone(),
+                        message: format!(
+                            "leg {leg_index} runs {closest:.2} px beside an edge of zone {}, closer than {ISO_LINK_CLEARANCE_PX}",
+                            zone.pointer
+                        ),
+                    });
+                }
+            }
+            if let Some(previous) = leg_index.checked_sub(1).and_then(|before| legs.get(before))
+                && route::turns_back(*previous, *leg)
+            {
+                defects.push(Defect {
+                    pointer: pointer.clone(),
+                    message: format!("leg {leg_index} turns back on the leg before it"),
+                });
+            }
+            if leg_index + 1 == legs.len() && leg.length() < least_last - GEOMETRY_EPSILON {
+                defects.push(Defect {
+                    pointer: pointer.clone(),
+                    message: format!(
+                        "last leg is {:.2} px, shorter than two arrowheads ({least_last:.2} px)",
+                        leg.length()
+                    ),
+                });
+            }
+        }
+    }
+    CheckReport {
+        check: CheckName::IsoLinksClear,
         examined,
         defects,
         not_applicable: None,

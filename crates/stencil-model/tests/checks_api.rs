@@ -5,7 +5,7 @@
 use stencil_model::NodePointer;
 use stencil_model::checks::{CheckName, CheckOutcome, CheckReport, Defect};
 
-const ALL_CHECKS: [(CheckName, &str, &str, &str); 9] = [
+const ALL_CHECKS: [(CheckName, &str, &str, &str); 10] = [
     (
         CheckName::ChildInsideContainer,
         "child-inside-container",
@@ -49,6 +49,12 @@ const ALL_CHECKS: [(CheckName, &str, &str, &str); 9] = [
         "iso-labels-clear",
         "pair",
         "pairs",
+    ),
+    (
+        CheckName::IsoLinksClear,
+        "iso-links-clear",
+        "link leg",
+        "link legs",
     ),
 ];
 

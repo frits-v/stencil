@@ -5,7 +5,7 @@ use stencil_layout::{
     BoxRect, LinkRoute, NodeGeometry, NodeTag, PageGeometry, Part, PartName, TextRun,
 };
 use stencil_model::pointer::NodePointer;
-use stencil_model::text::{TextMeasurer, TextStyleName};
+use stencil_model::text::TextMeasurer;
 use stencil_model::{LINKS_MAX, Link, Node, NodeRef, Page, PipeDir, PipeKind, Projection};
 use stencil_text::CosmicTextMeasurer;
 
@@ -18,15 +18,16 @@ use super::{
 use crate::iso::{
     Billboard, ISO_DOT_RADIUS_X_PX, ISO_DOT_RADIUS_Y_PX, ISO_SLAB_THICKNESS_PX, IsoPoint,
     ScreenPoint, Solid, SolidShape, arrowhead_vertices, billboard_member, end_direction,
-    member_box, project_page, project_point, start_direction,
+    has_zone_ancestor, iso_link_arrowhead_length, member_box, project_point, project_zoomed,
+    start_direction, zoomed_geometry,
 };
 use crate::palette::{
-    DotStyle, FacePaint, ISO_ICON_CHIP_SHADOW_OPACITY, LineStyle, Palette, Stroke,
+    DotStyle, FacePaint, ISO_ICON_CHIP_SHADOW_OPACITY, LineStyle, Palette, Stroke, ZoneTab,
 };
 use crate::{RenderError, SvgDocument, format_number};
 
-/// Radius of the chip behind a gcp label billboard (section 12.4).
-const GCP_CHIP_RADIUS_PX: f32 = 4.0;
+/// Radius of a zone tab (section 12.4).
+const ZONE_TAB_RADIUS_PX: f32 = 4.0;
 /// Padding of the plate behind billboard text that has no box of its own, across and down.
 /// The plate is the color of the surface the text stands on, so it is invisible there and
 /// stops every stroke that runs under the text.
@@ -41,7 +42,9 @@ pub(super) fn render_iso(
     geometry: &PageGeometry,
     expected: &[(NodePointer, DocumentNode<'_>)],
 ) -> Result<SvgDocument, RenderError> {
-    let scene = project_page(geometry)?;
+    let (zoomed, zoom) = zoomed_geometry(geometry)?;
+    let scene = project_zoomed(&zoomed, zoom)?;
+    let geometry = &zoomed;
     let palette = Palette::for_projection(page.theme, Projection::Iso);
     let mut writer = SvgWriter::new(page.canvas, palette);
     let width = format_number(scene.canvas.width);
@@ -113,9 +116,13 @@ pub(super) fn render_iso(
                 writer.write_node(depth + 1, &shifted, *document_node)?;
                 None
             }
-            (_, Some(solid), _) => {
-                writer.write_solid(depth + 1, node, *document_node, solid, scene.offset)?
-            }
+            (_, Some(solid), _) => writer.write_solid(
+                depth + 1,
+                node,
+                *document_node,
+                solid,
+                (scene.offset, scene.zoom),
+            )?,
             (_, None, _) => {
                 writer.write_node(depth + 1, node, *document_node)?;
                 None
@@ -263,6 +270,7 @@ impl SvgWriter {
         &self,
         document_node: DocumentNode<'_>,
         solid: &Solid,
+        zoom: f32,
     ) -> Result<Option<FacePaint>, RenderError> {
         let DocumentNode::Content(NodeRef::Node(content)) = document_node else {
             return Ok(None);
@@ -272,7 +280,7 @@ impl SvgWriter {
         };
         let paint = match content {
             Node::Zone(zone) => {
-                let level = (solid.base_z / ISO_SLAB_THICKNESS_PX).round() as usize;
+                let level = (solid.base_z / (ISO_SLAB_THICKNESS_PX * zoom)).round() as usize;
                 self.palette.slab_faces(zone.kind, level)
             }
             Node::Pcard(_) => {
@@ -306,8 +314,9 @@ impl SvgWriter {
         node: &NodeGeometry,
         document_node: DocumentNode<'_>,
         solid: &Solid,
-        offset: ScreenPoint,
+        placement: (ScreenPoint, f32),
     ) -> Result<Option<String>, RenderError> {
+        let (offset, zoom) = placement;
         let context = self.part_context(document_node);
         if solid.shape == SolidShape::Surface {
             let kind = context.pipe_kind.ok_or_else(|| surface_mismatch(node))?;
@@ -318,7 +327,7 @@ impl SvgWriter {
             }
             return Ok(None);
         }
-        let Some(paint) = self.face_paint(document_node, solid)? else {
+        let Some(paint) = self.face_paint(document_node, solid, zoom)? else {
             return Ok(None);
         };
         let top_z = solid.base_z + solid.height;
@@ -568,7 +577,8 @@ impl SvgWriter {
             (arrows.end, end_center, end_tip, (run_x, run_y)),
         ] {
             if arrow_here {
-                self.write_arrowhead_polygon(depth, tip, outward, z, kind, offset);
+                let head = (tip, outward, arrow_length);
+                self.write_arrowhead_polygon(depth, head, z, kind, offset);
             } else {
                 self.write_ellipse_dot(depth, project_point(center.0, center.1, z, offset), kind);
             }
@@ -576,17 +586,18 @@ impl SvgWriter {
         Ok(())
     }
 
+    /// `head` is the flat tip, the unit direction it points along and its length.
     fn write_arrowhead_polygon(
         &mut self,
         depth: usize,
-        tip: (f32, f32),
-        direction: (f32, f32),
+        head: ((f32, f32), (f32, f32), f32),
         z: f32,
         kind: PipeKind,
         offset: ScreenPoint,
     ) {
+        let (tip, direction, length) = head;
         let corners =
-            arrowhead_vertices(tip, direction).map(|(x, y)| project_point(x, y, z, offset));
+            arrowhead_vertices(tip, direction, length).map(|(x, y)| project_point(x, y, z, offset));
         let color = self.palette.wire_style(kind).stroke.color;
         self.line(
             depth,
@@ -663,7 +674,7 @@ impl SvgWriter {
             ),
         );
         let arrows = ArrowEnds::from_arrow(link.arrow);
-        let arrow_length = stencil_layout::ARROWHEAD_LENGTH_PX;
+        let arrow_length = iso_link_arrowhead_length(route.kind);
         let mut points = path.to_vec();
         let start_head = if arrows.start {
             start_direction(&points)
@@ -683,17 +694,30 @@ impl SvgWriter {
             shorten_end(&mut points, arrow_length);
             points.reverse();
         }
+        let stroke = self.palette.wire_style(route.kind).stroke;
+        // A dashed link skips each riser, so the dash pattern never lands on a slab edge as
+        // a solid tick; the gap reads as one more space between dashes.
+        let skips_risers = stroke.line != LineStyle::Solid;
         let mut data = String::new();
-        for (index, point) in points.iter().enumerate() {
-            let command = if index == 0 { "M" } else { " L" };
+        let mut previous: Option<IsoPoint> = None;
+        for point in &points {
+            let riser = previous.is_some_and(|last| {
+                (last.x - point.x).abs() <= stencil_layout::GEOMETRY_EPSILON_PX
+                    && (last.y - point.y).abs() <= stencil_layout::GEOMETRY_EPSILON_PX
+            });
+            let command = match (previous, skips_risers && riser) {
+                (None, _) => "M",
+                (Some(_), true) => " M",
+                (Some(_), false) => " L",
+            };
             let screen = project_point(point.x, point.y, point.z, offset);
             data.push_str(&format!(
                 "{command} {} {}",
                 format_number(screen.x),
                 format_number(screen.y)
             ));
+            previous = Some(*point);
         }
-        let stroke = self.palette.wire_style(route.kind).stroke;
         self.line(
             depth + 1,
             &format!(
@@ -704,8 +728,7 @@ impl SvgWriter {
         for (tip, direction) in [start_head, end_head].into_iter().flatten() {
             self.write_arrowhead_polygon(
                 depth + 1,
-                (tip.x, tip.y),
-                direction,
+                ((tip.x, tip.y), direction, arrow_length),
                 tip.z,
                 route.kind,
                 offset,
@@ -744,13 +767,14 @@ impl SvgWriter {
                     .get(index)
                     .map(|(_, document_node)| *document_node)
                     .ok_or_else(|| billboard_mismatch(billboard))?;
+                let tab = (node.tag == NodeTag::Zone).then(|| has_zone_ancestor(geometry, index));
                 self.write_node_billboard(
                     depth + 1,
                     node,
                     document_node,
                     billboard,
                     (delta_x, delta_y),
-                    ground,
+                    BillboardGround { ground, tab },
                 )?;
             }
             None => {
@@ -778,15 +802,27 @@ impl SvgWriter {
         document_node: DocumentNode<'_>,
         billboard: &Billboard,
         delta: (f32, f32),
-        ground: Option<&str>,
+        under: BillboardGround<'_>,
     ) -> Result<(), RenderError> {
         let (delta_x, delta_y) = delta;
+        let BillboardGround { ground, tab } = under;
         let context = self.part_context(document_node);
-        if node.tag == NodeTag::Zone && node.kind == Some("gcp") {
-            let chip = shifted_box(billboard.flat, delta_x, delta_y);
-            let paint = self.palette.gcp_label_chip();
-            self.write_box(depth, chip, GCP_CHIP_RADIUS_PX, paint);
-        }
+        let tab_ink = match (document_node, tab) {
+            (DocumentNode::Content(NodeRef::Node(Node::Zone(zone))), Some(nested)) => {
+                let bounds = shifted_box(billboard.flat, delta_x, delta_y);
+                let (fill, border, ink) = match self.palette.iso_zone_tab(zone.kind, nested) {
+                    ZoneTab::Filled { fill, ink } => (fill, None, ink),
+                    ZoneTab::Outline { border, ink } => (
+                        ground.unwrap_or(self.palette.page_background()),
+                        Some(border),
+                        ink,
+                    ),
+                };
+                self.write_rect(depth, bounds, ZONE_TAB_RADIUS_PX, Some(fill), border);
+                Some(ink)
+            }
+            _ => None,
+        };
         let members: Vec<Part> = node
             .parts
             .iter()
@@ -794,9 +830,10 @@ impl SvgWriter {
             .map(|part| shifted_part(part, delta_x, delta_y))
             .collect();
         let plate = ground.unwrap_or(self.palette.page_background());
+        let plates = self.palette.iso_text_plates();
         for part in members
             .iter()
-            .filter(|part| part.text.is_some() && needs_plate(node, part.name))
+            .filter(|part| plates && part.text.is_some() && needs_plate(node, part.name))
         {
             let ink = member_box(part);
             let bounds = BoxRect {
@@ -814,15 +851,12 @@ impl SvgWriter {
             if let Some(run) = &part.text {
                 let style_name = text_style_name(document_node, part.name)
                     .ok_or_else(|| part_mismatch(node, part))?;
-                // Zone names read as labels of the figure, not captions: primary ink.
-                let ink_name = if style_name == TextStyleName::ZoneLabel {
-                    TextStyleName::CardFunction
-                } else {
-                    style_name
+                let fill = match tab_ink {
+                    Some(ink) => ink,
+                    None => self
+                        .palette
+                        .text_ink(style_name, self.canvas, context.pipe_kind),
                 };
-                let fill = self
-                    .palette
-                    .text_ink(ink_name, self.canvas, context.pipe_kind);
                 self.write_text_run(depth, &node.pointer, part.bounds, run, fill)?;
             }
         }
@@ -859,12 +893,20 @@ impl SvgWriter {
     }
 }
 
+/// What a node billboard stands on: the fill of the surface under it, and for a zone
+/// whether another zone encloses it, which decides its tab.
+#[derive(Debug, Clone, Copy)]
+struct BillboardGround<'a> {
+    ground: Option<&'a str>,
+    tab: Option<bool>,
+}
+
 /// Billboard runs that are not drawn on a box of their own: every content run except the
 /// gcp label on its chip, a card's fact and ask in their boxes, and a Frame label on its
 /// chip. Tag runs sit on their tag box.
 fn needs_plate(node: &NodeGeometry, part: PartName) -> bool {
     match node.tag {
-        NodeTag::Zone => node.kind != Some("gcp"),
+        NodeTag::Zone => false,
         NodeTag::Pcard => matches!(part, PartName::FunctionName | PartName::ProductName),
         NodeTag::Fact | NodeTag::Note | NodeTag::Text | NodeTag::Callout => true,
         NodeTag::Frame

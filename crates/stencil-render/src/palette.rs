@@ -380,18 +380,30 @@ impl Palette {
         }
     }
 
-    /// Under iso, center and dusk draw every wire at ISO_WIRE_WIDTH_PX (section 12.6).
+    /// Under iso every wire takes the width of `iso_wire_width` (section 12.6).
     pub fn wire_style(self, kind: PipeKind) -> WireStyle {
         let flat = self.flat_wire_style(kind);
-        match (self.projection, self.theme) {
-            (Projection::Iso, Theme::Center | Theme::Dusk) => WireStyle {
+        match self.projection {
+            Projection::Iso => WireStyle {
                 stroke: Stroke {
-                    width_px: ISO_WIRE_WIDTH_PX,
+                    width_px: self.iso_wire_width(kind),
                     ..flat.stroke
                 },
                 ..flat
             },
-            (Projection::Flat, _) | (Projection::Iso, Theme::Wire) => flat,
+            Projection::Flat => flat,
+        }
+    }
+
+    /// The width of a wire, link or legend swatch of `kind` under iso (section 12.6): the
+    /// blue primary heaviest, the dashed failover two thirds of it, and a gray service call
+    /// a third of it in wire, where one ink leaves weight and pattern to tell them apart.
+    pub fn iso_wire_width(self, kind: PipeKind) -> f32 {
+        match (self.theme, kind) {
+            (_, PipeKind::Blue) => ISO_PRIMARY_WIRE_PX,
+            (Theme::Wire, PipeKind::Gray) => ISO_WIRE_THIN_WIRE_PX,
+            (Theme::Center | Theme::Dusk, PipeKind::Gray) => ISO_SERVICE_WIRE_PX,
+            (_, PipeKind::Dash | PipeKind::Pink | PipeKind::Deny) => ISO_SECONDARY_WIRE_PX,
         }
     }
 
@@ -578,29 +590,76 @@ impl Palette {
         self.page_background()
     }
 
-    /// The chip behind a gcp zone label drawn upright over the slab (section 12.4): the bar
-    /// fill, and in wire a white chip with the tag border.
-    pub fn gcp_label_chip(self) -> BoxPaint {
+    /// True when a chipless billboard run is drawn on a plate of its surface (section 12.4,
+    /// rule 4). Dusk draws none: its surfaces are close in value, and a plate that crosses
+    /// from a block top onto the floor shows as a patch.
+    pub fn iso_text_plates(self) -> bool {
         match self.theme {
-            Theme::Center | Theme::Dusk => BoxPaint {
-                fill: self.gcp_bar_fill(),
-                border: None,
-            },
-            Theme::Wire => BoxPaint {
-                fill: wire::WHITE,
-                border: Some(Stroke {
-                    width_px: wire::BORDER_PX,
-                    line: LineStyle::Solid,
-                    color: wire::INK,
-                }),
-            },
+            Theme::Center | Theme::Wire => true,
+            Theme::Dusk => false,
         }
+    }
+
+    /// The tab of a zone label under iso (section 12.4): filled for a zone with no zone
+    /// around it, brand blue for gcp and neutral for every other kind, and in wire the ink;
+    /// an outline in the zone's border color for a nested zone.
+    pub fn iso_zone_tab(self, kind: ZoneKind, nested: bool) -> ZoneTab {
+        if nested {
+            let color = self.zone_style(kind).border.map_or(
+                self.text_ink(TextStyleName::CardFunction, Canvas::Customer, None),
+                |stroke| stroke.color,
+            );
+            return ZoneTab::Outline {
+                border: Stroke {
+                    width_px: ISO_NESTED_TAB_BORDER_PX,
+                    line: LineStyle::Solid,
+                    color,
+                },
+                ink: self.text_ink(TextStyleName::CardFunction, Canvas::Customer, None),
+            };
+        }
+        let (fill, ink) = match (self.theme, kind) {
+            (Theme::Center, ZoneKind::Gcp) => (GCP_BAR_FILL, TEXT_WHITE),
+            (Theme::Center, _) => (ISO_NEUTRAL_TAB_FILL, TEXT_WHITE),
+            (Theme::Dusk, ZoneKind::Gcp) => (dusk::GCP_BAR_FILL, dusk::GCP_BAR_INK),
+            (Theme::Dusk, _) => (dusk::ISO_NEUTRAL_TAB_FILL, dusk::TEXT_PRIMARY),
+            (Theme::Wire, _) => (wire::INK, wire::WHITE),
+        };
+        ZoneTab::Filled { fill, ink }
     }
 }
 
-/// Stroke width of every wire, link and legend swatch under iso in center and dusk: twice
-/// the gcp outline, so a link never reads as a zone edge.
-pub const ISO_WIRE_WIDTH_PX: f32 = 3.0;
+/// A zone tab's paint: a filled box with light text, or an outline on the surface under it
+/// with the primary ink.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum ZoneTab {
+    Filled {
+        fill: &'static str,
+        ink: &'static str,
+    },
+    Outline {
+        border: Stroke,
+        ink: &'static str,
+    },
+}
+
+/// Stroke width of a blue wire, link and legend swatch under iso: the primary path.
+pub const ISO_PRIMARY_WIRE_PX: f32 = 3.75;
+/// Stroke width of a dash, pink or deny wire under iso: two thirds of the primary.
+pub const ISO_SECONDARY_WIRE_PX: f32 = 2.5;
+/// Stroke width of a gray wire under iso in center and dusk, where its color sets it apart.
+pub const ISO_SERVICE_WIRE_PX: f32 = 2.0;
+/// Stroke width of a gray wire under iso in wire: a third of the primary.
+pub const ISO_WIRE_THIN_WIRE_PX: f32 = 1.25;
+/// Fill of the tab of a zone other than gcp that no zone encloses, in center.
+pub const ISO_NEUTRAL_TAB_FILL: &str = "#5F6368";
+/// Border of a nested zone's outline tab.
+pub const ISO_NESTED_TAB_BORDER_PX: f32 = 1.25;
+/// Width of every solid slab outline and of the vpc ring under iso in wire.
+pub const ISO_WIRE_SLAB_OUTLINE_PX: f32 = 1.5;
+/// The vpc ring under iso in wire: dotted in light gray, so no zone edge shares the dash
+/// pattern or the ink of a link.
+pub const ISO_WIRE_RING_INK: &str = "#999999";
 /// The gcp slab's top-face outline under iso in center and dusk. The brand blue side faces
 /// carry the frame, so the outline stays thin.
 pub const ISO_GCP_OUTLINE_PX: f32 = 1.5;
@@ -640,11 +699,17 @@ impl Palette {
         match self.theme {
             Theme::Center => {
                 let (left, right) = self.brand_or_shaded_sides(kind, base)?;
+                // A solid border is dropped: the shaded sides carry the slab edge, and an
+                // outline in the border hue shows as a seam between top and side.
+                let top_stroke = match (kind, solid_border) {
+                    (ZoneKind::Gcp, _) | (_, None) => self.slab_top_stroke(kind, border),
+                    (_, Some(_)) => None,
+                };
                 Some(FacePaint {
                     top: base.map(str::to_string),
                     left,
                     right,
-                    top_stroke: self.slab_top_stroke(kind, border),
+                    top_stroke,
                     side_stroke: None,
                 })
             }
@@ -662,7 +727,11 @@ impl Palette {
                             dusk::ISO_SURFACE_TARGET,
                             lift - dusk::ISO_SIDE_DROP,
                         )?),
-                        Some(color.to_string()),
+                        Some(mix(
+                            color,
+                            dusk::ISO_SURFACE_TARGET,
+                            lift - dusk::ISO_RIGHT_SIDE_DROP,
+                        )?),
                     ),
                     (_, None) => (None, None),
                 };
@@ -685,12 +754,24 @@ impl Palette {
             }
             Theme::Wire => {
                 let fill = base.map(|_| wire::WHITE.to_string());
+                let outline = |stroke: Stroke| match stroke.line {
+                    LineStyle::Solid => Stroke {
+                        width_px: ISO_WIRE_SLAB_OUTLINE_PX,
+                        ..stroke
+                    },
+                    LineStyle::Dashed | LineStyle::Dotted if kind == ZoneKind::Vpc => Stroke {
+                        width_px: ISO_WIRE_SLAB_OUTLINE_PX,
+                        line: LineStyle::Dotted,
+                        color: ISO_WIRE_RING_INK,
+                    },
+                    LineStyle::Dashed | LineStyle::Dotted => stroke,
+                };
                 Some(FacePaint {
                     top: fill.clone(),
                     left: fill.clone(),
                     right: fill,
-                    top_stroke: border,
-                    side_stroke: solid_border,
+                    top_stroke: border.map(outline),
+                    side_stroke: solid_border.map(outline),
                 })
             }
         }
@@ -826,7 +907,7 @@ impl Palette {
 }
 
 /// Lightness step of the darker gcp side face.
-const GCP_SIDE_STEP: i8 = -8;
+const GCP_SIDE_STEP: i8 = -12;
 
 /// `color` moved `fraction` of the way to `toward` in each sRGB channel, as `#RRGGBB`.
 /// None when either is not `#` followed by six hex digits.
@@ -989,13 +1070,18 @@ mod dusk {
     /// ISO_SLAB_LIFT plus ISO_LEVEL_LIFT per filled zone beneath, blocks further still, so
     /// each surface is lighter than the one it stands on.
     pub const ISO_SURFACE_TARGET: &str = "#7F93B8";
-    pub const ISO_SLAB_LIFT: f32 = 0.14;
+    pub const ISO_SLAB_LIFT: f32 = 0.20;
     pub const ISO_LEVEL_LIFT: f32 = 0.08;
-    /// The left side face of a slab is this much less lifted than its top.
-    pub const ISO_SIDE_DROP: f32 = 0.06;
-    pub const ISO_BLOCK_TOP_LIFT: f32 = 0.34;
-    pub const ISO_BLOCK_LEFT_LIFT: f32 = 0.22;
-    pub const ISO_BLOCK_RIGHT_LIFT: f32 = 0.08;
+    /// The left and right side faces of a slab are this much less lifted than its top, so
+    /// both stay clear of the page.
+    pub const ISO_SIDE_DROP: f32 = 0.04;
+    pub const ISO_RIGHT_SIDE_DROP: f32 = 0.08;
+    /// A block top stands about 15 L* above the floor it sits on.
+    pub const ISO_BLOCK_TOP_LIFT: f32 = 0.46;
+    pub const ISO_BLOCK_LEFT_LIFT: f32 = 0.32;
+    pub const ISO_BLOCK_RIGHT_LIFT: f32 = 0.20;
+    /// The tab of a zone other than gcp that no zone encloses.
+    pub const ISO_NEUTRAL_TAB_FILL: &str = "#3A4A66";
     /// The edge of a solid-bordered slab top, lighter than every lifted floor.
     pub const ISO_RIM: &str = "#4A5B7E";
     pub const ISO_RIM_PX: f32 = 1.0;

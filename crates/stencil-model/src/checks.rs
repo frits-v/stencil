@@ -16,6 +16,7 @@ pub enum CheckName {
     LinksAvoidBoxes,
     PipesLand,
     IsoLabelsClear,
+    IsoLinksClear,
 }
 
 impl CheckName {
@@ -31,6 +32,7 @@ impl CheckName {
             CheckName::LinksAvoidBoxes => "links-avoid-boxes",
             CheckName::PipesLand => "pipes-land",
             CheckName::IsoLabelsClear => "iso-labels-clear",
+            CheckName::IsoLinksClear => "iso-links-clear",
         }
     }
 
@@ -60,6 +62,8 @@ impl CheckName {
             (CheckName::RememberedConstants, false) => "text fields",
             (CheckName::PipesLand, true) => "pipe end",
             (CheckName::PipesLand, false) => "pipe ends",
+            (CheckName::IsoLinksClear, true) => "link leg",
+            (CheckName::IsoLinksClear, false) => "link legs",
         }
     }
 }

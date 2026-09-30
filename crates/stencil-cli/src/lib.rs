@@ -66,7 +66,7 @@ enum Command {
         #[arg(long, value_enum)]
         projection: Option<ProjectionArgument>,
     },
-    /// Lay out and render in memory, then run all nine checks
+    /// Lay out and render in memory, then run all ten checks
     Check {
         /// Document to check
         json: PathBuf,
@@ -285,7 +285,7 @@ fn check(
     Ok(reports_exit_code(&reports))
 }
 
-fn check_in_memory(path: &Path, overrides: Overrides) -> Result<[CheckReport; 9], Failure> {
+fn check_in_memory(path: &Path, overrides: Overrides) -> Result<[CheckReport; 10], Failure> {
     let loaded = load_overridden_document(path, overrides)?;
     let rendered = render_page(&loaded, DeviceScale::DEFAULT)?;
     Ok(all_checks(

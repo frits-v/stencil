@@ -521,7 +521,8 @@ fn check_g7_passes_six_checks_and_skips_the_link_and_iso_checks() {
             "check links-avoid-boxes: examined 0 pairs, not applicable: page has no links",
             "check pipes-land: examined 8 pipe ends, 0 defects",
             "check iso-labels-clear: examined 0 pairs, not applicable: projection is flat",
-            "stencil check: 9 checks, 6 passed, 0 failed, 3 not applicable",
+            "check iso-links-clear: examined 0 link legs, not applicable: projection is flat",
+            "stencil check: 10 checks, 6 passed, 0 failed, 4 not applicable",
         ]
     );
     assert_eq!(outcome.stderr, "");
@@ -560,7 +561,7 @@ fn check_reports_overflowing_text_with_its_pointer() {
         .copied()
         .filter(|line| line.starts_with("check "))
         .collect();
-    assert_eq!(check_lines.len(), 9, "{}", outcome.stdout);
+    assert_eq!(check_lines.len(), 10, "{}", outcome.stdout);
     assert!(
         check_lines[0].starts_with("check child-inside-container: examined "),
         "{}",
@@ -593,6 +594,12 @@ fn check_reports_overflowing_text_with_its_pointer() {
         "{}",
         outcome.stdout
     );
+    assert_eq!(
+        check_lines[9],
+        "check iso-links-clear: examined 0 link legs, not applicable: projection is flat",
+        "{}",
+        outcome.stdout
+    );
     assert!(
         lines
             .iter()
@@ -602,7 +609,7 @@ fn check_reports_overflowing_text_with_its_pointer() {
     );
     assert_eq!(
         lines.last().copied(),
-        Some("stencil check: 9 checks, 4 passed, 1 failed, 4 not applicable"),
+        Some("stencil check: 10 checks, 4 passed, 1 failed, 5 not applicable"),
         "{}",
         outcome.stdout
     );

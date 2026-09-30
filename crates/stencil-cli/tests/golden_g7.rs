@@ -125,13 +125,15 @@ fn golden_g7() {
             (CheckName::LinksAvoidBoxes, 0),
             (CheckName::PipesLand, 8),
             (CheckName::IsoLabelsClear, 0),
+            (CheckName::IsoLinksClear, 0),
         ]
     );
     for report in &reports {
         let expected = match report.check {
-            CheckName::LinksRouted | CheckName::LinksAvoidBoxes | CheckName::IsoLabelsClear => {
-                CheckOutcome::NotApplicable
-            }
+            CheckName::LinksRouted
+            | CheckName::LinksAvoidBoxes
+            | CheckName::IsoLabelsClear
+            | CheckName::IsoLinksClear => CheckOutcome::NotApplicable,
             CheckName::ChildInsideContainer
             | CheckName::SiblingsDoNotOverlap
             | CheckName::TextFitsBox

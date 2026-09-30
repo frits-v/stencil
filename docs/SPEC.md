@@ -1256,7 +1256,7 @@ pub enum RenderError {
 
 `src/lib.rs` exposes `pub fn run(arguments: Vec<std::ffi::OsString>, stdout: &mut dyn Write, stderr: &mut dyn Write) -> ExitCode`, and integration tests call it directly. `src/main.rs` collects `std::env::args_os()`, calls `run` and exits with the returned code. Argument parsing uses clap derive. Section 7 has the commands.
 
-`src/lib.rs` also exposes `pub mod pipeline`, the steps `run` composes, so the section 9.4 golden test drives the same code path without the argument parser: `read_input` (at most `INPUT_BYTES_MAX` bytes), `load_document` (parse, vet, then the input as a `serde_json::Value`), `output_names`, `render_page` (layout with `CosmicTextMeasurer`, SVG, PNG and measured JSON in memory), `model_checks`, `all_checks` (the nine reports in `CheckName` order, section 12.9), `write_outputs`, and the `Failure` enum that section 7 maps to exit codes.
+`src/lib.rs` also exposes `pub mod pipeline`, the steps `run` composes, so the section 9.4 golden test drives the same code path without the argument parser: `read_input` (at most `INPUT_BYTES_MAX` bytes), `load_document` (parse, vet, then the input as a `serde_json::Value`), `output_names`, `render_page` (layout with `CosmicTextMeasurer`, SVG, PNG and measured JSON in memory), `model_checks`, `all_checks` (the ten reports in `CheckName` order, section 12.9), `write_outputs`, and the `Failure` enum that section 7 maps to exit codes.
 
 ```rust
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -1440,10 +1440,10 @@ stencil gallery <out-dir> [--examples <dir>]
 |---|---|---|
 | `vet` | parse, `validate_page`, then, only when there is no violation, `remembered-constants` and `legend-consistency` | one line per violation, or one line per check and one line per defect; one summary line |
 | `render` | parse and `validate_page` only (violations stop the command with exit 1; the two model checks do not run, so a legend inconsistency does not stop a render), layout with `CosmicTextMeasurer`, SVG, PNG at `--scale` (default 2), measured JSON; creates `--out-dir` if missing and overwrites existing outputs | the three written paths, absolute |
-| `check` | everything `render` does, held in memory without writing files, then all nine checks | one line per check, one line per defect, one summary line; or an `error` line and the summary line when layout or render fails with exit 1 |
+| `check` | everything `render` does, held in memory without writing files, then all ten checks | one line per check, one line per defect, one summary line; or an `error` line and the summary line when layout or render fails with exit 1 |
 | `schema` | prints `page_schema()` as pretty JSON | the schema |
 | `prime` | prints the authoring briefing for an agent: `crates/stencil-cli/prime/base.md` with the vocabulary table rendered from `page_schema()`, so tag names, field names, bounds and enum values come from the model; at most 6,000 bytes. With a topic (`themes`, `links`, `blocks`, `layout`, `checks`, `cue`, `example`), that topic's text instead, each at most 4,000 bytes except `example`, which is `examples/g7.json` verbatim. An unknown topic writes one line to stderr naming the topics and exits 2 | the briefing or the topic |
-| `gallery` | for every regular `.json` file directly inside `--examples` (default `examples`), in file-name order and at most 256 of them: parse and `validate_page` once, then for every theme in `--theme` order (center, dusk, wire) layout, SVG, PNG at scale 2 and measured JSON written to `<out-dir>/<stem>/<theme>/` as `render` writes them, followed by all nine checks. Then writes `<out-dir>/index.html` and `<out-dir>/gallery.json` | per render its failing check and defect lines, then `gallery <stem> <theme>: <check counts>`; the two index paths, absolute; one summary line |
+| `gallery` | for every regular `.json` file directly inside `--examples` (default `examples`), in file-name order and at most 256 of them: parse and `validate_page` once, then for every theme in `--theme` order (center, dusk, wire) layout, SVG, PNG at scale 2 and measured JSON written to `<out-dir>/<stem>/<theme>/` as `render` writes them, followed by all ten checks. Then writes `<out-dir>/index.html` and `<out-dir>/gallery.json` | per render its failing check and defect lines, then `gallery <stem> <theme>: <check counts>`; the two index paths, absolute; one summary line |
 
 Line formats, stable for scripts:
 
@@ -1453,7 +1453,7 @@ check text-fits-box: examined 40 text runs, 1 defect
 defect text-fits-box /body/0/children/2/children/0/children/0/children/1: fact "BGP peering · link-local /29" measured 571.20x16.20 in box 560.00x16.20
 check legend-consistency: examined 0 relations, FAILED: nothing examined
 check links-routed: examined 0 links, not applicable: page has no links
-stencil check: 9 checks, 3 passed, 2 failed, 4 not applicable
+stencil check: 10 checks, 3 passed, 2 failed, 5 not applicable
 violation gap-out-of-range /body/0/gap: gap 65 is above 64
 violation text-untrimmed /title: text starts or ends with whitespace
 stencil vet: 2 violations, checks not run
@@ -1468,7 +1468,7 @@ stencil vet: document does not parse, checks not run
 - A defect line is `defect <check> <pointer>: <message>`, and a violation line is `violation <rule> <pointer>: <message>`, with the rule in kebab-case as in section 1.3. An empty pointer prints as `""`.
 - The `vet` summary always starts with the violation count, `1 violation` or `<n> violations`, 0 included. A `render` or `check` summary carries a violation count only when violations stopped the run; otherwise `check` prints `stencil check: <n> checks, <p> passed, <f> failed`, followed by `, <a> not applicable` when a report did not apply. A document with violations or a parse failure prints `checks not run` in place of the check counts.
 - `render` and `check` print violations and parse errors in the same formats, followed by the summary line `stencil <command>: …`.
-- `check` prints the nine check lines in `CheckName` declaration order (child-inside-container, siblings-do-not-overlap, text-fits-box, remembered-constants, legend-consistency, links-routed, links-avoid-boxes, pipes-land, iso-labels-clear), and `vet` prints its two in the same relative order. Each check's defect lines follow its check line directly, in the order the `CheckReport` lists them.
+- `check` prints the ten check lines in `CheckName` declaration order (child-inside-container, siblings-do-not-overlap, text-fits-box, remembered-constants, legend-consistency, links-routed, links-avoid-boxes, pipes-land, iso-labels-clear, iso-links-clear), and `vet` prints its two in the same relative order. Each check's defect lines follow its check line directly, in the order the `CheckReport` lists them.
 - On success `render` prints the three absolute paths, one per line, in the order SVG, PNG, measured JSON, and nothing after them.
 - `gallery` prints, for each render, the check and defect lines of the checks that failed (none when every check passed or did not apply) followed by `gallery <stem> <theme>: <n> checks, <p> passed, <f> failed[, <a> not applicable]`. A document that does not parse or has violations prints its `error` or `violation` lines and `gallery <stem>: not rendered`; a render that fails with exit 1 (`MissingGlyph`) prints its `error` line and `gallery <stem> <theme>: not rendered`. After the renders come the absolute paths of `index.html` and `gallery.json`, then `stencil gallery: <r> renders of <e> examples in <t> themes, <f> failed`, where r counts the renders whose three files were written and f counts the renders that failed a check or were not rendered.
 - `index.html` is a static page with no script: one anchor per theme (`<a href="#center">`) leading to one `<section id="<theme>">` per theme, which lists every example with its kicker and title read from the document, the PNG as a thumbnail linking to the full PNG, links to the SVG and the measured JSON, and the check counts line. Every link is relative to the gallery directory, so the page works from a download, a zip or a static host. `gallery.json` holds the same data: `themes`, `examples` (each with `name`, `source`, `title`, `kicker` and one entry per theme holding `theme`, `passed`, `summary` and, when the render was written, `files` with the relative `png`, `svg` and `measured` paths), `renders` and `failed`. A document that does not load is listed under its file name with every render not rendered. Neither file carries a timestamp, so two runs over the same examples write the same bytes.
@@ -2114,7 +2114,7 @@ pub projection: Projection,
 
 The field follows `theme`: absent means `flat`, and `flat` is never serialized, so the round trip of every existing example keeps its bytes. `schema/stencil.schema.json` is regenerated with the new optional property. No vet rule is added.
 
-`CheckName` gains `IsoLabelsClear` as its last variant, `as_str` `iso-labels-clear`, unit `pair` for 1 and `pairs` otherwise.
+`CheckName` gains `IsoLabelsClear`, `as_str` `iso-labels-clear`, unit `pair` for 1 and `pairs` otherwise, and `IsoLinksClear` as its last variant, `as_str` `iso-links-clear`, unit `link leg` for 1 and `link legs` otherwise.
 
 ### 12.2 Projection
 
@@ -2157,9 +2157,14 @@ pub struct IsoScene {
     pub solids: Vec<Solid>,
     /// Painter order (section 12.5): body nodes in geometry order, then link tags in link order.
     pub billboards: Vec<Billboard>,
-    /// One per `PageGeometry.links` entry: the routed polyline laid over the slabs and cut
-    /// back at its endpoint blocks (section 12.3, rule 7), in flat px.
+    /// One per `PageGeometry.links` entry: the routed polyline adjusted by section 12.3
+    /// rule 8, laid over the slabs and cut back at its endpoint blocks (rule 7), in zoomed
+    /// flat px.
     pub link_paths: Vec<Vec<IsoPoint>>,
+    /// The kind of each link, in `link_paths` order.
+    pub link_kinds: Vec<PipeKind>,
+    /// The body zoom of rule 7.
+    pub zoom: f32,
 }
 
 /// Carries the node's pointer and screen silhouette so that `iso_labels_clear` reads the
@@ -2179,6 +2184,8 @@ pub struct Solid {
     /// True when the faces are filled in every theme, so the solid hides what was drawn
     /// before it: a slab with height and every block except Note and Frame.
     pub opaque: bool,
+    /// The node's border box in zoomed flat px.
+    pub footprint: BoxRect,
 }
 
 impl Solid {
@@ -2203,20 +2210,30 @@ pub struct Billboard {
     /// The drawn box, in canvas px, offset included.
     pub screen: BoxRect,
     /// True when the billboard is drawn on a box of its own that hides what lies under it:
-    /// the gcp chip and every tag.
+    /// every zone tab and every tag.
     pub opaque: bool,
     /// The screen ink boxes of the billboard's text runs, offset included.
     pub marks: Vec<BoxRect>,
+    /// True when every mark must lie inside the owner block's silhouette: the text of a
+    /// Fact, Note, Text, Callout or Frame.
+    pub contained: bool,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum BillboardRole { Content, Tag }
 
-/// Asserts nodes[0] is the root and /body is present, then projects the body.
+/// Asserts nodes[0] is the root and /body is present, then zooms and projects the body.
 pub fn project_page(geometry: &PageGeometry) -> Result<IsoScene, RenderError>;
+/// The geometry the projection draws (rule 7) and the zoom; the SVG writer draws from it.
+pub fn zoomed_geometry(geometry: &PageGeometry) -> Result<(PageGeometry, f32), RenderError>;
+/// `project_page` over a geometry `zoomed_geometry` returned.
+pub fn project_zoomed(geometry: &PageGeometry, zoom: f32) -> Result<IsoScene, RenderError>;
 
 /// NotApplicable with reason "projection is flat" for None; section 12.7 otherwise.
 pub fn iso_labels_clear(scene: Option<&IsoScene>) -> CheckReport;
+/// NotApplicable with reason "projection is flat" for None and "page has no links" for a
+/// scene without links; section 12.7 otherwise.
+pub fn iso_links_clear(scene: Option<&IsoScene>) -> CheckReport;
 ```
 
 `project_page` returns `RenderError::GeometryMismatch` when `nodes[0]` is not `""` (expected `""`) or when no node has pointer `/body` (expected `/body`, found `/<absent>`).
@@ -2229,6 +2246,7 @@ Rules:
 4. `offset.x = (canvas.width - (max_x - min_x)) / 2 - min_x` and `offset.y = body.y - min_y`, where `body.y` is the `/body` border box top. The drawn body is therefore centered across the canvas and starts at the flat body top.
 5. `footer_shift = (max_y - min_y) - body.height`. `canvas.width = max(PageGeometry.canvas.width, (max_x - min_x) + 2 * ISO_MARGIN_PX)` and `canvas.height = PageGeometry.canvas.height + footer_shift`. The header keeps the width it was laid out at, so the drawn canvas is never narrower than the flat one. This is the only place the drawn canvas differs from `PageGeometry.canvas`.
 6. The map sends a circle of radius r on a horizontal plane to an axis-aligned ellipse with semi-axes `r * sqrt(1.5)` across and `r * sqrt(0.5)` down, because the map's linear part M has M·Mᵀ = diag(1.5, 0.5).
+7. Zoom. Before projecting, the body is scaled about the `/body` top-left corner by `zoom = clamp(ISO_FILL_FRACTION * canvas.width / W, 1, ISO_ZOOM_MAX)`, where `ISO_FILL_FRACTION` = 0.8, `ISO_ZOOM_MAX` = 1.6 and W is `cos 30` times the spread of `x - y` over the footprints of the body nodes that draw a solid (a Row or Col draws nothing and can span the page). Every body node box, every part that is not a billboard member and every link point scales; a billboard member keeps its size and moves with its node's top-left corner (a Pipe or Tee member with its node's center), and a link tag keeps its size and moves with its center. Slab thickness, block height and every base_z scale by the zoom too, so the solids keep their proportions while text and icons keep their size. A body at least 80 percent of the canvas wide is drawn at zoom 1, unchanged. `measured_json` keeps the flat `nodes`; only `projection` reflects the zoom.
 
 ### 12.3 Solids
 
@@ -2249,7 +2267,8 @@ The page-level nodes draw no solid. Nested filled zones stack: a top-level zone 
 4. Top-face drawing. The Callout Accent part and the Frame diagonals are projected onto the top face as polygons and lines at `base_z + height`, in their flat paint. The gcp Bar part is not drawn: a band along the back edge is the heaviest mass on the page and carries no meaning the label chip and the brand blue side faces do not.
 5. Pipe. The wire is one `<line>` from the start dot center to the end dot center, both at the Pipe's base_z, with the stroke of its kind (section 12.6). It runs under the tag billboard, which masks its middle, so no gap opens between a wire end and an upright tag. At an arrowed end the line stops at the arrowhead base, as in section 2.7. A dot is an `<ellipse>` at the projected dot center with `rx` 4.9 and `ry` 2.83 (r = 4, rule 6 of section 12.2, rounded by section 5.1), painted as the flat dot. An arrowhead is a `<polygon>` of the three projected vertices of the flat arrowhead, filled with the wire color.
 6. Tee. The spine is a `<line>` along the projected spine center line at the Tee's base_z. The hub is a billboard.
-7. Links. A link runs over the terrain: the footprints of the slabs with height. Its routed polyline of section 11.2 is split wherever a segment crosses a footprint edge, each piece lies at the top of the highest slab whose footprint holds the piece's midpoint (edges included), or on the ground (z = 0), and a vertical riser joins two pieces of different height. Collinear points at one height are merged. Each end is then cut back to where the path enters the silhouette of its endpoint block on screen: an end on a block's bottom or right side lies on the silhouette already and stays; an end on a top or left side reaches a face the viewer cannot see, and without the cut its last stretch would be drawn across the block's top face. A zone endpoint is not cut. `IsoScene.link_paths` holds the result. The writer draws it as one `<path>` with the stroke of its kind, shortened by the arrowhead length along the last horizontal stretch at each arrowed end, and each arrowhead as a projected `<polygon>` at the height of its tip. An iso SVG writes no `<marker>` and no `<defs>`, because a marker draws its triangle unprojected. A link is drawn after every node, as in flat, so it paints over faces; its tag is a billboard at the height of the terrain under the tag's center.
+7. Links. A link runs over the terrain: the footprints of the slabs with height. Its routed polyline of section 11.2 is split wherever a segment crosses a footprint edge, each piece lies at the top of the highest slab whose footprint holds the piece's midpoint (edges included), or on the ground (z = 0), and a vertical riser joins two pieces of different height. Collinear points at one height are merged. Each end is then cut back to where the path enters the silhouette of its endpoint block on screen: an end on a block's bottom or right side lies on the silhouette already and stays; an end on a top or left side reaches a face the viewer cannot see, and without the cut its last stretch would be drawn across the block's top face. A zone endpoint is not cut. `IsoScene.link_paths` holds the result. The writer draws it as one `<path>` with the stroke of its kind, shortened by the arrowhead length along the last horizontal stretch at each arrowed end, and each arrowhead as a projected `<polygon>` at the height of its tip. A link arrowhead is `iso_link_arrowhead_length(kind)` long (18 for blue, 15 for dash, 14 for gray, pink and deny, the same in every theme so the canvas does not depend on the theme) with the flat width-to-length ratio; a pipe arrowhead keeps the flat 10. A dashed or dotted link moves (`M`) instead of drawing (`L`) across each riser, so its pattern never lands on a slab edge as a solid tick. An iso SVG writes no `<marker>` and no `<defs>`, because a marker draws its triangle unprojected. A link is drawn after every node, as in flat, so it paints over faces; its tag is a billboard placed along the link (section 12.4, rule 3).
+8. Link adjustments. Before the path is laid over the terrain, the routed polyline changes in two ways, both iso only (the flat route and `PageGeometry` are unchanged). First, when its ends sit on two facing sides (right and left, or bottom and top, with the second box beyond the first) that share at least `ISO_STRAIGHT_SHARED_MIN_PX` = 16 across the gap, and the leg through the middle of the shared span enters no block, the route becomes that one leg: side midpoints of two blocks that nearly line up would otherwise leave a short jog that the projection turns into a kink. Second, each inner leg (neither the first nor the last) that runs parallel to a zone edge closer than `ISO_LINK_CLEARANCE_PX` = 24, over an overlapping extent, moves to the nearest line at 24 from each parallel edge beside it, provided the two legs around it keep their direction, no moved leg enters a block, and the leg stays over the same zones; otherwise it stays, and `iso-links-clear` reports it.
 
 ### 12.4 Billboards
 
@@ -2257,23 +2276,22 @@ A billboard is part of the flat drawing, drawn upright and screen-aligned at a p
 
 | Owner | Role | Flat box and content | Placement | z |
 |---|---|---|---|---|
-| Zone, kind other than gcp | Content | the Label run | on open floor of the zone's top face (rule 3), else top-left at slab top + 18 | slab top, or slab top + 18 |
-| Zone, kind gcp | Content | a chip: the Label run's box grown by 7 top and bottom and 16 left and right, filled with the gcp bar fill at radius 4, then the Label run | top-left | slab top + 18 |
-| Pcard | Content | Icon (with its icon chip), FactBox, AskBox and the FunctionName, ProductName, Fact and Ask runs that are present | centered on the block's top face, then moved clear (rule 3) | block top |
+| Zone | Content | a tab: the Label run's box grown by 7 top and bottom and 16 left and right for gcp, 5 and 10 for every other kind, then the Label run | left edge on the zone's back corner, vertical middle level with it | slab top |
+| Pcard | Content | Icon (with its icon chip), with FactBox, AskBox and the FunctionName, ProductName, Fact and Ask runs that are present stacked under it (rule 2) | icon center on the block's top face center, then moved clear (rule 3) | block top |
 | Fact, Note | Content | the Text run | top-left | block top |
 | Text | Content | Heading, every Marker and every BodyLine | top-left | block top |
 | Callout | Content | Heading and Text runs | top-left | block top |
 | Frame | Content | LabelChip and the Label run | top-left | block top |
 | Pipe, Tee arm | Tag | the Tag part with its TagLabel and TagSub runs | center | base_z |
 | Tee | Tag | the Hub part with its HubText run | center | base_z |
-| Link with a label | Tag | the link Tag with its runs | center | terrain under the tag center |
+| Link with a label | Tag | the link Tag with its runs | center, on the link (rule 3) | terrain under the tag center |
 
 1. Flat box. A run's box is `(part.x + align offset, part.y, metrics.width_px, metrics.height_px)`, where the align offset is `(part.width - metrics.width_px) / 2` for `TextAlign::Center` and 0 otherwise. The ink width, not the part width, matters for a zone label, whose Label part spans the zone. Every other member contributes its part box. The billboard's flat box is the union of its members' boxes. The run boxes alone, moved with the billboard, are its `marks`.
-2. Anchor. A top-left billboard's screen box has its top-left corner at the projection of the flat box's top-left corner at z. A center billboard's screen box is centered on the projection of the flat box's center at z; a Pcard's is centered on the projection of its block's center. In every case the screen box has the flat box's width and height. A card is a thin block whose label is wider than its top face, so a centered label overhangs both long edges about equally instead of reaching far past the back edge.
-3. Placement. After every solid, link path and tag is known, each Pcard billboard and then each non-gcp zone label is moved, in billboard order, to the first clear candidate. The candidates are the centers of a 4 px flat grid over the block or zone footprint (coarsened until at most 4096), projected at the top z. A card tries them nearest its footprint's center first; a zone label nearest the back corner first, which is also highest on screen first. A candidate is clear when its box grown by the clearance (3 px for a card, `ISO_LABEL_CLEARANCE_PX` = 6 px for a zone label) overlaps no billboard already placed and no block silhouette other than its own, a zone label's grown box also lies inside its zone's top face and overlaps no silhouette of a slab nested in the zone, and no visible stroke crosses a grown mark. The visible strokes are the slab edges of section 12.7 less the pieces covered by opaque solids painted later, every link path, every wire and every spine. A billboard with no clear candidate keeps its first placement, and `iso-labels-clear` reports it. The fallback for a zone label sits 18 px above its slab top, where it clears the zone's own cards.
-4. Drawing. Every member is drawn with its section 5.2 flat drawing, translated by `(screen.x - flat.x, screen.y - flat.y)`. Coordinates stay absolute, and no `<g>` carries a transform. The number of `<text>` elements is the same as in the flat render of the same page. Two additions. A run that is not drawn on a box of its own (a non-gcp zone label, a Pcard's FunctionName and ProductName, and every run of a Fact, Note, Text or Callout) first gets a plate: a rect around its ink box, 3 px wider on each side and 1 px taller, radius 3, filled with the top fill of the surface the owner stands on or is (the zone's top for a zone label, the nearest filled enclosing zone for a ring's label, the block's top for a block), or the page background when there is none. The plate is invisible against its own surface and stops every stroke that runs under the text. A zone label is drawn in the primary ink (the `card_function` ink of the theme), because it names part of the figure.
+2. Anchor. A top-left billboard's screen box has its top-left corner at the projection of the flat box's top-left corner at z. A center billboard's screen box is centered on the projection of the flat box's center at z. A zone tab's left edge is at the projected back corner of its zone's top face (the first silhouette vertex), with the corner level with the tab's middle, the same rule for every zone, so each zone carries its name the way the gcp zone carries its brand. A Pcard's members are rearranged before placement: every member other than the Icon moves as one group so the group's top is 4 px under the 36 px icon chip and its center is on the icon's center; the icon's center then goes on the projection of the block's top face center. A card is a thin block whose label is wider than its top face; stacked under the icon, the label stays over the block instead of running past its back edge into the zone edge behind it. In every case the screen box has the flat box's width and height.
+3. Placement. After every solid and link path is known, each link tag and then each Pcard billboard is moved, in billboard order, to the first clear candidate; a billboard with no clear candidate keeps its first placement, and `iso-labels-clear` reports it. A link tag's candidates are points 4 px apart along its adjusted flat route (coarsened until at most 1024), nearest the middle of its longest leg first, each projected at the terrain height under it; a tag is clear when its box grown by `ISO_CARD_CLEARANCE_PX` = 3 overlaps no billboard already placed (the zone tabs and earlier tags) and no block silhouette, and no other link, wire or spine crosses it. A card's candidates are the centers of a 4 px flat grid over its block footprint (coarsened until at most 4096), nearest the footprint's center first, projected at the top z with the icon center on the candidate; a card is clear when its box grown by 3 overlaps no billboard already placed and no block silhouette other than its own, and no visible stroke crosses a grown mark. The visible strokes are the slab edges of section 12.7 less the pieces covered by opaque solids painted later, every link path, every wire and every spine.
+4. Drawing. Every member is drawn with its section 5.2 flat drawing, translated by `(screen.x - flat.x, screen.y - flat.y)`. Coordinates stay absolute, and no `<g>` carries a transform. The number of `<text>` elements is the same as in the flat render of the same page. Two additions. A zone tab is drawn first, as a rect at radius 4 in the paint of `Palette::iso_zone_tab`: a zone that no zone encloses gets a filled tab (gcp in the brand blue, every other kind in a neutral fill, and the ink in wire) with light text; a nested zone gets an outline tab, filled with the surface under it and stroked 1.25 px in its border color, with the primary ink. In center and wire a run that is not drawn on a box of its own (a Pcard's FunctionName and ProductName, and every run of a Fact, Note, Text or Callout) first gets a plate: a rect around its ink box, 3 px wider on each side and 1 px taller, radius 3, filled with the top fill of the surface the owner stands on or is, or the page background when there is none. The plate is invisible against its own surface and stops every stroke that runs under the text. Dusk draws no plates (`Palette::iso_text_plates`): its surfaces are close in value, and a plate that reaches from a block top onto the floor shows as a patch.
 5. Icon chip. Under iso every theme draws the 36 px chip under an icon: `Palette::iso_icon_chip`, which is white with a 1 px card-border ring in center, the dusk white tile in dusk, and white with a 1 px ink ring in wire; center also draws a shadow under it, the same rect 1.5 px lower in `#202124` at 0.18 opacity.
-6. The gcp chip exists because a label running horizontally over a slab edge that descends at 30 degrees leaves any band along that edge within about 30 px. In `wire` the chip is white with a 1.25 px ink border, like a wire tag. It stays at the slab's back corner as the brand anchor.
+6. Zone tabs exist because a label running horizontally over a slab edge that descends at 30 degrees leaves any band along that edge within about 30 px. A tab is opaque, so the edges under it are hidden and its text is not tested against them.
 7. The kicker badge and every page-level run are drawn flat (section 12.2, rule 2) and are not billboards.
 
 ### 12.5 Painter order and SVG
@@ -2319,8 +2337,11 @@ The coordinates in this example are illustrative.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Face { Top, Left, Right }
 
-/// Stroke width of every wire, link and legend swatch under iso in center and dusk.
-pub const ISO_WIRE_WIDTH_PX: f32 = 3.0;
+/// Stroke widths of wires, links and legend swatches under iso (`Palette::iso_wire_width`).
+pub const ISO_PRIMARY_WIRE_PX: f32 = 3.75;   // blue
+pub const ISO_SECONDARY_WIRE_PX: f32 = 2.5;  // dash, pink, deny
+pub const ISO_SERVICE_WIRE_PX: f32 = 2.0;    // gray in center and dusk
+pub const ISO_WIRE_THIN_WIRE_PX: f32 = 1.25; // gray in wire
 /// The gcp slab's top-face outline under iso in center and dusk.
 pub const ISO_GCP_OUTLINE_PX: f32 = 1.5;
 
@@ -2351,6 +2372,16 @@ impl Palette {
     /// The legend label of a kind under iso when the flat label names a color the theme does
     /// not draw.
     pub fn iso_legend_label(self, kind: PipeKind) -> Option<&'static str>;
+    pub fn iso_wire_width(self, kind: PipeKind) -> f32;
+    /// Filled for a zone no zone encloses, an outline for a nested one (section 12.4).
+    pub fn iso_zone_tab(self, kind: ZoneKind, nested: bool) -> ZoneTab;
+    /// False in dusk, which draws no text plates (section 12.4, rule 4).
+    pub fn iso_text_plates(self) -> bool;
+}
+
+pub enum ZoneTab {
+    Filled { fill: &'static str, ink: &'static str },
+    Outline { border: Stroke, ink: &'static str },
 }
 
 /// `color` (`#RRGGBB`) with its HSL lightness moved by `step_points` percentage points.
@@ -2372,18 +2403,18 @@ Slab paint (`slab_faces`), from the zone's flat fill F (the body fill for gcp) a
 
 | Theme | Top | Left, right | Top stroke | Side stroke |
 |---|---|---|---|---|
-| center | F | F shaded -8 and -16; gcp `#1A73E8` and `#1461C5` | B; gcp B at 1.5 px | none |
-| dusk | `mix(F, #7F93B8, 0.14 + 0.08 * level)` | left `mix(F, #7F93B8, top fraction - 0.06)`, right F; gcp as center | solid B: a 1 px `#4A5B7E` rim; dashed B: B; gcp B at 1.5 px | none |
-| wire | `#FFFFFF` when F exists | `#FFFFFF` when F exists | B | B when it is solid |
+| center | F | F shaded -8 and -16; gcp `#1A73E8` and `#1257B3` | gcp B at 1.5 px; a dashed B; a solid B on another kind is dropped, because the shaded sides carry the edge and a border in another hue shows as a seam | none |
+| dusk | `mix(F, #7F93B8, 0.20 + 0.08 * level)` | left `mix(F, #7F93B8, top fraction - 0.04)`, right `mix(F, #7F93B8, top fraction - 0.08)`; gcp as center | solid B: a 1 px `#4A5B7E` rim; dashed B: B; gcp B at 1.5 px | none |
+| wire | `#FFFFFF` when F exists | `#FFFFFF` when F exists | a solid B at 1.5 px; the vpc ring dotted in `#999999` at 1.5 px, so no zone edge shares the ink and dash of a link; other dashed B as B | B at 1.5 px when it is solid |
 
-Block paint (`block_faces`), from the node's flat fill F and flat border B: center and wire use the face table above; dusk uses `mix(F, #7F93B8, f)` with f = 0.34 for the top, 0.22 for the left and 0.08 for the right. Every face is stroked with B, and in wire with the ink border when B is None.
+Block paint (`block_faces`), from the node's flat fill F and flat border B: center and wire use the face table above; dusk uses `mix(F, #7F93B8, f)` with f = 0.46 for the top, 0.32 for the left and 0.20 for the right, which puts a card top about 15 L* above the gcp floor. Every face is stroked with B, and in wire with the ink border when B is None.
 
 1. `shade` parses the six hex digits into r, g and b in 0 to 1 (value / 255 in f64), converts to HSL with the standard formulas (hue from the largest channel, `rem_euclid(6.0)` for the red sector, saturation 0 when max equals min), sets `L = clamp(L + step_points / 100, 0, 1)`, converts back, maps each channel to `floor(channel * 255 + 0.5)` clamped to 0 to 255, and writes `#` and six uppercase hex digits. A step of 0 returns the input string unchanged, without a round trip. `mix` clamps the fraction to 0 to 1 and maps each channel to `floor(from + (to - from) * fraction + 0.5)`.
 2. `face_fill`, `slab_faces` and `block_faces` return None when a color does not parse, and the SVG writer returns `RenderError::Svg` naming the node, so no library code unwraps. A unit test parses every color constant in `palette.rs`, so the None path is unreachable in practice.
 3. Center and dusk draw slab sides unstroked. A stroked side face and the top face outline would draw two parallel lines 6 px apart along every front edge; the fill boundary alone reads as one edge. A dashed or dotted border is drawn once, on the top face, in every theme. The gcp slab carries the brand blue on its side faces and keeps a thin top outline, so a 3 px link never reads as a zone edge.
 4. Dusk fills sit near 12 percent lightness, so shading them darker leaves blocks darker than the floor they stand on. Dusk instead moves every surface toward a light blue gray by level: the page, then the floor of each filled zone, then the blocks, each lighter than the one below it, with the side faces darker than their top.
-5. In `wire`, "no face fills" means no shaded or colored fills. The faces are filled with the page background so hidden edges stay hidden and the scene reads as a line drawing. A node with no flat fill still draws its faces unfilled. Wire keeps its flat line weights, and its legend labels name the line, because every kind is drawn in one ink: `Thin line` (gray), `Solid line` (blue), `Ringed line` (pink), `Dashed line` (dash) and `Dotted line` (deny). The writer measures the new label in the label run's style and moves the description by the change in width, so the gap between them keeps its size.
-6. Under iso every wire, link and legend swatch is `ISO_WIRE_WIDTH_PX` wide in center and dusk, and its arrowheads stay 10 px long, more than three times the stroke.
+5. In `wire`, "no face fills" means no shaded or colored fills. The faces are filled with the page background so hidden edges stay hidden and the scene reads as a line drawing. A node with no flat fill still draws its faces unfilled. Wire keeps its flat line styles, and its legend labels name the line, because every kind is drawn in one ink: `Thin line` (gray), `Solid line` (blue), `Ringed line` (pink), `Dashed line` (dash) and `Dotted line` (deny). The writer measures the new label in the label run's style and moves the description by the change in width, so the gap between them keeps its size.
+6. Under iso the stroke weight ranks the kinds in every theme: blue (the primary) 3.75 px, dash, pink and deny 2.5 px (two thirds of it), gray 2 px in center and dusk, where its color sets it apart, and 1.25 px in wire (a third of the primary), where one ink leaves weight, pattern and arrowhead to tell them apart. Every link arrowhead is at least four times its stroke (section 12.3, rule 7).
 
 Test vectors, all exact under rule 1:
 
@@ -2399,16 +2430,19 @@ Test vectors, all exact under rule 1:
 
 | Check | Crate | Unit examined | Defect when | Epsilon |
 |---|---|---|---|---|
-| `iso-labels-clear` | render | each unordered pair of billboards; each (billboard, block) pair where the block is not the billboard's owner; each (billboard, slab) pair where the billboard is not opaque | two billboard screen boxes overlap; a billboard screen box overlaps a block's projected silhouette; a visible edge of the slab crosses one of the billboard's marks | 0.01 px |
+| `iso-labels-clear` | render | each unordered pair of billboards; each (billboard, block) pair where the block is not the billboard's owner; each (billboard, slab) pair where the billboard is not opaque; each contained billboard and its own block | two billboard screen boxes overlap; a billboard screen box overlaps a block's projected silhouette; a visible edge of the slab crosses one of the billboard's marks; a mark of a contained billboard leaves its block's silhouette | 0.01 px |
+| `iso-links-clear` | render | each leg of each link path, in flat px with its risers dropped and collinear points merged | the leg runs parallel to a zone footprint edge closer than `ISO_LINK_CLEARANCE_PX` over an overlapping extent; the leg turns back on the one before it; the last leg is shorter than two arrowheads of its kind | 0.01 px |
 
-`CheckName::unit` for `iso-labels-clear` is `pair` for 1 and `pairs` otherwise.
+`CheckName::unit` for `iso-labels-clear` is `pair` for 1 and `pairs` otherwise; for `iso-links-clear` `link leg` and `link legs`.
 
 1. The report is `CheckReport::not_applicable(CheckName::IsoLabelsClear, "projection is flat")` for a flat render. An iso render with fewer than two billboards, no (billboard, block) pair and no (billboard, slab) pair examines 0 and fails, as section 6 requires.
 2. Overlap is a separating-axis test over the two convex shapes: the x and y axes, plus the unit normals of the six silhouette edges for a block. Two shapes overlap when their projections on every axis overlap by more than `GEOMETRY_EPSILON_PX`. For two billboards this reduces to overlap width and height both above the epsilon, as in `siblings-do-not-overlap`.
 3. Leaf blocks own no descendants, so the exemption covers only a node's billboard over its own block. A zone's billboard over a block inside that zone is a defect: the placement of section 12.4 rule 3 exists so that it does not happen.
-4. Slab edges. `Solid::slab_edges` gives a slab's four top-face edges and, for a slab with height, its four lower silhouette edges and the front vertical edge. An edge piece covered on screen by an opaque solid painted later (geometry order) is hidden and does not count: a zone's back edge runs behind the cards standing near it. A mark is the ink box of one of the billboard's text runs; the icon chip, the gcp chip and every tag are opaque boxes that hide a stroke under them, so they are not tested. A crossing counts when the edge passes through the mark shrunk by the epsilon, so an edge that only touches a mark passes.
+4. Slab edges. `Solid::slab_edges` gives a slab's four top-face edges and, for a slab with height, its four lower silhouette edges and the front vertical edge. An edge piece covered on screen by an opaque solid painted later (geometry order) is hidden and does not count: a zone's back edge runs behind the cards standing near it. A mark is the ink box of one of the billboard's text runs; the icon chip, every zone tab and every link or pipe tag are opaque boxes that hide a stroke under them, so they are not tested. A crossing counts when the edge passes through the mark shrunk by the epsilon, so an edge that only touches a mark passes.
 5. Defect pointer: for two billboards, the owner of the later one in `IsoScene.billboards` order; otherwise the billboard's owner. Messages give the screen box with 2 decimals, for example `iso-labels-clear /body/0/children/0/children/1: content billboard 112.40,260.80 179.00x28.00 overlaps content billboard /body/0/children/0/children/0`, `iso-labels-clear /body/0/children/1: tag billboard 79.20,164.90 60.87x30.60 covers block /body/0/children/0/children/1` and `iso-labels-clear /body/0/children/1/children/0: content billboard 542.98,244.32 162.98x14.40 is crossed by an edge of slab /body/0/children/1`. The numbers in these messages are illustrative.
-6. Pairs are visited in billboard order, then block order, then slab order, so the defect list is deterministic. The loops are bounded by NODES_MAX + LINKS_MAX billboards and NODES_MAX solids.
+6. Pairs are visited in billboard order, then block order, then slab order, then contained billboards, so the defect list is deterministic. The loops are bounded by NODES_MAX + LINKS_MAX billboards and NODES_MAX solids.
+7. Contained text. The text of a Fact, Note, Text, Callout or Frame is laid out to fit its flat box; under iso its upright marks can reach past the block. Each mark's four corners must lie inside the block's silhouette, else the message is `<role> billboard X,Y WxH leaves its block`. A card's label is not contained: stacked under its icon it may overhang the block's long edges.
+8. `iso-links-clear` is `CheckReport::not_applicable(CheckName::IsoLinksClear, "projection is flat")` for a flat render and `"page has no links"` for a scene without links. Every defect points at `/links/<i>`, with the messages `leg N runs D px beside an edge of zone NODE, closer than 24`, `leg N turns back on the leg before it` and `last leg is L px, shorter than two arrowheads (A px)`, lengths with 2 decimals. The last-leg rule reads the end the default `arrow` draws; the scene does not carry the arrow value. Legs are visited in link order, and zones in solid order within a leg. The loops are bounded by LINKS_MAX links and NODES_MAX solids.
 
 The eight checks of sections 6 and 11.2 run on the flat geometry in both projections.
 
@@ -2452,17 +2486,17 @@ The numbers in this example are illustrative.
 | Command | Change |
 |---|---|
 | `render` | accepts `--projection flat` or `--projection iso`, which overrides `Page.projection` as `--theme` overrides `Page.theme` |
-| `check` | accepts the same flag; runs nine checks, `iso-labels-clear` last |
+| `check` | accepts the same flag; runs ten checks, `iso-labels-clear` and `iso-links-clear` last |
 | `vet` | unchanged; `--projection` is an unknown flag and exits 2 |
 
 - `pipeline::render_page` calls `project_page` once when the effective projection is `Iso` and keeps the result in `RenderedPage.scene: Option<IsoScene>`, which `measured_json` and the check read.
-- `pipeline::all_checks(page, geometry, scene: Option<&IsoScene>) -> [CheckReport; 9]`, in `CheckName` order.
-- `check` prints nine check lines. A flat page prints `check iso-labels-clear: examined 0 pairs, not applicable: projection is flat`, so the g7 summary becomes `stencil check: 9 checks, 6 passed, 0 failed, 3 not applicable`. Check stdout changes for every document; render outputs do not.
+- `pipeline::all_checks(page, geometry, scene: Option<&IsoScene>) -> [CheckReport; 10]`, in `CheckName` order.
+- `check` prints ten check lines. A flat page prints `check iso-labels-clear: examined 0 pairs, not applicable: projection is flat` and `check iso-links-clear: examined 0 link legs, not applicable: projection is flat`, so the g7 summary becomes `stencil check: 10 checks, 6 passed, 0 failed, 4 not applicable`. Check stdout changes for every document; render outputs do not.
 - `cue/stencil.cue` gains `projection?: "flat" | "iso"`.
 
 ### 12.10 Example and tests
 
-`examples/hero-iso.json` is a cover-slide figure of 10 body nodes and four links: an on-prem zone with the Edge router, and a gcp zone holding a vpc ring labeled `Shared VPC · europe-west4` around a Row of two Cols, the API gateway alone in the first and Warehouse over Model serving in the second. Both Rows have `grow: [0, 0]`, so every zone and card takes its content width and the cloud slab is about 1.5 to 1 instead of a long strip. The gateway's Col is as tall as its neighbor, which leaves open floor in front of the gateway for the ring's label. VLAN 1 (blue, via the gap between the zones) runs from the router's right side to the gateway's left side, VLAN 2 (dash, via the open floor) from the router's bottom to the gateway's bottom, and two gray arrowed links chain the gateway to Warehouse and Warehouse to Model serving, so all three services sit on one path from on-prem. The via points are the flat coordinates of the gap and the open floor under the default fonts.
+`examples/hero-iso.json` is a cover-slide figure of 11 body nodes and four links: an on-prem zone with the Edge router inside a Col with `justify: center`, and a gcp zone holding a vpc ring labeled `Shared VPC · europe-west4` around a Row of two Cols, the API gateway alone in the first and Warehouse over Model serving, 48 apart, in the second. Both Rows have `grow: [0, 0]`, so every zone and card takes its content width; the Col keeps the on-prem zone to the router and its margin instead of the Row's height, and centers it so the router's right side and the gateway's left side share 16.8 px before the zoom, which section 12.3 rule 8 draws as one straight leg. VLAN 1 (blue) runs from the router's right side to the gateway's left side, VLAN 2 (dash, via two points) from the router's bottom straight out of the on-prem slab's near edge, across the gap and up into the gateway's bottom, and two gray links chain the gateway to Warehouse and Warehouse to Model serving; every link carries the default end arrowhead. The via points are the flat coordinates under the default fonts, 28.7 px past the on-prem slab and 34.6 px short of the ring's front edge.
 
 ```json
 {
@@ -2479,11 +2513,17 @@ The numbers in this example are illustrative.
       "grow": [0, 0],
       "children": [
         {
-          "tag": "Zone",
-          "kind": "onprem-a",
-          "label": "On-prem",
+          "tag": "Col",
+          "justify": "center",
           "children": [
-            { "tag": "Pcard", "id": "router", "icon": "hybrid", "fn": "Edge router" }
+            {
+              "tag": "Zone",
+              "kind": "onprem-a",
+              "label": "On-prem",
+              "children": [
+                { "tag": "Pcard", "id": "router", "icon": "hybrid", "fn": "Edge router" }
+              ]
+            }
           ]
         },
         {
@@ -2509,7 +2549,7 @@ The numbers in this example are illustrative.
                     },
                     {
                       "tag": "Col",
-                      "gap": 64,
+                      "gap": 48,
                       "children": [
                         { "tag": "Pcard", "id": "warehouse", "icon": "bigquery", "fn": "Warehouse" },
                         { "tag": "Pcard", "id": "model", "icon": "vertex-ai", "fn": "Model serving" }
@@ -2530,28 +2570,29 @@ The numbers in this example are illustrative.
     { "kind": "gray", "text": "service call" }
   ],
   "links": [
-    { "from": "router", "to": "gateway", "kind": "blue", "label": "VLAN 1", "arrow": "none", "from_side": "right", "to_side": "left", "via": [{ "x": 235, "y": 159.5 }, { "x": 235, "y": 212.6 }] },
-    { "from": "router", "to": "gateway", "kind": "dash", "label": "VLAN 2", "arrow": "none", "from_side": "bottom", "to_side": "bottom", "via": [{ "x": 100.92, "y": 290 }, { "x": 344.84, "y": 290 }] },
+    { "from": "router", "to": "gateway", "kind": "blue", "label": "VLAN 1", "from_side": "right", "to_side": "left" },
+    { "from": "router", "to": "gateway", "kind": "dash", "label": "VLAN 2", "from_side": "bottom", "to_side": "bottom", "via": [{ "x": 100.92, "y": 304 }, { "x": 344.84, "y": 304 }] },
     { "from": "gateway", "to": "warehouse", "kind": "gray" },
     { "from": "warehouse", "to": "model", "kind": "gray", "from_side": "bottom", "to_side": "top" }
   ]
 }
 ```
 
-Its `iso-labels-clear` count is 86: 9 billboards (2 zone labels, the gcp chip, 4 cards, 2 link tags) give 36 billboard pairs, 9 billboards against 4 blocks less the 4 own-block pairs give 32, and the 6 billboards that are not opaque against 3 slabs give 18. The page has no pipes, so `pipes-land` is not applicable. Without `projection` the document passes the seven flat checks that apply to it.
+Its `iso-labels-clear` count is 80: 9 billboards (3 zone tabs, 4 cards, 2 link tags) give 36 billboard pairs, 9 billboards against 4 blocks less the 4 own-block pairs give 32, and the 4 cards, the billboards that are not opaque, against 3 slabs give 12; no billboard is contained. Its `iso-links-clear` count is 6 legs: one for VLAN 1, three for VLAN 2 and one for each service link. The page has no pipes, so `pipes-land` is not applicable. Without `projection` the document passes the seven flat checks that apply to it.
 
 Tests:
 
-- stencil-model: `"projection": "iso"` and `"flat"` parse and an absent field gives `Flat`; `"oblique"` is a `ModelError::Json`; a page with `Flat` serializes without the field, so the g7 round trip is unchanged; the schema test passes against the regenerated file and a copy with `"projection": "oblique"` fails schema validation; `CheckName::IsoLabelsClear.as_str()` is `iso-labels-clear` and `unit` gives `pair` and `pairs`.
+- stencil-model: `"projection": "iso"` and `"flat"` parse and an absent field gives `Flat`; `"oblique"` is a `ModelError::Json`; a page with `Flat` serializes without the field, so the g7 round trip is unchanged; the schema test passes against the regenerated file and a copy with `"projection": "oblique"` fails schema validation; `CheckName::IsoLabelsClear.as_str()` is `iso-labels-clear` and `unit` gives `pair` and `pairs`; `CheckName::IsoLinksClear.as_str()` is `iso-links-clear` and `unit` gives `link leg` and `link legs`.
 - stencil-render, projection: with zero offset, (100, 0, 0) projects to (86.60254, 50), (0, 100, 0) to (-86.60254, 50) and (0, 0, 18) to (0, -18). For a one-zone document laid out with `FixedMetricsMeasurer`, `canvas.width` equals the formula of section 12.2 rule 5, the drawn body's left and right margins are equal and at least 20 px, and the smallest y equals the `/body` top.
 - stencil-render, solids: a filled zone inside a filled zone has base_z 6; a Pcard in that inner zone has base_z 12 and height 18; a Pipe in a Col in the Row of the body has base_z 0; a Row produces no solid. A vpc inside a gcp zone is a slab with base_z 6, height 0, four edges and `opaque` false, and a Pcard in it stands at 6.
-- stencil-render, links: a link from a card in one top-level zone to the bottom of a card in another starts and ends at 6, has a piece at 0 and two risers, and ends on the route's end point. The same link into the left side ends more than 1 px short of that card. Every hero link starts and ends at 6; the two service links stay at 6 and both VLANs touch the ground. A link from a region zone inside a gcp zone to a card in that region ends at 12 and lies at 6 or 12 throughout. A path from one slab to a nested one steps down to 0 and up at each footprint edge; a path end outside a square is cut to its edge, and one that only touches it is unchanged.
+- stencil-render, zoom: a lone card in a zone of content width is zoomed by `ISO_ZOOM_MAX`, its block height and footprint scale by it, its billboard keeps its flat size and its icon center lands on the projected center of the block's top face; a body of any width gets a zoom between 1 and the cap, and a zoom of 1 returns an equal geometry.
+- stencil-render, links: a link from a card in one top-level zone to the bottom of a card in another starts and ends at 6 times the zoom, has a piece at 0 and two risers, and ends on the zoomed route's end point. The same link into the left side ends more than 1 px short of that card. Every hero link starts and ends at 6 times the zoom; the two service links stay there and both VLANs touch the ground. The hero's VLAN 1 is one straight leg although its layout route has a jog, and its tag's center lies on it. A jog between facing sides that share a span becomes one leg, and not when a block stands in the way or the sides share nothing; an inner leg 10 px from a zone edge moves to 24 px on the side it came from; a leg in a gap narrower than 48 px stays. The hero's dashed link has a move at each riser and its solid primary none, and both VLANs draw one arrowhead. A link from a region zone inside a gcp zone to a card in that region ends at 12 and lies at 6 or 12 throughout. A path from one slab to a nested one steps down to 0 and up at each footprint edge; a path end outside a square is cut to its edge, and one that only touches it is unchanged.
 - stencil-render, flat identity: `render_svg` of g7, `hybrid-ai` and `network-hub-spoke` with the field absent equals the existing center fixtures (the existing test), and with `"projection": "flat"` written in the document the SVG bytes are equal to the absent case. `measured_json(…, None)` is byte-identical to the section 5.4 output.
-- stencil-render, SVG: an iso render parses with usvg; it has one `<g data-id>` per geometry node and one `<g data-billboard>` per billboard, in order; no `<marker>` and no `<defs>`; every g7 dot is an `<ellipse>` with `rx="4.9"` and `ry="2.83"`; the billboard layer is the last child of `<svg>`; `text_elements` equals the flat render's; each zone group's first `<polygon>` precedes every descendant group. The hero's vpc ring is one unfilled dashed polygon, and every stroked polygon has `stroke-linejoin="round"`. Every chipless label's first element is a plate in the fill of its surface, and no text carries a stroke. The on-prem label is in the primary ink. Every theme draws the iso icon chip before the icon, and the flat hero draws no shadow. The hero's first link and first legend swatch are 3 px wide in center and dusk and 2 px in wire; the wire legend reads `Solid line`, `Dashed line`, `Thin line`, center and dusk keep the flat labels, and the relabeled entry keeps the flat gap before its description.
-- stencil-render, shading: the five test vectors above; a step of 0 returns the input; `shade("#12345", -8)` and `shade("red", -8)` are None; every color constant in `palette.rs` parses; in `wire` every face polygon's fill is `#FFFFFF` or `none`. Under dusk the gcp floor, the on-prem top and a level 1 region top are lighter than the page, the region lighter than the on-prem top, a card top lighter than both floors, its left face darker than its top and its right face darker than its left, and a solid-bordered slab has a top stroke. In center and dusk the gcp slab's sides are `#1A73E8` and `#1461C5`, unstroked, and its outline is 1.5 px, thinner than a wire.
-- stencil-render, check: a gcp zone holding a Row (gap 32) of two Pcards with icon and one-word `fn` examines 9 pairs (3 billboard pairs, 4 billboard and block pairs, 2 card and slab pairs) and passes. The same cards in a Col with gap 8 examine 9 and give one defect at the second card, whose billboard covers the first card's block. A hand-built scene with a slab edge through a label's mark is a defect with the message of rule 5 and the same edge under an opaque chip is not; the edge hidden behind a later opaque block is not a defect either. The flat render returns the not-applicable report. A hand-built `IsoScene` with two billboards overlapping by 0.02 px is a defect, and touching edges are not. Placement puts an empty zone's label near its back corner inside the face, moves it below a stroke across it, gives up on a label wider than the face, and puts a centered request on the region center.
+- stencil-render, SVG: an iso render parses with usvg; it has one `<g data-id>` per geometry node and one `<g data-billboard>` per billboard, in order; no `<marker>` and no `<defs>`; every g7 dot is an `<ellipse>` with `rx="4.9"` and `ry="2.83"`; the billboard layer is the last child of `<svg>`; `text_elements` equals the flat render's; each zone group's first `<polygon>` precedes every descendant group. The hero's vpc ring is one unfilled dashed or dotted polygon, and every stroked polygon has `stroke-linejoin="round"`. In center and wire the router's name sits on a plate in its block's top fill, and in dusk on none; no text carries a stroke. The on-prem and gcp tabs are filled in the paint of `iso_zone_tab` with its ink, the vpc tab is an outline in the gcp floor fill with its border color, and every tab's left edge and middle sit on its zone's back corner. Every theme draws the iso icon chip before the icon, and the flat hero draws no shadow. Each of the hero's links and its legend swatch are 3.75, 2.5 and 2 px wide in center and dusk and 3.75, 2.5 and 1.25 px in wire; the wire vpc ring is dotted in `#999999` and a wire solid slab outline is 1.5 px, while the flat wire vpc border stays dashed; the wire legend reads `Solid line`, `Dashed line`, `Thin line`, center and dusk keep the flat labels, and the relabeled entry keeps the flat gap before its description.
+- stencil-render, shading: the five test vectors above; a step of 0 returns the input; `shade("#12345", -8)` and `shade("red", -8)` are None; every color constant in `palette.rs` parses; in `wire` every face polygon's fill is `#FFFFFF` or `none`. Under dusk the gcp floor, the on-prem top and a level 1 region top are lighter than the page, the region lighter than the on-prem top, a card top lighter than both floors, its left face darker than its top and its right face darker than its left, and a solid-bordered slab has a top stroke. In center and dusk the gcp slab's sides are `#1A73E8` and `#1257B3`, unstroked, and its outline is 1.5 px, thinner than a wire.
+- stencil-render, check: a gcp zone holding a Row (gap 32) of two Pcards with icon and one-word `fn` examines 9 pairs (3 billboard pairs, 4 billboard and block pairs, 2 card and slab pairs) and passes. The same cards in a Col with gap 8 examine 9, and among the defects the second card's billboard covers the first card's block. A hand-built scene with a slab edge through a label's mark is a defect with the message of rule 5 and the same edge under an opaque chip is not; the edge hidden behind a later opaque block is not a defect either. The flat render returns the not-applicable report. A hand-built `IsoScene` with two billboards overlapping by 0.02 px is a defect, and touching edges are not. A contained mark inside its block passes and one wider than the block leaves it. Placement puts a request on the region center, moves a label off a stroke across it, and puts a tag on the first clear center along its link. `iso-links-clear` passes the hero's 6 legs, reports a hand-built leg 10 px from a zone edge, a leg that turns back and a 30 px last leg of a blue link, and is not applicable for a flat render.
 - stencil-render, measured JSON: for the hero, `nodes` is byte-identical between flat and iso, `projection.billboards` has 9 entries, and the whole output is byte-identical under the three themes while the SVG bytes differ.
-- stencil-cli: `check examples/hero-iso.json` under `--theme center`, `dusk` and `wire` exits 0 with `check iso-labels-clear: examined 86 pairs, 0 defects`, the pipes-land not-applicable line and `stencil check: 9 checks, 8 passed, 0 failed, 1 not applicable`. With `--projection flat` it prints the iso not-applicable line and `9 checks, 7 passed, 0 failed, 2 not applicable`. `render examples/hero-iso.json` under each theme writes three files, and the PNG width is `ceil(projection.canvas.width * 2)`. `render examples/g7.json --projection iso` writes an iso SVG whose measured JSON `nodes` equal the flat run's. `vet --projection iso` exits 2.
+- stencil-cli: `check examples/hero-iso.json` under `--theme center`, `dusk` and `wire` exits 0 with `check iso-labels-clear: examined 80 pairs, 0 defects`, `check iso-links-clear: examined 6 link legs, 0 defects`, the pipes-land not-applicable line and `stencil check: 10 checks, 9 passed, 0 failed, 1 not applicable`. With `--projection flat` it prints the two iso not-applicable lines and `10 checks, 7 passed, 0 failed, 3 not applicable`. `render examples/hero-iso.json` under each theme writes three files, and the PNG width is `ceil(projection.canvas.width * 2)`. `render examples/g7.json --projection iso` writes an iso SVG whose measured JSON `nodes` equal the flat run's. `vet --projection iso` exits 2.
 
 ## Conventions
 
