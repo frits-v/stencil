@@ -640,3 +640,30 @@ fn chipless_billboard_text_carries_a_page_background_halo() {
         }
     }
 }
+
+#[test]
+fn a_wire_fact_block_is_outlined_although_its_flat_box_has_no_border() {
+    let mut page = iso_page(json!([
+        { "tag": "Zone", "kind": "region-a", "label": "Region", "children": [
+            { "tag": "Fact", "text": "BGP peering" } ] }
+    ]));
+    page.theme = Theme::Wire;
+    let geometry = common::layout_with_fixed_metrics(&page);
+    let svg = render_svg(&page, &geometry).unwrap();
+    let parsed = common::parse_xml(&svg.svg);
+    let fact = common::group(&parsed, "/body/0/children/0");
+    let faces: Vec<_> = common::children_named(fact, "polygon");
+    assert_eq!(faces.len(), 3);
+    for face in faces {
+        assert_eq!(face.attribute("stroke"), Some("#222222"));
+        assert_eq!(face.attribute("stroke-width"), Some("1.25"));
+    }
+
+    page.theme = Theme::Center;
+    let svg = render_svg(&page, &geometry).unwrap();
+    let parsed = common::parse_xml(&svg.svg);
+    let fact = common::group(&parsed, "/body/0/children/0");
+    for face in common::children_named(fact, "polygon") {
+        assert_eq!(face.attribute("stroke"), None);
+    }
+}

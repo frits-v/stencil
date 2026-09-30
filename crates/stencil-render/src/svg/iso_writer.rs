@@ -291,7 +291,11 @@ impl SvgWriter {
                 ],
             ),
         ];
-        let stroke = paint.border.map(stroke_attributes).unwrap_or_default();
+        let stroke = self
+            .palette
+            .face_outline(paint.border)
+            .map(stroke_attributes)
+            .unwrap_or_default();
         for (face, corners) in faces {
             let fill = match paint.fill {
                 Some(base) => {

@@ -530,6 +530,20 @@ impl Palette {
         }
     }
 
+    /// The stroke of an isometric face (section 12.6): the node's flat border, and in wire
+    /// the ink border for a node whose flat drawing has none, so a filled block such as a
+    /// Fact still reads as a line drawing instead of a white patch.
+    pub fn face_outline(self, flat_border: Option<Stroke>) -> Option<Stroke> {
+        match self.theme {
+            Theme::Center | Theme::Dusk => flat_border,
+            Theme::Wire => Some(flat_border.unwrap_or(Stroke {
+                width_px: wire::BORDER_PX,
+                line: LineStyle::Solid,
+                color: wire::INK,
+            })),
+        }
+    }
+
     /// The outline behind upright billboard text that has no chip (section 12.4).
     pub fn text_halo(self) -> &'static str {
         self.page_background()
