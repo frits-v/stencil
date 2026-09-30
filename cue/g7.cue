@@ -33,7 +33,10 @@ customer: #Page & {
 		grow: [0, 0, 1]
 		children: [
 			{
+				// Each metro zone takes half the row height, so gutter half i
+				// sits level with metro i.
 				tag: "Col"
+				grow: [1, 1]
 				children: [
 					{
 						tag:   "Zone"

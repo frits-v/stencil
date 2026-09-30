@@ -1,13 +1,20 @@
 //! The geometry checks of section 6 and the two link checks of section 11.2.
 
+use std::collections::HashMap;
+
 use stencil_model::checks::{CheckName, CheckReport, Defect};
 use stencil_model::pointer::NodePointer;
+use stencil_model::{Node, NodeRef, Page, PipeDir, body_nodes};
 
 use crate::route::{link_obstacles, segment_enters};
-use crate::{BoxRect, GEOMETRY_EPSILON_PX, PageGeometry, Part, RouteStatus};
+use crate::{BoxRect, GEOMETRY_EPSILON_PX, NodeTag, PageGeometry, Part, RouteStatus};
 
 /// Why the link checks do not apply to a page without links.
 const NO_LINKS: &str = "page has no links";
+/// Why pipes-land does not apply to a page without a Pipe or Tee arm.
+const NO_PIPES: &str = "page has no pipes";
+/// Why pipes-land does not apply when no pipe sits beside a Row or Col sibling.
+const NO_PIPE_NEIGHBORS: &str = "no pipe has a neighbor";
 
 /// Each (parent, child) pair, the root excluded as a child: the child's border box must stay
 /// inside the parent's content box.
@@ -277,6 +284,229 @@ pub fn links_avoid_boxes(geometry: &PageGeometry) -> CheckReport {
         examined,
         defects,
         not_applicable: None,
+    }
+}
+
+/// One pipe end facing a neighbor: the pipe, the side, and the Row or Col child on that side.
+struct PipeEnd {
+    pipe: usize,
+    dir: PipeDir,
+    side: &'static str,
+    neighbor: usize,
+}
+
+/// Each pipe end that faces a neighbor (section 6). A Pipe h, Tee arms included, looks along
+/// the Row that holds its nearest ancestor-or-self Row child: that child's siblings directly
+/// left and right are its neighbors. A Pipe v does the same along a Col, above and below. On
+/// each side the pipe's center on the cross axis must fall within the extent of some node in
+/// the neighbor's subtree that is not a Row or Col. A defect sits on the pipe and names the
+/// side and the neighbor. Not applicable on a page without pipes, or when no pipe has a
+/// neighbor.
+pub fn pipes_land(page: &Page, geometry: &PageGeometry) -> CheckReport {
+    let mut pipes: Vec<(NodePointer, PipeDir)> = Vec::new();
+    for entry in body_nodes(page) {
+        match entry.node {
+            NodeRef::Node(Node::Pipe(pipe)) => pipes.push((entry.pointer, pipe.dir)),
+            NodeRef::TeeArm(arm) => pipes.push((entry.pointer, arm.dir)),
+            NodeRef::Node(
+                Node::Row(_)
+                | Node::Col(_)
+                | Node::Zone(_)
+                | Node::Pcard(_)
+                | Node::Fact(_)
+                | Node::Note(_)
+                | Node::Tee(_)
+                | Node::Text(_)
+                | Node::Callout(_)
+                | Node::Frame(_),
+            ) => {}
+        }
+    }
+    if pipes.is_empty() {
+        return CheckReport::not_applicable(CheckName::PipesLand, NO_PIPES);
+    }
+
+    let index_by_pointer: HashMap<&str, usize> = geometry
+        .nodes
+        .iter()
+        .enumerate()
+        .map(|(index, node)| (node.pointer.as_str(), index))
+        .collect();
+    let children_by_parent = children_by_parent(geometry);
+
+    let mut examined: u64 = 0;
+    let mut defects = Vec::new();
+    let mut ends: Vec<PipeEnd> = Vec::new();
+    for (pointer, dir) in &pipes {
+        let Some(&pipe) = index_by_pointer.get(pointer.as_str()) else {
+            examined += 1;
+            defects.push(Defect {
+                pointer: pointer.clone(),
+                message: "pipe is not a geometry node".to_string(),
+            });
+            continue;
+        };
+        ends.extend(pipe_ends(geometry, &children_by_parent, pipe, *dir));
+    }
+    if ends.is_empty() && defects.is_empty() {
+        return CheckReport::not_applicable(CheckName::PipesLand, NO_PIPE_NEIGHBORS);
+    }
+
+    for end in &ends {
+        let (Some(pipe), Some(neighbor)) = (
+            geometry.nodes.get(end.pipe),
+            geometry.nodes.get(end.neighbor),
+        ) else {
+            continue;
+        };
+        examined += 1;
+        let (center, axis) = match end.dir {
+            PipeDir::Horizontal => (pipe.bounds.y + pipe.bounds.height / 2.0, "y"),
+            PipeDir::Vertical => (pipe.bounds.x + pipe.bounds.width / 2.0, "x"),
+        };
+        if !subtree_spans(geometry, &children_by_parent, end.neighbor, end.dir, center) {
+            defects.push(Defect {
+                pointer: pipe.pointer.clone(),
+                message: format!(
+                    "{} neighbor {} has no box across the pipe's center {axis} {center:.2}",
+                    end.side, neighbor.pointer
+                ),
+            });
+        }
+    }
+    CheckReport {
+        check: CheckName::PipesLand,
+        examined,
+        defects,
+        not_applicable: None,
+    }
+}
+
+/// Indices of each node's children, in geometry order.
+fn children_by_parent(geometry: &PageGeometry) -> Vec<Vec<usize>> {
+    let mut children: Vec<Vec<usize>> = vec![Vec::new(); geometry.nodes.len()];
+    for (index, node) in geometry.nodes.iter().enumerate() {
+        if let Some(siblings) = node.parent.and_then(|parent| children.get_mut(parent)) {
+            siblings.push(index);
+        }
+    }
+    children
+}
+
+/// The neighbors of the pipe's nearest ancestor-or-self whose parent is a Row (for h) or a
+/// Col (for v), with the side each one is on. Empty when there is no such ancestor or it has
+/// no siblings.
+fn pipe_ends(
+    geometry: &PageGeometry,
+    children_by_parent: &[Vec<usize>],
+    pipe: usize,
+    dir: PipeDir,
+) -> Vec<PipeEnd> {
+    let (container, before_side, after_side) = match dir {
+        PipeDir::Horizontal => (NodeTag::Row, "left", "right"),
+        PipeDir::Vertical => (NodeTag::Col, "above", "below"),
+    };
+    let mut current = pipe;
+    for _ in 0..geometry.nodes.len() {
+        let Some(parent) = geometry.nodes.get(current).and_then(|node| node.parent) else {
+            return Vec::new();
+        };
+        let Some(parent_node) = geometry.nodes.get(parent) else {
+            return Vec::new();
+        };
+        if parent_node.tag != container {
+            current = parent;
+            continue;
+        }
+        let siblings = children_by_parent
+            .get(parent)
+            .map(Vec::as_slice)
+            .unwrap_or_default();
+        let Some(position) = siblings.iter().position(|&sibling| sibling == current) else {
+            return Vec::new();
+        };
+        let mut ends = Vec::new();
+        let before = position
+            .checked_sub(1)
+            .and_then(|index| siblings.get(index));
+        if let Some(&neighbor) = before {
+            ends.push(PipeEnd {
+                pipe,
+                dir,
+                side: before_side,
+                neighbor,
+            });
+        }
+        if let Some(&neighbor) = siblings.get(position + 1) {
+            ends.push(PipeEnd {
+                pipe,
+                dir,
+                side: after_side,
+                neighbor,
+            });
+        }
+        return ends;
+    }
+    Vec::new()
+}
+
+/// True when some node in the subtree rooted at `root`, `root` included, that is not a Row
+/// or Col spans `center` on the pipe's cross axis: y for a Pipe h, x for a Pipe v.
+fn subtree_spans(
+    geometry: &PageGeometry,
+    children_by_parent: &[Vec<usize>],
+    root: usize,
+    dir: PipeDir,
+    center: f32,
+) -> bool {
+    let mut pending = vec![root];
+    for _ in 0..geometry.nodes.len() {
+        let Some(index) = pending.pop() else {
+            return false;
+        };
+        let Some(node) = geometry.nodes.get(index) else {
+            continue;
+        };
+        let (start, end) = match dir {
+            PipeDir::Horizontal => (node.bounds.y, node.bounds.bottom()),
+            PipeDir::Vertical => (node.bounds.x, node.bounds.right()),
+        };
+        if pipe_lands_on(node.tag)
+            && center >= start - GEOMETRY_EPSILON_PX
+            && center <= end + GEOMETRY_EPSILON_PX
+        {
+            return true;
+        }
+        if let Some(children) = children_by_parent.get(index) {
+            pending.extend(children.iter().copied());
+        }
+    }
+    false
+}
+
+/// A pipe points at a box it can land on. A Row or Col only arranges its children, so it
+/// never counts; the page-level tags never occur inside a body subtree.
+fn pipe_lands_on(tag: NodeTag) -> bool {
+    match tag {
+        NodeTag::Zone
+        | NodeTag::Pcard
+        | NodeTag::Fact
+        | NodeTag::Note
+        | NodeTag::Pipe
+        | NodeTag::Tee
+        | NodeTag::Text
+        | NodeTag::Callout
+        | NodeTag::Frame => true,
+        NodeTag::Row
+        | NodeTag::Col
+        | NodeTag::Page
+        | NodeTag::Kicker
+        | NodeTag::Title
+        | NodeTag::Lede
+        | NodeTag::Body
+        | NodeTag::Legend
+        | NodeTag::LegendEntry
+        | NodeTag::Foot => false,
     }
 }
 

@@ -26,12 +26,14 @@ Examined counts: each check reports how many units it looked at, and a check tha
 | legend-consistency | relation: each kind use (Pipe, Tee arm, Tee spine, Link) and each legend entry | the use, or /legend/i | USER kind K has no legend entry; legend kind K is never used; legend kind K is already listed at /legend/j |
 | links-routed | link | /links/i | no route from A to B avoids every obstacle; drawn as a fallback L |
 | links-avoid-boxes | pair: segment and obstacle, tag and node | /links/i | segment N from (X, Y) to (X, Y) enters NODE box WxH at (X, Y); tag WxH at (X, Y) overlaps NODE box WxH at (X, Y) |
+| pipes-land | each pipe end with a neighbor | /body/... (the pipe) | center Y outside every box of neighbor NODE on the left or right (top or bottom for dir v) |
 
 Numbers carry 2 decimals; the tolerance is 0.01 px, and touching edges pass. text-fits-box also checks the tag of every labeled link. PART is a snake_case part name: function_name, product_name, fact, ask, tag_label, tag_sub, hub_text, label, text, badge_text, legend_label, legend_text, heading, marker, body_line.
 
 Reading defects:
 
 - child-inside-container on a Pcard: a word wider than its column. Raise the column's weight or shorten the word.
+- pipes-land: a gutter slot taller or shorter than the zone beside it. Give the producer Col the gutter Col's grow list.
 - child-inside-container on a gutter or pipe: the gutter weight is too small for the tag. Shorten the label or raise the weight.
 - text-fits-box at /title or another page field: one unbreakable string wider than the page.
 - siblings-do-not-overlap follows an overflow; fix the child-inside-container defect first.
