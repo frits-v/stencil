@@ -1,11 +1,13 @@
 //! The section 5.2 SVG writer.
 
+use std::collections::BTreeSet;
 use stencil_layout::{BoxRect, NodeGeometry, PageGeometry, Part, PartName, TextAlign, TextRun};
 use stencil_model::pointer::NodePointer;
 use stencil_model::text::TextStyleName;
+
 use stencil_model::{
-    Canvas, IconName, LEGEND_ENTRIES_MAX, LegendEntry, Node, NodeRef, NoteKind, Page, PipeDir,
-    PipeKind, ZoneKind, body_nodes,
+    Arrow, Canvas, IconName, LEGEND_ENTRIES_MAX, LegendEntry, Node, NodeRef, NoteKind, Page, Pipe,
+    PipeDir, PipeKind, ZoneKind, body_nodes,
 };
 
 use crate::icons::icon_data_uri;
@@ -20,6 +22,9 @@ const FACT_RADIUS_PX: f32 = 4.0;
 const TAG_RADIUS_PX: f32 = 6.0;
 const ICON_CHIP_SIZE_PX: f32 = 36.0;
 const ICON_CHIP_RADIUS_PX: f32 = 6.0;
+/// Arrowhead triangle along the run axis and across it (section 11.2).
+const ARROW_LENGTH_PX: f32 = 10.0;
+const ARROW_WIDTH_PX: f32 = 8.0;
 /// Corner radii of the gcp frame in CSS order: top-left, top-right, bottom-right, bottom-left.
 const GCP_RADII_PX: [f32; 4] = [4.0, 4.0, 10.0, 10.0];
 
@@ -60,6 +65,10 @@ pub fn render_svg(page: &Page, geometry: &PageGeometry) -> Result<SvgDocument, R
             writer.palette.page_background()
         ),
     );
+    let arrow_kinds = arrow_kinds(&expected);
+    if !arrow_kinds.is_empty() {
+        writer.write_arrow_markers(1, &arrow_kinds);
+    }
 
     // Geometry order is pre-order, so a stack of open groups reproduces the nesting.
     let mut open_groups: Vec<usize> = Vec::new();
@@ -118,6 +127,48 @@ fn geometry_order(page: &Page) -> Vec<(NodePointer, DocumentNode<'_>)> {
         order.push((root.child("foot"), DocumentNode::Foot));
     }
     order
+}
+
+/// Kinds of the Pipes and Tee arms that draw an arrowhead, one marker each.
+fn arrow_kinds(expected: &[(NodePointer, DocumentNode<'_>)]) -> BTreeSet<PipeKind> {
+    expected
+        .iter()
+        .filter_map(|(_, document_node)| match *document_node {
+            DocumentNode::Content(NodeRef::Node(Node::Pipe(pipe)) | NodeRef::TeeArm(pipe)) => {
+                Some(pipe)
+            }
+            _ => None,
+        })
+        .filter(|pipe| pipe.arrow != Arrow::None)
+        .map(|pipe| pipe.kind)
+        .collect()
+}
+
+/// Which ends of a pipe carry an arrowhead instead of a dot.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+struct ArrowEnds {
+    start: bool,
+    end: bool,
+}
+
+impl ArrowEnds {
+    fn of(pipe: &Pipe) -> Self {
+        match pipe.arrow {
+            Arrow::None => ArrowEnds::default(),
+            Arrow::Start => ArrowEnds {
+                start: true,
+                end: false,
+            },
+            Arrow::End => ArrowEnds {
+                start: false,
+                end: true,
+            },
+            Arrow::Both => ArrowEnds {
+                start: true,
+                end: true,
+            },
+        }
+    }
 }
 
 /// Pointer used in a mismatch when one side has no node at that position.
@@ -214,6 +265,7 @@ fn group_open_tag(node: &NodeGeometry) -> String {
 struct PartContext {
     pipe_kind: Option<PipeKind>,
     pipe_dir: Option<PipeDir>,
+    arrows: ArrowEnds,
     icon: Option<IconName>,
 }
 
@@ -293,6 +345,7 @@ impl SvgWriter {
             DocumentNode::Content(NodeRef::TeeArm(pipe)) => PartContext {
                 pipe_kind: Some(pipe.kind),
                 pipe_dir: Some(pipe.dir),
+                arrows: ArrowEnds::of(pipe),
                 icon: None,
             },
             DocumentNode::Content(NodeRef::Node(content)) => match content {
@@ -322,6 +375,7 @@ impl SvgWriter {
                 Node::Pipe(pipe) => PartContext {
                     pipe_kind: Some(pipe.kind),
                     pipe_dir: Some(pipe.dir),
+                    arrows: ArrowEnds::of(pipe),
                     icon: None,
                 },
                 Node::Tee(tee) => PartContext {
@@ -413,9 +467,20 @@ impl SvgWriter {
             }
             PartName::DotStart | PartName::DotEnd => {
                 let kind = context.pipe_kind.ok_or_else(|| part_mismatch(node, part))?;
-                let center_x = bounds.x + bounds.width / 2.0;
-                let center_y = bounds.y + bounds.height / 2.0;
-                self.write_dot(depth, center_x, center_y, kind);
+                let at_start = part.name == PartName::DotStart;
+                let arrow_here = if at_start {
+                    context.arrows.start
+                } else {
+                    context.arrows.end
+                };
+                if arrow_here {
+                    let dir = context.pipe_dir.ok_or_else(|| part_mismatch(node, part))?;
+                    self.write_arrowhead(depth, bounds, dir, at_start, kind);
+                } else {
+                    let center_x = bounds.x + bounds.width / 2.0;
+                    let center_y = bounds.y + bounds.height / 2.0;
+                    self.write_dot(depth, center_x, center_y, kind);
+                }
             }
             PartName::WireStart | PartName::WireEnd => {
                 let kind = context.pipe_kind.ok_or_else(|| part_mismatch(node, part))?;
@@ -456,6 +521,71 @@ impl SvgWriter {
             | PartName::LegendText => {}
         }
         Ok(())
+    }
+
+    /// One `<marker>` per arrow kind in this theme: a triangle 10 long and 8 wide in the wire
+    /// color, its tip on the carrier line's last point.
+    fn write_arrow_markers(&mut self, depth: usize, kinds: &BTreeSet<PipeKind>) {
+        let length = format_number(ARROW_LENGTH_PX);
+        let width = format_number(ARROW_WIDTH_PX);
+        let half_width = format_number(ARROW_WIDTH_PX / 2.0);
+        self.line(depth, "<defs>");
+        for kind in kinds {
+            let color = self.palette.wire_style(*kind).stroke.color;
+            let marker = format!(
+                r#"<marker id="{}" viewBox="0 0 {length} {width}" refX="{length}" refY="{half_width}" markerWidth="{length}" markerHeight="{width}" markerUnits="userSpaceOnUse" orient="auto"><path d="M 0 0 L {length} {half_width} L 0 {width} Z" fill="{color}"/></marker>"#,
+                self.arrow_marker_id(*kind)
+            );
+            self.line(depth + 1, &marker);
+        }
+        self.line(depth, "</defs>");
+    }
+
+    fn arrow_marker_id(&self, kind: PipeKind) -> String {
+        format!("arrow-{}-{}", self.palette.theme_name(), kind.as_str())
+    }
+
+    /// An arrowhead in place of an end dot, pointing out of the pipe with its tip on the dot
+    /// box's outer edge. The carrier line is unstroked and only places the marker.
+    fn write_arrowhead(
+        &mut self,
+        depth: usize,
+        dot_bounds: BoxRect,
+        dir: PipeDir,
+        at_start: bool,
+        kind: PipeKind,
+    ) {
+        let center_x = dot_bounds.x + dot_bounds.width / 2.0;
+        let center_y = dot_bounds.y + dot_bounds.height / 2.0;
+        let ((base_x, base_y), (tip_x, tip_y)) = match (dir, at_start) {
+            (PipeDir::Horizontal, true) => (
+                (dot_bounds.x + ARROW_LENGTH_PX, center_y),
+                (dot_bounds.x, center_y),
+            ),
+            (PipeDir::Horizontal, false) => (
+                (dot_bounds.right() - ARROW_LENGTH_PX, center_y),
+                (dot_bounds.right(), center_y),
+            ),
+            (PipeDir::Vertical, true) => (
+                (center_x, dot_bounds.y + ARROW_LENGTH_PX),
+                (center_x, dot_bounds.y),
+            ),
+            (PipeDir::Vertical, false) => (
+                (center_x, dot_bounds.bottom() - ARROW_LENGTH_PX),
+                (center_x, dot_bounds.bottom()),
+            ),
+        };
+        let marker_id = self.arrow_marker_id(kind);
+        self.line(
+            depth,
+            &format!(
+                r#"<line x1="{}" y1="{}" x2="{}" y2="{}" stroke="none" marker-end="url(#{marker_id})"/>"#,
+                format_number(base_x),
+                format_number(base_y),
+                format_number(tip_x),
+                format_number(tip_y),
+            ),
+        );
     }
 
     /// An end dot of a wire, filled or hollow as the palette says.
