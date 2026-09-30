@@ -100,3 +100,49 @@ fn badge_names_the_canvas_uppercased() {
         "badge left padding",
     );
 }
+
+#[test]
+fn internal_canvas_badge_reads_internal_in_purple() {
+    let page = page_from(json!({
+        "title": "Title",
+        "kicker": "Kicker",
+        "lede": "Lede",
+        "canvas": "internal",
+        "body": one_pipe_body(),
+        "legend": []
+    }));
+    let geometry = layout(&page);
+    let run = part(node(&geometry, "/kicker"), PartName::BadgeText)
+        .text
+        .clone()
+        .unwrap();
+    assert_eq!(run.text, "INTERNAL");
+    assert_eq!(run.color, "#7B1FA2");
+}
+
+#[test]
+fn note_kind_selects_its_text_style() {
+    let notes: Vec<serde_json::Value> = ["kicker", "h1", "lede", "legend", "foot"]
+        .iter()
+        .map(|kind| json!({ "tag": "Note", "kind": kind, "text": "Note text" }))
+        .collect();
+    let geometry = layout(&page_with_body(
+        1280,
+        json!([{ "tag": "Col", "children": notes }]),
+    ));
+    let expected = [
+        ("NOTE TEXT", 11.0, 13.2, "#1A73E8"),
+        ("Note text", 20.0, 24.0, "#202124"),
+        ("Note text", 13.0, 15.6, "#5F6368"),
+        ("Note text", 12.0, 14.4, "#5F6368"),
+        ("Note text", 11.0, 13.2, "#5F6368"),
+    ];
+    for (index, (text, size, line_height, color)) in expected.into_iter().enumerate() {
+        let note = node(&geometry, &format!("/body/0/children/{index}"));
+        let run = part(note, PartName::Text).text.clone().unwrap();
+        assert_eq!(run.text, text, "note {index}");
+        assert_eq!(run.style.size_px, size, "note {index}");
+        assert_close(note.bounds.height, line_height, "note height");
+        assert_eq!(run.color, color, "note {index}");
+    }
+}
