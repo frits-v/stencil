@@ -518,7 +518,12 @@ impl SvgWriter {
             | PartName::TagSub
             | PartName::HubText
             | PartName::LegendLabel
-            | PartName::LegendText => {}
+            | PartName::LegendText
+            | PartName::Heading
+            | PartName::Marker
+            | PartName::BodyLine
+            | PartName::Accent
+            | PartName::LabelChip => {}
         }
         Ok(())
     }

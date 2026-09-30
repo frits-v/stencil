@@ -504,9 +504,10 @@ mod dusk {
                 Canvas::Internal => BADGE_INK_INTERNAL,
             },
             TextStyleName::Kicker => KICKER,
-            TextStyleName::Title | TextStyleName::CardFunction | TextStyleName::LegendLabel => {
-                TEXT_PRIMARY
-            }
+            TextStyleName::Title
+            | TextStyleName::CardFunction
+            | TextStyleName::LegendLabel
+            | TextStyleName::BlockBody => TEXT_PRIMARY,
             TextStyleName::TagLabel => match pipe_kind {
                 Some(PipeKind::Deny) => DENY_TAG_INK,
                 Some(PipeKind::Gray | PipeKind::Blue | PipeKind::Pink | PipeKind::Dash) | None => {
@@ -604,7 +605,8 @@ mod wire {
             | TextStyleName::CardFunction
             | TextStyleName::Ask
             | TextStyleName::TagLabel
-            | TextStyleName::LegendLabel => INK,
+            | TextStyleName::LegendLabel
+            | TextStyleName::BlockBody => INK,
         }
     }
 }

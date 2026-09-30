@@ -12,6 +12,8 @@ pub enum CheckName {
     TextFitsBox,
     RememberedConstants,
     LegendConsistency,
+    LinksRouted,
+    LinksAvoidBoxes,
 }
 
 impl CheckName {
@@ -23,6 +25,8 @@ impl CheckName {
             CheckName::TextFitsBox => "text-fits-box",
             CheckName::RememberedConstants => "remembered-constants",
             CheckName::LegendConsistency => "legend-consistency",
+            CheckName::LinksRouted => "links-routed",
+            CheckName::LinksAvoidBoxes => "links-avoid-boxes",
         }
     }
 
@@ -32,8 +36,10 @@ impl CheckName {
         match (self, singular) {
             (CheckName::ChildInsideContainer | CheckName::LegendConsistency, true) => "relation",
             (CheckName::ChildInsideContainer | CheckName::LegendConsistency, false) => "relations",
-            (CheckName::SiblingsDoNotOverlap, true) => "pair",
-            (CheckName::SiblingsDoNotOverlap, false) => "pairs",
+            (CheckName::SiblingsDoNotOverlap | CheckName::LinksAvoidBoxes, true) => "pair",
+            (CheckName::SiblingsDoNotOverlap | CheckName::LinksAvoidBoxes, false) => "pairs",
+            (CheckName::LinksRouted, true) => "link",
+            (CheckName::LinksRouted, false) => "links",
             (CheckName::TextFitsBox, true) => "text run",
             (CheckName::TextFitsBox, false) => "text runs",
             (CheckName::RememberedConstants, true) => "text field",
@@ -53,12 +59,46 @@ pub struct CheckReport {
     pub check: CheckName,
     pub examined: u64,
     pub defects: Vec<Defect>,
+    /// Why the surface this check examines does not exist on the page, for example
+    /// "page has no links". None for every report that looked at the page.
+    pub not_applicable: Option<&'static str>,
+}
+
+/// How a report reads (section 6). A check that examined nothing fails unless the surface
+/// it examines does not exist on the page.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum CheckOutcome {
+    Passed,
+    Failed,
+    NotApplicable,
 }
 
 impl CheckReport {
-    /// examined > 0 and no defects.
+    /// A report for a check whose surface does not exist on the page: examined 0, no
+    /// defects, and `reason` naming the missing surface.
+    pub fn not_applicable(check: CheckName, reason: &'static str) -> Self {
+        CheckReport {
+            check,
+            examined: 0,
+            defects: Vec::new(),
+            not_applicable: Some(reason),
+        }
+    }
+
+    /// Passed when examined > 0 with no defects. NotApplicable only when a reason is set,
+    /// nothing was examined and there are no defects; a reason on a report that examined
+    /// something or found defects is inconsistent and reads as Failed.
+    pub fn outcome(&self) -> CheckOutcome {
+        match (self.not_applicable, self.examined, self.defects.is_empty()) {
+            (None, 1.., true) => CheckOutcome::Passed,
+            (Some(_), 0, true) => CheckOutcome::NotApplicable,
+            (None, 0, _) | (None, 1.., false) | (Some(_), _, _) => CheckOutcome::Failed,
+        }
+    }
+
+    /// examined > 0, no defects and no not-applicable reason.
     pub fn passed(&self) -> bool {
-        self.examined > 0 && self.defects.is_empty()
+        self.outcome() == CheckOutcome::Passed
     }
 }
 
@@ -132,6 +172,7 @@ pub fn remembered_constants(page: &Page) -> CheckReport {
         check: CheckName::RememberedConstants,
         examined: count_as_u64(fields.len()),
         defects,
+        not_applicable: None,
     }
 }
 
@@ -211,6 +252,7 @@ pub fn legend_consistency(page: &Page) -> CheckReport {
         check: CheckName::LegendConsistency,
         examined: count_as_u64(uses.len().saturating_add(legend_examined)),
         defects,
+        not_applicable: None,
     }
 }
 

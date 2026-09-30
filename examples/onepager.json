@@ -75,8 +75,16 @@
         },
         {
           "tag": "Col",
+          "gap": 64,
           "children": [
-            { "tag": "Pcard", "id": "console", "icon": "devops", "fn": "Operator console", "pn": "web client" },
+            {
+              "tag": "Row",
+              "justify": "center",
+              "grow": [0],
+              "children": [
+                { "tag": "Pcard", "id": "console", "icon": "devops", "fn": "Operator console", "pn": "web client" }
+              ]
+            },
             {
               "tag": "Zone",
               "id": "cloud",
@@ -84,24 +92,50 @@
               "label": "Google Cloud",
               "children": [
                 {
-                  "tag": "Row",
+                  "tag": "Col",
+                  "gap": 48,
                   "children": [
-                    { "tag": "Pcard", "id": "gateway", "icon": "networking", "fn": "Gateway", "pn": "API Gateway" },
-                    { "tag": "Pcard", "id": "api", "icon": "cloud-run", "fn": "Trigger API", "pn": "Cloud Run" }
-                  ]
-                },
-                {
-                  "tag": "Row",
-                  "children": [
-                    { "tag": "Pcard", "id": "queue", "icon": "integration", "fn": "Evaluation queue", "pn": "Pub/Sub" },
-                    { "tag": "Pcard", "id": "worker", "icon": "cloud-run", "fn": "Clip worker", "pn": "Cloud Run" }
-                  ]
-                },
-                {
-                  "tag": "Row",
-                  "children": [
-                    { "tag": "Pcard", "id": "evaluator", "icon": "vertex-ai", "fn": "Clip evaluator", "pn": "Vertex AI" },
-                    { "tag": "Pcard", "id": "database", "icon": "cloud-sql", "fn": "Verdict store", "pn": "Cloud SQL" }
+                    {
+                      "tag": "Row",
+                      "justify": "center",
+                      "grow": [0],
+                      "children": [
+                        { "tag": "Pcard", "id": "gateway", "icon": "networking", "fn": "Gateway", "pn": "API Gateway" }
+                      ]
+                    },
+                    {
+                      "tag": "Row",
+                      "justify": "center",
+                      "grow": [0],
+                      "children": [
+                        { "tag": "Pcard", "id": "api", "icon": "cloud-run", "fn": "Trigger API", "pn": "Cloud Run" }
+                      ]
+                    },
+                    {
+                      "tag": "Row",
+                      "justify": "center",
+                      "grow": [0],
+                      "children": [
+                        { "tag": "Pcard", "id": "queue", "icon": "integration", "fn": "Evaluation queue", "pn": "Pub/Sub" }
+                      ]
+                    },
+                    {
+                      "tag": "Row",
+                      "justify": "center",
+                      "grow": [0],
+                      "children": [
+                        { "tag": "Pcard", "id": "worker", "icon": "cloud-run", "fn": "Clip worker", "pn": "Cloud Run" }
+                      ]
+                    },
+                    {
+                      "tag": "Row",
+                      "grow": [0, 0],
+                      "justify": "space-between",
+                      "children": [
+                        { "tag": "Pcard", "id": "evaluator", "icon": "vertex-ai", "fn": "Clip evaluator", "pn": "Vertex AI" },
+                        { "tag": "Pcard", "id": "database", "icon": "cloud-sql", "fn": "Verdict store", "pn": "Cloud SQL" }
+                      ]
+                    }
                   ]
                 }
               ]
@@ -128,8 +162,8 @@
     { "from": "gateway", "to": "api", "kind": "blue", "label": "2 authorized call" },
     { "from": "api", "to": "queue", "kind": "blue", "label": "3 queue plan" },
     { "from": "queue", "to": "worker", "kind": "blue", "label": "4 deliver job" },
-    { "from": "worker", "to": "evaluator", "kind": "blue", "label": "5 evaluate clip" },
-    { "from": "worker", "to": "database", "kind": "blue", "label": "6 write verdict" },
-    { "from": "gateway", "to": "database", "kind": "deny", "label": "no direct path" }
+    { "from": "worker", "to": "evaluator", "kind": "blue", "label": "5 evaluate clip", "from_side": "left", "to_side": "top" },
+    { "from": "worker", "to": "database", "kind": "blue", "label": "6 write verdict", "from_side": "right", "to_side": "top" },
+    { "from": "evaluator", "to": "database", "kind": "deny", "label": "no direct write" }
   ]
 }
