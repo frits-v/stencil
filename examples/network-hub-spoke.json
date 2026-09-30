@@ -1,0 +1,498 @@
+{
+  "title": "One transit hub, one Shared VPC per environment, every path between them named. Prod and nonprod never peer.",
+  "kicker": "Landing zone · hub and spoke · Dedicated Interconnect 99.99% · SOW / deck / exec",
+  "lede": "Two metros land four VLAN attachments on two Cloud Routers in the transit hub. Spokes attach through Network Connectivity Center. Tiers sit in their own subnets with no public IPs; ingress enters through one load balancer with Cloud Armor and IAP in front.",
+  "foot": "Stress figure for the stencil renderer · hop facts are illustrative and were not looked up this session",
+  "width": 1440,
+  "canvas": "customer",
+  "body": [
+    {
+      "tag": "Row",
+      "gap": 8,
+      "grow": [
+        4,
+        4,
+        13
+      ],
+      "children": [
+        {
+          "tag": "Col",
+          "gap": 8,
+          "children": [
+            {
+              "tag": "Zone",
+              "kind": "onprem-a",
+              "label": "On-prem · Metro 1",
+              "children": [
+                {
+                  "tag": "Pcard",
+                  "icon": "hybrid",
+                  "fn": "Edge router 1",
+                  "pn": "port toward Google"
+                },
+                {
+                  "tag": "Pcard",
+                  "icon": "hybrid",
+                  "fn": "Edge router 2",
+                  "pn": "port toward Google"
+                }
+              ]
+            },
+            {
+              "tag": "Zone",
+              "kind": "onprem-b",
+              "label": "On-prem · Metro 2",
+              "children": [
+                {
+                  "tag": "Pcard",
+                  "icon": "hybrid",
+                  "fn": "Edge router 3",
+                  "pn": "port toward Google"
+                },
+                {
+                  "tag": "Pcard",
+                  "icon": "hybrid",
+                  "fn": "Edge router 4",
+                  "pn": "port toward Google"
+                }
+              ]
+            },
+            {
+              "tag": "Zone",
+              "kind": "project",
+              "label": "Corporate network",
+              "children": [
+                {
+                  "tag": "Pcard",
+                  "icon": "security-identity",
+                  "fn": "Perimeter firewall",
+                  "pn": "on-prem · inspects both metros"
+                },
+                {
+                  "tag": "Pcard",
+                  "icon": "networking",
+                  "fn": "Corporate DNS",
+                  "pn": "authoritative for corp zones"
+                },
+                {
+                  "tag": "Pcard",
+                  "icon": "compute",
+                  "fn": "Branch users",
+                  "pn": "SD-WAN · no direct cloud path"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "tag": "Col",
+          "grow": [
+            1,
+            1,
+            1
+          ],
+          "children": [
+            {
+              "tag": "Col",
+              "justify": "center",
+              "children": [
+                {
+                  "tag": "Tee",
+                  "kind": "blue",
+                  "hub": "Dedicated Interconnect · Metro 1",
+                  "arms": [
+                    {
+                      "tag": "Pipe",
+                      "dir": "h",
+                      "kind": "blue",
+                      "label": "VLAN 1",
+                      "sub": "EAD 1 · BGP"
+                    },
+                    {
+                      "tag": "Pipe",
+                      "dir": "h",
+                      "kind": "blue",
+                      "label": "VLAN 2",
+                      "sub": "EAD 2 · BGP"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "tag": "Col",
+              "justify": "center",
+              "children": [
+                {
+                  "tag": "Tee",
+                  "kind": "pink",
+                  "hub": "Dedicated Interconnect · Metro 2",
+                  "arms": [
+                    {
+                      "tag": "Pipe",
+                      "dir": "h",
+                      "kind": "pink",
+                      "label": "VLAN 3",
+                      "sub": "EAD 1 · BGP"
+                    },
+                    {
+                      "tag": "Pipe",
+                      "dir": "h",
+                      "kind": "pink",
+                      "label": "VLAN 4",
+                      "sub": "EAD 2 · BGP"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "tag": "Col",
+              "gap": 12,
+              "justify": "center",
+              "children": [
+                {
+                  "tag": "Pipe",
+                  "dir": "h",
+                  "kind": "dash",
+                  "label": "HA VPN",
+                  "sub": "backup path · IPsec · BGP"
+                },
+                {
+                  "tag": "Pipe",
+                  "dir": "h",
+                  "kind": "dash",
+                  "label": "DNS forwarding",
+                  "sub": "corp zones · both directions"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "tag": "Zone",
+          "kind": "gcp",
+          "label": "Google Cloud",
+          "children": [
+            {
+              "tag": "Zone",
+              "kind": "vpc",
+              "label": "Transit hub VPC · NCC hub · one network, two regions",
+              "children": [
+                {
+                  "tag": "Row",
+                  "gap": 8,
+                  "grow": [
+                    1,
+                    0,
+                    1
+                  ],
+                  "children": [
+                    {
+                      "tag": "Zone",
+                      "kind": "region-a",
+                      "label": "Region A",
+                      "children": [
+                        {
+                          "tag": "Pcard",
+                          "icon": "networking",
+                          "fn": "Cloud Router A",
+                          "pn": "private ASN · RFC 6996",
+                          "fact": "BGP timers from the Cloud Router doc"
+                        },
+                        {
+                          "tag": "Pcard",
+                          "icon": "networking",
+                          "fn": "Cloud NAT A",
+                          "pn": "egress for private subnets"
+                        },
+                        {
+                          "tag": "Pcard",
+                          "icon": "networking",
+                          "fn": "HA VPN gateway A",
+                          "pn": "backup to Metro 1"
+                        }
+                      ]
+                    },
+                    {
+                      "tag": "Pipe",
+                      "dir": "h",
+                      "kind": "dash",
+                      "label": "failover",
+                      "sub": "Region A ↔ Region B"
+                    },
+                    {
+                      "tag": "Zone",
+                      "kind": "region-b",
+                      "label": "Region B",
+                      "children": [
+                        {
+                          "tag": "Pcard",
+                          "icon": "networking",
+                          "fn": "Cloud Router B",
+                          "pn": "same private ASN as Region A"
+                        },
+                        {
+                          "tag": "Pcard",
+                          "icon": "networking",
+                          "fn": "Cloud NAT B",
+                          "pn": "egress for private subnets"
+                        },
+                        {
+                          "tag": "Pcard",
+                          "icon": "networking",
+                          "fn": "HA VPN gateway B",
+                          "pn": "backup to Metro 2"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "tag": "Fact",
+                  "text": "Hub advertises the Google VIP ranges named on the Private Google Access doc · Cloud DNS forwarding source range from the forwarding-zones doc"
+                }
+              ]
+            },
+            {
+              "tag": "Row",
+              "gap": 8,
+              "grow": [
+                2,
+                9
+              ],
+              "children": [
+                {
+                  "tag": "Col",
+                  "justify": "center",
+                  "children": [
+                    {
+                      "tag": "Tee",
+                      "kind": "gray",
+                      "hub": "NCC spokes",
+                      "arms": [
+                        {
+                          "tag": "Pipe",
+                          "dir": "h",
+                          "kind": "gray",
+                          "label": "prod spoke",
+                          "sub": "routes exchanged"
+                        },
+                        {
+                          "tag": "Pipe",
+                          "dir": "h",
+                          "kind": "gray",
+                          "label": "nonprod spoke",
+                          "sub": "routes exchanged"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "tag": "Col",
+                  "gap": 0,
+                  "children": [
+                    {
+                      "tag": "Zone",
+                      "kind": "project",
+                      "label": "Shared VPC · prod · host project",
+                      "children": [
+                        {
+                          "tag": "Row",
+                          "gap": 8,
+                          "grow": [
+                            1,
+                            0,
+                            1
+                          ],
+                          "children": [
+                            {
+                              "tag": "Zone",
+                              "kind": "subnet",
+                              "label": "web subnet · Region A",
+                              "children": [
+                                {
+                                  "tag": "Pcard",
+                                  "icon": "networking",
+                                  "fn": "Ingress",
+                                  "pn": "External Application LB",
+                                  "fact": "Cloud Armor · IAP"
+                                },
+                                {
+                                  "tag": "Pcard",
+                                  "icon": "compute-engine",
+                                  "fn": "Web tier",
+                                  "pn": "MIG · no public IP"
+                                }
+                              ]
+                            },
+                            {
+                              "tag": "Pipe",
+                              "dir": "h",
+                              "kind": "gray",
+                              "label": "to app",
+                              "sub": "internal LB"
+                            },
+                            {
+                              "tag": "Zone",
+                              "kind": "subnet",
+                              "label": "app subnet · Region A",
+                              "children": [
+                                {
+                                  "tag": "Pcard",
+                                  "icon": "compute-engine",
+                                  "fn": "App tier",
+                                  "pn": "Compute Engine MIG"
+                                },
+                                {
+                                  "tag": "Pcard",
+                                  "icon": "serverless",
+                                  "fn": "Async workers",
+                                  "pn": "Cloud Run · Direct VPC"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "tag": "Pipe",
+                          "dir": "v",
+                          "kind": "gray",
+                          "label": "to data",
+                          "sub": "private IP only · no route from web"
+                        },
+                        {
+                          "tag": "Zone",
+                          "kind": "subnet",
+                          "label": "data subnet · Region A",
+                          "children": [
+                            {
+                              "tag": "Row",
+                              "gap": 8,
+                              "grow": [
+                                1,
+                                1
+                              ],
+                              "children": [
+                                {
+                                  "tag": "Pcard",
+                                  "icon": "cloud-sql",
+                                  "fn": "Primary database",
+                                  "pn": "Cloud SQL · private IP",
+                                  "fact": "CMEK · PSA path"
+                                },
+                                {
+                                  "tag": "Pcard",
+                                  "icon": "databases",
+                                  "fn": "Cache",
+                                  "pn": "Memorystore · private"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "tag": "Pipe",
+                      "dir": "v",
+                      "kind": "deny",
+                      "label": "prod ↔ nonprod",
+                      "sub": "no peering · no shared routes"
+                    },
+                    {
+                      "tag": "Zone",
+                      "kind": "project",
+                      "label": "Shared VPC · nonprod · host project",
+                      "children": [
+                        {
+                          "tag": "Row",
+                          "gap": 8,
+                          "grow": [
+                            1,
+                            0,
+                            1
+                          ],
+                          "children": [
+                            {
+                              "tag": "Zone",
+                              "kind": "k8s",
+                              "label": "GKE · private cluster · Region B",
+                              "children": [
+                                {
+                                  "tag": "Pcard",
+                                  "icon": "gke",
+                                  "fn": "Control plane",
+                                  "pn": "private endpoint only"
+                                },
+                                {
+                                  "tag": "Pcard",
+                                  "icon": "containers",
+                                  "fn": "Node pool",
+                                  "pn": "no external IPs · alias IPs"
+                                }
+                              ]
+                            },
+                            {
+                              "tag": "Pipe",
+                              "dir": "h",
+                              "kind": "gray",
+                              "label": "shared services",
+                              "sub": "internal only"
+                            },
+                            {
+                              "tag": "Zone",
+                              "kind": "optional",
+                              "label": "Optional · shared services · Region B",
+                              "children": [
+                                {
+                                  "tag": "Pcard",
+                                  "icon": "networking",
+                                  "fn": "Private DNS",
+                                  "pn": "Cloud DNS · private zones"
+                                },
+                                {
+                                  "tag": "Pcard",
+                                  "icon": "observability",
+                                  "fn": "Flow logs and audit",
+                                  "pn": "Cloud Logging · org sink"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "legend": [
+    {
+      "kind": "blue",
+      "text": "Metro 1 ↔ Region A"
+    },
+    {
+      "kind": "pink",
+      "text": "Metro 2 ↔ Region B"
+    },
+    {
+      "kind": "dash",
+      "text": "backup path, DNS forwarding and region failover"
+    },
+    {
+      "kind": "gray",
+      "text": "east-west inside Google Cloud"
+    },
+    {
+      "kind": "deny",
+      "text": "prohibited path"
+    }
+  ]
+}
