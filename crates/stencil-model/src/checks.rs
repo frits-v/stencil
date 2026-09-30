@@ -1,5 +1,6 @@
 //! Check reports (section 6) and the two geometry-free checks.
 
+use crate::LEGEND_ENTRIES_MAX;
 use crate::document::{Node, Page, PipeKind};
 use crate::pointer::NodePointer;
 use crate::walk::{NodeRef, body_nodes, text_fields};
@@ -134,8 +135,10 @@ pub fn remembered_constants(page: &Page) -> CheckReport {
     }
 }
 
-/// Each pipe-kind use (every Pipe, Tee arm and Tee spine) and each legend entry is one
-/// examined relation. Defects are listed uses first, in body order, then legend entries.
+/// Each pipe-kind use (every Pipe, Tee arm and Tee spine) and each of the first
+/// LEGEND_ENTRIES_MAX + 1 legend entries is one examined relation. Defects are listed uses
+/// first, in body order, then legend entries. The bound caps the duplicate scan on a page
+/// that was never vetted.
 pub fn legend_consistency(page: &Page) -> CheckReport {
     let mut uses: Vec<(NodePointer, PipeKind, &'static str)> = Vec::new();
     for entry in body_nodes(page) {
@@ -159,6 +162,7 @@ pub fn legend_consistency(page: &Page) -> CheckReport {
         if !page
             .legend
             .iter()
+            .take(LEGEND_ENTRIES_MAX + 1)
             .any(|legend_entry| legend_entry.kind == *kind)
         {
             defects.push(Defect {
@@ -169,7 +173,8 @@ pub fn legend_consistency(page: &Page) -> CheckReport {
     }
 
     let legend_pointer = NodePointer::root().child("legend");
-    for (index, legend_entry) in page.legend.iter().enumerate() {
+    let legend_examined = page.legend.len().min(LEGEND_ENTRIES_MAX + 1);
+    for (index, legend_entry) in page.legend.iter().enumerate().take(legend_examined) {
         let kind = legend_entry.kind;
         let entry_pointer = legend_pointer.index(index);
         if !uses.iter().any(|(_, used_kind, _)| *used_kind == kind) {
@@ -197,7 +202,7 @@ pub fn legend_consistency(page: &Page) -> CheckReport {
 
     CheckReport {
         check: CheckName::LegendConsistency,
-        examined: count_as_u64(uses.len().saturating_add(page.legend.len())),
+        examined: count_as_u64(uses.len().saturating_add(legend_examined)),
         defects,
     }
 }

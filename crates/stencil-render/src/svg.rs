@@ -4,7 +4,8 @@ use stencil_layout::styles::badge_fill;
 use stencil_layout::{BoxRect, NodeGeometry, PageGeometry, Part, PartName, TextAlign, TextRun};
 use stencil_model::pointer::NodePointer;
 use stencil_model::{
-    Canvas, IconName, LegendEntry, Node, NodeRef, Page, PipeDir, PipeKind, ZoneKind, body_nodes,
+    Canvas, IconName, LEGEND_ENTRIES_MAX, LegendEntry, Node, NodeRef, Page, PipeDir, PipeKind,
+    ZoneKind, body_nodes,
 };
 
 use crate::icons::icon_data_uri;
@@ -82,7 +83,8 @@ pub fn render_svg(page: &Page, geometry: &PageGeometry) -> Result<SvgDocument, R
 }
 
 /// Pointers and document nodes in section 4.4 geometry order. The body portion is
-/// `body_nodes`, which is bounded by NODES_MAX + 1.
+/// `body_nodes`, which is bounded by NODES_MAX + 1, and the legend portion stops after
+/// LEGEND_ENTRIES_MAX + 1 entries; a longer geometry then fails as a mismatch.
 fn geometry_order(page: &Page) -> Vec<(NodePointer, DocumentNode<'_>)> {
     let root = NodePointer::root();
     let mut order = vec![
@@ -100,12 +102,18 @@ fn geometry_order(page: &Page) -> Vec<(NodePointer, DocumentNode<'_>)> {
     if !page.legend.is_empty() {
         let legend_pointer = root.child("legend");
         order.push((legend_pointer.clone(), DocumentNode::Legend));
-        order.extend(page.legend.iter().enumerate().map(|(index, entry)| {
-            (
-                legend_pointer.index(index),
-                DocumentNode::LegendEntry(entry),
-            )
-        }));
+        order.extend(
+            page.legend
+                .iter()
+                .enumerate()
+                .take(LEGEND_ENTRIES_MAX + 1)
+                .map(|(index, entry)| {
+                    (
+                        legend_pointer.index(index),
+                        DocumentNode::LegendEntry(entry),
+                    )
+                }),
+        );
     }
     if page.foot.is_some() {
         order.push((root.child("foot"), DocumentNode::Foot));
