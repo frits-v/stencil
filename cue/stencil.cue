@@ -3,7 +3,10 @@
 // coordinates; renderers and derived views (eraser.cue) decide geometry.
 package stencil
 
-import "list"
+import (
+	"list"
+	"strings"
+)
 
 // Values that read as plausible and are wrong often enough that no string in
 // a figure may carry them:
@@ -16,8 +19,13 @@ import "list"
 	!~"\\b35\\.191\\.0\\.0/16\\b" &
 	!~"\\b10\\.8\\.0\\.0/28\\b"
 
-// Every text field in the vocabulary.
-#Text: string & !="" & #NoRememberedConstant
+// Every text field in the vocabulary. The bounds match the Rust model
+// (crates/stencil-model/src/document.rs): 1 to 400 characters.
+#Text: string & !="" & strings.MaxRunes(400) & #NoRememberedConstant
+
+// A page body and the children of a Row, Col or Zone: 1 to 256 nodes, as in
+// the Rust model.
+#Children: [...#Node] & list.MinItems(1) & list.MaxItems(256)
 
 #Canvas:   "customer" | "internal"
 #PipeKind: "gray" | "blue" | "pink" | "dash" | "deny"
@@ -62,7 +70,9 @@ import "list"
 	foot?:  #Text
 	width?: int & >=640 & <=2560
 	canvas: #Canvas
-	body: [...#Node]
+	body:   #Children
+	// Unique kinds bound the legend at five entries, inside the Rust
+	// model's 16.
 	legend: [...#LegendEntry]
 
 	// Each check below is a struct keyed by the offending item, so a failure
@@ -129,7 +139,7 @@ import "list"
 	gap?: int & >=0 & <=64
 	grow?: [...int & >=0 & <=100]
 	justify?: #Justify
-	children: [...#Node]
+	children: #Children
 	if grow != _|_ {
 		_growLengthMatchesChildren: len(grow) & len(children)
 	}
@@ -152,10 +162,10 @@ import "list"
 // A tinted zone (region-a, region-b, onprem-a, onprem-b) must not contain a
 // pipe, tee arm or nested zone of the other tint anywhere below it.
 #Zone: {
-	tag:   "Zone"
-	kind:  #ZoneKind
-	label: #Text
-	children: [...#Node]
+	tag:      "Zone"
+	kind:     #ZoneKind
+	label:    #Text
+	children: #Children
 	_kinds: {for c in children {c._kinds}}
 	_below: {for c in children {c._zoneKinds}}
 	_zoneKinds: {(kind): true, _below}

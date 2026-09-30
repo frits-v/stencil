@@ -4,7 +4,8 @@
 //
 // The view accepts one shape, the g7 shape, and asserts it:
 //   body: [Row [ Col [onprem Zones of cards],
-//                Col [ Col [h Pipes], ... ], one pipe per card, in card order,
+//                Col [ Col [h Pipes], ... ], one half per onprem zone and
+//                one pipe per card, in card order,
 //                Zone gcp [ Zone vpc [Zone, v Pipe, Zone, ...] ] ]]
 package stencil
 
@@ -61,9 +62,10 @@ import (
 			{tag: "Zone", kind: "gcp", children: [{tag: "Zone", kind: "vpc"}]},
 		]
 	}]
-	_row:  T.body[0]
-	_left: _row.children[0]
-	_gutter: [for half in _row.children[1].children for pipe in half.children {pipe}]
+	_row:    T.body[0]
+	_left:   _row.children[0]
+	_halves: _row.children[1].children
+	_gutter: [for half in _halves for pipe in half.children {pipe}]
 	_gcp:   _row.children[2]
 	_vpc:   _gcp.children[0]
 	_stack: _vpc
@@ -89,7 +91,6 @@ import (
 		y:        _leftStacks[i].entities[k].y
 		zoneKind: z.kind
 	}]
-	_onePipePerCard: len(_gutter) & len(_cards)
 
 	// Google Cloud frame, VPC and the region stack.
 	let gcpX = P.margin + P.leftW + P.gutterW
@@ -137,6 +138,20 @@ import (
 	_swatch: {gray: "Solid gray", blue: "Solid blue", pink: "Solid pink", dash: "Dashed", deny: "Dashed red"}
 
 	out: {
+		// The checks sit inside out because vet evaluates only what the
+		// exported views reach; a hidden field beside out never runs.
+		_onePipePerCard: len(_gutter) & len(_cards)
+		// Gutter half i sits beside left zone i and carries only that
+		// metro's pipes.
+		_oneHalfPerMetro: len(_halves) & len(_left.children)
+		_halfBesideItsMetro: {
+			for i, half in _halves if i < len(_left.children) for pipe in half.children {
+				if #MetroFor[pipe.kind] != _left.children[i].kind {
+					(pipe.label): "\(pipe.kind) pipe in gutter half \(i)" & "beside \(_left.children[i].kind) zone"
+				}
+			}
+		}
+
 		entities: list.Concat([
 			[
 				{tag: "Note", id: "kicker", kind: "kicker", x: P.margin, y: P.margin, width: pageW, text: "\(strings.ToUpper(T.canvas)) · \(T.kicker)"},
