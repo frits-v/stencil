@@ -1,0 +1,515 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Page",
+  "type": "object",
+  "properties": {
+    "body": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Node"
+      },
+      "maxItems": 256,
+      "minItems": 1
+    },
+    "canvas": {
+      "$ref": "#/$defs/Canvas"
+    },
+    "foot": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "maxLength": 400,
+      "minLength": 1
+    },
+    "kicker": {
+      "type": "string",
+      "maxLength": 400,
+      "minLength": 1
+    },
+    "lede": {
+      "type": "string",
+      "maxLength": 400,
+      "minLength": 1
+    },
+    "legend": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/LegendEntry"
+      },
+      "maxItems": 16
+    },
+    "title": {
+      "type": "string",
+      "maxLength": 400,
+      "minLength": 1
+    },
+    "width": {
+      "type": "integer",
+      "format": "uint32",
+      "default": 1280,
+      "maximum": 2560,
+      "minimum": 640
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "title",
+    "kicker",
+    "lede",
+    "canvas",
+    "body",
+    "legend"
+  ],
+  "$defs": {
+    "Canvas": {
+      "type": "string",
+      "enum": [
+        "customer",
+        "internal"
+      ]
+    },
+    "IconName": {
+      "type": "string",
+      "enum": [
+        "agents",
+        "ai-ml",
+        "bigquery",
+        "cloud-run-flat",
+        "cloud-run",
+        "cloud-sql",
+        "cloud-storage",
+        "compute-engine",
+        "compute",
+        "containers",
+        "data-analytics",
+        "databases",
+        "devops",
+        "gke",
+        "hybrid",
+        "integration",
+        "networking",
+        "observability",
+        "scc",
+        "security-identity",
+        "serverless",
+        "storage",
+        "vertex-ai"
+      ]
+    },
+    "Justify": {
+      "type": "string",
+      "enum": [
+        "start",
+        "center",
+        "end",
+        "space-between"
+      ]
+    },
+    "LegendEntry": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "$ref": "#/$defs/PipeKind"
+        },
+        "text": {
+          "type": "string",
+          "maxLength": 400,
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "text"
+      ]
+    },
+    "Node": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "children": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Node"
+              },
+              "maxItems": 256,
+              "minItems": 1
+            },
+            "gap": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "uint16",
+              "maximum": 64,
+              "minimum": 0
+            },
+            "grow": {
+              "type": [
+                "array",
+                "null"
+              ],
+              "items": {
+                "type": "integer",
+                "format": "uint16",
+                "maximum": 65535,
+                "minimum": 0
+              }
+            },
+            "justify": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Justify"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "tag": {
+              "type": "string",
+              "const": "Row"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "tag",
+            "children"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "children": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Node"
+              },
+              "maxItems": 256,
+              "minItems": 1
+            },
+            "gap": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "uint16",
+              "maximum": 64,
+              "minimum": 0
+            },
+            "grow": {
+              "type": [
+                "array",
+                "null"
+              ],
+              "items": {
+                "type": "integer",
+                "format": "uint16",
+                "maximum": 65535,
+                "minimum": 0
+              }
+            },
+            "justify": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Justify"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "tag": {
+              "type": "string",
+              "const": "Col"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "tag",
+            "children"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "children": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Node"
+              },
+              "maxItems": 256,
+              "minItems": 1
+            },
+            "kind": {
+              "$ref": "#/$defs/ZoneKind"
+            },
+            "label": {
+              "type": "string",
+              "maxLength": 400,
+              "minLength": 1
+            },
+            "tag": {
+              "type": "string",
+              "const": "Zone"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "tag",
+            "kind",
+            "label",
+            "children"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "ask": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 400,
+              "minLength": 1
+            },
+            "fact": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 400,
+              "minLength": 1
+            },
+            "fn": {
+              "type": "string",
+              "maxLength": 400,
+              "minLength": 1
+            },
+            "icon": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/IconName"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "pn": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 400,
+              "minLength": 1
+            },
+            "tag": {
+              "type": "string",
+              "const": "Pcard"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "tag",
+            "fn"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "tag": {
+              "type": "string",
+              "const": "Fact"
+            },
+            "text": {
+              "type": "string",
+              "maxLength": 400,
+              "minLength": 1
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "tag",
+            "text"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "$ref": "#/$defs/NoteKind"
+            },
+            "tag": {
+              "type": "string",
+              "const": "Note"
+            },
+            "text": {
+              "type": "string",
+              "maxLength": 400,
+              "minLength": 1
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "tag",
+            "kind",
+            "text"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "dir": {
+              "$ref": "#/$defs/PipeDir"
+            },
+            "kind": {
+              "$ref": "#/$defs/PipeKind"
+            },
+            "label": {
+              "type": "string",
+              "maxLength": 400,
+              "minLength": 1
+            },
+            "sub": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 400,
+              "minLength": 1
+            },
+            "tag": {
+              "type": "string",
+              "const": "Pipe"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "tag",
+            "dir",
+            "kind",
+            "label"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "arms": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/TeeArm"
+              },
+              "maxItems": 2,
+              "minItems": 2
+            },
+            "hub": {
+              "type": "string",
+              "maxLength": 400,
+              "minLength": 1
+            },
+            "kind": {
+              "$ref": "#/$defs/PipeKind"
+            },
+            "tag": {
+              "type": "string",
+              "const": "Tee"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "tag",
+            "kind",
+            "hub",
+            "arms"
+          ]
+        }
+      ]
+    },
+    "NoteKind": {
+      "type": "string",
+      "enum": [
+        "kicker",
+        "h1",
+        "lede",
+        "legend",
+        "foot"
+      ]
+    },
+    "PipeDir": {
+      "type": "string",
+      "enum": [
+        "h",
+        "v"
+      ]
+    },
+    "PipeKind": {
+      "type": "string",
+      "enum": [
+        "gray",
+        "blue",
+        "pink",
+        "dash",
+        "deny"
+      ]
+    },
+    "TeeArm": {
+      "description": "A Tee arm is written with `\"tag\": \"Pipe\"`, the same object shape as a Pipe node.",
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "dir": {
+              "$ref": "#/$defs/PipeDir"
+            },
+            "kind": {
+              "$ref": "#/$defs/PipeKind"
+            },
+            "label": {
+              "type": "string",
+              "maxLength": 400,
+              "minLength": 1
+            },
+            "sub": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 400,
+              "minLength": 1
+            },
+            "tag": {
+              "type": "string",
+              "const": "Pipe"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "tag",
+            "dir",
+            "kind",
+            "label"
+          ]
+        }
+      ]
+    },
+    "ZoneKind": {
+      "type": "string",
+      "enum": [
+        "gcp",
+        "vpc",
+        "region-a",
+        "region-b",
+        "subnet",
+        "onprem-a",
+        "onprem-b",
+        "project",
+        "optional",
+        "k8s",
+        "perimeter"
+      ]
+    }
+  }
+}
