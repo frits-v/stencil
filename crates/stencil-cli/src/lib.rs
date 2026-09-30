@@ -1,7 +1,8 @@
-//! The `stencil` command line (SPEC sections 4.6 and 7): `vet`, `render`, `check` and
-//! `schema`. `run` holds the whole program so integration tests call it directly.
+//! The `stencil` command line (SPEC sections 4.6 and 7): `vet`, `render`, `check`, `schema`
+//! and `prime`. `run` holds the whole program so integration tests call it directly.
 
 pub mod pipeline;
+pub mod prime;
 
 mod exit;
 mod report;
@@ -19,7 +20,7 @@ use stencil_render::DeviceScale;
 
 pub use exit::ExitCode;
 
-use exit::{clap_exit_code, failure_exit_code, reports_exit_code};
+use exit::{clap_exit_code, failure_exit_code, prime_exit_code, reports_exit_code};
 use pipeline::{
     Failure, LoadedDocument, OutputPaths, all_checks, load_document, model_checks, output_names,
     read_input, render_page, write_outputs,
@@ -71,6 +72,11 @@ enum Command {
     },
     /// Print the document JSON Schema
     Schema,
+    /// Print the authoring briefing for an agent, or one deeper topic
+    Prime {
+        /// themes, links, blocks, layout, checks, cue or example
+        topic: Option<String>,
+    },
 }
 
 /// The `--theme` values, one per `Theme` variant (section 11.4).
@@ -138,6 +144,7 @@ fn run_command(
         } => render(&json, &out_dir, scale, theme, stdout, stderr),
         Command::Check { json, theme } => check(&json, theme, stdout, stderr),
         Command::Schema => schema(stdout, stderr),
+        Command::Prime { topic } => prime(topic.as_deref(), stdout, stderr),
     }
 }
 
@@ -243,6 +250,41 @@ fn schema(stdout: &mut dyn Write, stderr: &mut dyn Write) -> io::Result<ExitCode
                 source,
             };
             report_failure("schema", &failure, stdout, stderr)
+        }
+    }
+}
+
+/// The base briefing, or the named topic. An unknown topic is a usage error: one line on
+/// stderr naming the topics, exit 2.
+fn prime(
+    topic: Option<&str>,
+    stdout: &mut dyn Write,
+    stderr: &mut dyn Write,
+) -> io::Result<ExitCode> {
+    let Some(topic_name) = topic else {
+        return match prime::base_text() {
+            Ok(text) => {
+                write!(stdout, "{text}")?;
+                Ok(ExitCode::Clean)
+            }
+            Err(error) => {
+                writeln!(stderr, "stencil prime: {error}")?;
+                Ok(prime_exit_code(&error))
+            }
+        };
+    };
+    match prime::Topic::from_name(topic_name) {
+        Some(topic) => {
+            write!(stdout, "{}", topic.text())?;
+            Ok(ExitCode::Clean)
+        }
+        None => {
+            writeln!(
+                stderr,
+                "stencil prime: unknown topic {topic_name:?}; topics: {}",
+                prime::topic_names()
+            )?;
+            Ok(ExitCode::CouldNotRun)
         }
     }
 }
