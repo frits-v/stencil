@@ -10,6 +10,7 @@ use stencil_render::RenderError;
 use stencil_text::FontError;
 
 use crate::pipeline::Failure;
+use crate::prime::PrimeError;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ExitCode {
@@ -79,6 +80,16 @@ pub fn render_exit_code(error: &RenderError) -> ExitCode {
         | RenderError::FontNotResolved { .. }
         | RenderError::PixmapAllocation { .. }
         | RenderError::PngEncode { .. } => ExitCode::CouldNotRun,
+    }
+}
+
+/// The briefing is built from the binary's own schema and texts, so any failure is an
+/// internal fault, never a defect of a document.
+pub fn prime_exit_code(error: &PrimeError) -> ExitCode {
+    match error {
+        PrimeError::SchemaShape { .. }
+        | PrimeError::MissingMarker { .. }
+        | PrimeError::Serialize { .. } => ExitCode::CouldNotRun,
     }
 }
 
@@ -266,6 +277,25 @@ mod tests {
             source: missing_glyph(),
         });
         assert_eq!(failure_exit_code(&layout_defect), ExitCode::Defects);
+    }
+
+    #[test]
+    fn prime_errors_could_not_run() {
+        let serialize_error = serde_json::from_str::<u8>("x").unwrap_err();
+        for error in [
+            PrimeError::SchemaShape {
+                path: "/$defs".to_string(),
+            },
+            PrimeError::MissingMarker {
+                marker: "{{vocabulary}}",
+            },
+            PrimeError::Serialize {
+                what: "theme",
+                source: serialize_error,
+            },
+        ] {
+            assert_eq!(prime_exit_code(&error), ExitCode::CouldNotRun);
+        }
     }
 
     #[test]
