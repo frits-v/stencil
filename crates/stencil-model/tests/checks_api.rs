@@ -3,9 +3,9 @@
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
 use stencil_model::NodePointer;
-use stencil_model::checks::{CheckName, CheckReport, Defect};
+use stencil_model::checks::{CheckName, CheckOutcome, CheckReport, Defect};
 
-const ALL_CHECKS: [(CheckName, &str, &str, &str); 5] = [
+const ALL_CHECKS: [(CheckName, &str, &str, &str); 7] = [
     (
         CheckName::ChildInsideContainer,
         "child-inside-container",
@@ -36,6 +36,13 @@ const ALL_CHECKS: [(CheckName, &str, &str, &str); 5] = [
         "relation",
         "relations",
     ),
+    (CheckName::LinksRouted, "links-routed", "link", "links"),
+    (
+        CheckName::LinksAvoidBoxes,
+        "links-avoid-boxes",
+        "pair",
+        "pairs",
+    ),
 ];
 
 #[test]
@@ -54,6 +61,7 @@ fn nothing_examined_fails() {
         check: CheckName::TextFitsBox,
         examined: 0,
         defects: vec![],
+        not_applicable: None,
     };
     assert!(!report.passed());
 }
@@ -67,6 +75,7 @@ fn a_defect_fails() {
             pointer: NodePointer::root().child("title"),
             message: "too wide".to_string(),
         }],
+        not_applicable: None,
     };
     assert!(!report.passed());
 }
@@ -77,6 +86,40 @@ fn examined_without_defects_passes() {
         check: CheckName::TextFitsBox,
         examined: 1,
         defects: vec![],
+        not_applicable: None,
     };
     assert!(report.passed());
+    assert_eq!(report.outcome(), CheckOutcome::Passed);
+}
+
+#[test]
+fn a_report_without_its_surface_is_not_applicable_and_not_passed() {
+    let report = CheckReport::not_applicable(CheckName::LinksRouted, "page has no links");
+    assert_eq!(report.examined, 0);
+    assert_eq!(report.outcome(), CheckOutcome::NotApplicable);
+    assert!(!report.passed());
+}
+
+#[test]
+fn a_not_applicable_reason_on_an_examined_or_defective_report_fails() {
+    let mut examined = CheckReport::not_applicable(CheckName::LinksRouted, "page has no links");
+    examined.examined = 1;
+    assert_eq!(examined.outcome(), CheckOutcome::Failed);
+    let mut defective = CheckReport::not_applicable(CheckName::LinksRouted, "page has no links");
+    defective.defects.push(Defect {
+        pointer: NodePointer::root().child("links"),
+        message: "not routed".to_string(),
+    });
+    assert_eq!(defective.outcome(), CheckOutcome::Failed);
+}
+
+#[test]
+fn nothing_examined_without_a_reason_is_failed() {
+    let report = CheckReport {
+        check: CheckName::LinksAvoidBoxes,
+        examined: 0,
+        defects: vec![],
+        not_applicable: None,
+    };
+    assert_eq!(report.outcome(), CheckOutcome::Failed);
 }

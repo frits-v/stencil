@@ -51,7 +51,7 @@ pub const FONT_SIZE_MAX_PX: f32 = 96.0;
 pub const LETTER_SPACING_MIN_EM: f32 = -0.2;
 pub const LETTER_SPACING_MAX_EM: f32 = 0.5;
 
-/// The 17 styles of section 2.9, in table order.
+/// The 18 styles of section 2.9, in table order.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum TextStyleName {
     Badge,
@@ -71,6 +71,7 @@ pub enum TextStyleName {
     LegendLabel,
     LegendText,
     Foot,
+    BlockBody,
 }
 
 impl TextStyleName {
@@ -94,6 +95,7 @@ impl TextStyleName {
             TextStyleName::LegendLabel => "legend_label",
             TextStyleName::LegendText => "legend_text",
             TextStyleName::Foot => "foot",
+            TextStyleName::BlockBody => "block_body",
         }
     }
 
@@ -119,6 +121,7 @@ impl TextStyleName {
             TextStyleName::LegendLabel => &LEGEND_LABEL,
             TextStyleName::LegendText => &LEGEND_TEXT,
             TextStyleName::Foot => &FOOT,
+            TextStyleName::BlockBody => &BLOCK_BODY,
         }
     }
 }
@@ -290,9 +293,19 @@ const FOOT: NamedTextStyle = inter(
     false,
 );
 
-/// The 17 styles of section 2.9, in table order, which is TextStyleName order:
+/// Body lines of the Text and Callout blocks (section 11.3): 12 px at a 1.45 line height.
+const BLOCK_BODY: NamedTextStyle = inter(
+    TextStyleName::BlockBody,
+    FontWeight::Regular,
+    12.0,
+    17.4,
+    0.0,
+    false,
+);
+
+/// The 18 styles of section 2.9, in table order, which is TextStyleName order:
 /// TEXT_STYLES[i].name as usize == i.
-pub const TEXT_STYLES: [NamedTextStyle; 17] = [
+pub const TEXT_STYLES: [NamedTextStyle; 18] = [
     BADGE,
     KICKER,
     TITLE,
@@ -310,6 +323,7 @@ pub const TEXT_STYLES: [NamedTextStyle; 17] = [
     LEGEND_LABEL,
     LEGEND_TEXT,
     FOOT,
+    BLOCK_BODY,
 ];
 
 #[derive(Debug, Clone, PartialEq)]
