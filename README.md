@@ -6,6 +6,13 @@ Build the binary with `cargo build --release`; it lands at `target/release/stenc
 
 ## Commands
 
+An agent runs `stencil prime` first. It prints a briefing of about 1,500 tokens: the authoring loop, the vocabulary with every field and enum value taken from the model, the layout rules, the checks and how to fix each defect. `stencil prime <topic>` prints one deeper section: `themes`, `links`, `blocks`, `layout`, `checks`, `cue`, or `example` (the g7 document).
+
+```bash
+stencil prime
+stencil prime links
+```
+
 `stencil vet <json>` parses the document, applies the vet rules (field types, text limits, container sizes, nesting depth) and then runs the two checks that need no layout: remembered constants and legend consistency.
 
 ```bash
