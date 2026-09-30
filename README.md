@@ -25,7 +25,7 @@ stencil vet examples/g7.json
 stencil render examples/g7.json --out-dir out
 ```
 
-`stencil check <json>` does everything `render` does in memory, writes nothing, and runs all five checks: child inside container, siblings do not overlap, text fits box, remembered constants and legend consistency.
+`stencil check <json>` does everything `render` does in memory, writes nothing, and runs all eight checks: child inside container, siblings do not overlap, text fits box, remembered constants, legend consistency, links routed, links avoid boxes and pipes land.
 
 ```bash
 stencil check examples/g7.json
