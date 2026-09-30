@@ -3,6 +3,7 @@
 
 use std::ffi::OsString;
 use std::fs;
+use std::io::{self, Write};
 use std::path::{Path, PathBuf};
 
 use serde_json::Value;
@@ -25,6 +26,8 @@ pub enum Failure {
     },
     #[error("input path {} has no file stem to name the outputs after", path.display())]
     InputStem { path: PathBuf },
+    #[error("output {} is the input file", path.display())]
+    OutputIsInput { path: PathBuf },
     #[error(transparent)]
     Model(#[from] ModelError),
     #[error("document parses as a page but not as a JSON value")]
@@ -87,10 +90,32 @@ pub struct OutputPaths {
     pub measured: PathBuf,
 }
 
+/// Reads the input file. Bytes that are not UTF-8 are a document defect, not a read
+/// failure, because RFC 8259 requires JSON text to be UTF-8 (section 7).
 pub fn read_input(path: &Path) -> Result<String, Failure> {
-    fs::read_to_string(path).map_err(|source| Failure::ReadInput {
+    let bytes = fs::read(path).map_err(|source| Failure::ReadInput {
         path: path.to_path_buf(),
         source,
+    })?;
+    String::from_utf8(bytes).map_err(|error| {
+        let valid_up_to = error.utf8_error().valid_up_to();
+        invalid_utf8(error.as_bytes(), valid_up_to)
+    })
+}
+
+/// A `ModelError::Json` at the 1-based line and byte column of the first invalid byte,
+/// counted the way serde_json counts them.
+fn invalid_utf8(bytes: &[u8], valid_up_to: usize) -> Failure {
+    let prefix = bytes.get(..valid_up_to).unwrap_or_default();
+    let line_start = prefix
+        .iter()
+        .rposition(|&byte| byte == b'\n')
+        .map_or(0, |newline| newline + 1);
+    let newlines = prefix.iter().filter(|&&byte| byte == b'\n').count();
+    Failure::Model(ModelError::Json {
+        line: newlines + 1,
+        column: valid_up_to - line_start + 1,
+        message: "input is not valid UTF-8".to_string(),
     })
 }
 
@@ -151,12 +176,15 @@ pub fn all_checks(page: &Page, geometry: &PageGeometry) -> [CheckReport; 5] {
     ]
 }
 
-/// Creates `out_dir` when missing and writes SVG, PNG and measured JSON, overwriting
-/// existing files. The measured JSON is serialized before anything touches the disk.
+/// Creates `out_dir` when missing and writes SVG, PNG and measured JSON, replacing existing
+/// files. The measured JSON is serialized before anything touches the disk, an output that
+/// resolves to `input` is refused, and the three files are staged under temporary names and
+/// renamed only after every write succeeded (section 7).
 pub fn write_outputs(
     out_dir: &Path,
     names: &OutputNames,
     rendered: &RenderedPage,
+    input: &Path,
 ) -> Result<OutputPaths, Failure> {
     let mut measured_bytes =
         serde_json::to_vec_pretty(&rendered.measured).map_err(|source| Failure::Serialize {
@@ -177,15 +205,79 @@ pub fn write_outputs(
         png: directory.join(&names.png),
         measured: directory.join(&names.measured),
     };
-    write_file(&paths.svg, rendered.svg.svg.as_bytes())?;
-    write_file(&paths.png, &rendered.png)?;
-    write_file(&paths.measured, &measured_bytes)?;
+    let outputs = [
+        (&names.svg, &paths.svg, rendered.svg.svg.as_bytes()),
+        (&names.png, &paths.png, rendered.png.as_slice()),
+        (&names.measured, &paths.measured, measured_bytes.as_slice()),
+    ];
+
+    let input = fs::canonicalize(input).map_err(|source| Failure::ReadInput {
+        path: input.to_path_buf(),
+        source,
+    })?;
+    for (_, path, _) in &outputs {
+        // An existing output may be a link to the input, so compare resolved paths.
+        let resolved = fs::canonicalize(path).unwrap_or_else(|_| path.to_path_buf());
+        if resolved == input {
+            return Err(Failure::OutputIsInput {
+                path: path.to_path_buf(),
+            });
+        }
+    }
+
+    let mut staged: Vec<(PathBuf, &Path)> = Vec::with_capacity(outputs.len());
+    for (name, path, bytes) in &outputs {
+        let temporary = directory.join(temporary_name(name));
+        if let Err(source) = write_new_file(&temporary, bytes) {
+            remove_staged(&staged);
+            let _ = fs::remove_file(&temporary);
+            return Err(Failure::WriteOutput {
+                path: path.to_path_buf(),
+                source,
+            });
+        }
+        staged.push((temporary, path.as_path()));
+    }
+    for (index, (temporary, path)) in staged.iter().enumerate() {
+        if let Err(source) = fs::rename(temporary, path) {
+            remove_staged(staged.get(index..).unwrap_or_default());
+            return Err(Failure::WriteOutput {
+                path: path.to_path_buf(),
+                source,
+            });
+        }
+    }
     Ok(paths)
 }
 
-fn write_file(path: &Path, bytes: &[u8]) -> Result<(), Failure> {
-    fs::write(path, bytes).map_err(|source| Failure::WriteOutput {
-        path: path.to_path_buf(),
-        source,
-    })
+/// `.<name>.<process id>.tmp`, in the output directory so the rename stays on one file
+/// system.
+fn temporary_name(name: &OsString) -> OsString {
+    let mut temporary = OsString::from(".");
+    temporary.push(name);
+    temporary.push(format!(".{}.tmp", std::process::id()));
+    temporary
+}
+
+/// `create_new` refuses to open through a link planted at the temporary name; a leftover
+/// file from an earlier run of the same process id is removed first.
+fn write_new_file(path: &Path, bytes: &[u8]) -> io::Result<()> {
+    match fs::remove_file(path) {
+        Ok(()) => {}
+        Err(error) if error.kind() == io::ErrorKind::NotFound => {}
+        Err(error) => return Err(error),
+    }
+    let mut file = fs::File::options()
+        .write(true)
+        .create_new(true)
+        .open(path)?;
+    file.write_all(bytes)?;
+    file.sync_all()
+}
+
+/// Best effort: the write error that led here is the one reported.
+fn remove_staged(staged: &[(PathBuf, &Path)]) {
+    for (temporary, _) in staged {
+        let _ = fs::remove_file(temporary);
+    }
 }

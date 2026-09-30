@@ -1,6 +1,6 @@
-use crate::NODES_MAX;
 use crate::document::{Node, Page, Pipe, TeeArm};
 use crate::pointer::NodePointer;
+use crate::{LEGEND_ENTRIES_MAX, NODES_MAX};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct NodeEntry<'a> {
@@ -8,7 +8,8 @@ pub struct NodeEntry<'a> {
     /// The enclosing node: `/body` for body elements, the container for its children and
     /// the Tee for its arms.
     pub parent: Option<NodePointer>,
-    /// body elements have depth 1 and Tee arms their Tee's depth plus 1 (section 1.3).
+    /// Section 1.3 depth: body elements have depth 1, and the children of a Row, Col or
+    /// Zone and the arms of a Tee have their parent's depth plus 1.
     pub depth: usize,
     pub node: NodeRef<'a>,
 }
@@ -44,6 +45,7 @@ pub fn body_nodes(page: &Page) -> Vec<NodeEntry<'_>> {
         .body
         .iter()
         .enumerate()
+        .take(NODES_MAX + 1)
         .rev()
         .map(|(index, node)| NodeEntry {
             pointer: body_pointer.index(index),
@@ -69,7 +71,8 @@ fn push_children_reversed<'a>(entry: &NodeEntry<'a>, pending: &mut Vec<NodeEntry
     let child_depth = entry.depth.saturating_add(1);
     let push_nodes = |pending: &mut Vec<NodeEntry<'a>>, children: &'a [Node]| {
         let children_pointer = entry.pointer.child("children");
-        for (index, child) in children.iter().enumerate().rev() {
+        // A child past index NODES_MAX cannot be emitted before the walk stops.
+        for (index, child) in children.iter().enumerate().take(NODES_MAX + 1).rev() {
             pending.push(NodeEntry {
                 pointer: children_pointer.index(index),
                 parent: Some(entry.pointer.clone()),
@@ -133,9 +136,11 @@ pub(crate) fn push_page_head_text_fields<'a>(page: &'a Page, fields: &mut Vec<Te
     }
 }
 
+/// The first LEGEND_ENTRIES_MAX + 1 legend texts: one past the limit is enough for vet to
+/// report `legend-too-long` (section 1.3).
 pub(crate) fn push_legend_text_fields<'a>(page: &'a Page, fields: &mut Vec<TextField<'a>>) {
     let legend_pointer = NodePointer::root().child("legend");
-    for (index, entry) in page.legend.iter().enumerate() {
+    for (index, entry) in page.legend.iter().enumerate().take(LEGEND_ENTRIES_MAX + 1) {
         fields.push(TextField {
             pointer: legend_pointer.index(index).child("text"),
             text: &entry.text,

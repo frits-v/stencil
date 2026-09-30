@@ -305,6 +305,25 @@ fn line_height_below_size_is_rejected() {
 }
 
 #[test]
+fn infinite_line_height_is_rejected() {
+    let style = TextStyle {
+        line_height_px: f32::INFINITY,
+        ..card_function()
+    };
+    assert_eq!(
+        measure("a", &style, None),
+        Err(MeasureError::InvalidStyle {
+            reason: "line height is not finite"
+        })
+    );
+    let tall = TextStyle {
+        line_height_px: 1000.0,
+        ..card_function()
+    };
+    assert!(measure("a", &tall, None).is_ok());
+}
+
+#[test]
 fn letter_spacing_bounds() {
     for letter_spacing_em in [-0.2, 0.5] {
         let style = TextStyle {

@@ -352,14 +352,14 @@ serde handles types and required fields. `validate_page` then enforces the rules
 | `legend-too-long` | `legend` has more than 16 entries | `/legend` | `legend has <n> entries, above 16` |
 | `gap-out-of-range` | `gap` above 64 | `/…/gap` | `gap <n> is above 64` |
 | `grow-length-mismatch` | `grow` present and its length differs from `children` length | `/…/grow` | `grow has <g> weights for <c> children` |
-| `grow-out-of-range` | a `grow` weight above 100 | `/…/grow/<i>`, one violation per weight | `grow weight <w> is above 100` |
+| `grow-out-of-range` | a `grow` weight above 100 | `/…/grow/<i>`, one violation per weight among the first 257 (CHILDREN_MAX + 1); `grow-length-mismatch` covers a longer list | `grow weight <w> is above 100` |
 | `tee-arm-not-horizontal` | a Tee arm has `dir: "v"` | `/…/arms/<i>/dir` | `Tee arm dir is "v", expected "h"` |
 | `depth-exceeded` | a node's depth is above 24 (depth as defined below) | the node | `depth <n> is above 24` |
 | `nodes-exceeded` | more than 4096 nodes, Tee arms included (count as defined below) | `/body` | `more than 4096 nodes` |
 
 An empty `body` gives `body-empty`, never `children-empty`.
 
-Depth and node count have one definition, shared by `validate_page`, `NodeEntry.depth` and `cue/stencil.cue` wherever it expresses these limits. Each element of `body` has depth 1. A child of a Row, Col or Zone at depth d has depth d + 1, and each arm of a Tee at depth d has depth d + 1. The node count is the length of `body_nodes(page)`: every body node at any depth plus every Tee arm. Page-level nodes (`/kicker`, `/title` and the others in section 1.4) are not counted. `body_nodes` stops after NODES_MAX + 1 entries. `validate_page` reports `nodes-exceeded` at `/body` when the result has NODES_MAX + 1 entries, and checks the per-node rules on the entries `body_nodes` returned, so a page past the limit also gets the per-node violations of its first 4097 nodes. Layout only calls `body_nodes` on a vetted page. The text rules read the text values of those same entries plus the page-level fields, and `text_fields` is called only on a vetted page, so every walk over document content shares the bound. `depth-exceeded` reports each node at depth 25 and does not report its descendants again. `nodes-exceeded` reports once, at `/body`.
+Depth and node count have one definition, shared by `validate_page`, `NodeEntry.depth` and `cue/stencil.cue` wherever it expresses these limits. Each element of `body` has depth 1. A child of a Row, Col or Zone at depth d has depth d + 1, and each arm of a Tee at depth d has depth d + 1. The node count is the length of `body_nodes(page)`: every body node at any depth plus every Tee arm. Page-level nodes (`/kicker`, `/title` and the others in section 1.4) are not counted. `body_nodes` stops after NODES_MAX + 1 entries, and it takes at most NODES_MAX + 1 elements of `body` and of each `children` list onto its pending stack, because the k-th element of a list cannot be emitted before k earlier entries, so an element past that index is never reached. `validate_page` reports `nodes-exceeded` at `/body` when the result has NODES_MAX + 1 entries, and checks the per-node rules on the entries `body_nodes` returned, so a page past the limit also gets the per-node violations of its first 4097 nodes. Layout only calls `body_nodes` on a vetted page. The text rules read the text values of those same entries, the page-level fields and the first LEGEND_ENTRIES_MAX + 1 legend entries, so a legend past the limit gets one `legend-too-long` and the text violations of its first 17 entries. `text_fields` is called only on a vetted page. Every walk over document content therefore shares a vet bound. `depth-exceeded` reports each node at depth 25 and does not report its descendants again. `nodes-exceeded` reports once, at `/body`.
 
 A Page with no Pipe and no Tee passes vet but fails the legend check with zero examined (section 6). This is intended. Every stencil figure has at least one hop, and a figure without one is outside the stencil's scope. Implementers must not special-case it.
 
@@ -447,7 +447,7 @@ A Zone is a flex column with `AlignItems::STRETCH` and gap 8. Every child node o
 | k8s | none (0) | #FCE4EC | 8 | 12 | `zone_label` |
 | perimeter | 2.5 dashed #E37400 | #FFFBF5 | 10 | 12 | `perimeter_label` |
 
-The a and b tints follow the component reference for this stencil. Metro 1 and Region A are blue, and Metro 2 and Region B are pink, from end to end. The g7 gold HTML sets the same tints, but `.zone.region` and `.zone.onprem` override them in the gold's cascade. Its Chrome render therefore shows gray regions, and the golden comparison tolerates that fill difference (section 9).
+The a and b tints follow the component reference for this stencil. Metro 1 and Region A are blue, and Metro 2 and Region B are pink, from end to end. The g7 gold HTML sets the same tints, but `.zone.region` and `.zone.onprem` override them in the gold's cascade. Its Chrome render therefore shows neutral gray regions and neutral warm-gray on-prem zones, and the golden comparison tolerates both fill differences (section 9.4). Where the gold and this table disagree, this table is the contract.
 
 The gcp kind is the Google Cloud frame. It is a flex column with padding 0, border 3 and gap 0, and it holds two parts:
 
@@ -460,7 +460,7 @@ The child-inside-container check measures gcp children against the `body` part's
 
 - Flex row, `AlignItems::CENTER`, gap 10, padding 6 top and bottom, 10 left and right, border 1.5 #DADCE0, radius 8, fill #FFFFFF, `min_size.height` 44.
 - The `icon` part is a 28 by 28 leaf, present only when `icon` is set.
-- The `text` part is a flex column with `flex_grow` 1, `flex_basis` 0, min-width auto and `AlignItems::STRETCH`. Basis 0 gives the column the card's remaining width instead of its max-content width, so `fn`, `pn`, `fact` and `ask` wrap inside the card. Min-width auto keeps the widest word as the column's floor, so a single word wider than the card still overflows and is reported. In order it holds:
+- The `text` part is a flex column with `flex_grow` 1, `flex_basis` 0, min-width auto and `AlignItems::STRETCH`. Basis 0 gives the column the card's remaining width instead of its max-content width, so `fn`, `pn`, `fact` and `ask` wrap inside the card. Min-width auto keeps the widest word as the column's floor, so a single word wider than the card widens the card instead of overflowing its own text box: the card then overflows its container, which child-inside-container reports, and the run still fits its part box, so text-fits-box does not report it. In order it holds:
   - `fn`: style `card_function`.
   - `pn`: style `card_product`, margin-top 1.
   - `fact_box`: margin-top 4, padding 4/8, radius 4, fill #F1F3F4, containing `fact` (style `fact`).
@@ -707,7 +707,7 @@ Contract, which every implementation and the fake satisfy:
 - `width_px` is the maximum of `lines[i].width_px`, and `height_px == line_count as f32 * line_height_px`.
 - Letter spacing is added after every shaped glyph, the last one included. cosmic-text adds it per glyph (`x_advance + letter_spacing` in `shape.rs`), while CSS and SVG `letter-spacing` add it per character. The two agree for text with no ligatures and no multi-glyph clusters, and the one-directional parity test in section 10 tolerates the difference. The fake does no shaping, so for it a glyph is a Unicode scalar value.
 - The function has no side effects that change later results. The same input gives bit-identical output.
-- Boundary assertions return errors. Empty text gives `EmptyText`. A size outside 6 to 96, a line height below the size or a letter spacing outside -0.2 to 0.5 gives `InvalidStyle`. A negative or non-finite `max_width_px` gives `InvalidMaxWidth`. A character with no glyph in the bundled family gives `MissingGlyph`.
+- Boundary assertions return errors. Empty text gives `EmptyText`. A size outside 6 to 96, a line height below the size or not finite, or a letter spacing outside -0.2 to 0.5 gives `InvalidStyle`. A negative or non-finite `max_width_px` gives `InvalidMaxWidth`. A character with no glyph in the bundled family gives `MissingGlyph`.
 
 How layout calls the measurer: taffy's closure cannot return an error. The closure records the first `MeasureError` together with the node's pointer and returns a zero size. After `compute_layout_with_measure` returns, `layout_page` returns `LayoutError::Measure` if an error was recorded. The closure maps taffy's inputs as follows: a known width becomes `Some(width.max(0.0) + WRAP_EPSILON_PX)`, `AvailableSpace::Definite(w)` becomes `Some(w.max(0.0) + WRAP_EPSILON_PX)`, `MinContent` becomes `Some(0.0)` and `MaxContent` becomes `None`. The epsilon is the one the post-layout re-measure adds, so layout and re-measure agree on the line breaks (section 2.1). The clamp comes first because `taffy::compute_leaf_layout` subtracts margins from the available space, and a negative width would turn an overflow, which is a defect (exit 1), into `InvalidMaxWidth` (exit 2). `f32::max` also maps a NaN width to 0.
 
@@ -776,8 +776,8 @@ publish = false
 
 [workspace.dependencies]
 taffy = "=0.14.0"
-cosmic-text = "=0.19.0"
-resvg = "=0.48.1"
+cosmic-text = { version = "=0.19.0", default-features = false, features = ["std", "swash"] }
+resvg = { version = "=0.48.1", default-features = false, features = ["text"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 schemars = "1.2"
@@ -804,6 +804,8 @@ Each member's `Cargo.toml` opts in to the workspace lints. `[workspace.lints]` a
 [lints]
 workspace = true
 ```
+
+cosmic-text and resvg are built without their default features. cosmic-text keeps `std` and `swash` and drops `fontconfig`. resvg keeps `text` and drops `system-fonts`, `memmap-fonts`, `raster-images` and `svgz`, so usvg's fontdb 0.24 has no file-system or system-font code at all and the icons, which are plain SVG in data URIs, still decode. cosmic-text's `std` feature still enables `fs` and `memmap` on its own fontdb 0.23, so on the cosmic-text side the no-system-font rule (section 3.2) rests on never calling `load_system_fonts`.
 
 `jsonschema` is a dev-dependency of stencil-model only. Its default features pull in HTTP remote-reference resolution and a TLS stack, so they are off and the schema tests never reach the network. `sha2` 0.11 returns a hybrid-array digest, so hex encoding is written out explicitly: two lowercase hex digits per byte (`format!("{byte:02x}")` over the digest bytes), never a `{:x}` implementation on the digest type.
 
@@ -849,7 +851,8 @@ pub fn text_fields(page: &Page) -> Vec<TextField<'_>>;
 pub struct NodeEntry<'a> {
     pub pointer: NodePointer,
     pub parent: Option<NodePointer>,
-    /// body elements have depth 1 and Tee arms their Tee's depth plus 1 (section 1.3).
+    /// Section 1.3 depth: body elements have depth 1, and the children of a Row, Col or
+    /// Zone and the arms of a Tee have their parent's depth plus 1.
     pub depth: usize,
     pub node: NodeRef<'a>,
 }
@@ -978,7 +981,8 @@ pub struct FontFile {
 /// Inter-Regular, Inter-SemiBold, Inter-Bold, Inter-ExtraBold, via include_bytes!.
 pub const BUNDLED_FONTS: [FontFile; 4];
 
-/// Calls verify_fonts(&BUNDLED_FONTS).
+/// The public check over the four compiled-in faces; `verify_fonts` stays crate-private so
+/// only the font-swap test can pass it other files.
 pub fn verify_bundled_fonts() -> Result<(), FontError>;
 
 /// Parses each file and asserts family "Inter" and the listed weight. Crate-private so the
@@ -1112,6 +1116,8 @@ pub fn siblings_do_not_overlap(geometry: &PageGeometry) -> CheckReport;
 pub fn text_fits_box(geometry: &PageGeometry) -> CheckReport;
 ```
 
+`LayoutError::Taffy` and `LayoutError::NonFinite` carry the pointer of the node whose box failed when there is one: a taffy node not attached to the tree, or a non-finite border or content box, reports its record's pointer. A failure of `compute_layout_with_measure`, which computes the whole tree at once, a failure while walking the tree for absolute origins, and a non-finite canvas size are page-level and carry the root pointer `""`.
+
 Geometry order. `PageGeometry.nodes` order is `""`, `/kicker`, `/title`, `/lede`, `/body`, then each body node in pre-order with a Tee's arms `/…/arms/0`, `/…/arms/1` directly after the Tee and before its next sibling, then `/legend`, `/legend/0` … `/legend/n`, then `/foot`. `/legend` and its entries are absent when `legend` is empty, and `/foot` is absent when `foot` is. This is the section 2.2 root-child order, not section 4.2 document order. `render_svg`, `measured_json` and the siblings-do-not-overlap defect rule use this order. Document order stays the order of `validate_page`, `text_fields` and the remembered-constants check.
 
 ### 4.5 stencil-render
@@ -1129,9 +1135,13 @@ pub struct SvgDocument {
     pub text_elements: usize,
 }
 
+/// Largest pixmap render_png allocates, in pixels (section 5.3, step 5).
+pub const PNG_PIXELS_MAX: u64 = 1 << 27;
+
 /// Calls verify_bundled_fonts, parses the SVG with a usvg fontdb that holds only
 /// BUNDLED_FONTS, asserts the tree holds exactly `expected_text_elements` text nodes
-/// (section 5.3), renders at `scale`, and encodes PNG.
+/// and that every font lookup resolved (section 5.3), renders at `scale` within
+/// PNG_PIXELS_MAX, and encodes PNG.
 pub fn render_png(
     svg: &str,
     expected_text_elements: usize,
@@ -1187,6 +1197,8 @@ pub enum RenderError {
     TextNotRendered { count: usize },
     #[error("parsed SVG holds {found} text node(s), more than the {expected} expected")]
     TextCountExceeded { expected: usize, found: usize },
+    #[error("{lookups} font or glyph lookup(s) found no bundled face")]
+    FontNotResolved { lookups: usize },
     #[error("cannot allocate a {width}x{height} pixmap")]
     PixmapAllocation { width: u32, height: u32 },
     #[error("PNG encoding failed: {message}")]
@@ -1199,6 +1211,8 @@ pub enum RenderError {
 ### 4.6 stencil-cli
 
 `src/lib.rs` exposes `pub fn run(arguments: Vec<std::ffi::OsString>, stdout: &mut dyn Write, stderr: &mut dyn Write) -> ExitCode`, and integration tests call it directly. `src/main.rs` collects `std::env::args_os()`, calls `run` and exits with the returned code. Argument parsing uses clap derive. Section 7 has the commands.
+
+`src/lib.rs` also exposes `pub mod pipeline`, the steps `run` composes, so the section 9.4 golden test drives the same code path without the argument parser: `read_input`, `load_document` (parse, vet, then the input as a `serde_json::Value`), `output_names`, `render_page` (layout with `CosmicTextMeasurer`, SVG, PNG and measured JSON in memory), `model_checks`, `all_checks` (the five reports in `CheckName` order), `write_outputs`, and the `Failure` enum that section 7 maps to exit codes.
 
 ```rust
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -1266,11 +1280,18 @@ When the SVG is opened outside resvg, text renders correctly only if Inter is in
 `render_png` works in this order:
 
 1. Call `stencil_text::verify_bundled_fonts`. A failure returns `RenderError::Fonts`.
-2. Build `usvg::Options` with `fontdb` set to an `Arc` of a database that contains only the four bundled faces (loaded with `load_font_data`), `font_family` set to `"Inter"`, and no resources directory. The default `font_resolver` is kept. It appends the Serif generic to every query, and `Database::new()` maps Serif to `Times New Roman`, which is not loaded, so a missing family still resolves to nothing. No generic family is ever pointed at Inter on this database (`set_serif_family` and its siblings are never called), because a missing family would then render in Inter and pass step 4 (`docs/api-notes/resvg.md`).
+2. Build `usvg::Options` with `fontdb` set to an `Arc` of a database that contains only the four bundled faces (loaded with `load_font_data`), `font_family` set to `"Inter"`, no resources directory, an `image_href_resolver` that decodes `data:` URIs and resolves every other href to nothing, and a strict `font_resolver`:
+   - `select_font` queries the database with the element's own families, weight, stretch and style and appends no generic family. usvg's default selector appends Serif to every query, which resolves a missing family as soon as a generic family points at a loaded face.
+   - `select_fallback` returns `None`. usvg's default fallback substitutes any loaded face that covers a character, so with four Inter faces loaded it would draw a character from the wrong weight.
+   - Both closures count every lookup that finds no face.
+
+   No generic family is pointed at Inter on this database (`set_serif_family` and its siblings are never called). `docs/api-notes/resvg.md` records the resolver and the failure it closes.
 3. Parse with `usvg::Tree::from_str`.
-4. Count `usvg::Node::Text` nodes, descending recursively through `Node::Group` children only: not into a text node's flattened group and not into the tree of an `<image>` (icons hold no text). When a `<text>` element's font does not resolve, usvg 0.48 drops the element and raises no error. `parser/text.rs` returns before it pushes the `Node::Text`, and text layout returns `None` when it placed no glyphs, so a dropped string leaves no node behind and the only signal is a missing node. The count is compared with `expected_text_elements`, which the caller takes from `SvgDocument::text_elements`. Equal proceeds. Fewer returns `TextNotRendered { count: expected - found }`. More returns `TextCountExceeded`, which means the caller passed the wrong number.
-5. Allocate a `tiny_skia::Pixmap` of `ceil(width * scale)` by `ceil(height * scale)` and render with `resvg::render(&tree, Transform::from_scale(scale, scale), &mut pixmap.as_mut())`. `width` and `height` are the parsed tree's size, which is the SVG's `width` and `height` attributes, so they are the canvas size already rounded to 2 decimals by section 5.1. A layout height of 652.004 is written as 652 and renders 1304 px tall at scale 2, not 1305.
+4. Count `usvg::Node::Text` nodes, descending recursively through `Node::Group` children only: not into a text node's flattened group and not into the tree of an `<image>` (icons hold no text). The walk visits at most 16 × NODES_MAX = 65,536 groups, well above the one `<g>` per geometry node a vetted page writes, and returns `Svg` when the tree holds more. When a `<text>` element's font does not resolve, usvg 0.48 drops the element and raises no error. `parser/text.rs` returns before it pushes the `Node::Text`, and text layout returns `None` when it placed no glyphs, so a dropped string leaves no node behind. The count is compared with `expected_text_elements`, which the caller takes from `SvgDocument::text_elements`. Fewer returns `TextNotRendered { count: expected - found }`. More returns `TextCountExceeded`, which means the caller passed the wrong number. Equal goes on to the lookup tally from step 2: a span whose family does not resolve inside a `<text>` that still places other glyphs, or a character that no longer falls back, leaves the node count intact, so any counted miss returns `FontNotResolved { lookups }`. The tally counts resolver calls, not `<text>` elements, so one span with two unresolvable characters counts 2.
+5. Compute `ceil(width * scale)` and `ceil(height * scale)` in f64. `width` and `height` are the parsed tree's size, which is the SVG's `width` and `height` attributes, so they are the canvas size already rounded to 2 decimals by section 5.1. A layout height of 652.004 is written as 652 and renders 1304 px tall at scale 2, not 1305. When either extent is not finite or below 1, or their product is above `PNG_PIXELS_MAX`, return `PixmapAllocation` before anything is allocated. Otherwise allocate a `tiny_skia::Pixmap` of that size and render with `resvg::render(&tree, Transform::from_scale(scale, scale), &mut pixmap.as_mut())`.
 6. Encode with `pixmap.encode_png()`.
+
+`stencil_render::PNG_PIXELS_MAX` is 2^27 = 134,217,728 pixels, a 512 MiB RGBA buffer. No vet limit bounds the canvas height: 4096 nodes stacked in Cols give a canvas close to 200,000 px tall. On a 64-bit target `tiny_skia::Pixmap::new` only checks its size arithmetic, so it never returns `None` for such a canvas, and the allocation either aborts the process or maps memory lazily and thrashes while the pixmap is filled. The budget is therefore the only allocation guard. At scale 2 it admits a 1320 px wide canvas up to 25,420 px tall and a 2600 px wide canvas up to 12,905 px tall. `stencil check` renders at the default scale, so a document over the budget at scale 2 fails `check` with exit 2 as it fails `render`.
 
 The default scale is 2, so the default canvas renders 2640 px wide, the same size as the Chrome reference render.
 
@@ -1332,7 +1353,7 @@ Defect pointers:
 - `remembered-constants`: the text field. A field yields one defect per listed literal it contains, so one literal occurring twice is one defect and two different literals are two.
 - `legend-consistency`: for a used kind with no legend entry, one defect per use, at the pointer of every Pipe, Tee arm or Tee (for its spine) using that kind. For a legend entry whose kind is never used, `/legend/i`. For a kind listed twice, one defect at each later entry `/legend/j`.
 
-Defect messages name the pointer and the numbers involved, for example `text-fits-box /body/0/children/1/children/0/children/0: tag_label "VLAN 1" measured 41.3x15.6 in box 38.0x15.6`.
+Defect messages name the pointer and the numbers involved. A `text-fits-box` size defect is `<part> <text> measured <w>x<h> in box <w>x<h>`, where `<part>` is the snake_case part name, `<text>` is the run's string as Rust `{:?}` prints it (double-quoted, with `"` and `\` escaped), and each number has exactly 2 decimals (`{:.2}`), the precision of the 0.01 px epsilon, for example `text-fits-box /body/0/children/1/children/0/children/0: tag_label "VLAN 1" measured 41.30x15.60 in box 38.00x15.60`.
 
 Remembered constants. The literals and reasons match `drafting-diagrams/scripts/constants_lint.py` and `cue/stencil.cue`:
 
@@ -1368,7 +1389,7 @@ Line formats, stable for scripts:
 ```
 check child-inside-container: examined 33 relations, 0 defects
 check text-fits-box: examined 40 text runs, 1 defect
-defect text-fits-box /body/0/children/2/children/0/children/0/children/1: fact measured 571.2x16.2 in box 560.0x16.2
+defect text-fits-box /body/0/children/2/children/0/children/0/children/1: fact "BGP peering · link-local /29" measured 571.20x16.20 in box 560.00x16.20
 check legend-consistency: examined 0 relations, FAILED: nothing examined
 stencil check: 5 checks, 3 passed, 2 failed
 violation gap-out-of-range /body/0/gap: gap 65 is above 64
@@ -1395,7 +1416,7 @@ Exit codes:
 |---|---|---|
 | 0 | clean | every check passed; render wrote its files; schema printed; `--help` or `--version` printed |
 | 1 | defects in the document | invalid JSON, a serde type error, a vet violation, a failing check, a zero-examined check, `MissingGlyph`, content that overflows |
-| 2 | could not run | bad arguments or unknown subcommand (clap usage errors), unreadable input file, output directory not creatable or not writable, bundled font verification failure, resvg rejecting generated SVG, `TextNotRendered`, pixmap allocation failure, any internal fault in the table below |
+| 2 | could not run | bad arguments or unknown subcommand (clap usage errors), unreadable input file, output directory not creatable or not writable, bundled font verification failure, resvg rejecting generated SVG, `TextNotRendered`, a canvas above the PNG pixel budget (section 5.3), any internal fault in the table below |
 
 Every error variant maps to one code. The mapping is an exhaustive `match` with no wildcard arm, so a new variant does not compile until it has a code. The one exception is clap's `ErrorKind`, which is `#[non_exhaustive]`: its match names `DisplayHelp` and `DisplayVersion` and sends every other kind to 2 through a wildcard arm.
 
@@ -1403,13 +1424,18 @@ Every error variant maps to one code. The mapping is an exhaustive `match` with 
 |---|---|
 | clap error of kind `DisplayHelp` or `DisplayVersion` (returned by `try_parse` for `--help` and `--version`); the rendered text (`err.render()`) is written to the `stdout` argument of `run`, never through `err.print()` | 0 |
 | clap error of any other kind, unreadable input file, `--out-dir` not creatable or not writable, any output write failure | 2 |
+| CLI failures outside the document: an input path with no file stem (`InputStem`), an output path that is the input file (`OutputIsInput`), the second parse of a vetted input into `serde_json::Value` (`DocumentValue`), serializing the measured JSON or the schema (`Serialize`) | 2 |
 | `ModelError::Json`, `ModelError::Invalid`, `LayoutError::Invalid` | 1 |
 | `LayoutError::Measure` with source `MeasureError::MissingGlyph` | 1 |
 | `LayoutError::Measure` with source `EmptyText`, `InvalidStyle`, `InvalidMaxWidth` or `Backend` | 2 |
 | `LayoutError::Taffy`, `LayoutError::NonFinite` | 2 |
 | `FontError`, any variant, and `RenderError::Fonts` | 2 |
-| `RenderError::ScaleOutOfRange`, `GeometryMismatch`, `Svg`, `TextNotRendered`, `TextCountExceeded`, `PixmapAllocation`, `PngEncode` | 2 |
+| `RenderError::ScaleOutOfRange`, `GeometryMismatch`, `Svg`, `TextNotRendered`, `TextCountExceeded`, `FontNotResolved`, `PixmapAllocation`, `PngEncode` | 2 |
 | a failing `CheckReport`, zero examined included | 1 |
+
+An input file that reads but is not UTF-8 is a `ModelError::Json` (exit 1) at the line and column of the first invalid byte, with the message `input is not valid UTF-8`, because RFC 8259 requires JSON text to be UTF-8. "Unreadable" means an I/O failure only.
+
+`render` refuses an input whose canonical path equals the canonical path of one of its three outputs (`stencil render d/x.svg --out-dir d`), so a render never overwrites its own input. The three outputs are written to temporary files in the output directory, each created new, and renamed over the final names only after all three writes succeed. A failed write removes the temporary files and leaves existing outputs untouched, and a symlink at an output name is replaced, not followed.
 
 The CLI decides a `LayoutError::Measure` by its `source`, never by the wrapper alone. `EmptyText` cannot occur after vet, which rejects empty text, and `InvalidMaxWidth` cannot occur for a negative or NaN width because the measure closure clamps every width at 0 before adding the epsilon (section 3). Reaching either is an internal fault, as are the other exit 2 variants in this table.
 
@@ -1648,9 +1674,10 @@ The test lives in `crates/stencil-cli/tests/golden_g7.rs` and runs the library p
 Known differences between the stencil render and the gold, which a reviewer of the side-by-side does not report:
 
 - Font face: Inter against Helvetica Neue (section 8.1).
-- Region fills: blue and pink tints against the gold's gray regions (section 2.4).
-- Legend: stencil draws a 26 by 2 swatch, the kind label and the entry text for each entry (section 2.2). The gold writes each entry as one string, such as "Solid blue = Metro 1 ↔ Region A", with no swatch.
-- Foot: g7's `foot` is one string drawn as one text leaf. The gold splits its foot into two texts, one aligned left and one right.
+- Region fills: Region A blue and Region B pink against the gold's two neutral gray regions (section 2.4).
+- On-prem fills: Metro 1 blue and Metro 2 pink against the gold's two neutral warm-gray zones (section 2.4).
+- Legend: stencil draws a 26 by 2 swatch, the kind label and the entry text for each entry, with no separator between label and text (section 2.2). The gold writes each entry as one string with no swatch and an `=` separator, such as "Solid blue = Metro 1 ↔ Region A", and labels the `dash` kind "Dashed" where the section 2.2 table says "Dashed blue".
+- Foot: g7's `foot` is one string drawn as one left-aligned text leaf, "Customer canvas of g7 · same stencil · VLAN, EAD, BGP on both canvases". The gold splits it into "Customer canvas of g7 · same stencil" aligned left and "VLAN, EAD, BGP on both canvases" aligned right against the Google Cloud frame's right edge. The Page model has a single `foot` text and no way to express the right-aligned segment; a split foot is a model change outside the MVP.
 
 ## 10. Test plan
 
@@ -1663,12 +1690,13 @@ Each behavior change comes with a test that fails before the change. Each positi
 - A Tee arm written with `"tag": "Pipe"` parses. An arm with `"tag": "Zone"` is rejected.
 - An optional field written as `null` (`"pn": null`, `"gap": null`) parses as absent and validates against the schema. `"width": null` is a `ModelError::Json`.
 - For every `VetRule`, one document accepted at the limit and one rejected just past it: gap 64 against 65, width 640 against 639 and 2560 against 2561, 400 against 401 scalars, 256 against 257 children, 256 against 257 body nodes (`children-too-many` at `/body`), 16 against 17 legend entries, depth 24 against 25 (section 1.3 depth, body elements at depth 1), 4096 against 4097 nodes with Tee arms counted (a page far past the limit still gives `body_nodes` length 4097 and one `nodes-exceeded`), `grow` length equal against off by one, weight 100 against 101, text `"a"` against `" a"`, text with `\n`, and a Tee arm `v`. Each rejection asserts the violation's pointer and message against the section 1.3 table, and `VetRule::as_str` against its first column. `validate_page` returns all violations of a document with three distinct faults, in document order as section 4.2 defines it, using a document whose keys are written in an order different from the struct order (for example `kicker` before `title`, both untrimmed).
+- Walk bounds (section 1.3): a legend of 20 untrimmed entries gives one `legend-too-long` and `text-untrimmed` for `/legend/0/text` to `/legend/16/text` only. A Row of one child with 10,000 `grow` weights of 101 gives one `grow-length-mismatch` and 257 `grow-out-of-range`, the last at `/…/grow/256`. A Row of 200,000 Pcards gives `body_nodes` length 4097 ending at `/body/0/children/4095`.
 - Schema: `page_schema()` serialized equals the committed `schema/stencil.schema.json`, which makes drift a test failure. `examples/g7.json` validates against the schema with the `jsonschema` crate. A copy with an unknown Zone field fails schema validation, and so does a copy with a missing `tag`.
 - `remembered-constants`: each of the four literals fires in each kind of text field (title, lede, foot, legend text, zone label, fn, pn, fact, ask, note, pipe label, sub, hub). `AS64512`, `164512`, `10.8.0.0/280` and `135.191.0.0/16` do not fire. The examined count equals `text_fields(page).len()`. A field holding two different literals yields two defects, and a field holding one literal twice yields one.
 - `legend-consistency`: a used kind missing from the legend, a legend kind never used, a duplicate legend kind, a Tee spine kind counted, and Tee arm kinds counted. A kind missing from the legend and used by two Pipes yields two defects at the two Pipe pointers, and a duplicate legend kind yields one defect at the later entry. A page with no pipes and an empty legend reports examined 0, and `passed()` is false.
 - `TextStyleName`: for every variant, `TEXT_STYLES[v as usize].name == v`, `text_style()` returns that entry, and `as_str()` equals the section 2.9 name.
 - `CheckReport::passed` is false for examined 0 with no defects, and for examined 1 with one defect. `CheckName::unit` returns the singular for 1 and the plural for 0 and 2, for every check.
-- `FixedMetricsMeasurer`: the worked example (104.0 by 15.6), wrapping at a width that splits two words, a word longer than the max width (width exceeds max, one line), `Some(0.0)` giving the widest word, letter spacing adding `n * em * size`, `MissingGlyph` for a configured character, `EmptyText`, `InvalidStyle` for size 5 and 97, and `InvalidMaxWidth` for -1 and NaN.
+- `FixedMetricsMeasurer`: the worked example (104.0 by 15.6), wrapping at a width that splits two words, a word longer than the max width (width exceeds max, one line), `Some(0.0)` giving the widest word, letter spacing adding `n * em * size`, `MissingGlyph` for a configured character, `EmptyText`, `InvalidStyle` for size 5 and 97 and for an infinite line height, and `InvalidMaxWidth` for -1 and NaN.
 
 ### stencil-text
 
@@ -1698,8 +1726,8 @@ All tests except the wrap-epsilon regression use `FixedMetricsMeasurer::default(
 - Wrap-epsilon regression. The measurer is `FixedMetricsMeasurer { advance_em, missing_glyphs: Vec::new() }` with `advance_em = 0.501 + k as f32 * 0.002` for k from 0 to 99. These advances are not exact in f32, unlike the default 0.5, which can never show the bug. For each advance and each n from 1 to 40, the page body is one Row with `grow: [0]` holding one Col holding one Pipe h (kind `blue`, no `sub`) whose label is `VLAN ` followed by n `x` characters. The Row weight 0 makes the Col its max-content width, and the pipe stretches to it, which is the section 2.7 tag round trip. Every one of the 4000 layouts must give a `TagLabel` run with `line_count` 1, a `TagLabel` part 15.6 tall and a `Tag` part 30.6 tall (15.6 + 12 padding + 3 border), within 0.01 px. A taffy 0.14.0 probe of this structure with the section 3.1 arithmetic wrapped 163 of the 4000 without the epsilon in the closure and 0 with it.
 - Errors: a measurer returning `MissingGlyph` gives `LayoutError::Measure` with the text's pointer. An invalid page gives `LayoutError::Invalid`.
 - Checks on hand-built `PageGeometry`: overlap by 0.02 px is a defect and touching edges are not; a child 0.02 px outside its parent is a defect; a text run 0.02 px wider than its part is a defect; geometry with only the root gives examined 0 and fails for each geometry check.
-- Checks on laid-out documents: a Pcard with a single 120-character word in a Row of three at width 640 produces `text-fits-box` and `child-inside-container` defects. A small document of five nodes has hand-derived examined counts.
-- Dense stress (`examples/stress-dense.json`, written by the stencil-layout implementer). Layout completes, all five checks pass, and `body_nodes(page).len()` is 37. The document is exactly:
+- Checks on laid-out documents: a Pcard with a single 120-character word in a Row of three at width 640 produces `child-inside-container` defects for the three cards and no `text-fits-box` defect, because the min-content floor of section 2.5 widens the card to the word. A `/title` of one 200-character word at width 640 produces one `text-fits-box` defect at `/title` and no `child-inside-container` defect, because the root stretches the title leaf to the content width with no min-content floor. A small document of five nodes has hand-derived examined counts.
+- Dense stress (`examples/stress-dense.json`, written by the stencil-layout implementer). Layout completes, all five checks pass, and `body_nodes(page).len()` is 37. A test compares the file, parsed as a `serde_json::Value`, with the document below built field for field, so any drift fails. The document is exactly:
   - Page: title `Dense stress figure`, kicker `Stress · dense layout`, lede `Five rows of cards and pipes inside a service perimeter.`, canvas `internal`, no `foot`, no `width`, and legend entries `gray` `internal call`, `blue` `request path`, `pink` `reply path`, `dash` `failover` and `deny` `blocked egress`, in that order.
   - `body` holds one Zone, kind `gcp`, label `Google Cloud`. Its one child is a Zone of kind `perimeter`, label `Service perimeter`. Its one child is a Col with no `gap`, `grow` or `justify` and seven children in this order: Row 1, the Pipe v, Row 2, Row 3, the Tee, Row 4, Row 5.
   - Row r, for r from 1 to 5, has no `gap`, `grow` or `justify` and five children: Pcard, Pipe h, Pcard, Pipe h, Pcard. Card c, for c from 1 to 3, has icon `cloud-run`, fn `Service r.c` with r and c as digits (`Service 2.3`), pn `Cloud Run` and fact `Reads its config from a bucket in the same project`. The first Pipe h has kind `blue` and label `step r.1`, the second kind `gray` and label `step r.2`. Neither has a `sub`.
@@ -1714,8 +1742,8 @@ All tests except the wrap-epsilon regression use `FixedMetricsMeasurer::default(
 - Icons: each data URI decodes to bytes whose SHA-256 equals the section 8.2 table. A render of a Pcard for each of the 23 icons parses.
 - Colors: for each ZoneKind the rect fill, stroke, stroke width and dasharray match section 2.4. For each PipeKind the wire color and dasharray match section 5.2, and a Tee of that kind draws its spine, and a legend entry of that kind its swatch `<line>`, in the same color and dasharray. A `deny` Tee's hub has stroke #F4C7C3 and text fill #C5221F.
 - Numbers: no attribute value has more than 2 decimals, and `-0` never appears. `format_number` gives `Integer(0)` for -0.0 and -0.001, `Integer(1320)` for 1320.0, `Integer(652)` for 652.004 and `Decimal(652.4)` for 652.4.
-- PNG: dimensions are `ceil(c * scale)` for scales 1 and 4, where `c` is the canvas size rounded by section 5.1. A geometry whose height rounds down (for example 652.004) gives the PNG height from the rounded value. `DeviceScale::new(0)` and `new(5)` are rejected. Two renders are byte-identical.
-- `TextNotRendered`: `render_png` on a one-line SVG whose `<text>` names family `Helvetica Neue`, with `expected_text_elements` 1, fails with count 1. The same SVG naming `Inter` passes with 1, returns `TextNotRendered` with count 1 when given 2, and returns `TextCountExceeded` when given 0. For g7, `SvgDocument::text_elements` equals the number of `<text>` elements in the SVG string and the sum of `line_count` over all runs.
+- PNG: dimensions are `ceil(c * scale)` for scales 1 and 4, where `c` is the canvas size rounded by section 5.1. A geometry whose height rounds down (for example 652.004) gives the PNG height from the rounded value. `DeviceScale::new(0)` and `new(5)` are rejected. Two renders are byte-identical. The pixel budget accepts 8192 by 16384 at scale 1 and rejects 8192 by 16385, and rejects zero, negative, NaN and infinite extents. A 1320 by 60000 SVG at scale 2 returns `PixmapAllocation { width: 2640, height: 120000 }` without allocating. An `<image>` whose href is the path of a red PNG file renders white, because only `data:` hrefs resolve.
+- `TextNotRendered`: `render_png` on a one-line SVG whose `<text>` names family `Helvetica Neue`, with `expected_text_elements` 1, fails with count 1. The same SVG naming `Inter` passes with 1, returns `TextNotRendered` with count 1 when given 2, and returns `TextCountExceeded` when given 0. The `Helvetica Neue` SVG given 0 returns `FontNotResolved` with 1 lookup, and so does an `Inter` line holding U+4E00 given 1, because the fallback selector substitutes no face. For g7, `SvgDocument::text_elements` equals the number of `<text>` elements in the SVG string and the sum of `line_count` over all runs.
 - Measured-vs-rendered parity, one case per style in `TEXT_STYLES`. The measurement contract holds only in one direction, and this test checks that direction. A string containing `·` and `↔` (uppercased where `NamedTextStyle::uppercase` is true) is measured with `CosmicTextMeasurer`, written as a one-line SVG at x = 0 with `y = baseline_px` using the section 5.2 text attributes, and rendered at scale 4 on white with `expected_text_elements` 1. The test asserts:
   - no non-white pixel has x greater than `(width_px + 1) * 4`;
   - no non-white pixel has y greater than `(height_px + 1) * 4`;
@@ -1733,7 +1761,11 @@ All tests except the wrap-epsilon regression use `FixedMetricsMeasurer::default(
 - `vet` on malformed JSON exits 1. `vet` on a missing file exits 2. An unknown subcommand or flag exits 2. `--help` and `--version` exit 0, write the text to stdout and write nothing to stderr.
 - `render` writes the three files to a temporary directory and prints exactly their three absolute paths in the order SVG, PNG, measured JSON. `--scale 5` exits 2. An `--out-dir` under a read-only directory exits 2.
 - `check examples/g7.json` exits 0 and prints the five lines in `CheckName` order with the counts from section 9.4 and the summary `5 checks, 5 passed, 0 failed`.
-- `check` on a document whose text overflows exits 1 and names the pointer. `check` on a document with U+4E00 in a Pcard `fn` exits 1 (`MissingGlyph` through `LayoutError::Measure`) and prints an `error` line followed by `stencil check: checks not run`.
+- `check` on a document whose text overflows exits 1 and names the pointer. The document has one Pipe and a matching legend entry, so child-inside-container is the only failing check and the summary is `5 checks, 4 passed, 1 failed`.
+- `vet` and `check` on a file whose bytes are not UTF-8 exit 1 and print the `error` line with the line and column of the first invalid byte and `document does not parse, checks not run`.
+- `render d/figure.svg --out-dir d` exits 2 and leaves the input unchanged. A symlink planted at `<out-dir>/g7.svg` is replaced by the rendered file, its target keeps its bytes, and no temporary file is left behind.
+- A vetted page of 160 stacked Pcards exits 2 from `render --scale 4` with a `PixmapAllocation` message and writes nothing, and renders at `--scale 1`.
+- Two separate `stencil render` processes on g7 write byte-identical SVG, PNG and measured JSON. `check` on a document with U+4E00 in a Pcard `fn` exits 1 (`MissingGlyph` through `LayoutError::Measure`) and prints an `error` line followed by `stencil check: checks not run`.
 - `render` on a document whose legend omits a used kind writes its three files and exits 0, because render runs `validate_page` only.
 - `schema` prints JSON equal to `schema/stencil.schema.json`.
 - The golden g7 test in section 9.4.
