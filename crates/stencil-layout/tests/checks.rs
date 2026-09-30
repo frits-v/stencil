@@ -181,7 +181,8 @@ fn root_only_geometry_examines_nothing_and_fails() {
 
 /// Section 2.5 keeps the widest word as the text column's floor, so the card grows to fit
 /// the word and overflows the Row: child-inside-container reports it, and the run still fits
-/// its own part box.
+/// its own part box. The section 10 bullet for this document also names text-fits-box; the
+/// min-content floor of sections 2.3 and 2.5 rules that out.
 #[test]
 fn card_with_a_120_character_word_overflows_its_row() {
     let word = "w".repeat(120);
@@ -257,4 +258,50 @@ fn g7_geometry_checks_have_the_section_9_4_counts_and_pass() {
     assert!(inside.passed(), "{:?}", inside.defects);
     assert!(overlap.passed(), "{:?}", overlap.defects);
     assert!(fits.passed(), "{:?}", fits.defects);
+}
+
+/// The root stretches `/title` to the content width with no min-content floor, so a single
+/// 200-character word keeps its box at 640 wide and the run overflows it: text-fits-box
+/// reports it and child-inside-container does not.
+#[test]
+fn title_with_a_200_character_word_overflows_its_text_box() {
+    let mut page = page_with_body(640, json!([{ "tag": "Fact", "text": "Short" }]));
+    page.title = "w".repeat(200);
+    let geometry = layout(&page);
+
+    let fits = text_fits_box(&geometry);
+    assert_eq!(fits.defects.len(), 1, "{:?}", fits.defects);
+    assert_eq!(fits.defects[0].pointer.as_str(), "/title");
+    assert!(
+        fits.defects[0]
+            .message
+            .ends_with("measured 1920.00x24.00 in box 640.00x24.00"),
+        "{}",
+        fits.defects[0].message
+    );
+
+    let inside = child_inside_container(&geometry);
+    assert!(inside.passed(), "{:?}", inside.defects);
+}
+
+#[test]
+fn parent_index_outside_the_geometry_is_a_defect_in_both_structural_checks() {
+    let geometry = page(vec![
+        root(),
+        geometry_node("/kicker", Some(0), rect(10.0, 10.0, 30.0, 20.0)),
+        geometry_node("/title", Some(7), rect(10.0, 40.0, 30.0, 20.0)),
+    ]);
+    for report in [
+        child_inside_container(&geometry),
+        siblings_do_not_overlap(&geometry),
+    ] {
+        assert_eq!(report.defects.len(), 1, "{:?}", report.check);
+        assert_eq!(report.defects[0].pointer.as_str(), "/title");
+        assert_eq!(
+            report.defects[0].message,
+            "parent index 7 is not a geometry node"
+        );
+        assert!(report.examined >= 1, "{:?}", report.check);
+        assert!(!report.passed(), "{:?}", report.check);
+    }
 }
