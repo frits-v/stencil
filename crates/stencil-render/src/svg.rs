@@ -25,7 +25,7 @@ const BADGE_RADIUS_PX: f32 = 4.0;
 const CARD_RADIUS_PX: f32 = 8.0;
 const FACT_RADIUS_PX: f32 = 4.0;
 const TAG_RADIUS_PX: f32 = 6.0;
-const ICON_CHIP_SIZE_PX: f32 = 36.0;
+pub(crate) const ICON_CHIP_SIZE_PX: f32 = 36.0;
 const ICON_CHIP_RADIUS_PX: f32 = 6.0;
 /// Arrowhead triangle along the run axis and across it (section 11.2).
 const ARROW_LENGTH_PX: f32 = stencil_layout::ARROWHEAD_LENGTH_PX;

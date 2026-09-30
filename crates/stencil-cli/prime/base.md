@@ -6,7 +6,7 @@ stencil turns structural JSON (zones, cards, facts, pipes, links; no coordinates
 
 Write fig.json, `stencil vet fig.json`, `stencil check fig.json`, `stencil render fig.json --out-dir out --scale 2`, Read out/fig.png, fix, repeat until check shows 0 failed and the PNG reads right. Exit 0 clean; 1 defect in the document (the line names a JSON pointer such as /body/0/children/2; fix the JSON); 2 could not run (arguments, paths, fonts). `stencil schema` prints the JSON Schema.
 
-`stencil gallery out [--examples dir]` renders every .json in examples/ under every theme into out/ with index.html, gallery.json and each render's check summary; exit 1 if any check fails.
+`stencil gallery out [--examples dir]` renders every example in every theme, with index.html and gallery.json; a failed check exits 1.
 
 # Vocabulary
 
@@ -36,7 +36,8 @@ Every node object carries "tag". * required, =default. A field with no type is t
 | links-routed | each link | no clear route; drawn as a fallback L | set from_side and to_side, add via, or move an endpoint |
 | links-avoid-boxes | each segment-obstacle and tag-node pair | the line crosses a box or its tag covers one | same as links-routed; raise gap where links run |
 | pipes-land | each h or v pipe end that faces a Row or Col sibling | the pipe's center is outside every box in the neighbor's subtree, so it points at empty space | give the producer column the gutter's grow weights, or move the pipe to the slot beside its zone |
-| iso-labels-clear | iso only: label pairs, label and block or zone | overlap, or zone edge through text | floor for labels |
+| iso-labels-clear | iso only: labels, blocks, zones | overlap or zone edge in text | open floor |
+| iso-links-clear | iso only: link legs | leg by zone edge, reversed or short | wider gap |
 
 # Rules no check enforces
 

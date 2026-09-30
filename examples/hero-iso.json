@@ -12,11 +12,17 @@
       "grow": [0, 0],
       "children": [
         {
-          "tag": "Zone",
-          "kind": "onprem-a",
-          "label": "On-prem",
+          "tag": "Col",
+          "justify": "center",
           "children": [
-            { "tag": "Pcard", "id": "router", "icon": "hybrid", "fn": "Edge router" }
+            {
+              "tag": "Zone",
+              "kind": "onprem-a",
+              "label": "On-prem",
+              "children": [
+                { "tag": "Pcard", "id": "router", "icon": "hybrid", "fn": "Edge router" }
+              ]
+            }
           ]
         },
         {
@@ -42,7 +48,7 @@
                     },
                     {
                       "tag": "Col",
-                      "gap": 64,
+                      "gap": 48,
                       "children": [
                         { "tag": "Pcard", "id": "warehouse", "icon": "bigquery", "fn": "Warehouse" },
                         { "tag": "Pcard", "id": "model", "icon": "vertex-ai", "fn": "Model serving" }
@@ -63,8 +69,8 @@
     { "kind": "gray", "text": "service call" }
   ],
   "links": [
-    { "from": "router", "to": "gateway", "kind": "blue", "label": "VLAN 1", "arrow": "none", "from_side": "right", "to_side": "left", "via": [{ "x": 235, "y": 159.5 }, { "x": 235, "y": 212.6 }] },
-    { "from": "router", "to": "gateway", "kind": "dash", "label": "VLAN 2", "arrow": "none", "from_side": "bottom", "to_side": "bottom", "via": [{ "x": 100.92, "y": 290 }, { "x": 344.84, "y": 290 }] },
+    { "from": "router", "to": "gateway", "kind": "blue", "label": "VLAN 1", "from_side": "right", "to_side": "left" },
+    { "from": "router", "to": "gateway", "kind": "dash", "label": "VLAN 2", "from_side": "bottom", "to_side": "bottom", "via": [{ "x": 100.92, "y": 304 }, { "x": 344.84, "y": 304 }] },
     { "from": "gateway", "to": "warehouse", "kind": "gray" },
     { "from": "warehouse", "to": "model", "kind": "gray", "from_side": "bottom", "to_side": "top" }
   ]
