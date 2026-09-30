@@ -1,4 +1,10 @@
-#![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
+#![allow(
+    clippy::unwrap_used,
+    clippy::expect_used,
+    clippy::panic,
+    clippy::indexing_slicing,
+    clippy::unreachable
+)]
 
 mod common;
 
@@ -6,7 +12,7 @@ use resvg::usvg;
 use serde_json::json;
 use stencil_layout::{NodeTag, PartName};
 use stencil_model::pointer::NodePointer;
-use stencil_model::{PipeKind, ZoneKind};
+use stencil_model::{LEGEND_ENTRIES_MAX, PipeKind, ZoneKind};
 use stencil_render::{RenderError, render_svg};
 
 #[test]
@@ -558,4 +564,37 @@ fn rendering_twice_is_byte_identical() {
     let first = common::render_g7();
     let second = render_svg(&first.page, &first.geometry).unwrap();
     assert_eq!(first.svg, second);
+}
+
+/// A geometry with more legend nodes than the vet limit allows fails at the first one past
+/// LEGEND_ENTRIES_MAX + 1, because the document side stops walking the legend there.
+#[test]
+fn legend_order_stops_one_past_the_vet_limit() {
+    let entries: Vec<serde_json::Value> = (0..LEGEND_ENTRIES_MAX)
+        .map(|_| json!({ "kind": "blue", "text": "request" }))
+        .collect();
+    let body = json!([{ "tag": "Pipe", "dir": "h", "kind": "blue", "label": "hop" }]);
+    let mut rendered = common::render_document_with_fixed_metrics(common::page_document(
+        body,
+        serde_json::Value::Array(entries),
+    ));
+    let last_entry = rendered.geometry.nodes.last().unwrap().clone();
+    assert_eq!(last_entry.pointer.as_str(), "/legend/15");
+    let legend_pointer = NodePointer::root().child("legend");
+    for index in LEGEND_ENTRIES_MAX..LEGEND_ENTRIES_MAX + 4 {
+        let mut extra = last_entry.clone();
+        extra.pointer = legend_pointer.index(index);
+        rendered.geometry.nodes.push(extra);
+        rendered.page.legend.push(rendered.page.legend[0].clone());
+    }
+    assert_eq!(rendered.page.legend.len(), 20);
+
+    let error = render_svg(&rendered.page, &rendered.geometry).unwrap_err();
+    match error {
+        RenderError::GeometryMismatch { expected, found } => {
+            assert_eq!(expected.as_str(), "/<absent>");
+            assert_eq!(found.as_str(), "/legend/17");
+        }
+        other => panic!("expected GeometryMismatch, got {other:?}"),
+    }
 }

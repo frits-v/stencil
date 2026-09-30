@@ -1,6 +1,11 @@
 // Integration-test crates are not cfg(test), so clippy's allow-*-in-tests settings do not
 // reach their helper functions.
-#![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
+#![allow(
+    clippy::unwrap_used,
+    clippy::expect_used,
+    clippy::panic,
+    clippy::indexing_slicing
+)]
 
 mod common;
 

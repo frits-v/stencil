@@ -6,8 +6,8 @@ mod common;
 
 use common::{g7_page, legend_entry, page_with_body, pcard, pipe, pipe_value, tee};
 use stencil_model::PipeDir;
-use stencil_model::PipeKind;
 use stencil_model::checks::{CheckName, CheckReport, legend_consistency};
+use stencil_model::{LEGEND_ENTRIES_MAX, PipeKind};
 
 fn defects(report: &CheckReport) -> Vec<(String, String)> {
     report
@@ -126,4 +126,20 @@ fn page_with_no_pipes_and_no_legend_examines_nothing_and_fails() {
     assert_eq!(report.examined, 0);
     assert_eq!(report.defects, vec![]);
     assert!(!report.passed());
+}
+
+#[test]
+fn a_legend_past_the_vet_limit_is_examined_up_to_one_past_it() {
+    let mut page = page_with_body(vec![pipe(PipeKind::Blue, "a")]);
+    page.legend = vec![legend_entry(PipeKind::Blue, "request"); LEGEND_ENTRIES_MAX + 4];
+    let report = legend_consistency(&page);
+    assert_eq!(report.examined, 1 + 17);
+    let pointers: Vec<String> = defects(&report)
+        .into_iter()
+        .map(|(pointer, _)| pointer)
+        .collect();
+    let expected: Vec<String> = (1..=LEGEND_ENTRIES_MAX)
+        .map(|index| format!("/legend/{index}"))
+        .collect();
+    assert_eq!(pointers, expected);
 }

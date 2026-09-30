@@ -1,4 +1,9 @@
-#![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
+#![allow(
+    clippy::unwrap_used,
+    clippy::expect_used,
+    clippy::panic,
+    clippy::indexing_slicing
+)]
 
 use std::ffi::OsString;
 use std::fs;
@@ -222,6 +227,91 @@ fn vet_on_a_missing_file_could_not_run() {
         outcome.stderr
     );
     assert!(outcome.stderr.contains("caused by: "), "{}", outcome.stderr);
+}
+
+#[test]
+fn check_and_render_on_a_missing_file_could_not_run() {
+    let directory = scratch_directory("check_render_missing_file");
+    let path = directory.join("absent.json");
+    let out_dir = directory.join("out");
+
+    for arguments in [
+        vec!["check", path.to_str().unwrap()],
+        vec![
+            "render",
+            path.to_str().unwrap(),
+            "--out-dir",
+            out_dir.to_str().unwrap(),
+        ],
+    ] {
+        let outcome = run_stencil(&arguments);
+        assert_eq!(outcome.code, ExitCode::CouldNotRun, "{arguments:?}");
+        assert_eq!(outcome.stdout, "", "{arguments:?}");
+        assert!(
+            outcome.stderr.contains("cannot read input"),
+            "{}",
+            outcome.stderr
+        );
+    }
+    assert!(!out_dir.exists());
+}
+
+#[cfg(unix)]
+#[test]
+fn input_past_the_byte_limit_could_not_run() {
+    let outcome = run_stencil(&["vet", "/dev/zero"]);
+
+    assert_eq!(outcome.code, ExitCode::CouldNotRun);
+    assert_eq!(outcome.stdout, "");
+    assert!(
+        outcome
+            .stderr
+            .contains("input is larger than 67108864 bytes"),
+        "{}",
+        outcome.stderr
+    );
+}
+
+#[test]
+fn input_at_the_byte_limit_is_read() {
+    let limit = usize::try_from(stencil_cli::pipeline::INPUT_BYTES_MAX).unwrap();
+    let path = scratch_directory("input_at_byte_limit").join("padded.json");
+    let mut bytes = serde_json::to_vec(&g7_document()).unwrap();
+    bytes.resize(limit, b' ');
+    fs::write(&path, &bytes).unwrap();
+
+    let outcome = run_stencil(&["vet", path.to_str().unwrap()]);
+
+    assert_eq!(outcome.code, ExitCode::Clean, "{}", outcome.stderr);
+    fs::remove_file(&path).unwrap();
+}
+
+#[test]
+fn a_document_past_the_node_limit_is_a_vet_violation() {
+    // 16 Rows + 256 cards + 15 * 255 cards = 4097 nodes, no list above 256.
+    let card = json!({ "tag": "Pcard", "fn": "a" });
+    let mut rows = vec![json!({ "tag": "Row", "children": vec![card.clone(); 256] })];
+    rows.extend((0..15).map(|_| json!({ "tag": "Row", "children": vec![card.clone(); 255] })));
+    let document = minimal_page(Value::Array(rows), json!([]));
+    let path = write_document("vet_nodes_exceeded", "large.json", &document);
+
+    for command in ["vet", "check"] {
+        let outcome = run_stencil(&[command, &path]);
+        assert_eq!(
+            outcome.code,
+            ExitCode::Defects,
+            "{command}: {}",
+            outcome.stderr
+        );
+        assert_eq!(
+            outcome.stdout_lines(),
+            vec![
+                "violation nodes-exceeded /body: more than 4096 nodes".to_string(),
+                format!("stencil {command}: 1 violation, checks not run"),
+            ],
+            "{command}"
+        );
+    }
 }
 
 #[test]
@@ -649,6 +739,32 @@ fn render_replaces_a_symlink_at_an_output_name_instead_of_following_it() {
     assert!(leftovers.is_empty(), "{leftovers:?}");
 }
 
+#[test]
+fn a_directory_at_an_output_name_leaves_existing_outputs_untouched() {
+    let out_dir = scratch_directory("render_directory_at_output");
+    let old_svg = b"<svg>old</svg>".to_vec();
+    fs::write(out_dir.join("g7.svg"), &old_svg).unwrap();
+    fs::create_dir(out_dir.join("g7.png")).unwrap();
+
+    let outcome = run_stencil(&["render", &g7_path(), "--out-dir", out_dir.to_str().unwrap()]);
+
+    assert_eq!(outcome.code, ExitCode::CouldNotRun, "{}", outcome.stdout);
+    assert_eq!(outcome.stdout, "");
+    assert!(outcome.stderr.contains("g7.png"), "{}", outcome.stderr);
+    assert!(
+        fs::read(out_dir.join("g7.svg")).unwrap() == old_svg,
+        "g7.svg was replaced"
+    );
+    assert!(out_dir.join("g7.png").is_dir());
+    assert!(!out_dir.join("g7.measured.json").exists());
+    let leftovers: Vec<_> = fs::read_dir(&out_dir)
+        .unwrap()
+        .map(|entry| entry.unwrap().file_name())
+        .filter(|name| name.to_string_lossy().ends_with(".tmp"))
+        .collect();
+    assert!(leftovers.is_empty(), "{leftovers:?}");
+}
+
 /// 160 stacked cards give a canvas of about 8400 px: under the 2^27 pixel budget at
 /// scale 1 (1320 wide) and above it at scale 4 (5280 wide, about 33,600 tall).
 #[test]
@@ -683,7 +799,8 @@ fn a_vetted_tall_document_is_rejected_above_the_pixel_budget() {
     assert!(png.height() > 8000, "{}", png.height());
 }
 
-/// Two separate processes, so a per-process hash seed or map order would show up here.
+/// Two separate processes, so a per-process hash seed or map order would show up here. The
+/// default scale is the one users run.
 #[test]
 fn two_processes_render_byte_identical_outputs() {
     let binary = env!("CARGO_BIN_EXE_stencil");
@@ -693,7 +810,6 @@ fn two_processes_render_byte_identical_outputs() {
         let status = std::process::Command::new(binary)
             .args(["render", &g7_path(), "--out-dir"])
             .arg(&out_dir)
-            .args(["--scale", "1"])
             .output()
             .unwrap();
         assert!(status.status.success(), "{:?}", status);

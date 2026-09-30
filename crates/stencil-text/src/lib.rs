@@ -70,8 +70,9 @@ pub fn verify_bundled_fonts() -> Result<(), FontError> {
 }
 
 /// Parses each file and asserts family "Inter" and the listed weight. Crate-private so the
-/// font-swap test can pass a modified copy of BUNDLED_FONTS.
-pub(crate) fn verify_fonts(files: &[FontFile]) -> Result<(), FontError> {
+/// font-swap test can pass a modified copy of BUNDLED_FONTS. The array type fixes the file
+/// count, so the check can never pass over an empty list.
+pub(crate) fn verify_fonts(files: &[FontFile; BUNDLED_FONTS.len()]) -> Result<(), FontError> {
     for file in files {
         let mut database = fontdb::Database::new();
         load_face(&mut database, file)?;

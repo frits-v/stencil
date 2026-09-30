@@ -73,7 +73,7 @@ impl CosmicTextMeasurer {
         max_width_px: Option<f32>,
     ) -> Result<TextMetrics, MeasureError> {
         let metrics = Metrics::new(style.size_px, style.line_height_px);
-        let attrs = Attrs::new()
+        let attributes = Attrs::new()
             .family(Family::Name(style.family.css_name()))
             .weight(Weight(style.weight.css_value()))
             .letter_spacing(style.letter_spacing_em);
@@ -81,7 +81,7 @@ impl CosmicTextMeasurer {
         let mut buffer = Buffer::new(&mut self.font_system, metrics);
         buffer.set_wrap(Wrap::Word);
         buffer.set_size(max_width_px, None);
-        buffer.set_text(text, &attrs, Shaping::Advanced, None);
+        buffer.set_text(text, &attributes, Shaping::Advanced, None);
         buffer.shape_until_scroll(&mut self.font_system, false);
 
         // Glyph clusters are byte offsets into their own paragraph; cosmic-text splits the
@@ -154,20 +154,27 @@ fn check_glyphs(
     let Some(missing) = run.glyphs.iter().find(|glyph| glyph.glyph_id == 0) else {
         return Ok(());
     };
+    let missing_start = byte_offset(paragraph_start, missing.start)?;
     let character = text
-        .get(paragraph_start + missing.start..)
+        .get(missing_start..)
         .and_then(|rest| rest.chars().next())
         .ok_or_else(|| MeasureError::Backend {
-            message: format!(
-                "missing glyph cluster at byte {} is outside the text",
-                paragraph_start + missing.start
-            ),
+            message: format!("missing glyph cluster at byte {missing_start} is outside the text"),
         })?;
     Err(MeasureError::MissingGlyph {
         family: style.family.css_name(),
         character,
         codepoint: u32::from(character),
     })
+}
+
+/// `base + offset` for byte offsets that come from cosmic-text, which are not trusted to
+/// stay inside the text.
+fn byte_offset(base: usize, offset: usize) -> Result<usize, MeasureError> {
+    base.checked_add(offset)
+        .ok_or_else(|| MeasureError::Backend {
+            message: format!("byte offset {base} + {offset} overflows"),
+        })
 }
 
 /// One layout run in terms of the whole measured string.
@@ -195,8 +202,8 @@ fn line_extent(
             width_px: run.line_w,
         });
     };
-    let byte_start = paragraph_start + cluster_start;
-    let untrimmed_end = paragraph_start + cluster_end;
+    let byte_start = byte_offset(paragraph_start, cluster_start)?;
+    let untrimmed_end = byte_offset(paragraph_start, cluster_end)?;
     let line_text = text
         .get(byte_start..untrimmed_end)
         .ok_or_else(|| MeasureError::Backend {
@@ -205,7 +212,7 @@ fn line_extent(
             ),
         })?;
     let trimmed_length = line_text.trim_end_matches(' ').len();
-    let trailing_cluster_start = cluster_start + trimmed_length;
+    let trailing_cluster_start = byte_offset(cluster_start, trimmed_length)?;
     let trailing_space_px: f32 = run
         .glyphs
         .iter()
@@ -219,7 +226,7 @@ fn line_extent(
     };
     Ok(LineExtent {
         byte_start,
-        byte_end: byte_start + trimmed_length,
+        byte_end: byte_offset(byte_start, trimmed_length)?,
         width_px,
     })
 }
@@ -275,5 +282,14 @@ mod tests {
         let style = TextStyleName::TagLabel.text_style().style;
         measurer.measure("\u{4E00}", &style, None).unwrap_err();
         assert!(measurer.cache.is_empty());
+    }
+
+    #[test]
+    fn a_byte_offset_that_overflows_is_a_backend_error() {
+        assert_eq!(byte_offset(3, 4).unwrap(), 7);
+        assert!(matches!(
+            byte_offset(usize::MAX, 1),
+            Err(MeasureError::Backend { .. })
+        ));
     }
 }
