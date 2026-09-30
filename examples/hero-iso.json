@@ -8,23 +8,15 @@
   "body": [
     {
       "tag": "Row",
-      "gap": 8,
-      "grow": [0, 0, 1],
+      "gap": 64,
+      "grow": [0, 0],
       "children": [
         {
           "tag": "Zone",
           "kind": "onprem-a",
           "label": "On-prem",
           "children": [
-            { "tag": "Pcard", "icon": "hybrid", "fn": "Edge router" }
-          ]
-        },
-        {
-          "tag": "Col",
-          "justify": "space-between",
-          "children": [
-            { "tag": "Pipe", "dir": "h", "kind": "blue", "label": "VLAN 1" },
-            { "tag": "Pipe", "dir": "h", "kind": "dash", "label": "VLAN 2" }
+            { "tag": "Pcard", "id": "router", "icon": "hybrid", "fn": "Edge router" }
           ]
         },
         {
@@ -35,20 +27,25 @@
             {
               "tag": "Zone",
               "kind": "vpc",
-              "label": "Shared VPC",
+              "label": "Shared VPC · europe-west4",
               "children": [
                 {
-                  "tag": "Zone",
-                  "kind": "region-a",
-                  "label": "europe-west4",
+                  "tag": "Row",
+                  "gap": 64,
+                  "grow": [0, 0],
                   "children": [
                     {
-                      "tag": "Row",
-                      "gap": 32,
+                      "tag": "Col",
                       "children": [
-                        { "tag": "Pcard", "id": "gateway", "icon": "cloud-run", "fn": "API gateway" },
+                        { "tag": "Pcard", "id": "gateway", "icon": "cloud-run", "fn": "API gateway" }
+                      ]
+                    },
+                    {
+                      "tag": "Col",
+                      "gap": 64,
+                      "children": [
                         { "tag": "Pcard", "id": "warehouse", "icon": "bigquery", "fn": "Warehouse" },
-                        { "tag": "Pcard", "icon": "vertex-ai", "fn": "Model serving" }
+                        { "tag": "Pcard", "id": "model", "icon": "vertex-ai", "fn": "Model serving" }
                       ]
                     }
                   ]
@@ -62,9 +59,13 @@
   ],
   "legend": [
     { "kind": "blue", "text": "primary attachment" },
-    { "kind": "dash", "text": "failover attachment" }
+    { "kind": "dash", "text": "failover attachment" },
+    { "kind": "gray", "text": "service call" }
   ],
   "links": [
-    { "from": "gateway", "to": "warehouse", "kind": "blue", "arrow": "end" }
+    { "from": "router", "to": "gateway", "kind": "blue", "label": "VLAN 1", "arrow": "none", "from_side": "right", "to_side": "left", "via": [{ "x": 235, "y": 159.5 }, { "x": 235, "y": 212.6 }] },
+    { "from": "router", "to": "gateway", "kind": "dash", "label": "VLAN 2", "arrow": "none", "from_side": "bottom", "to_side": "bottom", "via": [{ "x": 100.92, "y": 290 }, { "x": 344.84, "y": 290 }] },
+    { "from": "gateway", "to": "warehouse", "kind": "gray" },
+    { "from": "warehouse", "to": "model", "kind": "gray", "from_side": "bottom", "to_side": "top" }
   ]
 }

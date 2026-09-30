@@ -6,7 +6,7 @@
 
 use stencil_layout::styles::{badge_fill, text_color};
 use stencil_model::text::TextStyleName;
-use stencil_model::{CalloutKind, Canvas, PipeKind, Theme, ZoneKind};
+use stencil_model::{CalloutKind, Canvas, PipeKind, Projection, Theme, ZoneKind};
 
 pub use stencil_layout::styles::{
     BADGE_FILL_CUSTOMER, BADGE_FILL_INTERNAL, BADGE_TEXT_CUSTOMER, BADGE_TEXT_INTERNAL, TEXT_AMBER,
@@ -229,19 +229,33 @@ pub struct WireStyle {
 /// Stroke width of a hollow end dot's ring.
 pub const HOLLOW_DOT_RING_PX: f32 = 1.5;
 
-/// The colors of one theme. Built once per render from `Page.theme`.
+/// The colors of one theme. Built once per render from `Page.theme` and `Page.projection`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Palette {
     theme: Theme,
+    projection: Projection,
 }
 
 impl Palette {
+    /// The flat palette of a theme.
     pub fn new(theme: Theme) -> Self {
-        Palette { theme }
+        Palette {
+            theme,
+            projection: Projection::Flat,
+        }
+    }
+
+    /// The palette of a theme under a projection; `Flat` gives `Palette::new`.
+    pub fn for_projection(theme: Theme, projection: Projection) -> Self {
+        Palette { theme, projection }
     }
 
     pub fn theme(self) -> Theme {
         self.theme
+    }
+
+    pub fn projection(self) -> Projection {
+        self.projection
     }
 
     /// The serialized theme name, used in marker ids.
@@ -366,7 +380,22 @@ impl Palette {
         }
     }
 
+    /// Under iso, center and dusk draw every wire at ISO_WIRE_WIDTH_PX (section 12.6).
     pub fn wire_style(self, kind: PipeKind) -> WireStyle {
+        let flat = self.flat_wire_style(kind);
+        match (self.projection, self.theme) {
+            (Projection::Iso, Theme::Center | Theme::Dusk) => WireStyle {
+                stroke: Stroke {
+                    width_px: ISO_WIRE_WIDTH_PX,
+                    ..flat.stroke
+                },
+                ..flat
+            },
+            (Projection::Flat, _) | (Projection::Iso, Theme::Wire) => flat,
+        }
+    }
+
+    fn flat_wire_style(self, kind: PipeKind) -> WireStyle {
         match self.theme {
             Theme::Center => {
                 let (color, line) = wire_style(kind);
@@ -569,6 +598,260 @@ impl Palette {
     }
 }
 
+/// Stroke width of every wire, link and legend swatch under iso in center and dusk: twice
+/// the gcp outline, so a link never reads as a zone edge.
+pub const ISO_WIRE_WIDTH_PX: f32 = 3.0;
+/// The gcp slab's top-face outline under iso in center and dusk. The brand blue side faces
+/// carry the frame, so the outline stays thin.
+pub const ISO_GCP_OUTLINE_PX: f32 = 1.5;
+/// The ring around an icon chip under iso in center and wire.
+pub const ISO_ICON_CHIP_RING_PX: f32 = 1.0;
+/// Opacity of the shadow under an icon chip in center.
+pub const ISO_ICON_CHIP_SHADOW_OPACITY: f32 = 0.18;
+
+/// Fills and strokes of the three faces of an isometric solid (section 12.6). A None fill
+/// draws the face unfilled; a None stroke draws it unstroked.
+#[derive(Debug, Clone, PartialEq)]
+pub struct FacePaint {
+    pub top: Option<String>,
+    pub left: Option<String>,
+    pub right: Option<String>,
+    pub top_stroke: Option<Stroke>,
+    pub side_stroke: Option<Stroke>,
+}
+
+impl Palette {
+    /// The faces of a zone slab that has `level` filled zones under it. Center and dusk
+    /// draw the sides unstroked, so the slab edge is one fill boundary instead of two
+    /// parallel lines; a dashed or dotted border is drawn on the top face only, in every
+    /// theme; the gcp slab carries the brand blue on its side faces. Dusk lifts each top face
+    /// toward its surface ink by level, so every surface is lighter than the one it stands
+    /// on, and rims solid-bordered tops with a lighter edge. None when a color does not
+    /// parse.
+    pub fn slab_faces(self, kind: ZoneKind, level: usize) -> Option<FacePaint> {
+        let style = self.zone_style(kind);
+        let base = if kind == ZoneKind::Gcp {
+            Some(self.gcp_body_fill())
+        } else {
+            style.fill
+        };
+        let border = style.border;
+        let solid_border = border.filter(|stroke| stroke.line == LineStyle::Solid);
+        match self.theme {
+            Theme::Center => {
+                let (left, right) = self.brand_or_shaded_sides(kind, base)?;
+                Some(FacePaint {
+                    top: base.map(str::to_string),
+                    left,
+                    right,
+                    top_stroke: self.slab_top_stroke(kind, border),
+                    side_stroke: None,
+                })
+            }
+            Theme::Dusk => {
+                let lift = dusk::ISO_SLAB_LIFT + dusk::ISO_LEVEL_LIFT * level as f32;
+                let top = match base {
+                    Some(color) => Some(mix(color, dusk::ISO_SURFACE_TARGET, lift)?),
+                    None => None,
+                };
+                let (left, right) = match (kind, base) {
+                    (ZoneKind::Gcp, _) => self.brand_or_shaded_sides(kind, base)?,
+                    (_, Some(color)) => (
+                        Some(mix(
+                            color,
+                            dusk::ISO_SURFACE_TARGET,
+                            lift - dusk::ISO_SIDE_DROP,
+                        )?),
+                        Some(color.to_string()),
+                    ),
+                    (_, None) => (None, None),
+                };
+                let top_stroke = match (kind, solid_border) {
+                    (ZoneKind::Gcp, _) => self.slab_top_stroke(kind, border),
+                    (_, Some(_)) => Some(Stroke {
+                        width_px: dusk::ISO_RIM_PX,
+                        line: LineStyle::Solid,
+                        color: dusk::ISO_RIM,
+                    }),
+                    (_, None) => border,
+                };
+                Some(FacePaint {
+                    top,
+                    left,
+                    right,
+                    top_stroke,
+                    side_stroke: None,
+                })
+            }
+            Theme::Wire => {
+                let fill = base.map(|_| wire::WHITE.to_string());
+                Some(FacePaint {
+                    top: fill.clone(),
+                    left: fill.clone(),
+                    right: fill,
+                    top_stroke: border,
+                    side_stroke: solid_border,
+                })
+            }
+        }
+    }
+
+    /// The gcp side faces in brand blue, one step darker on the right, or the zone fill
+    /// shaded by the face steps.
+    fn brand_or_shaded_sides(
+        self,
+        kind: ZoneKind,
+        base: Option<&'static str>,
+    ) -> Option<(Option<String>, Option<String>)> {
+        if kind == ZoneKind::Gcp {
+            return Some((
+                Some(GCP_BORDER.to_string()),
+                Some(shade(GCP_BORDER, GCP_SIDE_STEP)?),
+            ));
+        }
+        match base {
+            Some(color) => Some((
+                Some(self.face_fill(color, Face::Left)?),
+                Some(self.face_fill(color, Face::Right)?),
+            )),
+            None => Some((None, None)),
+        }
+    }
+
+    /// The top-face outline of a slab: the flat border, thinned to ISO_GCP_OUTLINE_PX for
+    /// gcp in center and dusk.
+    fn slab_top_stroke(self, kind: ZoneKind, border: Option<Stroke>) -> Option<Stroke> {
+        match (kind, self.theme) {
+            (ZoneKind::Gcp, Theme::Center | Theme::Dusk) => border.map(|stroke| Stroke {
+                width_px: ISO_GCP_OUTLINE_PX,
+                ..stroke
+            }),
+            _ => border,
+        }
+    }
+
+    /// The faces of a leaf block whose flat fill is `fill` and flat border `border`: every
+    /// face stroked with the border (in wire the ink border when there is none), the top
+    /// face the flat fill and the sides shaded. Dusk lifts all three faces so the block
+    /// stands out from the floor it sits on. None when a color does not parse.
+    pub fn block_faces(
+        self,
+        fill: Option<&'static str>,
+        border: Option<Stroke>,
+    ) -> Option<FacePaint> {
+        let stroke = self.face_outline(border);
+        let (top, left, right) = match (self.theme, fill) {
+            (_, None) => (None, None, None),
+            (Theme::Dusk, Some(color)) => (
+                Some(mix(
+                    color,
+                    dusk::ISO_SURFACE_TARGET,
+                    dusk::ISO_BLOCK_TOP_LIFT,
+                )?),
+                Some(mix(
+                    color,
+                    dusk::ISO_SURFACE_TARGET,
+                    dusk::ISO_BLOCK_LEFT_LIFT,
+                )?),
+                Some(mix(
+                    color,
+                    dusk::ISO_SURFACE_TARGET,
+                    dusk::ISO_BLOCK_RIGHT_LIFT,
+                )?),
+            ),
+            (Theme::Center | Theme::Wire, Some(color)) => (
+                Some(self.face_fill(color, Face::Top)?),
+                Some(self.face_fill(color, Face::Left)?),
+                Some(self.face_fill(color, Face::Right)?),
+            ),
+        };
+        Some(FacePaint {
+            top,
+            left,
+            right,
+            top_stroke: stroke,
+            side_stroke: stroke,
+        })
+    }
+
+    /// The rounded square under every icon under iso: the dusk white tile in every theme,
+    /// ringed in the card border in center and in ink in wire, so the chip reads on a
+    /// white block top.
+    pub fn iso_icon_chip(self) -> BoxPaint {
+        let ring = |color| {
+            Some(Stroke {
+                width_px: ISO_ICON_CHIP_RING_PX,
+                line: LineStyle::Solid,
+                color,
+            })
+        };
+        match self.theme {
+            Theme::Center => BoxPaint {
+                fill: CARD_FILL,
+                border: ring(CARD_BORDER),
+            },
+            Theme::Dusk => BoxPaint {
+                fill: dusk::ICON_CHIP,
+                border: None,
+            },
+            Theme::Wire => BoxPaint {
+                fill: wire::WHITE,
+                border: ring(wire::INK),
+            },
+        }
+    }
+
+    /// The color of the soft shadow under an iso icon chip; center only.
+    pub fn iso_icon_chip_shadow(self) -> Option<&'static str> {
+        match self.theme {
+            Theme::Center => Some(TEXT_DARK),
+            Theme::Dusk | Theme::Wire => None,
+        }
+    }
+
+    /// The legend label of a kind under iso when the flat label names a color the theme
+    /// does not draw: wire strokes every kind in black, so its labels name the line.
+    pub fn iso_legend_label(self, kind: PipeKind) -> Option<&'static str> {
+        match self.theme {
+            Theme::Center | Theme::Dusk => None,
+            Theme::Wire => Some(match kind {
+                PipeKind::Gray => "Thin line",
+                PipeKind::Blue => "Solid line",
+                PipeKind::Pink => "Ringed line",
+                PipeKind::Dash => "Dashed line",
+                PipeKind::Deny => "Dotted line",
+            }),
+        }
+    }
+}
+
+/// Lightness step of the darker gcp side face.
+const GCP_SIDE_STEP: i8 = -8;
+
+/// `color` moved `fraction` of the way to `toward` in each sRGB channel, as `#RRGGBB`.
+/// None when either is not `#` followed by six hex digits.
+pub fn mix(color: &str, toward: &str, fraction: f32) -> Option<String> {
+    let from = parse_hex_color(color)?;
+    let to = parse_hex_color(toward)?;
+    let fraction = fraction.clamp(0.0, 1.0);
+    let channel = |index: usize| -> Option<u8> {
+        let start = f32::from(*from.get(index)?);
+        let end = f32::from(*to.get(index)?);
+        // The clamp keeps the cast in range, so `as` never saturates.
+        Some(
+            (start + (end - start) * fraction + 0.5)
+                .floor()
+                .clamp(0.0, 255.0) as u8,
+        )
+    };
+    Some(format!(
+        "#{:02X}{:02X}{:02X}",
+        channel(0)?,
+        channel(1)?,
+        channel(2)?
+    ))
+}
+
 /// `color` (`#RRGGBB`) with its HSL lightness moved by `step_points` percentage points.
 /// None when `color` is not `#` followed by six hex digits. A step of 0 returns the input.
 pub fn shade(color: &str, step_points: i8) -> Option<String> {
@@ -702,6 +985,20 @@ mod dusk {
     pub const CALLOUT_RISK_FILL: &str = "#3A1A1A";
     pub const CALLOUT_DECISION_FILL: &str = "#143024";
     pub const CALLOUT_OPEN_FILL: &str = "#3A2A10";
+    /// Under iso every dusk surface is its flat fill moved toward this blue gray: slabs by
+    /// ISO_SLAB_LIFT plus ISO_LEVEL_LIFT per filled zone beneath, blocks further still, so
+    /// each surface is lighter than the one it stands on.
+    pub const ISO_SURFACE_TARGET: &str = "#7F93B8";
+    pub const ISO_SLAB_LIFT: f32 = 0.14;
+    pub const ISO_LEVEL_LIFT: f32 = 0.08;
+    /// The left side face of a slab is this much less lifted than its top.
+    pub const ISO_SIDE_DROP: f32 = 0.06;
+    pub const ISO_BLOCK_TOP_LIFT: f32 = 0.34;
+    pub const ISO_BLOCK_LEFT_LIFT: f32 = 0.22;
+    pub const ISO_BLOCK_RIGHT_LIFT: f32 = 0.08;
+    /// The edge of a solid-bordered slab top, lighter than every lifted floor.
+    pub const ISO_RIM: &str = "#4A5B7E";
+    pub const ISO_RIM_PX: f32 = 1.0;
 
     /// Center's border widths, line styles and radii with the dusk colors.
     pub fn zone_style(kind: ZoneKind) -> ZoneStyle {

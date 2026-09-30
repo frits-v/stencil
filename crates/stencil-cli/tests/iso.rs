@@ -62,19 +62,26 @@ fn scratch_directory(test_name: &str) -> PathBuf {
 const THEMES: [&str; 3] = ["center", "dusk", "wire"];
 
 #[test]
-fn check_hero_passes_every_check_in_every_theme() {
+fn check_hero_passes_every_applicable_check_in_every_theme() {
     for theme in THEMES {
         let outcome = run_stencil(&["check", &example_path("hero-iso.json"), "--theme", theme]);
         assert_eq!(outcome.code, ExitCode::Clean, "{theme}: {}", outcome.stdout);
         let lines = outcome.stdout_lines();
         assert!(
-            lines.contains(&"check iso-labels-clear: examined 81 pairs, 0 defects"),
+            lines.contains(&"check iso-labels-clear: examined 86 pairs, 0 defects"),
+            "{theme}: {}",
+            outcome.stdout
+        );
+        assert!(
+            lines.contains(
+                &"check pipes-land: examined 0 pipe ends, not applicable: page has no pipes"
+            ),
             "{theme}: {}",
             outcome.stdout
         );
         assert_eq!(
             lines.last().copied(),
-            Some("stencil check: 9 checks, 9 passed, 0 failed"),
+            Some("stencil check: 9 checks, 8 passed, 0 failed, 1 not applicable"),
             "{theme}"
         );
         assert_eq!(outcome.stderr, "");
@@ -98,7 +105,7 @@ fn check_hero_with_projection_flat_skips_the_iso_check() {
     );
     assert_eq!(
         lines.last().copied(),
-        Some("stencil check: 9 checks, 8 passed, 0 failed, 1 not applicable")
+        Some("stencil check: 9 checks, 7 passed, 0 failed, 2 not applicable")
     );
 }
 
