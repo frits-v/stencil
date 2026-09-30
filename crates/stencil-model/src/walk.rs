@@ -1,0 +1,180 @@
+use crate::NODES_MAX;
+use crate::document::{Node, Page, Pipe, TeeArm};
+use crate::pointer::NodePointer;
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct NodeEntry<'a> {
+    pub pointer: NodePointer,
+    /// The enclosing node: `/body` for body elements, the container for its children and
+    /// the Tee for its arms.
+    pub parent: Option<NodePointer>,
+    /// body elements have depth 1 and Tee arms their Tee's depth plus 1 (section 1.3).
+    pub depth: usize,
+    pub node: NodeRef<'a>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum NodeRef<'a> {
+    Node(&'a Node),
+    TeeArm(&'a Pipe),
+}
+
+impl NodeRef<'_> {
+    /// The serialized `tag` value; a Tee arm is written with `"tag": "Pipe"`.
+    pub fn tag_name(&self) -> &'static str {
+        match self {
+            NodeRef::Node(node) => node.tag_name(),
+            NodeRef::TeeArm(_) => "Pipe",
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct TextField<'a> {
+    pub pointer: NodePointer,
+    pub text: &'a str,
+}
+
+/// Pre-order walk of body nodes and Tee arms, each Tee's arms directly after the Tee.
+/// This is the body portion of the section 4.4 geometry order. Stops after
+/// NODES_MAX + 1 entries (section 1.3).
+pub fn body_nodes(page: &Page) -> Vec<NodeEntry<'_>> {
+    let body_pointer = NodePointer::root().child("body");
+    let mut pending: Vec<NodeEntry<'_>> = page
+        .body
+        .iter()
+        .enumerate()
+        .rev()
+        .map(|(index, node)| NodeEntry {
+            pointer: body_pointer.index(index),
+            parent: Some(body_pointer.clone()),
+            depth: 1,
+            node: NodeRef::Node(node),
+        })
+        .collect();
+
+    let mut entries = Vec::new();
+    for _ in 0..=NODES_MAX {
+        let Some(entry) = pending.pop() else {
+            break;
+        };
+        push_children_reversed(&entry, &mut pending);
+        entries.push(entry);
+    }
+    debug_assert!(entries.len() <= NODES_MAX + 1);
+    entries
+}
+
+fn push_children_reversed<'a>(entry: &NodeEntry<'a>, pending: &mut Vec<NodeEntry<'a>>) {
+    let child_depth = entry.depth.saturating_add(1);
+    let push_nodes = |pending: &mut Vec<NodeEntry<'a>>, children: &'a [Node]| {
+        let children_pointer = entry.pointer.child("children");
+        for (index, child) in children.iter().enumerate().rev() {
+            pending.push(NodeEntry {
+                pointer: children_pointer.index(index),
+                parent: Some(entry.pointer.clone()),
+                depth: child_depth,
+                node: NodeRef::Node(child),
+            });
+        }
+    };
+    match entry.node {
+        NodeRef::Node(Node::Row(row)) => push_nodes(pending, &row.children),
+        NodeRef::Node(Node::Col(col)) => push_nodes(pending, &col.children),
+        NodeRef::Node(Node::Zone(zone)) => push_nodes(pending, &zone.children),
+        NodeRef::Node(Node::Tee(tee)) => {
+            let arms_pointer = entry.pointer.child("arms");
+            for (index, arm) in tee.arms.iter().enumerate().rev() {
+                let TeeArm::Pipe(pipe) = arm;
+                pending.push(NodeEntry {
+                    pointer: arms_pointer.index(index),
+                    parent: Some(entry.pointer.clone()),
+                    depth: child_depth,
+                    node: NodeRef::TeeArm(pipe),
+                });
+            }
+        }
+        NodeRef::Node(Node::Pcard(_) | Node::Fact(_) | Node::Note(_) | Node::Pipe(_))
+        | NodeRef::TeeArm(_) => {}
+    }
+}
+
+/// Every authored text value with its pointer, in document order.
+pub fn text_fields(page: &Page) -> Vec<TextField<'_>> {
+    let mut fields = Vec::new();
+    push_page_head_text_fields(page, &mut fields);
+    for entry in body_nodes(page) {
+        push_node_text_fields(&entry, &mut fields);
+    }
+    push_legend_text_fields(page, &mut fields);
+    fields
+}
+
+/// `title`, `kicker`, `lede` and `foot`, the page text fields declared before `body`.
+pub(crate) fn push_page_head_text_fields<'a>(page: &'a Page, fields: &mut Vec<TextField<'a>>) {
+    let root = NodePointer::root();
+    fields.push(TextField {
+        pointer: root.child("title"),
+        text: &page.title,
+    });
+    fields.push(TextField {
+        pointer: root.child("kicker"),
+        text: &page.kicker,
+    });
+    fields.push(TextField {
+        pointer: root.child("lede"),
+        text: &page.lede,
+    });
+    if let Some(foot) = &page.foot {
+        fields.push(TextField {
+            pointer: root.child("foot"),
+            text: foot,
+        });
+    }
+}
+
+pub(crate) fn push_legend_text_fields<'a>(page: &'a Page, fields: &mut Vec<TextField<'a>>) {
+    let legend_pointer = NodePointer::root().child("legend");
+    for (index, entry) in page.legend.iter().enumerate() {
+        fields.push(TextField {
+            pointer: legend_pointer.index(index).child("text"),
+            text: &entry.text,
+        });
+    }
+}
+
+/// The text fields a node itself holds, in struct declaration order. Children are separate
+/// entries of the walk.
+pub(crate) fn push_node_text_fields<'a>(entry: &NodeEntry<'a>, fields: &mut Vec<TextField<'a>>) {
+    let mut push = |token: &str, text: &'a str| {
+        fields.push(TextField {
+            pointer: entry.pointer.child(token),
+            text,
+        });
+    };
+    match entry.node {
+        NodeRef::Node(Node::Row(_) | Node::Col(_)) => {}
+        NodeRef::Node(Node::Zone(zone)) => push("label", &zone.label),
+        NodeRef::Node(Node::Pcard(pcard)) => {
+            push("fn", &pcard.function_name);
+            if let Some(product_name) = &pcard.product_name {
+                push("pn", product_name);
+            }
+            if let Some(fact) = &pcard.fact {
+                push("fact", fact);
+            }
+            if let Some(ask) = &pcard.ask {
+                push("ask", ask);
+            }
+        }
+        NodeRef::Node(Node::Fact(fact)) => push("text", &fact.text),
+        NodeRef::Node(Node::Note(note)) => push("text", &note.text),
+        NodeRef::Node(Node::Pipe(pipe)) | NodeRef::TeeArm(pipe) => {
+            push("label", &pipe.label);
+            if let Some(sub) = &pipe.sub {
+                push("sub", sub);
+            }
+        }
+        NodeRef::Node(Node::Tee(tee)) => push("hub", &tee.hub),
+    }
+}
