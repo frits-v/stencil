@@ -37,3 +37,8 @@ todo = "deny"
 unimplemented = "deny"
 indexing_slicing = "deny"
 unreachable = "deny"
+
+# Dependencies (resvg, tiny-skia, cosmic-text, png) build optimized in test and dev builds,
+# so the tests that render every example finish in seconds; workspace crates keep debug.
+[profile.dev.package."*"]
+opt-level = 3

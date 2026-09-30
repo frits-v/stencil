@@ -54,6 +54,16 @@ pub enum Failure {
         #[source]
         source: std::io::Error,
     },
+    #[error("cannot read examples directory {}", path.display())]
+    ReadExamples {
+        path: PathBuf,
+        #[source]
+        source: std::io::Error,
+    },
+    #[error("examples directory {} holds no .json documents", path.display())]
+    NoExamples { path: PathBuf },
+    #[error("examples directory {} holds more than {limit} .json documents", path.display())]
+    ExamplesExceeded { path: PathBuf, limit: usize },
     #[error("cannot write {}", path.display())]
     WriteOutput {
         path: PathBuf,

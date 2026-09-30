@@ -4,3 +4,7 @@ cue = "0.17.1"
 [tasks.land]
 description = "Merge a pull request only after CI passes: mise run land -- <number>"
 run = "gh pr checks {{arg(name=\"pr\")}} --watch --fail-fast && gh pr merge {{arg(name=\"pr\")}} --squash --delete-branch"
+
+[tasks.gallery-docs]
+description = "Regenerate the README PNGs in docs/gallery from the examples"
+run = ["cargo build --release", "scripts/gallery-docs.sh docs/gallery target/release/stencil"]

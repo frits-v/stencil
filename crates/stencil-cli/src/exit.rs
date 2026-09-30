@@ -31,6 +31,9 @@ pub fn failure_exit_code(failure: &Failure) -> ExitCode {
         | Failure::DocumentValue(_)
         | Failure::Serialize { .. }
         | Failure::CreateOutputDirectory { .. }
+        | Failure::ReadExamples { .. }
+        | Failure::NoExamples { .. }
+        | Failure::ExamplesExceeded { .. }
         | Failure::WriteOutput { .. } => ExitCode::CouldNotRun,
     }
 }
@@ -268,6 +271,17 @@ mod tests {
             Failure::WriteOutput {
                 path: "out/g7.svg".into(),
                 source: io_error(),
+            },
+            Failure::ReadExamples {
+                path: "examples".into(),
+                source: io_error(),
+            },
+            Failure::NoExamples {
+                path: "examples".into(),
+            },
+            Failure::ExamplesExceeded {
+                path: "examples".into(),
+                limit: 256,
             },
         ] {
             assert_eq!(failure_exit_code(&failure), ExitCode::CouldNotRun);
