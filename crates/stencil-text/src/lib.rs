@@ -63,7 +63,8 @@ pub enum FontError {
     },
 }
 
-/// Calls verify_fonts(&BUNDLED_FONTS).
+/// The public check over the four compiled-in faces; `verify_fonts` stays crate-private so
+/// only the font-swap test can pass it other files.
 pub fn verify_bundled_fonts() -> Result<(), FontError> {
     verify_fonts(&BUNDLED_FONTS)
 }

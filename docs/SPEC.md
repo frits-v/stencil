@@ -979,7 +979,8 @@ pub struct FontFile {
 /// Inter-Regular, Inter-SemiBold, Inter-Bold, Inter-ExtraBold, via include_bytes!.
 pub const BUNDLED_FONTS: [FontFile; 4];
 
-/// Calls verify_fonts(&BUNDLED_FONTS).
+/// The public check over the four compiled-in faces; `verify_fonts` stays crate-private so
+/// only the font-swap test can pass it other files.
 pub fn verify_bundled_fonts() -> Result<(), FontError>;
 
 /// Parses each file and asserts family "Inter" and the listed weight. Crate-private so the
@@ -1112,6 +1113,8 @@ pub fn child_inside_container(geometry: &PageGeometry) -> CheckReport;
 pub fn siblings_do_not_overlap(geometry: &PageGeometry) -> CheckReport;
 pub fn text_fits_box(geometry: &PageGeometry) -> CheckReport;
 ```
+
+`LayoutError::Taffy` and `LayoutError::NonFinite` carry the pointer of the node whose box failed when there is one: a taffy node not attached to the tree, or a non-finite border or content box, reports its record's pointer. A failure of `compute_layout_with_measure`, which computes the whole tree at once, a failure while walking the tree for absolute origins, and a non-finite canvas size are page-level and carry the root pointer `""`.
 
 Geometry order. `PageGeometry.nodes` order is `""`, `/kicker`, `/title`, `/lede`, `/body`, then each body node in pre-order with a Tee's arms `/…/arms/0`, `/…/arms/1` directly after the Tee and before its next sibling, then `/legend`, `/legend/0` … `/legend/n`, then `/foot`. `/legend` and its entries are absent when `legend` is empty, and `/foot` is absent when `foot` is. This is the section 2.2 root-child order, not section 4.2 document order. `render_svg`, `measured_json` and the siblings-do-not-overlap defect rule use this order. Document order stays the order of `validate_page`, `text_fields` and the remembered-constants check.
 
@@ -1722,7 +1725,7 @@ All tests except the wrap-epsilon regression use `FixedMetricsMeasurer::default(
 - Errors: a measurer returning `MissingGlyph` gives `LayoutError::Measure` with the text's pointer. An invalid page gives `LayoutError::Invalid`.
 - Checks on hand-built `PageGeometry`: overlap by 0.02 px is a defect and touching edges are not; a child 0.02 px outside its parent is a defect; a text run 0.02 px wider than its part is a defect; geometry with only the root gives examined 0 and fails for each geometry check.
 - Checks on laid-out documents: a Pcard with a single 120-character word in a Row of three at width 640 produces `child-inside-container` defects for the three cards and no `text-fits-box` defect, because the min-content floor of section 2.5 widens the card to the word. A `/title` of one 200-character word at width 640 produces one `text-fits-box` defect at `/title` and no `child-inside-container` defect, because the root stretches the title leaf to the content width with no min-content floor. A small document of five nodes has hand-derived examined counts.
-- Dense stress (`examples/stress-dense.json`, written by the stencil-layout implementer). Layout completes, all five checks pass, and `body_nodes(page).len()` is 37. The document is exactly:
+- Dense stress (`examples/stress-dense.json`, written by the stencil-layout implementer). Layout completes, all five checks pass, and `body_nodes(page).len()` is 37. A test compares the file, parsed as a `serde_json::Value`, with the document below built field for field, so any drift fails. The document is exactly:
   - Page: title `Dense stress figure`, kicker `Stress · dense layout`, lede `Five rows of cards and pipes inside a service perimeter.`, canvas `internal`, no `foot`, no `width`, and legend entries `gray` `internal call`, `blue` `request path`, `pink` `reply path`, `dash` `failover` and `deny` `blocked egress`, in that order.
   - `body` holds one Zone, kind `gcp`, label `Google Cloud`. Its one child is a Zone of kind `perimeter`, label `Service perimeter`. Its one child is a Col with no `gap`, `grow` or `justify` and seven children in this order: Row 1, the Pipe v, Row 2, Row 3, the Tee, Row 4, Row 5.
   - Row r, for r from 1 to 5, has no `gap`, `grow` or `justify` and five children: Pcard, Pipe h, Pcard, Pipe h, Pcard. Card c, for c from 1 to 3, has icon `cloud-run`, fn `Service r.c` with r and c as digits (`Service 2.3`), pn `Cloud Run` and fact `Reads its config from a bucket in the same project`. The first Pipe h has kind `blue` and label `step r.1`, the second kind `gray` and label `step r.2`. Neither has a `sub`.
