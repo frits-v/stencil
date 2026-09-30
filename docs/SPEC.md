@@ -1580,7 +1580,7 @@ Two more fixtures are created during crate work, each by one owner:
 
 ### 9.1 In scope
 
-The eight tags in section 1, layout by taffy, measurement by cosmic-text over bundled Inter, SVG, PNG and measured JSON output, the five checks, and the four CLI commands.
+The eight tags in section 1, layout by taffy, measurement by cosmic-text over bundled Inter, SVG, PNG and measured JSON output, the eight checks, and the five CLI commands.
 
 ### 9.2 Cut list
 
