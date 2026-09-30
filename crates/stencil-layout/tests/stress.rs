@@ -3,10 +3,10 @@
 mod common;
 
 use common::{STRESS_JSON, layout};
+use serde_json::{Value, json};
 use stencil_layout::checks::{child_inside_container, siblings_do_not_overlap, text_fits_box};
 use stencil_layout::{NodeTag, PartName};
 use stencil_model::checks::{legend_consistency, remembered_constants};
-use serde_json::{Value, json};
 use stencil_model::{Page, body_nodes, parse_page};
 
 fn stress_page() -> Page {
@@ -29,9 +29,7 @@ fn section_10_stress_document() -> Value {
             "fact": "Reads its config from a bucket in the same project"
         })
     };
-    let step = |row: u32, step: u32, kind: &str| {
-        json!({ "tag": "Pipe", "dir": "h", "kind": kind, "label": format!("step {row}.{step}") })
-    };
+    let step = |row: u32, step: u32, kind: &str| json!({ "tag": "Pipe", "dir": "h", "kind": kind, "label": format!("step {row}.{step}") });
     let row = |row: u32| {
         json!({
             "tag": "Row",

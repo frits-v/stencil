@@ -470,7 +470,11 @@ fn check_reports_overflowing_text_with_its_pointer() {
         "{}",
         outcome.stdout
     );
-    assert!(!check_lines[0].ends_with(", 0 defects"), "{}", outcome.stdout);
+    assert!(
+        !check_lines[0].ends_with(", 0 defects"),
+        "{}",
+        outcome.stdout
+    );
     for passing in &check_lines[1..] {
         assert!(passing.ends_with(", 0 defects"), "{}", outcome.stdout);
     }
@@ -578,7 +582,12 @@ fn input_that_is_not_utf8_is_a_parse_defect() {
 
     for command in ["vet", "check"] {
         let outcome = run_stencil(&[command, path_text]);
-        assert_eq!(outcome.code, ExitCode::Defects, "{command}: {}", outcome.stderr);
+        assert_eq!(
+            outcome.code,
+            ExitCode::Defects,
+            "{command}: {}",
+            outcome.stderr
+        );
         assert_eq!(
             outcome.stdout_lines(),
             vec![
@@ -606,7 +615,11 @@ fn render_refuses_to_overwrite_its_input() {
 
     assert_eq!(outcome.code, ExitCode::CouldNotRun);
     assert_eq!(outcome.stdout, "");
-    assert!(outcome.stderr.contains("is the input file"), "{}", outcome.stderr);
+    assert!(
+        outcome.stderr.contains("is the input file"),
+        "{}",
+        outcome.stderr
+    );
     assert_eq!(fs::read(&input).unwrap(), original);
     assert!(!directory.join("figure.png").exists());
     assert!(!directory.join("figure.measured.json").exists());
@@ -649,7 +662,12 @@ fn a_vetted_tall_document_is_rejected_above_the_pixel_budget() {
     let out_dir_text = out_dir.to_str().unwrap();
 
     let too_large = run_stencil(&["render", &path, "--out-dir", out_dir_text, "--scale", "4"]);
-    assert_eq!(too_large.code, ExitCode::CouldNotRun, "{}", too_large.stdout);
+    assert_eq!(
+        too_large.code,
+        ExitCode::CouldNotRun,
+        "{}",
+        too_large.stdout
+    );
     assert_eq!(too_large.stdout, "");
     assert!(
         too_large.stderr.contains("cannot allocate a 5280x"),

@@ -9,8 +9,8 @@ use common::{
     tee, zone,
 };
 use stencil_model::{
-    CHILDREN_MAX, LEGEND_ENTRIES_MAX, NODES_MAX, Node, Page, Pcard, PipeDir, PipeKind, VetRule, ZoneKind, body_nodes,
-    validate_page,
+    CHILDREN_MAX, LEGEND_ENTRIES_MAX, NODES_MAX, Node, Page, Pcard, PipeDir, PipeKind, VetRule,
+    ZoneKind, body_nodes, validate_page,
 };
 
 /// (pointer, rule name, message) for every violation, with the rule name taken from
