@@ -2130,8 +2130,9 @@ pub const ISO_MARGIN_PX: f32 = 20.0;
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct ScreenPoint { pub x: f32, pub y: f32 }
 
-/// The projected page. Built once per iso render; `render_svg`, `measured_json` and
-/// `iso_labels_clear` read the same value.
+/// The projected page. The pipeline builds it once for `measured_json` and
+/// `iso_labels_clear`; `render_svg` builds an equal one itself, because the projection
+/// is a pure function of the geometry.
 #[derive(Debug, Clone, PartialEq)]
 pub struct IsoScene {
     /// The drawn canvas (section 12.2). `PageGeometry.canvas` stays the layout canvas.
