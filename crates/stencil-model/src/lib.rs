@@ -5,6 +5,7 @@ pub mod checks;
 pub mod document;
 pub mod grammar;
 pub mod pointer;
+pub mod products;
 pub mod text;
 pub mod theme;
 

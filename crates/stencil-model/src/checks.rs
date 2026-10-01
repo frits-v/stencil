@@ -1,4 +1,5 @@
-//! Check reports (section 6) and the two geometry-free checks.
+//! Check reports (section 6) and the geometry-free checks; icon-matches-product lives in
+//! `products`.
 
 use crate::document::{Chrome, Line, Node, Page, line_tint};
 use crate::grammar::{GRAMMAR_REMEMBERED_MAX, Grammar};
@@ -18,6 +19,8 @@ pub enum CheckName {
     PipesLand,
     IsoLabelsClear,
     IsoLinksClear,
+    PrintFit,
+    IconMatchesProduct,
 }
 
 impl CheckName {
@@ -34,6 +37,8 @@ impl CheckName {
             CheckName::PipesLand => "pipes-land",
             CheckName::IsoLabelsClear => "iso-labels-clear",
             CheckName::IsoLinksClear => "iso-links-clear",
+            CheckName::PrintFit => "print-fit",
+            CheckName::IconMatchesProduct => "icon-matches-product",
         }
     }
 
@@ -57,14 +62,16 @@ impl CheckName {
             ) => "pairs",
             (CheckName::LinksRouted, true) => "link",
             (CheckName::LinksRouted, false) => "links",
-            (CheckName::TextFitsBox, true) => "text run",
-            (CheckName::TextFitsBox, false) => "text runs",
+            (CheckName::TextFitsBox | CheckName::PrintFit, true) => "text run",
+            (CheckName::TextFitsBox | CheckName::PrintFit, false) => "text runs",
             (CheckName::RememberedConstants, true) => "text field",
             (CheckName::RememberedConstants, false) => "text fields",
             (CheckName::PipesLand, true) => "pipe end",
             (CheckName::PipesLand, false) => "pipe ends",
             (CheckName::IsoLinksClear, true) => "link leg",
             (CheckName::IsoLinksClear, false) => "link legs",
+            (CheckName::IconMatchesProduct, true) => "item",
+            (CheckName::IconMatchesProduct, false) => "items",
         }
     }
 }
@@ -123,7 +130,7 @@ impl CheckReport {
     }
 }
 
-fn is_word_character(character: char) -> bool {
+pub(crate) fn is_word_character(character: char) -> bool {
     character.is_ascii_alphanumeric() || character == '_'
 }
 
