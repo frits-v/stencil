@@ -404,3 +404,44 @@ fn negative_or_non_finite_max_width_is_rejected() {
         .measure("Metro", &card_function(), Some(0.0))
         .unwrap();
 }
+
+/// Section 13.11: the shared break opportunities, with the fake as the reference.
+#[test]
+fn dotted_and_hyphenated_names_break_as_the_fake_does() {
+    use stencil_model::text::FixedMetricsMeasurer;
+    let cases: [(&str, &[&str]); 4] = [
+        (
+            "acme-prod.analytics.raw-events",
+            &["acme-", "prod.", "analytics.", "raw-", "events"],
+        ),
+        ("10.8.0.0/28", &["10.8.0.0/28"]),
+        ("v1.2", &["v1.2"]),
+        ("gs://acme/raw", &["gs://", "acme/", "raw"]),
+    ];
+    let mut cosmic = measurer();
+    let mut fake = FixedMetricsMeasurer::default();
+    for (text, expected) in cases {
+        let metrics = cosmic.measure(text, &card_function(), Some(0.0)).unwrap();
+        assert_eq!(line_texts(text, &metrics), expected, "{text}");
+        assert!(!text.contains('\u{200B}'));
+        assert_contract_invariants(text, &card_function(), &metrics);
+        let faked = fake.measure(text, &card_function(), Some(0.0)).unwrap();
+        assert_eq!(line_texts(text, &faked), expected, "fake {text}");
+    }
+}
+
+#[test]
+fn a_dotted_name_keeps_its_max_content_width_and_one_line() {
+    let text = "acme-prod.analytics.raw-events";
+    let mut cosmic = measurer();
+    let whole = cosmic.measure(text, &card_function(), None).unwrap();
+    assert_eq!(line_texts(text, &whole), [text]);
+    let at_width = cosmic
+        .measure(
+            text,
+            &card_function(),
+            Some(whole.width_px + WRAP_EPSILON_PX),
+        )
+        .unwrap();
+    assert_eq!(metric_bits(&at_width), metric_bits(&whole));
+}

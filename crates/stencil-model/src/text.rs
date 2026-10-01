@@ -409,8 +409,8 @@ pub fn check_measure_input(
     Ok(())
 }
 
-/// A measurer with a fixed advance per Unicode scalar value and breaks only at U+0020
-/// (section 3.1).
+/// A measurer with a fixed advance per Unicode scalar value that breaks at the
+/// opportunities of `break_opportunities` (sections 3.1 and 13.11).
 #[derive(Debug, Clone, PartialEq)]
 pub struct FixedMetricsMeasurer {
     /// Advance of every character, including spaces, in em.
@@ -428,36 +428,58 @@ impl Default for FixedMetricsMeasurer {
     }
 }
 
-/// Byte range of a maximal run of non-space characters.
+/// Byte offsets at which a line may break, ascending (section 13.11): after a run of
+/// U+0020 that follows other text, after a `-` or `/` followed by an ASCII letter, and after
+/// a `.` followed by an ASCII letter. Each offset is where the next line would start, and a
+/// character before it stays on the earlier line. A dot between digits and a hyphen before a
+/// digit are not opportunities, so `10.8.0.0` and `-29` never split.
+pub fn break_opportunities(text: &str) -> Vec<usize> {
+    let mut opportunities = Vec::new();
+    let mut seen_text = false;
+    let mut characters = text.char_indices().peekable();
+    while let Some((byte_index, character)) = characters.next() {
+        let next = characters.peek().map(|&(_, next)| next);
+        let after_space_run = character == ' ' && seen_text && next.is_some_and(|next| next != ' ');
+        let after_joiner = matches!(character, '-' | '/' | '.')
+            && next.is_some_and(|next| next.is_ascii_alphabetic());
+        if after_space_run || after_joiner {
+            opportunities.push(byte_index + character.len_utf8());
+        }
+        seen_text |= character != ' ';
+    }
+    opportunities
+}
+
+/// Byte range of a word: the text between two consecutive break opportunities, without its
+/// spaces.
 #[derive(Debug, Clone, Copy)]
 struct Word {
     byte_start: usize,
     byte_end: usize,
 }
 
-fn space_separated_words(text: &str) -> Vec<Word> {
-    let mut words = Vec::new();
-    let mut word_start: Option<usize> = None;
-    for (byte_index, character) in text.char_indices() {
-        match (character == ' ', word_start) {
-            (true, Some(start)) => {
-                words.push(Word {
-                    byte_start: start,
-                    byte_end: byte_index,
-                });
-                word_start = None;
-            }
-            (false, None) => word_start = Some(byte_index),
-            (true, None) | (false, Some(_)) => {}
-        }
-    }
-    if let Some(start) = word_start {
-        words.push(Word {
-            byte_start: start,
-            byte_end: text.len(),
-        });
-    }
-    words
+/// The words of `text` in order. A segment that holds only spaces is not a word.
+fn words(text: &str) -> Vec<Word> {
+    let mut segment_starts = vec![0];
+    segment_starts.extend(break_opportunities(text));
+    let segment_ends = segment_starts
+        .iter()
+        .skip(1)
+        .copied()
+        .chain(std::iter::once(text.len()));
+    segment_starts
+        .iter()
+        .zip(segment_ends)
+        .filter_map(|(&segment_start, segment_end)| {
+            let segment = text.get(segment_start..segment_end)?;
+            let leading = segment.len() - segment.trim_start_matches(' ').len();
+            let trimmed = segment.trim_matches(' ');
+            (!trimmed.is_empty()).then(|| Word {
+                byte_start: segment_start + leading,
+                byte_end: segment_start + leading + trimmed.len(),
+            })
+        })
+        .collect()
 }
 
 impl FixedMetricsMeasurer {
@@ -489,7 +511,7 @@ impl TextMeasurer for FixedMetricsMeasurer {
         }
 
         let advance_px = (self.advance_em + style.letter_spacing_em) * style.size_px;
-        let words = space_separated_words(text);
+        let words = words(text);
 
         // Pairs of (byte_start, byte_end). Leading spaces stay on the first line; the spaces
         // at a break are trailing spaces of the earlier line and are dropped.

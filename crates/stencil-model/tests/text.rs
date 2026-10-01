@@ -174,9 +174,57 @@ fn word_wider_than_max_width_stays_whole() {
 
 #[test]
 fn zero_width_gives_the_widest_word() {
-    let metrics = measure("On-prem router 1", &card_function(), Some(0.0)).unwrap();
-    assert_eq!(metrics.line_count, 3);
-    assert_eq!(metrics.width_px, 7.0 * 6.5);
+    let text = "On-prem router 1";
+    let metrics = measure(text, &card_function(), Some(0.0)).unwrap();
+    assert_eq!(line_texts(text, &metrics), ["On-", "prem", "router", "1"]);
+    assert_eq!(metrics.width_px, 6.0 * 6.5);
+    assert_eq!(metrics.lines[0].width_px, 3.0 * 6.5);
+}
+
+fn line_texts<'a>(text: &'a str, metrics: &stencil_model::text::TextMetrics) -> Vec<&'a str> {
+    metrics
+        .lines
+        .iter()
+        .map(|line| &text[line.byte_start..line.byte_end])
+        .collect()
+}
+
+#[test]
+fn a_bucket_name_breaks_after_each_hyphen_and_dot_before_a_letter() {
+    let text = "acme-prod.analytics.raw-events";
+    let metrics = measure(text, &card_function(), Some(0.0)).unwrap();
+    assert_eq!(
+        line_texts(text, &metrics),
+        ["acme-", "prod.", "analytics.", "raw-", "events"]
+    );
+    assert_eq!(metrics.width_px, 10.0 * 6.5);
+}
+
+#[test]
+fn addresses_versions_and_ranges_stay_whole() {
+    for text in ["10.8.0.0/28", "v1.2", "-29", "a.1", "x-9"] {
+        let metrics = measure(text, &card_function(), Some(0.0)).unwrap();
+        assert_eq!(line_texts(text, &metrics), [text], "{text}");
+    }
+}
+
+#[test]
+fn a_storage_path_breaks_after_each_slash_before_a_letter() {
+    let text = "gs://acme/raw";
+    let metrics = measure(text, &card_function(), Some(0.0)).unwrap();
+    assert_eq!(line_texts(text, &metrics), ["gs://", "acme/", "raw"]);
+}
+
+#[test]
+fn break_opportunities_follow_section_13_11() {
+    use stencil_model::text::break_opportunities;
+    assert_eq!(break_opportunities("On-prem router 1"), [3, 8, 15]);
+    assert_eq!(break_opportunities("a  b"), [3]);
+    assert_eq!(break_opportunities("  lead"), Vec::<usize>::new());
+    assert_eq!(break_opportunities("trail  "), Vec::<usize>::new());
+    assert_eq!(break_opportunities("10.8.0.0/28 -29"), [12]);
+    assert_eq!(break_opportunities("acme.Raw/x-Y"), [5, 9, 11]);
+    assert_eq!(break_opportunities("a·b-c"), [5]);
 }
 
 #[test]
