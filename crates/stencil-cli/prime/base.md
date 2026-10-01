@@ -6,7 +6,7 @@ stencil turns structural JSON (boxes, items, facts, pipes, links; no coordinates
 
 Write fig.json, `stencil vet fig.json`, `stencil check fig.json`, `stencil render fig.json --out-dir out --scale 2`, Read out/fig.png, fix, repeat until check shows 0 failed and the PNG reads right. Exit 0 clean; 1 defect in the document (fix the JSON at the pointer the line names); 2 could not run (arguments, paths, fonts). `stencil schema` prints the JSON Schema.
 
-`stencil gallery out` renders every example in every theme; a failed check exits 1.
+`stencil gallery out` renders the examples in the designed themes; a failed check exits 1.
 
 # Grammars
 
