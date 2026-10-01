@@ -1,4 +1,5 @@
-//! The geometry checks of section 6 and the two link checks of section 11.2.
+//! The geometry checks of section 6, the two link checks of section 11.2 and print-fit of
+//! section 13.10.
 
 use std::collections::HashMap;
 
@@ -8,6 +9,96 @@ use stencil_model::{Node, NodeRef, Page, PipeDir, body_nodes};
 
 use crate::route::{link_obstacles, segment_enters};
 use crate::{BoxRect, GEOMETRY_EPSILON_PX, NodeTag, PageGeometry, Part, RouteStatus};
+
+/// Why print-fit does not apply when no `--print-width` was given.
+const NO_PRINT_WIDTH: &str = "no print width";
+
+/// The smallest type size a printed figure may carry, in points.
+pub const PRINT_TYPE_MIN_PT: f32 = 8.0;
+/// Tolerance of print-fit, in points.
+pub const PRINT_EPSILON_PT: f32 = 0.01;
+const POINTS_PER_INCH: f32 = 72.0;
+
+pub const PRINT_WIDTH_MIN_INCHES: f32 = 0.5;
+pub const PRINT_WIDTH_MAX_INCHES: f32 = 200.0;
+
+/// The width a figure prints at, in inches: finite and from PRINT_WIDTH_MIN_INCHES to
+/// PRINT_WIDTH_MAX_INCHES (section 13.10).
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct PrintWidth(f32);
+
+#[derive(Debug, Clone, Copy, PartialEq, thiserror::Error)]
+#[error(
+    "print width {0} is not a number of inches from {PRINT_WIDTH_MIN_INCHES} to {PRINT_WIDTH_MAX_INCHES}"
+)]
+pub struct PrintWidthError(pub f32);
+
+impl PrintWidth {
+    pub fn new(inches: f32) -> Result<Self, PrintWidthError> {
+        if inches.is_finite() && (PRINT_WIDTH_MIN_INCHES..=PRINT_WIDTH_MAX_INCHES).contains(&inches)
+        {
+            Ok(PrintWidth(inches))
+        } else {
+            Err(PrintWidthError(inches))
+        }
+    }
+
+    pub fn inches(self) -> f32 {
+        self.0
+    }
+}
+
+/// Each text run of every node part and every link tag, counted as text-fits-box counts
+/// them: a run whose size would print below 8 pt when the drawn canvas, `canvas_width_px`
+/// wide, prints `print_width` wide is a defect at the node that owns it, or at `/links/<i>`.
+/// Not applicable without a print width.
+pub fn print_fit(
+    geometry: &PageGeometry,
+    canvas_width_px: f32,
+    print_width: Option<PrintWidth>,
+) -> CheckReport {
+    let Some(print_width) = print_width else {
+        return CheckReport::not_applicable(CheckName::PrintFit, NO_PRINT_WIDTH);
+    };
+    let inches = print_width.inches();
+    let mut examined: u64 = 0;
+    let mut defects = Vec::new();
+    let mut examine = |owner: &NodePointer, parts: &[Part]| {
+        for part in parts {
+            let Some(run) = &part.text else {
+                continue;
+            };
+            examined += 1;
+            let size_px = run.style.size_px;
+            let points = size_px * POINTS_PER_INCH * inches / canvas_width_px;
+            if points + PRINT_EPSILON_PT < PRINT_TYPE_MIN_PT {
+                defects.push(Defect {
+                    pointer: owner.clone(),
+                    message: format!(
+                        "{} {:?} prints at {points:.2} pt, below {PRINT_TYPE_MIN_PT:.0} pt ({size_px:.2} px on a {canvas_width_px:.2} px canvas at {inches:.2} in)",
+                        part.name.as_str(),
+                        run.text,
+                    ),
+                });
+            }
+        }
+    };
+    for node in &geometry.nodes {
+        examine(&node.pointer, &node.parts);
+    }
+    let links_pointer = NodePointer::root().child("links");
+    for route in &geometry.links {
+        if route.tag.is_some() {
+            examine(&links_pointer.index(route.index), &route.parts);
+        }
+    }
+    CheckReport {
+        check: CheckName::PrintFit,
+        examined,
+        defects,
+        not_applicable: None,
+    }
+}
 
 /// Why the link checks do not apply to a page without links.
 const NO_LINKS: &str = "page has no links";
