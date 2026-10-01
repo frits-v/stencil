@@ -15,6 +15,9 @@ Rules CUE adds beyond stencil vet, under the gcp grammar:
 | every product Item carries a subtitle or a fact with source doc or ask | _itemsWithoutSubtitleOrFact.TITLE |
 | tint pairing: a region (tint 1 when absent) or a tinted onprem holds no solid pipe, arm or Box of another slot at any depth | _otherTintInsideZone |
 | a solid pipe between two sibling Boxes touches no tinted Box of another slot | _pipeBesideZoneOfOtherTint |
+| no product naming or drawn as Cloud Storage, BigQuery, Pub/Sub, Artifact Registry or Cloud Logging sits inside a vpc | _productInsideVpc.TITLE |
+| every apis Box has a gcp Box above it | _apisOutsideGcp.LABEL |
+| pipe targets name node ids, two different ones, and never on a Tee arm | _pipeTargetsUnknown.ID, _pipeTargetsEqual, _targetOnTeeArm |
 | a tint on a gray or deny line, or on a Box whose kind is not tintable | _tintWithoutEffect |
 | Box and Item kinds are the grammar's, and each sits in one of its kind's parents | _kindParentNotAllowed.KIND |
 | legend keys (line and tint) equal the keys used by pipes, tee spines and arms, and links | _pipeKeysMissingFromLegend.K, _linkKeysMissingFromLegend.K, _legendKeysUnusedInBody.K |

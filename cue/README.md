@@ -109,6 +109,9 @@ a hidden struct keyed by the offending item, so the error path names it.
   (`_linkToItself.<id>`). A page holds at most 256 links and a link at most 8 `via` points.
   Each point has x from 0 to the canvas width (`_viaOutsidePage`) and y of 0 or more; the
   canvas height is known only after layout.
+- Pipe targets. A Pipe's `from` and `to` name node ids (`_pipeTargetsUnknown.<id>`) and
+  differ (`_pipeTargetsEqual` on the Pipe); a Tee arm names neither
+  (`_targetOnTeeArm.<arm index>` on the Tee).
 - Ordered links. A link with `order` joins two different heads of one Lanes node, a head being
   a direct child of it (`_orderedLinkNotBetweenLaneHeads.<link index>`), and no two messages of
   one Lanes node share an order (`_linkOrderUsedTwice.<order>`).
@@ -157,6 +160,13 @@ _nesting: stencil.#GrammarNesting & {#grammar: grammar}
   sibling Boxes in a `Row`, `Col`, `Lanes` or `Box` may not touch a tinted Box of another slot
   (`_pipeBesideZoneOfOtherTint.<label>`). Dash, gray and deny lines are outside the rule: the g7
   failover pipe sits between Region A and Region B.
+- Products outside a VPC. A `product` item whose `subtitle` names Cloud Storage, BigQuery,
+  Pub/Sub, Artifact Registry or Cloud Logging at word boundaries, or whose `icon` is
+  `cloud-storage` or `bigquery`, may not have a `vpc` Box among its ancestors
+  (`_productInsideVpc.<title>`): these are Google APIs reached over Private Google Access.
+- apis inside gcp. Every `apis` Box has a `gcp` Box among its ancestors
+  (`_apisOutsideGcp.<label>`), which its parents list cannot say when a project or perimeter
+  sits between.
 
 ## Two canvases
 

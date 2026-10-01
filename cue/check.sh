@@ -269,6 +269,7 @@ echo "ok   chrome-none-one-key: an empty legend with one key in use vets clean, 
 long_text="$(printf 'x%.0s' {1..401})"
 many_facts="$(printf '{tag: "Fact", text: "filler"},%.0s' {1..255})"
 stray_subnet='{tag: "Box", kind: "subnet", label: "stray subnet", children: [{tag: "Fact", text: "no region around it"}]},'
+stray_apis='{tag: "Box", kind: "project", label: "Data project", children: [{tag: "Box", kind: "apis", label: "Stray APIs", children: [{tag: "Fact", text: "no gcp frame around it"}]}]},'
 
 # figure | name | sed expression applied to figures/<figure>.cue | text the
 # vet error must contain [| second text the error must also contain]. A g7
@@ -308,6 +309,9 @@ g7_cases=(
 	'legend-solid-tint-3-unused|s/{line: "dash", text: "region failover, not a fifth line"},/&\n\t\t{line: "solid", tint: 3, text: "unused slot"},/|_legendKeysUnusedInBody."solid-3"'
 	'tint-on-untintable-vpc|s/kind:  "vpc"/kind:  "vpc", tint: 1/|customer.body.0.children.2.children.0._tintWithoutEffect|has no effect on a vpc box'
 	"built-fact-without-subtitle|s/subtitle: \"private ASN · RFC 6996\"/facts: [{text: \"cr-region-a\", source: \"built\"}]/|_itemsWithoutSubtitleOrFact.\"Cloud Router A\""
+	'bigquery-product-inside-vpc|s/{tag: "Fact", text: "BGP peering[^}]*},/&\n{tag: "Item", kind: "product", icon: "bigquery", title: "Warehouse", subtitle: "BigQuery"},/|_productInsideVpc.Warehouse|sits inside a vpc; draw it in an apis box'
+	'cloud-storage-icon-inside-vpc|s/{tag: "Fact", text: "BGP peering[^}]*},/&\n{tag: "Item", kind: "product", icon: "cloud-storage", title: "Landing bucket", facts: [{text: "dual-region"}]},/|_productInsideVpc."Landing bucket"'
+	"apis-box-outside-gcp|s/^\tbody: \[{\$/\tbody: [$stray_apis {/|_apisOutsideGcp.\"Stray APIs\"|sits outside the gcp frame"
 	'pipe-target-unknown|s/label: "VLAN 1", sub: "EAD 1 · BGP"/&, to: "nowhere"/|_pipeTargetsUnknown.nowhere'
 	'pipe-targets-equal|s/title: "On-prem router 1"/id: "r1", &/; s/label: "VLAN 1", sub: "EAD 1 · BGP"/&, from: "r1", to: "r1"/|_pipeTargetsEqual|the same node as pipe to'
 	'pipe-target-on-tee-arm|s/title: "On-prem router 1"/id: "r1", &/; s/{tag: "Fact", text: "BGP peering[^}]*},/&\n{tag: "Tee", line: "solid", tint: 1, hub: "hub", arms: [{tag: "Pipe", dir: "h", line: "solid", tint: 1, label: "arm 1", to: "r1"}, {tag: "Pipe", dir: "h", line: "solid", tint: 1, label: "arm 2"}]},/|_targetOnTeeArm."0"'

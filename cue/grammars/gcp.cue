@@ -189,13 +189,29 @@ _nesting: stencil.#GrammarNesting & {#grammar: grammar}
 	_itemsWithoutSubtitleOrFact: {
 		for k, _ in _nameless {(k): "product item" & "needs a subtitle, or a fact with source doc or ask"}
 	}
+	// An apis Box holds Google APIs reached from inside the gcp frame; one
+	// with no gcp Box above it is drawn in the wrong place. A gcp Box absorbs
+	// the labels below it, so only the stray ones reach the page.
+	_apisAbove: {for n in body {n._apisLabels}}
+	_apisOutsideGcp: {
+		for k, _ in _apisAbove {(k): "apis box" & "sits outside the gcp frame"}
+	}
 }
 
+// Products that are Google APIs reached over Private Google Access, never
+// addresses in a VPC: named in a subtitle at word boundaries, or drawn with
+// their product icon.
+#ApiProductName: "\\b(Cloud Storage|BigQuery|Pub/Sub|Artifact Registry|Cloud Logging)\\b"
+#ApiProductIcons: ["cloud-storage", "bigquery"]
+
 // The gcp walk over the body. Each node carries:
-//   _tinted     the tinted lines and Boxes in its subtree, keyed "solid-2" or
-//               "region-1", each mapped to its tint slot
-//   _nameless   the titles of product items with no subtitle and no doc or
-//               ask fact
+//   _tinted       the tinted lines and Boxes in its subtree, keyed "solid-2" or
+//                 "region-1", each mapped to its tint slot
+//   _nameless     the titles of product items with no subtitle and no doc or
+//                 ask fact
+//   _apiProducts  the titles of product items that are Google APIs
+//                 (#ApiProductName, #ApiProductIcons)
+//   _apisLabels   the labels of apis Boxes below it with no gcp Box between
 // A Box also carries _tint, its effective tint as a list of zero or one slot,
 // and a solid Pipe carries _solidTint the same way. Tint pairing compares
 // slots; dash, gray and deny lines and untinted Boxes are outside it.
@@ -205,11 +221,14 @@ _nesting: stencil.#GrammarNesting & {#grammar: grammar}
 		children: [...#Node]
 		_tinted: {for c in children {c._tinted}}
 		_nameless: {for c in children {c._nameless}}
+		_apiProducts: {for c in children {c._apiProducts}}
+		_apisLabels: {for c in children {c._apisLabels}}
 		#SiblingTint
 	}
 	if tag == "Box" {
 		kind:  string
 		tint?: int
+		label: string
 		children: [...#Node]
 		_kindData: [for c in grammar.containers if c.name == kind {c}]
 		_tint: list.Take([
@@ -219,7 +238,20 @@ _nesting: stencil.#GrammarNesting & {#grammar: grammar}
 		_below: {for c in children {c._tinted}}
 		_tinted: {_below, for t in _tint {"\(kind)-\(t)": t}}
 		_nameless: {for c in children {c._nameless}}
+		_apiProducts: {for c in children {c._apiProducts}}
+		_apisLabels: {
+			if kind != "gcp" for c in children {c._apisLabels}
+			if kind == "apis" {(label): true}
+		}
 		#SiblingTint
+
+		// Google APIs are reached over Private Google Access, never placed in
+		// a VPC; they belong in an apis Box beside it.
+		if kind == "vpc" {
+			_productInsideVpc: {
+				for k, _ in _apiProducts {(k): "product" & "sits inside a vpc; draw it in an apis box"}
+			}
+		}
 
 		// A tinted Box holds no solid line, tee arm or Box of another tint at
 		// any depth.
@@ -232,6 +264,7 @@ _nesting: stencil.#GrammarNesting & {#grammar: grammar}
 	if tag == "Item" {
 		kind:      string
 		title:     string
+		icon?:     string
 		subtitle?: string
 		facts?: [...]
 		_hopFacts: [
@@ -241,6 +274,12 @@ _nesting: stencil.#GrammarNesting & {#grammar: grammar}
 		]
 		_tinted: {}
 		_nameless: {if kind == "product" && subtitle == _|_ && len(_hopFacts) == 0 {(title): true}}
+		_isApi: [
+			if subtitle != _|_ if subtitle =~ #ApiProductName {true},
+			if icon != _|_ if list.Contains(#ApiProductIcons, icon) {true},
+		]
+		_apiProducts: {if kind == "product" && len(_isApi) > 0 {(title): true}}
+		_apisLabels: {}
 	}
 	if tag == "Pipe" {
 		line:  string
@@ -248,6 +287,8 @@ _nesting: stencil.#GrammarNesting & {#grammar: grammar}
 		_solidTint: [if line == "solid" {[if tint != _|_ {tint}, 1][0]}]
 		_tinted: {for t in _solidTint {"solid-\(t)": t}}
 		_nameless: {}
+		_apiProducts: {}
+		_apisLabels: {}
 	}
 	if tag == "Tee" {
 		line:  string
@@ -260,10 +301,14 @@ _nesting: stencil.#GrammarNesting & {#grammar: grammar}
 			let armTint = [if arm.tint != _|_ {arm.tint}, 1][0] {"solid-\(armTint)": armTint}
 		}
 		_nameless: {}
+		_apiProducts: {}
+		_apisLabels: {}
 	}
 	if !list.Contains(["Row", "Col", "Lanes", "Box", "Item", "Pipe", "Tee"], tag) {
 		_tinted: {}
 		_nameless: {}
+		_apiProducts: {}
+		_apisLabels: {}
 	}
 	...
 }
