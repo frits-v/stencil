@@ -420,13 +420,34 @@ fn prime_grammar_with_an_unknown_or_missing_name_exits_2_with_one_line() {
     assert_eq!(extra.stdout, "");
 }
 
+/// The base briefing has 3 bytes to spare, so it names the designed themes and leaves the
+/// imported tier to the themes topic.
 #[test]
-fn the_base_briefing_names_every_built_in_theme() {
+fn the_base_briefing_names_every_designed_theme() {
     let text = base_output();
     let section = text.split("# Themes").nth(1).unwrap();
-    for name in stencil_model::BUILTIN_THEMES {
+    for name in stencil_model::DESIGNED_THEMES {
         assert!(section.contains(name), "{name}");
     }
+}
+
+#[test]
+fn the_themes_topic_lists_the_imported_tier_one_line_each_with_its_warning() {
+    let outcome = run_stencil(&["prime", "themes"]);
+    assert_eq!(outcome.code, ExitCode::Clean);
+    for name in stencil_model::IMPORTED_THEMES {
+        let lines: Vec<&str> = outcome
+            .stdout
+            .lines()
+            .filter(|line| line.starts_with(&format!("- {name}: ")))
+            .collect();
+        assert_eq!(lines.len(), 1, "{name}");
+        assert!(
+            lines[0].contains("editor heritage, below the colorblind bar"),
+            "{name}"
+        );
+    }
+    assert!(outcome.stdout.contains("stencil theme check <name>"));
 }
 
 #[test]

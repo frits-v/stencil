@@ -75,7 +75,8 @@ fn background_fill(svg: &str) -> &str {
     &svg[fill_start..fill_end]
 }
 
-const THEMES: [&str; 6] = ["center", "paper", "dusk", "clear", "clear-dark", "wire"];
+/// Every built-in, the imported tier included (sections 13.5 and 13.9).
+const THEMES: [&str; 13] = stencil_model::BUILTIN_THEMES;
 
 fn center_theme_json() -> &'static str {
     include_str!("../../stencil-render/themes/center.json")

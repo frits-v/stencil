@@ -1185,6 +1185,7 @@ dependencies = [
  "resvg",
  "serde",
  "serde_json",
+ "sha2",
  "stencil-layout",
  "stencil-model",
  "stencil-render",

@@ -34,6 +34,7 @@ use report::{
 };
 
 mod theme_command;
+mod theme_import;
 
 /// Upper bound on the `source()` links printed for one error.
 const ERROR_CHAIN_MAX: usize = 16;
@@ -109,7 +110,8 @@ enum Command {
         #[arg(long, value_name = "DIR", default_value = "examples")]
         examples: PathBuf,
     },
-    /// Print a built-in theme, or check a theme's contrast and separation
+    /// Print a built-in theme, check a theme's contrast and separation, or import a base16
+    /// scheme
     Theme {
         #[command(subcommand)]
         action: ThemeAction,
@@ -120,13 +122,27 @@ enum Command {
 enum ThemeAction {
     /// Print a built-in theme's JSON exactly as embedded
     Show {
-        /// center, paper, dusk, clear, clear-dark or wire
+        /// A built-in theme name: center, paper, dusk, clear, clear-dark, wire, or one of the
+        /// imported tier (tokyo-night, solarized-light, solarized-dark, material-dark,
+        /// gruvbox-dark, dracula, nord)
         name: String,
     },
     /// Load a theme and print its contrast and separation rows
     Check {
         /// A built-in theme name or a theme file path ending in .json
         theme: String,
+    },
+    /// Map a base16 or base24 color scheme onto a theme file and write its quality report
+    Import {
+        /// The scheme file, tinted-theming `palette:` layout or legacy flat layout
+        #[arg(long, value_name = "SCHEME")]
+        base16: PathBuf,
+        /// The theme name; defaults to the scheme's file stem
+        #[arg(long)]
+        name: Option<String>,
+        /// The theme file to write; the report is written beside it as <stem>.report.txt
+        #[arg(short = 'o', long = "out", value_name = "THEME_FILE")]
+        out: PathBuf,
     },
 }
 
@@ -251,6 +267,9 @@ fn run_command(
         Command::Theme { action } => match action {
             ThemeAction::Show { name } => theme_command::show(&name, stdout, stderr),
             ThemeAction::Check { theme } => theme_command::check(&theme, stdout, stderr),
+            ThemeAction::Import { base16, name, out } => {
+                theme_import::import(&base16, name.as_deref(), &out, stdout, stderr)
+            }
         },
     }
 }

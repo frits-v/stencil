@@ -1,8 +1,10 @@
-//! `stencil theme show` and `stencil theme check` (section 13.12).
+//! `stencil theme show` and `stencil theme check` (section 13.12); `stencil theme import` is
+//! in `theme_import`.
 
 use std::io::{self, Write};
 use std::path::Path;
 
+use stencil_model::theme::ThemeReport;
 use stencil_model::theme_quality;
 use stencil_render::builtin_theme_json;
 
@@ -46,25 +48,35 @@ pub fn check(
         Err(failure) => return report_failure("theme check", &failure, stdout, stderr),
     };
     let report = theme_quality(&theme);
-    for row in &report.rows {
-        writeln!(stdout, "{}", quality_row_line(row))?;
+    for line in quality_report_lines(&report, reference) {
+        writeln!(stdout, "{line}")?;
     }
+    Ok(quality_exit_code(&report))
+}
+
+/// The lines `stencil theme check <reference>` prints: one per quality row, then the
+/// summary, which reads `FAILED: nothing examined` when there are no rows.
+pub(crate) fn quality_report_lines(report: &ThemeReport, reference: &str) -> Vec<String> {
+    let mut lines: Vec<String> = report.rows.iter().map(quality_row_line).collect();
     if report.rows.is_empty() {
-        writeln!(
-            stdout,
+        lines.push(format!(
             "stencil theme check {reference}: FAILED: nothing examined"
-        )?;
-        return Ok(ExitCode::Defects);
-    }
-    writeln!(
-        stdout,
-        "stencil theme check {reference}: {}",
-        quality_summary_text(&report)
-    )?;
-    let (_, failed, _) = report.counts();
-    Ok(if failed == 0 {
-        ExitCode::Clean
+        ));
     } else {
+        lines.push(format!(
+            "stencil theme check {reference}: {}",
+            quality_summary_text(report)
+        ));
+    }
+    lines
+}
+
+/// Clean when at least one row was examined and no row failed.
+pub(crate) fn quality_exit_code(report: &ThemeReport) -> ExitCode {
+    let (_, failed, _) = report.counts();
+    if report.rows.is_empty() || failed > 0 {
         ExitCode::Defects
-    })
+    } else {
+        ExitCode::Clean
+    }
 }

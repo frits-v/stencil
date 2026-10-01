@@ -8,7 +8,7 @@ use std::path::{Path, PathBuf};
 use serde::Serialize;
 use stencil_layout::LayoutError;
 use stencil_model::checks::{CheckOutcome, CheckReport};
-use stencil_model::{BUILTIN_THEMES, ModelError};
+use stencil_model::{DESIGNED_THEMES, ModelError};
 use stencil_render::DeviceScale;
 
 use crate::exit::{ExitCode, failure_exit_code, reports_exit_code};
@@ -65,9 +65,12 @@ pub struct GalleryFiles {
     pub measured: String,
 }
 
-/// The six designed themes in the gallery's order (section 13.12).
+/// The six designed themes in the gallery's order, without the imported tier (section 13.9).
 fn gallery_themes() -> Vec<String> {
-    BUILTIN_THEMES.iter().map(|name| name.to_string()).collect()
+    DESIGNED_THEMES
+        .iter()
+        .map(|name| name.to_string())
+        .collect()
 }
 
 /// A built-in theme name as the theme reference of a gallery render.

@@ -123,9 +123,11 @@ impl Vision {
 type Rgb = [f64; 3];
 
 fn rgb(color: &Color) -> Option<Rgb> {
-    color
-        .channels()
-        .map(|channels| channels.map(|channel| f64::from(channel) / 255.0))
+    color.channels().map(channel_rgb)
+}
+
+fn channel_rgb(channels: [u8; 3]) -> Rgb {
+    channels.map(|channel| f64::from(channel) / 255.0)
 }
 
 fn to_linear(channel: f64) -> f64 {
@@ -152,14 +154,22 @@ fn luminance(color: Rgb) -> f64 {
 
 /// WCAG 2.2 contrast ratio.
 pub fn contrast_ratio(first: &Color, second: &Color) -> Option<f64> {
-    let first = luminance(rgb(first)?);
-    let second = luminance(rgb(second)?);
+    Some(channel_contrast_ratio(
+        first.channels()?,
+        second.channels()?,
+    ))
+}
+
+/// WCAG 2.2 contrast ratio of two colors given as sRGB channels.
+pub fn channel_contrast_ratio(first: [u8; 3], second: [u8; 3]) -> f64 {
+    let first = luminance(channel_rgb(first));
+    let second = luminance(channel_rgb(second));
     let (high, low) = if first >= second {
         (first, second)
     } else {
         (second, first)
     };
-    Some((high + 0.05) / (low + 0.05))
+    (high + 0.05) / (low + 0.05)
 }
 
 fn simulate(color: Rgb, vision: Vision) -> Rgb {
@@ -189,7 +199,12 @@ fn lab(color: Rgb) -> [f64; 3] {
 
 /// CIELAB L* of a color, 0 to 100.
 pub fn lightness(color: &Color) -> Option<f64> {
-    rgb(color).map(|color| lab(color)[0])
+    color.channels().map(channel_lightness)
+}
+
+/// CIELAB L* of a color given as sRGB channels, 0 to 100.
+pub fn channel_lightness(channels: [u8; 3]) -> f64 {
+    lab(channel_rgb(channels))[0]
 }
 
 fn delta_e(first: Rgb, second: Rgb) -> f64 {
