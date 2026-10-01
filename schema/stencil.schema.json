@@ -14,6 +14,9 @@
     "canvas": {
       "$ref": "#/$defs/Canvas"
     },
+    "chrome": {
+      "$ref": "#/$defs/Chrome"
+    },
     "foot": {
       "type": [
         "string",
@@ -21,6 +24,14 @@
       ],
       "maxLength": 400,
       "minLength": 1
+    },
+    "grammar": {
+      "description": "A built-in grammar name or a path ending in `.json`; absent means gcp.",
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^(gcp|plain|[^\\u0000-\\u001F]{1,395}\\.json)$"
     },
     "kicker": {
       "type": "string",
@@ -100,6 +111,51 @@
         "internal"
       ]
     },
+    "Chrome": {
+      "description": "Whether layout draws the badge, kicker, title and lede (section 13.7).",
+      "type": "string",
+      "enum": [
+        "full",
+        "none"
+      ]
+    },
+    "FactEntry": {
+      "description": "A fact inside an Item.",
+      "type": "object",
+      "properties": {
+        "source": {
+          "$ref": "#/$defs/FactSource"
+        },
+        "text": {
+          "type": "string",
+          "maxLength": 400,
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "text"
+      ]
+    },
+    "FactSource": {
+      "oneOf": [
+        {
+          "description": "Read from the live documentation when the figure was authored.",
+          "type": "string",
+          "const": "doc"
+        },
+        {
+          "description": "An as-built name read off the running system: a bucket, a VLAN ID, a project id.",
+          "type": "string",
+          "const": "built"
+        },
+        {
+          "description": "An open question for the reader.",
+          "type": "string",
+          "const": "ask"
+        }
+      ]
+    },
     "IconName": {
       "type": "string",
       "enum": [
@@ -140,19 +196,37 @@
     "LegendEntry": {
       "type": "object",
       "properties": {
-        "kind": {
-          "$ref": "#/$defs/PipeKind"
+        "line": {
+          "$ref": "#/$defs/Line"
         },
         "text": {
           "type": "string",
           "maxLength": 400,
           "minLength": 1
+        },
+        "tint": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint8",
+          "maximum": 8,
+          "minimum": 1
         }
       },
       "additionalProperties": false,
       "required": [
-        "kind",
+        "line",
         "text"
+      ]
+    },
+    "Line": {
+      "type": "string",
+      "enum": [
+        "gray",
+        "solid",
+        "dash",
+        "deny"
       ]
     },
     "Link": {
@@ -175,9 +249,6 @@
             }
           ]
         },
-        "kind": {
-          "$ref": "#/$defs/PipeKind"
-        },
         "label": {
           "type": [
             "string",
@@ -186,6 +257,9 @@
           "maxLength": 400,
           "minLength": 1
         },
+        "line": {
+          "$ref": "#/$defs/Line"
+        },
         "sub": {
           "type": [
             "string",
@@ -193,6 +267,15 @@
           ],
           "maxLength": 400,
           "minLength": 1
+        },
+        "tint": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint8",
+          "maximum": 8,
+          "minimum": 1
         },
         "to": {
           "type": "string"
@@ -219,7 +302,7 @@
       "required": [
         "from",
         "to",
-        "kind"
+        "line"
       ]
     },
     "ListKind": {
@@ -353,6 +436,47 @@
           ]
         },
         {
+          "description": "Lane heads that share one time axis (section 13.6). Until lane messages land, a Lanes\nnode lays out as a Row of equal columns.",
+          "type": "object",
+          "properties": {
+            "children": {
+              "description": "The lane heads, left to right: 1 to 32 nodes.",
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Node"
+              },
+              "maxItems": 32,
+              "minItems": 1
+            },
+            "gap": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "uint16",
+              "maximum": 64,
+              "minimum": 0
+            },
+            "id": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "pattern": "^[a-z0-9][a-z0-9-]{0,63}$"
+            },
+            "tag": {
+              "type": "string",
+              "const": "Lanes"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "tag",
+            "children"
+          ]
+        },
+        {
+          "description": "Any container. `kind` names one of the grammar's container kinds.",
           "type": "object",
           "properties": {
             "children": {
@@ -371,7 +495,8 @@
               "pattern": "^[a-z0-9][a-z0-9-]{0,63}$"
             },
             "kind": {
-              "$ref": "#/$defs/ZoneKind"
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9-]{0,31}$"
             },
             "label": {
               "type": "string",
@@ -380,7 +505,16 @@
             },
             "tag": {
               "type": "string",
-              "const": "Zone"
+              "const": "Box"
+            },
+            "tint": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "uint8",
+              "maximum": 8,
+              "minimum": 1
             }
           },
           "additionalProperties": false,
@@ -392,28 +526,15 @@
           ]
         },
         {
+          "description": "Any named leaf. `kind` names one of the grammar's item kinds.",
           "type": "object",
           "properties": {
-            "ask": {
-              "type": [
-                "string",
-                "null"
-              ],
-              "maxLength": 400,
-              "minLength": 1
-            },
-            "fact": {
-              "type": [
-                "string",
-                "null"
-              ],
-              "maxLength": 400,
-              "minLength": 1
-            },
-            "fn": {
-              "type": "string",
-              "maxLength": 400,
-              "minLength": 1
+            "facts": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/FactEntry"
+              },
+              "maxItems": 8
             },
             "icon": {
               "anyOf": [
@@ -432,7 +553,11 @@
               ],
               "pattern": "^[a-z0-9][a-z0-9-]{0,63}$"
             },
-            "pn": {
+            "kind": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9-]{0,31}$"
+            },
+            "subtitle": {
               "type": [
                 "string",
                 "null"
@@ -442,16 +567,23 @@
             },
             "tag": {
               "type": "string",
-              "const": "Pcard"
+              "const": "Item"
+            },
+            "title": {
+              "type": "string",
+              "maxLength": 400,
+              "minLength": 1
             }
           },
           "additionalProperties": false,
           "required": [
             "tag",
-            "fn"
+            "kind",
+            "title"
           ]
         },
         {
+          "description": "The Fact node: a fact standing on its own in a container.",
           "type": "object",
           "properties": {
             "id": {
@@ -460,6 +592,9 @@
                 "null"
               ],
               "pattern": "^[a-z0-9][a-z0-9-]{0,63}$"
+            },
+            "source": {
+              "$ref": "#/$defs/FactSource"
             },
             "tag": {
               "type": "string",
@@ -523,13 +658,13 @@
               ],
               "pattern": "^[a-z0-9][a-z0-9-]{0,63}$"
             },
-            "kind": {
-              "$ref": "#/$defs/PipeKind"
-            },
             "label": {
               "type": "string",
               "maxLength": 400,
               "minLength": 1
+            },
+            "line": {
+              "$ref": "#/$defs/Line"
             },
             "sub": {
               "type": [
@@ -542,13 +677,22 @@
             "tag": {
               "type": "string",
               "const": "Pipe"
+            },
+            "tint": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "uint8",
+              "maximum": 8,
+              "minimum": 1
             }
           },
           "additionalProperties": false,
           "required": [
             "tag",
             "dir",
-            "kind",
+            "line",
             "label"
           ]
         },
@@ -575,18 +719,27 @@
               ],
               "pattern": "^[a-z0-9][a-z0-9-]{0,63}$"
             },
-            "kind": {
-              "$ref": "#/$defs/PipeKind"
+            "line": {
+              "$ref": "#/$defs/Line"
             },
             "tag": {
               "type": "string",
               "const": "Tee"
+            },
+            "tint": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "uint8",
+              "maximum": 8,
+              "minimum": 1
             }
           },
           "additionalProperties": false,
           "required": [
             "tag",
-            "kind",
+            "line",
             "hub",
             "arms"
           ]
@@ -742,16 +895,6 @@
         "v"
       ]
     },
-    "PipeKind": {
-      "type": "string",
-      "enum": [
-        "gray",
-        "blue",
-        "pink",
-        "dash",
-        "deny"
-      ]
-    },
     "Projection": {
       "type": "string",
       "enum": [
@@ -787,13 +930,13 @@
               ],
               "pattern": "^[a-z0-9][a-z0-9-]{0,63}$"
             },
-            "kind": {
-              "$ref": "#/$defs/PipeKind"
-            },
             "label": {
               "type": "string",
               "maxLength": 400,
               "minLength": 1
+            },
+            "line": {
+              "$ref": "#/$defs/Line"
             },
             "sub": {
               "type": [
@@ -806,13 +949,22 @@
             "tag": {
               "type": "string",
               "const": "Pipe"
+            },
+            "tint": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "uint8",
+              "maximum": 8,
+              "minimum": 1
             }
           },
           "additionalProperties": false,
           "required": [
             "tag",
             "dir",
-            "kind",
+            "line",
             "label"
           ]
         }
@@ -824,22 +976,6 @@
         "center",
         "dusk",
         "wire"
-      ]
-    },
-    "ZoneKind": {
-      "type": "string",
-      "enum": [
-        "gcp",
-        "vpc",
-        "region-a",
-        "region-b",
-        "subnet",
-        "onprem-a",
-        "onprem-b",
-        "project",
-        "optional",
-        "k8s",
-        "perimeter"
       ]
     }
   }

@@ -1,6 +1,8 @@
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
+use crate::grammar::ContainerKind;
+
 pub const PAGE_WIDTH_DEFAULT: u32 = 1280;
 pub const PAGE_WIDTH_MIN: u32 = 640;
 pub const PAGE_WIDTH_MAX: u32 = 2560;
@@ -24,6 +26,23 @@ pub const FRAME_HEIGHT_MAX: u16 = 1200;
 pub const ID_SCALARS_MAX: usize = 64;
 /// The JSON Schema and CUE pattern for `id`. `is_valid_id` is its Rust twin.
 pub const ID_PATTERN: &str = r"^[a-z0-9][a-z0-9-]{0,63}$";
+pub const TINT_SLOTS: u8 = 8;
+/// The slot names of the built-in center theme, in slot order. Layout measures every
+/// legend label with these names (section 13.1 rule 7), so geometry never depends on the
+/// theme.
+pub const TINT_NAMES: [&str; 8] = [
+    "blue", "pink", "teal", "amber", "violet", "green", "orange", "cyan",
+];
+pub const FACTS_MAX: usize = 8;
+pub const LANES_MAX: usize = 32;
+pub const LANE_GAP_DEFAULT_PX: u16 = 32;
+/// A grammar kind name: a Box or Item `kind`.
+pub const KIND_PATTERN: &str = r"^[a-z][a-z0-9-]{0,31}$";
+pub const BUILTIN_GRAMMARS: [&str; 2] = ["gcp", "plain"];
+pub const GRAMMAR_DEFAULT: &str = "gcp";
+pub const GRAMMAR_REFERENCE_PATTERN: &str = r"^(gcp|plain|[^\u0000-\u001F]{1,395}\.json)$";
+/// Largest grammar file the CLI reads, in bytes.
+pub const DATA_FILE_BYTES_MAX: usize = 65_536;
 
 fn page_width_default() -> u32 {
     PAGE_WIDTH_DEFAULT
@@ -47,6 +66,14 @@ fn is_default_theme(theme: &Theme) -> bool {
 
 fn is_default_projection(projection: &Projection) -> bool {
     *projection == Projection::Flat
+}
+
+fn is_default_chrome(chrome: &Chrome) -> bool {
+    *chrome == Chrome::Full
+}
+
+fn is_default_fact_source(source: &FactSource) -> bool {
+    *source == FactSource::Doc
 }
 
 /// True when `id` matches ID_PATTERN: 1 to 64 characters, lowercase ASCII letters, digits
@@ -81,10 +108,16 @@ pub struct Page {
     #[schemars(range(min = 640, max = 2560))]
     pub width: u32,
     pub canvas: Canvas,
+    /// A built-in grammar name or a path ending in `.json`; absent means gcp.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(regex(pattern = GRAMMAR_REFERENCE_PATTERN))]
+    pub grammar: Option<String>,
     #[serde(default, skip_serializing_if = "is_default_theme")]
     pub theme: Theme,
     #[serde(default, skip_serializing_if = "is_default_projection")]
     pub projection: Projection,
+    #[serde(default, skip_serializing_if = "is_default_chrome")]
+    pub chrome: Chrome,
     #[schemars(length(min = 1, max = 256))]
     pub body: Vec<Node>,
     #[schemars(length(max = 16))]
@@ -118,10 +151,22 @@ pub enum Projection {
     Iso,
 }
 
+/// Whether layout draws the badge, kicker, title and lede (section 13.7).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema, Default)]
+#[serde(rename_all = "lowercase")]
+pub enum Chrome {
+    #[default]
+    Full,
+    None,
+}
+
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct LegendEntry {
-    pub kind: PipeKind,
+    pub line: Line,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(range(min = 1, max = 8))]
+    pub tint: Option<u8>,
     #[schemars(length(min = 1, max = 400))]
     pub text: String,
 }
@@ -131,8 +176,9 @@ pub struct LegendEntry {
 pub enum Node {
     Row(Row),
     Col(Col),
-    Zone(Zone),
-    Pcard(Pcard),
+    Lanes(Lanes),
+    Box(BoxNode),
+    Item(Item),
     Fact(Fact),
     Note(Note),
     Pipe(Pipe),
@@ -185,57 +231,84 @@ pub struct Col {
     pub children: Vec<Node>,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
-#[serde(rename_all = "kebab-case")]
-pub enum ZoneKind {
-    Gcp,
-    Vpc,
-    RegionA,
-    RegionB,
-    Subnet,
-    OnpremA,
-    OnpremB,
-    Project,
-    Optional,
-    K8s,
-    Perimeter,
-}
-
+/// Lane heads that share one time axis (section 13.6). Until lane messages land, a Lanes
+/// node lays out as a Row of equal columns.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
-pub struct Zone {
+pub struct Lanes {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[schemars(regex(pattern = ID_PATTERN))]
     pub id: Option<String>,
-    pub kind: ZoneKind,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(range(max = 64))]
+    pub gap: Option<u16>,
+    /// The lane heads, left to right: 1 to 32 nodes.
+    #[schemars(length(min = 1, max = 32))]
+    pub children: Vec<Node>,
+}
+
+/// Any container. `kind` names one of the grammar's container kinds.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct BoxNode {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(regex(pattern = ID_PATTERN))]
+    pub id: Option<String>,
+    #[schemars(regex(pattern = KIND_PATTERN))]
+    pub kind: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(range(min = 1, max = 8))]
+    pub tint: Option<u8>,
     #[schemars(length(min = 1, max = 400))]
     pub label: String,
     #[schemars(length(min = 1, max = 256))]
     pub children: Vec<Node>,
 }
 
+/// Any named leaf. `kind` names one of the grammar's item kinds.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
-pub struct Pcard {
+pub struct Item {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[schemars(regex(pattern = ID_PATTERN))]
     pub id: Option<String>,
+    #[schemars(regex(pattern = KIND_PATTERN))]
+    pub kind: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub icon: Option<IconName>,
-    #[serde(rename = "fn")]
     #[schemars(length(min = 1, max = 400))]
-    pub function_name: String,
-    #[serde(rename = "pn", default, skip_serializing_if = "Option::is_none")]
-    #[schemars(length(min = 1, max = 400))]
-    pub product_name: Option<String>,
+    pub title: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[schemars(length(min = 1, max = 400))]
-    pub fact: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[schemars(length(min = 1, max = 400))]
-    pub ask: Option<String>,
+    pub subtitle: Option<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[schemars(length(max = 8))]
+    pub facts: Vec<FactEntry>,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema, Default)]
+#[serde(rename_all = "lowercase")]
+pub enum FactSource {
+    /// Read from the live documentation when the figure was authored.
+    #[default]
+    Doc,
+    /// An as-built name read off the running system: a bucket, a VLAN ID, a project id.
+    Built,
+    /// An open question for the reader.
+    Ask,
+}
+
+/// A fact inside an Item.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct FactEntry {
+    #[schemars(length(min = 1, max = 400))]
+    pub text: String,
+    #[serde(default, skip_serializing_if = "is_default_fact_source")]
+    pub source: FactSource,
+}
+
+/// The Fact node: a fact standing on its own in a container.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct Fact {
@@ -244,6 +317,8 @@ pub struct Fact {
     pub id: Option<String>,
     #[schemars(length(min = 1, max = 400))]
     pub text: String,
+    #[serde(default, skip_serializing_if = "is_default_fact_source")]
+    pub source: FactSource,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
@@ -279,10 +354,9 @@ pub enum PipeDir {
     Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize, JsonSchema,
 )]
 #[serde(rename_all = "lowercase")]
-pub enum PipeKind {
+pub enum Line {
     Gray,
-    Blue,
-    Pink,
+    Solid,
     Dash,
     Deny,
 }
@@ -294,7 +368,10 @@ pub struct Pipe {
     #[schemars(regex(pattern = ID_PATTERN))]
     pub id: Option<String>,
     pub dir: PipeDir,
-    pub kind: PipeKind,
+    pub line: Line,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(range(min = 1, max = 8))]
+    pub tint: Option<u8>,
     #[schemars(length(min = 1, max = 400))]
     pub label: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -320,7 +397,10 @@ pub struct Tee {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[schemars(regex(pattern = ID_PATTERN))]
     pub id: Option<String>,
-    pub kind: PipeKind,
+    pub line: Line,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(range(min = 1, max = 8))]
+    pub tint: Option<u8>,
     #[schemars(length(min = 1, max = 400))]
     pub hub: String,
     pub arms: [TeeArm; 2],
@@ -391,7 +471,10 @@ pub struct Frame {
 pub struct Link {
     pub from: String,
     pub to: String,
-    pub kind: PipeKind,
+    pub line: Line,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(range(min = 1, max = 8))]
+    pub tint: Option<u8>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[schemars(length(min = 1, max = 400))]
     pub label: Option<String>,
@@ -469,8 +552,9 @@ impl Node {
         match self {
             Node::Row(_) => "Row",
             Node::Col(_) => "Col",
-            Node::Zone(_) => "Zone",
-            Node::Pcard(_) => "Pcard",
+            Node::Lanes(_) => "Lanes",
+            Node::Box(_) => "Box",
+            Node::Item(_) => "Item",
             Node::Fact(_) => "Fact",
             Node::Note(_) => "Note",
             Node::Pipe(_) => "Pipe",
@@ -486,8 +570,9 @@ impl Node {
         let id = match self {
             Node::Row(row) => &row.id,
             Node::Col(col) => &col.id,
-            Node::Zone(zone) => &zone.id,
-            Node::Pcard(pcard) => &pcard.id,
+            Node::Lanes(lanes) => &lanes.id,
+            Node::Box(box_node) => &box_node.id,
+            Node::Item(item) => &item.id,
             Node::Fact(fact) => &fact.id,
             Node::Note(note) => &note.id,
             Node::Pipe(pipe) => &pipe.id,
@@ -500,56 +585,34 @@ impl Node {
     }
 }
 
-impl ZoneKind {
-    pub const ALL: [ZoneKind; 11] = [
-        ZoneKind::Gcp,
-        ZoneKind::Vpc,
-        ZoneKind::RegionA,
-        ZoneKind::RegionB,
-        ZoneKind::Subnet,
-        ZoneKind::OnpremA,
-        ZoneKind::OnpremB,
-        ZoneKind::Project,
-        ZoneKind::Optional,
-        ZoneKind::K8s,
-        ZoneKind::Perimeter,
-    ];
+impl Line {
+    pub const ALL: [Line; 4] = [Line::Gray, Line::Solid, Line::Dash, Line::Deny];
 
-    /// The serialized name, for example "region-a".
+    /// The serialized name, for example "solid".
     pub fn as_str(self) -> &'static str {
         match self {
-            ZoneKind::Gcp => "gcp",
-            ZoneKind::Vpc => "vpc",
-            ZoneKind::RegionA => "region-a",
-            ZoneKind::RegionB => "region-b",
-            ZoneKind::Subnet => "subnet",
-            ZoneKind::OnpremA => "onprem-a",
-            ZoneKind::OnpremB => "onprem-b",
-            ZoneKind::Project => "project",
-            ZoneKind::Optional => "optional",
-            ZoneKind::K8s => "k8s",
-            ZoneKind::Perimeter => "perimeter",
+            Line::Gray => "gray",
+            Line::Solid => "solid",
+            Line::Dash => "dash",
+            Line::Deny => "deny",
         }
+    }
+
+    /// True for the lines a tint colors: solid and dash.
+    pub fn takes_tint(self) -> bool {
+        matches!(self, Line::Solid | Line::Dash)
     }
 }
 
-impl PipeKind {
-    pub const ALL: [PipeKind; 5] = [
-        PipeKind::Gray,
-        PipeKind::Blue,
-        PipeKind::Pink,
-        PipeKind::Dash,
-        PipeKind::Deny,
-    ];
+impl FactSource {
+    pub const ALL: [FactSource; 3] = [FactSource::Doc, FactSource::Built, FactSource::Ask];
 
-    /// The serialized name, for example "blue".
+    /// The serialized name, for example "built".
     pub fn as_str(self) -> &'static str {
         match self {
-            PipeKind::Gray => "gray",
-            PipeKind::Blue => "blue",
-            PipeKind::Pink => "pink",
-            PipeKind::Dash => "dash",
-            PipeKind::Deny => "deny",
+            FactSource::Doc => "doc",
+            FactSource::Built => "built",
+            FactSource::Ask => "ask",
         }
     }
 }
@@ -581,6 +644,12 @@ impl IconName {
         IconName::VertexAi,
     ];
 
+    /// The serialized name, for example "cloud-run".
+    pub fn as_str(self) -> &'static str {
+        let file_name = self.file_name();
+        file_name.strip_suffix(".svg").unwrap_or(file_name)
+    }
+
     /// The icon's file name in `assets/icons/`: the serialized stem plus `.svg`.
     pub fn file_name(self) -> &'static str {
         match self {
@@ -608,5 +677,102 @@ impl IconName {
             IconName::Storage => "storage.svg",
             IconName::VertexAi => "vertex-ai.svg",
         }
+    }
+}
+
+/// The tint a Box is painted with (section 13.1 rule 2): its own `tint`, else the kind's
+/// default, when the kind is tintable; None for a kind that takes no tint.
+pub fn box_tint(kind: &ContainerKind, tint: Option<u8>) -> Option<u8> {
+    if kind.tintable {
+        tint.or(kind.default_tint)
+    } else {
+        None
+    }
+}
+
+/// The tint a line is painted with: a solid or dash line's tint, or slot 1; none for gray
+/// and deny.
+pub fn line_tint(line: Line, tint: Option<u8>) -> Option<u8> {
+    if line.takes_tint() {
+        Some(tint.unwrap_or(1))
+    } else {
+        None
+    }
+}
+
+const TINT_SUFFIXES: [&str; 8] = ["a", "b", "c", "d", "e", "f", "g", "h"];
+
+/// The output key of a Box (section 13.1 rule 6): the kind, followed by `-a` to `-h` for
+/// effective tint 1 to 8.
+pub fn box_key(kind: &str, tint: Option<u8>) -> String {
+    match tint.and_then(|slot| TINT_SUFFIXES.get(usize::from(slot).wrapping_sub(1))) {
+        Some(suffix) => format!("{kind}-{suffix}"),
+        None => kind.to_string(),
+    }
+}
+
+const SOLID_KEYS: [&str; 8] = [
+    "blue", "pink", "solid-3", "solid-4", "solid-5", "solid-6", "solid-7", "solid-8",
+];
+const DASH_KEYS: [&str; 8] = [
+    "dash", "dash-2", "dash-3", "dash-4", "dash-5", "dash-6", "dash-7", "dash-8",
+];
+const SOLID_LABELS: [&str; 8] = [
+    "Solid blue",
+    "Solid pink",
+    "Solid teal",
+    "Solid amber",
+    "Solid violet",
+    "Solid green",
+    "Solid orange",
+    "Solid cyan",
+];
+const DASH_LABELS: [&str; 8] = [
+    "Dashed blue",
+    "Dashed pink",
+    "Dashed teal",
+    "Dashed amber",
+    "Dashed violet",
+    "Dashed green",
+    "Dashed orange",
+    "Dashed cyan",
+];
+
+/// Index into an eight-slot table for the effective tint of a solid or dash line. A tint
+/// outside 1 to 8 never passes vet; it reads as slot 1 here so the function stays total.
+fn slot_index(line: Line, tint: Option<u8>) -> usize {
+    let slot = line_tint(line, tint).unwrap_or(1);
+    if (1..=TINT_SLOTS).contains(&slot) {
+        usize::from(slot - 1)
+    } else {
+        0
+    }
+}
+
+fn slot_entry(table: &[&'static str; 8], index: usize) -> &'static str {
+    table.get(index).copied().unwrap_or(table[0])
+}
+
+/// The output key of a line (section 13.1 rule 6). Slots 1 and 2 of a solid line keep the
+/// names `blue` and `pink`, and slot 1 of a dash line is `dash`.
+pub fn line_key(line: Line, tint: Option<u8>) -> &'static str {
+    let index = slot_index(line, tint);
+    match line {
+        Line::Gray => "gray",
+        Line::Deny => "deny",
+        Line::Solid => slot_entry(&SOLID_KEYS, index),
+        Line::Dash => slot_entry(&DASH_KEYS, index),
+    }
+}
+
+/// The canonical legend label of section 13.1 rule 7, for example "Solid blue". Layout
+/// measures every legend label with it, whatever the theme.
+pub fn legend_label(line: Line, tint: Option<u8>) -> &'static str {
+    let index = slot_index(line, tint);
+    match line {
+        Line::Gray => "Solid gray",
+        Line::Deny => "Dashed red",
+        Line::Solid => slot_entry(&SOLID_LABELS, index),
+        Line::Dash => slot_entry(&DASH_LABELS, index),
     }
 }

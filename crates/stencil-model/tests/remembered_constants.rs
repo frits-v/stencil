@@ -5,10 +5,10 @@
 mod common;
 
 use common::{g7_page, legend_entry, page_with_body, pipe_value};
-use stencil_model::checks::{CheckName, REMEMBERED_CONSTANTS, remembered_constants};
+use stencil_model::checks::{CheckName, remembered_constants};
 use stencil_model::{
-    Arrow, Callout, CalloutKind, Frame, Link, ListKind, Node, Note, NoteKind, Page, Pcard, Pipe,
-    PipeDir, PipeKind, Tee, TeeArm, Text, Zone, ZoneKind, text_fields,
+    Arrow, BoxNode, Callout, CalloutKind, FactEntry, FactSource, Frame, Item, Line, Link, ListKind,
+    Node, Note, NoteKind, Page, Pipe, PipeDir, Tee, TeeArm, Text, text_fields,
 };
 
 const FILLER: &str = "x";
@@ -23,17 +23,31 @@ fn page_with_field(field: &str, text: &str) -> (Page, &'static str) {
         }
     };
     let mut page = page_with_body(vec![
-        Node::Zone(Zone {
+        Node::Box(BoxNode {
             id: None,
-            kind: ZoneKind::RegionA,
+            kind: "region".to_string(),
+            tint: None,
             label: pick("zone label"),
-            children: vec![Node::Pcard(Pcard {
+            children: vec![Node::Item(Item {
                 id: None,
+                kind: "product".to_string(),
                 icon: None,
-                function_name: pick("fn"),
-                product_name: Some(pick("pn")),
-                fact: Some(pick("fact")),
-                ask: Some(pick("ask")),
+                title: pick("title"),
+                subtitle: Some(pick("subtitle")),
+                facts: vec![
+                    FactEntry {
+                        text: pick("fact"),
+                        source: FactSource::Doc,
+                    },
+                    FactEntry {
+                        text: pick("built"),
+                        source: FactSource::Built,
+                    },
+                    FactEntry {
+                        text: pick("ask"),
+                        source: FactSource::Ask,
+                    },
+                ],
             })],
         }),
         Node::Note(Note {
@@ -45,17 +59,29 @@ fn page_with_field(field: &str, text: &str) -> (Page, &'static str) {
             id: None,
             arrow: stencil_model::Arrow::None,
             dir: PipeDir::Horizontal,
-            kind: PipeKind::Blue,
+            line: Line::Solid,
+            tint: Some(1),
             label: pick("pipe label"),
             sub: Some(pick("sub")),
         }),
         Node::Tee(Tee {
             id: None,
-            kind: PipeKind::Blue,
+            line: Line::Solid,
+            tint: Some(1),
             hub: pick("hub"),
             arms: [
-                TeeArm::Pipe(pipe_value(PipeDir::Horizontal, PipeKind::Blue, FILLER)),
-                TeeArm::Pipe(pipe_value(PipeDir::Horizontal, PipeKind::Blue, FILLER)),
+                TeeArm::Pipe(pipe_value(
+                    PipeDir::Horizontal,
+                    Line::Solid,
+                    Some(1),
+                    FILLER,
+                )),
+                TeeArm::Pipe(pipe_value(
+                    PipeDir::Horizontal,
+                    Line::Solid,
+                    Some(1),
+                    FILLER,
+                )),
             ],
         }),
         Node::Text(Text {
@@ -76,14 +102,15 @@ fn page_with_field(field: &str, text: &str) -> (Page, &'static str) {
             height: 200,
         }),
     ]);
-    page.title = pick("title");
+    page.title = pick("page title");
     page.lede = pick("lede");
     page.foot = Some(pick("foot"));
-    page.legend = vec![legend_entry(PipeKind::Blue, &pick("legend text"))];
+    page.legend = vec![legend_entry(Line::Solid, Some(1), &pick("legend text"))];
     page.links = vec![Link {
         from: "text".to_string(),
         to: "frame".to_string(),
-        kind: PipeKind::Blue,
+        line: Line::Solid,
+        tint: Some(1),
         label: Some(pick("link label")),
         sub: Some(pick("link sub")),
         arrow: Arrow::End,
@@ -92,15 +119,16 @@ fn page_with_field(field: &str, text: &str) -> (Page, &'static str) {
         via: Vec::new(),
     }];
     let pointer = match field {
-        "title" => "/title",
+        "page title" => "/title",
         "lede" => "/lede",
         "foot" => "/foot",
         "legend text" => "/legend/0/text",
         "zone label" => "/body/0/label",
-        "fn" => "/body/0/children/0/fn",
-        "pn" => "/body/0/children/0/pn",
-        "fact" => "/body/0/children/0/fact",
-        "ask" => "/body/0/children/0/ask",
+        "title" => "/body/0/children/0/title",
+        "subtitle" => "/body/0/children/0/subtitle",
+        "fact" => "/body/0/children/0/facts/0/text",
+        "built" => "/body/0/children/0/facts/1/text",
+        "ask" => "/body/0/children/0/facts/2/text",
         "note" => "/body/1/text",
         "pipe label" => "/body/2/label",
         "sub" => "/body/2/sub",
@@ -117,15 +145,16 @@ fn page_with_field(field: &str, text: &str) -> (Page, &'static str) {
     (page, pointer)
 }
 
-const FIELD_KINDS: [&str; 20] = [
-    "title",
+const FIELD_KINDS: [&str; 21] = [
+    "page title",
     "lede",
     "foot",
     "legend text",
     "zone label",
-    "fn",
-    "pn",
+    "title",
+    "subtitle",
     "fact",
+    "built",
     "ask",
     "note",
     "pipe label",
@@ -142,11 +171,13 @@ const FIELD_KINDS: [&str; 20] = [
 
 #[test]
 fn each_literal_fires_in_each_kind_of_text_field() {
-    for constant in REMEMBERED_CONSTANTS {
+    let grammar = common::gcp();
+    assert_eq!(grammar.remembered.len(), 4);
+    for constant in &grammar.remembered {
         for field in FIELD_KINDS {
             let (page, pointer) =
                 page_with_field(field, &format!("peer ASN {} here", constant.literal));
-            let report = remembered_constants(&page);
+            let report = remembered_constants(&page, &common::gcp());
             assert_eq!(report.defects.len(), 1, "{} in {field}", constant.literal);
             let defect = &report.defects[0];
             assert_eq!(defect.pointer.as_str(), pointer);
@@ -168,8 +199,12 @@ fn literal_fires_at_start_and_end_of_text_and_next_to_punctuation() {
         "AS-64512",
         "ASN·64512",
     ] {
-        let (page, _) = page_with_field("title", text);
-        assert_eq!(remembered_constants(&page).defects.len(), 1, "{text}");
+        let (page, _) = page_with_field("page title", text);
+        assert_eq!(
+            remembered_constants(&page, &common::gcp()).defects.len(),
+            1,
+            "{text}"
+        );
     }
 }
 
@@ -184,23 +219,23 @@ fn literals_inside_longer_tokens_do_not_fire() {
         "135.191.0.0/16",
         "130.211.0.0/220",
     ] {
-        let (page, _) = page_with_field("fn", text);
-        let report = remembered_constants(&page);
+        let (page, _) = page_with_field("title", text);
+        let report = remembered_constants(&page, &common::gcp());
         assert_eq!(report.defects, vec![], "{text}");
     }
 }
 
 #[test]
 fn a_bounded_occurrence_after_an_unbounded_one_fires() {
-    let (page, _) = page_with_field("fn", "AS64512 and 64512");
-    assert_eq!(remembered_constants(&page).defects.len(), 1);
+    let (page, _) = page_with_field("title", "AS64512 and 64512");
+    assert_eq!(remembered_constants(&page, &common::gcp()).defects.len(), 1);
 }
 
 #[test]
 fn check_scans_untransformed_text() {
-    let mut page = page_with_body(vec![common::pcard("a")]);
+    let mut page = page_with_body(vec![common::item("a")]);
     page.kicker = "asn 64512".to_string();
-    let report = remembered_constants(&page);
+    let report = remembered_constants(&page, &common::gcp());
     assert_eq!(report.defects.len(), 1);
     assert_eq!(report.defects[0].pointer.as_str(), "/kicker");
 }
@@ -209,7 +244,7 @@ fn check_scans_untransformed_text() {
 fn examined_equals_text_field_count() {
     for field in FIELD_KINDS {
         let (page, _) = page_with_field(field, FILLER);
-        let report = remembered_constants(&page);
+        let report = remembered_constants(&page, &common::gcp());
         assert_eq!(report.examined, text_fields(&page).len() as u64);
         assert!(report.passed());
     }
@@ -217,7 +252,7 @@ fn examined_equals_text_field_count() {
 
 #[test]
 fn g7_examines_36_fields_and_passes() {
-    let report = remembered_constants(&g7_page());
+    let report = remembered_constants(&g7_page(), &common::gcp());
     assert_eq!(report.check, CheckName::RememberedConstants);
     assert_eq!(report.examined, 36);
     assert!(report.passed());
@@ -226,7 +261,7 @@ fn g7_examines_36_fields_and_passes() {
 #[test]
 fn two_different_literals_give_two_defects() {
     let (page, pointer) = page_with_field("sub", "ASN 64512 and range 35.191.0.0/16");
-    let report = remembered_constants(&page);
+    let report = remembered_constants(&page, &common::gcp());
     let pointers: Vec<&str> = report
         .defects
         .iter()
@@ -244,5 +279,30 @@ fn two_different_literals_give_two_defects() {
 #[test]
 fn one_literal_twice_gives_one_defect() {
     let (page, _) = page_with_field("sub", "64512 and 64512");
-    assert_eq!(remembered_constants(&page).defects.len(), 1);
+    assert_eq!(remembered_constants(&page, &common::gcp()).defects.len(), 1);
+}
+
+#[test]
+fn the_gcp_grammar_lists_the_four_section_6_literals_in_order() {
+    let literals: Vec<String> = common::gcp()
+        .remembered
+        .iter()
+        .map(|constant| constant.literal.clone())
+        .collect();
+    assert_eq!(
+        literals,
+        ["64512", "130.211.0.0/22", "35.191.0.0/16", "10.8.0.0/28"]
+    );
+}
+
+#[test]
+fn a_grammar_without_remembered_literals_is_not_applicable() {
+    let (page, _) = page_with_field("title", "peer ASN 64512 here");
+    let report = remembered_constants(&page, &common::plain());
+    assert_eq!(report.examined, 0);
+    assert!(report.defects.is_empty());
+    assert_eq!(
+        report.not_applicable,
+        Some("grammar has no remembered constants")
+    );
 }

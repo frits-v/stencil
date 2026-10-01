@@ -6,7 +6,8 @@ use std::collections::BTreeSet;
 
 use stencil_model::text::{TextMeasurer, TextStyleName};
 use stencil_model::{
-    Canvas, Node, NodeRef, NoteKind, Page, PipeKind, ZoneKind, body_nodes, parse_page, text_fields,
+    Canvas, FactSource, Node, NodeRef, NoteKind, Page, body_nodes, legend_label, parse_page,
+    text_fields,
 };
 use stencil_text::CosmicTextMeasurer;
 
@@ -27,18 +28,8 @@ fn drawn(text: &str, style: TextStyleName) -> DrawnText {
     DrawnText { text, style }
 }
 
-fn legend_label(kind: PipeKind) -> &'static str {
-    match kind {
-        PipeKind::Gray => "Solid gray",
-        PipeKind::Blue => "Solid blue",
-        PipeKind::Pink => "Solid pink",
-        PipeKind::Dash => "Dashed blue",
-        PipeKind::Deny => "Dashed red",
-    }
-}
-
 /// The section 2.2 to 2.8 style of every authored text value, plus the fixed strings layout
-/// adds (the canvas badge, the `Ask: ` prefix and the legend labels). Returns the drawn
+/// adds (the canvas badge, the `• ` and `Ask: ` prefixes and the legend labels). Returns the drawn
 /// strings and how many of them are authored text values.
 fn drawn_texts(page: &Page) -> (Vec<DrawnText>, usize) {
     let mut authored = vec![
@@ -51,25 +42,30 @@ fn drawn_texts(page: &Page) -> (Vec<DrawnText>, usize) {
     }
     for entry in body_nodes(page) {
         match entry.node {
-            NodeRef::Node(Node::Row(_) | Node::Col(_)) => {}
-            NodeRef::Node(Node::Zone(zone)) => {
-                let style = match zone.kind {
-                    ZoneKind::Gcp => TextStyleName::GcpBar,
-                    ZoneKind::Perimeter => TextStyleName::PerimeterLabel,
+            NodeRef::Node(Node::Row(_) | Node::Col(_) | Node::Lanes(_)) => {}
+            NodeRef::Node(Node::Box(box_node)) => {
+                let style = match box_node.kind.as_str() {
+                    "gcp" => TextStyleName::GcpBar,
+                    "perimeter" => TextStyleName::PerimeterLabel,
                     _ => TextStyleName::ZoneLabel,
                 };
-                authored.push(drawn(&zone.label, style));
+                authored.push(drawn(&box_node.label, style));
             }
-            NodeRef::Node(Node::Pcard(pcard)) => {
-                authored.push(drawn(&pcard.function_name, TextStyleName::CardFunction));
-                if let Some(product_name) = &pcard.product_name {
-                    authored.push(drawn(product_name, TextStyleName::CardProduct));
+            NodeRef::Node(Node::Item(item)) => {
+                authored.push(drawn(&item.title, TextStyleName::CardFunction));
+                if let Some(subtitle) = &item.subtitle {
+                    authored.push(drawn(subtitle, TextStyleName::CardProduct));
                 }
-                if let Some(fact) = &pcard.fact {
-                    authored.push(drawn(fact, TextStyleName::Fact));
-                }
-                if let Some(ask) = &pcard.ask {
-                    authored.push(drawn(&format!("Ask: {ask}"), TextStyleName::Ask));
+                for fact in &item.facts {
+                    authored.push(match fact.source {
+                        FactSource::Doc => drawn(&fact.text, TextStyleName::Fact),
+                        FactSource::Built => {
+                            drawn(&format!("\u{2022} {}", fact.text), TextStyleName::Fact)
+                        }
+                        FactSource::Ask => {
+                            drawn(&format!("Ask: {}", fact.text), TextStyleName::Ask)
+                        }
+                    });
                 }
             }
             NodeRef::Node(Node::Fact(fact)) => {
@@ -110,7 +106,10 @@ fn drawn_texts(page: &Page) -> (Vec<DrawnText>, usize) {
     };
     authored.push(drawn(badge, TextStyleName::Badge));
     for entry in &page.legend {
-        authored.push(drawn(legend_label(entry.kind), TextStyleName::LegendLabel));
+        authored.push(drawn(
+            legend_label(entry.line, entry.tint),
+            TextStyleName::LegendLabel,
+        ));
     }
     (authored, authored_count)
 }
@@ -148,4 +147,13 @@ fn every_g7_character_has_a_glyph_in_its_style_weight() {
     assert!(examined_characters.contains(&'·'));
     assert!(examined_characters.contains(&'↔'));
     assert!(examined_characters.len() > 40, "{examined_characters:?}");
+}
+
+#[test]
+fn the_built_fact_bullet_has_a_glyph_in_the_fact_face() {
+    let mut measurer = CosmicTextMeasurer::new().unwrap();
+    let style = TextStyleName::Fact.text_style().style;
+    let metrics = measurer.measure("\u{2022} acme-raw", &style, None).unwrap();
+    assert!(metrics.width_px > 0.0);
+    measurer.measure("\u{2022}", &style, None).unwrap();
 }

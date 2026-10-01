@@ -1,0 +1,129 @@
+{
+    "name": "plain",
+    "containers": [
+        {
+            "name": "system",
+            "role": "frame",
+            "tintable": false,
+            "border": {
+                "pattern": "solid",
+                "width": 3
+            },
+            "padding": 0,
+            "radius": 10,
+            "label": "bar",
+            "parents": [
+                "page"
+            ]
+        },
+        {
+            "name": "boundary",
+            "role": "boundary",
+            "tone": "strong",
+            "tintable": false,
+            "border": {
+                "pattern": "dashed",
+                "width": 2
+            },
+            "padding": 10,
+            "radius": 8,
+            "label": "plain",
+            "parents": [
+                "page",
+                "system",
+                "group",
+                "tile"
+            ]
+        },
+        {
+            "name": "group",
+            "role": "group",
+            "tone": "neutral",
+            "tintable": true,
+            "border": {
+                "pattern": "solid",
+                "width": 1.5
+            },
+            "padding": 12,
+            "radius": 8,
+            "label": "plain",
+            "parents": [
+                "page",
+                "system",
+                "boundary",
+                "group",
+                "tile"
+            ]
+        },
+        {
+            "name": "tile",
+            "role": "tile",
+            "tone": "highlight",
+            "tintable": false,
+            "border": {
+                "pattern": "solid",
+                "width": 1.5
+            },
+            "padding": 12,
+            "radius": 8,
+            "label": "plain",
+            "parents": [
+                "page",
+                "system",
+                "boundary",
+                "tile"
+            ]
+        }
+    ],
+    "items": [
+        {
+            "name": "service",
+            "icons": "none",
+            "products": [],
+            "parents": [
+                "system",
+                "boundary",
+                "group",
+                "tile",
+                "page"
+            ]
+        },
+        {
+            "name": "store",
+            "icons": "none",
+            "products": [],
+            "parents": [
+                "system",
+                "boundary",
+                "group",
+                "tile",
+                "page"
+            ]
+        },
+        {
+            "name": "external",
+            "icons": "none",
+            "products": [],
+            "parents": [
+                "system",
+                "boundary",
+                "group",
+                "tile",
+                "page"
+            ]
+        },
+        {
+            "name": "person",
+            "icons": "none",
+            "products": [],
+            "parents": [
+                "system",
+                "boundary",
+                "group",
+                "tile",
+                "page"
+            ]
+        }
+    ],
+    "remembered": []
+}

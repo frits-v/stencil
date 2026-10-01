@@ -1,0 +1,322 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Grammar",
+  "type": "object",
+  "properties": {
+    "containers": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/ContainerKind"
+      },
+      "maxItems": 32,
+      "minItems": 1
+    },
+    "items": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/ItemKind"
+      },
+      "maxItems": 32,
+      "minItems": 1
+    },
+    "name": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]{0,31}$"
+    },
+    "remembered": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Remembered"
+      },
+      "maxItems": 64
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "name",
+    "containers",
+    "items",
+    "remembered"
+  ],
+  "$defs": {
+    "BorderPattern": {
+      "type": "string",
+      "enum": [
+        "solid",
+        "dashed",
+        "dotted",
+        "none"
+      ]
+    },
+    "ContainerKind": {
+      "type": "object",
+      "properties": {
+        "border": {
+          "$ref": "#/$defs/KindBorder"
+        },
+        "default_tint": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint8",
+          "maximum": 8,
+          "minimum": 1
+        },
+        "label": {
+          "$ref": "#/$defs/LabelStyle"
+        },
+        "name": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]{0,31}$"
+        },
+        "padding": {
+          "type": "number",
+          "format": "float",
+          "maximum": 32.0,
+          "minimum": 0.0
+        },
+        "parents": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1
+        },
+        "radius": {
+          "type": "number",
+          "format": "float",
+          "maximum": 16.0,
+          "minimum": 0.0
+        },
+        "role": {
+          "$ref": "#/$defs/Role"
+        },
+        "tintable": {
+          "type": "boolean"
+        },
+        "tone": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Tone"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "role",
+        "tintable",
+        "border",
+        "padding",
+        "radius",
+        "label",
+        "parents"
+      ]
+    },
+    "IconClass": {
+      "oneOf": [
+        {
+          "description": "From the archive's Unique Icons: stands for one product.",
+          "type": "string",
+          "const": "product"
+        },
+        {
+          "description": "From the archive's Category Icons: stands for a product family.",
+          "type": "string",
+          "const": "category"
+        }
+      ]
+    },
+    "IconName": {
+      "type": "string",
+      "enum": [
+        "agents",
+        "ai-ml",
+        "bigquery",
+        "cloud-run-flat",
+        "cloud-run",
+        "cloud-sql",
+        "cloud-storage",
+        "compute-engine",
+        "compute",
+        "containers",
+        "data-analytics",
+        "databases",
+        "devops",
+        "gke",
+        "hybrid",
+        "integration",
+        "networking",
+        "observability",
+        "scc",
+        "security-identity",
+        "serverless",
+        "storage",
+        "vertex-ai"
+      ]
+    },
+    "IconPack": {
+      "type": "string",
+      "enum": [
+        "gcp",
+        "none"
+      ]
+    },
+    "IconProducts": {
+      "type": "object",
+      "properties": {
+        "class": {
+          "$ref": "#/$defs/IconClass"
+        },
+        "icon": {
+          "$ref": "#/$defs/IconName"
+        },
+        "names": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "icon",
+        "class",
+        "names"
+      ]
+    },
+    "ItemKind": {
+      "type": "object",
+      "properties": {
+        "icons": {
+          "$ref": "#/$defs/IconPack"
+        },
+        "name": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]{0,31}$"
+        },
+        "parents": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1
+        },
+        "products": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/IconProducts"
+          }
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "icons",
+        "products",
+        "parents"
+      ]
+    },
+    "KindBorder": {
+      "type": "object",
+      "properties": {
+        "pattern": {
+          "$ref": "#/$defs/BorderPattern"
+        },
+        "width": {
+          "type": "number",
+          "format": "float",
+          "maximum": 4.0,
+          "minimum": 0.0
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "pattern",
+        "width"
+      ]
+    },
+    "LabelStyle": {
+      "oneOf": [
+        {
+          "description": "The zone label style.",
+          "type": "string",
+          "const": "plain"
+        },
+        {
+          "description": "The perimeter label style.",
+          "type": "string",
+          "const": "accent"
+        },
+        {
+          "description": "The gcp bar label, frame kinds only.",
+          "type": "string",
+          "const": "bar"
+        }
+      ]
+    },
+    "Remembered": {
+      "type": "object",
+      "properties": {
+        "literal": {
+          "type": "string",
+          "maxLength": 64,
+          "minLength": 1
+        },
+        "reason": {
+          "type": "string",
+          "maxLength": 400,
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "literal",
+        "reason"
+      ]
+    },
+    "Role": {
+      "oneOf": [
+        {
+          "description": "The outermost system or cloud: a bar holding the label over a body.",
+          "type": "string",
+          "const": "frame"
+        },
+        {
+          "description": "A network, trust or security edge.",
+          "type": "string",
+          "const": "boundary"
+        },
+        {
+          "description": "A locality, cluster or site.",
+          "type": "string",
+          "const": "group"
+        },
+        {
+          "description": "An ownership scope: a project, folder or account.",
+          "type": "string",
+          "const": "tile"
+        }
+      ]
+    },
+    "Tone": {
+      "type": "string",
+      "enum": [
+        "neutral",
+        "warm",
+        "cool",
+        "soft",
+        "strong",
+        "highlight",
+        "emphasis",
+        "accent"
+      ]
+    }
+  }
+}

@@ -1,6 +1,7 @@
 //! Check reports (section 6) and the two geometry-free checks.
 
-use crate::document::{Node, Page, PipeKind};
+use crate::document::{Chrome, Line, Node, Page, line_tint};
+use crate::grammar::{GRAMMAR_REMEMBERED_MAX, Grammar};
 use crate::pointer::NodePointer;
 use crate::walk::{NodeRef, body_nodes, text_fields};
 use crate::{LEGEND_ENTRIES_MAX, LINKS_MAX};
@@ -122,40 +123,13 @@ impl CheckReport {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct RememberedConstant {
-    pub literal: &'static str,
-    pub reason: &'static str,
-}
-
-const GFE_HEALTH_CHECK_REASON: &str = "GFE health-check probe range. Applies only to backend types the health-check doc names. Not serverless NEG or Cloud Run.";
-
-pub const REMEMBERED_CONSTANTS: [RememberedConstant; 4] = [
-    RememberedConstant {
-        literal: "64512",
-        reason: "doc example ASN, not a requirement. Dedicated Interconnect takes any private ASN (RFC 6996); Partner Interconnect is fixed at 16550.",
-    },
-    RememberedConstant {
-        literal: "130.211.0.0/22",
-        reason: GFE_HEALTH_CHECK_REASON,
-    },
-    RememberedConstant {
-        literal: "35.191.0.0/16",
-        reason: GFE_HEALTH_CHECK_REASON,
-    },
-    RememberedConstant {
-        literal: "10.8.0.0/28",
-        reason: "Serverless VPC Access connector range. Direct VPC egress does not use a connector; label it Private Google Access on the subnet instead.",
-    },
-];
-
 fn is_word_character(character: char) -> bool {
     character.is_ascii_alphanumeric() || character == '_'
 }
 
 /// True when `literal` occurs in `text` with no ASCII alphanumeric or `_` directly before
-/// or after it, the `\b` boundaries of `cue/stencil.cue`.
-fn contains_at_word_boundary(text: &str, literal: &str) -> bool {
+/// or after it, the `\b` boundaries of `cue/core.cue`.
+pub fn contains_at_word_boundary(text: &str, literal: &str) -> bool {
     text.char_indices().any(|(byte_index, _)| {
         let Some(rest) = text.get(byte_index..) else {
             return false;
@@ -173,14 +147,21 @@ fn contains_at_word_boundary(text: &str, literal: &str) -> bool {
     })
 }
 
-/// One defect per listed literal a text field contains at a word boundary. Examines every
-/// authored text field (`text_fields`), before any uppercase transform.
-pub fn remembered_constants(page: &Page) -> CheckReport {
+/// One defect per literal of the grammar's `remembered` list that a text field contains at a
+/// word boundary. Examines every authored text field (`text_fields`), before any uppercase
+/// transform. Not applicable when the grammar lists no literal.
+pub fn remembered_constants(page: &Page, grammar: &Grammar) -> CheckReport {
+    if grammar.remembered.is_empty() {
+        return CheckReport::not_applicable(
+            CheckName::RememberedConstants,
+            "grammar has no remembered constants",
+        );
+    }
     let fields = text_fields(page);
     let mut defects = Vec::new();
     for field in &fields {
-        for constant in &REMEMBERED_CONSTANTS {
-            if contains_at_word_boundary(field.text, constant.literal) {
+        for constant in grammar.remembered.iter().take(GRAMMAR_REMEMBERED_MAX) {
+            if contains_at_word_boundary(field.text, &constant.literal) {
                 defects.push(Defect {
                     pointer: field.pointer.clone(),
                     message: format!("contains {}: {}", constant.literal, constant.reason),
@@ -196,22 +177,59 @@ pub fn remembered_constants(page: &Page) -> CheckReport {
     }
 }
 
-/// Each pipe-kind use (every Pipe, Tee arm and Tee spine, and each of the first
-/// LINKS_MAX + 1 links) and each of the first LEGEND_ENTRIES_MAX + 1 legend entries is one
-/// examined relation. Defects are listed uses first, in body order and then link order,
-/// then legend entries. The bounds cap the scans on a page that was never vetted.
+/// What legend consistency compares: a line and its effective tint (section 13.1 rule 8).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+struct LegendKey {
+    line: Line,
+    tint: Option<u8>,
+}
+
+impl LegendKey {
+    fn new(line: Line, tint: Option<u8>) -> Self {
+        LegendKey {
+            line,
+            tint: line_tint(line, tint),
+        }
+    }
+
+    /// The key in document terms, for example "line solid tint 2" or "line gray".
+    fn describe(self) -> String {
+        match self.tint {
+            Some(tint) => format!("line {} tint {tint}", self.line.as_str()),
+            None => format!("line {}", self.line.as_str()),
+        }
+    }
+}
+
+/// Each line use (every Pipe, Tee arm and Tee spine, and each of the first LINKS_MAX + 1
+/// links) and each of the first LEGEND_ENTRIES_MAX + 1 legend entries is one examined
+/// relation, keyed on (line, effective tint). Defects are listed uses first, in body order
+/// and then link order, then legend entries. The bounds cap the scans on a page that was
+/// never vetted. A `chrome: none` page whose uses share one key may leave the legend empty
+/// (section 13.7 rule 3).
 pub fn legend_consistency(page: &Page) -> CheckReport {
-    let mut uses: Vec<(NodePointer, PipeKind, &'static str)> = Vec::new();
+    let mut uses: Vec<(NodePointer, LegendKey, &'static str)> = Vec::new();
     for entry in body_nodes(page) {
         match entry.node {
-            NodeRef::Node(Node::Pipe(pipe)) => uses.push((entry.pointer, pipe.kind, "Pipe")),
-            NodeRef::TeeArm(arm) => uses.push((entry.pointer, arm.kind, "Tee arm")),
-            NodeRef::Node(Node::Tee(tee)) => uses.push((entry.pointer, tee.kind, "Tee spine")),
+            NodeRef::Node(Node::Pipe(pipe)) => {
+                uses.push((entry.pointer, LegendKey::new(pipe.line, pipe.tint), "Pipe"));
+            }
+            NodeRef::TeeArm(arm) => {
+                uses.push((entry.pointer, LegendKey::new(arm.line, arm.tint), "Tee arm"));
+            }
+            NodeRef::Node(Node::Tee(tee)) => {
+                uses.push((
+                    entry.pointer,
+                    LegendKey::new(tee.line, tee.tint),
+                    "Tee spine",
+                ));
+            }
             NodeRef::Node(
                 Node::Row(_)
                 | Node::Col(_)
-                | Node::Zone(_)
-                | Node::Pcard(_)
+                | Node::Lanes(_)
+                | Node::Box(_)
+                | Node::Item(_)
                 | Node::Fact(_)
                 | Node::Note(_)
                 | Node::Text(_)
@@ -222,46 +240,58 @@ pub fn legend_consistency(page: &Page) -> CheckReport {
     }
     let links_pointer = NodePointer::root().child("links");
     for (index, link) in page.links.iter().enumerate().take(LINKS_MAX + 1) {
-        uses.push((links_pointer.index(index), link.kind, "Link"));
+        uses.push((
+            links_pointer.index(index),
+            LegendKey::new(link.line, link.tint),
+            "Link",
+        ));
     }
 
+    let legend_examined = page.legend.len().min(LEGEND_ENTRIES_MAX + 1);
+    let legend_keys: Vec<LegendKey> = page
+        .legend
+        .iter()
+        .take(legend_examined)
+        .map(|legend_entry| LegendKey::new(legend_entry.line, legend_entry.tint))
+        .collect();
+
+    let single_key_without_legend = page.chrome == Chrome::None
+        && legend_keys.is_empty()
+        && uses
+            .first()
+            .is_some_and(|(_, first_key, _)| uses.iter().all(|(_, key, _)| key == first_key));
+
     let mut defects = Vec::new();
-    for (pointer, kind, user) in &uses {
-        if !page
-            .legend
-            .iter()
-            .take(LEGEND_ENTRIES_MAX + 1)
-            .any(|legend_entry| legend_entry.kind == *kind)
-        {
-            defects.push(Defect {
-                pointer: pointer.clone(),
-                message: format!("{user} kind {} has no legend entry", kind.as_str()),
-            });
+    if !single_key_without_legend {
+        for (pointer, key, user) in &uses {
+            if !legend_keys.contains(key) {
+                defects.push(Defect {
+                    pointer: pointer.clone(),
+                    message: format!("{user} {} has no legend entry", key.describe()),
+                });
+            }
         }
     }
 
     let legend_pointer = NodePointer::root().child("legend");
-    let legend_examined = page.legend.len().min(LEGEND_ENTRIES_MAX + 1);
-    for (index, legend_entry) in page.legend.iter().enumerate().take(legend_examined) {
-        let kind = legend_entry.kind;
+    for (index, key) in legend_keys.iter().enumerate() {
         let entry_pointer = legend_pointer.index(index);
-        if !uses.iter().any(|(_, used_kind, _)| *used_kind == kind) {
+        if !uses.iter().any(|(_, used_key, _)| used_key == key) {
             defects.push(Defect {
                 pointer: entry_pointer.clone(),
-                message: format!("legend kind {} is never used", kind.as_str()),
+                message: format!("legend {} is never used", key.describe()),
             });
         }
-        let earlier = page
-            .legend
+        let earlier = legend_keys
             .iter()
             .take(index)
-            .position(|earlier_entry| earlier_entry.kind == kind);
+            .position(|earlier_key| earlier_key == key);
         if let Some(earlier_index) = earlier {
             defects.push(Defect {
                 pointer: entry_pointer,
                 message: format!(
-                    "legend kind {} is already listed at {}",
-                    kind.as_str(),
+                    "legend {} is already listed at {}",
+                    key.describe(),
                     legend_pointer.index(earlier_index)
                 ),
             });
