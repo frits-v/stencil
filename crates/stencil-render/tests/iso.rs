@@ -10,21 +10,21 @@
 
 mod common;
 
+use common::{THEMES, project_page, project_zoomed, render_svg};
 use serde_json::{Value, json};
 use stencil_layout::{BoxRect, PageGeometry, Size, TextRun};
 use stencil_model::checks::{CheckName, CheckOutcome};
+use stencil_model::grammar::Role;
 use stencil_model::pointer::NodePointer;
-use stencil_model::{Page, Theme};
+use stencil_model::{Page, Projection, Theme};
 use stencil_render::iso::{
     Billboard, BillboardRole, ISO_MARGIN_PX, ISO_ZOOM_MAX, IsoPoint, IsoScene, ScreenPoint, Solid,
-    SolidShape, iso_labels_clear, iso_links_clear, project_page, project_point, project_zoomed,
-    zoomed_geometry,
+    SolidShape, iso_labels_clear, iso_links_clear, project_point, zoomed_geometry,
 };
-use stencil_render::palette::{self, Face, LineUse, Palette, ZoneTab, shade};
-use stencil_render::{DeviceScale, measured_json, render_png, render_svg};
+use stencil_render::palette::{Face, LineUse, Palette, ZoneTab, shade};
+use stencil_render::{DeviceScale, measured_json, render_png};
 
 const HERO_JSON: &str = include_str!("../../../examples/hero-iso.json");
-const THEMES: [Theme; 3] = [Theme::Center, Theme::Dusk, Theme::Wire];
 const ZERO: ScreenPoint = ScreenPoint { x: 0.0, y: 0.0 };
 
 fn hero_page() -> Page {
@@ -439,7 +439,7 @@ fn pipe_dots_are_ellipses_on_the_floor() {
 fn every_theme_renders_the_hero_to_png() {
     for theme in THEMES {
         let mut page = hero_page();
-        page.theme = theme;
+        page.theme = Some(theme.to_string());
         let geometry = common::layout_with_cosmic_text(&page);
         let svg = render_svg(&page, &geometry).unwrap();
         render_png(&svg.svg, svg.text_elements, DeviceScale::new(1).unwrap()).unwrap();
@@ -456,41 +456,34 @@ fn shade_keeps_a_zero_step_and_rejects_malformed_colors() {
 }
 
 #[test]
-fn every_color_constant_in_the_palette_parses() {
-    let source = include_str!("../src/palette.rs");
-    let mut colors = 0;
-    for line in source
-        .lines()
-        .filter(|line| line.contains("const ") && line.contains("&str = \""))
-    {
-        let start = line.find('"').unwrap() + 1;
-        let end = start + line[start..].find('"').unwrap();
-        let literal = &line[start..end];
-        if literal.starts_with('#') {
-            assert!(shade(literal, -8).is_some(), "{literal}");
-            colors += 1;
+fn every_color_of_every_builtin_theme_shades() {
+    fn collect<'a>(value: &'a Value, colors: &mut Vec<&'a str>) {
+        match value {
+            Value::String(text) if text.starts_with('#') => colors.push(text),
+            Value::Array(items) => items.iter().for_each(|item| collect(item, colors)),
+            Value::Object(fields) => fields.values().for_each(|field| collect(field, colors)),
+            _ => {}
         }
     }
-    assert!(colors > 50, "found only {colors} colors");
-    for reexported in [
-        palette::BADGE_FILL_CUSTOMER,
-        palette::BADGE_FILL_INTERNAL,
-        palette::BADGE_TEXT_CUSTOMER,
-        palette::BADGE_TEXT_INTERNAL,
-        palette::TEXT_AMBER,
-        palette::TEXT_BLUE,
-        palette::TEXT_DARK,
-        palette::TEXT_DENY,
-        palette::TEXT_MUTED,
-        palette::TEXT_WHITE,
-    ] {
-        assert!(shade(reexported, -8).is_some(), "{reexported}");
+    for name in THEMES {
+        let value = serde_json::to_value(common::theme(name)).unwrap();
+        let mut colors = Vec::new();
+        collect(&value, &mut colors);
+        assert!(
+            colors.len() > 50,
+            "{name}: found only {} colors",
+            colors.len()
+        );
+        for color in colors {
+            assert!(shade(color, -8).is_some(), "{name} {color}");
+        }
     }
 }
 
 #[test]
 fn face_fills_follow_the_theme_steps() {
-    let center = Palette::new(Theme::Center);
+    let center_theme = common::theme("center");
+    let center = Palette::new(&center_theme, Projection::Iso);
     assert_eq!(
         center.face_fill("#D2E3FC", Face::Top).as_deref(),
         Some("#D2E3FC")
@@ -503,7 +496,10 @@ fn face_fills_follow_the_theme_steps() {
         center.face_fill("#D2E3FC", Face::Right).as_deref(),
         Some("#85B3F7")
     );
-    let dusk = Palette::new(Theme::Dusk);
+    let dusk_theme = common::theme("dusk");
+    let dusk = Palette::new(&dusk_theme, Projection::Iso);
+    assert_eq!(dusk.face_lightness_step(Face::Left), -4);
+    assert_eq!(dusk.face_lightness_step(Face::Right), -8);
     assert_eq!(
         dusk.face_fill("#14213A", Face::Left).as_deref(),
         Some("#0F182B")
@@ -512,10 +508,11 @@ fn face_fills_follow_the_theme_steps() {
         dusk.face_fill("#14213A", Face::Right).as_deref(),
         Some("#0A101C")
     );
-    let wire = Palette::new(Theme::Wire);
-    assert_eq!(wire.face_lightness_step(Face::Left), None);
+    let wire_theme = common::theme("wire");
+    let wire = Palette::new(&wire_theme, Projection::Iso);
     for face in [Face::Top, Face::Left, Face::Right] {
-        assert_eq!(wire.face_fill("#D2E3FC", face).as_deref(), Some("#FFFFFF"));
+        assert_eq!(wire.face_lightness_step(face), 0);
+        assert_eq!(wire.face_fill("#FFFFFF", face).as_deref(), Some("#FFFFFF"));
     }
     assert_eq!(center.face_fill("blue", Face::Top), None);
 }
@@ -524,7 +521,7 @@ fn face_fills_follow_the_theme_steps() {
 fn wire_faces_are_white_or_unfilled() {
     for document in [HERO_JSON, common::G7_JSON] {
         let mut page: Page = serde_json::from_str(document).unwrap();
-        page.theme = Theme::Wire;
+        page.theme = Some("wire".to_string());
         page.projection = stencil_model::Projection::Iso;
         let geometry = common::layout_with_cosmic_text(&page);
         let svg = render_svg(&page, &geometry).unwrap();
@@ -762,7 +759,7 @@ fn the_hero_measured_json_is_theme_independent_and_keeps_the_flat_nodes() {
     let mut svg_outputs = Vec::new();
     for theme in THEMES {
         let mut page = hero_page();
-        page.theme = theme;
+        page.theme = Some(theme.to_string());
         let geometry = common::layout_with_cosmic_text(&page);
         let scene = project_page(&geometry).unwrap();
         let iso = measured_json(&hero_document(), &geometry, Some(&scene));
@@ -813,14 +810,15 @@ const HERO_GCP: &str = "/body/0/children/1";
 const HERO_VPC: &str = "/body/0/children/1/children/0";
 
 #[test]
-fn card_text_sits_on_a_plate_in_center_and_wire_and_on_none_in_dusk() {
+fn card_text_sits_on_a_plate_on_a_light_page_and_on_none_on_a_dark_one() {
     for theme in THEMES {
         let mut page = hero_page();
-        page.theme = theme;
+        page.theme = Some(theme.to_string());
         let geometry = common::layout_with_cosmic_text(&page);
         let svg = render_svg(&page, &geometry).unwrap();
         let parsed = common::parse_xml(&svg.svg);
-        let palette = Palette::for_projection(theme, stencil_model::Projection::Iso);
+        let theme_data = common::theme(theme);
+        let palette = Palette::new(&theme_data, Projection::Iso);
         let card_top = palette
             .block_faces(Some(palette.card().fill), palette.card().border)
             .unwrap()
@@ -831,8 +829,9 @@ fn card_text_sits_on_a_plate_in_center_and_wire_and_on_none_in_dusk() {
         assert!(texts.iter().all(|text| text.attribute("stroke").is_none()));
         let plated =
             first.has_tag_name("rect") && first.attribute("fill") == Some(card_top.as_str());
-        assert_eq!(plated, theme != Theme::Dusk, "{theme:?}");
-        assert_eq!(palette.iso_text_plates(), theme != Theme::Dusk);
+        let dark = ["dusk", "clear-dark"].contains(&theme);
+        assert_eq!(plated, !dark, "{theme:?}");
+        assert_eq!(palette.iso_text_plates(), !dark);
     }
 }
 
@@ -840,11 +839,12 @@ fn card_text_sits_on_a_plate_in_center_and_wire_and_on_none_in_dusk() {
 fn zone_tabs_are_filled_at_the_top_level_and_outlined_when_nested() {
     for theme in THEMES {
         let mut page = hero_page();
-        page.theme = theme;
+        page.theme = Some(theme.to_string());
         let geometry = common::layout_with_cosmic_text(&page);
         let svg = render_svg(&page, &geometry).unwrap();
         let parsed = common::parse_xml(&svg.svg);
-        let palette = Palette::for_projection(theme, stencil_model::Projection::Iso);
+        let theme_data = common::theme(theme);
+        let palette = Palette::new(&theme_data, Projection::Iso);
         for (owner, kind) in [
             (HERO_ON_PREM, common::zone("onprem", Some(1))),
             (HERO_GCP, common::zone("gcp", None)),
@@ -859,7 +859,7 @@ fn zone_tabs_are_filled_at_the_top_level_and_outlined_when_nested() {
             assert_eq!(texts[0].attribute("fill"), Some(ink), "{theme:?} {owner}");
         }
         let gcp_top = palette
-            .slab_faces(common::zone("gcp", None).0, common::zone("gcp", None).1, 0)
+            .slab_faces(common::zone("gcp", None).0, common::zone("gcp", None).1)
             .unwrap()
             .top
             .unwrap();
@@ -908,7 +908,7 @@ fn a_wire_fact_block_is_outlined_although_its_flat_box_has_no_border() {
         { "tag": "Box", "kind": "region", "tint": 1, "label": "Region", "children": [
             { "tag": "Fact", "text": "BGP peering" } ] }
     ]));
-    page.theme = Theme::Wire;
+    page.theme = Some("wire".to_string());
     let geometry = common::layout_with_fixed_metrics(&page);
     let svg = render_svg(&page, &geometry).unwrap();
     let parsed = common::parse_xml(&svg.svg);
@@ -920,7 +920,7 @@ fn a_wire_fact_block_is_outlined_although_its_flat_box_has_no_border() {
         assert_eq!(face.attribute("stroke-width"), Some("1.25"));
     }
 
-    page.theme = Theme::Center;
+    page.theme = Some("center".to_string());
     let svg = render_svg(&page, &geometry).unwrap();
     let parsed = common::parse_xml(&svg.svg);
     let fact = common::group(&parsed, "/body/0/children/0");
@@ -943,7 +943,7 @@ fn every_example_renders_under_iso_in_every_theme() {
         let geometry = common::layout_with_cosmic_text(&serde_json::from_str(document).unwrap());
         for theme in THEMES {
             let mut page: Page = serde_json::from_str(document).unwrap();
-            page.theme = theme;
+            page.theme = Some(theme.to_string());
             let flat = render_svg(&page, &geometry).unwrap();
             page.projection = stencil_model::Projection::Iso;
             let iso = render_svg(&page, &geometry).unwrap();
@@ -953,69 +953,103 @@ fn every_example_renders_under_iso_in_every_theme() {
     }
 }
 
-/// Relative luminance of `#RRGGBB`, for ordering surfaces from dark to light.
-fn luminance(color: &str) -> f64 {
-    let channel = |start: usize| {
-        let value = f64::from(u8::from_str_radix(&color[start..start + 2], 16).unwrap()) / 255.0;
-        if value <= 0.039_28 {
-            value / 12.92
-        } else {
-            ((value + 0.055) / 1.055).powf(2.4)
+/// CIELAB L* of `#RRGGBB`.
+fn lightness(color: &str) -> f64 {
+    stencil_model::theme::lightness(&stencil_model::theme::Color(color.to_string())).unwrap()
+}
+
+/// Section 13.5's widened ladder: page, frame body, tone fills, card, fact box. Tint fills
+/// stand outside it, so a slab or block on a tinted floor is not compared with that floor.
+#[test]
+fn dark_iso_surfaces_climb_the_ladder_and_every_side_is_darker_than_its_top() {
+    for name in ["dusk", "clear-dark"] {
+        let theme = common::theme(name);
+        let palette = Palette::new(&theme, Projection::Iso);
+        let mut page = common::with_theme(hero_page(), name);
+        page.projection = Projection::Iso;
+        let geometry = common::layout_with_cosmic_text(&page);
+        // The top each node stands on, and whether that top is a ladder rung (the page or an
+        // untinted Box) rather than a tint fill.
+        let mut grounds: Vec<(String, bool)> = Vec::with_capacity(geometry.nodes.len());
+        let mut slabs = 0;
+        let mut blocks = 0;
+        for node in &geometry.nodes {
+            let ground = node.parent.map_or_else(
+                || (theme.page.as_str().to_string(), true),
+                |parent| grounds[parent].clone(),
+            );
+            let mut own = ground.clone();
+            let context = format!("{name} {}", node.pointer);
+            if let Some(look) = node.container {
+                let faces = palette.slab_faces(look, node.tint).unwrap();
+                if let Some(top) = faces.top.as_deref() {
+                    if ground.1 {
+                        assert!(lightness(top) > lightness(&ground.0), "{context} top");
+                    }
+                    let left = faces.left.as_deref().unwrap();
+                    let right = faces.right.as_deref().unwrap();
+                    if look.role != Role::Frame {
+                        assert!(lightness(left) < lightness(top), "{context} left");
+                    }
+                    assert!(lightness(right) < lightness(left), "{context} right");
+                    let tinted = look.role == Role::Group && node.tint.is_some();
+                    own = (top.to_string(), !tinted);
+                    slabs += 1;
+                }
+            } else if node.tag == stencil_layout::NodeTag::Pcard {
+                let card = palette.card();
+                let faces = palette.block_faces(Some(card.fill), card.border).unwrap();
+                let top = faces.top.as_deref().unwrap();
+                assert!(
+                    lightness(top) > lightness(theme.frame.body_fill.as_str()),
+                    "{context} item over the frame body"
+                );
+                for (_, tone) in theme.tones.all() {
+                    if let Some(fill) = &tone.fill {
+                        assert!(lightness(top) > lightness(fill.as_str()), "{context}");
+                    }
+                }
+                let left = faces.left.as_deref().unwrap();
+                let right = faces.right.as_deref().unwrap();
+                assert!(lightness(left) < lightness(top), "{context} left");
+                assert!(lightness(right) < lightness(left), "{context} right");
+                blocks += 1;
+            }
+            grounds.push(own);
         }
-    };
-    0.2126 * channel(1) + 0.7152 * channel(3) + 0.0722 * channel(5)
+        assert!(slabs >= 2, "{name}: {slabs} slabs");
+        assert!(blocks >= 4, "{name}: {blocks} blocks");
+        assert!(lightness(theme.fact.fill.as_str()) > lightness(theme.card.fill.as_str()));
+    }
 }
 
 #[test]
-fn dusk_surfaces_get_lighter_from_the_page_to_the_floor_to_the_blocks() {
-    let dusk = Palette::for_projection(Theme::Dusk, stencil_model::Projection::Iso);
-    let page = luminance(dusk.page_background());
-    let floor = dusk
-        .slab_faces(common::zone("gcp", None).0, common::zone("gcp", None).1, 0)
-        .unwrap();
-    let on_prem = dusk
-        .slab_faces(
-            common::zone("onprem", Some(1)).0,
-            common::zone("onprem", Some(1)).1,
-            0,
-        )
-        .unwrap();
-    let region = dusk
-        .slab_faces(
-            common::zone("region", Some(1)).0,
-            common::zone("region", Some(1)).1,
-            1,
-        )
-        .unwrap();
-    let card = dusk.card();
-    let block = dusk.block_faces(Some(card.fill), card.border).unwrap();
-    let floor_top = luminance(floor.top.as_deref().unwrap());
-    let block_top = luminance(block.top.as_deref().unwrap());
-    assert!(floor_top > page);
-    assert!(luminance(on_prem.top.as_deref().unwrap()) > page);
-    assert!(luminance(region.top.as_deref().unwrap()) > luminance(on_prem.top.as_deref().unwrap()));
-    assert!(block_top > floor_top);
-    assert!(block_top > luminance(region.top.as_deref().unwrap()));
-    assert!(luminance(block.left.as_deref().unwrap()) < block_top);
-    assert!(luminance(block.right.as_deref().unwrap()) < luminance(block.left.as_deref().unwrap()));
-    assert!(on_prem.top_stroke.is_some());
-}
-
-#[test]
-fn the_gcp_slab_carries_the_brand_on_its_sides_and_a_thin_outline_on_top() {
-    for theme in [Theme::Center, Theme::Dusk] {
-        let palette = Palette::for_projection(theme, stencil_model::Projection::Iso);
+fn the_frame_slab_carries_the_frame_sides_and_a_thin_outline_on_top() {
+    for name in THEMES {
+        let theme = common::theme(name);
+        let palette = Palette::new(&theme, Projection::Iso);
         let faces = palette
-            .slab_faces(common::zone("gcp", None).0, common::zone("gcp", None).1, 0)
+            .slab_faces(common::zone("gcp", None).0, common::zone("gcp", None).1)
             .unwrap();
-        assert_eq!(faces.left.as_deref(), Some(palette::GCP_BORDER));
-        assert_eq!(
-            faces.right.as_deref(),
-            shade(palette::GCP_BORDER, -12).as_deref()
-        );
-        assert_eq!(faces.side_stroke, None);
+        match &theme.iso.frame_sides {
+            Some(sides) => {
+                assert_eq!(faces.left.as_deref(), Some(sides.left.as_str()), "{name}");
+                assert_eq!(faces.right.as_deref(), Some(sides.right.as_str()), "{name}");
+                assert_eq!(sides.left, theme.frame.border, "{name}");
+                assert_eq!(
+                    Some(sides.right.as_str()),
+                    shade(theme.frame.border.as_str(), -12).as_deref(),
+                    "{name}"
+                );
+                assert_eq!(faces.side_stroke, None, "{name}");
+            }
+            None => {
+                assert_eq!(faces.left, faces.top, "{name}: faces 0 shade nothing");
+                assert!(faces.side_stroke.is_some(), "{name}");
+            }
+        }
         let outline = faces.top_stroke.unwrap();
-        assert_eq!(outline.width_px, palette::ISO_GCP_OUTLINE_PX);
+        assert_eq!(outline.width_px, theme.iso.frame_outline, "{name}");
         assert!(
             outline.width_px
                 < palette
@@ -1024,13 +1058,17 @@ fn the_gcp_slab_carries_the_brand_on_its_sides_and_a_thin_outline_on_top() {
                     .width_px
         );
     }
+    let center = common::theme("center");
+    let sides = center.iso.frame_sides.as_ref().unwrap();
+    assert_eq!(sides.left.as_str(), "#1A73E8");
+    assert_eq!(sides.right.as_str(), "#1257B3");
 }
 
 #[test]
 fn a_dashed_zone_border_is_drawn_once_on_the_top_face() {
     for theme in THEMES {
         let mut page = hero_page();
-        page.theme = theme;
+        page.theme = Some(theme.to_string());
         let geometry = common::layout_with_cosmic_text(&page);
         let svg = render_svg(&page, &geometry).unwrap();
         let parsed = common::parse_xml(&svg.svg);
@@ -1052,7 +1090,7 @@ fn a_dashed_zone_border_is_drawn_once_on_the_top_face() {
 fn every_theme_draws_a_ringed_icon_chip_under_iso_and_center_flat_draws_none() {
     for theme in THEMES {
         let mut page = hero_page();
-        page.theme = theme;
+        page.theme = Some(theme.to_string());
         let geometry = common::layout_with_cosmic_text(&page);
         let svg = render_svg(&page, &geometry).unwrap();
         let parsed = common::parse_xml(&svg.svg);
@@ -1067,8 +1105,8 @@ fn every_theme_draws_a_ringed_icon_chip_under_iso_and_center_flat_draws_none() {
             .unwrap();
         let chip = children[image - 1];
         assert!(chip.has_tag_name("rect"));
-        let expected =
-            Palette::for_projection(theme, stencil_model::Projection::Iso).iso_icon_chip();
+        let theme_data = common::theme(theme);
+        let expected = Palette::new(&theme_data, Projection::Iso).iso_icon_chip();
         assert_eq!(chip.attribute("fill"), Some(expected.fill), "{theme:?}");
         assert_eq!(
             chip.attribute("stroke"),
@@ -1085,24 +1123,37 @@ fn every_theme_draws_a_ringed_icon_chip_under_iso_and_center_flat_draws_none() {
 
 #[test]
 fn iso_link_weights_rank_primary_failover_and_service_and_the_wire_legend_names_the_line() {
-    let expected_widths = [
-        (Theme::Center, ["3.75", "2.5", "2"]),
-        (Theme::Dusk, ["3.75", "2.5", "2"]),
-        (Theme::Wire, ["3.75", "2.5", "1.25"]),
-    ];
-    for (theme, widths) in expected_widths {
+    assert_eq!(
+        widths_of(&common::theme("center")),
+        ["3.75".to_string(), "2.5".to_string(), "2".to_string()]
+    );
+    assert_eq!(
+        widths_of(&common::theme("wire")),
+        ["3.75".to_string(), "2.5".to_string(), "1.25".to_string()]
+    );
+    for theme in THEMES {
+        let theme_data = common::theme(theme);
+        let widths = widths_of(&theme_data);
         let mut page = hero_page();
-        page.theme = theme;
+        page.theme = Some(theme.to_string());
         let geometry = common::layout_with_cosmic_text(&page);
         let svg = render_svg(&page, &geometry).unwrap();
         let parsed = common::parse_xml(&svg.svg);
-        for (index, width) in widths.into_iter().enumerate() {
+        for (index, width) in widths.iter().enumerate() {
             let link = common::group(&parsed, &format!("/links/{index}"));
             let path = common::children_named(link, "path")[0];
-            assert_eq!(path.attribute("stroke-width"), Some(width), "{theme:?}");
+            assert_eq!(
+                path.attribute("stroke-width"),
+                Some(width.as_str()),
+                "{theme:?}"
+            );
             let entry = common::group(&parsed, &format!("/legend/{index}"));
             let swatch = common::children_named(entry, "line")[0];
-            assert_eq!(swatch.attribute("stroke-width"), Some(width), "{theme:?}");
+            assert_eq!(
+                swatch.attribute("stroke-width"),
+                Some(width.as_str()),
+                "{theme:?}"
+            );
         }
         let labels: Vec<&str> = (0..3)
             .map(|index| {
@@ -1110,24 +1161,35 @@ fn iso_link_weights_rank_primary_failover_and_service_and_the_wire_legend_names_
                 common::children_named(entry, "text")[0].text().unwrap()
             })
             .collect();
-        match theme {
-            Theme::Wire => assert_eq!(labels, ["Solid line", "Dashed line", "Thin line"]),
-            Theme::Center | Theme::Dusk => {
-                assert_eq!(labels, ["Solid blue", "Dashed blue", "Solid gray"]);
-            }
+        if theme == "wire" {
+            assert_eq!(labels, ["Solid line", "Dashed line", "Thin line"]);
+        } else {
+            assert_eq!(
+                labels,
+                ["Solid blue", "Dashed blue", "Solid gray"],
+                "{theme}"
+            );
         }
     }
+}
+
+/// The hero's three link widths under a theme: solid slot 1, dash, gray.
+fn widths_of(theme: &Theme) -> [String; 3] {
+    let widths = &theme.iso.widths;
+    [widths.primary, widths.secondary, widths.gray]
+        .map(|width| stencil_render::format_number(width).to_string())
 }
 
 #[test]
 fn a_relabeled_wire_legend_keeps_the_gap_before_its_description() {
     let mut page = hero_page();
-    page.theme = Theme::Wire;
+    page.theme = Some("wire".to_string());
     let geometry = common::layout_with_cosmic_text(&page);
     let svg = render_svg(&page, &geometry).unwrap();
     let parsed = common::parse_xml(&svg.svg);
     let mut flat = page.clone();
     flat.projection = stencil_model::Projection::Flat;
+    flat.theme = None;
     let flat_svg = render_svg(&flat, &geometry).unwrap();
     let flat_parsed = common::parse_xml(&flat_svg.svg);
     let gap = |document: &resvg::usvg::roxmltree::Document<'_>, run: &TextRun| {
@@ -1466,25 +1528,27 @@ fn a_dashed_link_skips_its_risers_and_a_solid_one_draws_them() {
 
 #[test]
 fn the_wire_vpc_ring_is_dotted_light_gray_and_solid_slab_outlines_are_heavier() {
-    let palette = Palette::for_projection(Theme::Wire, stencil_model::Projection::Iso);
+    let wire = common::theme("wire");
+    let palette = Palette::new(&wire, Projection::Iso);
     let ring = palette
-        .slab_faces(common::zone("vpc", None).0, common::zone("vpc", None).1, 1)
+        .slab_faces(common::zone("vpc", None).0, common::zone("vpc", None).1)
         .unwrap()
         .top_stroke
         .unwrap();
-    assert_eq!(ring.line, palette::LineStyle::Dotted);
-    assert_eq!(ring.color, palette::ISO_WIRE_RING_INK);
+    assert_eq!(ring.line, stencil_render::palette::LineStyle::Dotted);
+    assert_eq!(ring.color, "#999999");
+    assert_eq!(ring.width_px, 1.5);
     let on_prem = palette
         .slab_faces(
             common::zone("onprem", Some(1)).0,
             common::zone("onprem", Some(1)).1,
-            0,
         )
         .unwrap();
+    assert_eq!(on_prem.top_stroke.unwrap().width_px, wire.iso.edge_width);
+    assert_eq!(on_prem.side_stroke.unwrap().width_px, wire.iso.edge_width);
+    let flat = Palette::new(&wire, Projection::Flat).zone_style(common::zone("vpc", None).0, None);
     assert_eq!(
-        on_prem.top_stroke.unwrap().width_px,
-        palette::ISO_WIRE_SLAB_OUTLINE_PX
+        flat.border.unwrap().line,
+        stencil_render::palette::LineStyle::Dashed
     );
-    let flat = Palette::new(Theme::Wire).zone_style(common::zone("vpc", None).0, None);
-    assert_eq!(flat.border.unwrap().line, palette::LineStyle::Dashed);
 }

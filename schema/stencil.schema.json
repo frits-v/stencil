@@ -61,7 +61,20 @@
       "$ref": "#/$defs/Projection"
     },
     "theme": {
-      "$ref": "#/$defs/Theme"
+      "description": "A built-in theme name or a path ending in `.json`; absent means center.",
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^(center|paper|dusk|clear|clear-dark|wire|[^\\u0000-\\u001F]{1,395}\\.json)$"
+    },
+    "theme_overrides": {
+      "description": "A partial theme merged onto the resolved theme (section 13.4 rule 8).",
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": true
     },
     "title": {
       "type": "string",
@@ -968,14 +981,6 @@
             "label"
           ]
         }
-      ]
-    },
-    "Theme": {
-      "type": "string",
-      "enum": [
-        "center",
-        "dusk",
-        "wire"
       ]
     }
   }

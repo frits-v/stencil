@@ -11,10 +11,12 @@ use stencil_model::grammar::Role;
 use stencil_model::pointer::NodePointer;
 use stencil_model::text::TextStyleName;
 
+use stencil_model::text::TextMeasurer;
 use stencil_model::{
     Arrow, Canvas, Chrome, FactSource, IconName, LEGEND_ENTRIES_MAX, LINKS_MAX, LegendEntry, Link,
-    Node, NodeRef, NoteKind, Page, PagePoint, Pipe, PipeDir, Projection, body_nodes,
+    Node, NodeRef, NoteKind, Page, PagePoint, Pipe, PipeDir, Projection, Theme, body_nodes,
 };
+use stencil_text::CosmicTextMeasurer;
 
 use crate::icons::icon_data_uri;
 use crate::palette::{self, BoxPaint, DotStyle, LineStyle, LineUse, Palette, Stroke};
@@ -68,17 +70,23 @@ enum DocumentNode<'a> {
     Foot,
 }
 
-/// Walks page and geometry in the section 4.4 geometry order and asserts the pointers match.
-pub fn render_svg(page: &Page, geometry: &PageGeometry) -> Result<SvgDocument, RenderError> {
+/// Walks page and geometry in the section 4.4 geometry order and asserts the pointers match,
+/// painting every role from `theme`.
+pub fn render_svg(
+    page: &Page,
+    theme: &Theme,
+    geometry: &PageGeometry,
+) -> Result<SvgDocument, RenderError> {
     let expected = geometry_order(page);
     if let Some(mismatch) = first_mismatch(&expected, geometry) {
         return Err(mismatch);
     }
     if page.projection == Projection::Iso {
-        return iso_writer::render_iso(page, geometry, &expected);
+        return iso_writer::render_iso(page, theme, geometry, &expected);
     }
 
-    let mut writer = SvgWriter::new(page.canvas, Palette::new(page.theme));
+    let mut writer = SvgWriter::new(page.canvas, Palette::new(theme, Projection::Flat));
+    let mut relabeler = Relabeler::default();
     let width = format_number(geometry.canvas.width);
     let height = format_number(geometry.canvas.height);
     writer.line(
@@ -105,7 +113,12 @@ pub fn render_svg(page: &Page, geometry: &PageGeometry) -> Result<SvgDocument, R
         close_groups_until_parent(&mut writer, &mut open_groups, geometry, index)?;
         let depth = open_groups.len() + 1;
         writer.line(depth, &group_open_tag(node));
-        writer.write_node(depth + 1, node, *document_node)?;
+        let relabeled = relabeler.relabeled(writer.palette, node, *document_node)?;
+        writer.write_node(
+            depth + 1,
+            relabeled.as_ref().unwrap_or(node),
+            *document_node,
+        )?;
         open_groups.push(index);
     }
     for depth in (1..=open_groups.len()).rev() {
@@ -319,26 +332,95 @@ fn group_open_tag(node: &NodeGeometry) -> String {
     )
 }
 
+/// Draws each legend entry's label as the theme names it (section 13.4 rule 9), measuring
+/// the drawn label with the bundled fonts, which load on the first relabeled entry.
+#[derive(Default)]
+struct Relabeler {
+    measurer: Option<CosmicTextMeasurer>,
+}
+
+impl Relabeler {
+    /// The legend entry with its drawn label, or None when the node is not a legend entry
+    /// or its drawn label equals the canonical one.
+    fn relabeled(
+        &mut self,
+        palette: Palette<'_>,
+        node: &NodeGeometry,
+        document_node: DocumentNode<'_>,
+    ) -> Result<Option<NodeGeometry>, RenderError> {
+        let DocumentNode::LegendEntry(entry) = document_node else {
+            return Ok(None);
+        };
+        let Some(label) = palette.legend_relabel(LineUse::new(entry.line, entry.tint)) else {
+            return Ok(None);
+        };
+        let measurer = match self.measurer.as_mut() {
+            Some(measurer) => measurer,
+            None => self.measurer.insert(CosmicTextMeasurer::new()?),
+        };
+        relabel_legend_entry(node, &label, measurer).map(Some)
+    }
+}
+
+/// A legend entry whose label run reads `label`, measured in the run's style, with the
+/// description moved by the change in label width so the gap between them keeps its size.
+fn relabel_legend_entry(
+    entry: &NodeGeometry,
+    label: &str,
+    measurer: &mut dyn TextMeasurer,
+) -> Result<NodeGeometry, RenderError> {
+    let mut relabeled = entry.clone();
+    let mut width_change = 0.0;
+    for part in &mut relabeled.parts {
+        if part.name == PartName::LegendLabel
+            && let Some(run) = &part.text
+        {
+            let metrics =
+                measurer
+                    .measure(label, &run.style, None)
+                    .map_err(|error| RenderError::Svg {
+                        message: format!(
+                            "legend label {label:?} at {} could not be measured: {error}",
+                            entry.pointer
+                        ),
+                    })?;
+            width_change = metrics.width_px - run.metrics.width_px;
+            part.bounds.width += width_change;
+            part.text = Some(TextRun {
+                text: label.to_string(),
+                metrics,
+                ..run.clone()
+            });
+        }
+    }
+    for part in &mut relabeled.parts {
+        if part.name == PartName::LegendText {
+            part.bounds.x += width_change;
+        }
+    }
+    Ok(relabeled)
+}
+
 /// Document facts a part needs that geometry does not carry.
 #[derive(Debug, Clone, Copy, Default)]
-struct PartContext {
+struct PartContext<'a> {
     line: Option<LineUse>,
     pipe_dir: Option<PipeDir>,
     arrows: ArrowEnds,
     icon: Option<IconName>,
     /// Accent bar color of a Callout.
-    accent: Option<&'static str>,
+    accent: Option<&'a str>,
 }
 
-struct SvgWriter {
+struct SvgWriter<'a> {
     output: String,
     text_elements: usize,
     canvas: Canvas,
-    palette: Palette,
+    palette: Palette<'a>,
 }
 
-impl SvgWriter {
-    fn new(canvas: Canvas, palette: Palette) -> Self {
+impl<'a> SvgWriter<'a> {
+    fn new(canvas: Canvas, palette: Palette<'a>) -> Self {
         SvgWriter {
             output: String::new(),
             text_elements: 0,
@@ -374,17 +456,35 @@ impl SvgWriter {
         }
         for part in &node.parts {
             if let Some(run) = &part.text {
-                let style_name = text_style_name(document_node, node.container, part.name)
-                    .ok_or_else(|| part_mismatch(node, part))?;
-                let fill = self.palette.text_ink(
-                    style_name,
-                    self.canvas,
-                    context.line.map(|line_use| line_use.line),
-                );
+                let fill = self.text_fill(node, document_node, part, context)?;
                 self.write_text_run(depth, &node.pointer, part.bounds, run, fill)?;
             }
         }
         Ok(())
+    }
+
+    /// The ink of a text part: a Box label by its container's paint, every other run by
+    /// its section 2.9 style.
+    fn text_fill(
+        &self,
+        node: &NodeGeometry,
+        document_node: DocumentNode<'_>,
+        part: &Part,
+        context: PartContext<'a>,
+    ) -> Result<&'a str, RenderError> {
+        if let DocumentNode::Content(NodeRef::Node(Node::Box(_))) = document_node
+            && part.name == PartName::Label
+        {
+            let look = node.container.ok_or_else(|| container_mismatch(node))?;
+            return Ok(self.palette.container_label_ink(look, node.tint));
+        }
+        let style_name = text_style_name(document_node, node.container, part.name)
+            .ok_or_else(|| part_mismatch(node, part))?;
+        Ok(self.palette.text_ink(
+            style_name,
+            self.canvas,
+            context.line.map(|line_use| line_use.line),
+        ))
     }
 
     /// Draws the box of the node itself, below its parts, and returns what the parts need.
@@ -393,7 +493,7 @@ impl SvgWriter {
         depth: usize,
         node: &NodeGeometry,
         document_node: DocumentNode<'_>,
-    ) -> Result<PartContext, RenderError> {
+    ) -> Result<PartContext<'a>, RenderError> {
         if let DocumentNode::Content(NodeRef::Node(content)) = document_node {
             match content {
                 Node::Text(_) => {
@@ -436,7 +536,7 @@ impl SvgWriter {
     }
 
     /// The document facts the parts of a node need, without drawing anything.
-    fn part_context(&self, document_node: DocumentNode<'_>) -> PartContext {
+    fn part_context(&self, document_node: DocumentNode<'_>) -> PartContext<'a> {
         match document_node {
             DocumentNode::Page
             | DocumentNode::Kicker
@@ -488,7 +588,7 @@ impl SvgWriter {
 
     /// The box of a fact by source (section 13.7): a doc fact on the fact fill, an ask on
     /// the ask fill, an as-built name unfilled.
-    fn fact_box_fill(&self, source: FactSource) -> Option<&'static str> {
+    fn fact_box_fill(&self, source: FactSource) -> Option<&'a str> {
         match source {
             FactSource::Doc => Some(self.palette.fact_fill()),
             FactSource::Built => None,
@@ -576,7 +676,7 @@ impl SvgWriter {
         depth: usize,
         node: &NodeGeometry,
         part: &Part,
-        context: PartContext,
+        context: PartContext<'a>,
     ) -> Result<(), RenderError> {
         let bounds = part.bounds;
         match part.name {
@@ -585,14 +685,14 @@ impl SvgWriter {
                 self.write_box(depth, bounds, BADGE_RADIUS_PX, badge_paint);
             }
             PartName::Bar => {
-                let fill = self.palette.gcp_bar_fill();
+                let fill = self.palette.frame_bar_fill();
                 self.write_rect(depth, bounds, 0.0, Some(fill), None);
-                if let Some(rule) = self.palette.gcp_bar_rule() {
+                if let Some(rule) = self.palette.frame_bar_rule() {
                     self.write_bottom_rule(depth, bounds, rule);
                 }
             }
             PartName::Body => {
-                let fill = self.palette.gcp_body_fill();
+                let fill = self.palette.frame_body_fill();
                 self.write_rect(depth, bounds, 0.0, Some(fill), None);
             }
             PartName::Icon => {
@@ -881,6 +981,7 @@ impl SvgWriter {
     fn write_dot(&mut self, depth: usize, center_x: f32, center_y: f32, kind: LineUse) {
         let wire = self.palette.wire_style(kind);
         let circle = match wire.dot {
+            DotStyle::None => return,
             DotStyle::Filled => format!(
                 r#"<circle cx="{}" cy="{}" r="{}" fill="{}"/>"#,
                 format_number(center_x),
@@ -946,12 +1047,12 @@ impl SvgWriter {
         );
     }
 
-    fn write_box(&mut self, depth: usize, bounds: BoxRect, radius_px: f32, paint: BoxPaint) {
+    fn write_box(&mut self, depth: usize, bounds: BoxRect, radius_px: f32, paint: BoxPaint<'_>) {
         self.write_rect(depth, bounds, radius_px, Some(paint.fill), paint.border);
     }
 
     /// A horizontal rule along the bottom edge of `bounds`, inside the box.
-    fn write_bottom_rule(&mut self, depth: usize, bounds: BoxRect, rule: Stroke) {
+    fn write_bottom_rule(&mut self, depth: usize, bounds: BoxRect, rule: Stroke<'_>) {
         let center_y = bounds.bottom() - rule.width_px / 2.0;
         self.line(
             depth,
@@ -975,7 +1076,7 @@ impl SvgWriter {
         bounds: BoxRect,
         radius_px: f32,
         fill: Option<&str>,
-        stroke: Option<Stroke>,
+        stroke: Option<Stroke<'_>>,
     ) {
         let inset = stroke.map_or(0.0, |stroke| stroke.width_px / 2.0);
         let rect = inset_rect(bounds, inset);
@@ -1138,7 +1239,7 @@ fn icon_chip_box(icon_bounds: BoxRect) -> BoxRect {
     }
 }
 
-fn stroke_attributes(stroke: Stroke) -> String {
+fn stroke_attributes(stroke: Stroke<'_>) -> String {
     let dash = match stroke.line {
         LineStyle::Solid => String::new(),
         LineStyle::Dashed => format!(r#" stroke-dasharray="{}""#, palette::DASH_ARRAY),

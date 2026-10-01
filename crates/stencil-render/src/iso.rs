@@ -28,8 +28,6 @@ use drape::Terrain;
 use placement::Obstacles;
 use shapes::{rectangle_overlaps_polygon, rectangles_overlap, segment_crosses_box};
 
-/// Slab thickness of a filled Zone, and the rise of each filled nested Zone over its parent.
-pub const ISO_SLAB_THICKNESS_PX: f32 = 6.0;
 /// Height of a leaf block (Pcard, Fact, Note, Text, Callout, Frame).
 pub const ISO_BLOCK_HEIGHT_PX: f32 = 18.0;
 /// cos 30 degrees, written out so every build uses the same f32.
@@ -101,7 +99,7 @@ pub struct Solid {
     pub pointer: NodePointer,
     pub shape: SolidShape,
     pub base_z: f32,
-    /// ISO_SLAB_THICKNESS_PX for a filled slab, 0 for a ring zone and a surface,
+    /// The theme's slab thickness for a filled slab, 0 for a ring zone and a surface,
     /// ISO_BLOCK_HEIGHT_PX for a block.
     pub height: f32,
     /// The six section 12.3 silhouette vertices in canvas px, offset included.
@@ -377,8 +375,28 @@ fn center(bounds: BoxRect) -> (f32, f32) {
 /// its children.
 struct NodeFacts {
     in_body: Vec<bool>,
-    /// Top of the nearest enclosing Zone's solid, 0 without a Zone ancestor.
-    slab_top: Vec<f32>,
+}
+
+/// What the projection needs beyond the geometry (section 13.4 rule 12): the theme's slab
+/// thickness, and per geometry node whether it is a ring. A Box is a ring when its tone is
+/// strong and it has no effective tint, so the rings depend on the document and the
+/// grammar, never on the theme.
+#[derive(Debug, Clone, PartialEq)]
+pub struct SolidInputs {
+    /// Slab thickness of a filled Box, and the rise of each filled nested Box over its
+    /// parent.
+    pub slab_thickness_px: f32,
+    /// Indexed like `PageGeometry.nodes`.
+    pub rings: Vec<bool>,
+}
+
+impl SolidInputs {
+    pub fn new(geometry: &PageGeometry, slab_thickness_px: f32) -> Self {
+        SolidInputs {
+            slab_thickness_px,
+            rings: geometry.nodes.iter().map(is_ring_zone).collect(),
+        }
+    }
 }
 
 /// True when a zone encloses node `index`. Parents precede children, so the walk ends
@@ -397,55 +415,75 @@ pub(crate) fn has_zone_ancestor(geometry: &PageGeometry, index: usize) -> bool {
     false
 }
 
-/// The height of a zone's solid.
-fn zone_height(node: &NodeGeometry) -> f32 {
-    if is_ring_zone(node) {
+/// The height of the solid of the zone at geometry index `index`.
+fn zone_height(index: usize, inputs: &SolidInputs) -> f32 {
+    if inputs.rings.get(index).copied().unwrap_or(false) {
         0.0
     } else {
-        ISO_SLAB_THICKNESS_PX
+        inputs.slab_thickness_px
     }
+}
+
+/// Top of the nearest enclosing Zone's solid per node, 0 without a Zone ancestor. Parents
+/// precede children, so one pass in geometry order sees every parent's top first.
+fn slab_tops(geometry: &PageGeometry, inputs: &SolidInputs) -> Vec<f32> {
+    let mut tops = vec![0.0; geometry.nodes.len()];
+    for (index, node) in geometry.nodes.iter().enumerate() {
+        let Some(parent) = node.parent.filter(|parent| *parent < index) else {
+            continue;
+        };
+        let parent_top = tops.get(parent).copied().unwrap_or(0.0);
+        let top = match geometry.nodes.get(parent) {
+            Some(parent_node) if parent_node.tag == NodeTag::Zone => {
+                parent_top + zone_height(parent, inputs)
+            }
+            _ => parent_top,
+        };
+        if let Some(slot) = tops.get_mut(index) {
+            *slot = top;
+        }
+    }
+    tops
 }
 
 fn node_facts(geometry: &PageGeometry, body: usize) -> Result<NodeFacts, RenderError> {
     let count = geometry.nodes.len();
     let mut facts = NodeFacts {
         in_body: vec![false; count],
-        slab_top: vec![0.0; count],
     };
     for (index, node) in geometry.nodes.iter().enumerate() {
         let Some(parent) = node.parent else {
             continue;
         };
-        let parent_node = geometry
+        if geometry
             .nodes
             .get(parent)
             .filter(|_| parent < index)
-            .ok_or_else(|| RenderError::GeometryMismatch {
+            .is_none()
+        {
+            return Err(RenderError::GeometryMismatch {
                 expected: NodePointer::root().child("<parent before child>"),
                 found: node.pointer.clone(),
-            })?;
+            });
+        }
         let parent_in_body = facts.in_body.get(parent).copied().unwrap_or(false);
-        let parent_top = facts.slab_top.get(parent).copied().unwrap_or(0.0);
-        let top = if parent_node.tag == NodeTag::Zone {
-            parent_top + zone_height(parent_node)
-        } else {
-            parent_top
-        };
         if let Some(slot) = facts.in_body.get_mut(index) {
             *slot = parent == body || parent_in_body;
-        }
-        if let Some(slot) = facts.slab_top.get_mut(index) {
-            *slot = top;
         }
     }
     Ok(facts)
 }
 
-/// Shape, base and height of a body node's solid; None for Row and Col. `slab_top` is the
-/// top of the nearest enclosing Zone's solid.
-fn solid_shape(node: &NodeGeometry, slab_top: f32) -> Option<(SolidShape, f32, f32)> {
+/// Shape, base and height of the solid of the body node at `index`; None for Row and Col.
+/// `slab_top` is the top of the nearest enclosing Zone's solid.
+fn solid_shape(
+    node: &NodeGeometry,
+    index: usize,
+    slab_top: f32,
+    inputs: &SolidInputs,
+) -> Option<(SolidShape, f32, f32)> {
     match node.tag {
-        NodeTag::Zone => Some((SolidShape::Slab, slab_top, zone_height(node))),
+        NodeTag::Zone => Some((SolidShape::Slab, slab_top, zone_height(index, inputs))),
         NodeTag::Pcard
         | NodeTag::Fact
         | NodeTag::Note
@@ -1042,14 +1080,22 @@ fn stack_card(node: &mut NodeGeometry) {
 }
 
 /// Asserts nodes[0] is the root and /body is present, then zooms and projects the body.
-pub fn project_page(geometry: &PageGeometry) -> Result<IsoScene, RenderError> {
+pub fn project_page(
+    geometry: &PageGeometry,
+    inputs: &SolidInputs,
+) -> Result<IsoScene, RenderError> {
     let (zoomed, zoom) = zoomed_geometry(geometry)?;
-    project_zoomed(&zoomed, zoom)
+    project_zoomed(&zoomed, zoom, inputs)
 }
 
 /// `project_page` over a geometry `zoomed_geometry` returned.
-pub fn project_zoomed(geometry: &PageGeometry, zoom: f32) -> Result<IsoScene, RenderError> {
+pub fn project_zoomed(
+    geometry: &PageGeometry,
+    zoom: f32,
+    inputs: &SolidInputs,
+) -> Result<IsoScene, RenderError> {
     let (body_index, facts) = body_facts(geometry)?;
+    let slab_top = slab_tops(geometry, inputs);
     let Some(body) = geometry.nodes.get(body_index) else {
         return Err(RenderError::GeometryMismatch {
             expected: NodePointer::root().child("body"),
@@ -1066,8 +1112,8 @@ pub fn project_zoomed(geometry: &PageGeometry, zoom: f32) -> Result<IsoScene, Re
         if !facts.in_body.get(index).copied().unwrap_or(false) {
             continue;
         }
-        let slab_top = facts.slab_top.get(index).copied().unwrap_or(0.0);
-        let Some((shape, flat_base_z, flat_height)) = solid_shape(node, slab_top) else {
+        let top = slab_top.get(index).copied().unwrap_or(0.0);
+        let Some((shape, flat_base_z, flat_height)) = solid_shape(node, index, top, inputs) else {
             continue;
         };
         // Heights scale with the zoom, so a zoomed scene keeps the proportions of section

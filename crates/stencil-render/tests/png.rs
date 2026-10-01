@@ -2,10 +2,9 @@
 
 mod common;
 
+use common::render_svg;
 use stencil_model::text::{TEXT_STYLES, TextMeasurer};
-use stencil_render::{
-    DeviceScale, PNG_PIXELS_MAX, RenderError, format_number, render_png, render_svg,
-};
+use stencil_render::{DeviceScale, PNG_PIXELS_MAX, RenderError, format_number, render_png};
 use stencil_text::CosmicTextMeasurer;
 
 fn one_line_svg(family: &str) -> String {

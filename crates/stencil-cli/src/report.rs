@@ -1,8 +1,9 @@
 //! Section 7 stdout line formats, stable for scripts.
 
-use stencil_model::Violation;
 use stencil_model::checks::{CheckName, CheckOutcome, CheckReport, Defect};
 use stencil_model::grammar::GrammarViolation;
+use stencil_model::theme::{QualityClass, QualityRow, ThemeReport};
+use stencil_model::{ThemeViolation, Violation};
 
 pub fn count_text(count: u64, singular: &str, plural: &str) -> String {
     if count == 1 {
@@ -33,6 +34,52 @@ pub fn grammar_violation_line(violation: &GrammarViolation) -> String {
         violation.pointer,
         violation.message
     )
+}
+
+pub fn theme_violation_line(violation: &ThemeViolation) -> String {
+    format!(
+        "violation {} {}: {}",
+        violation.rule.as_str(),
+        violation.pointer,
+        violation.message
+    )
+}
+
+/// One quality row of `stencil theme check` (section 13.12), for example
+/// `row contrast ink.primary on page: 16.10, at least 4.50, passed`.
+pub fn quality_row_line(row: &QualityRow) -> String {
+    let class = row.class.as_str();
+    let subject = &row.subject;
+    let Some(value) = row.value else {
+        let reason = row.not_applicable.unwrap_or("not examined");
+        return format!("row {class} {subject}: not applicable: {reason}");
+    };
+    let between = match (&row.closest, row.class) {
+        (Some((first, second)), QualityClass::Separation) => {
+            format!(" between {first} and {second}")
+        }
+        _ => String::new(),
+    };
+    let verdict = if value >= row.threshold {
+        "passed"
+    } else {
+        "FAILED"
+    };
+    format!(
+        "row {class} {subject}: {value:.2}{between}, at least {:.2}, {verdict}",
+        row.threshold
+    )
+}
+
+/// `<n> rows, <p> passed, <f> failed`, with `, <a> not applicable` when any row is.
+pub fn quality_summary_text(report: &ThemeReport) -> String {
+    let (passed, failed, not_applicable) = report.counts();
+    let rows = count_text(report.rows.len() as u64, "row", "rows");
+    if not_applicable == 0 {
+        format!("{rows}, {passed} passed, {failed} failed")
+    } else {
+        format!("{rows}, {passed} passed, {failed} failed, {not_applicable} not applicable")
+    }
 }
 
 pub fn check_line(report: &CheckReport) -> String {

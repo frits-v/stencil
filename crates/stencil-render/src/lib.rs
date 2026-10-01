@@ -2,6 +2,7 @@
 
 pub mod iso;
 pub mod palette;
+pub mod themes;
 
 mod icons;
 mod measured;
@@ -17,6 +18,7 @@ pub use icons::{icon_data_uri, icon_svg_bytes};
 pub use measured::measured_json;
 pub use png::{PNG_PIXELS_MAX, render_png};
 pub use svg::render_svg;
+pub use themes::{builtin_theme, builtin_theme_json};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct SvgDocument {

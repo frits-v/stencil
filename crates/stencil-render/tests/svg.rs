@@ -8,13 +8,14 @@
 
 mod common;
 
+use common::render_svg;
 use common::{LineKey, ZoneKey};
 use resvg::usvg;
 use serde_json::json;
 use stencil_layout::{NodeTag, PartName};
 use stencil_model::LEGEND_ENTRIES_MAX;
 use stencil_model::pointer::NodePointer;
-use stencil_render::{RenderError, render_svg};
+use stencil_render::RenderError;
 
 #[test]
 fn g7_svg_parses_with_usvg() {

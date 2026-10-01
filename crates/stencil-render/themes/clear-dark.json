@@ -1,0 +1,248 @@
+{
+  "name": "clear-dark",
+  "tint_cue": "color",
+  "page": "#12161C",
+  "ink": {
+    "primary": "#E9EDF2",
+    "secondary": "#A8B1BD",
+    "zone_label": "#A8B1BD"
+  },
+  "kicker": "#6AB0FF",
+  "badge": {
+    "customer": {
+      "fill": "#143E60",
+      "ink": "#C2E0FF"
+    },
+    "internal": {
+      "fill": "#2C2547",
+      "ink": "#D6B7FF"
+    }
+  },
+  "card": {
+    "fill": "#1C222B",
+    "border": {
+      "color": "#434C5A",
+      "width": 1.5,
+      "pattern": "solid"
+    }
+  },
+  "fact": {
+    "fill": "#262D37",
+    "ink": "#C4CCD6"
+  },
+  "ask": {
+    "fill": "#322200",
+    "ink": "#FDCB03"
+  },
+  "tag": {
+    "fill": "#1C222B",
+    "border": {
+      "color": "#4C5664",
+      "width": 1.5,
+      "pattern": "solid"
+    },
+    "ink": "#E9EDF2",
+    "sub_ink": "#A8B1BD"
+  },
+  "legend": {
+    "label_ink": "#E9EDF2",
+    "text_ink": "#C4CCD6"
+  },
+  "foot": "#A8B1BD",
+  "callout": {
+    "note": {
+      "accent": "#0090FF",
+      "fill": "#194064"
+    },
+    "risk": {
+      "accent": "#FC4E5C",
+      "fill": "#3C2028"
+    },
+    "decision": {
+      "accent": "#9EEA7F",
+      "fill": "#0C2617"
+    },
+    "open": {
+      "accent": "#FDCB03",
+      "fill": "#322200"
+    }
+  },
+  "placeholder": {
+    "border": "#8E98A6",
+    "diagonal": "#3A424E"
+  },
+  "icon_chip": "#FFFFFF",
+  "frame": {
+    "border": "#3F82CC",
+    "frame_fill": "#12161C",
+    "bar_fill": "#1D4F86",
+    "bar_ink": "#FFFFFF",
+    "body_fill": "#161B22"
+  },
+  "tones": {
+    "neutral": {
+      "fill": "#141E1B",
+      "border": "#5E8F7A"
+    },
+    "warm": {
+      "fill": "#1D1B19",
+      "border": "#8C7F72"
+    },
+    "cool": {
+      "fill": "#1B1A26",
+      "border": "#7C7598"
+    },
+    "soft": {
+      "fill": "#1F1820"
+    },
+    "strong": {
+      "border": "#8E98A6"
+    },
+    "highlight": {
+      "fill": "#1E1C14",
+      "border": "#A68B35"
+    },
+    "emphasis": {
+      "fill": "#151C26",
+      "border": "#0090FF"
+    },
+    "accent": {
+      "fill": "#1F1916",
+      "border": "#E8883A",
+      "label_ink": "#F4AA6A"
+    }
+  },
+  "containers": {},
+  "lanes": {
+    "lifeline": {
+      "color": "#A8B1BD",
+      "width": 1.0,
+      "pattern": "dashed"
+    }
+  },
+  "gray": {
+    "color": "#9AA3AF",
+    "width": 2.0,
+    "pattern": "solid",
+    "dot": "filled"
+  },
+  "solid": {
+    "width": 2.0,
+    "dots": [
+      "filled",
+      "filled",
+      "filled",
+      "filled",
+      "filled",
+      "filled",
+      "filled",
+      "filled"
+    ]
+  },
+  "dash": {
+    "width": 2.0,
+    "pattern": "dashed",
+    "dot": "filled"
+  },
+  "deny": {
+    "color": "#FC4E5C",
+    "width": 2.0,
+    "pattern": "dashed",
+    "dot": "filled",
+    "tag_border": "#9A3540",
+    "tag_ink": "#FF7C86"
+  },
+  "tints": [
+    {
+      "name": "blue",
+      "fill": "#194064",
+      "border": "#0E64AA",
+      "ink": "#6EBEFD",
+      "wire": "#0090FF"
+    },
+    {
+      "name": "pink",
+      "fill": "#3D142D",
+      "border": "#803B5A",
+      "ink": "#D5789B",
+      "wire": "#D16A91"
+    },
+    {
+      "name": "teal",
+      "fill": "#2E403E",
+      "border": "#4A8D85",
+      "ink": "#6CECDB",
+      "wire": "#6CECDB"
+    },
+    {
+      "name": "ochre",
+      "fill": "#322200",
+      "border": "#8D6E01",
+      "ink": "#FDCB03",
+      "wire": "#FDCB03"
+    },
+    {
+      "name": "indigo",
+      "fill": "#2C2547",
+      "border": "#79679A",
+      "ink": "#D6B7FF",
+      "wire": "#D6B7FF"
+    },
+    {
+      "name": "green",
+      "fill": "#0C2617",
+      "border": "#4E7E46",
+      "ink": "#9EEA7F",
+      "wire": "#9EEA7F"
+    },
+    {
+      "name": "orange",
+      "fill": "#54362B",
+      "border": "#974F1E",
+      "ink": "#EDA46D",
+      "wire": "#E86D0F"
+    },
+    {
+      "name": "olive",
+      "fill": "#3E4016",
+      "border": "#5E6532",
+      "ink": "#B2BA96",
+      "wire": "#869254"
+    }
+  ],
+  "iso": {
+    "faces": {
+      "top": 0,
+      "left": -4,
+      "right": -8
+    },
+    "slab_thickness": 6.0,
+    "frame_sides": {
+      "left": "#3F82CC",
+      "right": "#2B64A3"
+    },
+    "frame_outline": 1.5,
+    "solid_edges": "none",
+    "edge_width": 1.5,
+    "plates": false,
+    "tabs": {
+      "frame": {
+        "fill": "#1D4F86",
+        "ink": "#FFFFFF"
+      },
+      "top": {
+        "fill": "#434C5A",
+        "ink": "#E9EDF2"
+      },
+      "nested_width": 1.25
+    },
+    "chip": {
+      "fill": "#FFFFFF"
+    },
+    "widths": {
+      "primary": 3.75,
+      "secondary": 2.5,
+      "gray": 2.0
+    }
+  }
+}

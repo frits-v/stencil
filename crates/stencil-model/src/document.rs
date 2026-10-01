@@ -44,7 +44,12 @@ pub const KIND_PATTERN: &str = r"^[a-z][a-z0-9-]{0,31}$";
 pub const BUILTIN_GRAMMARS: [&str; 2] = ["gcp", "plain"];
 pub const GRAMMAR_DEFAULT: &str = "gcp";
 pub const GRAMMAR_REFERENCE_PATTERN: &str = r"^(gcp|plain|[^\u0000-\u001F]{1,395}\.json)$";
-/// Largest grammar file the CLI reads, in bytes.
+/// The designed built-in themes, in the gallery's order (section 13.5).
+pub const BUILTIN_THEMES: [&str; 6] = ["center", "paper", "dusk", "clear", "clear-dark", "wire"];
+pub const THEME_DEFAULT: &str = "center";
+pub const THEME_REFERENCE_PATTERN: &str =
+    r"^(center|paper|dusk|clear|clear-dark|wire|[^\u0000-\u001F]{1,395}\.json)$";
+/// Largest grammar or theme file the CLI reads, in bytes.
 pub const DATA_FILE_BYTES_MAX: usize = 65_536;
 
 fn page_width_default() -> u32 {
@@ -61,10 +66,6 @@ fn pipe_arrow_default() -> Arrow {
 
 fn is_pipe_arrow_default(arrow: &Arrow) -> bool {
     *arrow == Arrow::None
-}
-
-fn is_default_theme(theme: &Theme) -> bool {
-    *theme == Theme::Center
 }
 
 fn is_default_projection(projection: &Projection) -> bool {
@@ -115,8 +116,13 @@ pub struct Page {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[schemars(regex(pattern = GRAMMAR_REFERENCE_PATTERN))]
     pub grammar: Option<String>,
-    #[serde(default, skip_serializing_if = "is_default_theme")]
-    pub theme: Theme,
+    /// A built-in theme name or a path ending in `.json`; absent means center.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(regex(pattern = THEME_REFERENCE_PATTERN))]
+    pub theme: Option<String>,
+    /// A partial theme merged onto the resolved theme (section 13.4 rule 8).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub theme_overrides: Option<serde_json::Map<String, serde_json::Value>>,
     #[serde(default, skip_serializing_if = "is_default_projection")]
     pub projection: Projection,
     #[serde(default, skip_serializing_if = "is_default_chrome")]
@@ -135,15 +141,6 @@ pub struct Page {
 pub enum Canvas {
     Customer,
     Internal,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema, Default)]
-#[serde(rename_all = "lowercase")]
-pub enum Theme {
-    #[default]
-    Center,
-    Dusk,
-    Wire,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema, Default)]

@@ -14,7 +14,6 @@ use serde_json::{Value, json};
 use stencil_layout::NodeTag;
 use stencil_render::iso::is_ring_zone;
 use stencil_render::measured_json;
-use stencil_render::palette::{TINT_FILLS, TINT_WIRES};
 
 fn solid_pipe(tint: u8) -> Value {
     json!({ "tag": "Pipe", "dir": "h", "line": "solid", "tint": tint, "label": format!("slot {tint}") })
@@ -52,6 +51,7 @@ fn slots_document() -> Value {
 
 #[test]
 fn every_tint_slot_draws_its_key_fill_and_wire_under_center() {
+    let center = common::theme("center");
     let rendered = common::render_document_with_fixed_metrics(slots_document());
     let document = common::parse_xml(&rendered.svg.svg);
     let region_keys = [
@@ -68,27 +68,36 @@ fn every_tint_slot_draws_its_key_fill_and_wire_under_center() {
         let region = common::group(&document, &format!("/body/0/children/{index}"));
         assert_eq!(region.attribute("data-kind"), Some(region_keys[index]));
         let rect = common::children_named(region, "rect")[0];
-        assert_eq!(rect.attribute("fill"), Some(TINT_FILLS[index]));
+        assert_eq!(
+            rect.attribute("fill"),
+            Some(center.tints[index].fill.as_str())
+        );
         assert_eq!(rect.attribute("stroke"), Some("#BDC1C6"));
 
         let solid = common::group(&document, &format!("/body/1/children/{index}"));
         assert_eq!(solid.attribute("data-kind"), Some(solid_keys[index]));
         for wire in common::children_named(solid, "line") {
-            assert_eq!(wire.attribute("stroke"), Some(TINT_WIRES[index]));
+            assert_eq!(
+                wire.attribute("stroke"),
+                Some(center.tints[index].wire.as_str())
+            );
             assert_eq!(wire.attribute("stroke-dasharray"), None);
         }
 
         let dash = common::group(&document, &format!("/body/2/children/{index}"));
         assert_eq!(dash.attribute("data-kind"), Some(dash_keys[index]));
         for wire in common::children_named(dash, "line") {
-            assert_eq!(wire.attribute("stroke"), Some(TINT_WIRES[index]));
+            assert_eq!(
+                wire.attribute("stroke"),
+                Some(center.tints[index].wire.as_str())
+            );
             assert_eq!(wire.attribute("stroke-dasharray"), Some("6 5"));
         }
     }
-    assert_eq!(TINT_WIRES[0], "#1A73E8");
-    assert_eq!(TINT_WIRES[1], "#C2185B");
-    assert_eq!(TINT_FILLS[0], "#D2E3FC");
-    assert_eq!(TINT_FILLS[1], "#FCE4EC");
+    assert_eq!(center.tints[0].wire.as_str(), "#1A73E8");
+    assert_eq!(center.tints[1].wire.as_str(), "#C2185B");
+    assert_eq!(center.tints[0].fill.as_str(), "#D2E3FC");
+    assert_eq!(center.tints[1].fill.as_str(), "#FCE4EC");
 }
 
 #[test]
