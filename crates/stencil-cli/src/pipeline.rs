@@ -12,16 +12,18 @@ use stencil_layout::checks::{
     child_inside_container, links_avoid_boxes, links_routed, pipes_land, siblings_do_not_overlap,
     text_fits_box,
 };
-use stencil_layout::{LayoutError, PageGeometry, layout_page};
+use stencil_layout::{LayoutError, PageGeometry, layout_page, theme_legend_labels};
 use stencil_model::checks::{CheckReport, legend_consistency, remembered_constants};
 use stencil_model::grammar::GrammarViolation;
+use stencil_model::text::MeasureError;
 use stencil_model::{
-    DATA_FILE_BYTES_MAX, Grammar, GrammarError, ModelError, Page, Projection, builtin_grammar,
-    grammar_reference, is_grammar_reference, parse_grammar, parse_page, validate_page, vet_page,
+    DATA_FILE_BYTES_MAX, Grammar, GrammarError, ModelError, Page, Projection, Theme, ThemeError,
+    apply_overrides, builtin_grammar, grammar_reference, is_grammar_reference, parse_grammar,
+    parse_page, parse_theme, theme_reference, validate_page, vet_page,
 };
-use stencil_render::iso::{IsoScene, iso_labels_clear, iso_links_clear, project_page};
+use stencil_render::iso::{IsoScene, SolidInputs, iso_labels_clear, iso_links_clear, project_page};
 use stencil_render::{
-    DeviceScale, RenderError, SvgDocument, measured_json, render_png, render_svg,
+    DeviceScale, RenderError, SvgDocument, builtin_theme, measured_json, render_png, render_svg,
 };
 use stencil_text::{CosmicTextMeasurer, FontError};
 
@@ -46,6 +48,20 @@ pub enum Failure {
         path: PathBuf,
         #[source]
         source: std::io::Error,
+    },
+    #[error(transparent)]
+    Theme(#[from] ThemeError),
+    #[error("cannot read theme {}", path.display())]
+    ReadTheme {
+        path: PathBuf,
+        #[source]
+        source: std::io::Error,
+    },
+    #[error("cannot measure the legend labels of theme {theme}")]
+    ThemeLabels {
+        theme: String,
+        #[source]
+        source: MeasureError,
     },
     #[error("document parses as a page but not as a JSON value")]
     DocumentValue(#[source] serde_json::Error),
@@ -85,13 +101,23 @@ pub enum Failure {
     },
 }
 
-/// A vetted page with the grammar it names, together with the input parsed as a plain JSON
-/// value, which the measured JSON carries unchanged as `document`.
+/// A vetted page with the grammar it names and the theme it is drawn in, together with the
+/// input parsed as a plain JSON value, which the measured JSON carries unchanged as
+/// `document`.
 #[derive(Debug, Clone, PartialEq)]
 pub struct LoadedDocument {
     pub page: Page,
     pub grammar: Grammar,
+    pub theme: Theme,
     pub document: Value,
+}
+
+/// A theme reference and the directory a path reference resolves against: the current
+/// directory for `--theme`, the document's directory for `Page.theme` (section 13.4 rule 1).
+#[derive(Debug, Clone, Copy)]
+pub struct ThemeChoice<'a> {
+    pub reference: &'a str,
+    pub directory: &'a Path,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -165,17 +191,21 @@ fn invalid_utf8(bytes: &[u8], valid_up_to: usize) -> Failure {
     })
 }
 
-/// `load_document_from` with grammar paths resolved against the current directory.
+/// `load_document_from` with grammar and theme paths resolved against the current directory
+/// and no `--theme`.
 pub fn load_document(json_text: &str) -> Result<LoadedDocument, Failure> {
-    load_document_from(json_text, Path::new("."))
+    load_document_from(json_text, Path::new("."), None)
 }
 
 /// Parses the page, resolves and loads the grammar it names (section 13.2), vets the page
-/// against it, then parses the input again into `serde_json::Value`. A grammar given by
-/// path resolves against `document_directory`, the directory of the input document.
+/// against it, resolves and loads the theme with the page's overrides (section 13.4 rules 1
+/// to 5), then parses the input again into `serde_json::Value`. A grammar or theme given by
+/// path in the page resolves against `document_directory`, the directory of the input
+/// document. `theme_flag`, the `--theme` value, replaces the page's theme reference.
 pub fn load_document_from(
     json_text: &str,
     document_directory: &Path,
+    theme_flag: Option<ThemeChoice<'_>>,
 ) -> Result<LoadedDocument, Failure> {
     let page = parse_page(json_text)?;
     let reference = grammar_reference(&page).to_string();
@@ -190,12 +220,87 @@ pub fn load_document_from(
         ))));
     };
     let page = vet_page(page, &grammar)?;
+    let choice = theme_flag.unwrap_or(ThemeChoice {
+        reference: theme_reference(&page),
+        directory: document_directory,
+    });
+    let theme = load_theme(&page, choice)?;
     let document: Value = serde_json::from_str(json_text).map_err(Failure::DocumentValue)?;
     Ok(LoadedDocument {
         page,
         grammar,
+        theme,
         document,
     })
+}
+
+/// The theme `choice` names with the page's `theme_overrides` merged on, after the legend
+/// label rule (section 13.4 rule 4) passed.
+pub fn load_theme(page: &Page, choice: ThemeChoice<'_>) -> Result<Theme, Failure> {
+    let base = resolve_theme(choice.reference, choice.directory)?;
+    let theme = match &page.theme_overrides {
+        Some(overrides) => apply_overrides(&base, overrides)?,
+        None => base,
+    };
+    check_legend_labels(&theme, &theme.name)?;
+    Ok(theme)
+}
+
+/// The legend label rule needs a measurer, so it runs here with the bundled fonts.
+pub fn check_legend_labels(theme: &Theme, origin: &str) -> Result<(), Failure> {
+    let mut measurer = CosmicTextMeasurer::new()?;
+    let violations =
+        theme_legend_labels(theme, &mut measurer).map_err(|source| Failure::ThemeLabels {
+            theme: theme.name.clone(),
+            source,
+        })?;
+    if violations.is_empty() {
+        Ok(())
+    } else {
+        Err(Failure::Theme(ThemeError::Invalid {
+            origin: origin.to_string(),
+            violations,
+        }))
+    }
+}
+
+/// A built-in theme by name, or a theme file by path relative to `directory`, read up to
+/// DATA_FILE_BYTES_MAX bytes and validated.
+pub fn resolve_theme(reference: &str, directory: &Path) -> Result<Theme, Failure> {
+    if let Some(builtin) = builtin_theme(reference) {
+        return Ok(builtin?);
+    }
+    let path = directory.join(reference);
+    let bytes = read_data_file(&path, "theme").map_err(|source| Failure::ReadTheme {
+        path: path.clone(),
+        source,
+    })?;
+    let origin = path.display().to_string();
+    let json_text = String::from_utf8(bytes).map_err(|error| ThemeError::Json {
+        origin: origin.clone(),
+        line: 1,
+        column: error.utf8_error().valid_up_to() + 1,
+        message: "theme is not valid UTF-8".to_string(),
+    })?;
+    Ok(parse_theme(&json_text, &origin)?)
+}
+
+/// The bytes of a grammar or theme file, at most DATA_FILE_BYTES_MAX of them.
+fn read_data_file(path: &Path, what: &str) -> io::Result<Vec<u8>> {
+    let file = fs::File::open(path)?;
+    if file.metadata()?.is_dir() {
+        return Err(io::Error::from(io::ErrorKind::IsADirectory));
+    }
+    let limit = u64::try_from(DATA_FILE_BYTES_MAX).unwrap_or(u64::MAX);
+    let mut bytes = Vec::new();
+    file.take(limit + 1).read_to_end(&mut bytes)?;
+    if bytes.len() > DATA_FILE_BYTES_MAX {
+        return Err(io::Error::new(
+            io::ErrorKind::FileTooLarge,
+            format!("{what} is larger than {DATA_FILE_BYTES_MAX} bytes"),
+        ));
+    }
+    Ok(bytes)
 }
 
 /// A built-in grammar by name, or a grammar file by path relative to `directory`, read up
@@ -205,22 +310,10 @@ pub fn resolve_grammar(reference: &str, directory: &Path) -> Result<Grammar, Fai
         return Ok(builtin?);
     }
     let path = directory.join(reference);
-    let read_error = |source| Failure::ReadGrammar {
+    let bytes = read_data_file(&path, "grammar").map_err(|source| Failure::ReadGrammar {
         path: path.clone(),
         source,
-    };
-    let file = fs::File::open(&path).map_err(read_error)?;
-    let limit = u64::try_from(DATA_FILE_BYTES_MAX).unwrap_or(u64::MAX);
-    let mut bytes = Vec::new();
-    file.take(limit + 1)
-        .read_to_end(&mut bytes)
-        .map_err(read_error)?;
-    if bytes.len() > DATA_FILE_BYTES_MAX {
-        return Err(read_error(io::Error::new(
-            io::ErrorKind::FileTooLarge,
-            format!("grammar is larger than {DATA_FILE_BYTES_MAX} bytes"),
-        )));
-    }
+    })?;
     let origin = path.display().to_string();
     let json_text = String::from_utf8(bytes).map_err(|error| GrammarError::Json {
         origin: origin.clone(),
@@ -229,6 +322,11 @@ pub fn resolve_grammar(reference: &str, directory: &Path) -> Result<Grammar, Fai
         message: "grammar is not valid UTF-8".to_string(),
     })?;
     Ok(parse_grammar(&json_text, &origin)?)
+}
+
+/// The violations of a theme failure, empty for a JSON error.
+pub fn theme_violations(error: &ThemeError) -> &[stencil_model::ThemeViolation] {
+    error.violations()
 }
 
 /// The violations of a grammar failure, empty for a JSON error.
@@ -264,9 +362,12 @@ pub fn render_page(loaded: &LoadedDocument, scale: DeviceScale) -> Result<Render
     let geometry = layout_page(&loaded.page, &loaded.grammar, &mut measurer)?;
     let scene = match loaded.page.projection {
         Projection::Flat => None,
-        Projection::Iso => Some(project_page(&geometry)?),
+        Projection::Iso => {
+            let inputs = SolidInputs::new(&geometry, loaded.theme.iso.slab_thickness);
+            Some(project_page(&geometry, &inputs)?)
+        }
     };
-    let svg = render_svg(&loaded.page, &geometry)?;
+    let svg = render_svg(&loaded.page, &loaded.theme, &geometry)?;
     let png = render_png(&svg.svg, svg.text_elements, scale)?;
     let measured = measured_json(&loaded.document, &geometry, scene.as_ref());
     Ok(RenderedPage {

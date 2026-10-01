@@ -10,9 +10,46 @@ use resvg::usvg::roxmltree;
 use serde_json::{Value, json};
 use stencil_layout::{ContainerLook, PageGeometry, TextRun, layout_page};
 use stencil_model::text::FixedMetricsMeasurer;
-use stencil_model::{Grammar, Page, builtin_grammar};
-use stencil_render::{SvgDocument, render_svg};
+use stencil_model::{Grammar, Page, Theme, builtin_grammar, theme_reference};
+use stencil_render::iso::{IsoScene, SolidInputs};
+use stencil_render::{RenderError, SvgDocument, builtin_theme};
 use stencil_text::CosmicTextMeasurer;
+
+/// The six designed built-in themes, in the gallery's order.
+pub const THEMES: [&str; 6] = ["center", "paper", "dusk", "clear", "clear-dark", "wire"];
+
+/// A built-in theme by name.
+pub fn theme(name: &str) -> Theme {
+    builtin_theme(name)
+        .unwrap_or_else(|| panic!("{name} is not a built-in theme"))
+        .unwrap_or_else(|error| panic!("built-in theme {name} does not load: {error}"))
+}
+
+/// The SVG of `page` under the built-in theme it names, center when it names none.
+pub fn render_svg(page: &Page, geometry: &PageGeometry) -> Result<SvgDocument, RenderError> {
+    stencil_render::render_svg(page, &theme(theme_reference(page)), geometry)
+}
+
+/// The projection inputs of `geometry` under the built-in theme `page` names.
+pub fn solid_inputs(page: &Page, geometry: &PageGeometry) -> SolidInputs {
+    SolidInputs::new(geometry, theme(theme_reference(page)).iso.slab_thickness)
+}
+
+/// `project_page` with the slab thickness every designed built-in uses.
+pub fn project_page(geometry: &PageGeometry) -> Result<IsoScene, RenderError> {
+    stencil_render::iso::project_page(geometry, &SolidInputs::new(geometry, 6.0))
+}
+
+/// `project_zoomed` with the slab thickness every designed built-in uses.
+pub fn project_zoomed(geometry: &PageGeometry, zoom: f32) -> Result<IsoScene, RenderError> {
+    stencil_render::iso::project_zoomed(geometry, zoom, &SolidInputs::new(geometry, 6.0))
+}
+
+/// `page` with its theme reference set to `name`.
+pub fn with_theme(mut page: Page, name: &str) -> Page {
+    page.theme = Some(name.to_string());
+    page
+}
 
 pub const G7_JSON: &str = include_str!("../../../../examples/g7.json");
 

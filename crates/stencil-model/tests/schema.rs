@@ -184,3 +184,17 @@ fn onepager_validates() {
         .collect();
     assert_eq!(errors, Vec::<String>::new());
 }
+
+#[test]
+fn every_builtin_theme_name_and_a_json_path_pass_the_theme_pattern() {
+    let validator = validator();
+    for name in stencil_model::BUILTIN_THEMES
+        .iter()
+        .copied()
+        .chain(["themes/brand.json"])
+    {
+        let mut document = g7_value();
+        document["theme"] = serde_json::json!(name);
+        assert!(validator.is_valid(&document), "{name}");
+    }
+}

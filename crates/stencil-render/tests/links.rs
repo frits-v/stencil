@@ -231,7 +231,8 @@ fn links_are_drawn_after_every_node() {
         .map(|group| group.attribute("data-id").unwrap())
         .collect();
     assert_eq!(groups, ["", "/links/0", "/links/1", "/links/2"]);
-    let dusk_blue = Palette::new(stencil_model::Theme::Dusk)
+    let dusk = common::theme("dusk");
+    let dusk_blue = Palette::new(&dusk, stencil_model::Projection::Flat)
         .wire_style(stencil_render::palette::LineUse::new(
             stencil_model::Line::Solid,
             Some(1),
@@ -320,7 +321,7 @@ fn onepager_links_render_to_png_in_every_theme() {
         document["theme"] = json!(theme);
         let page: stencil_model::Page = serde_json::from_value(document).unwrap();
         let geometry = common::layout_with_cosmic_text(&page);
-        let svg = stencil_render::render_svg(&page, &geometry).unwrap();
+        let svg = common::render_svg(&page, &geometry).unwrap();
         let parsed = common::parse_xml(&svg.svg);
         for index in 0..page.links.len() {
             let link = link_group(&parsed, index);

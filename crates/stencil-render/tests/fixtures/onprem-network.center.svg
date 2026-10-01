@@ -126,7 +126,7 @@
             <text x="908.23" y="179.77" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#5F6368">DMZ</text>
             <g data-id="/body/0/children/0/children/4/children/0" data-tag="Zone" data-kind="group-c">
               <rect x="908.98" y="191.35" width="361.27" height="106.7" rx="7.25" fill="#E1FCFD" stroke="#BDC1C6" stroke-width="1.5"/>
-              <text x="921.73" y="215.67" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#5F6368">VLAN 30 · public services</text>
+              <text x="921.73" y="215.67" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#004845">VLAN 30 · public services</text>
               <g data-id="/body/0/children/0/children/4/children/0/children/0" data-tag="Row">
                 <g data-id="/body/0/children/0/children/4/children/0/children/0/children/0" data-tag="Pcard">
                   <rect x="922.48" y="227.25" width="162.39" height="57.3" rx="7.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
@@ -142,7 +142,7 @@
             </g>
             <g data-id="/body/0/children/0/children/4/children/1" data-tag="Zone" data-kind="group-d">
               <rect x="908.98" y="307.55" width="361.27" height="122.1" rx="7.25" fill="#FAF9CA" stroke="#BDC1C6" stroke-width="1.5"/>
-              <text x="921.73" y="331.87" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#5F6368">VLAN 99 · transit</text>
+              <text x="921.73" y="331.87" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#5A3900">VLAN 99 · transit</text>
               <g data-id="/body/0/children/0/children/4/children/1/children/0" data-tag="Pcard">
                 <rect x="922.48" y="343.45" width="334.27" height="72.7" rx="7.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
                 <text x="933.23" y="362.73" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#202124">Edge router</text>

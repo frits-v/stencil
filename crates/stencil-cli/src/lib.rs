@@ -1,5 +1,5 @@
-//! The `stencil` command line (SPEC sections 4.6 and 7): `vet`, `render`, `check`, `schema`,
-//! `prime` and `gallery`. `run` holds the whole program so integration tests call it directly.
+//! The `stencil` command line (SPEC sections 4.6, 7 and 13.12): `vet`, `render`, `check`,
+//! `schema`, `prime`, `gallery` and `theme`. `run` holds the whole program so integration tests call it directly.
 
 pub mod pipeline;
 pub mod prime;
@@ -16,19 +16,23 @@ use std::path::{Path, PathBuf};
 use clap::{Parser, Subcommand, ValueEnum};
 use stencil_layout::LayoutError;
 use stencil_model::checks::CheckReport;
-use stencil_model::{ModelError, Projection, Theme};
+use stencil_model::{ModelError, Projection};
 use stencil_render::DeviceScale;
 
 pub use exit::ExitCode;
 
 use exit::{clap_exit_code, failure_exit_code, prime_exit_code, reports_exit_code};
 use pipeline::{
-    Failure, LoadedDocument, OutputPaths, all_checks, grammar_violations, load_document_from,
-    model_checks, output_names, read_input, render_page, write_outputs,
+    Failure, LoadedDocument, OutputPaths, ThemeChoice, all_checks, grammar_violations,
+    load_document_from, model_checks, output_names, read_input, render_page, theme_violations,
+    write_outputs,
 };
 use report::{
-    check_counts_text, grammar_violation_line, report_lines, violation_count_text, violation_line,
+    check_counts_text, grammar_violation_line, report_lines, theme_violation_line,
+    violation_count_text, violation_line,
 };
+
+mod theme_command;
 
 /// Upper bound on the `source()` links printed for one error.
 const ERROR_CHAIN_MAX: usize = 16;
@@ -61,9 +65,10 @@ enum Command {
         /// PNG device scale, 1 to 4
         #[arg(long, default_value_t = DeviceScale::DEFAULT.get())]
         scale: u8,
-        /// Color theme, overriding the document's `theme`
-        #[arg(long, value_enum)]
-        theme: Option<ThemeArgument>,
+        /// A built-in theme name or a theme file path ending in .json, overriding the
+        /// document's `theme`
+        #[arg(long, value_name = "THEME")]
+        theme: Option<String>,
         /// Projection, overriding the document's `projection`
         #[arg(long, value_enum)]
         projection: Option<ProjectionArgument>,
@@ -72,9 +77,10 @@ enum Command {
     Check {
         /// Document to check
         json: PathBuf,
-        /// Color theme, overriding the document's `theme`
-        #[arg(long, value_enum)]
-        theme: Option<ThemeArgument>,
+        /// A built-in theme name or a theme file path ending in .json, overriding the
+        /// document's `theme`
+        #[arg(long, value_name = "THEME")]
+        theme: Option<String>,
         /// Projection, overriding the document's `projection`
         #[arg(long, value_enum)]
         projection: Option<ProjectionArgument>,
@@ -96,24 +102,25 @@ enum Command {
         #[arg(long, value_name = "DIR", default_value = "examples")]
         examples: PathBuf,
     },
+    /// Print a built-in theme, or check a theme's contrast and separation
+    Theme {
+        #[command(subcommand)]
+        action: ThemeAction,
+    },
 }
 
-/// The `--theme` values, one per `Theme` variant (section 11.4).
-#[derive(Debug, Clone, Copy, PartialEq, Eq, ValueEnum)]
-enum ThemeArgument {
-    Center,
-    Dusk,
-    Wire,
-}
-
-impl From<ThemeArgument> for Theme {
-    fn from(argument: ThemeArgument) -> Self {
-        match argument {
-            ThemeArgument::Center => Theme::Center,
-            ThemeArgument::Dusk => Theme::Dusk,
-            ThemeArgument::Wire => Theme::Wire,
-        }
-    }
+#[derive(Debug, Subcommand)]
+enum ThemeAction {
+    /// Print a built-in theme's JSON exactly as embedded
+    Show {
+        /// center, paper, dusk, clear, clear-dark or wire
+        name: String,
+    },
+    /// Load a theme and print its contrast and separation rows
+    Check {
+        /// A built-in theme name or a theme file path ending in .json
+        theme: String,
+    },
 }
 
 /// The `--projection` values, one per `Projection` variant (section 12.9).
@@ -133,30 +140,36 @@ impl From<ProjectionArgument> for Projection {
 }
 
 /// The `--theme` and `--projection` overrides of `render` and `check`.
-#[derive(Debug, Clone, Copy, Default)]
+#[derive(Debug, Clone, Default)]
 struct Overrides {
-    theme: Option<ThemeArgument>,
+    theme: Option<String>,
     projection: Option<ProjectionArgument>,
 }
 
-/// Parses and vets the input, then applies the overrides to the page. The JSON value that
-/// the measured JSON carries stays the input as written.
-fn load_overridden_document(path: &Path, overrides: Overrides) -> Result<LoadedDocument, Failure> {
-    let mut loaded = load_document_at(path)?;
-    if let Some(theme) = overrides.theme {
-        loaded.page.theme = Theme::from(theme);
-    }
+/// Parses and vets the input with the `--theme` reference, resolved against the current
+/// directory, in place of the page's, then applies the projection override to the page. The
+/// JSON value that the measured JSON carries stays the input as written.
+fn load_overridden_document(path: &Path, overrides: &Overrides) -> Result<LoadedDocument, Failure> {
+    let theme_flag = overrides.theme.as_deref().map(|reference| ThemeChoice {
+        reference,
+        directory: Path::new("."),
+    });
+    let mut loaded = load_document_at(path, theme_flag)?;
     if let Some(projection) = overrides.projection {
         loaded.page.projection = Projection::from(projection);
     }
     Ok(loaded)
 }
 
-/// Reads and loads the document at `path`, resolving a grammar path against its directory.
-fn load_document_at(path: &Path) -> Result<LoadedDocument, Failure> {
+/// Reads and loads the document at `path`, resolving a grammar or theme path the page names
+/// against its directory.
+fn load_document_at(
+    path: &Path,
+    theme_flag: Option<ThemeChoice<'_>>,
+) -> Result<LoadedDocument, Failure> {
     let json_text = read_input(path)?;
     let directory = path.parent().unwrap_or(Path::new("."));
-    load_document_from(&json_text, directory)
+    load_document_from(&json_text, directory, theme_flag)
 }
 
 pub fn run(arguments: Vec<OsString>, stdout: &mut dyn Write, stderr: &mut dyn Write) -> ExitCode {
@@ -195,7 +208,7 @@ fn run_command(
             &json,
             &out_dir,
             scale,
-            Overrides { theme, projection },
+            &Overrides { theme, projection },
             stdout,
             stderr,
         ),
@@ -203,12 +216,16 @@ fn run_command(
             json,
             theme,
             projection,
-        } => check(&json, Overrides { theme, projection }, stdout, stderr),
+        } => check(&json, &Overrides { theme, projection }, stdout, stderr),
         Command::Schema => schema(stdout, stderr),
         Command::Prime { topic, name } => prime(topic.as_deref(), name.as_deref(), stdout, stderr),
         Command::Gallery { out_dir, examples } => {
             gallery::gallery(&out_dir, &examples, stdout, stderr)
         }
+        Command::Theme { action } => match action {
+            ThemeAction::Show { name } => theme_command::show(&name, stdout, stderr),
+            ThemeAction::Check { theme } => theme_command::check(&theme, stdout, stderr),
+        },
     }
 }
 
@@ -229,7 +246,7 @@ fn report_usage(
 }
 
 fn vet(path: &Path, stdout: &mut dyn Write, stderr: &mut dyn Write) -> io::Result<ExitCode> {
-    let loaded = match load_document_at(path) {
+    let loaded = match load_document_at(path, None) {
         Ok(loaded) => loaded,
         Err(failure) => return report_failure("vet", &failure, stdout, stderr),
     };
@@ -250,7 +267,7 @@ fn render(
     path: &Path,
     out_dir: &Path,
     scale: u8,
-    overrides: Overrides,
+    overrides: &Overrides,
     stdout: &mut dyn Write,
     stderr: &mut dyn Write,
 ) -> io::Result<ExitCode> {
@@ -270,7 +287,7 @@ fn render_to_disk(
     path: &Path,
     out_dir: &Path,
     scale: u8,
-    overrides: Overrides,
+    overrides: &Overrides,
 ) -> Result<OutputPaths, Failure> {
     let scale = DeviceScale::new(scale)?;
     let names = output_names(path)?;
@@ -281,7 +298,7 @@ fn render_to_disk(
 
 fn check(
     path: &Path,
-    overrides: Overrides,
+    overrides: &Overrides,
     stdout: &mut dyn Write,
     stderr: &mut dyn Write,
 ) -> io::Result<ExitCode> {
@@ -296,7 +313,7 @@ fn check(
     Ok(reports_exit_code(&reports))
 }
 
-fn check_in_memory(path: &Path, overrides: Overrides) -> Result<[CheckReport; 10], Failure> {
+fn check_in_memory(path: &Path, overrides: &Overrides) -> Result<[CheckReport; 10], Failure> {
     let loaded = load_overridden_document(path, overrides)?;
     let rendered = render_page(&loaded, DeviceScale::DEFAULT)?;
     Ok(all_checks(
@@ -402,7 +419,7 @@ fn prime_grammar(
 
 /// A defect of the document (exit 1) is reported on stdout in the section 7 formats. A
 /// failure to run (exit 2) goes to stderr with its error chain, and stdout stays empty.
-fn report_failure(
+pub(crate) fn report_failure(
     command: &str,
     failure: &Failure,
     stdout: &mut dyn Write,
@@ -445,6 +462,13 @@ fn write_document_defect(
             writeln!(stdout, "error {error}")?;
             for violation in grammar_violations(error) {
                 writeln!(stdout, "{}", grammar_violation_line(violation))?;
+            }
+            writeln!(stdout, "stencil {command}: checks not run")
+        }
+        Failure::Theme(error) => {
+            writeln!(stdout, "error {error}")?;
+            for violation in theme_violations(error) {
+                writeln!(stdout, "{}", theme_violation_line(violation))?;
             }
             writeln!(stdout, "stencil {command}: checks not run")
         }

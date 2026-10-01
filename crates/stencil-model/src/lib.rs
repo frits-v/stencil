@@ -6,6 +6,7 @@ pub mod document;
 pub mod grammar;
 pub mod pointer;
 pub mod text;
+pub mod theme;
 
 mod vet;
 mod walk;
@@ -16,7 +17,11 @@ pub use grammar::{
     parse_grammar, validate_grammar,
 };
 pub use pointer::NodePointer;
-pub use vet::{VetRule, Violation, is_grammar_reference, validate_page};
+pub use theme::{
+    Theme, ThemeError, ThemeRule, ThemeViolation, apply_overrides, drawn_legend_label, parse_theme,
+    theme_quality, theme_schema, validate_theme,
+};
+pub use vet::{VetRule, Violation, is_grammar_reference, is_theme_reference, validate_page};
 pub use walk::{NodeEntry, NodeRef, TextField, body_nodes, text_fields};
 
 #[derive(Debug, thiserror::Error)]
@@ -56,6 +61,11 @@ pub fn vet_page(page: Page, grammar: &Grammar) -> Result<Page, ModelError> {
 /// The grammar reference a page names, `gcp` when it names none.
 pub fn grammar_reference(page: &Page) -> &str {
     page.grammar.as_deref().unwrap_or(GRAMMAR_DEFAULT)
+}
+
+/// The theme reference a page names, `center` when it names none.
+pub fn theme_reference(page: &Page) -> &str {
+    page.theme.as_deref().unwrap_or(THEME_DEFAULT)
 }
 
 /// serde_json's Display appends " at line L column C"; the location is carried in its own

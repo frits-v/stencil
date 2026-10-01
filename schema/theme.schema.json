@@ -1,0 +1,978 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Theme",
+  "type": "object",
+  "properties": {
+    "ask": {
+      "$ref": "#/$defs/Swatch"
+    },
+    "badge": {
+      "$ref": "#/$defs/BadgeRole"
+    },
+    "callout": {
+      "$ref": "#/$defs/CalloutRole"
+    },
+    "card": {
+      "$ref": "#/$defs/CardRole"
+    },
+    "containers": {
+      "$ref": "#/$defs/ContainerRole"
+    },
+    "dash": {
+      "$ref": "#/$defs/DashRole"
+    },
+    "deny": {
+      "$ref": "#/$defs/DenyRole"
+    },
+    "fact": {
+      "$ref": "#/$defs/Swatch"
+    },
+    "foot": {
+      "$ref": "#/$defs/Color"
+    },
+    "frame": {
+      "$ref": "#/$defs/FrameRole"
+    },
+    "gray": {
+      "$ref": "#/$defs/GrayRole"
+    },
+    "icon_chip": {
+      "description": "The flat chip under every icon; absent draws none.",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Color"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "ink": {
+      "$ref": "#/$defs/Inks"
+    },
+    "iso": {
+      "$ref": "#/$defs/IsoRole"
+    },
+    "kicker": {
+      "$ref": "#/$defs/Color"
+    },
+    "lanes": {
+      "$ref": "#/$defs/LanesRole"
+    },
+    "legend": {
+      "$ref": "#/$defs/LegendRole"
+    },
+    "name": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]{0,31}$"
+    },
+    "page": {
+      "$ref": "#/$defs/Color"
+    },
+    "placeholder": {
+      "$ref": "#/$defs/PlaceholderRole"
+    },
+    "solid": {
+      "$ref": "#/$defs/SolidRole"
+    },
+    "tag": {
+      "$ref": "#/$defs/TagRole"
+    },
+    "tint_cue": {
+      "$ref": "#/$defs/TintCue"
+    },
+    "tints": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Tint"
+      },
+      "maxItems": 8,
+      "minItems": 8
+    },
+    "tones": {
+      "$ref": "#/$defs/Tones"
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "name",
+    "tint_cue",
+    "page",
+    "ink",
+    "kicker",
+    "badge",
+    "card",
+    "fact",
+    "ask",
+    "tag",
+    "legend",
+    "foot",
+    "callout",
+    "placeholder",
+    "frame",
+    "tones",
+    "containers",
+    "lanes",
+    "gray",
+    "solid",
+    "dash",
+    "deny",
+    "tints",
+    "iso"
+  ],
+  "$defs": {
+    "Accent": {
+      "type": "object",
+      "properties": {
+        "accent": {
+          "$ref": "#/$defs/Color"
+        },
+        "fill": {
+          "$ref": "#/$defs/Color"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "accent",
+        "fill"
+      ]
+    },
+    "BadgeRole": {
+      "type": "object",
+      "properties": {
+        "border": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ThemeStroke"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "customer": {
+          "$ref": "#/$defs/Swatch"
+        },
+        "internal": {
+          "$ref": "#/$defs/Swatch"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "customer",
+        "internal"
+      ]
+    },
+    "BlockShadow": {
+      "description": "A soft shadow under every opaque block (section 13.11).",
+      "type": "object",
+      "properties": {
+        "blur": {
+          "type": "number",
+          "format": "float",
+          "maximum": 8.0,
+          "minimum": 0.0
+        },
+        "color": {
+          "$ref": "#/$defs/Color"
+        },
+        "dy": {
+          "type": "number",
+          "format": "float",
+          "maximum": 8.0,
+          "minimum": 0.0
+        },
+        "opacity": {
+          "type": "number",
+          "format": "float",
+          "maximum": 1.0,
+          "minimum": 0.0
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "color",
+        "opacity",
+        "blur",
+        "dy"
+      ]
+    },
+    "CalloutRole": {
+      "type": "object",
+      "properties": {
+        "decision": {
+          "$ref": "#/$defs/Accent"
+        },
+        "note": {
+          "$ref": "#/$defs/Accent"
+        },
+        "open": {
+          "$ref": "#/$defs/Accent"
+        },
+        "risk": {
+          "$ref": "#/$defs/Accent"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "note",
+        "risk",
+        "decision",
+        "open"
+      ]
+    },
+    "CardRole": {
+      "type": "object",
+      "properties": {
+        "border": {
+          "$ref": "#/$defs/ThemeStroke"
+        },
+        "fill": {
+          "$ref": "#/$defs/Color"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "fill",
+        "border"
+      ]
+    },
+    "ChipRole": {
+      "type": "object",
+      "properties": {
+        "fill": {
+          "$ref": "#/$defs/Color"
+        },
+        "ring": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Color"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "shadow": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ChipShadow"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "fill"
+      ]
+    },
+    "ChipShadow": {
+      "type": "object",
+      "properties": {
+        "color": {
+          "$ref": "#/$defs/Color"
+        },
+        "dy": {
+          "type": "number",
+          "format": "float",
+          "maximum": 4.0,
+          "minimum": 0.0
+        },
+        "opacity": {
+          "type": "number",
+          "format": "float",
+          "maximum": 1.0,
+          "minimum": 0.0
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "color",
+        "opacity",
+        "dy"
+      ]
+    },
+    "Color": {
+      "description": "An uppercase `#RRGGBB` color.",
+      "type": "string",
+      "pattern": "^#[0-9A-F]{6}$"
+    },
+    "ContainerRole": {
+      "type": "object",
+      "properties": {
+        "borderless_outline": {
+          "description": "A border for containers whose grammar pattern is none; absent draws none.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ThemeStroke"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "draw_width": {
+          "description": "Every container border but a frame's is drawn at this width; absent draws the\ngrammar's width.",
+          "type": [
+            "number",
+            "null"
+          ],
+          "format": "float",
+          "maximum": 4.0,
+          "minimum": 0.5
+        },
+        "frame_draw_width": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "format": "float",
+          "maximum": 4.0,
+          "minimum": 0.5
+        }
+      },
+      "additionalProperties": false
+    },
+    "DashRole": {
+      "type": "object",
+      "properties": {
+        "dot": {
+          "$ref": "#/$defs/DotStyle"
+        },
+        "pattern": {
+          "$ref": "#/$defs/LinePattern"
+        },
+        "width": {
+          "type": "number",
+          "format": "float",
+          "maximum": 4.0,
+          "minimum": 0.5
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "width",
+        "pattern",
+        "dot"
+      ]
+    },
+    "DenyRole": {
+      "type": "object",
+      "properties": {
+        "color": {
+          "$ref": "#/$defs/Color"
+        },
+        "dot": {
+          "$ref": "#/$defs/DotStyle"
+        },
+        "pattern": {
+          "$ref": "#/$defs/LinePattern"
+        },
+        "tag_border": {
+          "$ref": "#/$defs/Color"
+        },
+        "tag_ink": {
+          "$ref": "#/$defs/Color"
+        },
+        "width": {
+          "type": "number",
+          "format": "float",
+          "maximum": 4.0,
+          "minimum": 0.5
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "color",
+        "width",
+        "pattern",
+        "dot",
+        "tag_border",
+        "tag_ink"
+      ]
+    },
+    "DotStyle": {
+      "oneOf": [
+        {
+          "description": "A disc in the wire color.",
+          "type": "string",
+          "const": "filled"
+        },
+        {
+          "description": "A ring in the wire color around the page color.",
+          "type": "string",
+          "const": "hollow"
+        },
+        {
+          "description": "No end dot.",
+          "type": "string",
+          "const": "none"
+        }
+      ]
+    },
+    "FaceSteps": {
+      "description": "HSL lightness steps of the isometric faces, in percentage points.",
+      "type": "object",
+      "properties": {
+        "left": {
+          "type": "integer",
+          "format": "int8",
+          "maximum": 40,
+          "minimum": -40
+        },
+        "right": {
+          "type": "integer",
+          "format": "int8",
+          "maximum": 40,
+          "minimum": -40
+        },
+        "top": {
+          "type": "integer",
+          "format": "int8",
+          "maximum": 40,
+          "minimum": -40
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "top",
+        "left",
+        "right"
+      ]
+    },
+    "FrameRole": {
+      "description": "The frame role: the outermost container, the gcp frame.",
+      "type": "object",
+      "properties": {
+        "bar_fill": {
+          "$ref": "#/$defs/Color"
+        },
+        "bar_ink": {
+          "$ref": "#/$defs/Color"
+        },
+        "bar_rule": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ThemeStroke"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "body_fill": {
+          "$ref": "#/$defs/Color"
+        },
+        "border": {
+          "$ref": "#/$defs/Color"
+        },
+        "frame_fill": {
+          "$ref": "#/$defs/Color"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "border",
+        "frame_fill",
+        "bar_fill",
+        "bar_ink",
+        "body_fill"
+      ]
+    },
+    "FrameSides": {
+      "type": "object",
+      "properties": {
+        "left": {
+          "$ref": "#/$defs/Color"
+        },
+        "right": {
+          "$ref": "#/$defs/Color"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "left",
+        "right"
+      ]
+    },
+    "GrayRole": {
+      "type": "object",
+      "properties": {
+        "color": {
+          "$ref": "#/$defs/Color"
+        },
+        "dot": {
+          "$ref": "#/$defs/DotStyle"
+        },
+        "pattern": {
+          "$ref": "#/$defs/LinePattern"
+        },
+        "width": {
+          "type": "number",
+          "format": "float",
+          "maximum": 4.0,
+          "minimum": 0.5
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "color",
+        "width",
+        "pattern",
+        "dot"
+      ]
+    },
+    "Inks": {
+      "type": "object",
+      "properties": {
+        "primary": {
+          "description": "Title, item title, block body, list bullets.",
+          "$ref": "#/$defs/Color"
+        },
+        "secondary": {
+          "description": "Lede, item subtitle.",
+          "$ref": "#/$defs/Color"
+        },
+        "zone_label": {
+          "description": "An untinted container's label, a Frame block's label.",
+          "$ref": "#/$defs/Color"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "primary",
+        "secondary",
+        "zone_label"
+      ]
+    },
+    "IsoRole": {
+      "type": "object",
+      "properties": {
+        "block_outline": {
+          "description": "The outline of a block whose flat drawing has no border; absent draws none.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ThemeStroke"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "chip": {
+          "$ref": "#/$defs/ChipRole"
+        },
+        "edge_width": {
+          "type": "number",
+          "format": "float",
+          "maximum": 4.0,
+          "minimum": 0.5
+        },
+        "faces": {
+          "$ref": "#/$defs/FaceSteps"
+        },
+        "frame_outline": {
+          "type": "number",
+          "format": "float",
+          "maximum": 4.0,
+          "minimum": 0.5
+        },
+        "frame_sides": {
+          "description": "The frame slab's side faces; absent shades the frame body fill like any slab.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/FrameSides"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "plates": {
+          "type": "boolean"
+        },
+        "ring": {
+          "description": "A ring (a container with no drawn fill); absent draws its flat border.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ThemeStroke"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "shadow": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BlockShadow"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "slab_thickness": {
+          "type": "number",
+          "format": "float",
+          "maximum": 16.0,
+          "minimum": 2.0
+        },
+        "solid_edges": {
+          "$ref": "#/$defs/SolidEdges"
+        },
+        "tabs": {
+          "$ref": "#/$defs/TabRole"
+        },
+        "widths": {
+          "$ref": "#/$defs/IsoWidths"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "faces",
+        "slab_thickness",
+        "frame_outline",
+        "solid_edges",
+        "edge_width",
+        "plates",
+        "tabs",
+        "chip",
+        "widths"
+      ]
+    },
+    "IsoWidths": {
+      "type": "object",
+      "properties": {
+        "gray": {
+          "type": "number",
+          "format": "float",
+          "maximum": 4.0,
+          "minimum": 0.5
+        },
+        "primary": {
+          "description": "Solid slot 1.",
+          "type": "number",
+          "format": "float",
+          "maximum": 4.0,
+          "minimum": 0.5
+        },
+        "secondary": {
+          "description": "Solid slots 2 to 8, dash, deny.",
+          "type": "number",
+          "format": "float",
+          "maximum": 4.0,
+          "minimum": 0.5
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "primary",
+        "secondary",
+        "gray"
+      ]
+    },
+    "LanesRole": {
+      "type": "object",
+      "properties": {
+        "lifeline": {
+          "$ref": "#/$defs/ThemeStroke"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "lifeline"
+      ]
+    },
+    "LegendRole": {
+      "type": "object",
+      "properties": {
+        "label_ink": {
+          "$ref": "#/$defs/Color"
+        },
+        "text_ink": {
+          "description": "Legend text and the Note kind legend.",
+          "$ref": "#/$defs/Color"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "label_ink",
+        "text_ink"
+      ]
+    },
+    "LinePattern": {
+      "type": "string",
+      "enum": [
+        "solid",
+        "dashed",
+        "dotted"
+      ]
+    },
+    "PlaceholderRole": {
+      "description": "The Frame block of section 11.3, a wireframe placeholder.",
+      "type": "object",
+      "properties": {
+        "border": {
+          "$ref": "#/$defs/Color"
+        },
+        "diagonal": {
+          "$ref": "#/$defs/Color"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "border",
+        "diagonal"
+      ]
+    },
+    "SolidEdges": {
+      "oneOf": [
+        {
+          "description": "A solid container border is not drawn on the slab; the shaded sides carry the edge.",
+          "type": "string",
+          "const": "none"
+        },
+        {
+          "description": "A solid border is drawn at `edge_width` on the top face and the sides.",
+          "type": "string",
+          "const": "outline"
+        }
+      ]
+    },
+    "SolidRole": {
+      "description": "Solid and dash lines take their color from the tint slot's wire.",
+      "type": "object",
+      "properties": {
+        "dots": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/DotStyle"
+          },
+          "maxItems": 8,
+          "minItems": 8
+        },
+        "width": {
+          "type": "number",
+          "format": "float",
+          "maximum": 4.0,
+          "minimum": 0.5
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "width",
+        "dots"
+      ]
+    },
+    "Swatch": {
+      "type": "object",
+      "properties": {
+        "fill": {
+          "$ref": "#/$defs/Color"
+        },
+        "ink": {
+          "$ref": "#/$defs/Color"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "fill",
+        "ink"
+      ]
+    },
+    "TabRole": {
+      "type": "object",
+      "properties": {
+        "frame": {
+          "$ref": "#/$defs/Swatch"
+        },
+        "nested_width": {
+          "type": "number",
+          "format": "float",
+          "maximum": 4.0,
+          "minimum": 0.5
+        },
+        "top": {
+          "$ref": "#/$defs/Swatch"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "frame",
+        "top",
+        "nested_width"
+      ]
+    },
+    "TagRole": {
+      "type": "object",
+      "properties": {
+        "border": {
+          "$ref": "#/$defs/ThemeStroke"
+        },
+        "fill": {
+          "$ref": "#/$defs/Color"
+        },
+        "ink": {
+          "$ref": "#/$defs/Color"
+        },
+        "sub_ink": {
+          "$ref": "#/$defs/Color"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "fill",
+        "border",
+        "ink",
+        "sub_ink"
+      ]
+    },
+    "ThemeStroke": {
+      "type": "object",
+      "properties": {
+        "color": {
+          "$ref": "#/$defs/Color"
+        },
+        "pattern": {
+          "$ref": "#/$defs/LinePattern"
+        },
+        "width": {
+          "type": "number",
+          "format": "float",
+          "maximum": 4.0,
+          "minimum": 0.5
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "color",
+        "width",
+        "pattern"
+      ]
+    },
+    "Tint": {
+      "type": "object",
+      "properties": {
+        "border": {
+          "$ref": "#/$defs/Color"
+        },
+        "fill": {
+          "$ref": "#/$defs/Color"
+        },
+        "ink": {
+          "$ref": "#/$defs/Color"
+        },
+        "name": {
+          "type": "string",
+          "pattern": "^[a-z]{1,12}$"
+        },
+        "wire": {
+          "$ref": "#/$defs/Color"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "fill",
+        "border",
+        "ink",
+        "wire"
+      ]
+    },
+    "TintCue": {
+      "oneOf": [
+        {
+          "description": "Tints are told apart by color; legend labels name the color.",
+          "type": "string",
+          "const": "color"
+        },
+        {
+          "description": "Tints are told apart by end dots and pattern; legend labels name the line.",
+          "type": "string",
+          "const": "line"
+        }
+      ]
+    },
+    "ToneRole": {
+      "type": "object",
+      "properties": {
+        "border": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Color"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "fill": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Color"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "label_ink": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Color"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "Tones": {
+      "type": "object",
+      "properties": {
+        "accent": {
+          "$ref": "#/$defs/ToneRole"
+        },
+        "cool": {
+          "$ref": "#/$defs/ToneRole"
+        },
+        "emphasis": {
+          "$ref": "#/$defs/ToneRole"
+        },
+        "highlight": {
+          "$ref": "#/$defs/ToneRole"
+        },
+        "neutral": {
+          "$ref": "#/$defs/ToneRole"
+        },
+        "soft": {
+          "$ref": "#/$defs/ToneRole"
+        },
+        "strong": {
+          "description": "Never filled (rule 3): a container of this tone is a ring under iso.",
+          "$ref": "#/$defs/ToneRole"
+        },
+        "warm": {
+          "$ref": "#/$defs/ToneRole"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "neutral",
+        "warm",
+        "cool",
+        "soft",
+        "strong",
+        "highlight",
+        "emphasis",
+        "accent"
+      ]
+    }
+  }
+}

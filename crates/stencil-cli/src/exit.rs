@@ -5,7 +5,7 @@ use clap::error::ErrorKind;
 use stencil_layout::LayoutError;
 use stencil_model::checks::{CheckOutcome, CheckReport};
 use stencil_model::text::MeasureError;
-use stencil_model::{GrammarError, ModelError};
+use stencil_model::{GrammarError, ModelError, ThemeError};
 use stencil_render::RenderError;
 use stencil_text::FontError;
 
@@ -23,11 +23,14 @@ pub fn failure_exit_code(failure: &Failure) -> ExitCode {
     match failure {
         Failure::Model(error) => model_exit_code(error),
         Failure::Grammar(error) => grammar_exit_code(error),
+        Failure::Theme(error) => theme_exit_code(error),
+        Failure::ThemeLabels { source, .. } => measure_exit_code(source),
         Failure::Fonts(error) => font_exit_code(error),
         Failure::Layout(error) => layout_exit_code(error),
         Failure::Render(error) => render_exit_code(error),
         Failure::ReadInput { .. }
         | Failure::ReadGrammar { .. }
+        | Failure::ReadTheme { .. }
         | Failure::InputStem { .. }
         | Failure::OutputIsInput { .. }
         | Failure::DocumentValue(_)
@@ -44,6 +47,13 @@ pub fn failure_exit_code(failure: &Failure) -> ExitCode {
 pub fn grammar_exit_code(error: &GrammarError) -> ExitCode {
     match error {
         GrammarError::Json { .. } | GrammarError::Invalid { .. } => ExitCode::Defects,
+    }
+}
+
+/// A theme file is authored input like the document (section 13.4 rule 5).
+pub fn theme_exit_code(error: &ThemeError) -> ExitCode {
+    match error {
+        ThemeError::Json { .. } | ThemeError::Invalid { .. } => ExitCode::Defects,
     }
 }
 

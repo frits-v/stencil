@@ -9,19 +9,14 @@
 
 mod common;
 
+use common::THEMES;
 use resvg::usvg::roxmltree;
 use serde_json::{Value, json};
 use stencil_layout::{BoxRect, PartName};
-use stencil_model::Theme;
+use stencil_model::Projection;
 use stencil_model::pointer::NodePointer;
 use stencil_render::measured_json;
 use stencil_render::palette::Palette;
-
-const THEMES: [(Theme, &str); 3] = [
-    (Theme::Center, "center"),
-    (Theme::Dusk, "dusk"),
-    (Theme::Wire, "wire"),
-];
 
 /// Body: a numbered Text, a bulleted Text, a plain Text, a risk and a decision Callout, and
 /// a Frame.
@@ -70,8 +65,9 @@ fn texts<'a>(group: roxmltree::Node<'a, '_>) -> Vec<&'a str> {
 
 #[test]
 fn text_blocks_draw_box_heading_lines_and_markers() {
-    for (theme, name) in THEMES {
-        let palette = Palette::new(theme);
+    for name in THEMES {
+        let theme = common::theme(name);
+        let palette = Palette::new(&theme, Projection::Flat);
         let rendered = common::render_document_with_fixed_metrics(block_document(name));
         let document = common::parse_xml(&rendered.svg.svg);
 
@@ -129,27 +125,10 @@ fn text_blocks_draw_box_heading_lines_and_markers() {
 
 #[test]
 fn callouts_draw_the_kind_tint_and_accent_bar() {
-    let expected = [
-        (
-            Theme::Center,
-            "center",
-            ["#FCE8E6", "#E6F4EA"],
-            ["#C5221F", "#188038"],
-        ),
-        (
-            Theme::Dusk,
-            "dusk",
-            ["#3A1A1A", "#143024"],
-            ["#C5221F", "#188038"],
-        ),
-        (
-            Theme::Wire,
-            "wire",
-            ["#FFFFFF", "#FFFFFF"],
-            ["#222222", "#222222"],
-        ),
-    ];
-    for (theme, name, fills, accents) in expected {
+    for name in THEMES {
+        let theme = common::theme(name);
+        let fills = [&theme.callout.risk.fill, &theme.callout.decision.fill];
+        let accents = [&theme.callout.risk.accent, &theme.callout.decision.accent];
         let rendered = common::render_document_with_fixed_metrics(block_document(name));
         let document = common::parse_xml(&rendered.svg.svg);
         for (offset, (fill, accent)) in fills.iter().zip(accents).enumerate() {
@@ -158,21 +137,44 @@ fn callouts_draw_the_kind_tint_and_accent_bar() {
             let callout_box = common::children_named(callout, "rect")[0];
             assert_eq!(
                 callout_box.attribute("fill"),
-                Some(*fill),
+                Some(fill.as_str()),
                 "{name} {pointer}"
             );
             assert_eq!(
                 callout_box.attribute("stroke"),
-                Some(Palette::new(theme).card().border.unwrap().color),
+                Some(theme.card.border.color.as_str()),
                 "{name} {pointer}"
             );
             let bar = common::children_named(callout, "path")[0];
-            assert_eq!(bar.attribute("fill"), Some(accent), "{name} {pointer}");
+            assert_eq!(
+                bar.attribute("fill"),
+                Some(accent.as_str()),
+                "{name} {pointer}"
+            );
         }
         let titled = common::group(&document, &block_pointer(3));
         assert_eq!(texts(titled), ["Risk title", "risk text"], "{name}");
         let untitled = common::group(&document, &block_pointer(4));
         assert_eq!(texts(untitled), ["decision text"], "{name}");
+    }
+}
+
+#[test]
+fn center_and_wire_callouts_keep_the_section_11_3_colors() {
+    let center = common::theme("center");
+    assert_eq!(center.callout.risk.fill.as_str(), "#FCE8E6");
+    assert_eq!(center.callout.decision.fill.as_str(), "#E6F4EA");
+    assert_eq!(center.callout.risk.accent.as_str(), "#C5221F");
+    assert_eq!(center.callout.decision.accent.as_str(), "#188038");
+    let wire = common::theme("wire");
+    for accent in [
+        &wire.callout.note,
+        &wire.callout.risk,
+        &wire.callout.decision,
+        &wire.callout.open,
+    ] {
+        assert_eq!(accent.fill.as_str(), "#FFFFFF");
+        assert_eq!(accent.accent.as_str(), "#222222");
     }
 }
 
@@ -251,8 +253,9 @@ fn the_callout_accent_bar_is_four_px_wide_inside_the_border() {
 
 #[test]
 fn a_frame_draws_two_diagonals_under_a_dashed_border_and_a_label_chip() {
-    for (theme, name) in THEMES {
-        let palette = Palette::new(theme);
+    for name in THEMES {
+        let theme = common::theme(name);
+        let palette = Palette::new(&theme, Projection::Flat);
         let rendered = common::render_document_with_fixed_metrics(block_document(name));
         let document = common::parse_xml(&rendered.svg.svg);
         let pointer = block_pointer(5);

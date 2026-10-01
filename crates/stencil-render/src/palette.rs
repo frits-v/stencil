@@ -1,125 +1,61 @@
-//! Every color the SVG writer paints, keyed by theme (section 11.1). The constants and
-//! free functions below `Palette` are the `center` tables of sections 2.4 to 2.9 and 5.2,
-//! keyed by a container's role, tone and tint and by a line and its tint (section 13.1),
-//! never by a grammar's kind names.
-//! Center text colors are defined once in `stencil_layout::styles`, which resolves them
-//! into each `TextRun`, and are re-exported here so the palette is complete in one place.
-//! Drawing code reads colors only through a `Palette`.
+//! Every paint the SVG writer draws, read from the resolved `Theme` (section 13.4 rule 11).
+//! Containers paint by role, tone and tint, lines by line and tint, never by a grammar's
+//! kind names. No color is named here: every method returns a value borrowed from the
+//! theme, or derived from one by `shade`.
 
 use stencil_layout::ContainerLook;
-use stencil_layout::styles::{badge_fill, text_color};
-use stencil_model::grammar::{BorderPattern, Role, Tone};
+use stencil_model::grammar::{BorderPattern, Role};
 use stencil_model::text::TextStyleName;
-use stencil_model::{CalloutKind, Canvas, Line, Projection, Theme, line_key, line_tint};
-
-pub use stencil_layout::styles::{
-    BADGE_FILL_CUSTOMER, BADGE_FILL_INTERNAL, BADGE_TEXT_CUSTOMER, BADGE_TEXT_INTERNAL, TEXT_AMBER,
-    TEXT_BLUE, TEXT_DARK, TEXT_DENY, TEXT_MUTED, TEXT_WHITE,
+use stencil_model::theme::{SolidEdges, ThemeStroke, Tint, solid_dot};
+use stencil_model::{
+    CalloutKind, Canvas, Line, Projection, Theme, drawn_legend_label, legend_label, line_key,
+    line_tint,
 };
 
-pub const CANVAS_FILL: &str = "#FFFFFF";
+pub use stencil_model::theme::{DotStyle, LinePattern as LineStyle};
 
-pub const GCP_BORDER: &str = "#1A73E8";
-pub const GCP_FRAME_FILL: &str = "#FFFFFF";
-pub const GCP_BAR_FILL: &str = "#1A73E8";
-pub const GCP_BODY_FILL: &str = "#FAFBFC";
-pub const VPC_BORDER: &str = "#5F6368";
-pub const REGION_BORDER: &str = "#BDC1C6";
-pub const SUBNET_BORDER: &str = "#9AA0A6";
-pub const ONPREM_BORDER: &str = "#D7CCC8";
-pub const PROJECT_BORDER: &str = "#FFE082";
-pub const OPTIONAL_BORDER: &str = "#4284F3";
-pub const PERIMETER_BORDER: &str = "#E37400";
-pub const TINT_A_FILL: &str = "#D2E3FC";
-pub const TINT_B_FILL: &str = "#FCE4EC";
-pub const SUBNET_FILL: &str = "#EDE7F6";
-pub const PROJECT_FILL: &str = "#FFF8E1";
-pub const OPTIONAL_FILL: &str = "#F8FBFF";
-pub const K8S_FILL: &str = "#FCE4EC";
-pub const PERIMETER_FILL: &str = "#FFFBF5";
-/// Fill of an untinted Box of the warm tone: an onprem without tint (section 13.5).
-pub const WARM_FILL: &str = "#EFEBE9";
-/// Fill of an untinted Box of the neutral tone: gcp's apis and plain's group.
-pub const NEUTRAL_FILL: &str = "#EDF3F0";
-/// Tint slot fills 1 to 8; slots 1 and 2 are the blue and pink of section 2.4.
-pub const TINT_FILLS: [&str; 8] = [
-    TINT_A_FILL,
-    TINT_B_FILL,
-    "#E1FCFD",
-    "#FAF9CA",
-    "#EFEBFF",
-    "#E5F7E3",
-    "#FCDBCD",
-    "#BFDDE8",
-];
-
-pub const CARD_FILL: &str = "#FFFFFF";
-pub const CARD_BORDER: &str = "#DADCE0";
-pub const FACT_FILL: &str = "#F1F3F4";
-pub const ASK_FILL: &str = "#FEF7E0";
-
-pub const TAG_FILL: &str = "#FFFFFF";
-pub const TAG_BORDER: &str = "#DADCE0";
-pub const TAG_BORDER_DENY: &str = "#F4C7C3";
-
-pub const WIRE_GRAY: &str = "#5F6368";
-pub const WIRE_BLUE: &str = "#1A73E8";
-pub const WIRE_PINK: &str = "#C2185B";
-pub const WIRE_DENY: &str = "#C5221F";
-/// Tint slot wires 1 to 8; slots 1 and 2 are the blue and pink of section 5.2.
-pub const TINT_WIRES: [&str; 8] = [
-    WIRE_BLUE, WIRE_PINK, "#007D78", "#A36E14", "#593894", "#497938", "#9D3E1B", "#005276",
-];
-
-pub const CALLOUT_NOTE_ACCENT: &str = "#1A73E8";
-pub const CALLOUT_NOTE_FILL: &str = "#E8F0FE";
-pub const CALLOUT_RISK_ACCENT: &str = "#C5221F";
-pub const CALLOUT_RISK_FILL: &str = "#FCE8E6";
-pub const CALLOUT_DECISION_ACCENT: &str = "#188038";
-pub const CALLOUT_DECISION_FILL: &str = "#E6F4EA";
-pub const CALLOUT_OPEN_ACCENT: &str = "#B06000";
-pub const CALLOUT_OPEN_FILL: &str = "#FEF7E0";
-pub const FRAME_BORDER: &str = "#9AA0A6";
-
-pub const CARD_BORDER_PX: f32 = 1.5;
 /// Border of the section 11.3 blocks, which layout reserves.
 pub const BLOCK_BORDER_PX: f32 = 1.25;
-/// The Frame's corner-to-corner diagonals.
+/// The Frame block's corner-to-corner diagonals.
 pub const FRAME_DIAGONAL_PX: f32 = 1.0;
-pub const TAG_BORDER_PX: f32 = 1.5;
-pub const WIRE_WIDTH_PX: f32 = 2.0;
+/// Stroke width of a hollow end dot's ring.
+pub const HOLLOW_DOT_RING_PX: f32 = 1.5;
+/// The ring around an icon chip under iso.
+pub const ISO_ICON_CHIP_RING_PX: f32 = 1.0;
 
 /// `stroke-dasharray` of every dashed border and dashed wire (section 5.2).
 pub const DASH_ARRAY: &str = "6 5";
-/// `stroke-dasharray` of the dotted lines of the wire theme (section 11.1).
+/// `stroke-dasharray` of every dotted border and dotted wire.
 pub const DOT_ARRAY: &str = "2 3";
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum LineStyle {
-    Solid,
-    Dashed,
-    Dotted,
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct Stroke<'a> {
+    pub width_px: f32,
+    pub line: LineStyle,
+    pub color: &'a str,
 }
 
-/// A Box's paint: the section 2.4 row of its kind, the frame's border and frame fill
-/// included.
+impl<'a> Stroke<'a> {
+    fn of(stroke: &'a ThemeStroke) -> Self {
+        Stroke {
+            width_px: stroke.width,
+            line: stroke.pattern,
+            color: stroke.color.as_str(),
+        }
+    }
+}
+
+/// A Box's paint: fill, border in the kind's pattern and the kind's radius.
 #[derive(Debug, Clone, Copy, PartialEq)]
-pub struct ZoneStyle {
-    /// None for a borderless kind such as k8s.
-    pub border: Option<Stroke>,
-    /// None for an unfilled kind such as vpc.
-    pub fill: Option<&'static str>,
+pub struct ZoneStyle<'a> {
+    /// None for a borderless container.
+    pub border: Option<Stroke<'a>>,
+    /// None for an unfilled container such as a ring.
+    pub fill: Option<&'a str>,
     pub radius_px: f32,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub struct Stroke {
-    pub width_px: f32,
-    pub line: LineStyle,
-    pub color: &'static str,
-}
-
-/// A line as drawn: its pattern and its effective tint (section 13.1 rule 2), slot 1 for an
+/// A line as drawn: its line and its effective tint (section 13.1 rule 2), slot 1 for an
 /// untinted solid or dash line and None for gray and deny. Ordered as the arrow markers are
 /// written: gray, solid by slot, dash by slot, deny.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -143,156 +79,50 @@ impl LineUse {
     }
 }
 
-/// The entry of an eight-slot table for a tint, slot 1 for none or one outside 1 to 8.
-fn slot_entry(table: &[&'static str; 8], tint: Option<u8>) -> &'static str {
-    let index = match tint {
-        Some(slot @ 1..=8) => usize::from(slot - 1),
-        _ => 0,
-    };
-    table.get(index).copied().unwrap_or(table[0])
-}
-
-/// The stroke of a container border in the kind's pattern and width, None for `none`.
-fn border_stroke(look: ContainerLook, color: &'static str) -> Option<Stroke> {
-    let line = match look.pattern {
-        BorderPattern::Solid => LineStyle::Solid,
-        BorderPattern::Dashed => LineStyle::Dashed,
-        BorderPattern::Dotted => LineStyle::Dotted,
-        BorderPattern::None => return None,
-    };
-    Some(Stroke {
-        width_px: look.border_width,
-        line,
-        color,
-    })
-}
-
-/// The tint fill of a Box: only a group is filled with its tint (section 13.2).
-fn group_tint(look: ContainerLook, tint: Option<u8>) -> Option<u8> {
-    if look.role == Role::Group { tint } else { None }
-}
-
-/// Border color and fill of a Box in center, by role, tone and tint (section 2.4 through
-/// the tones of section 13.5).
-fn center_box_colors(
-    look: ContainerLook,
-    tint: Option<u8>,
-) -> (&'static str, Option<&'static str>) {
-    if look.role == Role::Frame {
-        return (GCP_BORDER, Some(GCP_FRAME_FILL));
-    }
-    let tinted = group_tint(look, tint).map(|slot| slot_entry(&TINT_FILLS, Some(slot)));
-    match look.tone {
-        Some(Tone::Strong) => (VPC_BORDER, None),
-        Some(Tone::Neutral) => (REGION_BORDER, Some(tinted.unwrap_or(NEUTRAL_FILL))),
-        Some(Tone::Warm) => (ONPREM_BORDER, Some(tinted.unwrap_or(WARM_FILL))),
-        Some(Tone::Cool) => (SUBNET_BORDER, Some(tinted.unwrap_or(SUBNET_FILL))),
-        Some(Tone::Highlight) => (PROJECT_BORDER, Some(tinted.unwrap_or(PROJECT_FILL))),
-        Some(Tone::Emphasis) => (OPTIONAL_BORDER, Some(tinted.unwrap_or(OPTIONAL_FILL))),
-        Some(Tone::Soft) => (REGION_BORDER, Some(tinted.unwrap_or(K8S_FILL))),
-        Some(Tone::Accent) => (PERIMETER_BORDER, Some(tinted.unwrap_or(PERIMETER_FILL))),
-        None => (REGION_BORDER, tinted),
-    }
-}
-
-/// The center paint of a Box whose container kind looks like `look`, with effective tint
-/// `tint`: the colors by role, tone and tint, the border in the kind's pattern and width,
-/// and the kind's radius.
-pub fn zone_style(look: ContainerLook, tint: Option<u8>) -> ZoneStyle {
-    let (border_color, fill) = center_box_colors(look, tint);
-    ZoneStyle {
-        border: border_stroke(look, border_color),
-        fill,
-        radius_px: look.radius,
-    }
-}
-
-/// Wire, dot, spine and legend swatch color and line style (section 5.2). A dash line takes
-/// its slot's wire, as center's dash took the blue wire (section 13.1 rule 3).
-pub fn wire_style(line_use: LineUse) -> (&'static str, LineStyle) {
-    match line_use.line {
-        Line::Gray => (WIRE_GRAY, LineStyle::Solid),
-        Line::Solid => (slot_entry(&TINT_WIRES, line_use.tint), LineStyle::Solid),
-        Line::Dash => (slot_entry(&TINT_WIRES, line_use.tint), LineStyle::Dashed),
-        Line::Deny => (WIRE_DENY, LineStyle::Dashed),
-    }
-}
-
-/// Border of a Pipe tag or Tee hub (sections 2.7 and 2.8).
-pub fn tag_border(line: Line) -> &'static str {
-    match line {
-        Line::Deny => TAG_BORDER_DENY,
-        Line::Gray | Line::Solid | Line::Dash => TAG_BORDER,
-    }
-}
-
 /// Fill and optional border of a box: a card, a tag, a badge.
 #[derive(Debug, Clone, Copy, PartialEq)]
-pub struct BoxPaint {
-    pub fill: &'static str,
-    pub border: Option<Stroke>,
-}
-
-/// How the end dots of a wire are painted.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum DotStyle {
-    /// A disc in the wire color.
-    Filled,
-    /// A ring in the wire color around the page background, the wire theme's pink.
-    Hollow,
-}
-
-/// Accent bar color and fill of a Callout kind (section 11.3).
-pub fn callout_colors(kind: CalloutKind) -> (&'static str, &'static str) {
-    match kind {
-        CalloutKind::Note => (CALLOUT_NOTE_ACCENT, CALLOUT_NOTE_FILL),
-        CalloutKind::Risk => (CALLOUT_RISK_ACCENT, CALLOUT_RISK_FILL),
-        CalloutKind::Decision => (CALLOUT_DECISION_ACCENT, CALLOUT_DECISION_FILL),
-        CalloutKind::Open => (CALLOUT_OPEN_ACCENT, CALLOUT_OPEN_FILL),
-    }
+pub struct BoxPaint<'a> {
+    pub fill: &'a str,
+    pub border: Option<Stroke<'a>>,
 }
 
 /// A Callout box and its accent bar.
 #[derive(Debug, Clone, Copy, PartialEq)]
-pub struct CalloutPaint {
-    pub accent: &'static str,
-    pub fill: &'static str,
-    pub border: Stroke,
+pub struct CalloutPaint<'a> {
+    pub accent: &'a str,
+    pub fill: &'a str,
+    pub border: Stroke<'a>,
 }
 
-/// Paint of a wire, a Tee spine and a legend swatch of one kind, and of that kind's end dots
-/// and arrowheads, which take the wire color.
+/// Paint of a wire, a Tee spine and a legend swatch of one line, and of that line's end
+/// dots and arrowheads, which take the wire color.
 #[derive(Debug, Clone, Copy, PartialEq)]
-pub struct WireStyle {
-    pub stroke: Stroke,
+pub struct WireStyle<'a> {
+    pub stroke: Stroke<'a>,
     pub dot: DotStyle,
 }
 
-/// Stroke width of a hollow end dot's ring.
-pub const HOLLOW_DOT_RING_PX: f32 = 1.5;
+/// The soft shadow under an iso icon chip.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct ChipShadowPaint<'a> {
+    pub color: &'a str,
+    pub opacity: f32,
+    pub dy: f32,
+}
 
-/// The colors of one theme. Built once per render from `Page.theme` and `Page.projection`.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct Palette {
-    theme: Theme,
+/// The paint of one theme under one projection. Built once per render.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct Palette<'a> {
+    theme: &'a Theme,
     projection: Projection,
 }
 
-impl Palette {
-    /// The flat palette of a theme.
-    pub fn new(theme: Theme) -> Self {
-        Palette {
-            theme,
-            projection: Projection::Flat,
-        }
-    }
-
-    /// The palette of a theme under a projection; `Flat` gives `Palette::new`.
-    pub fn for_projection(theme: Theme, projection: Projection) -> Self {
+impl<'a> Palette<'a> {
+    pub fn new(theme: &'a Theme, projection: Projection) -> Self {
         Palette { theme, projection }
     }
 
-    pub fn theme(self) -> Theme {
+    pub fn theme(self) -> &'a Theme {
         self.theme
     }
 
@@ -300,132 +130,149 @@ impl Palette {
         self.projection
     }
 
-    /// The serialized theme name, used in marker ids.
-    pub fn theme_name(self) -> &'static str {
-        match self.theme {
-            Theme::Center => "center",
-            Theme::Dusk => "dusk",
-            Theme::Wire => "wire",
-        }
+    /// The theme name, used in marker ids.
+    pub fn theme_name(self) -> &'a str {
+        &self.theme.name
     }
 
-    pub fn page_background(self) -> &'static str {
-        match self.theme {
-            Theme::Center => CANVAS_FILL,
-            Theme::Dusk => dusk::PAGE_BACKGROUND,
-            Theme::Wire => wire::WHITE,
+    pub fn page_background(self) -> &'a str {
+        self.theme.page.as_str()
+    }
+
+    /// The tint a Box is painted with: only a group takes its tint (section 13.2).
+    fn box_tint(self, look: ContainerLook, tint: Option<u8>) -> Option<&'a Tint> {
+        if look.role == Role::Group {
+            tint.map(|slot| self.theme.tint(slot))
+        } else {
+            None
         }
     }
 
     /// The paint of a Box whose container kind looks like `look`, with effective tint
-    /// `tint`.
-    pub fn zone_style(self, look: ContainerLook, tint: Option<u8>) -> ZoneStyle {
-        match self.theme {
-            Theme::Center => zone_style(look, tint),
-            Theme::Dusk => dusk::zone_style(look, tint),
-            Theme::Wire => wire::zone_style(look, tint),
-        }
-    }
-
-    /// The gcp frame's bar fill.
-    pub fn gcp_bar_fill(self) -> &'static str {
-        match self.theme {
-            Theme::Center => GCP_BAR_FILL,
-            Theme::Dusk => dusk::GCP_BAR_FILL,
-            Theme::Wire => wire::WHITE,
-        }
-    }
-
-    /// A rule along the bottom edge of the gcp bar, drawn inside the bar box.
-    pub fn gcp_bar_rule(self) -> Option<Stroke> {
-        match self.theme {
-            Theme::Center | Theme::Dusk => None,
-            Theme::Wire => Some(Stroke {
-                width_px: wire::GCP_BAR_RULE_PX,
-                line: LineStyle::Solid,
-                color: wire::INK,
-            }),
-        }
-    }
-
-    pub fn gcp_body_fill(self) -> &'static str {
-        match self.theme {
-            Theme::Center => GCP_BODY_FILL,
-            Theme::Dusk => dusk::GCP_BODY_FILL,
-            Theme::Wire => wire::WHITE,
-        }
-    }
-
-    pub fn card(self) -> BoxPaint {
-        let (fill, color, width_px) = self.card_colors();
-        BoxPaint {
-            fill,
-            border: Some(Stroke {
+    /// `tint` (section 13.4): the slot fill when tinted, else the tone's fill; the tone's
+    /// border, or the slot's when the tone has none, in the kind's pattern; a frame paints
+    /// from the frame role.
+    pub fn zone_style(self, look: ContainerLook, tint: Option<u8>) -> ZoneStyle<'a> {
+        let containers = &self.theme.containers;
+        let (fill, border_color, width_px) = if look.role == Role::Frame {
+            (
+                Some(self.theme.frame.frame_fill.as_str()),
+                Some(self.theme.frame.border.as_str()),
+                containers.frame_draw_width.unwrap_or(look.border_width),
+            )
+        } else {
+            let tinted = self.box_tint(look, tint);
+            let tone = look.tone.map(|tone| self.theme.tones.get(tone));
+            let fill = tinted.map(|slot| slot.fill.as_str()).or_else(|| {
+                tone.and_then(|tone| tone.fill.as_ref())
+                    .map(|fill| fill.as_str())
+            });
+            let border = tone
+                .and_then(|tone| tone.border.as_ref())
+                .map(|border| border.as_str())
+                .or_else(|| tinted.map(|slot| slot.border.as_str()));
+            (
+                fill,
+                border,
+                containers.draw_width.unwrap_or(look.border_width),
+            )
+        };
+        let line = match look.pattern {
+            BorderPattern::Solid => Some(LineStyle::Solid),
+            BorderPattern::Dashed => Some(LineStyle::Dashed),
+            BorderPattern::Dotted => Some(LineStyle::Dotted),
+            BorderPattern::None => None,
+        };
+        let border = match line {
+            Some(line) => border_color.map(|color| Stroke {
                 width_px,
-                line: LineStyle::Solid,
+                line,
                 color,
             }),
+            None => containers.borderless_outline.as_ref().map(Stroke::of),
+        };
+        ZoneStyle {
+            border,
+            fill,
+            radius_px: look.radius,
         }
     }
 
-    /// Fill of a Fact node and of a Pcard's fact box.
-    pub fn fact_fill(self) -> &'static str {
-        match self.theme {
-            Theme::Center => FACT_FILL,
-            Theme::Dusk => dusk::NOTE_BOX_FILL,
-            Theme::Wire => wire::WHITE,
+    /// The ink of a Box label: the frame's bar ink, the slot ink when tinted, else the
+    /// tone's label ink, else the zone label ink.
+    pub fn container_label_ink(self, look: ContainerLook, tint: Option<u8>) -> &'a str {
+        if look.role == Role::Frame {
+            return self.theme.frame.bar_ink.as_str();
+        }
+        if let Some(slot) = self.box_tint(look, tint) {
+            return slot.ink.as_str();
+        }
+        look.tone
+            .and_then(|tone| self.theme.tones.get(tone).label_ink.as_ref())
+            .unwrap_or(&self.theme.ink.zone_label)
+            .as_str()
+    }
+
+    pub fn frame_bar_fill(self) -> &'a str {
+        self.theme.frame.bar_fill.as_str()
+    }
+
+    /// A rule along the bottom edge of the frame bar, drawn inside the bar box.
+    pub fn frame_bar_rule(self) -> Option<Stroke<'a>> {
+        self.theme.frame.bar_rule.as_ref().map(Stroke::of)
+    }
+
+    pub fn frame_body_fill(self) -> &'a str {
+        self.theme.frame.body_fill.as_str()
+    }
+
+    pub fn card(self) -> BoxPaint<'a> {
+        BoxPaint {
+            fill: self.theme.card.fill.as_str(),
+            border: Some(Stroke::of(&self.theme.card.border)),
         }
     }
 
-    pub fn ask_fill(self) -> &'static str {
-        match self.theme {
-            Theme::Center => ASK_FILL,
-            Theme::Dusk => dusk::NOTE_BOX_FILL,
-            Theme::Wire => wire::WHITE,
-        }
+    /// Fill of a doc Fact node and of an Item's doc fact box.
+    pub fn fact_fill(self) -> &'a str {
+        self.theme.fact.fill.as_str()
+    }
+
+    pub fn ask_fill(self) -> &'a str {
+        self.theme.ask.fill.as_str()
     }
 
     /// A Pipe tag or Tee hub on this line (sections 2.7 and 2.8).
-    pub fn tag(self, line: Line) -> BoxPaint {
-        let (fill, color, width_px) = match self.theme {
-            Theme::Center => (TAG_FILL, tag_border(line), TAG_BORDER_PX),
-            Theme::Dusk => (dusk::CARD_FILL, dusk::tag_border(line), TAG_BORDER_PX),
-            Theme::Wire => (wire::WHITE, wire::INK, wire::BORDER_PX),
+    pub fn tag(self, line: Line) -> BoxPaint<'a> {
+        let tag = &self.theme.tag;
+        let color = match line {
+            Line::Deny => self.theme.deny.tag_border.as_str(),
+            Line::Gray | Line::Solid | Line::Dash => tag.border.color.as_str(),
         };
         BoxPaint {
-            fill,
+            fill: tag.fill.as_str(),
             border: Some(Stroke {
-                width_px,
-                line: LineStyle::Solid,
                 color,
+                ..Stroke::of(&tag.border)
             }),
         }
     }
 
     /// The canvas badge on the page kicker.
-    pub fn badge(self, canvas: Canvas) -> BoxPaint {
-        match self.theme {
-            Theme::Center => BoxPaint {
-                fill: badge_fill(canvas),
-                border: None,
-            },
-            Theme::Dusk => BoxPaint {
-                fill: dusk::badge_fill(canvas),
-                border: None,
-            },
-            Theme::Wire => BoxPaint {
-                fill: wire::WHITE,
-                border: Some(Stroke {
-                    width_px: wire::BORDER_PX,
-                    line: LineStyle::Solid,
-                    color: wire::INK,
-                }),
-            },
+    pub fn badge(self, canvas: Canvas) -> BoxPaint<'a> {
+        let badge = &self.theme.badge;
+        let swatch = match canvas {
+            Canvas::Customer => &badge.customer,
+            Canvas::Internal => &badge.internal,
+        };
+        BoxPaint {
+            fill: swatch.fill.as_str(),
+            border: badge.border.as_ref().map(Stroke::of),
         }
     }
 
     /// Under iso every wire takes the width of `iso_wire_width` (section 12.6).
-    pub fn wire_style(self, line_use: LineUse) -> WireStyle {
+    pub fn wire_style(self, line_use: LineUse) -> WireStyle<'a> {
         let flat = self.flat_wire_style(line_use);
         match self.projection {
             Projection::Iso => WireStyle {
@@ -439,49 +286,65 @@ impl Palette {
         }
     }
 
-    /// The width of a wire, link or legend swatch under iso (section 12.6): solid slot 1,
-    /// the primary, heaviest, every other solid, dash and deny line two thirds of it, and a
-    /// gray service call a third of it in wire, where one ink leaves weight and pattern to
-    /// tell them apart.
+    /// The width of a wire, link or legend swatch under iso: the primary width for solid
+    /// slot 1, the gray width for gray and the secondary width for every other line.
     pub fn iso_wire_width(self, line_use: LineUse) -> f32 {
-        match (self.theme, line_use.line, line_use.tint) {
-            (_, Line::Solid, Some(1)) => ISO_PRIMARY_WIRE_PX,
-            (Theme::Wire, Line::Gray, _) => ISO_WIRE_THIN_WIRE_PX,
-            (Theme::Center | Theme::Dusk, Line::Gray, _) => ISO_SERVICE_WIRE_PX,
-            (_, Line::Solid | Line::Dash | Line::Deny, _) => ISO_SECONDARY_WIRE_PX,
+        let widths = &self.theme.iso.widths;
+        match (line_use.line, line_use.tint) {
+            (Line::Solid, Some(1)) => widths.primary,
+            (Line::Gray, _) => widths.gray,
+            (Line::Solid | Line::Dash | Line::Deny, _) => widths.secondary,
         }
     }
 
-    fn flat_wire_style(self, line_use: LineUse) -> WireStyle {
-        match self.theme {
-            Theme::Center => {
-                let (color, line) = wire_style(line_use);
-                WireStyle {
-                    stroke: Stroke {
-                        width_px: WIRE_WIDTH_PX,
-                        line,
-                        color,
-                    },
-                    dot: DotStyle::Filled,
-                }
-            }
-            Theme::Dusk => {
-                let (color, line) = dusk::wire_style(line_use);
-                WireStyle {
-                    stroke: Stroke {
-                        width_px: WIRE_WIDTH_PX,
-                        line,
-                        color,
-                    },
-                    dot: DotStyle::Filled,
-                }
-            }
-            Theme::Wire => wire::wire_style(line_use),
+    fn flat_wire_style(self, line_use: LineUse) -> WireStyle<'a> {
+        let theme = self.theme;
+        let slot = line_use.tint.unwrap_or(1);
+        let (color, width_px, line, dot) = match line_use.line {
+            Line::Gray => (
+                theme.gray.color.as_str(),
+                theme.gray.width,
+                theme.gray.pattern,
+                theme.gray.dot,
+            ),
+            Line::Solid => (
+                theme.tint(slot).wire.as_str(),
+                theme.solid.width,
+                LineStyle::Solid,
+                solid_dot(theme, slot),
+            ),
+            Line::Dash => (
+                theme.tint(slot).wire.as_str(),
+                theme.dash.width,
+                theme.dash.pattern,
+                theme.dash.dot,
+            ),
+            Line::Deny => (
+                theme.deny.color.as_str(),
+                theme.deny.width,
+                theme.deny.pattern,
+                theme.deny.dot,
+            ),
+        };
+        WireStyle {
+            stroke: Stroke {
+                width_px,
+                line,
+                color,
+            },
+            dot,
         }
+    }
+
+    /// The legend label drawn for a line when it differs from the canonical label layout
+    /// measured (section 13.4 rule 9); None when they are equal.
+    pub fn legend_relabel(self, line_use: LineUse) -> Option<String> {
+        let drawn = drawn_legend_label(self.theme, line_use.line, line_use.tint);
+        (drawn != legend_label(line_use.line, line_use.tint)).then_some(drawn)
     }
 
     /// A Text block: card fill and card border color at the 1.25 px block border.
-    pub fn block(self) -> BoxPaint {
+    pub fn block(self) -> BoxPaint<'a> {
         let card = self.card();
         BoxPaint {
             fill: card.fill,
@@ -492,90 +355,98 @@ impl Palette {
         }
     }
 
-    /// A Callout of this kind: the Text box border with the kind's tint and accent.
-    pub fn callout(self, kind: CalloutKind) -> CalloutPaint {
-        let (accent, fill) = match self.theme {
-            Theme::Center => callout_colors(kind),
-            Theme::Dusk => dusk::callout_colors(kind),
-            Theme::Wire => (wire::INK, wire::WHITE),
+    /// A Callout of this kind: the Text box border with the kind's accent and fill.
+    pub fn callout(self, kind: CalloutKind) -> CalloutPaint<'a> {
+        let callout = &self.theme.callout;
+        let accent = match kind {
+            CalloutKind::Note => &callout.note,
+            CalloutKind::Risk => &callout.risk,
+            CalloutKind::Decision => &callout.decision,
+            CalloutKind::Open => &callout.open,
         };
-        let (_, border_color, _) = self.card_colors();
         CalloutPaint {
-            accent,
-            fill,
+            accent: accent.accent.as_str(),
+            fill: accent.fill.as_str(),
             border: Stroke {
                 width_px: BLOCK_BORDER_PX,
                 line: LineStyle::Solid,
-                color: border_color,
+                color: self.theme.card.border.color.as_str(),
             },
         }
     }
 
-    /// The dashed border of a Frame.
-    pub fn frame_border(self) -> Stroke {
-        let color = match self.theme {
-            Theme::Center => FRAME_BORDER,
-            Theme::Dusk => dusk::VPC_BORDER,
-            Theme::Wire => wire::INK,
-        };
+    /// The dashed border of a Frame block.
+    pub fn frame_border(self) -> Stroke<'a> {
         Stroke {
             width_px: BLOCK_BORDER_PX,
             line: LineStyle::Dashed,
-            color,
+            color: self.theme.placeholder.border.as_str(),
         }
     }
 
-    /// The two corner-to-corner lines of a Frame, in the secondary ink.
-    pub fn frame_diagonal(self) -> Stroke {
-        let color = match self.theme {
-            Theme::Center => TEXT_MUTED,
-            Theme::Dusk => dusk::TEXT_SECONDARY,
-            Theme::Wire => wire::SECONDARY_INK,
-        };
+    /// The two corner-to-corner lines of a Frame block.
+    pub fn frame_diagonal(self) -> Stroke<'a> {
         Stroke {
             width_px: FRAME_DIAGONAL_PX,
             line: LineStyle::Solid,
-            color,
+            color: self.theme.placeholder.diagonal.as_str(),
         }
     }
 
+    /// A Lanes lifeline (section 13.6).
+    pub fn lifeline(self) -> Stroke<'a> {
+        Stroke::of(&self.theme.lanes.lifeline)
+    }
+
     /// The chip under a Frame label, so the diagonals stop at the words.
-    pub fn frame_label_chip(self) -> &'static str {
+    pub fn frame_label_chip(self) -> &'a str {
         self.page_background()
     }
 
     /// The dot of a bulleted Text line, in the body ink.
-    pub fn list_bullet(self, canvas: Canvas) -> &'static str {
+    pub fn list_bullet(self, canvas: Canvas) -> &'a str {
         self.text_ink(TextStyleName::BlockBody, canvas, None)
     }
 
-    fn card_colors(self) -> (&'static str, &'static str, f32) {
-        match self.theme {
-            Theme::Center => (CARD_FILL, CARD_BORDER, CARD_BORDER_PX),
-            Theme::Dusk => (dusk::CARD_FILL, dusk::CARD_BORDER, CARD_BORDER_PX),
-            Theme::Wire => (wire::WHITE, wire::INK, wire::BORDER_PX),
-        }
-    }
-
-    /// Fill of the rounded square under every icon (section 11.1). The center chip would be
-    /// card fill on card fill, invisible, so center draws none and its output stays the
-    /// pre-theme output.
-    pub fn icon_chip(self) -> Option<&'static str> {
-        match self.theme {
-            Theme::Center => None,
-            Theme::Dusk => Some(dusk::ICON_CHIP),
-            Theme::Wire => Some(wire::WHITE),
-        }
+    /// Fill of the flat rounded square under every icon (section 11.1); None draws none.
+    pub fn icon_chip(self) -> Option<&'a str> {
+        self.theme.icon_chip.as_ref().map(|chip| chip.as_str())
     }
 
     /// Text color of a style. `canvas` decides `badge`; `line` is the line of the Pipe, Tee
-    /// or Link a `tag_label` run belongs to.
-    pub fn text_ink(self, name: TextStyleName, canvas: Canvas, line: Option<Line>) -> &'static str {
-        match self.theme {
-            Theme::Center => text_color(name, canvas, line),
-            Theme::Dusk => dusk::text_ink(name, canvas, line),
-            Theme::Wire => wire::text_ink(name),
-        }
+    /// or Link a `tag_label` run belongs to. A Box label takes `container_label_ink`.
+    pub fn text_ink(self, name: TextStyleName, canvas: Canvas, line: Option<Line>) -> &'a str {
+        let theme = self.theme;
+        let color = match name {
+            TextStyleName::Badge => match canvas {
+                Canvas::Customer => &theme.badge.customer.ink,
+                Canvas::Internal => &theme.badge.internal.ink,
+            },
+            TextStyleName::Kicker => &theme.kicker,
+            TextStyleName::Title | TextStyleName::CardFunction | TextStyleName::BlockBody => {
+                &theme.ink.primary
+            }
+            TextStyleName::LegendLabel => &theme.legend.label_ink,
+            TextStyleName::TagLabel => match line {
+                Some(Line::Deny) => &theme.deny.tag_ink,
+                Some(Line::Gray | Line::Solid | Line::Dash) | None => &theme.tag.ink,
+            },
+            TextStyleName::GcpBar => &theme.frame.bar_ink,
+            TextStyleName::PerimeterLabel => theme
+                .tones
+                .accent
+                .label_ink
+                .as_ref()
+                .unwrap_or(&theme.ink.zone_label),
+            TextStyleName::ZoneLabel => &theme.ink.zone_label,
+            TextStyleName::Fact => &theme.fact.ink,
+            TextStyleName::Ask => &theme.ask.ink,
+            TextStyleName::Lede | TextStyleName::CardProduct => &theme.ink.secondary,
+            TextStyleName::TagSub => &theme.tag.sub_ink,
+            TextStyleName::NoteLegend | TextStyleName::LegendText => &theme.legend.text_ink,
+            TextStyleName::Foot => &theme.foot,
+        };
+        color.as_str()
     }
 }
 
@@ -587,307 +458,166 @@ pub enum Face {
     Right,
 }
 
-impl Palette {
-    /// HSL lightness step of a face in percentage points; None in wire (no shading).
-    pub fn face_lightness_step(self, face: Face) -> Option<i8> {
-        match (self.theme, face) {
-            (Theme::Wire, _) => None,
-            (Theme::Center | Theme::Dusk, Face::Top) => Some(0),
-            (Theme::Center, Face::Left) => Some(-8),
-            (Theme::Center, Face::Right) => Some(-16),
-            (Theme::Dusk, Face::Left) => Some(-4),
-            (Theme::Dusk, Face::Right) => Some(-8),
-        }
-    }
-
-    /// The fill of `face` for a node whose flat fill is `base`: base itself for Top, base
-    /// shaded by the step for Left and Right, and the page background for every face in wire.
-    /// None when `base` is not `#RRGGBB`.
-    pub fn face_fill(self, base: &'static str, face: Face) -> Option<String> {
-        parse_hex_color(base)?;
-        match self.face_lightness_step(face) {
-            Some(step_points) => shade(base, step_points),
-            None => Some(self.page_background().to_string()),
-        }
-    }
-
-    /// The stroke of an isometric face (section 12.6): the node's flat border, and in wire
-    /// the ink border for a node whose flat drawing has none, so a filled block such as a
-    /// Fact still reads as a line drawing instead of a white patch.
-    pub fn face_outline(self, flat_border: Option<Stroke>) -> Option<Stroke> {
-        match self.theme {
-            Theme::Center | Theme::Dusk => flat_border,
-            Theme::Wire => Some(flat_border.unwrap_or(Stroke {
-                width_px: wire::BORDER_PX,
-                line: LineStyle::Solid,
-                color: wire::INK,
-            })),
-        }
-    }
-
-    /// The outline behind upright billboard text that has no chip (section 12.4).
-    pub fn text_halo(self) -> &'static str {
-        self.page_background()
-    }
-
-    /// True when a chipless billboard run is drawn on a plate of its surface (section 12.4,
-    /// rule 4). Dusk draws none: its surfaces are close in value, and a plate that crosses
-    /// from a block top onto the floor shows as a patch.
-    pub fn iso_text_plates(self) -> bool {
-        match self.theme {
-            Theme::Center | Theme::Wire => true,
-            Theme::Dusk => false,
-        }
-    }
-
-    /// The tab of a Box label under iso (section 12.4): filled for a Box with no Box around
-    /// it, brand blue for a frame and neutral for every other role, and in wire the ink; an
-    /// outline in the Box's border color for a nested Box.
-    pub fn iso_zone_tab(self, look: ContainerLook, tint: Option<u8>, nested: bool) -> ZoneTab {
-        if nested {
-            let color = self.zone_style(look, tint).border.map_or(
-                self.text_ink(TextStyleName::CardFunction, Canvas::Customer, None),
-                |stroke| stroke.color,
-            );
-            return ZoneTab::Outline {
-                border: Stroke {
-                    width_px: ISO_NESTED_TAB_BORDER_PX,
-                    line: LineStyle::Solid,
-                    color,
-                },
-                ink: self.text_ink(TextStyleName::CardFunction, Canvas::Customer, None),
-            };
-        }
-        let is_frame = look.role == Role::Frame;
-        let (fill, ink) = match (self.theme, is_frame) {
-            (Theme::Center, true) => (GCP_BAR_FILL, TEXT_WHITE),
-            (Theme::Center, false) => (ISO_NEUTRAL_TAB_FILL, TEXT_WHITE),
-            (Theme::Dusk, true) => (dusk::GCP_BAR_FILL, dusk::GCP_BAR_INK),
-            (Theme::Dusk, false) => (dusk::ISO_NEUTRAL_TAB_FILL, dusk::TEXT_PRIMARY),
-            (Theme::Wire, _) => (wire::INK, wire::WHITE),
-        };
-        ZoneTab::Filled { fill, ink }
-    }
-}
-
-/// A zone tab's paint: a filled box with light text, or an outline on the surface under it
-/// with the primary ink.
+/// A zone tab's paint: a filled box, or an outline on the surface under it.
 #[derive(Debug, Clone, Copy, PartialEq)]
-pub enum ZoneTab {
-    Filled {
-        fill: &'static str,
-        ink: &'static str,
-    },
-    Outline {
-        border: Stroke,
-        ink: &'static str,
-    },
+pub enum ZoneTab<'a> {
+    Filled { fill: &'a str, ink: &'a str },
+    Outline { border: Stroke<'a>, ink: &'a str },
 }
-
-/// Stroke width of a blue wire, link and legend swatch under iso: the primary path.
-pub const ISO_PRIMARY_WIRE_PX: f32 = 3.75;
-/// Stroke width of a dash, pink or deny wire under iso: two thirds of the primary.
-pub const ISO_SECONDARY_WIRE_PX: f32 = 2.5;
-/// Stroke width of a gray wire under iso in center and dusk, where its color sets it apart.
-pub const ISO_SERVICE_WIRE_PX: f32 = 2.0;
-/// Stroke width of a gray wire under iso in wire: a third of the primary.
-pub const ISO_WIRE_THIN_WIRE_PX: f32 = 1.25;
-/// Fill of the tab of a zone other than gcp that no zone encloses, in center.
-pub const ISO_NEUTRAL_TAB_FILL: &str = "#5F6368";
-/// Border of a nested zone's outline tab.
-pub const ISO_NESTED_TAB_BORDER_PX: f32 = 1.25;
-/// Width of every solid slab outline and of the vpc ring under iso in wire.
-pub const ISO_WIRE_SLAB_OUTLINE_PX: f32 = 1.5;
-/// The vpc ring under iso in wire: dotted in light gray, so no zone edge shares the dash
-/// pattern or the ink of a link.
-pub const ISO_WIRE_RING_INK: &str = "#999999";
-/// The gcp slab's top-face outline under iso in center and dusk. The brand blue side faces
-/// carry the frame, so the outline stays thin.
-pub const ISO_GCP_OUTLINE_PX: f32 = 1.5;
-/// The ring around an icon chip under iso in center and wire.
-pub const ISO_ICON_CHIP_RING_PX: f32 = 1.0;
-/// Opacity of the shadow under an icon chip in center.
-pub const ISO_ICON_CHIP_SHADOW_OPACITY: f32 = 0.18;
 
 /// Fills and strokes of the three faces of an isometric solid (section 12.6). A None fill
 /// draws the face unfilled; a None stroke draws it unstroked.
 #[derive(Debug, Clone, PartialEq)]
-pub struct FacePaint {
+pub struct FacePaint<'a> {
     pub top: Option<String>,
     pub left: Option<String>,
     pub right: Option<String>,
-    pub top_stroke: Option<Stroke>,
-    pub side_stroke: Option<Stroke>,
+    pub top_stroke: Option<Stroke<'a>>,
+    pub side_stroke: Option<Stroke<'a>>,
 }
 
-impl Palette {
-    /// The faces of a zone slab that has `level` filled zones under it. Center and dusk
-    /// draw the sides unstroked, so the slab edge is one fill boundary instead of two
-    /// parallel lines; a dashed or dotted border is drawn on the top face only, in every
-    /// theme; the gcp slab carries the brand blue on its side faces. Dusk lifts each top face
-    /// toward its surface ink by level, so every surface is lighter than the one it stands
-    /// on, and rims solid-bordered tops with a lighter edge. None when a color does not
-    /// parse.
-    pub fn slab_faces(
-        self,
-        look: ContainerLook,
-        tint: Option<u8>,
-        level: usize,
-    ) -> Option<FacePaint> {
+impl<'a> Palette<'a> {
+    /// HSL lightness step of a face in percentage points (`iso.faces`).
+    pub fn face_lightness_step(self, face: Face) -> i8 {
+        let faces = &self.theme.iso.faces;
+        match face {
+            Face::Top => faces.top,
+            Face::Left => faces.left,
+            Face::Right => faces.right,
+        }
+    }
+
+    /// The fill of `face` for a node whose flat fill is `base`: base shaded by the face's
+    /// step. None when `base` is not `#RRGGBB`.
+    pub fn face_fill(self, base: &str, face: Face) -> Option<String> {
+        shade(base, self.face_lightness_step(face))
+    }
+
+    /// The stroke of an isometric block face: the node's flat border, or
+    /// `iso.block_outline` for a node whose flat drawing has none.
+    pub fn face_outline(self, flat_border: Option<Stroke<'a>>) -> Option<Stroke<'a>> {
+        flat_border.or_else(|| self.theme.iso.block_outline.as_ref().map(Stroke::of))
+    }
+
+    /// The outline behind upright billboard text that has no chip (section 12.4).
+    pub fn text_halo(self) -> &'a str {
+        self.page_background()
+    }
+
+    /// True when a chipless billboard run is drawn on a plate of its surface (section 12.4,
+    /// rule 4).
+    pub fn iso_text_plates(self) -> bool {
+        self.theme.iso.plates
+    }
+
+    /// The tab of a Box label under iso (section 12.4): the frame tab for a frame, the
+    /// top-level tab for a Box with no Box around it, and an outline in the Box's border
+    /// color for a nested Box.
+    pub fn iso_zone_tab(self, look: ContainerLook, tint: Option<u8>, nested: bool) -> ZoneTab<'a> {
+        let tabs = &self.theme.iso.tabs;
+        let ink = self.theme.ink.primary.as_str();
+        if nested {
+            let color = self
+                .zone_style(look, tint)
+                .border
+                .map_or(ink, |stroke| stroke.color);
+            return ZoneTab::Outline {
+                border: Stroke {
+                    width_px: tabs.nested_width,
+                    line: LineStyle::Solid,
+                    color,
+                },
+                ink,
+            };
+        }
+        let swatch = if look.role == Role::Frame {
+            &tabs.frame
+        } else {
+            &tabs.top
+        };
+        ZoneTab::Filled {
+            fill: swatch.fill.as_str(),
+            ink: swatch.ink.as_str(),
+        }
+    }
+
+    /// The faces of a Box slab (section 12.6 over the theme's roles): the top in the flat
+    /// fill, the sides shaded by the face steps or, for a frame, `iso.frame_sides`. A solid
+    /// border is dropped under `solid_edges: none`, where the shaded sides carry the edge,
+    /// and drawn at `edge_width` on the top and the sides under `outline`. A dashed or
+    /// dotted border is drawn on the top face only; a ring takes `iso.ring` when set. A
+    /// frame's top outline is `iso.frame_outline` wide. None when a color does not parse.
+    pub fn slab_faces(self, look: ContainerLook, tint: Option<u8>) -> Option<FacePaint<'a>> {
+        let iso = &self.theme.iso;
         let style = self.zone_style(look, tint);
         let is_frame = look.role == Role::Frame;
         let base = if is_frame {
-            Some(self.gcp_body_fill())
+            Some(self.frame_body_fill())
         } else {
             style.fill
         };
-        let border = style.border;
-        let solid_border = border.filter(|stroke| stroke.line == LineStyle::Solid);
-        match self.theme {
-            Theme::Center => {
-                let (left, right) = self.brand_or_shaded_sides(is_frame, base)?;
-                // A solid border is dropped: the shaded sides carry the slab edge, and an
-                // outline in the border hue shows as a seam between top and side.
-                let top_stroke = match (is_frame, solid_border) {
-                    (true, _) | (_, None) => self.slab_top_stroke(is_frame, border),
-                    (false, Some(_)) => None,
-                };
-                Some(FacePaint {
-                    top: base.map(str::to_string),
-                    left,
-                    right,
-                    top_stroke,
-                    side_stroke: None,
-                })
-            }
-            Theme::Dusk => {
-                let lift = dusk::ISO_SLAB_LIFT + dusk::ISO_LEVEL_LIFT * level as f32;
-                let top = match base {
-                    Some(color) => Some(mix(color, dusk::ISO_SURFACE_TARGET, lift)?),
-                    None => None,
-                };
-                let (left, right) = match (is_frame, base) {
-                    (true, _) => self.brand_or_shaded_sides(is_frame, base)?,
-                    (_, Some(color)) => (
-                        Some(mix(
-                            color,
-                            dusk::ISO_SURFACE_TARGET,
-                            lift - dusk::ISO_SIDE_DROP,
-                        )?),
-                        Some(mix(
-                            color,
-                            dusk::ISO_SURFACE_TARGET,
-                            lift - dusk::ISO_RIGHT_SIDE_DROP,
-                        )?),
-                    ),
-                    (_, None) => (None, None),
-                };
-                let top_stroke = match (is_frame, solid_border) {
-                    (true, _) => self.slab_top_stroke(is_frame, border),
-                    (_, Some(_)) => Some(Stroke {
-                        width_px: dusk::ISO_RIM_PX,
-                        line: LineStyle::Solid,
-                        color: dusk::ISO_RIM,
-                    }),
-                    (_, None) => border,
-                };
-                Some(FacePaint {
-                    top,
-                    left,
-                    right,
-                    top_stroke,
-                    side_stroke: None,
-                })
-            }
-            Theme::Wire => {
-                let fill = base.map(|_| wire::WHITE.to_string());
-                let outline = |stroke: Stroke| match stroke.line {
-                    LineStyle::Solid => Stroke {
-                        width_px: ISO_WIRE_SLAB_OUTLINE_PX,
-                        ..stroke
-                    },
-                    LineStyle::Dashed | LineStyle::Dotted if look.is_ring(tint) => Stroke {
-                        width_px: ISO_WIRE_SLAB_OUTLINE_PX,
-                        line: LineStyle::Dotted,
-                        color: ISO_WIRE_RING_INK,
-                    },
-                    LineStyle::Dashed | LineStyle::Dotted => stroke,
-                };
-                Some(FacePaint {
-                    top: fill.clone(),
-                    left: fill.clone(),
-                    right: fill,
-                    top_stroke: border.map(outline),
-                    side_stroke: solid_border.map(outline),
-                })
-            }
-        }
-    }
-
-    /// The frame's side faces in brand blue, one step darker on the right, or the Box fill
-    /// shaded by the face steps.
-    fn brand_or_shaded_sides(
-        self,
-        is_frame: bool,
-        base: Option<&'static str>,
-    ) -> Option<(Option<String>, Option<String>)> {
-        if is_frame {
-            return Some((
-                Some(GCP_BORDER.to_string()),
-                Some(shade(GCP_BORDER, GCP_SIDE_STEP)?),
-            ));
-        }
-        match base {
-            Some(color) => Some((
+        let (left, right) = match (is_frame, &iso.frame_sides, base) {
+            (true, Some(sides), _) => (
+                Some(sides.left.as_str().to_string()),
+                Some(sides.right.as_str().to_string()),
+            ),
+            (_, _, Some(color)) => (
                 Some(self.face_fill(color, Face::Left)?),
                 Some(self.face_fill(color, Face::Right)?),
-            )),
-            None => Some((None, None)),
-        }
-    }
-
-    /// The top-face outline of a slab: the flat border, thinned to ISO_GCP_OUTLINE_PX for
-    /// a frame in center and dusk.
-    fn slab_top_stroke(self, is_frame: bool, border: Option<Stroke>) -> Option<Stroke> {
-        match (is_frame, self.theme) {
-            (true, Theme::Center | Theme::Dusk) => border.map(|stroke| Stroke {
-                width_px: ISO_GCP_OUTLINE_PX,
+            ),
+            (_, _, None) => (None, None),
+        };
+        let top = match base {
+            Some(color) => Some(self.face_fill(color, Face::Top)?),
+            None => None,
+        };
+        let border = style.border;
+        let solid_border = border.filter(|stroke| stroke.line == LineStyle::Solid);
+        let edge = |stroke: Stroke<'a>| Stroke {
+            width_px: iso.edge_width,
+            ..stroke
+        };
+        let top_stroke = if is_frame {
+            border.map(|stroke| Stroke {
+                width_px: iso.frame_outline,
                 ..stroke
-            }),
-            _ => border,
-        }
+            })
+        } else if look.is_ring(tint)
+            && let Some(ring) = &iso.ring
+        {
+            Some(Stroke::of(ring))
+        } else {
+            match (solid_border, iso.solid_edges) {
+                (Some(_), SolidEdges::None) => None,
+                (Some(stroke), SolidEdges::Outline) => Some(edge(stroke)),
+                (None, _) => border,
+            }
+        };
+        let side_stroke = match iso.solid_edges {
+            SolidEdges::None => None,
+            SolidEdges::Outline => solid_border.map(edge),
+        };
+        Some(FacePaint {
+            top,
+            left,
+            right,
+            top_stroke,
+            side_stroke,
+        })
     }
 
     /// The faces of a leaf block whose flat fill is `fill` and flat border `border`: every
-    /// face stroked with the border (in wire the ink border when there is none), the top
-    /// face the flat fill and the sides shaded. Dusk lifts all three faces so the block
-    /// stands out from the floor it sits on. None when a color does not parse.
+    /// face stroked with `face_outline`, each face the flat fill shaded by its step. None
+    /// when a color does not parse.
     pub fn block_faces(
         self,
-        fill: Option<&'static str>,
-        border: Option<Stroke>,
-    ) -> Option<FacePaint> {
+        fill: Option<&'a str>,
+        border: Option<Stroke<'a>>,
+    ) -> Option<FacePaint<'a>> {
         let stroke = self.face_outline(border);
-        let (top, left, right) = match (self.theme, fill) {
-            (_, None) => (None, None, None),
-            (Theme::Dusk, Some(color)) => (
-                Some(mix(
-                    color,
-                    dusk::ISO_SURFACE_TARGET,
-                    dusk::ISO_BLOCK_TOP_LIFT,
-                )?),
-                Some(mix(
-                    color,
-                    dusk::ISO_SURFACE_TARGET,
-                    dusk::ISO_BLOCK_LEFT_LIFT,
-                )?),
-                Some(mix(
-                    color,
-                    dusk::ISO_SURFACE_TARGET,
-                    dusk::ISO_BLOCK_RIGHT_LIFT,
-                )?),
-            ),
-            (Theme::Center | Theme::Wire, Some(color)) => (
+        let (top, left, right) = match fill {
+            None => (None, None, None),
+            Some(color) => (
                 Some(self.face_fill(color, Face::Top)?),
                 Some(self.face_fill(color, Face::Left)?),
                 Some(self.face_fill(color, Face::Right)?),
@@ -902,62 +632,33 @@ impl Palette {
         })
     }
 
-    /// The rounded square under every icon under iso: the dusk white tile in every theme,
-    /// ringed in the card border in center and in ink in wire, so the chip reads on a
-    /// white block top.
-    pub fn iso_icon_chip(self) -> BoxPaint {
-        let ring = |color| {
-            Some(Stroke {
+    /// The rounded square under every icon under iso, ringed when `iso.chip.ring` is set.
+    pub fn iso_icon_chip(self) -> BoxPaint<'a> {
+        let chip = &self.theme.iso.chip;
+        BoxPaint {
+            fill: chip.fill.as_str(),
+            border: chip.ring.as_ref().map(|ring| Stroke {
                 width_px: ISO_ICON_CHIP_RING_PX,
                 line: LineStyle::Solid,
-                color,
-            })
-        };
-        match self.theme {
-            Theme::Center => BoxPaint {
-                fill: CARD_FILL,
-                border: ring(CARD_BORDER),
-            },
-            Theme::Dusk => BoxPaint {
-                fill: dusk::ICON_CHIP,
-                border: None,
-            },
-            Theme::Wire => BoxPaint {
-                fill: wire::WHITE,
-                border: ring(wire::INK),
-            },
-        }
-    }
-
-    /// The color of the soft shadow under an iso icon chip; center only.
-    pub fn iso_icon_chip_shadow(self) -> Option<&'static str> {
-        match self.theme {
-            Theme::Center => Some(TEXT_DARK),
-            Theme::Dusk | Theme::Wire => None,
-        }
-    }
-
-    /// The legend label of a line under iso when the flat label names a color the theme
-    /// does not draw: wire strokes every line in black, so its labels name the line, a
-    /// solid slot by its end dots.
-    pub fn iso_legend_label(self, line_use: LineUse) -> Option<&'static str> {
-        match self.theme {
-            Theme::Center | Theme::Dusk => None,
-            Theme::Wire => Some(match line_use.line {
-                Line::Gray => "Thin line",
-                Line::Solid => match wire::dot_style(line_use.tint) {
-                    DotStyle::Filled => "Solid line",
-                    DotStyle::Hollow => "Ringed line",
-                },
-                Line::Dash => "Dashed line",
-                Line::Deny => "Dotted line",
+                color: ring.as_str(),
             }),
         }
     }
-}
 
-/// Lightness step of the darker gcp side face.
-const GCP_SIDE_STEP: i8 = -12;
+    /// The soft shadow under an iso icon chip, when the theme sets one.
+    pub fn iso_icon_chip_shadow(self) -> Option<ChipShadowPaint<'a>> {
+        self.theme
+            .iso
+            .chip
+            .shadow
+            .as_ref()
+            .map(|shadow| ChipShadowPaint {
+                color: shadow.color.as_str(),
+                opacity: shadow.opacity,
+                dy: shadow.dy,
+            })
+    }
+}
 
 /// `color` moved `fraction` of the way to `toward` in each sRGB channel, as `#RRGGBB`.
 /// None when either is not `#` followed by six hex digits.
@@ -1062,314 +763,4 @@ fn hsl_to_rgb(hue: f64, saturation: f64, lightness: f64) -> [f64; 3] {
     };
     let lift = lightness - chroma / 2.0;
     [red + lift, green + lift, blue + lift]
-}
-
-/// The dark theme of section 11.1.
-mod dusk {
-    use super::{LineStyle, LineUse, ZoneStyle, border_stroke, group_tint, slot_entry};
-    use stencil_layout::ContainerLook;
-    use stencil_model::grammar::{Role, Tone};
-    use stencil_model::text::TextStyleName;
-    use stencil_model::{CalloutKind, Canvas, Line};
-
-    pub const PAGE_BACKGROUND: &str = "#0B1220";
-    pub const TEXT_PRIMARY: &str = "#E6EDF7";
-    pub const TEXT_SECONDARY: &str = "#9AA7BD";
-    pub const KICKER: &str = "#5B9CFF";
-    pub const BADGE_FILL_CUSTOMER: &str = "#16305C";
-    pub const BADGE_INK_CUSTOMER: &str = "#9CC3FF";
-    pub const BADGE_FILL_INTERNAL: &str = "#2E1A4A";
-    pub const BADGE_INK_INTERNAL: &str = "#D6B4FF";
-    pub const CARD_FILL: &str = "#111A2E";
-    pub const CARD_BORDER: &str = "#2A3550";
-    pub const NOTE_BOX_FILL: &str = "#182238";
-    pub const NOTE_BOX_INK: &str = "#B7C2D6";
-    pub const GCP_BORDER: &str = "#1A73E8";
-    pub const GCP_BAR_FILL: &str = "#1A73E8";
-    pub const GCP_BAR_INK: &str = "#FFFFFF";
-    pub const GCP_BODY_FILL: &str = "#0F172A";
-    pub const VPC_BORDER: &str = "#6B7A99";
-    pub const TINT_A_FILL: &str = "#14213A";
-    pub const TINT_B_FILL: &str = "#2A1626";
-    pub const REGION_A_BORDER: &str = "#2F4A7A";
-    pub const REGION_B_BORDER: &str = "#6A2A47";
-    pub const SUBNET_FILL: &str = "#1D1836";
-    pub const SUBNET_BORDER: &str = "#4A3F7A";
-    pub const ONPREM_BORDER: &str = "#3A3532";
-    pub const PROJECT_FILL: &str = "#1F1B10";
-    pub const PROJECT_BORDER: &str = "#5A4A1A";
-    pub const OPTIONAL_FILL: &str = "#10203A";
-    pub const OPTIONAL_BORDER: &str = "#4284F3";
-    pub const K8S_FILL: &str = "#2A1626";
-    /// Fills of an untinted warm and neutral Box, the widened dusk ladder of section 13.5.
-    pub const WARM_FILL: &str = "#222229";
-    pub const NEUTRAL_FILL: &str = "#1B232E";
-    /// Tint slots 1 to 8: fill, Box border and wire. Slots 3 to 8 lighten center's wires for
-    /// the dark page.
-    pub const TINT_FILLS: [&str; 8] = [
-        TINT_A_FILL,
-        TINT_B_FILL,
-        "#192D38",
-        "#2C2C2D",
-        "#23253C",
-        "#222D31",
-        "#2B262E",
-        "#192938",
-    ];
-    pub const TINT_BORDERS: [&str; 8] = [
-        REGION_A_BORDER,
-        REGION_B_BORDER,
-        "#2E565D",
-        "#5E5240",
-        "#484365",
-        "#44564A",
-        "#5C4442",
-        "#2E4A5C",
-    ];
-    pub const TINT_WIRES: [&str; 8] = [
-        WIRE_BLUE, WIRE_PINK, "#59AAA7", "#C3A166", "#937EB9", "#89A87E", "#BF826B", "#598FA6",
-    ];
-    pub const PERIMETER_FILL: &str = "#17130B";
-    pub const PERIMETER_BORDER: &str = "#E37400";
-    pub const PERIMETER_INK: &str = "#F2A44B";
-    pub const ZONE_LABEL_INK: &str = "#B7C2D6";
-    pub const WIRE_GRAY: &str = "#9AA7BD";
-    pub const WIRE_BLUE: &str = "#5B9CFF";
-    pub const WIRE_PINK: &str = "#FF5C8A";
-    pub const WIRE_DENY: &str = "#FF6B6B";
-    pub const DENY_TAG_INK: &str = "#FF8A8A";
-    pub const DENY_TAG_BORDER: &str = "#5A2A2A";
-    pub const LEGEND_INK: &str = "#9AA7BD";
-    pub const FOOT_INK: &str = "#9AA7BD";
-    pub const ICON_CHIP: &str = "#FFFFFF";
-    pub const CALLOUT_NOTE_FILL: &str = "#16305C";
-    pub const CALLOUT_RISK_FILL: &str = "#3A1A1A";
-    pub const CALLOUT_DECISION_FILL: &str = "#143024";
-    pub const CALLOUT_OPEN_FILL: &str = "#3A2A10";
-    /// Under iso every dusk surface is its flat fill moved toward this blue gray: slabs by
-    /// ISO_SLAB_LIFT plus ISO_LEVEL_LIFT per filled zone beneath, blocks further still, so
-    /// each surface is lighter than the one it stands on.
-    pub const ISO_SURFACE_TARGET: &str = "#7F93B8";
-    pub const ISO_SLAB_LIFT: f32 = 0.20;
-    pub const ISO_LEVEL_LIFT: f32 = 0.08;
-    /// The left and right side faces of a slab are this much less lifted than its top, so
-    /// both stay clear of the page.
-    pub const ISO_SIDE_DROP: f32 = 0.04;
-    pub const ISO_RIGHT_SIDE_DROP: f32 = 0.08;
-    /// A block top stands about 15 L* above the floor it sits on.
-    pub const ISO_BLOCK_TOP_LIFT: f32 = 0.46;
-    pub const ISO_BLOCK_LEFT_LIFT: f32 = 0.32;
-    pub const ISO_BLOCK_RIGHT_LIFT: f32 = 0.20;
-    /// The tab of a zone other than gcp that no zone encloses.
-    pub const ISO_NEUTRAL_TAB_FILL: &str = "#3A4A66";
-    /// The edge of a solid-bordered slab top, lighter than every lifted floor.
-    pub const ISO_RIM: &str = "#4A5B7E";
-    pub const ISO_RIM_PX: f32 = 1.0;
-
-    /// Center's border widths, line styles and radii with the dusk colors. A tinted neutral
-    /// group takes its slot's border, as region-a and region-b did; a tinted warm group
-    /// keeps the warm border, as onprem-a and onprem-b did.
-    pub fn zone_style(look: ContainerLook, tint: Option<u8>) -> ZoneStyle {
-        let (border_color, fill) = if look.role == Role::Frame {
-            (GCP_BORDER, Some(GCP_BODY_FILL))
-        } else {
-            let tinted = group_tint(look, tint);
-            let tint_fill = tinted.map(|slot| slot_entry(&TINT_FILLS, Some(slot)));
-            match look.tone {
-                Some(Tone::Strong) => (VPC_BORDER, None),
-                Some(Tone::Neutral) => (
-                    slot_entry(&TINT_BORDERS, tinted),
-                    Some(tint_fill.unwrap_or(NEUTRAL_FILL)),
-                ),
-                Some(Tone::Warm) => (ONPREM_BORDER, Some(tint_fill.unwrap_or(WARM_FILL))),
-                Some(Tone::Cool) => (SUBNET_BORDER, Some(tint_fill.unwrap_or(SUBNET_FILL))),
-                Some(Tone::Highlight) => (PROJECT_BORDER, Some(tint_fill.unwrap_or(PROJECT_FILL))),
-                Some(Tone::Emphasis) => (OPTIONAL_BORDER, Some(tint_fill.unwrap_or(OPTIONAL_FILL))),
-                Some(Tone::Soft) => (REGION_A_BORDER, Some(tint_fill.unwrap_or(K8S_FILL))),
-                Some(Tone::Accent) => (PERIMETER_BORDER, Some(tint_fill.unwrap_or(PERIMETER_FILL))),
-                None => (REGION_A_BORDER, tint_fill),
-            }
-        };
-        ZoneStyle {
-            border: border_stroke(look, border_color),
-            fill,
-            radius_px: look.radius,
-        }
-    }
-
-    pub fn wire_style(line_use: LineUse) -> (&'static str, LineStyle) {
-        match line_use.line {
-            Line::Gray => (WIRE_GRAY, LineStyle::Solid),
-            Line::Solid => (slot_entry(&TINT_WIRES, line_use.tint), LineStyle::Solid),
-            Line::Dash => (slot_entry(&TINT_WIRES, line_use.tint), LineStyle::Dashed),
-            Line::Deny => (WIRE_DENY, LineStyle::Dashed),
-        }
-    }
-
-    pub fn tag_border(line: Line) -> &'static str {
-        match line {
-            Line::Deny => DENY_TAG_BORDER,
-            Line::Gray | Line::Solid | Line::Dash => CARD_BORDER,
-        }
-    }
-
-    pub fn badge_fill(canvas: Canvas) -> &'static str {
-        match canvas {
-            Canvas::Customer => BADGE_FILL_CUSTOMER,
-            Canvas::Internal => BADGE_FILL_INTERNAL,
-        }
-    }
-
-    /// The center accents on dark tints (section 11.3).
-    pub fn callout_colors(kind: CalloutKind) -> (&'static str, &'static str) {
-        let (accent, _) = super::callout_colors(kind);
-        let fill = match kind {
-            CalloutKind::Note => CALLOUT_NOTE_FILL,
-            CalloutKind::Risk => CALLOUT_RISK_FILL,
-            CalloutKind::Decision => CALLOUT_DECISION_FILL,
-            CalloutKind::Open => CALLOUT_OPEN_FILL,
-        };
-        (accent, fill)
-    }
-
-    pub fn text_ink(name: TextStyleName, canvas: Canvas, line: Option<Line>) -> &'static str {
-        match name {
-            TextStyleName::Badge => match canvas {
-                Canvas::Customer => BADGE_INK_CUSTOMER,
-                Canvas::Internal => BADGE_INK_INTERNAL,
-            },
-            TextStyleName::Kicker => KICKER,
-            TextStyleName::Title
-            | TextStyleName::CardFunction
-            | TextStyleName::LegendLabel
-            | TextStyleName::BlockBody => TEXT_PRIMARY,
-            TextStyleName::TagLabel => match line {
-                Some(Line::Deny) => DENY_TAG_INK,
-                Some(Line::Gray | Line::Solid | Line::Dash) | None => TEXT_PRIMARY,
-            },
-            TextStyleName::GcpBar => GCP_BAR_INK,
-            TextStyleName::PerimeterLabel => PERIMETER_INK,
-            TextStyleName::ZoneLabel => ZONE_LABEL_INK,
-            TextStyleName::Fact | TextStyleName::Ask => NOTE_BOX_INK,
-            TextStyleName::Lede | TextStyleName::CardProduct | TextStyleName::TagSub => {
-                TEXT_SECONDARY
-            }
-            TextStyleName::NoteLegend | TextStyleName::LegendText => LEGEND_INK,
-            TextStyleName::Foot => FOOT_INK,
-        }
-    }
-}
-
-/// The monochrome wireframe theme of section 11.1.
-mod wire {
-    use super::{DotStyle, LineStyle, LineUse, Stroke, WIRE_WIDTH_PX, WireStyle, ZoneStyle};
-    use stencil_layout::ContainerLook;
-    use stencil_model::Line;
-    use stencil_model::grammar::{BorderPattern, Role, Tone};
-    use stencil_model::text::TextStyleName;
-
-    pub const WHITE: &str = "#FFFFFF";
-    pub const INK: &str = "#222222";
-    pub const SECONDARY_INK: &str = "#555555";
-    pub const BORDER_PX: f32 = 1.25;
-    pub const GCP_BORDER_PX: f32 = 2.0;
-    pub const GCP_BAR_RULE_PX: f32 = 2.0;
-    pub const THIN_WIRE_PX: f32 = 1.25;
-
-    /// Center's radii; one ink, white fills where center fills, and the line style of the
-    /// kind's pattern, except that the cool tone is dotted and a borderless kind is outlined.
-    pub fn zone_style(look: ContainerLook, tint: Option<u8>) -> ZoneStyle {
-        let center = super::zone_style(look, tint);
-        let (width_px, line) = match (look.role, look.tone, look.pattern) {
-            (Role::Frame, _, _) => (GCP_BORDER_PX, LineStyle::Solid),
-            (_, Some(Tone::Cool), _) => (BORDER_PX, LineStyle::Dotted),
-            (_, _, BorderPattern::Dashed) => (BORDER_PX, LineStyle::Dashed),
-            (_, _, BorderPattern::Dotted) => (BORDER_PX, LineStyle::Dotted),
-            (_, _, BorderPattern::Solid | BorderPattern::None) => (BORDER_PX, LineStyle::Solid),
-        };
-        ZoneStyle {
-            border: Some(Stroke {
-                width_px,
-                line,
-                color: INK,
-            }),
-            fill: center.fill.map(|_| WHITE),
-            radius_px: center.radius_px,
-        }
-    }
-
-    /// The end dots of a solid slot: filled for slot 1, hollow for slot 2, and so on
-    /// alternating, so slot 1 draws as the old blue and slot 2 as the old pink.
-    pub fn dot_style(tint: Option<u8>) -> DotStyle {
-        match tint {
-            Some(slot) if slot % 2 == 0 => DotStyle::Hollow,
-            _ => DotStyle::Filled,
-        }
-    }
-
-    /// Lines are told apart by line style and end dots alone.
-    pub fn wire_style(line_use: LineUse) -> WireStyle {
-        let (width_px, line, dot) = match line_use.line {
-            Line::Gray => (THIN_WIRE_PX, LineStyle::Solid, DotStyle::Filled),
-            Line::Solid => (WIRE_WIDTH_PX, LineStyle::Solid, dot_style(line_use.tint)),
-            Line::Dash => (WIRE_WIDTH_PX, LineStyle::Dashed, DotStyle::Filled),
-            Line::Deny => (WIRE_WIDTH_PX, LineStyle::Dotted, DotStyle::Filled),
-        };
-        WireStyle {
-            stroke: Stroke {
-                width_px,
-                line,
-                color: INK,
-            },
-            dot,
-        }
-    }
-
-    pub fn text_ink(name: TextStyleName) -> &'static str {
-        match name {
-            TextStyleName::Lede
-            | TextStyleName::ZoneLabel
-            | TextStyleName::CardProduct
-            | TextStyleName::Fact
-            | TextStyleName::TagSub
-            | TextStyleName::NoteLegend
-            | TextStyleName::LegendText
-            | TextStyleName::Foot => SECONDARY_INK,
-            TextStyleName::Badge
-            | TextStyleName::Kicker
-            | TextStyleName::Title
-            | TextStyleName::GcpBar
-            | TextStyleName::PerimeterLabel
-            | TextStyleName::CardFunction
-            | TextStyleName::Ask
-            | TextStyleName::TagLabel
-            | TextStyleName::LegendLabel
-            | TextStyleName::BlockBody => INK,
-        }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn shade_matches_the_section_12_6_vectors() {
-        let vectors = [
-            ("#D2E3FC", ["#BFD7FB", "#ACCBF9", "#85B3F7"]),
-            ("#FFFFFF", ["#F5F5F5", "#EBEBEB", "#D6D6D6"]),
-            ("#FAFBFC", ["#EDF1F4", "#E0E7ED", "#C7D2DD"]),
-            ("#1A73E8", ["#166AD8", "#1461C5", "#104EA0"]),
-            ("#14213A", ["#0F182B", "#0A101C", "#000000"]),
-        ];
-        for (color, expected) in vectors {
-            for (step, shaded) in [-4, -8, -16].into_iter().zip(expected) {
-                assert_eq!(
-                    shade(color, step).as_deref(),
-                    Some(shaded),
-                    "{color} {step}"
-                );
-            }
-        }
-    }
 }

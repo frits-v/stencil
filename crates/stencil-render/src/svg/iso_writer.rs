@@ -1,29 +1,23 @@
 //! The section 12.5 SVG: page-level nodes flat, body nodes as faces and surfaces in
 //! geometry order, links on their planes, then every billboard upright on top.
 
-use stencil_layout::{
-    BoxRect, LinkRoute, NodeGeometry, NodeTag, PageGeometry, Part, PartName, TextRun,
-};
+use stencil_layout::{BoxRect, LinkRoute, NodeGeometry, NodeTag, PageGeometry, Part, PartName};
 use stencil_model::pointer::NodePointer;
-use stencil_model::text::TextMeasurer;
-use stencil_model::{LINKS_MAX, Link, Node, NodeRef, Page, PipeDir, Projection};
-use stencil_text::CosmicTextMeasurer;
+use stencil_model::{LINKS_MAX, Link, Node, NodeRef, Page, PipeDir, Projection, Theme};
 
 use super::DOT_RADIUS_PX;
 use super::{
-    ArrowEnds, DocumentNode, ICON_CHIP_RADIUS_PX, PartContext, SvgWriter, TAG_RADIUS_PX,
+    ArrowEnds, DocumentNode, ICON_CHIP_RADIUS_PX, PartContext, Relabeler, SvgWriter, TAG_RADIUS_PX,
     close_groups_until_parent, escape_xml, frame_diagonal_box, group_open_tag, icon_chip_box,
     link_mismatch, part_mismatch, pipe_text_style_name, stroke_attributes, text_style_name,
 };
 use crate::iso::{
-    Billboard, ISO_DOT_RADIUS_X_PX, ISO_DOT_RADIUS_Y_PX, ISO_SLAB_THICKNESS_PX, IsoPoint,
-    ScreenPoint, Solid, SolidShape, arrowhead_vertices, billboard_member, end_direction,
-    has_zone_ancestor, iso_link_arrowhead_length, member_box, project_point, project_zoomed,
-    start_direction, zoomed_geometry,
+    Billboard, ISO_DOT_RADIUS_X_PX, ISO_DOT_RADIUS_Y_PX, IsoPoint, ScreenPoint, Solid, SolidInputs,
+    SolidShape, arrowhead_vertices, billboard_member, end_direction, has_zone_ancestor,
+    iso_link_arrowhead_length, member_box, project_point, project_zoomed, start_direction,
+    zoomed_geometry,
 };
-use crate::palette::{
-    DotStyle, FacePaint, ISO_ICON_CHIP_SHADOW_OPACITY, LineStyle, LineUse, Palette, Stroke, ZoneTab,
-};
+use crate::palette::{DotStyle, FacePaint, LineStyle, LineUse, Palette, Stroke, ZoneTab};
 use crate::{RenderError, SvgDocument, format_number};
 
 /// Radius of a zone tab (section 12.4).
@@ -34,18 +28,17 @@ const ZONE_TAB_RADIUS_PX: f32 = 4.0;
 const TEXT_PLATE_PADDING_X_PX: f32 = 3.0;
 const TEXT_PLATE_PADDING_Y_PX: f32 = 1.0;
 const TEXT_PLATE_RADIUS_PX: f32 = 3.0;
-/// How far the shadow under an iso icon chip drops.
-const ICON_CHIP_SHADOW_DROP_PX: f32 = 1.5;
-
 pub(super) fn render_iso(
     page: &Page,
+    theme: &Theme,
     geometry: &PageGeometry,
     expected: &[(NodePointer, DocumentNode<'_>)],
 ) -> Result<SvgDocument, RenderError> {
     let (zoomed, zoom) = zoomed_geometry(geometry)?;
-    let scene = project_zoomed(&zoomed, zoom)?;
+    let solid_inputs = SolidInputs::new(&zoomed, theme.iso.slab_thickness);
+    let scene = project_zoomed(&zoomed, zoom, &solid_inputs)?;
     let geometry = &zoomed;
-    let palette = Palette::for_projection(page.theme, Projection::Iso);
+    let palette = Palette::new(theme, Projection::Iso);
     let mut writer = SvgWriter::new(page.canvas, palette);
     let width = format_number(scene.canvas.width);
     let height = format_number(scene.canvas.height);
@@ -73,7 +66,7 @@ pub(super) fn render_iso(
     // The fill of the surface each node stands on or is, so billboard text can be haloed in
     // it. Parents precede children, so a node without a filled top inherits its parent's.
     let mut surfaces: Vec<Option<String>> = vec![None; geometry.nodes.len()];
-    let mut measurer: Option<CosmicTextMeasurer> = None;
+    let mut relabeler = Relabeler::default();
 
     let mut open_groups: Vec<usize> = Vec::new();
     for (index, (node, (_, document_node))) in geometry.nodes.iter().zip(expected).enumerate() {
@@ -96,22 +89,14 @@ pub(super) fn render_iso(
             .and_then(|parent| surfaces.get(parent).cloned().flatten());
         let solid = solids.get(index).copied().flatten();
         let surface = match (node.tag, solid, document_node) {
-            (NodeTag::LegendEntry, _, DocumentNode::LegendEntry(entry)) => {
+            (NodeTag::LegendEntry, _, DocumentNode::LegendEntry(_)) => {
                 let shifted = shifted_node(node, 0.0, scene.footer_shift);
-                let relabeled = match writer
-                    .palette
-                    .iso_legend_label(LineUse::new(entry.line, entry.tint))
-                {
-                    Some(label) => {
-                        let measurer = match measurer.as_mut() {
-                            Some(measurer) => measurer,
-                            None => measurer.insert(CosmicTextMeasurer::new()?),
-                        };
-                        relabel_legend_entry(&shifted, label, measurer)?
-                    }
-                    None => shifted,
-                };
-                writer.write_node(depth + 1, &relabeled, *document_node)?;
+                let relabeled = relabeler.relabeled(writer.palette, &shifted, *document_node)?;
+                writer.write_node(
+                    depth + 1,
+                    relabeled.as_ref().unwrap_or(&shifted),
+                    *document_node,
+                )?;
                 None
             }
             (NodeTag::Legend | NodeTag::LegendEntry | NodeTag::Foot, _, _) => {
@@ -119,13 +104,9 @@ pub(super) fn render_iso(
                 writer.write_node(depth + 1, &shifted, *document_node)?;
                 None
             }
-            (_, Some(solid), _) => writer.write_solid(
-                depth + 1,
-                node,
-                *document_node,
-                solid,
-                (scene.offset, scene.zoom),
-            )?,
+            (_, Some(solid), _) => {
+                writer.write_solid(depth + 1, node, *document_node, solid, scene.offset)?
+            }
             (_, None, _) => {
                 writer.write_node(depth + 1, node, *document_node)?;
                 None
@@ -194,45 +175,6 @@ fn shifted_node(node: &NodeGeometry, delta_x: f32, delta_y: f32) -> NodeGeometry
     }
 }
 
-/// A legend entry whose label run reads `label`, measured in the run's style, with the
-/// description moved by the change in label width so the gap between them keeps its size.
-fn relabel_legend_entry(
-    entry: &NodeGeometry,
-    label: &str,
-    measurer: &mut CosmicTextMeasurer,
-) -> Result<NodeGeometry, RenderError> {
-    let mut relabeled = entry.clone();
-    let mut width_change = 0.0;
-    for part in &mut relabeled.parts {
-        if part.name == PartName::LegendLabel
-            && let Some(run) = &part.text
-        {
-            let metrics =
-                measurer
-                    .measure(label, &run.style, None)
-                    .map_err(|error| RenderError::Svg {
-                        message: format!(
-                            "legend label {label:?} at {} could not be measured: {error}",
-                            entry.pointer
-                        ),
-                    })?;
-            width_change = metrics.width_px - run.metrics.width_px;
-            part.bounds.width += width_change;
-            part.text = Some(TextRun {
-                text: label.to_string(),
-                metrics,
-                ..run.clone()
-            });
-        }
-    }
-    for part in &mut relabeled.parts {
-        if part.name == PartName::LegendText {
-            part.bounds.x += width_change;
-        }
-    }
-    Ok(relabeled)
-}
-
 /// `x,y x,y ...` for a polygon's `points`.
 fn points_attribute(points: &[ScreenPoint]) -> String {
     points
@@ -267,26 +209,24 @@ fn shorten_end(path: &mut Vec<IsoPoint>, length: f32) {
     }
 }
 
-impl SvgWriter {
+impl<'a> SvgWriter<'a> {
     /// The face paint of a slab or block, or None for a node that draws no faces.
     fn face_paint(
         &self,
         node: &NodeGeometry,
         document_node: DocumentNode<'_>,
         solid: &Solid,
-        zoom: f32,
-    ) -> Result<Option<FacePaint>, RenderError> {
+    ) -> Result<Option<FacePaint<'a>>, RenderError> {
         let DocumentNode::Content(NodeRef::Node(content)) = document_node else {
             return Ok(None);
         };
-        let block = |fill: Option<&'static str>, border: Option<Stroke>| {
+        let block = |fill: Option<&'a str>, border: Option<Stroke<'a>>| {
             self.palette.block_faces(fill, border)
         };
         let paint = match content {
             Node::Box(_) => {
-                let level = (solid.base_z / (ISO_SLAB_THICKNESS_PX * zoom)).round() as usize;
                 let look = node.container.ok_or_else(|| surface_mismatch(node))?;
-                self.palette.slab_faces(look, node.tint, level)
+                self.palette.slab_faces(look, node.tint)
             }
             Node::Item(_) => {
                 let card = self.palette.card();
@@ -324,9 +264,8 @@ impl SvgWriter {
         node: &NodeGeometry,
         document_node: DocumentNode<'_>,
         solid: &Solid,
-        placement: (ScreenPoint, f32),
+        offset: ScreenPoint,
     ) -> Result<Option<String>, RenderError> {
-        let (offset, zoom) = placement;
         let context = self.part_context(document_node);
         if solid.shape == SolidShape::Surface {
             let kind = context.line.ok_or_else(|| surface_mismatch(node))?;
@@ -337,7 +276,7 @@ impl SvgWriter {
             }
             return Ok(None);
         }
-        let Some(paint) = self.face_paint(node, document_node, solid, zoom)? else {
+        let Some(paint) = self.face_paint(node, document_node, solid)? else {
             return Ok(None);
         };
         let top_z = solid.base_z + solid.height;
@@ -354,7 +293,7 @@ impl SvgWriter {
         bounds: BoxRect,
         base_z: f32,
         top_z: f32,
-        paint: &FacePaint,
+        paint: &FacePaint<'_>,
         offset: ScreenPoint,
     ) {
         let (left, top, right, bottom) = (bounds.x, bounds.y, bounds.right(), bounds.bottom());
@@ -488,7 +427,7 @@ impl SvgWriter {
         depth: usize,
         start: ScreenPoint,
         end: ScreenPoint,
-        stroke: Stroke,
+        stroke: Stroke<'_>,
     ) {
         self.line(
             depth,
@@ -511,13 +450,14 @@ impl SvgWriter {
             self.line(
                 depth,
                 &format!(
-                    r#"<rect x="{}" y="{}" width="{}" height="{}" rx="{}" fill="{shadow}" fill-opacity="{}"/>"#,
+                    r#"<rect x="{}" y="{}" width="{}" height="{}" rx="{}" fill="{}" fill-opacity="{}"/>"#,
                     format_number(chip.x),
-                    format_number(chip.y + ICON_CHIP_SHADOW_DROP_PX),
+                    format_number(chip.y + shadow.dy),
                     format_number(chip.width),
                     format_number(chip.height),
                     format_number(ICON_CHIP_RADIUS_PX),
-                    format_number(ISO_ICON_CHIP_SHADOW_OPACITY),
+                    shadow.color,
+                    format_number(shadow.opacity),
                 ),
             );
         }
@@ -531,7 +471,7 @@ impl SvgWriter {
         &mut self,
         depth: usize,
         node: &NodeGeometry,
-        context: PartContext,
+        context: PartContext<'a>,
         z: f32,
         offset: ScreenPoint,
     ) -> Result<(), RenderError> {
@@ -624,6 +564,7 @@ impl SvgWriter {
     fn write_ellipse_dot(&mut self, depth: usize, center: ScreenPoint, kind: LineUse) {
         let wire = self.palette.wire_style(kind);
         let (fill, ring) = match wire.dot {
+            DotStyle::None => return,
             DotStyle::Filled => (wire.stroke.color, String::new()),
             DotStyle::Hollow => (
                 self.palette.page_background(),

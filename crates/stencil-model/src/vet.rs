@@ -1,8 +1,8 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use crate::document::{
-    BUILTIN_GRAMMARS, FACTS_MAX, LANES_MAX, Link, Node, Page, PipeDir, Projection, TINT_SLOTS,
-    Text, is_valid_id,
+    BUILTIN_GRAMMARS, BUILTIN_THEMES, FACTS_MAX, LANES_MAX, Link, Node, Page, PipeDir, Projection,
+    TINT_SLOTS, Text, is_valid_id,
 };
 use crate::grammar::{Grammar, IconPack, PAGE_PARENT};
 use crate::pointer::NodePointer;
@@ -56,6 +56,7 @@ pub enum VetRule {
     LinkViaOutside,
     TintOutOfRange,
     GrammarUnknown,
+    ThemeUnknown,
     KindUnknown,
     KindParentNotAllowed,
     IconOutsidePack,
@@ -97,6 +98,7 @@ impl VetRule {
             VetRule::LinkViaOutside => "link-via-outside",
             VetRule::TintOutOfRange => "tint-out-of-range",
             VetRule::GrammarUnknown => "grammar-unknown",
+            VetRule::ThemeUnknown => "theme-unknown",
             VetRule::KindUnknown => "kind-unknown",
             VetRule::KindParentNotAllowed => "kind-parent-not-allowed",
             VetRule::IconOutsidePack => "icon-outside-pack",
@@ -127,6 +129,12 @@ pub fn is_grammar_reference(reference: &str) -> bool {
     BUILTIN_GRAMMARS.contains(&reference) || reference.ends_with(".json")
 }
 
+/// True when `reference` is a built-in theme name or a string ending in `.json`, the
+/// condition of `theme-unknown`.
+pub fn is_theme_reference(reference: &str) -> bool {
+    BUILTIN_THEMES.contains(&reference) || reference.ends_with(".json")
+}
+
 /// All vet violations against `grammar`, the grammar `page.grammar` resolved to, in
 /// document order (section 4.2). Empty means valid.
 pub fn validate_page(page: &Page, grammar: &Grammar) -> Vec<Violation> {
@@ -155,6 +163,16 @@ pub fn validate_page(page: &Page, grammar: &Grammar) -> Vec<Violation> {
             root.child("grammar"),
             VetRule::GrammarUnknown,
             format!("grammar \"{reference}\" is neither a built-in grammar nor a .json path"),
+        );
+    }
+
+    if let Some(reference) = &page.theme
+        && !is_theme_reference(reference)
+    {
+        violations.push(
+            root.child("theme"),
+            VetRule::ThemeUnknown,
+            format!("theme \"{reference}\" is neither a built-in theme nor a .json path"),
         );
     }
 

@@ -38,7 +38,7 @@ The next three figures use the `plain` grammar.
 
 `examples/onprem-network.json`: an on-prem site with two firewall zones, a tinted group and a pipe per VLAN, and a blocked path between the zones.
 
-These PNGs are the center theme at scale 1, regenerated with `mise run gallery-docs`; CI fails when they drift from the examples. The full gallery, every example in all three themes with its SVG, 2x PNG and measured JSON, is the `gallery` artifact of the CI run on main, and `gallery.zip` plus the center PNGs are attached to the release of every `v*` tag.
+These PNGs are the center theme at scale 1, regenerated with `mise run gallery-docs`; CI fails when they drift from the examples. The full gallery, every example in all six themes with its SVG, 2x PNG and measured JSON, is the `gallery` artifact of the CI run on main, and `gallery.zip` plus the center PNGs are attached to the release of every `v*` tag.
 
 ## Commands
 
@@ -74,7 +74,13 @@ stencil check examples/g7.json
 stencil schema > stencil.schema.json
 ```
 
-`stencil gallery <out-dir> [--examples <dir>]` renders every `.json` document in `examples/` (or `--examples`) under every theme into `<out-dir>/<example>/<theme>/`, runs the checks on each render, and writes `index.html`, a static page with one section per theme, and `gallery.json` with the same data. It prints one check summary per render and the number of renders; it exits 1 when any check fails and 2 when the examples directory holds no document.
+`--theme` on `render` and `check` takes a built-in theme (`center`, `paper`, `dusk`, `clear`, `clear-dark`, `wire`) or a theme file ending in `.json`, and wins over the document's `theme`. `stencil theme show <name>` prints a built-in theme's JSON, the starting point for a theme file; `stencil theme check <theme>` prints its contrast and separation rows and exits 1 when one fails.
+
+```bash
+stencil theme check paper
+```
+
+`stencil gallery <out-dir> [--examples <dir>]` renders every `.json` document in `examples/` (or `--examples`) under the six built-in themes into `<out-dir>/<example>/<theme>/`, runs the checks on each render, and writes `index.html`, a static page with one section per theme, and `gallery.json` with the same data. It prints one check summary per render and the number of renders; it exits 1 when any check fails and 2 when the examples directory holds no document.
 
 ```bash
 stencil gallery target/gallery

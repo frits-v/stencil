@@ -1,39 +1,26 @@
 # Themes
 
-A theme sets colors only. Layout, text sizes, icons and the measured JSON are identical under every theme, so pick it last. Set "theme" on the Page (default center), or pass `--theme center|dusk|wire` to render and check; the flag wins over the page.
+A theme sets paint only. Layout, text sizes, icons and the measured JSON are identical under every theme, so pick it last. Set "theme" on the Page (default center) to a built-in name or a theme file path ending in .json, or pass `--theme` to render and check; the flag wins over the page.
 
-| Theme | Use for | Look |
-|---|---|---|
-| center | customer-facing slides and documents on white | Google Cloud Architecture Center stencil: white page, blue gcp bar, tinted Boxes |
-| dusk | dark slides and screens | navy page, light ink, darkened tints; each icon sits on a white 36 px chip so dark icons stay visible |
-| wire | design docs, reviews, print | white page, #222222 ink and borders, no fills; kinds differ by line style only |
+- center: Architecture Center on white; customer slides and documents, the default.
+- paper: warm paper with one saturated blue; print and long documents.
+- dusk: deep navy with a widened surface ladder; dark slides and screens.
+- clear: tints chosen to stay apart under color-vision deficiency, light.
+- clear-dark: the same, dark.
+- wire: one ink, white fills, lines told apart by pattern and end dots; design docs and reviews.
 
-| Role | center | dusk | wire |
-|---|---|---|---|
-| page | #FFFFFF | #0B1220 | #FFFFFF |
-| ink, secondary ink | #202124, #5F6368 | #E6EDF7, #9AA7BD | #222222, #555555 |
-| card fill, border | #FFFFFF, #DADCE0 | #111A2E, #2A3550 | white, #222222 |
-| fact box, ask box | #F1F3F4, #FEF7E0 | #182238 | white |
-| gcp frame and bar | #1A73E8 bar, #FAFBFC body | #1A73E8 bar, #0F172A body | 2 px border, white bar |
-| tint slot 1: region, onprem tint 1 | #D2E3FC | #14213A | none |
-| tint slot 2: region, onprem tint 2; k8s | #FCE4EC | #2A1626 | none |
-| subnet | #EDE7F6, dashed | #1D1836, dashed | dotted |
-| project | #FFF8E1 | #1F1B10 | solid |
-| optional | #F8FBFF, dashed blue | #10203A, dashed blue | dashed |
-| perimeter | #FFFBF5, dashed orange | #17130B, dashed orange | dashed |
-| gray wire | #5F6368 | #9AA7BD | thin solid |
-| solid tint 1 wire | #1A73E8 | #5B9CFF | 2 px solid |
-| solid tint 2 wire | #C2185B | #FF5C8A | 2 px, hollow end dots |
-| dash wire | its slot's wire, dashed | its slot's wire, dashed | dashed |
-| deny wire | #C5221F dashed, red tag | #FF6B6B dashed | dotted |
-| callout note, risk, decision, open | accents #1A73E8, #C5221F, #188038, #B06000 on light tints | same accents on dark tints | #222222 accent, white fill |
+Tint slots. A Box tint or a solid or dash line's tint picks one of eight slots. Center names them, and legend labels in every theme are measured with these names:
 
-Line meanings hold in every theme: gray for internal calls, solid tint 1 and tint 2 for the two paired paths, dash for failover, control plane or identity, deny for a blocked path. Keep Metro 1 and Region A on tint 1 and Metro 2 and Region B on tint 2 end to end.
+| Slot | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 |
+|---|---|---|---|---|---|---|---|---|
+| center | blue | pink | teal | amber | violet | green | orange | cyan |
 
-Under wire:
+Other themes paint the same slot in their own color and name the legend label after it ("Solid rose" in paper). Under wire a label names the line instead: "Solid line", "Ringed line" (hollow dots), "Plain line" (no dots), "Dashed line", "Thin line", "Dotted line". Write legend text as meaning ("request path"), never as color. Keep a paired path on one slot end to end: Metro 1 and Region A on tint 1, Metro 2 and Region B on tint 2.
 
-- In a flat render a legend entry's label is fixed per line and slot ("Solid blue", "Dashed red") and still reads that way next to a black swatch; an iso render names the line instead ("Solid line", "Dashed line"). Write the legend text as meaning ("request path"), never as color.
-- Links have no end dots, so a tint 1 and a tint 2 link draw the same. Tell them apart by label.
-- A Callout shows its kind only through the title you write: "Risk: ...", "Decision: ...".
+Theme files. `stencil theme show <name>` prints a built-in theme's JSON; copy it as the start of a theme file. `stencil theme check <theme>` prints every contrast and separation row and exits 1 when one fails; render and check never fail on contrast. A theme file that breaks a structural rule (lowercase hex, a width outside 0.5 to 4, an unknown role) stops every command with `violation` lines.
 
-Projection: "projection": "iso" (or render and check with --projection iso) draws the body as a 30 degree isometric scene: filled Boxes become slabs, an untinted Box of the strong tone (gcp vpc) becomes a dashed ring on its parent, items become blocks, links run over the slabs to their endpoint blocks, and every label stays upright. A body narrower than the canvas is zoomed, up to 1.6 times, until it spans 80 percent of it; text keeps its size. Every Box label is a tab on the Box's back corner: filled for a Box no Box encloses, an outline for a nested one. An item's icon stands on the middle of its block with the name under it. Layout and the flat checks do not change; check adds iso-labels-clear, which also fails when a Box edge runs through label text, and iso-links-clear, which fails when a link leg runs within 24 px of a parallel Box edge. Link weight ranks the lines: solid tint 1 heaviest, other lines two thirds of it, gray lightest. Leave open floor: Row grow 0 so Boxes take their content size, items 64 apart, and a gap between Boxes of at least 48 px for a link leg that runs along it. Two facing sides that share 16 px or more get one straight link across; give the blocks overlapping spans (a Col with justify center around a single Box) instead of a jog. A link into an item's bottom or right side meets a face the viewer sees; one into a top or left side stops where it meets the block.
+Overrides. "theme_overrides" on the Page is a partial theme merged onto the chosen theme: objects merge key by key, other values replace. `tints` takes an object keyed by slot number, so `{"tints": {"3": {"wire": "#00796B"}}}` recolors one wire. Colors are uppercase #RRGGBB.
+
+Under wire, links have no end dots, so two link tints draw the same; tell them apart by label. A Callout shows its kind only through the title you write: "Risk: ...", "Decision: ...".
+
+Projection: "projection": "iso" (or render and check with --projection iso) draws the body as a 30 degree isometric scene: filled Boxes become slabs, an untinted Box of the strong tone (gcp vpc) becomes a ring on its parent, items become blocks, links run over the slabs to their endpoint blocks, and every label stays upright. A body narrower than the canvas is zoomed, up to 1.6 times, until it spans 80 percent of it; text keeps its size. Every Box label is a tab on the Box's back corner. Layout and the flat checks do not change; check adds iso-labels-clear and iso-links-clear, which fails when a link leg runs within 24 px of a parallel Box edge. Leave open floor: Row grow 0, items 64 apart, a gap between Boxes of at least 48 px for a link leg along it, and overlapping spans for blocks joined straight across.

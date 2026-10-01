@@ -124,7 +124,7 @@
             </g>
             <g data-id="/body/0/children/1/children/2/children/1" data-tag="Zone" data-kind="group-c">
               <rect x="897.92" y="316.45" width="370.83" height="93.9" rx="7.25" fill="#E1FCFD" stroke="#BDC1C6" stroke-width="1.5"/>
-              <text x="910.67" y="340.77" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#5F6368">Site reliability</text>
+              <text x="910.67" y="340.77" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#004845">Site reliability</text>
               <g data-id="/body/0/children/1/children/2/children/1/children/0" data-tag="Row">
                 <g data-id="/body/0/children/1/children/2/children/1/children/0/children/0" data-tag="Pcard">
                   <rect x="911.42" y="352.35" width="167.17" height="44.5" rx="7.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
@@ -140,7 +140,7 @@
             </g>
             <g data-id="/body/0/children/1/children/2/children/2" data-tag="Zone" data-kind="group-c">
               <rect x="897.92" y="419.85" width="370.83" height="93.9" rx="7.25" fill="#E1FCFD" stroke="#BDC1C6" stroke-width="1.5"/>
-              <text x="910.67" y="444.17" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#5F6368">Support</text>
+              <text x="910.67" y="444.17" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#004845">Support</text>
               <g data-id="/body/0/children/1/children/2/children/2/children/0" data-tag="Row">
                 <g data-id="/body/0/children/1/children/2/children/2/children/0/children/0" data-tag="Pcard">
                   <rect x="911.42" y="455.75" width="167.17" height="44.5" rx="7.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>

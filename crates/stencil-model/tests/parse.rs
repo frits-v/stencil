@@ -10,7 +10,10 @@
 mod common;
 
 use common::{G7_JSON, g7_page, g7_value};
-use stencil_model::{Arrow, Item, ModelError, Node, PAGE_WIDTH_DEFAULT, Theme, parse_and_vet};
+use stencil_model::{
+    Arrow, BUILTIN_THEMES, Item, ModelError, Node, PAGE_WIDTH_DEFAULT, VetRule, parse_and_vet,
+    theme_reference,
+};
 
 fn assert_json_error(json_text: &str) {
     match parse_and_vet(json_text, &common::gcp()) {
@@ -268,31 +271,53 @@ fn g7_serializes_to_its_input_plus_the_width_default() {
 }
 
 #[test]
-fn theme_defaults_to_center_and_is_not_serialized_as_default() {
+fn theme_defaults_to_center_and_round_trips_as_written() {
     let page = parse_and_vet(G7_JSON, &common::gcp()).unwrap();
-    assert_eq!(page.theme, Theme::Center);
+    assert_eq!(page.theme, None);
+    assert_eq!(theme_reference(&page), "center");
 
-    for (name, theme) in [
-        ("center", Theme::Center),
-        ("dusk", Theme::Dusk),
-        ("wire", Theme::Wire),
-    ] {
+    for name in BUILTIN_THEMES.iter().copied().chain(["themes/brand.json"]) {
         let mut document = g7_value();
         document["theme"] = serde_json::json!(name);
         let page = parse_and_vet(&document.to_string(), &common::gcp()).unwrap();
-        assert_eq!(page.theme, theme);
+        assert_eq!(page.theme.as_deref(), Some(name));
+        assert_eq!(theme_reference(&page), name);
         let serialized = serde_json::to_value(&page).unwrap();
-        let expected = (theme != Theme::Center).then(|| serde_json::json!(name));
-        assert_eq!(serialized.get("theme").cloned(), expected, "{name}");
+        assert_eq!(serialized.get("theme"), Some(&serde_json::json!(name)));
     }
 }
 
 #[test]
-fn unknown_or_null_theme_is_a_json_error() {
+fn a_theme_that_is_neither_built_in_nor_json_is_theme_unknown() {
     let mut document = g7_value();
     document["theme"] = serde_json::json!("night");
+    match parse_and_vet(&document.to_string(), &common::gcp()) {
+        Err(ModelError::Invalid(violations)) => {
+            assert_eq!(violations.len(), 1);
+            assert_eq!(violations[0].rule, VetRule::ThemeUnknown);
+            assert_eq!(violations[0].rule.as_str(), "theme-unknown");
+            assert_eq!(violations[0].pointer.as_str(), "/theme");
+            assert_eq!(
+                violations[0].message,
+                "theme \"night\" is neither a built-in theme nor a .json path"
+            );
+        }
+        other => panic!("expected ModelError::Invalid, got {other:?}"),
+    }
+    document["theme"] = serde_json::json!(7);
     assert_json_error(&document.to_string());
-    document["theme"] = serde_json::Value::Null;
+}
+
+#[test]
+fn theme_overrides_is_an_object_kept_as_written() {
+    let mut document = g7_value();
+    document["theme_overrides"] = serde_json::json!({ "tints": { "3": { "wire": "#00796B" } } });
+    let page = parse_and_vet(&document.to_string(), &common::gcp()).unwrap();
+    let overrides = page.theme_overrides.as_ref().unwrap();
+    assert_eq!(overrides["tints"]["3"]["wire"], "#00796B");
+    let serialized = serde_json::to_value(&page).unwrap();
+    assert_eq!(serialized["theme_overrides"], document["theme_overrides"]);
+    document["theme_overrides"] = serde_json::json!("dusk");
     assert_json_error(&document.to_string());
 }
 

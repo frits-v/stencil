@@ -8,6 +8,7 @@ mod build;
 mod compute;
 mod lanes;
 mod route;
+mod theme_labels;
 
 use stencil_model::grammar::{BorderPattern, LabelStyle, Role, Tone};
 use stencil_model::pointer::NodePointer;
@@ -16,6 +17,7 @@ use stencil_model::{Grammar, Line, Page, PagePoint, Violation, line_key, validat
 
 pub use build::{container_label_style, fact_presentation};
 pub use stencil_model::text::WRAP_EPSILON_PX;
+pub use theme_labels::theme_legend_labels;
 
 pub const GEOMETRY_EPSILON_PX: f32 = 0.01;
 

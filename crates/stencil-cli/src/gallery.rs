@@ -5,21 +5,21 @@ use std::fs;
 use std::io::{self, Write};
 use std::path::{Path, PathBuf};
 
-use clap::ValueEnum;
 use serde::Serialize;
 use stencil_layout::LayoutError;
 use stencil_model::checks::{CheckOutcome, CheckReport};
-use stencil_model::{ModelError, Theme};
+use stencil_model::{BUILTIN_THEMES, ModelError};
 use stencil_render::DeviceScale;
 
-use crate::ThemeArgument;
 use crate::exit::{ExitCode, failure_exit_code, reports_exit_code};
 use crate::pipeline::{
-    Failure, LoadedDocument, OutputNames, all_checks, grammar_violations, load_document_from,
-    output_names, read_input, render_page, write_outputs,
+    Failure, LoadedDocument, OutputNames, ThemeChoice, all_checks, grammar_violations,
+    load_document_from, load_theme, output_names, read_input, render_page, theme_violations,
+    write_outputs,
 };
 use crate::report::{
-    check_counts_text, count_text, grammar_violation_line, report_lines, violation_line,
+    check_counts_text, count_text, grammar_violation_line, report_lines, theme_violation_line,
+    violation_line,
 };
 
 /// Largest number of documents one gallery renders. Each one costs a render per theme.
@@ -65,17 +65,17 @@ pub struct GalleryFiles {
     pub measured: String,
 }
 
-/// Theme names in `--theme` order, taken from the argument enum so a new theme joins the
-/// gallery without a second list.
-fn gallery_themes() -> Vec<(String, Theme)> {
-    ThemeArgument::value_variants()
-        .iter()
-        .filter_map(|argument| {
-            argument
-                .to_possible_value()
-                .map(|value| (value.get_name().to_string(), Theme::from(*argument)))
-        })
-        .collect()
+/// The six designed themes in the gallery's order (section 13.12).
+fn gallery_themes() -> Vec<String> {
+    BUILTIN_THEMES.iter().map(|name| name.to_string()).collect()
+}
+
+/// A built-in theme name as the theme reference of a gallery render.
+fn builtin_choice(name: &str) -> ThemeChoice<'_> {
+    ThemeChoice {
+        reference: name,
+        directory: Path::new("."),
+    }
 }
 
 /// The `.json` files directly inside `examples`, sorted by file name so the gallery is the
@@ -165,7 +165,7 @@ fn build_gallery(
     })?;
 
     let mut manifest = GalleryManifest {
-        themes: themes.iter().map(|(name, _)| name.clone()).collect(),
+        themes: themes.clone(),
         examples: Vec::with_capacity(paths.len()),
         renders: 0,
         failed: 0,
@@ -174,9 +174,10 @@ fn build_gallery(
         let names = output_names(path)?;
         let name = utf8_stem(path)?;
         let directory = path.parent().unwrap_or(Path::new("."));
-        let loaded = match read_input(path)
-            .and_then(|json_text| load_document_from(&json_text, directory))
-        {
+        let loaded = match read_input(path).and_then(|json_text| {
+            let first = themes.first().map_or("center", String::as_str);
+            load_document_from(&json_text, directory, Some(builtin_choice(first)))
+        }) {
             Ok(loaded) => loaded,
             Err(failure) => {
                 stop_unless_defect(failure, |failure| {
@@ -199,8 +200,8 @@ fn build_gallery(
             kicker: loaded.page.kicker.clone(),
             renders: Vec::with_capacity(themes.len()),
         };
-        for (theme_name, theme) in &themes {
-            let result = render_theme(out_dir, path, &names, &name, theme_name, *theme, &loaded)?;
+        for theme_name in &themes {
+            let result = render_theme(out_dir, path, &names, &name, theme_name, &loaded)?;
             for line in &result.lines {
                 writeln!(stdout, "{line}")?;
             }
@@ -249,7 +250,7 @@ fn build_gallery(
 
 /// An example whose document does not load: listed under every theme as not rendered, with
 /// its file name in place of the title the document would have given.
-fn unloaded_example(path: &Path, name: &str, themes: &[(String, Theme)]) -> GalleryExample {
+fn unloaded_example(path: &Path, name: &str, themes: &[String]) -> GalleryExample {
     GalleryExample {
         name: name.to_string(),
         source: file_name_text(path),
@@ -257,7 +258,7 @@ fn unloaded_example(path: &Path, name: &str, themes: &[(String, Theme)]) -> Gall
         kicker: "document does not load".to_string(),
         renders: themes
             .iter()
-            .map(|(theme_name, _)| not_rendered(theme_name))
+            .map(|theme_name| not_rendered(theme_name))
             .collect(),
     }
 }
@@ -306,6 +307,9 @@ fn document_defect_lines(failure: &Failure) -> Vec<String> {
         Failure::Grammar(error) => std::iter::once(format!("error {error}"))
             .chain(grammar_violations(error).iter().map(grammar_violation_line))
             .collect(),
+        Failure::Theme(error) => std::iter::once(format!("error {error}"))
+            .chain(theme_violations(error).iter().map(theme_violation_line))
+            .collect(),
         other => vec![format!("error {other}")],
     }
 }
@@ -317,12 +321,14 @@ fn render_theme(
     names: &OutputNames,
     name: &str,
     theme_name: &str,
-    theme: Theme,
     loaded: &LoadedDocument,
 ) -> Result<RenderResult, GalleryStop> {
     let mut themed = loaded.clone();
-    themed.page.theme = theme;
-    let rendered = match render_page(&themed, DeviceScale::DEFAULT) {
+    let rendered = load_theme(&loaded.page, builtin_choice(theme_name)).and_then(|theme| {
+        themed.theme = theme;
+        render_page(&themed, DeviceScale::DEFAULT)
+    });
+    let rendered = match rendered {
         Ok(rendered) => rendered,
         Err(failure) => {
             let mut lines = Vec::new();
@@ -520,9 +526,11 @@ mod tests {
     }
 
     #[test]
-    fn the_gallery_covers_every_theme_in_argument_order() {
-        let names: Vec<String> = gallery_themes().into_iter().map(|(name, _)| name).collect();
-        assert_eq!(names, ["center", "dusk", "wire"]);
+    fn the_gallery_covers_the_six_designed_themes_in_order() {
+        assert_eq!(
+            gallery_themes(),
+            ["center", "paper", "dusk", "clear", "clear-dark", "wire"]
+        );
     }
 
     #[test]

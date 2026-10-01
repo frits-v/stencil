@@ -9,7 +9,7 @@ mod common;
 
 use stencil_layout::{PageGeometry, layout_page};
 use stencil_model::{Page, Projection, parse_and_vet};
-use stencil_render::iso::project_page;
+use stencil_render::iso::{SolidInputs, project_page};
 use stencil_render::{measured_json, render_svg};
 use stencil_text::CosmicTextMeasurer;
 
@@ -74,7 +74,7 @@ fn every_example_renders_its_center_svg_fixture_byte_for_byte() {
     let mut examined = 0;
     for example in &EXAMPLES {
         let (page, geometry) = page_and_geometry(example);
-        let rendered = render_svg(&page, &geometry).unwrap();
+        let rendered = render_svg(&page, &common::theme("center"), &geometry).unwrap();
         assert!(
             rendered.svg == example.svg,
             "{}: center SVG differs from tests/fixtures/{}.center.svg",
@@ -94,7 +94,11 @@ fn every_example_writes_its_geometry_fixture_byte_for_byte() {
         let document: serde_json::Value = serde_json::from_str(example.document).unwrap();
         let scene = match page.projection {
             Projection::Flat => None,
-            Projection::Iso => Some(project_page(&geometry).unwrap()),
+            Projection::Iso => {
+                let inputs =
+                    SolidInputs::new(&geometry, common::theme("center").iso.slab_thickness);
+                Some(project_page(&geometry, &inputs).unwrap())
+            }
         };
         let mut measured = measured_json(&document, &geometry, scene.as_ref());
         let removed = measured.as_object_mut().unwrap().remove("document");

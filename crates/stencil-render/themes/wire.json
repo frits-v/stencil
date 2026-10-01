@@ -1,0 +1,274 @@
+{
+  "name": "wire",
+  "tint_cue": "line",
+  "page": "#FFFFFF",
+  "ink": {
+    "primary": "#222222",
+    "secondary": "#555555",
+    "zone_label": "#555555"
+  },
+  "kicker": "#222222",
+  "badge": {
+    "customer": {
+      "fill": "#FFFFFF",
+      "ink": "#222222"
+    },
+    "internal": {
+      "fill": "#FFFFFF",
+      "ink": "#222222"
+    },
+    "border": {
+      "color": "#222222",
+      "width": 1.25,
+      "pattern": "solid"
+    }
+  },
+  "card": {
+    "fill": "#FFFFFF",
+    "border": {
+      "color": "#222222",
+      "width": 1.25,
+      "pattern": "solid"
+    }
+  },
+  "fact": {
+    "fill": "#FFFFFF",
+    "ink": "#555555"
+  },
+  "ask": {
+    "fill": "#FFFFFF",
+    "ink": "#222222"
+  },
+  "tag": {
+    "fill": "#FFFFFF",
+    "border": {
+      "color": "#222222",
+      "width": 1.25,
+      "pattern": "solid"
+    },
+    "ink": "#222222",
+    "sub_ink": "#555555"
+  },
+  "legend": {
+    "label_ink": "#222222",
+    "text_ink": "#555555"
+  },
+  "foot": "#555555",
+  "callout": {
+    "note": {
+      "accent": "#222222",
+      "fill": "#FFFFFF"
+    },
+    "risk": {
+      "accent": "#222222",
+      "fill": "#FFFFFF"
+    },
+    "decision": {
+      "accent": "#222222",
+      "fill": "#FFFFFF"
+    },
+    "open": {
+      "accent": "#222222",
+      "fill": "#FFFFFF"
+    }
+  },
+  "placeholder": {
+    "border": "#222222",
+    "diagonal": "#555555"
+  },
+  "icon_chip": "#FFFFFF",
+  "frame": {
+    "border": "#222222",
+    "frame_fill": "#FFFFFF",
+    "bar_fill": "#FFFFFF",
+    "bar_ink": "#222222",
+    "bar_rule": {
+      "color": "#222222",
+      "width": 2.0,
+      "pattern": "solid"
+    },
+    "body_fill": "#FFFFFF"
+  },
+  "tones": {
+    "neutral": {
+      "fill": "#FFFFFF",
+      "border": "#222222"
+    },
+    "warm": {
+      "fill": "#FFFFFF",
+      "border": "#222222"
+    },
+    "cool": {
+      "fill": "#FFFFFF",
+      "border": "#222222"
+    },
+    "soft": {
+      "fill": "#FFFFFF",
+      "border": "#222222"
+    },
+    "strong": {
+      "border": "#222222"
+    },
+    "highlight": {
+      "fill": "#FFFFFF",
+      "border": "#222222"
+    },
+    "emphasis": {
+      "fill": "#FFFFFF",
+      "border": "#222222"
+    },
+    "accent": {
+      "fill": "#FFFFFF",
+      "border": "#222222",
+      "label_ink": "#222222"
+    }
+  },
+  "containers": {
+    "draw_width": 1.25,
+    "frame_draw_width": 2.0,
+    "borderless_outline": {
+      "color": "#222222",
+      "width": 1.25,
+      "pattern": "solid"
+    }
+  },
+  "lanes": {
+    "lifeline": {
+      "color": "#555555",
+      "width": 1.0,
+      "pattern": "dashed"
+    }
+  },
+  "gray": {
+    "color": "#222222",
+    "width": 1.25,
+    "pattern": "solid",
+    "dot": "filled"
+  },
+  "solid": {
+    "width": 2.0,
+    "dots": [
+      "filled",
+      "hollow",
+      "none",
+      "filled",
+      "hollow",
+      "none",
+      "filled",
+      "hollow"
+    ]
+  },
+  "dash": {
+    "width": 2.0,
+    "pattern": "dashed",
+    "dot": "filled"
+  },
+  "deny": {
+    "color": "#222222",
+    "width": 2.0,
+    "pattern": "dotted",
+    "dot": "filled",
+    "tag_border": "#222222",
+    "tag_ink": "#222222"
+  },
+  "tints": [
+    {
+      "name": "blue",
+      "fill": "#FFFFFF",
+      "border": "#222222",
+      "ink": "#555555",
+      "wire": "#222222"
+    },
+    {
+      "name": "pink",
+      "fill": "#FFFFFF",
+      "border": "#222222",
+      "ink": "#555555",
+      "wire": "#222222"
+    },
+    {
+      "name": "teal",
+      "fill": "#FFFFFF",
+      "border": "#222222",
+      "ink": "#555555",
+      "wire": "#222222"
+    },
+    {
+      "name": "amber",
+      "fill": "#FFFFFF",
+      "border": "#222222",
+      "ink": "#555555",
+      "wire": "#222222"
+    },
+    {
+      "name": "violet",
+      "fill": "#FFFFFF",
+      "border": "#222222",
+      "ink": "#555555",
+      "wire": "#222222"
+    },
+    {
+      "name": "green",
+      "fill": "#FFFFFF",
+      "border": "#222222",
+      "ink": "#555555",
+      "wire": "#222222"
+    },
+    {
+      "name": "orange",
+      "fill": "#FFFFFF",
+      "border": "#222222",
+      "ink": "#555555",
+      "wire": "#222222"
+    },
+    {
+      "name": "cyan",
+      "fill": "#FFFFFF",
+      "border": "#222222",
+      "ink": "#555555",
+      "wire": "#222222"
+    }
+  ],
+  "iso": {
+    "faces": {
+      "top": 0,
+      "left": 0,
+      "right": 0
+    },
+    "slab_thickness": 6.0,
+    "frame_outline": 1.5,
+    "solid_edges": "outline",
+    "edge_width": 1.5,
+    "ring": {
+      "color": "#999999",
+      "width": 1.5,
+      "pattern": "dotted"
+    },
+    "block_outline": {
+      "color": "#222222",
+      "width": 1.25,
+      "pattern": "solid"
+    },
+    "plates": true,
+    "tabs": {
+      "frame": {
+        "fill": "#222222",
+        "ink": "#FFFFFF"
+      },
+      "top": {
+        "fill": "#222222",
+        "ink": "#FFFFFF"
+      },
+      "nested_width": 1.25
+    },
+    "chip": {
+      "fill": "#FFFFFF",
+      "ring": "#222222"
+    },
+    "widths": {
+      "primary": 3.75,
+      "secondary": 2.5,
+      "gray": 1.25
+    }
+  }
+}
