@@ -110,6 +110,17 @@ pub struct ChipShadowPaint<'a> {
     pub dy: f32,
 }
 
+/// The soft shadow under every opaque iso block (section 13.11).
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct BlockShadowPaint<'a> {
+    pub color: &'a str,
+    pub opacity: f32,
+    /// Standard deviation of the Gaussian blur, in px.
+    pub blur: f32,
+    /// How far the shadow sits below the block's base on screen, in px.
+    pub dy: f32,
+}
+
 /// The paint of one theme under one projection. Built once per render.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Palette<'a> {
@@ -655,6 +666,20 @@ impl<'a> Palette<'a> {
             .map(|shadow| ChipShadowPaint {
                 color: shadow.color.as_str(),
                 opacity: shadow.opacity,
+                dy: shadow.dy,
+            })
+    }
+
+    /// The shadow under every opaque iso block, when the theme sets one.
+    pub fn iso_block_shadow(self) -> Option<BlockShadowPaint<'a>> {
+        self.theme
+            .iso
+            .shadow
+            .as_ref()
+            .map(|shadow| BlockShadowPaint {
+                color: shadow.color.as_str(),
+                opacity: shadow.opacity,
+                blur: shadow.blur,
                 dy: shadow.dy,
             })
     }

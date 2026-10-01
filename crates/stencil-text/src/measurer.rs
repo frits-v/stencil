@@ -4,7 +4,8 @@ use cosmic_text::{
     Attrs, Buffer, Family, FontSystem, LayoutRun, LineIter, Metrics, Shaping, Weight, Wrap,
 };
 use stencil_model::text::{
-    MeasureError, TextLine, TextMeasurer, TextMetrics, TextStyle, check_measure_input,
+    MeasureError, TextLine, TextMeasurer, TextMetrics, TextStyle, break_opportunities,
+    check_measure_input,
 };
 
 use crate::{FontError, bundled_font_database, verify_bundled_fonts};
@@ -72,6 +73,17 @@ impl CosmicTextMeasurer {
         style: &TextStyle,
         max_width_px: Option<f32>,
     ) -> Result<TextMetrics, MeasureError> {
+        self.measure_shaped(&ShapedText::with_dot_breaks(text), style, max_width_px)
+    }
+
+    /// Shapes `shaped.text` and reports every line in terms of `shaped.original`.
+    fn measure_shaped(
+        &mut self,
+        shaped: &ShapedText<'_>,
+        style: &TextStyle,
+        max_width_px: Option<f32>,
+    ) -> Result<TextMetrics, MeasureError> {
+        let text = shaped.text.as_str();
         let metrics = Metrics::new(style.size_px, style.line_height_px);
         let attributes = Attrs::new()
             .family(Family::Name(style.family.css_name()))
@@ -103,7 +115,11 @@ impl CosmicTextMeasurer {
                         ),
                     })?;
             check_glyphs(text, style, &run, paragraph_start)?;
-            let extent = line_extent(text, &run, paragraph_start)?;
+            let extent = shaped.original_extent(
+                line_extent(text, &run, paragraph_start)?,
+                &run,
+                paragraph_start,
+            )?;
             // f32::max below skips a NaN, so each line is checked before it is kept.
             if !extent.width_px.is_finite() || !run.line_y.is_finite() {
                 return Err(MeasureError::Backend {
@@ -140,6 +156,103 @@ impl CosmicTextMeasurer {
             height_px: line_count as f32 * style.line_height_px,
             line_count,
             lines,
+        })
+    }
+}
+
+/// U+200B ZERO WIDTH SPACE, shaped after a dot so that cosmic-text's UAX #14 wrapping
+/// breaks there (section 13.11). Every bundled face maps it to a glyph with no advance.
+const ZERO_WIDTH_SPACE: &str = "\u{200B}";
+
+/// The string cosmic-text shapes: the measured string with U+200B inserted at every break
+/// opportunity after a dot. Hyphens and slashes need no insertion, because `Wrap::Word`
+/// already breaks after them.
+struct ShapedText<'a> {
+    original: &'a str,
+    text: String,
+    /// Byte offsets in `text` where an inserted U+200B starts, ascending.
+    inserted_starts: Vec<usize>,
+}
+
+impl<'a> ShapedText<'a> {
+    fn with_dot_breaks(original: &'a str) -> Self {
+        let dot_breaks: Vec<usize> = break_opportunities(original)
+            .into_iter()
+            .filter(|&offset| {
+                offset
+                    .checked_sub(1)
+                    .and_then(|dot| original.as_bytes().get(dot))
+                    == Some(&b'.')
+            })
+            .collect();
+        let mut text =
+            String::with_capacity(original.len() + dot_breaks.len() * ZERO_WIDTH_SPACE.len());
+        let mut inserted_starts = Vec::with_capacity(dot_breaks.len());
+        let mut copied = 0;
+        for offset in dot_breaks {
+            text.push_str(original.get(copied..offset).unwrap_or_default());
+            inserted_starts.push(text.len());
+            text.push_str(ZERO_WIDTH_SPACE);
+            copied = offset;
+        }
+        text.push_str(original.get(copied..).unwrap_or_default());
+        ShapedText {
+            original,
+            text,
+            inserted_starts,
+        }
+    }
+
+    /// The byte offset in `original` of a character boundary in `text`: every inserted
+    /// U+200B that starts before it is removed.
+    fn original_offset(&self, shaped_offset: usize) -> usize {
+        let inserted_before = self
+            .inserted_starts
+            .iter()
+            .filter(|&&start| start < shaped_offset)
+            .count();
+        shaped_offset.saturating_sub(inserted_before * ZERO_WIDTH_SPACE.len())
+    }
+
+    /// A line extent in `text` as one in `original`. The advance of each inserted U+200B in
+    /// the run, which is the letter spacing cosmic-text adds after every glyph, is taken out
+    /// of the width, so a dotted word measures as it does without the insertion.
+    fn original_extent(
+        &self,
+        extent: LineExtent,
+        run: &LayoutRun<'_>,
+        paragraph_start: usize,
+    ) -> Result<LineExtent, MeasureError> {
+        if self.inserted_starts.is_empty() {
+            return Ok(extent);
+        }
+        let mut inserted_px = 0.0_f32;
+        for glyph in run.glyphs {
+            if self
+                .inserted_starts
+                .contains(&byte_offset(paragraph_start, glyph.start)?)
+            {
+                inserted_px += glyph.w;
+            }
+        }
+        let byte_start = self.original_offset(extent.byte_start);
+        let byte_end = self.original_offset(extent.byte_end);
+        if byte_start > byte_end || byte_end > self.original.len() {
+            return Err(MeasureError::Backend {
+                message: format!(
+                    "line bytes {byte_start}..{byte_end} are outside the measured text"
+                ),
+            });
+        }
+        let width_px = if inserted_px > 0.0 {
+            (extent.width_px - inserted_px).max(0.0)
+        } else {
+            extent.width_px
+        };
+        Ok(LineExtent {
+            byte_start,
+            byte_end,
+            width_px,
         })
     }
 }
@@ -282,6 +395,55 @@ mod tests {
         let style = TextStyleName::TagLabel.text_style().style;
         measurer.measure("\u{4E00}", &style, None).unwrap_err();
         assert!(measurer.cache.is_empty());
+    }
+
+    #[test]
+    fn inserted_zero_width_spaces_leave_the_width_unchanged() {
+        let mut measurer = CosmicTextMeasurer::new().unwrap();
+        for name in [
+            TextStyleName::Kicker,
+            TextStyleName::Badge,
+            TextStyleName::Fact,
+        ] {
+            let style = name.text_style().style;
+            let text = "ACME-PROD.ANALYTICS.RAW";
+            let inserted = ShapedText::with_dot_breaks(text);
+            assert_eq!(inserted.inserted_starts.len(), 2);
+            let plain = ShapedText {
+                original: text,
+                text: text.to_string(),
+                inserted_starts: Vec::new(),
+            };
+            let with_breaks = measurer.measure_shaped(&inserted, &style, None).unwrap();
+            let without = measurer.measure_shaped(&plain, &style, None).unwrap();
+            assert_eq!(with_breaks.lines.len(), 1, "{}", name.as_str());
+            assert_eq!(
+                (
+                    with_breaks.lines[0].byte_start,
+                    with_breaks.lines[0].byte_end
+                ),
+                (0, text.len())
+            );
+            assert!(
+                (with_breaks.width_px - without.width_px).abs() < 0.01,
+                "{}: {} with the insertions, {} without",
+                name.as_str(),
+                with_breaks.width_px,
+                without.width_px
+            );
+        }
+    }
+
+    #[test]
+    fn original_offsets_skip_each_inserted_character() {
+        let shaped = ShapedText::with_dot_breaks("a.b.c");
+        assert_eq!(shaped.text, "a.\u{200B}b.\u{200B}c");
+        assert_eq!(shaped.inserted_starts, vec![2, 7]);
+        let mapped: Vec<usize> = [0, 2, 5, 7, 10, 11]
+            .into_iter()
+            .map(|offset| shaped.original_offset(offset))
+            .collect();
+        assert_eq!(mapped, vec![0, 2, 2, 4, 4, 5]);
     }
 
     #[test]

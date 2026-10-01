@@ -239,6 +239,12 @@
     "chip": {
       "fill": "#FFFFFF"
     },
+    "shadow": {
+      "color": "#000000",
+      "opacity": 0.5,
+      "blur": 3.0,
+      "dy": 3.0
+    },
     "widths": {
       "primary": 3.75,
       "secondary": 2.5,

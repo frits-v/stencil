@@ -364,7 +364,11 @@ pub fn render_page(loaded: &LoadedDocument, scale: DeviceScale) -> Result<Render
     let scene = match loaded.page.projection {
         Projection::Flat => None,
         Projection::Iso => {
-            let inputs = SolidInputs::new(&geometry, loaded.theme.iso.slab_thickness);
+            let inputs = SolidInputs::new(
+                &geometry,
+                &loaded.page.links,
+                loaded.theme.iso.slab_thickness,
+            );
             Some(project_page(&geometry, &inputs)?)
         }
     };

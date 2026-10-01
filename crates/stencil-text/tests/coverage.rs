@@ -157,3 +157,38 @@ fn the_built_fact_bullet_has_a_glyph_in_the_fact_face() {
     assert!(metrics.width_px > 0.0);
     measurer.measure("\u{2022}", &style, None).unwrap();
 }
+
+/// Section 13.11: the measurer breaks after a dot by shaping U+200B ZERO WIDTH SPACE after
+/// it, which is sound only when every bundled face maps U+200B to a real glyph with no
+/// advance.
+#[test]
+fn every_bundled_face_maps_zero_width_space_to_a_glyph_without_advance() {
+    use cosmic_text::{Attrs, Buffer, Family, FontSystem, Metrics, Shaping, Weight, fontdb};
+    use stencil_text::BUNDLED_FONTS;
+
+    let mut database = fontdb::Database::new();
+    for file in &BUNDLED_FONTS {
+        database.load_font_data(file.bytes.to_vec());
+    }
+    let mut font_system = FontSystem::new_with_locale_and_db("en-US".into(), database);
+    let mut examined_faces = 0;
+    for file in &BUNDLED_FONTS {
+        let attributes = Attrs::new()
+            .family(Family::Name("Inter"))
+            .weight(Weight(file.weight.css_value()));
+        let mut buffer = Buffer::new(&mut font_system, Metrics::new(13.0, 15.6));
+        buffer.set_text("a\u{200B}b", &attributes, Shaping::Advanced, None);
+        buffer.shape_until_scroll(&mut font_system, false);
+        let runs: Vec<_> = buffer.layout_runs().collect();
+        assert_eq!(runs.len(), 1, "{}", file.file_name);
+        let zero_width_space = runs[0]
+            .glyphs
+            .iter()
+            .find(|glyph| glyph.start == 1)
+            .unwrap_or_else(|| panic!("{}: no glyph for U+200B", file.file_name));
+        assert_ne!(zero_width_space.glyph_id, 0, "{}", file.file_name);
+        assert_eq!(zero_width_space.w, 0.0, "{}", file.file_name);
+        examined_faces += 1;
+    }
+    assert_eq!(examined_faces, 4);
+}

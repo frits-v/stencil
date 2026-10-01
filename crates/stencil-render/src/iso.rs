@@ -2,6 +2,7 @@
 //! computed from `PageGeometry` alone, and the `iso-labels-clear` check over the result.
 
 mod drape;
+mod exit;
 mod placement;
 mod route;
 mod shapes;
@@ -13,7 +14,7 @@ use stencil_layout::{
 use stencil_model::checks::{CheckName, CheckReport, Defect};
 use stencil_model::grammar::Role;
 use stencil_model::pointer::NodePointer;
-use stencil_model::{LINKS_MAX, Line, NODES_MAX, PagePoint};
+use stencil_model::{LINKS_MAX, Line, Link, NODES_MAX, PagePoint};
 
 use crate::RenderError;
 use crate::svg::DOT_RADIUS_PX;
@@ -388,13 +389,22 @@ pub struct SolidInputs {
     pub slab_thickness_px: f32,
     /// Indexed like `PageGeometry.nodes`.
     pub rings: Vec<bool>,
+    /// Indexed like `Page.links`: true when the link has no authored `via` and no
+    /// `from_side`, so it may be routed again to leave its slab (section 13.11 rule 2).
+    pub slab_exits: Vec<bool>,
 }
 
 impl SolidInputs {
-    pub fn new(geometry: &PageGeometry, slab_thickness_px: f32) -> Self {
+    /// `links` are the page's links, which `geometry.links` routes.
+    pub fn new(geometry: &PageGeometry, links: &[Link], slab_thickness_px: f32) -> Self {
         SolidInputs {
             slab_thickness_px,
             rings: geometry.nodes.iter().map(is_ring_zone).collect(),
+            slab_exits: links
+                .iter()
+                .take(LINKS_MAX)
+                .map(|link| link.via.is_empty() && link.from_side.is_none())
+                .collect(),
         }
     }
 }
@@ -736,9 +746,24 @@ fn path_strokes(path: &[IsoPoint]) -> Vec<(ScreenPoint, ScreenPoint)> {
         .collect()
 }
 
-/// A link's routed polyline with the adjustments of section 12.3 rule 8: one leg across two
-/// facing sides that share a span, then every inner leg moved clear of the zone edges.
-fn adjusted_route(route: &LinkRoute, geometry: &PageGeometry, solids: &[Solid]) -> Vec<PagePoint> {
+/// A link's routed polyline with the adjustments of section 12.3 rule 8 (one leg across two
+/// facing sides that share a span, then every inner leg moved clear of the zone edges),
+/// replaced by the slab exit route of section 13.11 rule 2 when the link may take one.
+fn adjusted_route(
+    route: &LinkRoute,
+    geometry: &PageGeometry,
+    solids: &[Solid],
+    inputs: &SolidInputs,
+) -> Vec<PagePoint> {
+    let adjusted = rule_8_route(route, geometry, solids);
+    let may_exit = inputs.slab_exits.get(route.index).copied().unwrap_or(false);
+    let exit = may_exit
+        .then(|| exit::slab_exit_route(route, geometry, solids, &adjusted))
+        .flatten();
+    exit.unwrap_or(adjusted)
+}
+
+fn rule_8_route(route: &LinkRoute, geometry: &PageGeometry, solids: &[Solid]) -> Vec<PagePoint> {
     let blocks: Vec<BoxRect> = solids
         .iter()
         .filter(|solid| solid.shape == SolidShape::Block)
@@ -769,6 +794,7 @@ fn link_paths(
     geometry: &PageGeometry,
     terrain: &[Terrain],
     solids: &[Solid],
+    inputs: &SolidInputs,
 ) -> Vec<(Vec<PagePoint>, Vec<IsoPoint>)> {
     let block_silhouette = |node: usize| {
         solids
@@ -781,7 +807,7 @@ fn link_paths(
         .iter()
         .take(LINKS_MAX)
         .map(|route| {
-            let points = adjusted_route(route, geometry, solids);
+            let points = adjusted_route(route, geometry, solids, inputs);
             let mut path = drape::drape(&points, terrain);
             if let Some(outline) = block_silhouette(route.from_node) {
                 drape::trim_start_at(&mut path, &outline);
@@ -1162,7 +1188,7 @@ pub fn project_zoomed(
             top: solid.base_z + solid.height,
         })
         .collect();
-    let routes = link_paths(geometry, &terrain, &solids);
+    let routes = link_paths(geometry, &terrain, &solids, inputs);
     let mut link_strokes = Vec::with_capacity(routes.len());
     let mut tags = Vec::new();
     for (position, (route, (points, path))) in geometry.links.iter().zip(&routes).enumerate() {

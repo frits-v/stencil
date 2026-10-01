@@ -21,9 +21,6 @@ use stencil_model::text::FixedMetricsMeasurer;
 use stencil_model::{Grammar, Page, Theme, validate_theme};
 use stencil_render::render_svg;
 
-/// Roles the renderer does not draw yet, with the step that draws them.
-const NOT_YET_DRAWN: [(&str, &str); 1] = [("/iso/shadow", "block shadows land in step (e)")];
-
 fn pipe(line: &str, tint: Option<u8>, arrow: &str) -> Value {
     let mut node = json!({ "tag": "Pipe", "dir": "h", "line": line, "label": "tag", "sub": "sub", "arrow": arrow });
     if let Some(tint) = tint {
@@ -288,22 +285,9 @@ fn every_theme_role_changes_the_drawing() {
         .iter()
         .map(|(pointer, _)| pointer.as_str())
         .filter(|pointer| !read.iter().any(|read| read == pointer))
-        .filter(|pointer| {
-            !NOT_YET_DRAWN
-                .iter()
-                .any(|(prefix, _)| pointer.starts_with(prefix))
-        })
         .collect();
     assert_eq!(unread, Vec::<&str>::new(), "roles the renderer never reads");
     assert!(read.len() > 150, "examined only {} roles", read.len());
-}
-
-#[test]
-fn not_yet_drawn_roles_are_absent_from_every_builtin() {
-    for name in common::THEMES {
-        let theme = common::theme(name);
-        assert!(theme.iso.shadow.is_none(), "{name}: {}", NOT_YET_DRAWN[0].1);
-    }
 }
 
 /// Every `.rs` file under `directory`, at most `limit` deep.

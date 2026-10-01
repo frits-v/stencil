@@ -95,8 +95,11 @@ fn every_example_writes_its_geometry_fixture_byte_for_byte() {
         let scene = match page.projection {
             Projection::Flat => None,
             Projection::Iso => {
-                let inputs =
-                    SolidInputs::new(&geometry, common::theme("center").iso.slab_thickness);
+                let inputs = SolidInputs::new(
+                    &geometry,
+                    &page.links,
+                    common::theme("center").iso.slab_thickness,
+                );
                 Some(project_page(&geometry, &inputs).unwrap())
             }
         };
