@@ -28,7 +28,7 @@ Examined counts: each check reports how many units it looked at, and a check tha
 | links-routed | link | /links/i | no route from A to B avoids every obstacle; drawn as a fallback L |
 | links-avoid-boxes | pair: segment and obstacle, tag and node | /links/i | segment N from (X, Y) to (X, Y) enters NODE box WxH at (X, Y); tag WxH at (X, Y) overlaps NODE box WxH at (X, Y) |
 | pipes-land | each pipe end with a neighbor or a from or to target | /body/... (the pipe) | SIDE neighbor NODE has no box across the pipe's center Y; or from (to) target NODE has none, or lies on the other side |
-| iso-labels-clear | pair: label and label, label and block, label and Box, text and its block (iso only) | the later label's owner | ROLE billboard X,Y WxH overlaps ROLE billboard OWNER; or covers block NODE; or is crossed by an edge of slab NODE; or leaves its block |
+| iso-labels-clear | pair: two labels, label and later solid, label and Box edge, label and link, text and its block (iso only) | later label's owner | label OWNER at X,Y along A overlaps label OWNER; or is covered by NODE; or is crossed by an edge of slab NODE; or by /links/i; or leaves its block |
 | iso-links-clear | link leg (iso only) | /links/i | leg N runs D px beside an edge of zone NODE, closer than 24; or turns back; or last leg is L px, under 2 arrowheads |
 | print-fit | text run (with --print-width) | the run's node, or /links/i | PART "TEXT" prints at P pt, below 8 pt (S px on a C px canvas at W in) |
 | icon-matches-product | item with an icon or subtitle, kind with an icon table | the item | subtitle names P, whose icon is I; the item carries O; or subtitle names P, which has no product icon; the item carries the product icon I |
