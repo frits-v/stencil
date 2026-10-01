@@ -7,6 +7,7 @@ use stencil_model::checks::{CheckName, CheckReport, Defect};
 use stencil_model::pointer::NodePointer;
 use stencil_model::{Node, NodeRef, Page, PipeDir, body_nodes};
 
+use crate::compute::{PipeTarget, move_extent, targeted_pipes};
 use crate::route::{link_obstacles, segment_enters};
 use crate::{BoxRect, GEOMETRY_EPSILON_PX, NodeTag, PageGeometry, Part, RouteStatus};
 
@@ -386,13 +387,92 @@ struct PipeEnd {
     neighbor: usize,
 }
 
+/// One examined pipe end: a neighbor end of section 6, or an end aimed at a named target.
+enum ExaminedEnd<'a> {
+    Neighbor(PipeEnd),
+    Target {
+        pipe: usize,
+        dir: PipeDir,
+        end: TargetEnd,
+        target: &'a PipeTarget,
+    },
+}
+
+/// Which end of a pipe a target names: `from` the left (h) or upper (v) end, `to` the other.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum TargetEnd {
+    From,
+    To,
+}
+
+impl TargetEnd {
+    fn as_str(self) -> &'static str {
+        match self {
+            TargetEnd::From => "from",
+            TargetEnd::To => "to",
+        }
+    }
+}
+
+/// The defect message of a pipe end aimed at a named target (section 13.8 rule 6), or None
+/// when the end lands: the pipe's center on the move axis lies within the target's extent,
+/// the epsilon included, and the target lies on the end's side along the run axis.
+fn target_end_defect(
+    pipe: &crate::NodeGeometry,
+    dir: PipeDir,
+    end: TargetEnd,
+    target: &crate::NodeGeometry,
+) -> Option<String> {
+    let (center, axis) = match dir {
+        PipeDir::Horizontal => (pipe.bounds.y + pipe.bounds.height / 2.0, "y"),
+        PipeDir::Vertical => (pipe.bounds.x + pipe.bounds.width / 2.0, "x"),
+    };
+    let (start, finish) = move_extent(&target.bounds, dir);
+    if center < start - GEOMETRY_EPSILON_PX || center > finish + GEOMETRY_EPSILON_PX {
+        return Some(format!(
+            "{} target {} has no box across the pipe's center {axis} {center:.2}",
+            end.as_str(),
+            target.pointer
+        ));
+    }
+    let (pipe_run_center, target_run_center) = match dir {
+        PipeDir::Horizontal => (
+            pipe.bounds.x + pipe.bounds.width / 2.0,
+            target.bounds.x + target.bounds.width / 2.0,
+        ),
+        PipeDir::Vertical => (
+            pipe.bounds.y + pipe.bounds.height / 2.0,
+            target.bounds.y + target.bounds.height / 2.0,
+        ),
+    };
+    let on_its_side = match end {
+        TargetEnd::From => target_run_center < pipe_run_center,
+        TargetEnd::To => target_run_center > pipe_run_center,
+    };
+    if on_its_side {
+        return None;
+    }
+    let wrong_side = match (dir, end) {
+        (PipeDir::Horizontal, TargetEnd::From) => "on the right of",
+        (PipeDir::Horizontal, TargetEnd::To) => "on the left of",
+        (PipeDir::Vertical, TargetEnd::From) => "below",
+        (PipeDir::Vertical, TargetEnd::To) => "above",
+    };
+    Some(format!(
+        "{} target {} lies {wrong_side} the pipe",
+        end.as_str(),
+        target.pointer
+    ))
+}
+
 /// Each pipe end that faces a neighbor (section 6). A Pipe h, Tee arms included, looks along
 /// the Row that holds its nearest ancestor-or-self Row child: that child's siblings directly
 /// left and right are its neighbors. A Pipe v does the same along a Col, above and below. On
 /// each side the pipe's center on the cross axis must fall within the extent of some node in
-/// the neighbor's subtree that is not a Row or Col. A defect sits on the pipe and names the
-/// side and the neighbor. Not applicable on a page without pipes, or when no pipe has a
-/// neighbor.
+/// the neighbor's subtree that is not a Row or Col. A Pipe that names a target examines one
+/// end per target in place of the neighbor on that side (section 13.8 rule 6). A defect sits
+/// on the pipe and names the side and the neighbor or target. Not applicable on a page
+/// without pipes, or when no pipe has a neighbor or a target.
 pub fn pipes_land(page: &Page, geometry: &PageGeometry) -> CheckReport {
     let mut pipes: Vec<(NodePointer, PipeDir)> = Vec::new();
     for entry in body_nodes(page) {
@@ -426,9 +506,10 @@ pub fn pipes_land(page: &Page, geometry: &PageGeometry) -> CheckReport {
         .collect();
     let children_by_parent = children_by_parent(geometry);
 
+    let targeted = targeted_pipes(page, geometry);
     let mut examined: u64 = 0;
     let mut defects = Vec::new();
-    let mut ends: Vec<PipeEnd> = Vec::new();
+    let mut ends: Vec<ExaminedEnd<'_>> = Vec::new();
     for (pointer, dir) in &pipes {
         let Some(&pipe) = index_by_pointer.get(pointer.as_str()) else {
             examined += 1;
@@ -438,32 +519,86 @@ pub fn pipes_land(page: &Page, geometry: &PageGeometry) -> CheckReport {
             });
             continue;
         };
-        ends.extend(pipe_ends(geometry, &children_by_parent, pipe, *dir));
+        let targets = targeted
+            .iter()
+            .find(|targeted| targeted.pointer == *pointer);
+        let from = targets.and_then(|targets| targets.from.as_ref());
+        let to = targets.and_then(|targets| targets.to.as_ref());
+        let (before_side, after_side) = match dir {
+            PipeDir::Horizontal => ("left", "right"),
+            PipeDir::Vertical => ("above", "below"),
+        };
+        let mut neighbors = pipe_ends(geometry, &children_by_parent, pipe, *dir);
+        let before = neighbors.iter().position(|end| end.side == before_side);
+        let before = before.map(|position| neighbors.remove(position));
+        let after = neighbors.into_iter().find(|end| end.side == after_side);
+        for (target, end, neighbor) in [(from, TargetEnd::From, before), (to, TargetEnd::To, after)]
+        {
+            match (target, neighbor) {
+                (Some(target), _) => ends.push(ExaminedEnd::Target {
+                    pipe,
+                    dir: *dir,
+                    end,
+                    target,
+                }),
+                (None, Some(neighbor)) => ends.push(ExaminedEnd::Neighbor(neighbor)),
+                (None, None) => {}
+            }
+        }
     }
     if ends.is_empty() && defects.is_empty() {
         return CheckReport::not_applicable(CheckName::PipesLand, NO_PIPE_NEIGHBORS);
     }
 
-    for end in &ends {
-        let (Some(pipe), Some(neighbor)) = (
-            geometry.nodes.get(end.pipe),
-            geometry.nodes.get(end.neighbor),
-        ) else {
-            continue;
-        };
-        examined += 1;
-        let (center, axis) = match end.dir {
-            PipeDir::Horizontal => (pipe.bounds.y + pipe.bounds.height / 2.0, "y"),
-            PipeDir::Vertical => (pipe.bounds.x + pipe.bounds.width / 2.0, "x"),
-        };
-        if !subtree_spans(geometry, &children_by_parent, end.neighbor, end.dir, center) {
-            defects.push(Defect {
-                pointer: pipe.pointer.clone(),
-                message: format!(
-                    "{} neighbor {} has no box across the pipe's center {axis} {center:.2}",
-                    end.side, neighbor.pointer
-                ),
-            });
+    for examined_end in &ends {
+        match examined_end {
+            ExaminedEnd::Target {
+                pipe: pipe_index,
+                dir,
+                end,
+                target,
+            } => {
+                let Some(pipe) = geometry.nodes.get(*pipe_index) else {
+                    continue;
+                };
+                examined += 1;
+                let message = match target.node.and_then(|index| geometry.nodes.get(index)) {
+                    Some(target_node) => target_end_defect(pipe, *dir, *end, target_node),
+                    None => Some(format!(
+                        "{} target \"{}\" is not a geometry node",
+                        end.as_str(),
+                        target.id
+                    )),
+                };
+                if let Some(message) = message {
+                    defects.push(Defect {
+                        pointer: pipe.pointer.clone(),
+                        message,
+                    });
+                }
+            }
+            ExaminedEnd::Neighbor(end) => {
+                let (Some(pipe), Some(neighbor)) = (
+                    geometry.nodes.get(end.pipe),
+                    geometry.nodes.get(end.neighbor),
+                ) else {
+                    continue;
+                };
+                examined += 1;
+                let (center, axis) = match end.dir {
+                    PipeDir::Horizontal => (pipe.bounds.y + pipe.bounds.height / 2.0, "y"),
+                    PipeDir::Vertical => (pipe.bounds.x + pipe.bounds.width / 2.0, "x"),
+                };
+                if !subtree_spans(geometry, &children_by_parent, end.neighbor, end.dir, center) {
+                    defects.push(Defect {
+                        pointer: pipe.pointer.clone(),
+                        message: format!(
+                            "{} neighbor {} has no box across the pipe's center {axis} {center:.2}",
+                            end.side, neighbor.pointer
+                        ),
+                    });
+                }
+            }
         }
     }
     CheckReport {

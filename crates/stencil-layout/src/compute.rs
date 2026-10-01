@@ -1,17 +1,19 @@
 //! Runs taffy with the measure closure of section 3, re-measures every text leaf at its final
-//! width and converts parent-relative taffy boxes into absolute geometry.
+//! width, converts parent-relative taffy boxes into absolute geometry, and moves the slots of
+//! pipes that name their targets (section 13.8).
 
 use std::collections::HashMap;
 
 use stencil_model::pointer::NodePointer;
 use stencil_model::text::{MeasureError, TextMeasurer, WRAP_EPSILON_PX};
+use stencil_model::{Node, NodeRef, Page, PipeDir, body_nodes};
 use taffy::prelude::{AvailableSpace, NodeId};
 use taffy::{LayoutInput, LayoutOutput};
 
 use crate::build::{ArrowEnds, BuiltPage, LayoutTree, TextLeaf};
 use crate::{
-    ARROWHEAD_LENGTH_PX, BoxRect, LayoutError, NodeGeometry, PageGeometry, Part, PartName, Size,
-    TextRun,
+    ARROWHEAD_LENGTH_PX, BoxRect, LayoutError, NodeGeometry, NodeTag, PageGeometry, Part, PartName,
+    Size, TextRun,
 };
 
 /// Side of the Pipe dot box that an arrowhead replaces (section 2.7).
@@ -284,4 +286,205 @@ fn is_finite_box(bounds: &BoxRect) -> bool {
         && bounds.y.is_finite()
         && bounds.width.is_finite()
         && bounds.height.is_finite()
+}
+
+/// A Pipe node that names a target in `from` or `to` (section 13.8), with every index
+/// resolved against the geometry. An index is None only for a page that was never vetted.
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct TargetedPipe {
+    pub pointer: NodePointer,
+    pub dir: PipeDir,
+    pub pipe: Option<usize>,
+    pub from: Option<PipeTarget>,
+    pub to: Option<PipeTarget>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct PipeTarget {
+    pub id: String,
+    pub node: Option<usize>,
+}
+
+/// Every Pipe node of the page with a `from` or `to`, in body order. Tee arms cannot carry
+/// a target, so they are never listed.
+pub(crate) fn targeted_pipes(page: &Page, geometry: &PageGeometry) -> Vec<TargetedPipe> {
+    let entries = body_nodes(page);
+    let pointer_by_id: HashMap<&str, &NodePointer> = entries
+        .iter()
+        .filter_map(|entry| entry.node.id().map(|id| (id, &entry.pointer)))
+        .collect();
+    let index_by_pointer: HashMap<&str, usize> = geometry
+        .nodes
+        .iter()
+        .enumerate()
+        .map(|(index, node)| (node.pointer.as_str(), index))
+        .collect();
+    let resolve = |id: &Option<String>| {
+        id.as_ref().map(|id| PipeTarget {
+            id: id.clone(),
+            node: pointer_by_id
+                .get(id.as_str())
+                .and_then(|pointer| index_by_pointer.get(pointer.as_str()).copied()),
+        })
+    };
+    let mut pipes = Vec::new();
+    for entry in &entries {
+        let NodeRef::Node(Node::Pipe(pipe)) = entry.node else {
+            continue;
+        };
+        if pipe.from.is_none() && pipe.to.is_none() {
+            continue;
+        }
+        pipes.push(TargetedPipe {
+            pointer: entry.pointer.clone(),
+            dir: pipe.dir,
+            pipe: index_by_pointer.get(entry.pointer.as_str()).copied(),
+            from: resolve(&pipe.from),
+            to: resolve(&pipe.to),
+        });
+    }
+    pipes
+}
+
+/// The start and end of a box on the move axis of a pipe: y for h, x for v.
+pub(crate) fn move_extent(bounds: &BoxRect, dir: PipeDir) -> (f32, f32) {
+    match dir {
+        PipeDir::Horizontal => (bounds.y, bounds.bottom()),
+        PipeDir::Vertical => (bounds.x, bounds.right()),
+    }
+}
+
+/// The slot of a pipe (section 13.8 rule 1): its parent when that is a Row or Col holding
+/// only Pipes and Tees, otherwise the pipe itself.
+fn pipe_slot(geometry: &PageGeometry, pipe: usize) -> usize {
+    let Some(parent) = geometry.nodes.get(pipe).and_then(|node| node.parent) else {
+        return pipe;
+    };
+    let parent_is_line = geometry
+        .nodes
+        .get(parent)
+        .is_some_and(|node| matches!(node.tag, NodeTag::Row | NodeTag::Col));
+    let only_pipes = geometry
+        .nodes
+        .iter()
+        .filter(|node| node.parent == Some(parent))
+        .all(|node| matches!(node.tag, NodeTag::Pipe | NodeTag::Tee));
+    if parent_is_line && only_pipes {
+        parent
+    } else {
+        pipe
+    }
+}
+
+/// The aim span of one pipe (section 13.8 rule 2): the intersection of its targets' extents
+/// on the move axis, the `to` extent when the two do not overlap, or the one target's extent.
+fn aim_span(geometry: &PageGeometry, pipe: &TargetedPipe) -> Option<(f32, f32)> {
+    let extent = |target: &Option<PipeTarget>| {
+        target
+            .as_ref()
+            .and_then(|target| target.node)
+            .and_then(|index| geometry.nodes.get(index))
+            .map(|node| move_extent(&node.bounds, pipe.dir))
+    };
+    match (extent(&pipe.from), extent(&pipe.to)) {
+        (Some(from), Some(to)) => {
+            let start = from.0.max(to.0);
+            let end = from.1.min(to.1);
+            if start <= end {
+                Some((start, end))
+            } else {
+                Some(to)
+            }
+        }
+        (Some(only), None) | (None, Some(only)) => Some(only),
+        (None, None) => None,
+    }
+}
+
+/// Section 13.8 rule 4: every slot holding a pipe with targets moves along the move axis so
+/// its center lies on the midpoint of the union of its pipes' aim spans, clamped to its
+/// parent's content box. The slot's box, its descendants and their parts move by the same
+/// amount; no size changes and nothing else moves. Slots are processed in geometry order.
+pub(crate) fn translate_pipe_slots(page: &Page, geometry: &mut PageGeometry) {
+    let pipes = targeted_pipes(page, geometry);
+    let mut slots: Vec<(usize, PipeDir)> = Vec::new();
+    for pipe in &pipes {
+        let Some(index) = pipe.pipe else {
+            continue;
+        };
+        let slot = pipe_slot(geometry, index);
+        if !slots.iter().any(|(known, _)| *known == slot) {
+            slots.push((slot, pipe.dir));
+        }
+    }
+    slots.sort_by_key(|(slot, _)| *slot);
+
+    for (slot, dir) in slots {
+        let mut union: Option<(f32, f32)> = None;
+        for pipe in &pipes {
+            let in_slot = pipe
+                .pipe
+                .is_some_and(|index| pipe_slot(geometry, index) == slot);
+            if !in_slot || pipe.dir != dir {
+                continue;
+            }
+            if let Some((start, end)) = aim_span(geometry, pipe) {
+                union = Some(match union {
+                    None => (start, end),
+                    Some((union_start, union_end)) => (union_start.min(start), union_end.max(end)),
+                });
+            }
+        }
+        let Some((aim_start, aim_end)) = union else {
+            continue;
+        };
+        let Some(slot_node) = geometry.nodes.get(slot) else {
+            continue;
+        };
+        let (slot_start, slot_end) = move_extent(&slot_node.bounds, dir);
+        let slot_size = slot_end - slot_start;
+        let mut new_start = (aim_start + aim_end) / 2.0 - slot_size / 2.0;
+        if let Some(parent) = slot_node
+            .parent
+            .and_then(|parent| geometry.nodes.get(parent))
+        {
+            let (content_start, content_end) = move_extent(&parent.content, dir);
+            new_start = new_start.min(content_end - slot_size).max(content_start);
+        }
+        let shift = new_start - slot_start;
+        if shift != 0.0 {
+            translate_subtree(geometry, slot, dir, shift);
+        }
+    }
+}
+
+/// Moves the node at `root`, its descendants and every part of each by `shift` along the
+/// move axis. Geometry order is pre-order, so a parent comes before its children.
+fn translate_subtree(geometry: &mut PageGeometry, root: usize, dir: PipeDir, shift: f32) {
+    let mut in_subtree = vec![false; geometry.nodes.len()];
+    for index in 0..geometry.nodes.len() {
+        let parent_inside = geometry
+            .nodes
+            .get(index)
+            .and_then(|node| node.parent)
+            .and_then(|parent| in_subtree.get(parent).copied())
+            .unwrap_or(false);
+        if let Some(flag) = in_subtree.get_mut(index) {
+            *flag = index == root || parent_inside;
+        }
+    }
+    let shifted = |bounds: &mut BoxRect| match dir {
+        PipeDir::Horizontal => bounds.y += shift,
+        PipeDir::Vertical => bounds.x += shift,
+    };
+    for (node, inside) in geometry.nodes.iter_mut().zip(in_subtree) {
+        if !inside {
+            continue;
+        }
+        shifted(&mut node.bounds);
+        shifted(&mut node.content);
+        for part in &mut node.parts {
+            shifted(&mut part.bounds);
+        }
+    }
 }
