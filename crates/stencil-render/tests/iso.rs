@@ -5,27 +5,38 @@
     clippy::indexing_slicing
 )]
 
-//! The section 12 isometric projection: point map, solids, billboards, the SVG, shading,
-//! the iso-labels-clear check and the measured JSON.
+//! The section 12 isometric projection: point map, solids, labels on their planes, the SVG,
+//! shading, the iso-labels-clear check and the measured JSON.
 
 mod common;
 
 use common::{THEMES, project_page, project_zoomed, render_svg};
+use resvg::usvg::roxmltree;
 use serde_json::{Value, json};
-use stencil_layout::{BoxRect, PageGeometry, Size, TextRun};
+use stencil_layout::{
+    BoxRect, ISO_TYPE_SCALE, ISO_ZONE_LABEL_SCALE, NodeTag, PageGeometry, PartName, Size,
+    TextRun, turned_box, unturned_box,
+};
 use stencil_model::checks::{CheckName, CheckOutcome};
 use stencil_model::grammar::Role;
 use stencil_model::pointer::NodePointer;
 use stencil_model::{Page, Projection, Theme};
 use stencil_render::iso::{
-    Billboard, BillboardRole, ISO_MARGIN_PX, ISO_ZOOM_MAX, IsoPoint, IsoScene, ScreenPoint, Solid,
+    Axis, ISO_MARGIN_PX, ISO_ZOOM_MAX, IsoPoint, IsoScene, Label, PlaneMap, ScreenPoint, Solid,
     SolidShape, iso_labels_clear, iso_links_clear, project_point, zoomed_geometry,
 };
-use stencil_render::palette::{Face, LineUse, Palette, ZoneTab, shade};
-use stencil_render::{DeviceScale, measured_json, render_png};
+use stencil_render::palette::{Face, LineUse, Palette, shade};
+use stencil_render::{DeviceScale, format_number, measured_json, render_png};
 
 const HERO_JSON: &str = include_str!("../../../examples/hero-iso.json");
 const ZERO: ScreenPoint = ScreenPoint { x: 0.0, y: 0.0 };
+
+const HERO_ON_PREM: &str = "/body/0/children/0/children/0";
+const HERO_ROUTER: &str = "/body/0/children/0/children/0/children/0";
+const HERO_GCP: &str = "/body/0/children/1";
+const HERO_VPC: &str = "/body/0/children/1/children/0/children/0";
+const HERO_APIS: &str = "/body/0/children/1/children/0/children/1";
+const HERO_ZONES: [&str; 4] = [HERO_ON_PREM, HERO_GCP, HERO_VPC, HERO_APIS];
 
 fn hero_page() -> Page {
     serde_json::from_str(HERO_JSON).unwrap()
@@ -90,9 +101,9 @@ fn a_one_zone_page_is_centered_across_and_starts_at_the_body_top() {
         xs.extend(solid.silhouette.iter().map(|point| point.x));
         ys.extend(solid.silhouette.iter().map(|point| point.y));
     }
-    for billboard in &scene.billboards {
-        xs.extend([billboard.screen.x, billboard.screen.right()]);
-        ys.extend([billboard.screen.y, billboard.screen.bottom()]);
+    for label in &scene.labels {
+        xs.extend(label.corners.iter().map(|corner| corner.x));
+        ys.extend(label.corners.iter().map(|corner| corner.y));
     }
     let min_x = xs.iter().copied().fold(f32::INFINITY, f32::min);
     let max_x = xs.iter().copied().fold(f32::NEG_INFINITY, f32::max);
@@ -376,16 +387,19 @@ fn the_iso_svg_has_the_section_12_5_structure() {
         .map(|node| node.pointer.as_str())
         .collect();
     assert_eq!(data_ids, geometry_ids);
-    let billboard_ids: Vec<&str> = document
+    let plane_owners: Vec<&str> = document
         .descendants()
-        .filter_map(|node| element_attribute(node, "data-billboard"))
+        .filter(|node| node.attribute("data-plane").is_some())
+        .map(|plane| plane.parent_element().unwrap().attribute("data-id").unwrap())
         .collect();
-    let scene_ids: Vec<&str> = scene
-        .billboards
+    let label_owners: Vec<&str> = scene
+        .labels
         .iter()
-        .map(|billboard| billboard.owner.as_str())
+        .map(|label| label.owner.as_str())
         .collect();
-    assert_eq!(billboard_ids, scene_ids);
+    assert_eq!(plane_owners, label_owners);
+    assert!(!iso.svg.contains("data-billboard"));
+    assert!(!iso.svg.contains("data-layer"));
     assert!(!iso.svg.contains("<marker"));
     assert_eq!(
         iso.svg.matches("<defs>").count(),
@@ -395,7 +409,7 @@ fn the_iso_svg_has_the_section_12_5_structure() {
     assert!(!iso.svg.contains("<circle"));
     let root = document.root_element();
     let last = root.children().rfind(|node| node.is_element()).unwrap();
-    assert_eq!(last.attribute("data-layer"), Some("billboards"));
+    assert_eq!(last.attribute("data-id"), Some("/links/3"));
     let page_group = common::group(&document, "");
     assert_eq!(page_group.attribute("data-projection"), Some("iso"));
 
@@ -409,16 +423,254 @@ fn the_iso_svg_has_the_section_12_5_structure() {
         let first_polygon = children
             .iter()
             .position(|node| node.has_tag_name("polygon"));
-        let first_group = children.iter().position(|node| node.has_tag_name("g"));
-        match (first_polygon, first_group) {
-            (Some(polygon), Some(group)) => assert!(polygon < group),
+        let plane = children
+            .iter()
+            .position(|node| node.attribute("data-plane").is_some());
+        match (first_polygon, plane) {
+            (Some(polygon), Some(plane)) => assert!(polygon < plane),
             other => panic!("zone {:?}: {other:?}", zone.attribute("data-id")),
         }
         assert!(
             !zone.children().any(|node| node.has_tag_name("text")),
-            "a body group holds no text"
+            "a zone's text lies in its plane group"
         );
     }
+}
+
+#[test]
+fn the_plane_group_of_each_hero_zone_carries_its_label_map_as_its_matrix() {
+    let page = hero_page();
+    let geometry = common::layout_with_cosmic_text(&page);
+    let scene = project_page(&geometry).unwrap();
+    let svg = render_svg(&page, &geometry).unwrap();
+    let parsed = common::parse_xml(&svg.svg);
+    for owner in HERO_ZONES {
+        let label = label_of(&scene, owner);
+        let plane = plane_group(common::group(&parsed, owner)).unwrap();
+        let PlaneMap { a, b, c, d, e, f } = label.map;
+        for (written, expected) in matrix_of(plane).into_iter().zip([a, b, c, d, e, f]) {
+            assert_close(written, expected, owner);
+        }
+        assert_eq!(
+            plane.attribute("data-plane"),
+            Some(format_number(label.z).to_string().as_str()),
+            "{owner}"
+        );
+        assert_eq!(plane.attribute("data-axis"), Some("x"), "{owner}");
+        let texts = common::children_named(plane, "text");
+        assert_eq!(texts.len(), 1, "{owner}");
+    }
+}
+
+/// Each node group holds its faces, then its plane group, then the groups of its children,
+/// so every later solid is painted over the label.
+#[test]
+fn a_plane_group_follows_its_node_faces_and_precedes_every_later_node_group() {
+    for document in [HERO_JSON, common::G7_JSON] {
+        let mut page: Page = serde_json::from_str(document).unwrap();
+        page.projection = Projection::Iso;
+        let geometry = common::layout_with_cosmic_text(&page);
+        let scene = project_page(&geometry).unwrap();
+        let svg = render_svg(&page, &geometry).unwrap();
+        let parsed = common::parse_xml(&svg.svg);
+        let mut planes = 0;
+        for group in parsed
+            .descendants()
+            .filter(|node| node.has_tag_name("g") && node.attribute("data-id").is_some())
+        {
+            let Some(plane) = plane_group(group) else {
+                continue;
+            };
+            planes += 1;
+            let owner = group.attribute("data-id").unwrap();
+            let children: Vec<_> = group.children().filter(|node| node.is_element()).collect();
+            let at = children.iter().position(|child| *child == plane).unwrap();
+            assert!(at > 0, "{owner}: the plane group comes after the solid");
+            for (index, child) in children.iter().enumerate() {
+                let is_group = child.has_tag_name("g");
+                if index < at {
+                    assert!(!is_group, "{owner}: a group before the plane group");
+                } else if index > at {
+                    assert!(
+                        is_group && child.attribute("data-id").is_some(),
+                        "{owner}: {child:?} after the plane group"
+                    );
+                }
+            }
+        }
+        assert_eq!(planes, scene.labels.len());
+        assert!(planes >= 10, "{planes}");
+    }
+}
+
+#[test]
+fn a_zone_label_lies_on_its_slab_top_and_a_card_content_on_its_block_top() {
+    let page = hero_page();
+    let geometry = common::layout_with_cosmic_text(&page);
+    let scene = project_page(&geometry).unwrap();
+    let svg = render_svg(&page, &geometry).unwrap();
+    let parsed = common::parse_xml(&svg.svg);
+    let floor = 6.0 * scene.zoom;
+    for (owner, shape, top) in [
+        (HERO_ON_PREM, SolidShape::Slab, floor),
+        (HERO_GCP, SolidShape::Slab, floor),
+        (HERO_VPC, SolidShape::Slab, floor),
+        (HERO_APIS, SolidShape::Slab, 2.0 * floor),
+        (HERO_ROUTER, SolidShape::Block, floor + 18.0 * scene.zoom),
+    ] {
+        let solid = solid_of(&scene, owner);
+        let label = label_of(&scene, owner);
+        assert_eq!(solid.shape, shape, "{owner}");
+        assert_close(solid.base_z + solid.height, top, owner);
+        assert_close(label.z, top, owner);
+        let plane = plane_group(common::group(&parsed, owner)).unwrap();
+        assert_eq!(
+            plane.attribute("data-plane"),
+            Some(format_number(top).to_string().as_str()),
+            "{owner}"
+        );
+    }
+}
+
+/// A Col of two regions joined by a vertical pipe whose tag carries a label and a sub.
+fn vertical_pipe_page() -> Page {
+    iso_page(json!([
+        { "tag": "Col", "children": [
+            { "tag": "Box", "kind": "region", "tint": 1, "label": "Region A",
+              "children": [card("Primary", "cloud-run")] },
+            { "tag": "Pipe", "dir": "v", "line": "dash", "label": "failover replication",
+              "sub": "async" },
+            { "tag": "Box", "kind": "region", "tint": 2, "label": "Region B",
+              "children": [card("Standby", "cloud-run")] } ] }
+    ]))
+}
+
+#[test]
+fn a_vertical_pipe_tag_reads_along_y_and_is_drawn_in_its_unturned_box() {
+    let page = vertical_pipe_page();
+    let geometry = common::layout_with_cosmic_text(&page);
+    let scene = project_page(&geometry).unwrap();
+    let pipe_pointer = "/body/0/children/1";
+    let pipe = &geometry.nodes[index_of(&geometry, pipe_pointer)];
+    let label = label_of(&scene, pipe_pointer);
+    assert_eq!(label.axis, Axis::Y);
+    assert!(label.opaque);
+
+    let members: Vec<BoxRect> = [PartName::Tag, PartName::TagLabel, PartName::TagSub]
+        .into_iter()
+        .map(|name| pipe.part(name).unwrap().bounds)
+        .collect();
+    let union = members
+        .iter()
+        .copied()
+        .reduce(|first, second| {
+            let left = first.x.min(second.x);
+            let top = first.y.min(second.y);
+            BoxRect {
+                x: left,
+                y: top,
+                width: first.right().max(second.right()) - left,
+                height: first.bottom().max(second.bottom()) - top,
+            }
+        })
+        .unwrap();
+    let pivot = center_of(union);
+    let strip = pipe.part(PartName::TagLabel).unwrap();
+    let run = strip.text.as_ref().unwrap();
+    assert!(strip.bounds.height > strip.bounds.width, "{strip:?}");
+    assert!(run.metrics.width_px > strip.bounds.width, "{strip:?}");
+    for strip in &members {
+        let local = unturned_box(*strip, pivot);
+        assert_eq!((local.width, local.height), (strip.height, strip.width));
+        let turned = turned_box(local, pivot);
+        for (actual, expected) in [
+            (turned.x, strip.x),
+            (turned.y, strip.y),
+            (turned.width, strip.width),
+            (turned.height, strip.height),
+        ] {
+            assert_close(actual, expected, "turned_box of the unturned strip");
+        }
+    }
+
+    let svg = render_svg(&page, &geometry).unwrap();
+    let parsed = common::parse_xml(&svg.svg);
+    let plane = plane_group(common::group(&parsed, pipe_pointer)).unwrap();
+    assert_eq!(plane.attribute("data-axis"), Some("y"));
+    let PlaneMap { a, b, c, d, e, f } = label.map;
+    for (written, expected) in matrix_of(plane).into_iter().zip([a, b, c, d, e, f]) {
+        assert_close(written, expected, "pipe tag matrix");
+    }
+    let pill = common::children_named(plane, "rect")[0];
+    let number = |name: &str| -> f32 { pill.attribute(name).unwrap().parse().unwrap() };
+    let inset = pill
+        .attribute("stroke-width")
+        .map_or(0.0, |width| width.parse::<f32>().unwrap() / 2.0);
+    let local_tag = unturned_box(members[0], pivot);
+    assert!(local_tag.width > local_tag.height, "{local_tag:?}");
+    assert_close(number("x"), local_tag.x + inset, "pill x");
+    assert_close(number("y"), local_tag.y + inset, "pill y");
+    assert_close(number("width"), local_tag.width - 2.0 * inset, "pill width");
+    assert_close(number("height"), local_tag.height - 2.0 * inset, "pill height");
+    let lines: u32 = [PartName::TagLabel, PartName::TagSub]
+        .into_iter()
+        .map(|name| pipe.part(name).unwrap().text.as_ref().unwrap().metrics.line_count)
+        .sum();
+    assert_eq!(common::children_named(plane, "text").len() as u32, lines);
+}
+
+#[test]
+fn iso_layout_grows_a_card_title_by_the_type_scale_and_keeps_the_page_title_flat() {
+    let iso = iso_page(json!([
+        { "tag": "Box", "kind": "region", "tint": 1, "label": "Region",
+          "children": [card("Gateway", "cloud-run")] }
+    ]));
+    let mut flat = iso.clone();
+    flat.projection = Projection::Flat;
+    let iso_geometry = common::layout_with_fixed_metrics(&iso);
+    let flat_geometry = common::layout_with_fixed_metrics(&flat);
+    let style = |geometry: &PageGeometry, pointer: &str, name: PartName| {
+        geometry.nodes[index_of(geometry, pointer)]
+            .part(name)
+            .unwrap()
+            .text
+            .as_ref()
+            .unwrap()
+            .style
+    };
+    let card_pointer = "/body/0/children/0";
+    let iso_card = style(&iso_geometry, card_pointer, PartName::FunctionName);
+    let flat_card = style(&flat_geometry, card_pointer, PartName::FunctionName);
+    assert_close(
+        iso_card.size_px,
+        flat_card.size_px * ISO_TYPE_SCALE,
+        "card title size",
+    );
+    assert_close(
+        iso_card.line_height_px,
+        flat_card.line_height_px * ISO_TYPE_SCALE,
+        "card title line height",
+    );
+    let iso_zone = style(&iso_geometry, "/body/0", PartName::Label);
+    let flat_zone = style(&flat_geometry, "/body/0", PartName::Label);
+    assert_close(
+        iso_zone.size_px,
+        flat_zone.size_px * ISO_ZONE_LABEL_SCALE,
+        "zone label size",
+    );
+    let title_style = |geometry: &PageGeometry| {
+        geometry
+            .nodes
+            .iter()
+            .find(|node| node.tag == NodeTag::Title)
+            .unwrap()
+            .parts
+            .iter()
+            .find_map(|part| part.text.as_ref())
+            .unwrap()
+            .style
+    };
+    assert_eq!(title_style(&iso_geometry), title_style(&flat_geometry));
 }
 
 #[test]
@@ -548,14 +800,15 @@ fn wire_faces_are_white_or_unfilled() {
     }
 }
 
-/// A gcp zone, whose opaque label chip is exempt from the slab-edge pairs, around two
-/// cards.
+/// A gcp zone around two cards.
 fn two_card_zone(container: Value) -> Page {
     iso_page(json!([
         { "tag": "Box", "kind": "gcp", "label": "Google Cloud", "children": [container] }
     ]))
 }
 
+/// Three labels give three pairs; the zone label has two later blocks and the first card's
+/// label one; each label meets the one slab; each card's content must stay on its block.
 #[test]
 fn cards_side_by_side_leave_their_labels_clear() {
     let page = two_card_zone(json!({
@@ -564,148 +817,50 @@ fn cards_side_by_side_leave_their_labels_clear() {
     }));
     let geometry = common::layout_with_cosmic_text(&page);
     let scene = project_page(&geometry).unwrap();
+    assert_eq!(scene.labels.len(), 3);
     let report = iso_labels_clear(Some(&scene));
-    assert_eq!(report.examined, 9);
+    assert_eq!(report.examined, 3 + 3 + 3 + 2);
     assert_eq!(report.outcome(), CheckOutcome::Passed, "{report:?}");
 }
 
-/// Cards 8 px apart leave the second card's label no clear spot on its own top face, so it
-/// keeps its first placement and the check reports it over the first block.
-#[test]
-fn stacked_cards_put_the_second_label_over_the_first_block() {
-    let page = two_card_zone(json!({
-        "tag": "Col", "gap": 8,
-        "children": [card("Gateway", "cloud-run"), card("Warehouse", "bigquery")]
-    }));
-    let geometry = common::layout_with_cosmic_text(&page);
-    let scene = project_page(&geometry).unwrap();
-    let report = iso_labels_clear(Some(&scene));
-    assert_eq!(report.examined, 9);
-    let second = "/body/0/children/0/children/1";
-    let first = "/body/0/children/0/children/0";
-    assert!(
-        report
-            .defects
-            .iter()
-            .any(|defect| defect.pointer.as_str() == second
-                && defect.message.starts_with("content billboard ")
-                && defect.message.ends_with(&format!("covers block {first}"))),
-        "{report:?}"
-    );
-}
+/// Layout px are screen px, so a hand-built label's corners and marks are its boxes.
+const IDENTITY: PlaneMap = PlaneMap {
+    a: 1.0,
+    b: 0.0,
+    c: 0.0,
+    d: 1.0,
+    e: 0.0,
+    f: 0.0,
+};
 
-#[test]
-fn a_zone_edge_through_a_label_is_a_defect_and_one_under_a_chip_is_not() {
-    let slab = Solid {
-        node: 0,
-        pointer: NodePointer::root().child("body").index(0),
-        shape: SolidShape::Slab,
-        base_z: 0.0,
-        height: 0.0,
-        silhouette: [
-            ScreenPoint { x: 0.0, y: 5.0 },
-            ScreenPoint { x: 100.0, y: 5.0 },
-            ScreenPoint { x: 100.0, y: 5.0 },
-            ScreenPoint { x: 100.0, y: 50.0 },
-            ScreenPoint { x: 0.0, y: 50.0 },
-            ScreenPoint { x: 0.0, y: 50.0 },
-        ],
-        opaque: false,
-        footprint: NO_FOOTPRINT,
-    };
-    let label = billboard_at("label", 20.0);
-    let mut chip = billboard_at("chip", 60.0);
-    chip.opaque = true;
-    let mut scene = scene_with(vec![label, chip]);
-    scene.solids = vec![slab];
-    let report = iso_labels_clear(Some(&scene));
-    assert_eq!(report.examined, 2);
-    assert_eq!(report.defects.len(), 1, "{report:?}");
-    assert_eq!(report.defects[0].pointer.as_str(), "/body/0/label");
-    assert_eq!(
-        report.defects[0].message,
-        "content billboard 20.00,0.00 10.00x10.00 is crossed by an edge of slab /body/0"
-    );
-}
-
-#[test]
-fn an_edge_hidden_behind_a_later_block_does_not_cross_a_label() {
-    let edge_row = [
-        ScreenPoint { x: 0.0, y: 5.0 },
-        ScreenPoint { x: 100.0, y: 5.0 },
-        ScreenPoint { x: 100.0, y: 5.0 },
-        ScreenPoint { x: 100.0, y: 50.0 },
-        ScreenPoint { x: 0.0, y: 50.0 },
-        ScreenPoint { x: 0.0, y: 50.0 },
-    ];
-    let slab = Solid {
-        node: 0,
-        pointer: NodePointer::root().child("body").index(0),
-        shape: SolidShape::Slab,
-        base_z: 0.0,
-        height: 0.0,
-        silhouette: edge_row,
-        opaque: false,
-        footprint: NO_FOOTPRINT,
-    };
-    let block = Solid {
-        node: 1,
-        pointer: NodePointer::root().child("body").index(1),
-        shape: SolidShape::Block,
-        base_z: 0.0,
-        height: 18.0,
-        silhouette: [
-            ScreenPoint { x: 15.0, y: 0.0 },
-            ScreenPoint { x: 35.0, y: 0.0 },
-            ScreenPoint { x: 35.0, y: 4.0 },
-            ScreenPoint { x: 35.0, y: 8.0 },
-            ScreenPoint { x: 15.0, y: 8.0 },
-            ScreenPoint { x: 15.0, y: 4.0 },
-        ],
-        opaque: true,
-        footprint: NO_FOOTPRINT,
-    };
-    let mut label = billboard_at("label", 20.0);
-    label.node = Some(1);
-    label.marks = vec![BoxRect {
-        x: 20.0,
-        y: 4.0,
-        width: 10.0,
-        height: 2.0,
-    }];
-    let mut scene = scene_with(vec![label]);
-    scene.solids = vec![slab, block];
-    let report = iso_labels_clear(Some(&scene));
-    assert_eq!(report.examined, 1);
-    assert!(report.passed(), "{report:?}");
-}
-
-#[test]
-fn a_flat_render_is_not_applicable() {
-    let report = iso_labels_clear(None);
-    assert_eq!(report.check, CheckName::IsoLabelsClear);
-    assert_eq!(report.outcome(), CheckOutcome::NotApplicable);
-    assert_eq!(report.not_applicable, Some("projection is flat"));
-}
-
-fn billboard_at(owner: &str, x: f32) -> Billboard {
-    let screen = BoxRect {
+/// A 10 px label of a link-tag-like owner `/body/0/<owner>` at (x, 0), whose one mark
+/// fills it.
+fn label_at(owner: &str, x: f32) -> Label {
+    let flat = BoxRect {
         x,
         y: 0.0,
         width: 10.0,
         height: 10.0,
     };
-    Billboard {
+    let corners = IDENTITY.corners(flat);
+    Label {
         owner: NodePointer::root().child("body").index(0).child(owner),
         node: None,
-        role: BillboardRole::Content,
-        flat: screen,
         z: 0.0,
-        screen,
+        axis: Axis::X,
+        map: IDENTITY,
+        flat,
+        corners,
+        marks: vec![corners],
         opaque: false,
-        marks: vec![screen],
         contained: false,
     }
+}
+
+/// `label` with one mark, the box `mark`.
+fn with_mark(mut label: Label, mark: BoxRect) -> Label {
+    label.marks = vec![IDENTITY.corners(mark)];
+    label
 }
 
 /// A flat footprint far from every hand-built scene's links.
@@ -716,7 +871,56 @@ const NO_FOOTPRINT: BoxRect = BoxRect {
     height: 1.0,
 };
 
-fn scene_with(billboards: Vec<Billboard>) -> IsoScene {
+/// The silhouette of a slab of height 0 whose top face is the screen rectangle from x 0
+/// to 100 and y 5 to 50.
+const FLAT_SLAB: [ScreenPoint; 6] = [
+    ScreenPoint { x: 0.0, y: 5.0 },
+    ScreenPoint { x: 100.0, y: 5.0 },
+    ScreenPoint { x: 100.0, y: 5.0 },
+    ScreenPoint { x: 100.0, y: 50.0 },
+    ScreenPoint { x: 0.0, y: 50.0 },
+    ScreenPoint { x: 0.0, y: 50.0 },
+];
+
+/// A block whose silhouette is the screen rectangle from (left, top) to (right, bottom).
+fn block(node: usize, left: f32, top: f32, right: f32, bottom: f32) -> Solid {
+    let middle = (top + bottom) / 2.0;
+    Solid {
+        node,
+        pointer: NodePointer::root().child("body").index(node),
+        shape: SolidShape::Block,
+        base_z: 0.0,
+        height: 18.0,
+        silhouette: [
+            ScreenPoint { x: left, y: top },
+            ScreenPoint { x: right, y: top },
+            ScreenPoint { x: right, y: middle },
+            ScreenPoint {
+                x: right,
+                y: bottom,
+            },
+            ScreenPoint { x: left, y: bottom },
+            ScreenPoint { x: left, y: middle },
+        ],
+        opaque: true,
+        footprint: NO_FOOTPRINT,
+    }
+}
+
+fn flat_slab(node: usize) -> Solid {
+    Solid {
+        node,
+        pointer: NodePointer::root().child("body").index(node),
+        shape: SolidShape::Slab,
+        base_z: 0.0,
+        height: 0.0,
+        silhouette: FLAT_SLAB,
+        opaque: false,
+        footprint: NO_FOOTPRINT,
+    }
+}
+
+fn scene_with(labels: Vec<Label>) -> IsoScene {
     IsoScene {
         canvas: Size {
             width: 100.0,
@@ -725,36 +929,197 @@ fn scene_with(billboards: Vec<Billboard>) -> IsoScene {
         offset: ZERO,
         footer_shift: 0.0,
         solids: Vec::new(),
-        billboards,
+        labels,
         link_paths: Vec::new(),
         link_kinds: Vec::new(),
         zoom: 1.0,
+        origin: (0.0, 0.0),
     }
 }
 
 #[test]
-fn billboards_overlapping_by_two_hundredths_are_a_defect_and_touching_ones_are_not() {
-    let overlapping = scene_with(vec![billboard_at("a", 0.0), billboard_at("b", 9.98)]);
+fn a_flat_render_is_not_applicable() {
+    let report = iso_labels_clear(None);
+    assert_eq!(report.check, CheckName::IsoLabelsClear);
+    assert_eq!(report.outcome(), CheckOutcome::NotApplicable);
+    assert_eq!(report.not_applicable, Some("projection is flat"));
+}
+
+#[test]
+fn labels_overlapping_by_two_hundredths_are_a_defect_and_touching_ones_are_not() {
+    let overlapping = scene_with(vec![label_at("a", 0.0), label_at("b", 9.98)]);
     let report = iso_labels_clear(Some(&overlapping));
     assert_eq!(report.examined, 1);
     assert_eq!(report.defects.len(), 1);
     assert_eq!(report.defects[0].pointer.as_str(), "/body/0/b");
     assert_eq!(
         report.defects[0].message,
-        "content billboard 9.98,0.00 10.00x10.00 overlaps content billboard /body/0/a"
+        "label /body/0/b at 9.98,0.00 along x overlaps label /body/0/a"
     );
 
-    let touching = scene_with(vec![billboard_at("a", 0.0), billboard_at("b", 10.0)]);
+    let touching = scene_with(vec![label_at("a", 0.0), label_at("b", 10.0)]);
     let report = iso_labels_clear(Some(&touching));
     assert_eq!(report.examined, 1);
     assert!(report.passed());
 }
 
 #[test]
-fn one_billboard_and_no_block_examines_nothing_and_fails() {
-    let report = iso_labels_clear(Some(&scene_with(vec![billboard_at("a", 0.0)])));
+fn one_label_and_no_block_examines_nothing_and_fails() {
+    let report = iso_labels_clear(Some(&scene_with(vec![label_at("a", 0.0)])));
     assert_eq!(report.examined, 0);
     assert_eq!(report.outcome(), CheckOutcome::Failed);
+}
+
+#[test]
+fn a_block_painted_after_a_label_covers_it_and_under_a_link_tag_every_block_counts() {
+    let over = block(1, 15.0, 0.0, 35.0, 8.0);
+    let mut covered = label_at("label", 20.0);
+    covered.node = Some(0);
+    let mut scene = scene_with(vec![covered]);
+    scene.solids = vec![over.clone()];
+    let report = iso_labels_clear(Some(&scene));
+    assert_eq!(report.examined, 1);
+    assert_eq!(report.defects.len(), 1, "{report:?}");
+    assert_eq!(report.defects[0].pointer.as_str(), "/body/0/label");
+    assert_eq!(
+        report.defects[0].message,
+        "label /body/0/label at 20.00,0.00 along x is covered by /body/1"
+    );
+
+    let mut painted_over_it = label_at("label", 20.0);
+    painted_over_it.node = Some(2);
+    let mut scene = scene_with(vec![painted_over_it]);
+    scene.solids = vec![over.clone()];
+    let report = iso_labels_clear(Some(&scene));
+    assert_eq!(report.examined, 0, "a block painted before its label is not examined");
+    assert!(report.defects.is_empty(), "{report:?}");
+
+    let mut scene = scene_with(vec![label_at("tag", 20.0)]);
+    scene.solids = vec![over];
+    let report = iso_labels_clear(Some(&scene));
+    assert_eq!(report.examined, 1);
+    assert_eq!(
+        report.defects[0].message,
+        "label /body/0/tag at 20.00,0.00 along x is covered by /body/1"
+    );
+}
+
+#[test]
+fn a_zone_edge_through_a_label_is_a_defect_and_one_under_an_opaque_label_is_not() {
+    let label = label_at("label", 20.0);
+    let mut chip = label_at("chip", 60.0);
+    chip.opaque = true;
+    let mut scene = scene_with(vec![label, chip]);
+    scene.solids = vec![flat_slab(0)];
+    let report = iso_labels_clear(Some(&scene));
+    assert_eq!(report.examined, 2);
+    assert_eq!(report.defects.len(), 1, "{report:?}");
+    assert_eq!(report.defects[0].pointer.as_str(), "/body/0/label");
+    assert_eq!(
+        report.defects[0].message,
+        "label /body/0/label at 20.00,0.00 along x is crossed by an edge of slab /body/0"
+    );
+}
+
+#[test]
+fn an_edge_hidden_behind_a_later_block_does_not_cross_a_label() {
+    let mut label = with_mark(
+        label_at("label", 20.0),
+        BoxRect {
+            x: 20.0,
+            y: 4.0,
+            width: 10.0,
+            height: 2.0,
+        },
+    );
+    label.node = Some(1);
+    let mut scene = scene_with(vec![label]);
+    scene.solids = vec![flat_slab(0), block(1, 15.0, 0.0, 35.0, 8.0)];
+    let report = iso_labels_clear(Some(&scene));
+    assert_eq!(report.examined, 1);
+    assert!(report.passed(), "{report:?}");
+}
+
+#[test]
+fn a_link_through_a_label_is_a_defect_and_one_under_an_opaque_label_is_not() {
+    let label = label_at("label", 20.0);
+    let mut tag = label_at("tag", 0.0);
+    tag.opaque = true;
+    let mut scene = scene_with(vec![label, tag]);
+    // The flat points (x, y) with x + y = 10 lie on the screen line y = 5.
+    scene.link_paths = vec![vec![
+        IsoPoint {
+            x: -30.0,
+            y: 40.0,
+            z: 0.0,
+        },
+        IsoPoint {
+            x: 40.0,
+            y: -30.0,
+            z: 0.0,
+        },
+    ]];
+    scene.link_kinds = vec![(stencil_model::Line::Solid, Some(1))];
+    let report = iso_labels_clear(Some(&scene));
+    assert_eq!(report.examined, 2);
+    assert_eq!(report.defects.len(), 1, "{report:?}");
+    assert_eq!(
+        report.defects[0].message,
+        "label /body/0/label at 20.00,0.00 along x is crossed by link /links/0"
+    );
+}
+
+#[test]
+fn text_that_leaves_its_block_is_a_defect() {
+    let mark = BoxRect {
+        x: 5.0,
+        y: 5.0,
+        width: 20.0,
+        height: 10.0,
+    };
+    let mut inside = with_mark(label_at("text", 5.0), mark);
+    inside.node = Some(0);
+    inside.contained = true;
+    let outside = with_mark(
+        inside.clone(),
+        BoxRect {
+            width: 50.0,
+            ..mark
+        },
+    );
+    for (label, defects) in [(inside, 0), (outside, 1)] {
+        let mut scene = scene_with(vec![label]);
+        scene.solids = vec![block(0, 0.0, 0.0, 40.0, 40.0)];
+        let report = iso_labels_clear(Some(&scene));
+        assert_eq!(report.examined, 1);
+        assert_eq!(report.defects.len(), defects, "{report:?}");
+        if defects == 1 {
+            assert_eq!(
+                report.defects[0].message,
+                "label /body/0/text at 5.00,0.00 along x leaves its block"
+            );
+        }
+    }
+}
+
+/// Ten labels give 45 pairs. Painted-later opaque solids: 6, 5, 4, 4, 3, 2, 1 and 0 for the
+/// zone and card labels in geometry order, 4 blocks for each of the two link tags. The
+/// eight non-opaque labels each meet the four slabs and the four link paths, and the four
+/// cards' content must stay on its block.
+#[test]
+fn the_hero_labels_are_clear() {
+    let page = hero_page();
+    let geometry = common::layout_with_cosmic_text(&page);
+    let scene = stencil_render::iso::project_page(
+        &geometry,
+        &common::solid_inputs(&page, &geometry),
+    )
+    .unwrap();
+    assert_eq!(scene.labels.len(), 10);
+    let report = iso_labels_clear(Some(&scene));
+    assert_eq!(report.examined, 45 + (25 + 8) + 32 + 32 + 4);
+    assert!(report.defects.is_empty(), "{report:#?}");
+    assert!(report.passed());
 }
 
 #[test]
@@ -772,13 +1137,10 @@ fn the_hero_measured_json_is_theme_independent_and_keeps_the_flat_nodes() {
             serde_json::to_vec(&iso["nodes"]).unwrap(),
             serde_json::to_vec(&flat["nodes"]).unwrap()
         );
-        assert_eq!(
-            iso["projection"]["billboards"].as_array().unwrap().len(),
-            10
-        );
+        assert_eq!(iso["projection"]["labels"].as_array().unwrap().len(), 10);
         assert_eq!(iso["projection"]["kind"], "iso");
-        for billboard in iso["projection"]["billboards"].as_array().unwrap() {
-            let id = billboard["id"].as_str().unwrap();
+        for label in iso["projection"]["labels"].as_array().unwrap() {
+            let id = label["id"].as_str().unwrap();
             assert!(hero_document().pointer(id).is_some(), "{id}");
         }
         measured_outputs.push(serde_json::to_vec_pretty(&iso).unwrap());
@@ -791,122 +1153,30 @@ fn the_hero_measured_json_is_theme_independent_and_keeps_the_flat_nodes() {
     assert_ne!(svg_outputs[1], svg_outputs[2]);
 }
 
-/// The first element of a billboard group, and its text elements.
-fn billboard_parts<'a>(
-    parsed: &'a resvg::usvg::roxmltree::Document<'a>,
-    owner: &str,
-) -> (
-    resvg::usvg::roxmltree::Node<'a, 'a>,
-    Vec<resvg::usvg::roxmltree::Node<'a, 'a>>,
-) {
-    let group = parsed
-        .descendants()
-        .find(|node| node.attribute("data-billboard") == Some(owner))
-        .unwrap();
-    let first = group.children().find(|node| node.is_element()).unwrap();
-    let texts = group
-        .descendants()
-        .filter(|node| node.has_tag_name("text"))
-        .collect();
-    (first, texts)
-}
-
-const HERO_ON_PREM: &str = "/body/0/children/0/children/0";
-const HERO_ROUTER: &str = "/body/0/children/0/children/0/children/0";
-const HERO_GCP: &str = "/body/0/children/1";
-const HERO_VPC: &str = "/body/0/children/1/children/0/children/0";
-const HERO_APIS: &str = "/body/0/children/1/children/0/children/1";
-
 #[test]
-fn card_text_sits_on_a_plate_on_a_light_page_and_on_none_on_a_dark_one() {
-    for theme in THEMES {
-        let mut page = hero_page();
-        page.theme = Some(theme.to_string());
-        let geometry = common::layout_with_cosmic_text(&page);
-        let svg = render_svg(&page, &geometry).unwrap();
-        let parsed = common::parse_xml(&svg.svg);
-        let theme_data = common::theme(theme);
-        let palette = Palette::new(&theme_data, Projection::Iso);
-        let card_top = palette
-            .block_faces(Some(palette.card().fill), palette.card().border)
-            .unwrap()
-            .top
-            .unwrap();
-        let (first, texts) = billboard_parts(&parsed, HERO_ROUTER);
-        assert!(!texts.is_empty());
-        assert!(texts.iter().all(|text| text.attribute("stroke").is_none()));
-        let plated =
-            first.has_tag_name("rect") && first.attribute("fill") == Some(card_top.as_str());
-        let dark = ["dusk", "clear-dark"].contains(&theme);
-        assert_eq!(plated, !dark, "{theme:?}");
-        assert_eq!(palette.iso_text_plates(), !dark);
-    }
-}
-
-#[test]
-fn zone_tabs_are_filled_at_the_top_level_and_outlined_when_nested() {
-    for theme in THEMES {
-        let mut page = hero_page();
-        page.theme = Some(theme.to_string());
-        let geometry = common::layout_with_cosmic_text(&page);
-        let svg = render_svg(&page, &geometry).unwrap();
-        let parsed = common::parse_xml(&svg.svg);
-        let theme_data = common::theme(theme);
-        let palette = Palette::new(&theme_data, Projection::Iso);
-        for (owner, kind) in [
-            (HERO_ON_PREM, common::zone("onprem", Some(1))),
-            (HERO_GCP, common::zone("gcp", None)),
-        ] {
-            let ZoneTab::Filled { fill, ink } = palette.iso_zone_tab(kind.0, kind.1, false) else {
-                panic!("a top-level tab is filled");
-            };
-            let (tab, texts) = billboard_parts(&parsed, owner);
-            assert!(tab.has_tag_name("rect"), "{theme:?} {owner}");
-            assert_eq!(tab.attribute("fill"), Some(fill), "{theme:?} {owner}");
-            assert!(tab.attribute("stroke").is_none(), "{theme:?} {owner}");
-            assert_eq!(texts[0].attribute("fill"), Some(ink), "{theme:?} {owner}");
-        }
-        let gcp_top = palette
-            .slab_faces(common::zone("gcp", None).0, common::zone("gcp", None).1)
-            .unwrap()
-            .top
-            .unwrap();
-        let ZoneTab::Outline { border, ink } =
-            palette.iso_zone_tab(common::zone("vpc", None).0, None, true)
-        else {
-            panic!("a nested tab is an outline");
-        };
-        let (tab, texts) = billboard_parts(&parsed, HERO_VPC);
-        assert_eq!(tab.attribute("fill"), Some(gcp_top.as_str()), "{theme:?}");
-        assert_eq!(tab.attribute("stroke"), Some(border.color), "{theme:?}");
-        assert_eq!(texts[0].attribute("fill"), Some(ink), "{theme:?}");
-    }
-}
-
-#[test]
-fn every_zone_tab_hangs_from_its_zone_back_corner() {
+fn the_measured_projection_lists_each_label_with_its_id_axis_corners_and_z() {
     let page = hero_page();
     let geometry = common::layout_with_cosmic_text(&page);
     let scene = project_page(&geometry).unwrap();
-    for owner in [HERO_ON_PREM, HERO_GCP, HERO_VPC, HERO_APIS] {
-        let solid = scene
-            .solids
-            .iter()
-            .find(|solid| solid.pointer.as_str() == owner)
-            .unwrap();
-        let tab = scene
-            .billboards
-            .iter()
-            .find(|billboard| billboard.owner.as_str() == owner)
-            .unwrap();
-        let back = solid.silhouette[0];
-        assert!(
-            (tab.screen.x - back.x).abs() < 1e-3,
-            "{owner} {tab:?} {back:?}"
-        );
-        let middle = tab.screen.y + tab.screen.height / 2.0;
-        assert!((middle - back.y).abs() < 1e-3, "{owner} {tab:?} {back:?}");
-        assert!(tab.opaque);
+    let measured = measured_json(&hero_document(), &geometry, Some(&scene));
+    let projection = measured["projection"].as_object().unwrap();
+    let keys: Vec<&String> = projection.keys().collect();
+    assert_eq!(keys, ["canvas", "footer_shift", "kind", "labels", "offset"]);
+    assert!(projection.get("billboards").is_none());
+    let labels = projection["labels"].as_array().unwrap();
+    assert_eq!(labels.len(), scene.labels.len());
+    for (written, label) in labels.iter().zip(&scene.labels) {
+        let keys: Vec<&String> = written.as_object().unwrap().keys().collect();
+        assert_eq!(keys, ["axis", "corners", "id", "z"]);
+        assert_eq!(written["id"], label.owner.as_str());
+        assert_eq!(written["axis"], label.axis.as_str());
+        assert_eq!(written["z"], format_number(label.z).to_json());
+        let corners = written["corners"].as_array().unwrap();
+        assert_eq!(corners.len(), 4);
+        for (corner, expected) in corners.iter().zip(label.corners) {
+            assert_eq!(corner["x"], format_number(expected.x).to_json());
+            assert_eq!(corner["y"], format_number(expected.y).to_json());
+        }
     }
 }
 
@@ -1102,10 +1372,7 @@ fn every_theme_draws_a_ringed_icon_chip_under_iso_and_center_flat_draws_none() {
         let geometry = common::layout_with_cosmic_text(&page);
         let svg = render_svg(&page, &geometry).unwrap();
         let parsed = common::parse_xml(&svg.svg);
-        let group = parsed
-            .descendants()
-            .find(|node| node.attribute("data-billboard") == Some(HERO_ROUTER))
-            .unwrap();
+        let group = plane_group(common::group(&parsed, HERO_ROUTER)).unwrap();
         let children: Vec<_> = group.children().filter(|node| node.is_element()).collect();
         let image = children
             .iter()
@@ -1240,11 +1507,7 @@ fn a_narrow_body_is_zoomed_to_the_cap_with_heights_and_text_sizes_kept_in_propor
     let scene = project_page(&geometry).unwrap();
     assert_eq!(scene.zoom, ISO_ZOOM_MAX);
     let card_pointer = "/body/0/children/0/children/0";
-    let block = scene
-        .solids
-        .iter()
-        .find(|solid| solid.pointer.as_str() == card_pointer)
-        .unwrap();
+    let block = solid_of(&scene, card_pointer);
     assert_close(block.height, 18.0 * ISO_ZOOM_MAX, "block height");
     let flat_card = &geometry.nodes[index_of(&geometry, card_pointer)];
     assert_close(
@@ -1252,32 +1515,70 @@ fn a_narrow_body_is_zoomed_to_the_cap_with_heights_and_text_sizes_kept_in_propor
         flat_card.bounds.width * ISO_ZOOM_MAX,
         "footprint width",
     );
-    let billboard = scene
-        .billboards
-        .iter()
-        .find(|billboard| billboard.owner.as_str() == card_pointer)
-        .unwrap();
-    let icon = flat_card.part(stencil_layout::PartName::Icon).unwrap();
-    assert!(
-        billboard.screen.width < flat_card.bounds.width,
-        "{billboard:?}"
+    let label = label_of(&scene, card_pointer);
+    assert_close(
+        screen_distance(label.corners[0], label.corners[1]),
+        label.flat.width * ISO_ZOOM_MAX,
+        "label width on screen",
     );
-    assert!(billboard.screen.width >= icon.bounds.width);
+    assert_close(
+        screen_distance(label.corners[1], label.corners[2]),
+        label.flat.height * ISO_ZOOM_MAX,
+        "label height on screen",
+    );
     let (zoomed, _) = zoomed_geometry(&geometry).unwrap();
-    let zoomed_icon = zoomed.nodes[index_of(&zoomed, card_pointer)]
-        .part(stencil_layout::PartName::Icon)
-        .unwrap()
-        .bounds;
-    let top = project_point(
-        block.footprint.x + block.footprint.width / 2.0,
-        block.footprint.y + block.footprint.height / 2.0,
+    let icon = flat_card.part(PartName::Icon).unwrap().bounds;
+    assert_eq!(
+        zoomed.nodes[index_of(&zoomed, card_pointer)]
+            .part(PartName::Icon)
+            .unwrap()
+            .bounds,
+        icon,
+        "a plane member stays in layout px"
+    );
+    let (icon_x, icon_y) = center_of(icon);
+    let (origin_x, origin_y) = scene.origin;
+    let scene_icon = project_point(
+        origin_x + (icon_x - origin_x) * ISO_ZOOM_MAX,
+        origin_y + (icon_y - origin_y) * ISO_ZOOM_MAX,
         block.base_z + block.height,
         scene.offset,
     );
-    let icon_x = billboard.screen.x + zoomed_icon.x - billboard.flat.x + zoomed_icon.width / 2.0;
-    let icon_y = billboard.screen.y + zoomed_icon.y - billboard.flat.y + zoomed_icon.height / 2.0;
-    assert_close(icon_x, top.x, "icon center x on the top face center");
-    assert_close(icon_y, top.y, "icon center y on the top face center");
+    let drawn_icon = label.map.apply(icon_x, icon_y);
+    assert_close(drawn_icon.x, scene_icon.x, "icon center x");
+    assert_close(drawn_icon.y, scene_icon.y, "icon center y");
+}
+
+#[test]
+fn a_label_at_zoom_two_lies_twice_as_far_from_the_body_origin_as_at_zoom_one() {
+    let page = two_card_zone(json!({
+        "tag": "Row", "gap": 32,
+        "children": [card("Gateway", "cloud-run"), card("Warehouse", "bigquery")]
+    }));
+    let geometry = common::layout_with_fixed_metrics(&page);
+    let one = project_zoomed(&geometry, 1.0).unwrap();
+    let two = project_zoomed(&geometry, 2.0).unwrap();
+    assert_eq!(one.labels.len(), 3);
+    for (first, second) in one.labels.iter().zip(&two.labels) {
+        assert_eq!(first.owner, second.owner);
+        assert_eq!(first.flat, second.flat);
+        assert_close(second.z, 2.0 * first.z, "plane height");
+        let first_origin = first.map.apply(one.origin.0, one.origin.1);
+        let second_origin = second.map.apply(two.origin.0, two.origin.1);
+        for (near, far) in first.corners.iter().zip(&second.corners) {
+            let what = format!("corner of {}", first.owner);
+            assert_close(
+                far.x - second_origin.x,
+                2.0 * (near.x - first_origin.x),
+                &what,
+            );
+            assert_close(
+                far.y - second_origin.y,
+                2.0 * (near.y - first_origin.y),
+                &what,
+            );
+        }
+    }
 }
 
 #[test]
@@ -1295,7 +1596,7 @@ fn a_wide_body_is_not_zoomed() {
 }
 
 #[test]
-fn a_card_icon_stands_on_its_block_top_center_with_the_name_under_it() {
+fn a_card_icon_lies_on_its_block_top_face_with_the_name_under_it() {
     let hero = hero_page();
     let geometry = common::layout_with_cosmic_text(&hero);
     let (zoomed, zoom) = zoomed_geometry(&geometry).unwrap();
@@ -1306,45 +1607,26 @@ fn a_card_icon_stands_on_its_block_top_center_with_the_name_under_it() {
         "/body/0/children/1/children/0/children/1/children/0",
     ] {
         let node = &zoomed.nodes[index_of(&zoomed, owner)];
-        let block = scene
-            .solids
-            .iter()
-            .find(|solid| solid.pointer.as_str() == owner)
-            .unwrap();
-        let billboard = scene
-            .billboards
-            .iter()
-            .find(|billboard| billboard.owner.as_str() == owner)
-            .unwrap();
-        let icon = node.part(stencil_layout::PartName::Icon).unwrap().bounds;
-        let name = node
-            .part(stencil_layout::PartName::FunctionName)
-            .unwrap()
-            .bounds;
+        let block = solid_of(&scene, owner);
+        let label = label_of(&scene, owner);
+        assert_eq!(label.axis, Axis::X, "{owner}");
+        let icon = node.part(PartName::Icon).unwrap().bounds;
+        let name = node.part(PartName::FunctionName).unwrap().bounds;
         assert!(name.y > icon.bottom(), "{owner}");
-        let icon_center = (
-            billboard.screen.x + icon.x - billboard.flat.x + icon.width / 2.0,
-            billboard.screen.y + icon.y - billboard.flat.y + icon.height / 2.0,
-        );
+        let (icon_x, icon_y) = center_of(icon);
+        let icon_center = label.map.apply(icon_x, icon_y);
         let top_z = block.base_z + block.height;
         let corner = |x: f32, y: f32| project_point(x, y, top_z, scene.offset);
         let face = block.footprint;
-        let polygon = [
+        let top_face = [
             corner(face.x, face.y),
             corner(face.right(), face.y),
             corner(face.right(), face.bottom()),
             corner(face.x, face.bottom()),
         ];
-        let inside = (0..4).all(|index| {
-            let start = polygon[index];
-            let end = polygon[(index + 1) % 4];
-            (end.x - start.x) * (icon_center.1 - start.y)
-                - (end.y - start.y) * (icon_center.0 - start.x)
-                >= 0.0
-        });
         assert!(
-            inside,
-            "{owner}: icon {icon_center:?} off the top face {polygon:?}"
+            inside_convex(icon_center, &top_face),
+            "{owner}: icon {icon_center:?} off the top face {top_face:?}"
         );
     }
 }
@@ -1361,15 +1643,10 @@ fn the_hero_primary_is_one_straight_leg_with_its_tag_on_it() {
         primary.iter().all(|point| (point.y - first.y).abs() < 1e-3),
         "{primary:?}"
     );
-    let tag = scene
-        .billboards
-        .iter()
-        .find(|billboard| billboard.owner.as_str() == "/links/0")
-        .unwrap();
-    let center = ScreenPoint {
-        x: tag.screen.x + tag.screen.width / 2.0,
-        y: tag.screen.y + tag.screen.height / 2.0,
-    };
+    let tag = label_of(&scene, "/links/0");
+    assert_eq!(tag.axis, Axis::X);
+    let (center_x, center_y) = center_of(tag.flat);
+    let center = tag.map.apply(center_x, center_y);
     let on_path = primary.windows(2).any(|pair| {
         let start = project_point(pair[0].x, pair[0].y, pair[0].z, scene.offset);
         let end = project_point(pair[1].x, pair[1].y, pair[1].z, scene.offset);
@@ -1468,47 +1745,6 @@ fn a_leg_beside_a_zone_edge_a_leg_that_turns_back_and_a_short_last_leg_are_defec
         report.defects[0].message,
         "last leg is 30.00 px, shorter than two arrowheads (36.00 px)"
     );
-}
-
-#[test]
-fn text_that_leaves_its_block_is_a_defect() {
-    let block = Solid {
-        node: 0,
-        pointer: NodePointer::root().child("body").index(0),
-        shape: SolidShape::Block,
-        base_z: 0.0,
-        height: 18.0,
-        silhouette: [
-            ScreenPoint { x: 0.0, y: 0.0 },
-            ScreenPoint { x: 40.0, y: 0.0 },
-            ScreenPoint { x: 40.0, y: 20.0 },
-            ScreenPoint { x: 40.0, y: 40.0 },
-            ScreenPoint { x: 0.0, y: 40.0 },
-            ScreenPoint { x: 0.0, y: 20.0 },
-        ],
-        opaque: true,
-        footprint: NO_FOOTPRINT,
-    };
-    let mut inside = billboard_at("text", 5.0);
-    inside.node = Some(0);
-    inside.contained = true;
-    inside.marks = vec![BoxRect {
-        x: 5.0,
-        y: 5.0,
-        width: 20.0,
-        height: 10.0,
-    }];
-    let mut outside = inside.clone();
-    outside.marks[0].width = 50.0;
-    for (billboard, defects) in [(inside, 0), (outside, 1)] {
-        let mut scene = scene_with(vec![billboard]);
-        scene.solids = vec![block.clone()];
-        let report = iso_labels_clear(Some(&scene));
-        assert_eq!(report.defects.len(), defects, "{report:?}");
-        if defects == 1 {
-            assert!(report.defects[0].message.ends_with("leaves its block"));
-        }
-    }
 }
 
 #[test]
@@ -1611,4 +1847,67 @@ fn the_vpc_is_a_ring_under_every_theme() {
         let solid = scene.solids.iter().find(|solid| solid.node == vpc).unwrap();
         assert_eq!(solid.height, 0.0, "{name}");
     }
+}
+
+/// The label `owner` draws in `scene`.
+fn label_of<'a>(scene: &'a IsoScene, owner: &str) -> &'a Label {
+    scene
+        .labels
+        .iter()
+        .find(|label| label.owner.as_str() == owner)
+        .unwrap_or_else(|| panic!("no label of {owner}"))
+}
+
+/// The solid `owner` draws in `scene`.
+fn solid_of<'a>(scene: &'a IsoScene, owner: &str) -> &'a Solid {
+    scene
+        .solids
+        .iter()
+        .find(|solid| solid.pointer.as_str() == owner)
+        .unwrap_or_else(|| panic!("no solid of {owner}"))
+}
+
+fn center_of(bounds: BoxRect) -> (f32, f32) {
+    (
+        bounds.x + bounds.width / 2.0,
+        bounds.y + bounds.height / 2.0,
+    )
+}
+
+/// The direct `<g data-plane>` child of a node or link group.
+fn plane_group<'a, 'input>(
+    group: roxmltree::Node<'a, 'input>,
+) -> Option<roxmltree::Node<'a, 'input>> {
+    group
+        .children()
+        .find(|child| child.has_tag_name("g") && child.attribute("data-plane").is_some())
+}
+
+/// The six numbers of a `transform="matrix(a b c d e f)"`.
+fn matrix_of(group: roxmltree::Node<'_, '_>) -> [f32; 6] {
+    let transform = group.attribute("transform").unwrap();
+    let inner = transform
+        .strip_prefix("matrix(")
+        .and_then(|rest| rest.strip_suffix(')'))
+        .unwrap_or_else(|| panic!("not a matrix: {transform}"));
+    let numbers: Vec<f32> = inner
+        .split(' ')
+        .map(|number| number.parse().unwrap())
+        .collect();
+    numbers.try_into().unwrap()
+}
+
+/// True when `point` lies inside the convex `polygon`, whose vertices run clockwise on
+/// screen, or within 0.01 px of its boundary.
+fn inside_convex(point: ScreenPoint, polygon: &[ScreenPoint]) -> bool {
+    (0..polygon.len()).all(|index| {
+        let start = polygon[index];
+        let end = polygon[(index + 1) % polygon.len()];
+        let cross = (end.x - start.x) * (point.y - start.y) - (end.y - start.y) * (point.x - start.x);
+        cross / (end.x - start.x).hypot(end.y - start.y) >= -0.01
+    })
+}
+
+fn screen_distance(first: ScreenPoint, second: ScreenPoint) -> f32 {
+    (first.x - second.x).hypot(first.y - second.y)
 }
