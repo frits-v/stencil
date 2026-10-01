@@ -1,12 +1,14 @@
 //! Builds the taffy tree for a vetted page (sections 2.2 to 2.8) and records, per geometry
 //! node, the taffy nodes its bounds, content box and parts are read from.
 
+use stencil_model::grammar::{LabelStyle, Role};
 use stencil_model::pointer::NodePointer;
 use stencil_model::text::TextStyleName;
 use stencil_model::{
-    Arrow, Callout, Canvas, DEPTH_MAX, Fact, Frame, GAP_DEFAULT_PX, Justify, LegendEntry, ListKind,
-    Node, Note, NoteKind, Page, Pcard, Pipe, PipeDir, PipeKind, Tee, TeeArm, Text, VetRule,
-    Violation, Zone, ZoneKind,
+    Arrow, BoxNode, Callout, Canvas, Chrome, DEPTH_MAX, Fact, FactSource, Frame, GAP_DEFAULT_PX,
+    Grammar, Item, Justify, LANE_GAP_DEFAULT_PX, LegendEntry, ListKind, Node, Note, NoteKind, Page,
+    Pipe, PipeDir, Tee, TeeArm, Text, VetRule, Violation, box_key, box_tint, legend_label,
+    line_key, line_tint,
 };
 use taffy::prelude::{
     AlignItems, AlignSelf, Dimension, Display, FlexDirection, FlexWrap, JustifyContent,
@@ -15,7 +17,7 @@ use taffy::prelude::{
 };
 
 use crate::styles::text_color;
-use crate::{LayoutError, NodeTag, PartName, TextAlign};
+use crate::{ContainerLook, LayoutError, NodeTag, PartName, TextAlign};
 
 /// Taffy's node context is an index into `BuiltPage::text_leaves`.
 pub(crate) type LayoutTree = TaffyTree<usize>;
@@ -38,7 +40,9 @@ pub(crate) struct PartRecord {
 pub(crate) struct NodeRecord {
     pub pointer: NodePointer,
     pub tag: NodeTag,
-    pub kind: Option<&'static str>,
+    pub kind: Option<String>,
+    pub tint: Option<u8>,
+    pub container: Option<ContainerLook>,
     pub parent: Option<usize>,
     pub taffy_node: NodeId,
     /// The taffy node whose content box children must stay inside.
@@ -77,18 +81,19 @@ pub(crate) struct BuiltPage {
 enum Placement {
     /// A child of a Row: the main axis is horizontal.
     RowItem { weight: u16 },
-    /// A child of a Col, a Zone or the page body: the main axis is vertical.
+    /// A child of a Col, a Box or the page body: the main axis is vertical.
     ColumnItem { weight: u16 },
     /// A Tee arm in grid row line 1 or 3, column line 2.
     TeeArm { row_line: i16 },
 }
 
-pub(crate) fn build_page(page: &Page) -> Result<BuiltPage, LayoutError> {
+pub(crate) fn build_page(page: &Page, grammar: &Grammar) -> Result<BuiltPage, LayoutError> {
     let mut builder = Builder {
         tree: TaffyTree::new(),
         records: Vec::new(),
         text_leaves: Vec::new(),
         canvas: page.canvas,
+        grammar,
     };
     builder.tree.disable_rounding();
     let root = builder.add_page(page)?;
@@ -100,11 +105,12 @@ pub(crate) fn build_page(page: &Page) -> Result<BuiltPage, LayoutError> {
     })
 }
 
-struct Builder {
+struct Builder<'grammar> {
     tree: LayoutTree,
     records: Vec<NodeRecord>,
     text_leaves: Vec<TextLeaf>,
     canvas: Canvas,
+    grammar: &'grammar Grammar,
 }
 
 /// Every taffy node starts from this: content that does not fit overflows (section 2.1).
@@ -200,8 +206,9 @@ fn default_weight(container: NodeTag, child: &Node) -> u16 {
         Node::Pipe(_) | Node::Tee(_) => 0,
         Node::Row(_)
         | Node::Col(_)
-        | Node::Zone(_)
-        | Node::Pcard(_)
+        | Node::Lanes(_)
+        | Node::Box(_)
+        | Node::Item(_)
         | Node::Fact(_)
         | Node::Note(_)
         | Node::Text(_)
@@ -210,6 +217,8 @@ fn default_weight(container: NodeTag, child: &Node) -> u16 {
     };
     match container {
         NodeTag::Row => row_weight,
+        // Lane heads are equal columns (section 13.6).
+        NodeTag::Lanes => 1,
         NodeTag::Text | NodeTag::Callout | NodeTag::Frame => 0,
         NodeTag::Col
         | NodeTag::Page
@@ -229,34 +238,32 @@ fn default_weight(container: NodeTag, child: &Node) -> u16 {
     }
 }
 
-fn zone_border_px(kind: ZoneKind) -> f32 {
-    match kind {
-        ZoneKind::Gcp => 3.0,
-        ZoneKind::Vpc | ZoneKind::Optional => 2.0,
-        ZoneKind::RegionA
-        | ZoneKind::RegionB
-        | ZoneKind::Subnet
-        | ZoneKind::OnpremA
-        | ZoneKind::OnpremB
-        | ZoneKind::Project => 1.5,
-        ZoneKind::K8s => 0.0,
-        ZoneKind::Perimeter => 2.5,
+/// The text style of a container label (section 13.2): `bar` is the frame bar label,
+/// `accent` the perimeter label, `plain` the zone label.
+pub fn container_label_style(label: LabelStyle) -> TextStyleName {
+    match label {
+        LabelStyle::Bar => TextStyleName::GcpBar,
+        LabelStyle::Accent => TextStyleName::PerimeterLabel,
+        LabelStyle::Plain => TextStyleName::ZoneLabel,
     }
 }
 
-fn zone_padding_px(kind: ZoneKind) -> f32 {
-    match kind {
-        ZoneKind::Gcp => 0.0,
-        ZoneKind::Vpc => 10.0,
-        ZoneKind::RegionA
-        | ZoneKind::RegionB
-        | ZoneKind::Subnet
-        | ZoneKind::OnpremA
-        | ZoneKind::OnpremB
-        | ZoneKind::Project
-        | ZoneKind::Optional
-        | ZoneKind::K8s
-        | ZoneKind::Perimeter => 12.0,
+/// The part names, text style and prefix of a fact by source (section 13.7).
+pub fn fact_presentation(
+    source: FactSource,
+) -> ((PartName, PartName), TextStyleName, &'static str) {
+    match source {
+        FactSource::Doc => ((PartName::FactBox, PartName::Fact), TextStyleName::Fact, ""),
+        FactSource::Built => (
+            (PartName::BuiltBox, PartName::Built),
+            TextStyleName::Fact,
+            "\u{2022} ",
+        ),
+        FactSource::Ask => (
+            (PartName::AskBox, PartName::Ask),
+            TextStyleName::Ask,
+            "Ask: ",
+        ),
     }
 }
 
@@ -270,16 +277,6 @@ fn note_style(kind: NoteKind) -> TextStyleName {
     }
 }
 
-fn legend_label(kind: PipeKind) -> &'static str {
-    match kind {
-        PipeKind::Gray => "Solid gray",
-        PipeKind::Blue => "Solid blue",
-        PipeKind::Pink => "Solid pink",
-        PipeKind::Dash => "Dashed blue",
-        PipeKind::Deny => "Dashed red",
-    }
-}
-
 fn canvas_badge_text(canvas: Canvas) -> &'static str {
     match canvas {
         Canvas::Customer => "Customer",
@@ -290,12 +287,12 @@ fn canvas_badge_text(canvas: Canvas) -> &'static str {
 struct TextSpec<'a> {
     text: &'a str,
     style_name: TextStyleName,
-    pipe_kind: Option<PipeKind>,
+    line: Option<stencil_model::Line>,
     align: TextAlign,
     source: NodePointer,
 }
 
-impl Builder {
+impl Builder<'_> {
     fn taffy_error(pointer: &NodePointer) -> impl Fn(taffy::TaffyError) -> LayoutError + '_ {
         move |error| LayoutError::Taffy {
             pointer: pointer.clone(),
@@ -367,7 +364,7 @@ impl Builder {
         self.text_leaves.push(TextLeaf {
             text,
             style_name: spec.style_name,
-            color: text_color(spec.style_name, self.canvas, spec.pipe_kind),
+            color: text_color(spec.style_name, self.canvas, spec.line),
             align: spec.align,
             source: spec.source,
         });
@@ -382,7 +379,7 @@ impl Builder {
     fn record(
         pointer: NodePointer,
         tag: NodeTag,
-        kind: Option<&'static str>,
+        kind: Option<String>,
         parent: Option<usize>,
         taffy_node: NodeId,
     ) -> NodeRecord {
@@ -390,6 +387,8 @@ impl Builder {
             pointer,
             tag,
             kind,
+            tint: None,
+            container: None,
             parent,
             taffy_node,
             content_node: taffy_node,
@@ -421,23 +420,26 @@ impl Builder {
             root,
         ));
 
-        self.add_kicker(page, root, root_index)?;
-        self.add_page_text(
-            root,
-            root_index,
-            (NodeTag::Title, "title"),
-            &page.title,
-            TextStyleName::Title,
-            margins(0.0, 0.0, 0.0, 0.0),
-        )?;
-        self.add_page_text(
-            root,
-            root_index,
-            (NodeTag::Lede, "lede"),
-            &page.lede,
-            TextStyleName::Lede,
-            margins(4.0, 0.0, 16.0, 0.0),
-        )?;
+        // A captioned figure draws no badge, kicker, title or lede (section 13.7).
+        if page.chrome == Chrome::Full {
+            self.add_kicker(page, root, root_index)?;
+            self.add_page_text(
+                root,
+                root_index,
+                (NodeTag::Title, "title"),
+                &page.title,
+                TextStyleName::Title,
+                margins(0.0, 0.0, 0.0, 0.0),
+            )?;
+            self.add_page_text(
+                root,
+                root_index,
+                (NodeTag::Lede, "lede"),
+                &page.lede,
+                TextStyleName::Lede,
+                margins(4.0, 0.0, 16.0, 0.0),
+            )?;
+        }
         self.add_body(page, root, root_index)?;
         self.add_legend(&page.legend, root, root_index)?;
         if let Some(foot) = &page.foot {
@@ -480,7 +482,7 @@ impl Builder {
             TextSpec {
                 text: canvas_badge_text(page.canvas),
                 style_name: TextStyleName::Badge,
-                pipe_kind: None,
+                line: None,
                 align: TextAlign::Start,
                 source: NodePointer::root().child("canvas"),
             },
@@ -496,7 +498,7 @@ impl Builder {
             TextSpec {
                 text: &page.kicker,
                 style_name: TextStyleName::Kicker,
-                pipe_kind: None,
+                line: None,
                 align: TextAlign::Start,
                 source: pointer.clone(),
             },
@@ -544,7 +546,7 @@ impl Builder {
             TextSpec {
                 text,
                 style_name,
-                pipe_kind: None,
+                line: None,
                 align: TextAlign::Start,
                 source: pointer.clone(),
             },
@@ -654,11 +656,11 @@ impl Builder {
             base_style(),
             Some(entry_node),
             TextSpec {
-                text: legend_label(entry.kind),
+                text: legend_label(entry.line, entry.tint),
                 style_name: TextStyleName::LegendLabel,
-                pipe_kind: None,
+                line: None,
                 align: TextAlign::Start,
-                source: pointer.child("kind"),
+                source: pointer.child("line"),
             },
         )?;
         let (text, text_leaf) = self.text_leaf(
@@ -667,7 +669,7 @@ impl Builder {
             TextSpec {
                 text: &entry.text,
                 style_name: TextStyleName::LegendText,
-                pipe_kind: None,
+                line: None,
                 align: TextAlign::Start,
                 source: pointer.child("text"),
             },
@@ -675,10 +677,11 @@ impl Builder {
         let mut record = Self::record(
             pointer,
             NodeTag::LegendEntry,
-            Some(entry.kind.as_str()),
+            Some(line_key(entry.line, entry.tint).to_string()),
             Some(legend_index),
             entry_node,
         );
+        record.tint = line_tint(entry.line, entry.tint);
         record.parts = vec![
             PartRecord {
                 name: PartName::Swatch,
@@ -747,16 +750,30 @@ impl Builder {
                 placement,
                 depth,
             ),
-            Node::Zone(zone) => self.add_zone(
-                zone,
+            Node::Lanes(lanes) => self.add_flex_container(
+                FlexContainer {
+                    tag: NodeTag::Lanes,
+                    gap: Some(lanes.gap.unwrap_or(LANE_GAP_DEFAULT_PX)),
+                    grow: None,
+                    justify: None,
+                    children: &lanes.children,
+                },
                 pointer,
                 parent_index,
                 parent_container,
                 placement,
                 depth,
             ),
-            Node::Pcard(pcard) => {
-                self.add_pcard(pcard, pointer, parent_index, parent_container, placement)
+            Node::Box(box_node) => self.add_box(
+                box_node,
+                pointer,
+                parent_index,
+                parent_container,
+                placement,
+                depth,
+            ),
+            Node::Item(item) => {
+                self.add_item(item, pointer, parent_index, parent_container, placement)
             }
             Node::Fact(fact) => {
                 self.add_fact(fact, pointer, parent_index, parent_container, placement)
@@ -790,7 +807,8 @@ impl Builder {
         depth: usize,
     ) -> Result<(), LayoutError> {
         let gap = f32::from(container.gap.unwrap_or(GAP_DEFAULT_PX));
-        let (direction, gap_size) = if container.tag == NodeTag::Row {
+        let lays_out_as_row = matches!(container.tag, NodeTag::Row | NodeTag::Lanes);
+        let (direction, gap_size) = if lays_out_as_row {
             (
                 FlexDirection::Row,
                 taffy::Size {
@@ -843,7 +861,7 @@ impl Builder {
         };
         let children_pointer = pointer.child("children");
         for (child_index, (child, &weight)) in container.children.iter().zip(&weights).enumerate() {
-            let child_placement = if container.tag == NodeTag::Row {
+            let child_placement = if lays_out_as_row {
                 Placement::RowItem { weight }
             } else {
                 Placement::ColumnItem { weight }
@@ -860,18 +878,33 @@ impl Builder {
         Ok(())
     }
 
-    fn add_zone(
+    /// A Box laid out from its container kind (section 13.1): a frame kind as section 2.4's
+    /// gcp zone with bar and body, every other role as the non-gcp zone, with the kind's
+    /// border width, padding and label style.
+    fn add_box(
         &mut self,
-        zone: &Zone,
+        box_node: &BoxNode,
         pointer: NodePointer,
         parent_index: usize,
         parent_container: NodeId,
         placement: Placement,
         depth: usize,
     ) -> Result<(), LayoutError> {
-        let border = zone_border_px(zone.kind);
-        let padding = zone_padding_px(zone.kind);
-        let gap = if zone.kind == ZoneKind::Gcp { 0.0 } else { 8.0 };
+        let grammar = self.grammar;
+        let Some(kind) = grammar.container(&box_node.kind) else {
+            return Err(LayoutError::Invalid(vec![Violation {
+                message: format!(
+                    "kind \"{}\" is not a container kind of grammar {}",
+                    box_node.kind, grammar.name
+                ),
+                pointer: pointer.child("kind"),
+                rule: VetRule::KindUnknown,
+            }]));
+        };
+        let is_frame = kind.role == Role::Frame;
+        let border = kind.border.width;
+        let padding = kind.padding;
+        let gap = if is_frame { 0.0 } else { 8.0 };
         let mut style = Style {
             border: sides(border, border, border, border),
             padding: sides(padding, padding, padding, padding),
@@ -884,15 +917,26 @@ impl Builder {
         apply_flex_placement(&mut style, placement);
         let zone_node = self.container(style, parent_container, &pointer)?;
         let label_source = pointer.child("label");
+        let tint = box_tint(kind, box_node.tint);
         let mut record = Self::record(
             pointer.clone(),
             NodeTag::Zone,
-            Some(zone.kind.as_str()),
+            Some(box_key(&kind.name, tint)),
             Some(parent_index),
             zone_node,
         );
+        record.tint = tint;
+        record.container = Some(ContainerLook {
+            role: kind.role,
+            tone: kind.tone,
+            pattern: kind.border.pattern,
+            border_width: kind.border.width,
+            radius: kind.radius,
+            label: kind.label,
+        });
+        let label_style = container_label_style(kind.label);
 
-        let children_container = if zone.kind == ZoneKind::Gcp {
+        let children_container = if is_frame {
             let bar_style = Style {
                 padding: sides(7.0, 16.0, 7.0, 16.0),
                 ..flex_column(AlignItems::STRETCH)
@@ -902,9 +946,9 @@ impl Builder {
                 base_style(),
                 Some(bar),
                 TextSpec {
-                    text: &zone.label,
-                    style_name: TextStyleName::GcpBar,
-                    pipe_kind: None,
+                    text: &box_node.label,
+                    style_name: label_style,
+                    line: None,
                     align: TextAlign::Start,
                     source: label_source,
                 },
@@ -939,18 +983,13 @@ impl Builder {
             ];
             body
         } else {
-            let style_name = if zone.kind == ZoneKind::Perimeter {
-                TextStyleName::PerimeterLabel
-            } else {
-                TextStyleName::ZoneLabel
-            };
             let (label, label_leaf) = self.text_leaf(
                 base_style(),
                 Some(zone_node),
                 TextSpec {
-                    text: &zone.label,
-                    style_name,
-                    pipe_kind: None,
+                    text: &box_node.label,
+                    style_name: label_style,
+                    line: None,
                     align: TextAlign::Start,
                     source: label_source,
                 },
@@ -965,7 +1004,7 @@ impl Builder {
 
         let index = self.push_record(record);
         let children_pointer = pointer.child("children");
-        for (child_index, child) in zone.children.iter().enumerate() {
+        for (child_index, child) in box_node.children.iter().enumerate() {
             self.add_body_node(
                 child,
                 children_pointer.index(child_index),
@@ -978,9 +1017,11 @@ impl Builder {
         Ok(())
     }
 
-    fn add_pcard(
+    /// An Item laid out as section 2.5's card: icon, title, subtitle, then one box per fact
+    /// in list order (section 13.7).
+    fn add_item(
         &mut self,
-        pcard: &Pcard,
+        item: &Item,
         pointer: NodePointer,
         parent_index: usize,
         parent_container: NodeId,
@@ -1003,7 +1044,7 @@ impl Builder {
         let card = self.container(style, parent_container, &pointer)?;
         let mut parts = Vec::new();
 
-        if pcard.icon.is_some() {
+        if item.icon.is_some() {
             let icon = self.plain_leaf(
                 Style {
                     size: fixed_size(28.0, 28.0),
@@ -1035,11 +1076,11 @@ impl Builder {
             base_style(),
             Some(column),
             TextSpec {
-                text: &pcard.function_name,
+                text: &item.title,
                 style_name: TextStyleName::CardFunction,
-                pipe_kind: None,
+                line: None,
                 align: TextAlign::Start,
-                source: pointer.child("fn"),
+                source: pointer.child("title"),
             },
         )?;
         parts.push(PartRecord {
@@ -1048,7 +1089,7 @@ impl Builder {
             text_leaf: Some(function_leaf),
         });
 
-        if let Some(product_name) = &pcard.product_name {
+        if let Some(subtitle) = &item.subtitle {
             let (product, product_leaf) = self.text_leaf(
                 Style {
                     margin: margins(1.0, 0.0, 0.0, 0.0),
@@ -1056,11 +1097,11 @@ impl Builder {
                 },
                 Some(column),
                 TextSpec {
-                    text: product_name,
+                    text: subtitle,
                     style_name: TextStyleName::CardProduct,
-                    pipe_kind: None,
+                    line: None,
                     align: TextAlign::Start,
-                    source: pointer.child("pn"),
+                    source: pointer.child("subtitle"),
                 },
             )?;
             parts.push(PartRecord {
@@ -1070,25 +1111,17 @@ impl Builder {
             });
         }
 
-        if let Some(fact) = &pcard.fact {
+        let facts_pointer = pointer.child("facts");
+        for (index, fact) in item.facts.iter().enumerate() {
+            let (names, style_name, prefix) = fact_presentation(fact.source);
+            let drawn = format!("{prefix}{}", fact.text);
             self.add_chip(
                 column,
                 &mut parts,
-                (PartName::FactBox, PartName::Fact),
-                fact,
-                TextStyleName::Fact,
-                pointer.child("fact"),
-            )?;
-        }
-        if let Some(ask) = &pcard.ask {
-            let ask_text = format!("Ask: {ask}");
-            self.add_chip(
-                column,
-                &mut parts,
-                (PartName::AskBox, PartName::Ask),
-                &ask_text,
-                TextStyleName::Ask,
-                pointer.child("ask"),
+                names,
+                &drawn,
+                style_name,
+                facts_pointer.index(index).child("text"),
             )?;
         }
 
@@ -1098,7 +1131,7 @@ impl Builder {
         Ok(())
     }
 
-    /// The Pcard fact and ask boxes: margin-top 4, padding 4/8, one text leaf.
+    /// The fact boxes of an Item: margin-top 4, padding 4/8, one text leaf.
     fn add_chip(
         &mut self,
         column: NodeId,
@@ -1120,7 +1153,7 @@ impl Builder {
             TextSpec {
                 text,
                 style_name,
-                pipe_kind: None,
+                line: None,
                 align: TextAlign::Start,
                 source,
             },
@@ -1152,13 +1185,15 @@ impl Builder {
         };
         apply_flex_placement(&mut style, placement);
         let fact_node = self.container(style, parent_container, &pointer)?;
+        let (_, style_name, prefix) = fact_presentation(fact.source);
+        let drawn = format!("{prefix}{}", fact.text);
         let (leaf, leaf_index) = self.text_leaf(
             base_style(),
             Some(fact_node),
             TextSpec {
-                text: &fact.text,
-                style_name: TextStyleName::Fact,
-                pipe_kind: None,
+                text: &drawn,
+                style_name,
+                line: None,
                 align: TextAlign::Start,
                 source: pointer.child("text"),
             },
@@ -1189,7 +1224,7 @@ impl Builder {
             TextSpec {
                 text: &note.text,
                 style_name: note_style(note.kind),
-                pipe_kind: None,
+                line: None,
                 align: TextAlign::Start,
                 source: pointer.child("text"),
             },
@@ -1243,9 +1278,9 @@ impl Builder {
             size: fixed_size(8.0, 8.0),
             ..base_style()
         };
-        let wire_minimum = match (horizontal, pipe.kind) {
+        let wire_minimum = match (horizontal, pipe.line) {
             (true, _) => 14.0,
-            (false, PipeKind::Deny) => 16.0,
+            (false, stencil_model::Line::Deny) => 16.0,
             (false, _) => 12.0,
         };
         let wire_style = if horizontal {
@@ -1297,7 +1332,7 @@ impl Builder {
             TextSpec {
                 text: &pipe.label,
                 style_name: TextStyleName::TagLabel,
-                pipe_kind: Some(pipe.kind),
+                line: Some(pipe.line),
                 align: TextAlign::Center,
                 source: pointer.child("label"),
             },
@@ -1334,7 +1369,7 @@ impl Builder {
                 TextSpec {
                     text: sub,
                     style_name: TextStyleName::TagSub,
-                    pipe_kind: Some(pipe.kind),
+                    line: Some(pipe.line),
                     align: TextAlign::Center,
                     source: pointer.child("sub"),
                 },
@@ -1361,10 +1396,11 @@ impl Builder {
         let mut record = Self::record(
             pointer,
             NodeTag::Pipe,
-            Some(pipe.kind.as_str()),
+            Some(line_key(pipe.line, pipe.tint).to_string()),
             Some(parent_index),
             pipe_node,
         );
+        record.tint = line_tint(pipe.line, pipe.tint);
         record.parts = parts;
         record.arrow_ends = arrow_ends(pipe.arrow, horizontal);
         self.push_record(record);
@@ -1428,7 +1464,7 @@ impl Builder {
             TextSpec {
                 text: &tee.hub,
                 style_name: TextStyleName::TagLabel,
-                pipe_kind: Some(tee.kind),
+                line: Some(tee.line),
                 align: TextAlign::Center,
                 source: pointer.child("hub"),
             },
@@ -1436,10 +1472,11 @@ impl Builder {
         let mut record = Self::record(
             pointer.clone(),
             NodeTag::Tee,
-            Some(tee.kind.as_str()),
+            Some(line_key(tee.line, tee.tint).to_string()),
             Some(parent_index),
             tee_node,
         );
+        record.tint = line_tint(tee.line, tee.tint);
         record.parts = vec![
             PartRecord {
                 name: PartName::Spine,
@@ -1509,7 +1546,7 @@ impl Builder {
                         TextSpec {
                             text: line_text,
                             style_name: TextStyleName::BlockBody,
-                            pipe_kind: None,
+                            line: None,
                             align: TextAlign::Start,
                             source: line_pointer,
                         },
@@ -1546,7 +1583,7 @@ impl Builder {
                             TextSpec {
                                 text: &number,
                                 style_name: TextStyleName::BlockBody,
-                                pipe_kind: None,
+                                line: None,
                                 align: TextAlign::Start,
                                 source: line_pointer.clone(),
                             },
@@ -1574,7 +1611,7 @@ impl Builder {
                         TextSpec {
                             text: line_text,
                             style_name: TextStyleName::BlockBody,
-                            pipe_kind: None,
+                            line: None,
                             align: TextAlign::Start,
                             source: line_pointer,
                         },
@@ -1645,7 +1682,7 @@ impl Builder {
             TextSpec {
                 text: &callout.text,
                 style_name: TextStyleName::BlockBody,
-                pipe_kind: None,
+                line: None,
                 align: TextAlign::Start,
                 source: pointer.child("text"),
             },
@@ -1710,7 +1747,7 @@ impl Builder {
             TextSpec {
                 text: &frame.label,
                 style_name: TextStyleName::ZoneLabel,
-                pipe_kind: None,
+                line: None,
                 align: TextAlign::Center,
                 source: pointer.child("label"),
             },
@@ -1755,7 +1792,7 @@ impl Builder {
             TextSpec {
                 text,
                 style_name: TextStyleName::CardFunction,
-                pipe_kind: None,
+                line: None,
                 align: TextAlign::Start,
                 source,
             },

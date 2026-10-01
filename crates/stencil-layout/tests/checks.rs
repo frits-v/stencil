@@ -25,6 +25,8 @@ fn geometry_node(pointer_text: &str, parent: Option<usize>, bounds: BoxRect) -> 
         pointer: pointer(pointer_text),
         tag: NodeTag::Fact,
         kind: None,
+        tint: None,
+        container: None,
         parent,
         bounds,
         content: bounds,
@@ -189,9 +191,9 @@ fn card_with_a_120_character_word_overflows_its_row() {
     let page = page_with_body(
         640,
         json!([{ "tag": "Row", "children": [
-            { "tag": "Pcard", "fn": word },
-            { "tag": "Pcard", "fn": "Second" },
-            { "tag": "Pcard", "fn": "Third" }
+            { "tag": "Item", "kind": "product", "title": word },
+            { "tag": "Item", "kind": "product", "title": "Second" },
+            { "tag": "Item", "kind": "product", "title": "Third" }
         ]}]),
     );
     let geometry = layout(&page);
@@ -227,9 +229,9 @@ fn small_document_has_hand_derived_counts() {
         1280,
         json!([
             { "tag": "Row", "children": [
-                { "tag": "Pcard", "fn": "Left" },
-                { "tag": "Pipe", "dir": "h", "kind": "gray", "label": "call" },
-                { "tag": "Pcard", "fn": "Right" }
+                { "tag": "Item", "kind": "product", "title": "Left" },
+                { "tag": "Pipe", "dir": "h", "line": "gray", "label": "call" },
+                { "tag": "Item", "kind": "product", "title": "Right" }
             ]},
             { "tag": "Fact", "text": "A fact under the row" }
         ]),

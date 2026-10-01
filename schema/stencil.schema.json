@@ -138,22 +138,12 @@
       ]
     },
     "FactSource": {
-      "oneOf": [
-        {
-          "description": "Read from the live documentation when the figure was authored.",
-          "type": "string",
-          "const": "doc"
-        },
-        {
-          "description": "An as-built name read off the running system: a bucket, a VLAN ID, a project id.",
-          "type": "string",
-          "const": "built"
-        },
-        {
-          "description": "An open question for the reader.",
-          "type": "string",
-          "const": "ask"
-        }
+      "description": "Where a fact comes from (section 13.7): `doc` is read from the live documentation when\nthe figure was authored, `built` is an as-built name read off the running system (a\nbucket, a VLAN ID, a project id), and `ask` is an open question for the reader.",
+      "type": "string",
+      "enum": [
+        "doc",
+        "built",
+        "ask"
       ]
     },
     "IconName": {

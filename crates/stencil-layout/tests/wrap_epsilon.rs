@@ -27,11 +27,11 @@ fn tag_label_laid_out_at_its_max_content_width_stays_on_one_line() {
                     "grow": [0],
                     "children": [{
                         "tag": "Col",
-                        "children": [{ "tag": "Pipe", "dir": "h", "kind": "blue", "label": label }]
+                        "children": [{ "tag": "Pipe", "dir": "h", "line": "solid", "tint": 1, "label": label }]
                     }]
                 }]),
             );
-            let geometry = layout_page(&page, &mut measurer).unwrap();
+            let geometry = layout_page(&page, &common::gcp(), &mut measurer).unwrap();
             let pipe_node = node(&geometry, "/body/0/children/0/children/0");
             let label_part = part(pipe_node, PartName::TagLabel);
             let run = label_part.text.as_ref().unwrap();

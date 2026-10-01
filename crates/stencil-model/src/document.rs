@@ -286,15 +286,15 @@ pub struct Item {
     pub facts: Vec<FactEntry>,
 }
 
+/// Where a fact comes from (section 13.7): `doc` is read from the live documentation when
+/// the figure was authored, `built` is an as-built name read off the running system (a
+/// bucket, a VLAN ID, a project id), and `ask` is an open question for the reader.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema, Default)]
 #[serde(rename_all = "lowercase")]
 pub enum FactSource {
-    /// Read from the live documentation when the figure was authored.
     #[default]
     Doc,
-    /// An as-built name read off the running system: a bucket, a VLAN ID, a project id.
     Built,
-    /// An open question for the reader.
     Ask,
 }
 

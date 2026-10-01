@@ -8,11 +8,12 @@
 
 mod common;
 
+use common::{LineKey, ZoneKey};
 use resvg::usvg;
 use serde_json::json;
 use stencil_layout::{NodeTag, PartName};
+use stencil_model::LEGEND_ENTRIES_MAX;
 use stencil_model::pointer::NodePointer;
-use stencil_model::{LEGEND_ENTRIES_MAX, PipeKind, ZoneKind};
 use stencil_render::{RenderError, render_svg};
 
 #[test]
@@ -49,7 +50,7 @@ fn groups_nest_like_the_node_tree_and_carry_tag_and_kind() {
     for node in &rendered.geometry.nodes {
         let group = common::group(&document, node.pointer.as_str());
         assert_eq!(group.attribute("data-tag"), Some(node.tag.as_str()));
-        assert_eq!(group.attribute("data-kind"), node.kind);
+        assert_eq!(group.attribute("data-kind"), node.kind.as_deref());
         assert_eq!(group.attribute("transform"), None);
         let parent_pointer = node
             .parent
@@ -249,40 +250,29 @@ fn icons_are_images_with_the_data_uri() {
     }
 }
 
-/// A page using every ZoneKind, every PipeKind as a Pipe, a Tee and a legend entry.
+/// A page using every ZoneKey, every LineKey as a Pipe, a Tee and a legend entry.
 fn palette_document() -> serde_json::Value {
-    let zones: Vec<_> = ZoneKind::ALL
+    let zones: Vec<_> = ZoneKey::ALL.iter().map(|kind| kind.box_json()).collect();
+    let pipes: Vec<_> = LineKey::ALL
+        .iter()
+        .map(|kind| kind.with_line(json!({ "tag": "Pipe", "dir": "h", "label": kind.as_str() })))
+        .collect();
+    let tees: Vec<_> = LineKey::ALL
         .iter()
         .map(|kind| {
-            json!({
-                "tag": "Zone",
-                "kind": kind.as_str(),
-                "label": format!("Zone {}", kind.as_str()),
-                "children": [{ "tag": "Fact", "text": "fact" }]
-            })
-        })
-        .collect();
-    let pipes: Vec<_> = PipeKind::ALL
-        .iter()
-        .map(|kind| json!({ "tag": "Pipe", "dir": "h", "kind": kind.as_str(), "label": kind.as_str() }))
-        .collect();
-    let tees: Vec<_> = PipeKind::ALL
-        .iter()
-        .map(|kind| {
-            json!({
+            kind.with_line(json!({
                 "tag": "Tee",
-                "kind": kind.as_str(),
                 "hub": "hub",
                 "arms": [
-                    { "tag": "Pipe", "dir": "h", "kind": kind.as_str(), "label": "arm one" },
-                    { "tag": "Pipe", "dir": "h", "kind": kind.as_str(), "label": "arm two" }
+                    kind.with_line(json!({ "tag": "Pipe", "dir": "h", "label": "arm one" })),
+                    kind.with_line(json!({ "tag": "Pipe", "dir": "h", "label": "arm two" }))
                 ]
-            })
+            }))
         })
         .collect();
-    let legend: Vec<_> = PipeKind::ALL
+    let legend: Vec<_> = LineKey::ALL
         .iter()
-        .map(|kind| json!({ "kind": kind.as_str(), "text": kind.as_str() }))
+        .map(|kind| kind.with_line(json!({ "text": kind.as_str() })))
         .collect();
     common::page_document(
         json!([
@@ -296,7 +286,7 @@ fn palette_document() -> serde_json::Value {
 
 /// (fill, stroke, stroke-width, dasharray) of section 2.4, gcp excluded.
 fn expected_zone_rect(
-    kind: ZoneKind,
+    kind: ZoneKey,
 ) -> (
     &'static str,
     Option<&'static str>,
@@ -304,28 +294,28 @@ fn expected_zone_rect(
     Option<&'static str>,
 ) {
     match kind {
-        ZoneKind::Gcp => unreachable!("gcp is drawn with paths"),
-        ZoneKind::Vpc => ("none", Some("#5F6368"), Some("2"), Some("6 5")),
-        ZoneKind::RegionA => ("#D2E3FC", Some("#BDC1C6"), Some("1.5"), None),
-        ZoneKind::RegionB => ("#FCE4EC", Some("#BDC1C6"), Some("1.5"), None),
-        ZoneKind::Subnet => ("#EDE7F6", Some("#9AA0A6"), Some("1.5"), Some("6 5")),
-        ZoneKind::OnpremA => ("#D2E3FC", Some("#D7CCC8"), Some("1.5"), None),
-        ZoneKind::OnpremB => ("#FCE4EC", Some("#D7CCC8"), Some("1.5"), None),
-        ZoneKind::Project => ("#FFF8E1", Some("#FFE082"), Some("1.5"), None),
-        ZoneKind::Optional => ("#F8FBFF", Some("#4284F3"), Some("2"), Some("6 5")),
-        ZoneKind::K8s => ("#FCE4EC", None, None, None),
-        ZoneKind::Perimeter => ("#FFFBF5", Some("#E37400"), Some("2.5"), Some("6 5")),
+        ZoneKey::Gcp => unreachable!("gcp is drawn with paths"),
+        ZoneKey::Vpc => ("none", Some("#5F6368"), Some("2"), Some("6 5")),
+        ZoneKey::RegionA => ("#D2E3FC", Some("#BDC1C6"), Some("1.5"), None),
+        ZoneKey::RegionB => ("#FCE4EC", Some("#BDC1C6"), Some("1.5"), None),
+        ZoneKey::Subnet => ("#EDE7F6", Some("#9AA0A6"), Some("1.5"), Some("6 5")),
+        ZoneKey::OnpremA => ("#D2E3FC", Some("#D7CCC8"), Some("1.5"), None),
+        ZoneKey::OnpremB => ("#FCE4EC", Some("#D7CCC8"), Some("1.5"), None),
+        ZoneKey::Project => ("#FFF8E1", Some("#FFE082"), Some("1.5"), None),
+        ZoneKey::Optional => ("#F8FBFF", Some("#4284F3"), Some("2"), Some("6 5")),
+        ZoneKey::K8s => ("#FCE4EC", None, None, None),
+        ZoneKey::Perimeter => ("#FFFBF5", Some("#E37400"), Some("2.5"), Some("6 5")),
     }
 }
 
 /// (color, dasharray) of section 5.2.
-fn expected_wire(kind: PipeKind) -> (&'static str, Option<&'static str>) {
+fn expected_wire(kind: LineKey) -> (&'static str, Option<&'static str>) {
     match kind {
-        PipeKind::Gray => ("#5F6368", None),
-        PipeKind::Blue => ("#1A73E8", None),
-        PipeKind::Pink => ("#C2185B", None),
-        PipeKind::Dash => ("#1A73E8", Some("6 5")),
-        PipeKind::Deny => ("#C5221F", Some("6 5")),
+        LineKey::Gray => ("#5F6368", None),
+        LineKey::Blue => ("#1A73E8", None),
+        LineKey::Pink => ("#C2185B", None),
+        LineKey::Dash => ("#1A73E8", Some("6 5")),
+        LineKey::Deny => ("#C5221F", Some("6 5")),
     }
 }
 
@@ -333,10 +323,10 @@ fn expected_wire(kind: PipeKind) -> (&'static str, Option<&'static str>) {
 fn zone_boxes_use_the_section_2_4_colors() {
     let rendered = common::render_document_with_fixed_metrics(palette_document());
     let document = common::parse_xml(&rendered.svg.svg);
-    for (index, kind) in ZoneKind::ALL.iter().enumerate() {
+    for (index, kind) in ZoneKey::ALL.iter().enumerate() {
         let group = common::group(&document, &format!("/body/0/children/{index}"));
         assert_eq!(group.attribute("data-kind"), Some(kind.as_str()));
-        if *kind == ZoneKind::Gcp {
+        if *kind == ZoneKey::Gcp {
             let paths = common::children_named(group, "path");
             assert_eq!(paths.len(), 2);
             assert_eq!(paths[0].attribute("fill"), Some("#FFFFFF"));
@@ -400,7 +390,7 @@ fn stroked_rects_stay_inside_the_border_box() {
 fn pipes_tees_and_legend_swatches_use_the_section_5_2_colors() {
     let rendered = common::render_document_with_fixed_metrics(palette_document());
     let document = common::parse_xml(&rendered.svg.svg);
-    for (index, kind) in PipeKind::ALL.iter().enumerate() {
+    for (index, kind) in LineKey::ALL.iter().enumerate() {
         let (color, dash) = expected_wire(*kind);
 
         let pipe = common::group(&document, &format!("/body/1/children/{index}"));
@@ -447,8 +437,8 @@ fn pipes_tees_and_legend_swatches_use_the_section_5_2_colors() {
 fn tag_and_hub_borders_turn_red_only_for_deny() {
     let rendered = common::render_document_with_fixed_metrics(palette_document());
     let document = common::parse_xml(&rendered.svg.svg);
-    for (index, kind) in PipeKind::ALL.iter().enumerate() {
-        let (border, label) = if *kind == PipeKind::Deny {
+    for (index, kind) in LineKey::ALL.iter().enumerate() {
+        let (border, label) = if *kind == LineKey::Deny {
             ("#F4C7C3", "#C5221F")
         } else {
             ("#DADCE0", "#202124")
@@ -484,9 +474,9 @@ fn tee_draws_spine_then_hub_then_arm_groups() {
 fn text_content_is_xml_escaped() {
     let body = json!([
         { "tag": "Fact", "text": "a < b & c > \"d\"" },
-        { "tag": "Pipe", "dir": "h", "kind": "blue", "label": "hop" }
+        { "tag": "Pipe", "dir": "h", "line": "solid", "tint": 1, "label": "hop" }
     ]);
-    let legend = json!([{ "kind": "blue", "text": "request path" }]);
+    let legend = json!([{ "line": "solid", "tint": 1, "text": "request path" }]);
     let rendered = common::render_document_with_fixed_metrics(common::page_document(body, legend));
     assert!(
         rendered
@@ -506,9 +496,9 @@ fn text_content_is_xml_escaped() {
 fn interior_space_runs_survive_in_the_svg() {
     let body = json!([
         { "tag": "Fact", "text": "a  b" },
-        { "tag": "Pipe", "dir": "h", "kind": "blue", "label": "hop" }
+        { "tag": "Pipe", "dir": "h", "line": "solid", "tint": 1, "label": "hop" }
     ]);
-    let legend = json!([{ "kind": "blue", "text": "request path" }]);
+    let legend = json!([{ "line": "solid", "tint": 1, "text": "request path" }]);
     let rendered = common::render_document_with_fixed_metrics(common::page_document(body, legend));
     assert!(rendered.svg.svg.contains(r#"xml:space="preserve""#));
     assert!(rendered.svg.svg.contains(">a  b</text>"));
@@ -534,8 +524,8 @@ fn kicker_badge_follows_the_canvas() {
 fn geometry_of_another_page_is_a_mismatch() {
     let g7 = common::render_g7();
     let body = json!([
-        { "tag": "Pipe", "dir": "h", "kind": "blue", "label": "hop" },
-        { "tag": "Pipe", "dir": "h", "kind": "blue", "label": "hop" }
+        { "tag": "Pipe", "dir": "h", "line": "solid", "tint": 1, "label": "hop" },
+        { "tag": "Pipe", "dir": "h", "line": "solid", "tint": 1, "label": "hop" }
     ]);
     let other = common::render_document_with_fixed_metrics(common::page_document(body, json!([])));
     let error = render_svg(&other.page, &g7.geometry).unwrap_err();
@@ -571,9 +561,9 @@ fn rendering_twice_is_byte_identical() {
 #[test]
 fn legend_order_stops_one_past_the_vet_limit() {
     let entries: Vec<serde_json::Value> = (0..LEGEND_ENTRIES_MAX)
-        .map(|_| json!({ "kind": "blue", "text": "request" }))
+        .map(|_| json!({ "line": "solid", "tint": 1, "text": "request" }))
         .collect();
-    let body = json!([{ "tag": "Pipe", "dir": "h", "kind": "blue", "label": "hop" }]);
+    let body = json!([{ "tag": "Pipe", "dir": "h", "line": "solid", "tint": 1, "label": "hop" }]);
     let mut rendered = common::render_document_with_fixed_metrics(common::page_document(
         body,
         serde_json::Value::Array(entries),

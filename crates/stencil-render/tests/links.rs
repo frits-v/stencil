@@ -19,7 +19,7 @@ use stencil_render::{DeviceScale, measured_json, render_png};
 const ONEPAGER_JSON: &str = include_str!("../../../examples/onepager.json");
 
 fn card(id: &str) -> Value {
-    json!({ "tag": "Pcard", "id": id, "fn": id })
+    json!({ "tag": "Item", "kind": "product", "id": id, "title": id })
 }
 
 /// Three cards in a row: a blue `end` link a to b with a label and sub, a gray `start` link
@@ -28,15 +28,15 @@ fn linked_document(theme: &str) -> Value {
     let mut document = common::page_document(
         json!([{ "tag": "Row", "gap": 64, "children": [card("a"), card("b"), card("c")] }]),
         json!([
-            { "kind": "blue", "text": "blue" },
-            { "kind": "gray", "text": "gray" }
+            { "line": "solid", "tint": 1, "text": "blue" },
+            { "line": "gray", "text": "gray" }
         ]),
     );
     document["theme"] = json!(theme);
     document["links"] = json!([
-        { "from": "a", "to": "b", "kind": "blue", "label": "call", "sub": "HTTPS" },
-        { "from": "b", "to": "c", "kind": "gray", "arrow": "start" },
-        { "from": "a", "to": "c", "kind": "gray", "arrow": "none", "from_side": "top", "to_side": "top" }
+        { "from": "a", "to": "b", "line": "solid", "tint": 1, "label": "call", "sub": "HTTPS" },
+        { "from": "b", "to": "c", "line": "gray", "arrow": "start" },
+        { "from": "a", "to": "c", "line": "gray", "arrow": "none", "from_side": "top", "to_side": "top" }
     ]);
     document
 }
@@ -232,7 +232,10 @@ fn links_are_drawn_after_every_node() {
         .collect();
     assert_eq!(groups, ["", "/links/0", "/links/1", "/links/2"]);
     let dusk_blue = Palette::new(stencil_model::Theme::Dusk)
-        .wire_style(stencil_model::PipeKind::Blue)
+        .wire_style(stencil_render::palette::LineUse::new(
+            stencil_model::Line::Solid,
+            Some(1),
+        ))
         .stroke
         .color;
     let path = common::children_named(link_group(&document, 0), "path")[0];
@@ -251,9 +254,9 @@ fn a_fallback_route_is_still_drawn() {
             ]},
             card("target")
         ]}]),
-        json!([{ "kind": "blue", "text": "blue" }]),
+        json!([{ "line": "solid", "tint": 1, "text": "blue" }]),
     );
-    document["links"] = json!([{ "from": "center", "to": "target", "kind": "blue" }]);
+    document["links"] = json!([{ "from": "center", "to": "target", "line": "solid", "tint": 1 }]);
     let rendered = common::render_document_with_fixed_metrics(document);
     let routed = route(&rendered, 0);
     assert_eq!(routed.status, RouteStatus::Fallback);

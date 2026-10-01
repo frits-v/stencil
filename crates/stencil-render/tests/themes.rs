@@ -10,9 +10,10 @@
 
 mod common;
 
+use common::{LineKey, ZoneKey};
 use resvg::usvg::roxmltree;
 use serde_json::{Value, json};
-use stencil_model::{Page, PipeKind, Theme, ZoneKind};
+use stencil_model::{Page, Theme};
 use stencil_render::palette::Palette;
 use stencil_render::{DeviceScale, measured_json, render_png, render_svg};
 
@@ -45,41 +46,34 @@ fn render_themed(document: Value, theme: Theme) -> common::Rendered {
     common::render_document_with_fixed_metrics(with_theme(document, theme))
 }
 
-/// A customer page with every ZoneKind, every PipeKind as a Pipe, a Tee and a legend entry,
+/// A customer page with every ZoneKey, every LineKey as a Pipe, a Tee and a legend entry,
 /// a Pcard with an icon, fact and ask, and a Note of each legend-ish kind.
 fn palette_document() -> Value {
-    let zones: Vec<_> = ZoneKind::ALL
+    let zones: Vec<_> = ZoneKey::ALL.iter().map(|kind| kind.box_json()).collect();
+    let pipes: Vec<_> = LineKey::ALL
         .iter()
         .map(|kind| {
-            json!({
-                "tag": "Zone",
-                "kind": kind.as_str(),
-                "label": format!("Zone {}", kind.as_str()),
-                "children": [{ "tag": "Fact", "text": "fact" }]
-            })
+            kind.with_line(
+                json!({ "tag": "Pipe", "dir": "h", "label": kind.as_str(), "sub": "sub" }),
+            )
         })
         .collect();
-    let pipes: Vec<_> = PipeKind::ALL
-        .iter()
-        .map(|kind| json!({ "tag": "Pipe", "dir": "h", "kind": kind.as_str(), "label": kind.as_str(), "sub": "sub" }))
-        .collect();
-    let tees: Vec<_> = PipeKind::ALL
+    let tees: Vec<_> = LineKey::ALL
         .iter()
         .map(|kind| {
-            json!({
+            kind.with_line(json!({
                 "tag": "Tee",
-                "kind": kind.as_str(),
                 "hub": "hub",
                 "arms": [
-                    { "tag": "Pipe", "dir": "h", "kind": kind.as_str(), "label": "arm one" },
-                    { "tag": "Pipe", "dir": "h", "kind": kind.as_str(), "label": "arm two" }
+                    kind.with_line(json!({ "tag": "Pipe", "dir": "h", "label": "arm one" })),
+                    kind.with_line(json!({ "tag": "Pipe", "dir": "h", "label": "arm two" }))
                 ]
-            })
+            }))
         })
         .collect();
-    let legend: Vec<_> = PipeKind::ALL
+    let legend: Vec<_> = LineKey::ALL
         .iter()
-        .map(|kind| json!({ "kind": kind.as_str(), "text": kind.as_str() }))
+        .map(|kind| kind.with_line(json!({ "text": kind.as_str() })))
         .collect();
     let mut document = common::page_document(
         json!([
@@ -87,12 +81,11 @@ fn palette_document() -> Value {
             { "tag": "Col", "children": pipes },
             { "tag": "Col", "children": tees },
             {
-                "tag": "Pcard",
+                "tag": "Item", "kind": "product",
                 "icon": "bigquery",
-                "fn": "Warehouse",
-                "pn": "BigQuery",
-                "fact": "a fact",
-                "ask": "an ask"
+                "title": "Warehouse",
+                "subtitle": "BigQuery",
+                "facts": [{ "text": "a fact" }, { "text": "an ask", "source": "ask" }]
             }
         ]),
         json!(legend),
@@ -174,7 +167,7 @@ fn png_page_background_is_the_palette_page_background() {
 
 /// (fill, stroke, stroke-width, dasharray) of the dusk zone table, gcp excluded.
 fn expected_dusk_zone_rect(
-    kind: ZoneKind,
+    kind: ZoneKey,
 ) -> (
     &'static str,
     Option<&'static str>,
@@ -182,17 +175,17 @@ fn expected_dusk_zone_rect(
     Option<&'static str>,
 ) {
     match kind {
-        ZoneKind::Gcp => unreachable!("gcp is drawn with paths"),
-        ZoneKind::Vpc => ("none", Some("#6B7A99"), Some("2"), Some("6 5")),
-        ZoneKind::RegionA => ("#14213A", Some("#2F4A7A"), Some("1.5"), None),
-        ZoneKind::RegionB => ("#2A1626", Some("#6A2A47"), Some("1.5"), None),
-        ZoneKind::Subnet => ("#1D1836", Some("#4A3F7A"), Some("1.5"), Some("6 5")),
-        ZoneKind::OnpremA => ("#14213A", Some("#3A3532"), Some("1.5"), None),
-        ZoneKind::OnpremB => ("#2A1626", Some("#3A3532"), Some("1.5"), None),
-        ZoneKind::Project => ("#1F1B10", Some("#5A4A1A"), Some("1.5"), None),
-        ZoneKind::Optional => ("#10203A", Some("#4284F3"), Some("2"), Some("6 5")),
-        ZoneKind::K8s => ("#2A1626", None, None, None),
-        ZoneKind::Perimeter => ("#17130B", Some("#E37400"), Some("2.5"), Some("6 5")),
+        ZoneKey::Gcp => unreachable!("gcp is drawn with paths"),
+        ZoneKey::Vpc => ("none", Some("#6B7A99"), Some("2"), Some("6 5")),
+        ZoneKey::RegionA => ("#14213A", Some("#2F4A7A"), Some("1.5"), None),
+        ZoneKey::RegionB => ("#2A1626", Some("#6A2A47"), Some("1.5"), None),
+        ZoneKey::Subnet => ("#1D1836", Some("#4A3F7A"), Some("1.5"), Some("6 5")),
+        ZoneKey::OnpremA => ("#14213A", Some("#3A3532"), Some("1.5"), None),
+        ZoneKey::OnpremB => ("#2A1626", Some("#3A3532"), Some("1.5"), None),
+        ZoneKey::Project => ("#1F1B10", Some("#5A4A1A"), Some("1.5"), None),
+        ZoneKey::Optional => ("#10203A", Some("#4284F3"), Some("2"), Some("6 5")),
+        ZoneKey::K8s => ("#2A1626", None, None, None),
+        ZoneKey::Perimeter => ("#17130B", Some("#E37400"), Some("2.5"), Some("6 5")),
     }
 }
 
@@ -200,10 +193,10 @@ fn expected_dusk_zone_rect(
 fn dusk_zones_follow_the_section_11_1_table() {
     let rendered = render_themed(palette_document(), Theme::Dusk);
     let document = common::parse_xml(&rendered.svg.svg);
-    for (index, kind) in ZoneKind::ALL.iter().enumerate() {
+    for (index, kind) in ZoneKey::ALL.iter().enumerate() {
         let group = common::group(&document, &format!("/body/0/children/{index}"));
         let label = common::children_named(group, "text")[0];
-        if *kind == ZoneKind::Gcp {
+        if *kind == ZoneKey::Gcp {
             let paths = common::children_named(group, "path");
             assert_eq!(paths[0].attribute("fill"), Some("#0F172A"));
             assert_eq!(paths[1].attribute("stroke"), Some("#1A73E8"));
@@ -220,7 +213,7 @@ fn dusk_zones_follow_the_section_11_1_table() {
         assert_eq!(rect.attribute("stroke"), stroke, "{name}");
         assert_eq!(rect.attribute("stroke-width"), stroke_width, "{name}");
         assert_eq!(rect.attribute("stroke-dasharray"), dash, "{name}");
-        let label_ink = if *kind == ZoneKind::Perimeter {
+        let label_ink = if *kind == ZoneKey::Perimeter {
             "#F2A44B"
         } else {
             "#B7C2D6"
@@ -233,14 +226,14 @@ fn dusk_zones_follow_the_section_11_1_table() {
 fn dusk_wires_tags_and_deny_follow_the_section_11_1_table() {
     let rendered = render_themed(palette_document(), Theme::Dusk);
     let document = common::parse_xml(&rendered.svg.svg);
-    let expected_wire = |kind: PipeKind| match kind {
-        PipeKind::Gray => ("#9AA7BD", None),
-        PipeKind::Blue => ("#5B9CFF", None),
-        PipeKind::Pink => ("#FF5C8A", None),
-        PipeKind::Dash => ("#5B9CFF", Some("6 5")),
-        PipeKind::Deny => ("#FF6B6B", Some("6 5")),
+    let expected_wire = |kind: LineKey| match kind {
+        LineKey::Gray => ("#9AA7BD", None),
+        LineKey::Blue => ("#5B9CFF", None),
+        LineKey::Pink => ("#FF5C8A", None),
+        LineKey::Dash => ("#5B9CFF", Some("6 5")),
+        LineKey::Deny => ("#FF6B6B", Some("6 5")),
     };
-    for (index, kind) in PipeKind::ALL.iter().enumerate() {
+    for (index, kind) in LineKey::ALL.iter().enumerate() {
         let (color, dash) = expected_wire(*kind);
         let pipe = common::group(&document, &format!("/body/1/children/{index}"));
         for wire in common::children_named(pipe, "line") {
@@ -250,7 +243,7 @@ fn dusk_wires_tags_and_deny_follow_the_section_11_1_table() {
         for dot in common::children_named(pipe, "circle") {
             assert_eq!(dot.attribute("fill"), Some(color));
         }
-        let (tag_border, tag_ink) = if *kind == PipeKind::Deny {
+        let (tag_border, tag_ink) = if *kind == LineKey::Deny {
             ("#5A2A2A", "#FF8A8A")
         } else {
             ("#2A3550", "#E6EDF7")
@@ -355,9 +348,9 @@ fn badges_follow_the_theme_and_canvas() {
 fn wire_zone_borders_follow_kind_and_fills_stay_white() {
     let rendered = render_themed(palette_document(), Theme::Wire);
     let document = common::parse_xml(&rendered.svg.svg);
-    for (index, kind) in ZoneKind::ALL.iter().enumerate() {
+    for (index, kind) in ZoneKey::ALL.iter().enumerate() {
         let group = common::group(&document, &format!("/body/0/children/{index}"));
-        if *kind == ZoneKind::Gcp {
+        if *kind == ZoneKey::Gcp {
             let paths = common::children_named(group, "path");
             assert_eq!(paths[0].attribute("fill"), Some("#FFFFFF"));
             assert_eq!(paths[1].attribute("stroke"), Some("#222222"));
@@ -367,11 +360,11 @@ fn wire_zone_borders_follow_kind_and_fills_stay_white() {
         }
         let rect = common::children_named(group, "rect")[0];
         let expected_dash = match kind {
-            ZoneKind::Vpc | ZoneKind::Optional | ZoneKind::Perimeter => Some("6 5"),
-            ZoneKind::Subnet => Some("2 3"),
+            ZoneKey::Vpc | ZoneKey::Optional | ZoneKey::Perimeter => Some("6 5"),
+            ZoneKey::Subnet => Some("2 3"),
             _ => None,
         };
-        let expected_fill = if *kind == ZoneKind::Vpc {
+        let expected_fill = if *kind == ZoneKey::Vpc {
             "none"
         } else {
             "#FFFFFF"
@@ -418,13 +411,13 @@ fn wire_gcp_bar_is_white_with_a_two_px_bottom_rule_and_dark_ink() {
 fn wire_kinds_are_told_apart_by_line_style() {
     let rendered = render_themed(palette_document(), Theme::Wire);
     let document = common::parse_xml(&rendered.svg.svg);
-    let expected = |kind: PipeKind| match kind {
-        PipeKind::Gray => ("1.25", None),
-        PipeKind::Blue | PipeKind::Pink => ("2", None),
-        PipeKind::Dash => ("2", Some("6 5")),
-        PipeKind::Deny => ("2", Some("2 3")),
+    let expected = |kind: LineKey| match kind {
+        LineKey::Gray => ("1.25", None),
+        LineKey::Blue | LineKey::Pink => ("2", None),
+        LineKey::Dash => ("2", Some("6 5")),
+        LineKey::Deny => ("2", Some("2 3")),
     };
-    for (index, kind) in PipeKind::ALL.iter().enumerate() {
+    for (index, kind) in LineKey::ALL.iter().enumerate() {
         let (width, dash) = expected(*kind);
         let name = kind.as_str();
         let pipe = common::group(&document, &format!("/body/1/children/{index}"));
@@ -441,7 +434,7 @@ fn wire_kinds_are_told_apart_by_line_style() {
         assert_eq!(dots.len(), 2, "{name}");
         let swatch_dots = common::children_named(entry, "circle");
         for dot in dots.iter().chain(&swatch_dots) {
-            if *kind == PipeKind::Pink {
+            if *kind == LineKey::Pink {
                 assert_eq!(dot.attribute("fill"), Some("#FFFFFF"), "{name}");
                 assert_eq!(dot.attribute("stroke"), Some("#222222"), "{name}");
             } else {
@@ -449,7 +442,7 @@ fn wire_kinds_are_told_apart_by_line_style() {
                 assert_eq!(dot.attribute("stroke"), None, "{name}");
             }
         }
-        let expected_swatch_dots = if *kind == PipeKind::Pink { 2 } else { 0 };
+        let expected_swatch_dots = if *kind == LineKey::Pink { 2 } else { 0 };
         assert_eq!(swatch_dots.len(), expected_swatch_dots, "{name}");
         let tag = common::children_named(pipe, "rect")[0];
         assert_eq!(tag.attribute("fill"), Some("#FFFFFF"), "{name}");

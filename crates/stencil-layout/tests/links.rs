@@ -23,13 +23,13 @@ fn linked_page(body: Value, links: Value) -> Value {
         "width": 640,
         "canvas": "customer",
         "body": body,
-        "legend": [{ "kind": "blue", "text": "request path" }],
+        "legend": [{ "line": "solid", "tint": 1, "text": "request path" }],
         "links": links
     })
 }
 
 fn card(id: &str) -> Value {
-    json!({ "tag": "Pcard", "id": id, "fn": id })
+    json!({ "tag": "Item", "kind": "product", "id": id, "title": id })
 }
 
 fn route_of(geometry: &PageGeometry, index: usize) -> &LinkRoute {
@@ -74,7 +74,7 @@ fn row_with_obstacle(links: Value) -> Value {
 #[test]
 fn a_link_routed_around_one_obstacle_never_enters_it() {
     let geometry = layout(&page_from(row_with_obstacle(
-        json!([{ "from": "a", "to": "c", "kind": "blue" }]),
+        json!([{ "from": "a", "to": "c", "line": "solid", "tint": 1 }]),
     )));
     let route = route_of(&geometry, 0);
     assert_eq!(route.status, RouteStatus::Routed);
@@ -119,7 +119,7 @@ fn a_via_route_passes_its_point() {
     };
     let geometry = layout(&page_from(linked_page(
         body,
-        json!([{ "from": "a", "to": "c", "kind": "blue", "via": [{ "x": via.x, "y": via.y }] }]),
+        json!([{ "from": "a", "to": "c", "line": "solid", "tint": 1, "via": [{ "x": via.x, "y": via.y }] }]),
     )));
     let route = route_of(&geometry, 0);
     assert_eq!(route.status, RouteStatus::Routed);
@@ -148,7 +148,7 @@ fn an_enclosed_endpoint_falls_back_and_fails_links_routed() {
     ]}]);
     let geometry = layout(&page_from(linked_page(
         body,
-        json!([{ "from": "center", "to": "target", "kind": "blue" }]),
+        json!([{ "from": "center", "to": "target", "line": "solid", "tint": 1 }]),
     )));
     let route = route_of(&geometry, 0);
     assert_eq!(route.status, RouteStatus::Fallback);
@@ -197,8 +197,8 @@ fn link_checks_do_not_apply_to_a_page_without_links() {
 #[test]
 fn link_checks_count_links_and_segment_obstacle_pairs() {
     let geometry = layout(&page_from(row_with_obstacle(json!([
-        { "from": "a", "to": "b", "kind": "blue" },
-        { "from": "a", "to": "c", "kind": "blue" }
+        { "from": "a", "to": "b", "line": "solid", "tint": 1 },
+        { "from": "a", "to": "c", "line": "solid", "tint": 1 }
     ]))));
     let routed = links_routed(&geometry);
     assert_eq!(routed.examined, 2);
@@ -216,7 +216,7 @@ fn link_checks_count_links_and_segment_obstacle_pairs() {
 #[test]
 fn a_tag_is_sized_like_a_pipe_tag_and_centered_on_the_longest_segment() {
     let geometry = layout(&page_from(row_with_obstacle(json!([
-        { "from": "a", "to": "b", "kind": "blue", "label": "step 1", "sub": "HTTPS" }
+        { "from": "a", "to": "b", "line": "solid", "tint": 1, "label": "step 1", "sub": "HTTPS" }
     ]))));
     let route = route_of(&geometry, 0);
     assert_eq!(route.points.len(), 2, "adjacent cards link straight across");
@@ -250,7 +250,7 @@ fn a_tag_is_sized_like_a_pipe_tag_and_centered_on_the_longest_segment() {
 #[test]
 fn a_forced_side_leaves_through_that_side() {
     let geometry = layout(&page_from(row_with_obstacle(json!([
-        { "from": "a", "to": "b", "kind": "blue", "from_side": "top", "to_side": "top" }
+        { "from": "a", "to": "b", "line": "solid", "tint": 1, "from_side": "top", "to_side": "top" }
     ]))));
     let route = route_of(&geometry, 0);
     assert_eq!(route.status, RouteStatus::Routed);
@@ -269,8 +269,8 @@ fn a_forced_side_leaves_through_that_side() {
 #[test]
 fn routing_is_a_pure_function_of_the_geometry() {
     let page = page_from(row_with_obstacle(json!([
-        { "from": "a", "to": "c", "kind": "blue", "label": "one" },
-        { "from": "c", "to": "a", "kind": "blue" }
+        { "from": "a", "to": "c", "line": "solid", "tint": 1, "label": "one" },
+        { "from": "c", "to": "a", "line": "solid", "tint": 1 }
     ])));
     assert_eq!(layout(&page).links, layout(&page).links);
 }

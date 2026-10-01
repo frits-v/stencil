@@ -24,28 +24,28 @@ fn arrow_document(theme: &str) -> Value {
             {
                 "tag": "Col",
                 "children": [
-                    { "tag": "Pipe", "dir": "h", "kind": "blue", "label": "end", "arrow": "end" },
-                    { "tag": "Pipe", "dir": "h", "kind": "pink", "label": "start", "arrow": "start" },
-                    { "tag": "Pipe", "dir": "v", "kind": "dash", "label": "both", "arrow": "both" },
-                    { "tag": "Pipe", "dir": "h", "kind": "gray", "label": "none" },
+                    { "tag": "Pipe", "dir": "h", "line": "solid", "tint": 1, "label": "end", "arrow": "end" },
+                    { "tag": "Pipe", "dir": "h", "line": "solid", "tint": 2, "label": "start", "arrow": "start" },
+                    { "tag": "Pipe", "dir": "v", "line": "dash", "label": "both", "arrow": "both" },
+                    { "tag": "Pipe", "dir": "h", "line": "gray", "label": "none" },
                     {
                         "tag": "Tee",
-                        "kind": "deny",
+                        "line": "deny",
                         "hub": "hub",
                         "arms": [
-                            { "tag": "Pipe", "dir": "h", "kind": "deny", "label": "arm", "arrow": "end" },
-                            { "tag": "Pipe", "dir": "h", "kind": "deny", "label": "arm" }
+                            { "tag": "Pipe", "dir": "h", "line": "deny", "label": "arm", "arrow": "end" },
+                            { "tag": "Pipe", "dir": "h", "line": "deny", "label": "arm" }
                         ]
                     }
                 ]
             }
         ]),
         json!([
-            { "kind": "gray", "text": "gray" },
-            { "kind": "blue", "text": "blue" },
-            { "kind": "pink", "text": "pink" },
-            { "kind": "dash", "text": "dash" },
-            { "kind": "deny", "text": "deny" }
+            { "line": "gray", "text": "gray" },
+            { "line": "solid", "tint": 1, "text": "blue" },
+            { "line": "solid", "tint": 2, "text": "pink" },
+            { "line": "dash", "text": "dash" },
+            { "line": "deny", "text": "deny" }
         ]),
     );
     document["theme"] = json!(theme);

@@ -6,7 +6,7 @@ use stencil_layout::{
 };
 use stencil_model::pointer::NodePointer;
 use stencil_model::text::TextMeasurer;
-use stencil_model::{LINKS_MAX, Link, Node, NodeRef, Page, PipeDir, PipeKind, Projection};
+use stencil_model::{LINKS_MAX, Link, Node, NodeRef, Page, PipeDir, Projection};
 use stencil_text::CosmicTextMeasurer;
 
 use super::DOT_RADIUS_PX;
@@ -22,7 +22,7 @@ use crate::iso::{
     start_direction, zoomed_geometry,
 };
 use crate::palette::{
-    DotStyle, FacePaint, ISO_ICON_CHIP_SHADOW_OPACITY, LineStyle, Palette, Stroke, ZoneTab,
+    DotStyle, FacePaint, ISO_ICON_CHIP_SHADOW_OPACITY, LineStyle, LineUse, Palette, Stroke, ZoneTab,
 };
 use crate::{RenderError, SvgDocument, format_number};
 
@@ -98,7 +98,10 @@ pub(super) fn render_iso(
         let surface = match (node.tag, solid, document_node) {
             (NodeTag::LegendEntry, _, DocumentNode::LegendEntry(entry)) => {
                 let shifted = shifted_node(node, 0.0, scene.footer_shift);
-                let relabeled = match writer.palette.iso_legend_label(entry.kind) {
+                let relabeled = match writer
+                    .palette
+                    .iso_legend_label(LineUse::new(entry.line, entry.tint))
+                {
                     Some(label) => {
                         let measurer = match measurer.as_mut() {
                             Some(measurer) => measurer,
@@ -268,6 +271,7 @@ impl SvgWriter {
     /// The face paint of a slab or block, or None for a node that draws no faces.
     fn face_paint(
         &self,
+        node: &NodeGeometry,
         document_node: DocumentNode<'_>,
         solid: &Solid,
         zoom: f32,
@@ -279,11 +283,12 @@ impl SvgWriter {
             self.palette.block_faces(fill, border)
         };
         let paint = match content {
-            Node::Zone(zone) => {
+            Node::Box(_) => {
                 let level = (solid.base_z / (ISO_SLAB_THICKNESS_PX * zoom)).round() as usize;
-                self.palette.slab_faces(zone.kind, level)
+                let look = node.container.ok_or_else(|| surface_mismatch(node))?;
+                self.palette.slab_faces(look, node.tint, level)
             }
-            Node::Pcard(_) => {
+            Node::Item(_) => {
                 let card = self.palette.card();
                 block(Some(card.fill), card.border)
             }
@@ -291,13 +296,18 @@ impl SvgWriter {
                 let text_block = self.palette.block();
                 block(Some(text_block.fill), text_block.border)
             }
-            Node::Fact(_) => block(Some(self.palette.fact_fill()), None),
+            Node::Fact(fact) => block(self.fact_box_fill(fact.source), None),
             Node::Callout(callout) => {
                 let paint = self.palette.callout(callout.kind);
                 block(Some(paint.fill), Some(paint.border))
             }
             Node::Frame(_) => block(None, Some(self.palette.frame_border())),
-            Node::Note(_) | Node::Row(_) | Node::Col(_) | Node::Pipe(_) | Node::Tee(_) => {
+            Node::Note(_)
+            | Node::Row(_)
+            | Node::Col(_)
+            | Node::Lanes(_)
+            | Node::Pipe(_)
+            | Node::Tee(_) => {
                 return Ok(None);
             }
         };
@@ -319,7 +329,7 @@ impl SvgWriter {
         let (offset, zoom) = placement;
         let context = self.part_context(document_node);
         if solid.shape == SolidShape::Surface {
-            let kind = context.pipe_kind.ok_or_else(|| surface_mismatch(node))?;
+            let kind = context.line.ok_or_else(|| surface_mismatch(node))?;
             if let Some(spine) = node.part(PartName::Spine) {
                 self.write_spine(depth, spine.bounds, kind, solid.base_z, offset);
             } else {
@@ -327,7 +337,7 @@ impl SvgWriter {
             }
             return Ok(None);
         }
-        let Some(paint) = self.face_paint(document_node, solid, zoom)? else {
+        let Some(paint) = self.face_paint(node, document_node, solid, zoom)? else {
             return Ok(None);
         };
         let top_z = solid.base_z + solid.height;
@@ -437,10 +447,11 @@ impl SvgWriter {
                     self.write_screen_line(depth, start, end, diagonal);
                 }
             }
-            Node::Zone(_)
+            Node::Box(_)
             | Node::Row(_)
             | Node::Col(_)
-            | Node::Pcard(_)
+            | Node::Lanes(_)
+            | Node::Item(_)
             | Node::Fact(_)
             | Node::Note(_)
             | Node::Pipe(_)
@@ -524,7 +535,7 @@ impl SvgWriter {
         z: f32,
         offset: ScreenPoint,
     ) -> Result<(), RenderError> {
-        let kind = context.pipe_kind.ok_or_else(|| surface_mismatch(node))?;
+        let kind = context.line.ok_or_else(|| surface_mismatch(node))?;
         let dir = context.pipe_dir.ok_or_else(|| surface_mismatch(node))?;
         let arrows = context.arrows;
         let dot_start = node
@@ -592,7 +603,7 @@ impl SvgWriter {
         depth: usize,
         head: ((f32, f32), (f32, f32), f32),
         z: f32,
-        kind: PipeKind,
+        kind: LineUse,
         offset: ScreenPoint,
     ) {
         let (tip, direction, length) = head;
@@ -610,7 +621,7 @@ impl SvgWriter {
 
     /// A 4 px dot on a horizontal plane is an ellipse on screen (section 12.2, rule 6),
     /// filled or hollow as the flat dot.
-    fn write_ellipse_dot(&mut self, depth: usize, center: ScreenPoint, kind: PipeKind) {
+    fn write_ellipse_dot(&mut self, depth: usize, center: ScreenPoint, kind: LineUse) {
         let wire = self.palette.wire_style(kind);
         let (fill, ring) = match wire.dot {
             DotStyle::Filled => (wire.stroke.color, String::new()),
@@ -639,7 +650,7 @@ impl SvgWriter {
         &mut self,
         depth: usize,
         spine: BoxRect,
-        kind: PipeKind,
+        kind: LineUse,
         z: f32,
         offset: ScreenPoint,
     ) {
@@ -670,11 +681,12 @@ impl SvgWriter {
             &format!(
                 r#"<g data-id="{}" data-tag="Link" data-kind="{}">"#,
                 escape_xml(pointer.as_str()),
-                route.kind.as_str()
+                route.key()
             ),
         );
+        let line_use = LineUse::new(route.line, route.tint);
         let arrows = ArrowEnds::from_arrow(link.arrow);
-        let arrow_length = iso_link_arrowhead_length(route.kind);
+        let arrow_length = iso_link_arrowhead_length(route.line, route.tint);
         let mut points = path.to_vec();
         let start_head = if arrows.start {
             start_direction(&points)
@@ -694,7 +706,7 @@ impl SvgWriter {
             shorten_end(&mut points, arrow_length);
             points.reverse();
         }
-        let stroke = self.palette.wire_style(route.kind).stroke;
+        let stroke = self.palette.wire_style(line_use).stroke;
         // A dashed link skips each riser, so the dash pattern never lands on a slab edge as
         // a solid tick; the gap reads as one more space between dashes.
         let skips_risers = stroke.line != LineStyle::Solid;
@@ -730,7 +742,7 @@ impl SvgWriter {
                 depth + 1,
                 ((tip.x, tip.y), direction, arrow_length),
                 tip.z,
-                route.kind,
+                line_use,
                 offset,
             );
         }
@@ -808,9 +820,10 @@ impl SvgWriter {
         let BillboardGround { ground, tab } = under;
         let context = self.part_context(document_node);
         let tab_ink = match (document_node, tab) {
-            (DocumentNode::Content(NodeRef::Node(Node::Zone(zone))), Some(nested)) => {
+            (DocumentNode::Content(NodeRef::Node(Node::Box(_))), Some(nested)) => {
                 let bounds = shifted_box(billboard.flat, delta_x, delta_y);
-                let (fill, border, ink) = match self.palette.iso_zone_tab(zone.kind, nested) {
+                let look = node.container.ok_or_else(|| surface_mismatch(node))?;
+                let (fill, border, ink) = match self.palette.iso_zone_tab(look, node.tint, nested) {
                     ZoneTab::Filled { fill, ink } => (fill, None, ink),
                     ZoneTab::Outline { border, ink } => (
                         ground.unwrap_or(self.palette.page_background()),
@@ -849,13 +862,15 @@ impl SvgWriter {
         }
         for part in &members {
             if let Some(run) = &part.text {
-                let style_name = text_style_name(document_node, part.name)
+                let style_name = text_style_name(document_node, node.container, part.name)
                     .ok_or_else(|| part_mismatch(node, part))?;
                 let fill = match tab_ink {
                     Some(ink) => ink,
-                    None => self
-                        .palette
-                        .text_ink(style_name, self.canvas, context.pipe_kind),
+                    None => self.palette.text_ink(
+                        style_name,
+                        self.canvas,
+                        context.line.map(|line_use| line_use.line),
+                    ),
                 };
                 self.write_text_run(depth, &node.pointer, part.bounds, run, fill)?;
             }
@@ -875,7 +890,7 @@ impl SvgWriter {
             let bounds = shifted_box(part.bounds, delta_x, delta_y);
             match (part.name, &part.text) {
                 (PartName::Tag, None) => {
-                    let tag_paint = self.palette.tag(route.kind);
+                    let tag_paint = self.palette.tag(route.line);
                     self.write_box(depth, bounds, TAG_RADIUS_PX, tag_paint);
                 }
                 (PartName::TagLabel | PartName::TagSub, Some(run)) => {
@@ -883,7 +898,7 @@ impl SvgWriter {
                         pipe_text_style_name(part.name).ok_or_else(|| link_mismatch(route))?;
                     let fill = self
                         .palette
-                        .text_ink(style_name, self.canvas, Some(route.kind));
+                        .text_ink(style_name, self.canvas, Some(route.line));
                     self.write_text_run(depth, &pointer, bounds, run, fill)?;
                 }
                 _ => return Err(link_mismatch(route)),
@@ -921,7 +936,8 @@ fn needs_plate(node: &NodeGeometry, part: PartName) -> bool {
         | NodeTag::LegendEntry
         | NodeTag::Foot
         | NodeTag::Row
-        | NodeTag::Col => false,
+        | NodeTag::Col
+        | NodeTag::Lanes => false,
     }
 }
 

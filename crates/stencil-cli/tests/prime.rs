@@ -16,7 +16,8 @@ use stencil_cli::pipeline::{all_checks, load_document, read_input, render_page};
 use stencil_cli::prime::{BASE_BYTES_MAX, TOPIC_BYTES_MAX, Topic, base_text, field_notes};
 use stencil_cli::{ExitCode, run};
 use stencil_model::{
-    Arrow, CalloutKind, IconName, Justify, ListKind, PipeKind, Side, Theme, ZoneKind, page_schema,
+    Arrow, CalloutKind, Chrome, FactSource, IconName, Justify, Line, ListKind, Side, Theme,
+    builtin_grammar, page_schema,
 };
 use stencil_render::DeviceScale;
 
@@ -69,7 +70,7 @@ fn node_tags() -> BTreeSet<String> {
 /// Everything the vocabulary table may name in its first column.
 fn table_objects() -> BTreeSet<String> {
     let mut objects = node_tags();
-    for name in ["Page", "LegendEntry", "Link"] {
+    for name in ["Page", "FactEntry", "LegendEntry", "Link"] {
         objects.insert(name.to_string());
     }
     objects
@@ -195,6 +196,16 @@ fn callout_kinds() -> Vec<CalloutKind> {
     all.to_vec()
 }
 
+fn chromes() -> Vec<Chrome> {
+    let all = [Chrome::Full, Chrome::None];
+    for chrome in all {
+        match chrome {
+            Chrome::Full | Chrome::None => {}
+        }
+    }
+    all.to_vec()
+}
+
 fn names<T: Serialize + Copy>(values: &[T]) -> Vec<String> {
     values.iter().map(|value| serialized(*value)).collect()
 }
@@ -206,7 +217,17 @@ fn all_texts() -> Vec<(String, String)> {
         let outcome = run_stencil(&["prime", topic.name()]);
         texts.push((topic.name().to_string(), outcome.stdout));
     }
+    for name in stencil_model::BUILTIN_GRAMMARS {
+        let outcome = run_stencil(&["prime", "grammar", name]);
+        texts.push((format!("grammar {name}"), outcome.stdout));
+    }
     texts
+}
+
+#[test]
+fn the_budgets_are_7000_bytes_for_the_base_and_5000_for_each_topic() {
+    assert_eq!(BASE_BYTES_MAX, 7000);
+    assert_eq!(TOPIC_BYTES_MAX, 5000);
 }
 
 #[test]
@@ -288,17 +309,91 @@ fn the_base_briefing_names_every_node_tag_in_its_vocabulary() {
     for tag in node_tags() {
         assert!(rows.contains(&tag), "vocabulary has no row for {tag}");
     }
-    for object in ["Page", "LegendEntry", "Link"] {
+    for object in ["Page", "FactEntry", "LegendEntry", "Link"] {
         assert!(rows.contains(object), "vocabulary has no row for {object}");
     }
-    assert_eq!(node_tags().len(), 11);
+    assert_eq!(node_tags().len(), 12);
+}
+
+#[test]
+fn the_base_briefing_describes_the_core_vocabulary() {
+    let text = base_output();
+    assert!(text.contains("Every node object carries \"tag\"; the Page does not."));
+    assert!(
+        text.contains("Sequence and timeline figures are refused until a timeline grammar exists.")
+    );
+    for word in [
+        "Box", "Item", "Lanes", "facts", "source", "line", "tint", "chrome", "grammar",
+    ] {
+        assert!(text.contains(word), "the vocabulary names no {word}");
+    }
+    assert!(text.contains("grammar ref =gcp; a built-in name or a .json path"));
+    assert!(text.contains("chrome Chrome =full"));
+    assert!(text.contains("source FactSource =doc"));
+    assert!(text.contains("tint 1-8"));
+    assert!(text.contains("`stencil prime grammar <name>`"));
+    for name in stencil_model::BUILTIN_GRAMMARS {
+        assert!(text.contains(name), "the briefing names no grammar {name}");
+    }
+}
+
+#[test]
+fn prime_grammar_prints_each_built_in_grammar_within_the_topic_budget() {
+    for name in stencil_model::BUILTIN_GRAMMARS {
+        let outcome = run_stencil(&["prime", "grammar", name]);
+        assert_eq!(outcome.code, ExitCode::Clean, "{name}: {}", outcome.stderr);
+        assert_eq!(outcome.stderr, "");
+        assert!(
+            outcome.stdout.len() <= TOPIC_BYTES_MAX,
+            "{name} briefing is {} bytes",
+            outcome.stdout.len()
+        );
+        assert!(!outcome.stdout.contains("{{"), "{name}: an unfilled marker");
+        let grammar = builtin_grammar(name).unwrap().unwrap();
+        for container in &grammar.containers {
+            let row = format!("| {} | ", container.name);
+            assert!(
+                outcome.stdout.contains(&row),
+                "{name} briefing has no row for {}",
+                container.name
+            );
+        }
+        for item in &grammar.items {
+            assert!(
+                outcome.stdout.contains(&format!("| {} | ", item.name)),
+                "{name} briefing has no row for {}",
+                item.name
+            );
+        }
+    }
+    let gcp = run_stencil(&["prime", "grammar", "gcp"]).stdout;
+    assert!(gcp.contains("| apis | group | neutral | no |"), "{gcp}");
+    assert!(
+        gcp.contains("| region | group | neutral | yes, default 1 |"),
+        "{gcp}"
+    );
+}
+
+#[test]
+fn prime_grammar_with_an_unknown_or_missing_name_exits_2_with_one_line() {
+    for arguments in [vec!["prime", "grammar", "nope"], vec!["prime", "grammar"]] {
+        let outcome = run_stencil(&arguments);
+        assert_eq!(outcome.code, ExitCode::CouldNotRun, "{arguments:?}");
+        assert_eq!(outcome.stdout, "");
+        assert_eq!(outcome.stderr.lines().count(), 1, "{}", outcome.stderr);
+        assert!(outcome.stderr.contains("gcp, plain"), "{}", outcome.stderr);
+    }
+    let extra = run_stencil(&["prime", "themes", "gcp"]);
+    assert_eq!(extra.code, ExitCode::CouldNotRun);
+    assert_eq!(extra.stdout, "");
 }
 
 #[test]
 fn the_base_briefing_lists_every_enum_value_from_the_model() {
     let text = base_output();
-    assert_enum_listed(&text, "ZoneKind", names(&ZoneKind::ALL));
-    assert_enum_listed(&text, "PipeKind", names(&PipeKind::ALL));
+    assert_enum_listed(&text, "Line", names(&Line::ALL));
+    assert_enum_listed(&text, "FactSource", names(&FactSource::ALL));
+    assert_enum_listed(&text, "Chrome", names(&chromes()));
     assert_enum_listed(&text, "IconName", names(&IconName::ALL));
     assert_enum_listed(&text, "Theme", names(&themes()));
     assert_enum_listed(&text, "Arrow", names(&arrows()));
@@ -313,7 +408,12 @@ fn the_base_briefing_lists_every_enum_value_from_the_model() {
 fn the_base_briefing_covers_every_check_the_pipeline_runs() {
     let loaded = load_document(&read_input(&g7_path()).unwrap()).unwrap();
     let rendered = render_page(&loaded, DeviceScale::DEFAULT).unwrap();
-    let reports = all_checks(&loaded.page, &rendered.geometry, rendered.scene.as_ref());
+    let reports = all_checks(
+        &loaded.page,
+        &loaded.grammar,
+        &rendered.geometry,
+        rendered.scene.as_ref(),
+    );
     let text = base_output();
     for report in &reports {
         let row = format!("| {} |", report.check.as_str());
@@ -350,7 +450,7 @@ fn no_prime_text_names_a_tag_that_does_not_exist() {
         }
         for word in text.split(|character: char| !character.is_ascii_alphanumeric()) {
             assert!(
-                !["Grid", "Xcard", "Box", "Group", "Edge"].contains(&word),
+                !["Grid", "Xcard", "Zone", "Pcard", "Group", "Edge"].contains(&word),
                 "{topic} names {word}, which is not a tag"
             );
         }

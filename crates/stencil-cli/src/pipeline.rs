@@ -14,7 +14,11 @@ use stencil_layout::checks::{
 };
 use stencil_layout::{LayoutError, PageGeometry, layout_page};
 use stencil_model::checks::{CheckReport, legend_consistency, remembered_constants};
-use stencil_model::{ModelError, Page, Projection, parse_page};
+use stencil_model::grammar::GrammarViolation;
+use stencil_model::{
+    DATA_FILE_BYTES_MAX, Grammar, GrammarError, ModelError, Page, Projection, builtin_grammar,
+    grammar_reference, is_grammar_reference, parse_grammar, parse_page, validate_page, vet_page,
+};
 use stencil_render::iso::{IsoScene, iso_labels_clear, iso_links_clear, project_page};
 use stencil_render::{
     DeviceScale, RenderError, SvgDocument, measured_json, render_png, render_svg,
@@ -35,6 +39,14 @@ pub enum Failure {
     OutputIsInput { path: PathBuf },
     #[error(transparent)]
     Model(#[from] ModelError),
+    #[error(transparent)]
+    Grammar(#[from] GrammarError),
+    #[error("cannot read grammar {}", path.display())]
+    ReadGrammar {
+        path: PathBuf,
+        #[source]
+        source: std::io::Error,
+    },
     #[error("document parses as a page but not as a JSON value")]
     DocumentValue(#[source] serde_json::Error),
     #[error(transparent)]
@@ -73,11 +85,12 @@ pub enum Failure {
     },
 }
 
-/// A vetted page together with the input parsed as a plain JSON value, which the measured
-/// JSON carries unchanged as `document`.
+/// A vetted page with the grammar it names, together with the input parsed as a plain JSON
+/// value, which the measured JSON carries unchanged as `document`.
 #[derive(Debug, Clone, PartialEq)]
 pub struct LoadedDocument {
     pub page: Page,
+    pub grammar: Grammar,
     pub document: Value,
 }
 
@@ -152,11 +165,78 @@ fn invalid_utf8(bytes: &[u8], valid_up_to: usize) -> Failure {
     })
 }
 
-/// `parse_page`, which vets, followed by a second parse into `serde_json::Value`.
+/// `load_document_from` with grammar paths resolved against the current directory.
 pub fn load_document(json_text: &str) -> Result<LoadedDocument, Failure> {
+    load_document_from(json_text, Path::new("."))
+}
+
+/// Parses the page, resolves and loads the grammar it names (section 13.2), vets the page
+/// against it, then parses the input again into `serde_json::Value`. A grammar given by
+/// path resolves against `document_directory`, the directory of the input document.
+pub fn load_document_from(
+    json_text: &str,
+    document_directory: &Path,
+) -> Result<LoadedDocument, Failure> {
     let page = parse_page(json_text)?;
+    let reference = grammar_reference(&page).to_string();
+    let grammar = if is_grammar_reference(&reference) {
+        resolve_grammar(&reference, document_directory)?
+    } else {
+        // `grammar-unknown` is reported before resolution, with every other violation the
+        // page has under the default grammar.
+        let fallback = resolve_grammar(stencil_model::GRAMMAR_DEFAULT, document_directory)?;
+        return Err(Failure::Model(ModelError::Invalid(validate_page(
+            &page, &fallback,
+        ))));
+    };
+    let page = vet_page(page, &grammar)?;
     let document: Value = serde_json::from_str(json_text).map_err(Failure::DocumentValue)?;
-    Ok(LoadedDocument { page, document })
+    Ok(LoadedDocument {
+        page,
+        grammar,
+        document,
+    })
+}
+
+/// A built-in grammar by name, or a grammar file by path relative to `directory`, read up
+/// to DATA_FILE_BYTES_MAX bytes and validated.
+pub fn resolve_grammar(reference: &str, directory: &Path) -> Result<Grammar, Failure> {
+    if let Some(builtin) = builtin_grammar(reference) {
+        return Ok(builtin?);
+    }
+    let path = directory.join(reference);
+    let read_error = |source| Failure::ReadGrammar {
+        path: path.clone(),
+        source,
+    };
+    let file = fs::File::open(&path).map_err(read_error)?;
+    let limit = u64::try_from(DATA_FILE_BYTES_MAX).unwrap_or(u64::MAX);
+    let mut bytes = Vec::new();
+    file.take(limit + 1)
+        .read_to_end(&mut bytes)
+        .map_err(read_error)?;
+    if bytes.len() > DATA_FILE_BYTES_MAX {
+        return Err(read_error(io::Error::new(
+            io::ErrorKind::FileTooLarge,
+            format!("grammar is larger than {DATA_FILE_BYTES_MAX} bytes"),
+        )));
+    }
+    let origin = path.display().to_string();
+    let json_text = String::from_utf8(bytes).map_err(|error| GrammarError::Json {
+        origin: origin.clone(),
+        line: 1,
+        column: error.utf8_error().valid_up_to() + 1,
+        message: "grammar is not valid UTF-8".to_string(),
+    })?;
+    Ok(parse_grammar(&json_text, &origin)?)
+}
+
+/// The violations of a grammar failure, empty for a JSON error.
+pub fn grammar_violations(error: &GrammarError) -> &[GrammarViolation] {
+    match error {
+        GrammarError::Json { .. } => &[],
+        GrammarError::Invalid { violations, .. } => violations,
+    }
 }
 
 pub fn output_names(input: &Path) -> Result<OutputNames, Failure> {
@@ -181,7 +261,7 @@ pub fn output_names(input: &Path) -> Result<OutputNames, Failure> {
 /// and renders all three outputs in memory.
 pub fn render_page(loaded: &LoadedDocument, scale: DeviceScale) -> Result<RenderedPage, Failure> {
     let mut measurer = CosmicTextMeasurer::new()?;
-    let geometry = layout_page(&loaded.page, &mut measurer)?;
+    let geometry = layout_page(&loaded.page, &loaded.grammar, &mut measurer)?;
     let scene = match loaded.page.projection {
         Projection::Flat => None,
         Projection::Iso => Some(project_page(&geometry)?),
@@ -199,18 +279,22 @@ pub fn render_page(loaded: &LoadedDocument, scale: DeviceScale) -> Result<Render
 }
 
 /// The two geometry-free checks, in `CheckName` order.
-pub fn model_checks(page: &Page) -> [CheckReport; 2] {
-    [remembered_constants(page), legend_consistency(page)]
+pub fn model_checks(page: &Page, grammar: &Grammar) -> [CheckReport; 2] {
+    [
+        remembered_constants(page, grammar),
+        legend_consistency(page),
+    ]
 }
 
 /// All ten checks, in `CheckName` order. `iso-labels-clear` and `iso-links-clear` read the
 /// scene and are not applicable without one.
 pub fn all_checks(
     page: &Page,
+    grammar: &Grammar,
     geometry: &PageGeometry,
     scene: Option<&IsoScene>,
 ) -> [CheckReport; 10] {
-    let [remembered, legend] = model_checks(page);
+    let [remembered, legend] = model_checks(page, grammar);
     [
         child_inside_container(geometry),
         siblings_do_not_overlap(geometry),

@@ -11,8 +11,9 @@ use stencil_layout::{
     BoxRect, LinkRoute, NodeGeometry, NodeTag, PageGeometry, Part, PartName, Size, TextAlign,
 };
 use stencil_model::checks::{CheckName, CheckReport, Defect};
+use stencil_model::grammar::Role;
 use stencil_model::pointer::NodePointer;
-use stencil_model::{LINKS_MAX, NODES_MAX, PagePoint, PipeKind};
+use stencil_model::{LINKS_MAX, Line, NODES_MAX, PagePoint};
 
 use crate::RenderError;
 use crate::svg::DOT_RADIUS_PX;
@@ -85,8 +86,8 @@ pub struct IsoScene {
     /// rule 8, laid over the slabs and cut back at its endpoint blocks (rule 7), in zoomed
     /// flat px.
     pub link_paths: Vec<Vec<IsoPoint>>,
-    /// The kind of each link, in `link_paths` order.
-    pub link_kinds: Vec<PipeKind>,
+    /// The line and effective tint of each link, in `link_paths` order.
+    pub link_kinds: Vec<(Line, Option<u8>)>,
     /// The body zoom of section 12.2, rule 7.
     pub zoom: f32,
 }
@@ -212,14 +213,15 @@ pub fn silhouette(
     ]
 }
 
-/// A zone drawn as a ring on its parent's top instead of a slab: the zone kinds that have
-/// no fill in any theme.
+/// A Box drawn as a ring on its parent's top instead of a slab: the strong tone untinted,
+/// which has no fill in any theme (section 13.4 rule 12).
 pub fn is_ring_zone(node: &NodeGeometry) -> bool {
-    node.tag == NodeTag::Zone && node.kind == Some("vpc")
+    node.tag == NodeTag::Zone && node.container.is_some_and(|look| look.is_ring(node.tint))
 }
 
+/// A Box of the frame role, the gcp frame of section 12.3.
 fn is_gcp_zone(node: &NodeGeometry) -> bool {
-    node.tag == NodeTag::Zone && node.kind == Some("gcp")
+    node.tag == NodeTag::Zone && node.container.is_some_and(|look| look.role == Role::Frame)
 }
 
 /// The padding of a zone's tab around its Label run.
@@ -240,10 +242,12 @@ pub(crate) fn billboard_member(tag: NodeTag, part: PartName) -> bool {
             part,
             PartName::Icon
                 | PartName::FactBox
+                | PartName::BuiltBox
                 | PartName::AskBox
                 | PartName::FunctionName
                 | PartName::ProductName
                 | PartName::Fact
+                | PartName::Built
                 | PartName::Ask
         ),
         NodeTag::Fact | NodeTag::Note => part == PartName::Text,
@@ -264,7 +268,8 @@ pub(crate) fn billboard_member(tag: NodeTag, part: PartName) -> bool {
         | NodeTag::LegendEntry
         | NodeTag::Foot
         | NodeTag::Row
-        | NodeTag::Col => false,
+        | NodeTag::Col
+        | NodeTag::Lanes => false,
     }
 }
 
@@ -457,7 +462,8 @@ fn solid_shape(node: &NodeGeometry, slab_top: f32) -> Option<(SolidShape, f32, f
         | NodeTag::LegendEntry
         | NodeTag::Foot
         | NodeTag::Row
-        | NodeTag::Col => None,
+        | NodeTag::Col
+        | NodeTag::Lanes => None,
     }
 }
 
@@ -597,14 +603,15 @@ impl Extent {
 
 const ZERO_OFFSET: ScreenPoint = ScreenPoint { x: 0.0, y: 0.0 };
 
-/// Flat length of a link arrowhead under iso, by kind (section 12.3, rule 7). Each is at
-/// least four times the widest stroke the kind has in any theme, and it does not depend on
-/// the theme, so the drawn canvas does not either.
-pub fn iso_link_arrowhead_length(kind: PipeKind) -> f32 {
-    match kind {
-        PipeKind::Blue => 18.0,
-        PipeKind::Dash => 15.0,
-        PipeKind::Gray | PipeKind::Pink | PipeKind::Deny => 14.0,
+/// Flat length of a link arrowhead under iso, by line and effective tint (section 12.3,
+/// rule 7): 18 for solid slot 1, 15 for every dash, 14 for the rest. Each is at least four
+/// times the widest stroke the line has in any theme, and it does not depend on the theme,
+/// so the drawn canvas does not either.
+pub fn iso_link_arrowhead_length(line: Line, tint: Option<u8>) -> f32 {
+    match (line, tint) {
+        (Line::Solid, Some(1)) => 18.0,
+        (Line::Dash, _) => 15.0,
+        (Line::Gray | Line::Solid | Line::Deny, _) => 14.0,
     }
 }
 
@@ -1118,7 +1125,7 @@ pub fn project_zoomed(geometry: &PageGeometry, zoom: f32) -> Result<IsoScene, Re
             extent.add(project_point(point.x, point.y, point.z, ZERO_OFFSET));
         }
         // LinkRoute does not carry the arrow value, so both ends get an arrowhead extent.
-        let head = iso_link_arrowhead_length(route.kind);
+        let head = iso_link_arrowhead_length(route.line, route.tint);
         for (tip, direction) in [start_direction(path), end_direction(path)]
             .into_iter()
             .flatten()
@@ -1210,7 +1217,11 @@ pub fn project_zoomed(geometry: &PageGeometry, zoom: f32) -> Result<IsoScene, Re
         solids,
         billboards,
         link_paths: routes.into_iter().map(|(_, path)| path).collect(),
-        link_kinds: geometry.links.iter().map(|route| route.kind).collect(),
+        link_kinds: geometry
+            .links
+            .iter()
+            .map(|route| (route.line, route.tint))
+            .collect(),
         zoom,
     })
 }
@@ -1385,7 +1396,7 @@ pub fn iso_links_clear(scene: Option<&IsoScene>) -> CheckReport {
             })
             .collect();
         let legs = route::legs(&route::corners(&flat));
-        let least_last = 2.0 * iso_link_arrowhead_length(*kind);
+        let least_last = 2.0 * iso_link_arrowhead_length(kind.0, kind.1);
         for (leg_index, leg) in legs.iter().enumerate() {
             examined += 1;
             for (zone, edges) in &zones {

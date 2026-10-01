@@ -24,34 +24,35 @@ fn stress_document_has_37_body_nodes() {
 fn section_10_stress_document() -> Value {
     let card = |row: u32, column: u32| {
         json!({
-            "tag": "Pcard",
+            "tag": "Item", "kind": "product",
             "icon": "cloud-run",
-            "fn": format!("Service {row}.{column}"),
-            "pn": "Cloud Run",
-            "fact": "Reads its config from a bucket in the same project"
+            "title": format!("Service {row}.{column}"),
+            "subtitle": "Cloud Run",
+            "facts": [{ "text": "Reads its config from a bucket in the same project" }]
         })
     };
-    let step = |row: u32, step: u32, kind: &str| json!({ "tag": "Pipe", "dir": "h", "kind": kind, "label": format!("step {row}.{step}") });
+    let solid_step = |row: u32, step: u32| json!({ "tag": "Pipe", "dir": "h", "line": "solid", "tint": 1, "label": format!("step {row}.{step}") });
+    let gray_step = |row: u32, step: u32| json!({ "tag": "Pipe", "dir": "h", "line": "gray", "label": format!("step {row}.{step}") });
     let row = |row: u32| {
         json!({
             "tag": "Row",
             "children": [
                 card(row, 1),
-                step(row, 1, "blue"),
+                solid_step(row, 1),
                 card(row, 2),
-                step(row, 2, "gray"),
+                gray_step(row, 2),
                 card(row, 3)
             ]
         })
     };
-    let failover = json!({ "tag": "Pipe", "dir": "v", "kind": "dash", "label": "failover" });
+    let failover = json!({ "tag": "Pipe", "dir": "v", "line": "dash", "label": "failover" });
     let tee = json!({
         "tag": "Tee",
-        "kind": "deny",
+        "line": "deny",
         "hub": "egress",
         "arms": [
-            { "tag": "Pipe", "dir": "h", "kind": "blue", "label": "allowed" },
-            { "tag": "Pipe", "dir": "h", "kind": "pink", "label": "reply" }
+            { "tag": "Pipe", "dir": "h", "line": "solid", "tint": 1, "label": "allowed" },
+            { "tag": "Pipe", "dir": "h", "line": "solid", "tint": 2, "label": "reply" }
         ]
     });
     json!({
@@ -59,12 +60,13 @@ fn section_10_stress_document() -> Value {
         "kicker": "Service perimeter · Cloud Run",
         "lede": "Five rows of cards and pipes inside a service perimeter.",
         "canvas": "internal",
+        "grammar": "gcp",
         "body": [{
-            "tag": "Zone",
+            "tag": "Box",
             "kind": "gcp",
             "label": "Google Cloud",
             "children": [{
-                "tag": "Zone",
+                "tag": "Box",
                 "kind": "perimeter",
                 "label": "Service perimeter",
                 "children": [{
@@ -74,11 +76,11 @@ fn section_10_stress_document() -> Value {
             }]
         }],
         "legend": [
-            { "kind": "gray", "text": "internal call" },
-            { "kind": "blue", "text": "request path" },
-            { "kind": "pink", "text": "reply path" },
-            { "kind": "dash", "text": "failover" },
-            { "kind": "deny", "text": "blocked egress" }
+            { "line": "gray", "text": "internal call" },
+            { "line": "solid", "tint": 1, "text": "request path" },
+            { "line": "solid", "tint": 2, "text": "reply path" },
+            { "line": "dash", "text": "failover" },
+            { "line": "deny", "text": "blocked egress" }
         ]
     })
 }
@@ -101,7 +103,7 @@ fn stress_layout_passes_every_check_on_the_page() {
         child_inside_container(&geometry),
         siblings_do_not_overlap(&geometry),
         text_fits_box(&geometry),
-        remembered_constants(&page),
+        remembered_constants(&page, &common::gcp()),
         legend_consistency(&page),
         landing,
     ];

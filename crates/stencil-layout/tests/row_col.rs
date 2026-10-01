@@ -7,11 +7,11 @@ use serde_json::{Value, json};
 use stencil_layout::checks::child_inside_container;
 
 fn card(function_name: &str) -> Value {
-    json!({ "tag": "Pcard", "fn": function_name })
+    json!({ "tag": "Item", "kind": "product", "title": function_name })
 }
 
 fn one_card_zone(label: &str) -> Value {
-    json!({ "tag": "Zone", "kind": "region-a", "label": label, "children": [card("Inside")] })
+    json!({ "tag": "Box", "kind": "region", "tint": 1, "label": label, "children": [card("Inside")] })
 }
 
 fn card_stack(count: usize) -> Value {
@@ -88,7 +88,7 @@ fn pipe_in_a_row_keeps_its_max_content_width() {
         1280,
         json!([{
             "tag": "Row",
-            "children": [card("Left"), { "tag": "Pipe", "dir": "h", "kind": "blue", "label": "VLAN 1" }, card("Right")]
+            "children": [card("Left"), { "tag": "Pipe", "dir": "h", "line": "solid", "tint": 1, "label": "VLAN 1" }, card("Right")]
         }]),
     ));
     let pipe = node(&geometry, "/body/0/children/1");
@@ -129,7 +129,7 @@ fn grow_0_0_1_gives_all_free_width_to_the_third_child() {
 
 #[test]
 fn justify_center_centers_two_pipes_in_a_taller_col() {
-    let pipe = |label: &str| json!({ "tag": "Pipe", "dir": "h", "kind": "blue", "label": label });
+    let pipe = |label: &str| json!({ "tag": "Pipe", "dir": "h", "line": "solid", "tint": 1, "label": label });
     let geometry = layout(&page_with_body(
         1280,
         json!([{
@@ -152,7 +152,7 @@ fn justify_center_centers_two_pipes_in_a_taller_col() {
 
 #[test]
 fn justify_end_and_space_between_place_the_stack() {
-    let pipe = |label: &str| json!({ "tag": "Pipe", "dir": "h", "kind": "blue", "label": label });
+    let pipe = |label: &str| json!({ "tag": "Pipe", "dir": "h", "line": "solid", "tint": 1, "label": label });
     for (justify, first_at_top, last_at_bottom) in [
         ("end", false, true),
         ("space-between", true, true),

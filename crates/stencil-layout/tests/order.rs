@@ -48,10 +48,10 @@ fn tee_arms_follow_the_tee_before_its_next_sibling() {
             "tag": "Col",
             "children": [
                 {
-                    "tag": "Tee", "kind": "blue", "hub": "hub",
+                    "tag": "Tee", "line": "solid", "tint": 1, "hub": "hub",
                     "arms": [
-                        { "tag": "Pipe", "dir": "h", "kind": "blue", "label": "up" },
-                        { "tag": "Pipe", "dir": "h", "kind": "blue", "label": "down" }
+                        { "tag": "Pipe", "dir": "h", "line": "solid", "tint": 1, "label": "up" },
+                        { "tag": "Pipe", "dir": "h", "line": "solid", "tint": 1, "label": "down" }
                     ]
                 },
                 { "tag": "Fact", "text": "after the tee" }
@@ -78,7 +78,7 @@ fn tee_arms_follow_the_tee_before_its_next_sibling() {
     let tee_index = 6;
     assert_eq!(geometry.children(tee_index), vec![7, 8]);
     assert_eq!(geometry.nodes[7].parent, Some(tee_index));
-    assert_eq!(geometry.nodes[7].kind, Some("blue"));
+    assert_eq!(geometry.nodes[7].kind.as_deref(), Some("blue"));
 }
 
 #[test]

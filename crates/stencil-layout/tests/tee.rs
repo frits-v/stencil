@@ -8,10 +8,10 @@ use stencil_layout::PartName;
 
 fn tee(first_arm: &str, second_arm: &str) -> Value {
     json!({
-        "tag": "Tee", "kind": "deny", "hub": "egress",
+        "tag": "Tee", "line": "deny", "hub": "egress",
         "arms": [
-            { "tag": "Pipe", "dir": "h", "kind": "blue", "label": first_arm },
-            { "tag": "Pipe", "dir": "h", "kind": "pink", "label": second_arm }
+            { "tag": "Pipe", "dir": "h", "line": "solid", "tint": 1, "label": first_arm },
+            { "tag": "Pipe", "dir": "h", "line": "solid", "tint": 2, "label": second_arm }
         ]
     })
 }
@@ -90,7 +90,7 @@ fn tee_is_at_least_118_wide() {
     let geometry = layout(&page_with_body(
         1280,
         json!([{ "tag": "Row", "children": [
-            { "tag": "Pcard", "fn": "Left" }, tee("a", "b"), { "tag": "Pcard", "fn": "Right" }
+            { "tag": "Item", "kind": "product", "title": "Left" }, tee("a", "b"), { "tag": "Item", "kind": "product", "title": "Right" }
         ]}]),
     ));
     let tee_node = node(&geometry, "/body/0/children/1");

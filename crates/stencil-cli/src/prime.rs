@@ -1,24 +1,31 @@
 //! `stencil prime`: the briefing an agent reads before it authors a figure. The prose lives
 //! in `prime/*.md`; the vocabulary table is rendered from `page_schema()` at run time, so
-//! tag names, field names, bounds and enum values come from the model.
+//! tag names, field names, bounds and enum values come from the model, and each grammar
+//! briefing's kind tables are rendered from the grammar's data.
 
 use serde::Serialize;
 use serde_json::{Map, Value};
+use stencil_model::grammar::{BorderPattern, IconPack, LabelStyle, Role, Tone};
 use stencil_model::{
-    Arrow, GAP_DEFAULT_PX, GROW_WEIGHT_MAX, ID_PATTERN, Justify, TEXT_SCALARS_MAX, Theme,
+    Arrow, BUILTIN_GRAMMARS, Chrome, FactSource, GAP_DEFAULT_PX, GRAMMAR_DEFAULT,
+    GRAMMAR_REFERENCE_PATTERN, GROW_WEIGHT_MAX, Grammar, GrammarError, ID_PATTERN, Justify,
+    KIND_PATTERN, LANE_GAP_DEFAULT_PX, TEXT_SCALARS_MAX, Theme, builtin_grammar,
 };
 
 const BASE_TEXT: &str = include_str!("../prime/base.md");
 const VOCABULARY_MARKER: &str = "{{vocabulary}}";
 const TOPICS_MARKER: &str = "{{topics}}";
+const GRAMMARS_MARKER: &str = "{{grammars}}";
+const KINDS_MARKER: &str = "{{kinds}}";
 
 /// Largest `stencil prime` output, in bytes.
-pub const BASE_BYTES_MAX: usize = 6000;
-/// Largest `stencil prime <topic>` output, in bytes, for every topic except `example`.
-pub const TOPIC_BYTES_MAX: usize = 4000;
+pub const BASE_BYTES_MAX: usize = 7000;
+/// Largest `stencil prime <topic>` and `stencil prime grammar <name>` output, in bytes, for
+/// every topic except `example`.
+pub const TOPIC_BYTES_MAX: usize = 5000;
 
 /// Schema definitions that get their own vocabulary row after Page and the node tags.
-const ROW_DEFINITIONS: [&str; 2] = ["LegendEntry", "Link"];
+const ROW_DEFINITIONS: [&str; 3] = ["FactEntry", "LegendEntry", "Link"];
 
 /// Upper bound on `$ref` hops while describing one field, so a self-referencing schema
 /// cannot loop.
@@ -98,8 +105,111 @@ pub fn topic_names() -> String {
         .join(", ")
 }
 
+/// The grammar briefing text of a built-in grammar, before its kind tables are filled in.
+fn grammar_briefing_text(name: &str) -> Option<&'static str> {
+    match name {
+        "gcp" => Some(include_str!("../prime/grammars/gcp.md")),
+        "plain" => Some(include_str!("../prime/grammars/plain.md")),
+        _ => None,
+    }
+}
+
+/// `gcp, plain`, the built-in grammar names in `BUILTIN_GRAMMARS` order.
+pub fn grammar_names() -> String {
+    BUILTIN_GRAMMARS.join(", ")
+}
+
+/// `stencil prime grammar <name>`: the grammar's briefing with its kind tables rendered from
+/// its data. None for a name that is not a built-in grammar.
+pub fn grammar_text(name: &str) -> Option<Result<String, PrimeError>> {
+    let text = grammar_briefing_text(name)?;
+    let grammar = match builtin_grammar(name)? {
+        Ok(grammar) => grammar,
+        Err(source) => return Some(Err(PrimeError::Grammar(source))),
+    };
+    Some(fill(text, KINDS_MARKER, &kind_tables(&grammar)))
+}
+
+/// The container kinds and item kinds of a grammar as two markdown tables.
+pub fn kind_tables(grammar: &Grammar) -> String {
+    let mut text = String::from(
+        "| Container kind | Role | Tone | Tint | Border | Label | Parents |\n|---|---|---|---|---|---|---|\n",
+    );
+    for container in &grammar.containers {
+        let tint = match (container.tintable, container.default_tint) {
+            (true, Some(slot)) => format!("yes, default {slot}"),
+            (true, None) => "yes, no default".to_string(),
+            (false, _) => "no".to_string(),
+        };
+        text.push_str(&format!(
+            "| {} | {} | {} | {tint} | {} {} | {} | {} |\n",
+            container.name,
+            role_name(container.role),
+            container.tone.map_or("", tone_name),
+            pattern_name(container.border.pattern),
+            container.border.width,
+            label_name(container.label),
+            container.parents.join(", ")
+        ));
+    }
+    text.push_str("\n| Item kind | Icons | Parents |\n|---|---|---|\n");
+    for item in &grammar.items {
+        let icons = match item.icons {
+            IconPack::Gcp => "gcp",
+            IconPack::None => "none",
+        };
+        text.push_str(&format!(
+            "| {} | {icons} | {} |\n",
+            item.name,
+            item.parents.join(", ")
+        ));
+    }
+    text.trim_end().to_string()
+}
+
+fn role_name(role: Role) -> &'static str {
+    match role {
+        Role::Frame => "frame",
+        Role::Boundary => "boundary",
+        Role::Group => "group",
+        Role::Tile => "tile",
+    }
+}
+
+fn tone_name(tone: Tone) -> &'static str {
+    match tone {
+        Tone::Neutral => "neutral",
+        Tone::Warm => "warm",
+        Tone::Cool => "cool",
+        Tone::Soft => "soft",
+        Tone::Strong => "strong",
+        Tone::Highlight => "highlight",
+        Tone::Emphasis => "emphasis",
+        Tone::Accent => "accent",
+    }
+}
+
+fn pattern_name(pattern: BorderPattern) -> &'static str {
+    match pattern {
+        BorderPattern::Solid => "solid",
+        BorderPattern::Dashed => "dashed",
+        BorderPattern::Dotted => "dotted",
+        BorderPattern::None => "none",
+    }
+}
+
+fn label_name(label: LabelStyle) -> &'static str {
+    match label {
+        LabelStyle::Plain => "plain",
+        LabelStyle::Accent => "accent",
+        LabelStyle::Bar => "bar",
+    }
+}
+
 #[derive(Debug, thiserror::Error)]
 pub enum PrimeError {
+    #[error(transparent)]
+    Grammar(#[from] GrammarError),
     #[error("the document schema at {path} has a shape the vocabulary table does not describe")]
     SchemaShape { path: String },
     #[error("the prime text has no {marker} marker")]
@@ -117,8 +227,13 @@ pub fn base_text() -> Result<String, PrimeError> {
     let schema = stencil_model::page_schema();
     let vocabulary = vocabulary(schema.as_value())?;
     let topics = format!("Topics: `stencil prime <topic>` with {}.", topic_names());
+    let grammars = format!(
+        "Grammars: {}. `stencil prime grammar <name>` prints a grammar's kinds and rules.",
+        grammar_names()
+    );
     fill(BASE_TEXT, VOCABULARY_MARKER, &vocabulary)
         .and_then(|text| fill(&text, TOPICS_MARKER, &topics))
+        .and_then(|text| fill(&text, GRAMMARS_MARKER, &grammars))
 }
 
 fn fill(text: &str, marker: &'static str, value: &str) -> Result<String, PrimeError> {
@@ -143,16 +258,28 @@ pub fn field_notes() -> Result<Vec<FieldNote>, PrimeError> {
     let theme = serialized_name("theme", Theme::default())?;
     let justify = serialized_name("justify", Justify::Start)?;
     let pipe_arrow = serialized_name("pipe arrow", Arrow::None)?;
+    let chrome = serialized_name("chrome", Chrome::default())?;
+    let source = serialized_name("fact source", FactSource::default())?;
     let note = |object, field, note: String| FieldNote {
         object,
         field,
         note,
     };
     let mut notes = vec![
+        note(
+            "Page",
+            "grammar",
+            format!("={GRAMMAR_DEFAULT}; a built-in name or a .json path"),
+        ),
         note("Page", "theme", format!("={theme}")),
+        note("Page", "chrome", format!("={chrome}")),
         note("Pipe", "arrow", format!("={pipe_arrow}")),
         note("Tee", "arms", "dir h".to_string()),
+        note("Fact", "source", format!("={source}")),
+        note("FactEntry", "source", format!("={source}")),
+        note("Lanes", "gap", format!("={LANE_GAP_DEFAULT_PX}")),
     ];
+
     for container in ["Row", "Col"] {
         notes.push(note(container, "gap", format!("={GAP_DEFAULT_PX}")));
         notes.push(note(
@@ -413,8 +540,13 @@ fn describe_string(property: &Value) -> String {
     let minimum = property.get("minLength").and_then(Value::as_u64);
     let maximum = property.get("maxLength").and_then(Value::as_u64);
     let text_maximum = u64::try_from(TEXT_SCALARS_MAX).ok();
+    let pattern = property.get("pattern").and_then(Value::as_str);
     if minimum == Some(1) && maximum == text_maximum {
         String::new()
+    } else if pattern == Some(KIND_PATTERN) {
+        "kind".to_string()
+    } else if pattern == Some(GRAMMAR_REFERENCE_PATTERN) {
+        "ref".to_string()
     } else {
         // The id pattern and the link endpoints are the only other strings in the model.
         "id".to_string()

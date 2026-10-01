@@ -13,15 +13,17 @@ fn single_card(card: Value) -> stencil_layout::PageGeometry {
 
 #[test]
 fn icon_is_28_by_28() {
-    let geometry = single_card(json!({ "tag": "Pcard", "icon": "gke", "fn": "Cluster" }));
+    let geometry =
+        single_card(json!({ "tag": "Item", "kind": "product", "icon": "gke", "title": "Cluster" }));
     let icon = part(node(&geometry, "/body/0"), PartName::Icon);
     assert_eq!((icon.bounds.width, icon.bounds.height), (28.0, 28.0));
 }
 
 #[test]
 fn card_with_icon_fn_and_pn_is_46_tall() {
-    let geometry =
-        single_card(json!({ "tag": "Pcard", "icon": "gke", "fn": "Cluster", "pn": "GKE" }));
+    let geometry = single_card(
+        json!({ "tag": "Item", "kind": "product", "icon": "gke", "title": "Cluster", "subtitle": "GKE" }),
+    );
     assert_close(
         node(&geometry, "/body/0").bounds.height,
         46.0,
@@ -31,7 +33,8 @@ fn card_with_icon_fn_and_pn_is_46_tall() {
 
 #[test]
 fn card_with_icon_and_fn_only_is_raised_to_44() {
-    let geometry = single_card(json!({ "tag": "Pcard", "icon": "gke", "fn": "Cluster" }));
+    let geometry =
+        single_card(json!({ "tag": "Item", "kind": "product", "icon": "gke", "title": "Cluster" }));
     assert_close(
         node(&geometry, "/body/0").bounds.height,
         44.0,
@@ -41,9 +44,11 @@ fn card_with_icon_and_fn_only_is_raised_to_44() {
 
 #[test]
 fn fact_adds_its_box_height_plus_4() {
-    let plain = single_card(json!({ "tag": "Pcard", "icon": "gke", "fn": "Cluster", "pn": "GKE" }));
+    let plain = single_card(
+        json!({ "tag": "Item", "kind": "product", "icon": "gke", "title": "Cluster", "subtitle": "GKE" }),
+    );
     let with_fact = single_card(json!({
-        "tag": "Pcard", "icon": "gke", "fn": "Cluster", "pn": "GKE", "fact": "Three zones"
+        "tag": "Item", "kind": "product", "icon": "gke", "title": "Cluster", "subtitle": "GKE", "facts": [{ "text": "Three zones" }]
     }));
     let card = node(&with_fact, "/body/0");
     let fact_box = part(card, PartName::FactBox);
@@ -57,7 +62,9 @@ fn fact_adds_its_box_height_plus_4() {
 
 #[test]
 fn ask_is_prefixed_and_boxed() {
-    let geometry = single_card(json!({ "tag": "Pcard", "fn": "Cluster", "ask": "confirm zones" }));
+    let geometry = single_card(
+        json!({ "tag": "Item", "kind": "product", "title": "Cluster", "facts": [{ "text": "confirm zones", "source": "ask" }] }),
+    );
     let card = node(&geometry, "/body/0");
     let ask = part(card, PartName::Ask);
     let run = ask.text.as_ref().unwrap();
@@ -69,7 +76,9 @@ fn ask_is_prefixed_and_boxed() {
 
 #[test]
 fn text_starts_at_left_padding_without_icon() {
-    let geometry = single_card(json!({ "tag": "Pcard", "fn": "Cluster", "pn": "GKE" }));
+    let geometry = single_card(
+        json!({ "tag": "Item", "kind": "product", "title": "Cluster", "subtitle": "GKE" }),
+    );
     let card = node(&geometry, "/body/0");
     let text = part(card, PartName::Text);
     assert_close(
@@ -89,8 +98,8 @@ fn text_column_takes_remaining_width_and_the_fact_wraps() {
             "tag": "Row",
             "gap": 40,
             "children": [
-                { "tag": "Pcard", "icon": "gke", "fn": "Cluster", "fact": fact },
-                { "tag": "Pcard", "fn": "Other" }
+                { "tag": "Item", "kind": "product", "icon": "gke", "title": "Cluster", "facts": [{ "text": fact }] },
+                { "tag": "Item", "kind": "product", "title": "Other" }
             ]
         }]),
     );

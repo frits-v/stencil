@@ -23,10 +23,12 @@ pub use exit::ExitCode;
 
 use exit::{clap_exit_code, failure_exit_code, prime_exit_code, reports_exit_code};
 use pipeline::{
-    Failure, LoadedDocument, OutputPaths, all_checks, load_document, model_checks, output_names,
-    read_input, render_page, write_outputs,
+    Failure, LoadedDocument, OutputPaths, all_checks, grammar_violations, load_document_from,
+    model_checks, output_names, read_input, render_page, write_outputs,
 };
-use report::{check_counts_text, report_lines, violation_count_text, violation_line};
+use report::{
+    check_counts_text, grammar_violation_line, report_lines, violation_count_text, violation_line,
+};
 
 /// Upper bound on the `source()` links printed for one error.
 const ERROR_CHAIN_MAX: usize = 16;
@@ -81,8 +83,10 @@ enum Command {
     Schema,
     /// Print the authoring briefing for an agent, or one deeper topic
     Prime {
-        /// themes, links, blocks, layout, checks, cue or example
+        /// themes, links, blocks, layout, checks, cue, example, or grammar
         topic: Option<String>,
+        /// The grammar to brief on, after `grammar`: gcp or plain
+        name: Option<String>,
     },
     /// Render and check every example under every theme, with index.html and gallery.json
     Gallery {
@@ -138,7 +142,7 @@ struct Overrides {
 /// Parses and vets the input, then applies the overrides to the page. The JSON value that
 /// the measured JSON carries stays the input as written.
 fn load_overridden_document(path: &Path, overrides: Overrides) -> Result<LoadedDocument, Failure> {
-    let mut loaded = load_document(&read_input(path)?)?;
+    let mut loaded = load_document_at(path)?;
     if let Some(theme) = overrides.theme {
         loaded.page.theme = Theme::from(theme);
     }
@@ -146,6 +150,13 @@ fn load_overridden_document(path: &Path, overrides: Overrides) -> Result<LoadedD
         loaded.page.projection = Projection::from(projection);
     }
     Ok(loaded)
+}
+
+/// Reads and loads the document at `path`, resolving a grammar path against its directory.
+fn load_document_at(path: &Path) -> Result<LoadedDocument, Failure> {
+    let json_text = read_input(path)?;
+    let directory = path.parent().unwrap_or(Path::new("."));
+    load_document_from(&json_text, directory)
 }
 
 pub fn run(arguments: Vec<OsString>, stdout: &mut dyn Write, stderr: &mut dyn Write) -> ExitCode {
@@ -194,7 +205,7 @@ fn run_command(
             projection,
         } => check(&json, Overrides { theme, projection }, stdout, stderr),
         Command::Schema => schema(stdout, stderr),
-        Command::Prime { topic } => prime(topic.as_deref(), stdout, stderr),
+        Command::Prime { topic, name } => prime(topic.as_deref(), name.as_deref(), stdout, stderr),
         Command::Gallery { out_dir, examples } => {
             gallery::gallery(&out_dir, &examples, stdout, stderr)
         }
@@ -218,11 +229,11 @@ fn report_usage(
 }
 
 fn vet(path: &Path, stdout: &mut dyn Write, stderr: &mut dyn Write) -> io::Result<ExitCode> {
-    let loaded = match read_input(path).and_then(|json_text| load_document(&json_text)) {
+    let loaded = match load_document_at(path) {
         Ok(loaded) => loaded,
         Err(failure) => return report_failure("vet", &failure, stdout, stderr),
     };
-    let reports = model_checks(&loaded.page);
+    let reports = model_checks(&loaded.page, &loaded.grammar);
     for line in report_lines(&reports) {
         writeln!(stdout, "{line}")?;
     }
@@ -290,6 +301,7 @@ fn check_in_memory(path: &Path, overrides: Overrides) -> Result<[CheckReport; 10
     let rendered = render_page(&loaded, DeviceScale::DEFAULT)?;
     Ok(all_checks(
         &loaded.page,
+        &loaded.grammar,
         &rendered.geometry,
         rendered.scene.as_ref(),
     ))
@@ -313,11 +325,25 @@ fn schema(stdout: &mut dyn Write, stderr: &mut dyn Write) -> io::Result<ExitCode
 
 /// The base briefing, or the named topic. An unknown topic is a usage error: one line on
 /// stderr naming the topics, exit 2.
+/// The topic name that takes a grammar name after it.
+const GRAMMAR_TOPIC: &str = "grammar";
+
 fn prime(
     topic: Option<&str>,
+    name: Option<&str>,
     stdout: &mut dyn Write,
     stderr: &mut dyn Write,
 ) -> io::Result<ExitCode> {
+    if topic == Some(GRAMMAR_TOPIC) {
+        return prime_grammar(name, stdout, stderr);
+    }
+    if let Some(extra) = name {
+        writeln!(
+            stderr,
+            "stencil prime: unexpected argument {extra:?}; only `stencil prime grammar <name>` takes a second argument"
+        )?;
+        return Ok(ExitCode::CouldNotRun);
+    }
     let Some(topic_name) = topic else {
         return match prime::base_text() {
             Ok(text) => {
@@ -340,6 +366,34 @@ fn prime(
                 stderr,
                 "stencil prime: unknown topic {topic_name:?}; topics: {}",
                 prime::topic_names()
+            )?;
+            Ok(ExitCode::CouldNotRun)
+        }
+    }
+}
+
+/// `stencil prime grammar <name>`: a built-in grammar's briefing. A missing or unknown name
+/// writes one line naming the grammars to stderr and exits 2.
+fn prime_grammar(
+    name: Option<&str>,
+    stdout: &mut dyn Write,
+    stderr: &mut dyn Write,
+) -> io::Result<ExitCode> {
+    match name.and_then(prime::grammar_text) {
+        Some(Ok(text)) => {
+            write!(stdout, "{text}")?;
+            Ok(ExitCode::Clean)
+        }
+        Some(Err(error)) => {
+            writeln!(stderr, "stencil prime: {error}")?;
+            Ok(prime_exit_code(&error))
+        }
+        None => {
+            let named = name.map_or_else(|| "no grammar".to_string(), |name| format!("{name:?}"));
+            writeln!(
+                stderr,
+                "stencil prime grammar: unknown grammar {named}; grammars: {}",
+                prime::grammar_names()
             )?;
             Ok(ExitCode::CouldNotRun)
         }
@@ -386,6 +440,13 @@ fn write_document_defect(
                 "stencil {command}: {}, checks not run",
                 violation_count_text(violations.len())
             )
+        }
+        Failure::Grammar(error) => {
+            writeln!(stdout, "error {error}")?;
+            for violation in grammar_violations(error) {
+                writeln!(stdout, "{}", grammar_violation_line(violation))?;
+            }
+            writeln!(stdout, "stencil {command}: checks not run")
         }
         other => {
             writeln!(stdout, "error {other}")?;

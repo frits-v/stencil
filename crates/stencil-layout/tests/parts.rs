@@ -23,15 +23,15 @@ fn every_tag_geometry() -> PageGeometry {
                         "tag": "Col",
                         "children": [
                             {
-                                "tag": "Zone", "kind": "region-a", "label": "Region A",
+                                "tag": "Box", "kind": "onprem", "tint": 1, "label": "Region A",
                                 "children": [{
-                                    "tag": "Pcard", "icon": "gke", "fn": "Cluster", "pn": "GKE",
-                                    "fact": "Three zones", "ask": "confirm"
+                                    "tag": "Item", "kind": "product", "icon": "gke", "title": "Cluster", "subtitle": "GKE",
+                                    "facts": [{ "text": "Three zones" }, { "text": "confirm", "source": "ask" }]
                                 }]
                             },
                             {
-                                "tag": "Zone", "kind": "gcp", "label": "Google Cloud",
-                                "children": [{ "tag": "Pcard", "fn": "Bare card" }]
+                                "tag": "Box", "kind": "gcp", "label": "Google Cloud",
+                                "children": [{ "tag": "Item", "kind": "product", "title": "Bare card" }]
                             }
                         ]
                     },
@@ -39,13 +39,13 @@ fn every_tag_geometry() -> PageGeometry {
                     { "tag": "Fact", "text": "A fact" }
                 ]
             },
-            { "tag": "Pipe", "dir": "h", "kind": "blue", "label": "VLAN 1", "sub": "EAD 1" },
-            { "tag": "Pipe", "dir": "v", "kind": "dash", "label": "failover" },
+            { "tag": "Pipe", "dir": "h", "line": "solid", "tint": 1, "label": "VLAN 1", "sub": "EAD 1" },
+            { "tag": "Pipe", "dir": "v", "line": "dash", "label": "failover" },
             {
-                "tag": "Tee", "kind": "deny", "hub": "egress",
+                "tag": "Tee", "line": "deny", "hub": "egress",
                 "arms": [
-                    { "tag": "Pipe", "dir": "h", "kind": "blue", "label": "allowed" },
-                    { "tag": "Pipe", "dir": "h", "kind": "pink", "label": "reply" }
+                    { "tag": "Pipe", "dir": "h", "line": "solid", "tint": 1, "label": "allowed" },
+                    { "tag": "Pipe", "dir": "h", "line": "solid", "tint": 2, "label": "reply" }
                 ]
             },
             {
@@ -55,7 +55,7 @@ fn every_tag_geometry() -> PageGeometry {
             { "tag": "Callout", "kind": "risk", "title": "Drift", "text": "Plans change." },
             { "tag": "Frame", "label": "Console screen", "height": 120 }
         ],
-        "legend": [{ "kind": "blue", "text": "request path" }]
+        "legend": [{ "line": "solid", "tint": 1, "text": "request path" }]
     }));
     layout(&page)
 }
@@ -213,12 +213,17 @@ fn kinds_are_set_for_zone_pipe_tee_and_legend_entry_only() {
         );
     }
     assert_eq!(
-        node(&geometry, "/body/0/children/0/children/0").kind,
-        Some("region-a")
+        node(&geometry, "/body/0/children/0/children/0")
+            .kind
+            .as_deref(),
+        Some("onprem-a")
     );
-    assert_eq!(node(&geometry, "/body/3").kind, Some("deny"));
-    assert_eq!(node(&geometry, "/body/3/arms/1").kind, Some("pink"));
-    assert_eq!(node(&geometry, "/legend/0").kind, Some("blue"));
+    assert_eq!(node(&geometry, "/body/3").kind.as_deref(), Some("deny"));
+    assert_eq!(
+        node(&geometry, "/body/3/arms/1").kind.as_deref(),
+        Some("pink")
+    );
+    assert_eq!(node(&geometry, "/legend/0").kind.as_deref(), Some("blue"));
 }
 
 #[test]

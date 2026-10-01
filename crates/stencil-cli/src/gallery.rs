@@ -15,10 +15,12 @@ use stencil_render::DeviceScale;
 use crate::ThemeArgument;
 use crate::exit::{ExitCode, failure_exit_code, reports_exit_code};
 use crate::pipeline::{
-    Failure, LoadedDocument, OutputNames, all_checks, load_document, output_names, read_input,
-    render_page, write_outputs,
+    Failure, LoadedDocument, OutputNames, all_checks, grammar_violations, load_document_from,
+    output_names, read_input, render_page, write_outputs,
 };
-use crate::report::{check_counts_text, count_text, report_lines, violation_line};
+use crate::report::{
+    check_counts_text, count_text, grammar_violation_line, report_lines, violation_line,
+};
 
 /// Largest number of documents one gallery renders. Each one costs a render per theme.
 pub const EXAMPLES_MAX: usize = 256;
@@ -171,7 +173,10 @@ fn build_gallery(
     for path in &paths {
         let names = output_names(path)?;
         let name = utf8_stem(path)?;
-        let loaded = match read_input(path).and_then(|json_text| load_document(&json_text)) {
+        let directory = path.parent().unwrap_or(Path::new("."));
+        let loaded = match read_input(path)
+            .and_then(|json_text| load_document_from(&json_text, directory))
+        {
             Ok(loaded) => loaded,
             Err(failure) => {
                 stop_unless_defect(failure, |failure| {
@@ -298,6 +303,9 @@ fn document_defect_lines(failure: &Failure) -> Vec<String> {
         | Failure::Layout(LayoutError::Invalid(violations)) => {
             violations.iter().map(violation_line).collect()
         }
+        Failure::Grammar(error) => std::iter::once(format!("error {error}"))
+            .chain(grammar_violations(error).iter().map(grammar_violation_line))
+            .collect(),
         other => vec![format!("error {other}")],
     }
 }
@@ -329,7 +337,12 @@ fn render_theme(
             });
         }
     };
-    let reports = all_checks(&themed.page, &rendered.geometry, rendered.scene.as_ref());
+    let reports = all_checks(
+        &themed.page,
+        &themed.grammar,
+        &rendered.geometry,
+        rendered.scene.as_ref(),
+    );
     write_outputs(&out_dir.join(name).join(theme_name), names, &rendered, path)?;
 
     let passed = reports_exit_code(&reports) == ExitCode::Clean;

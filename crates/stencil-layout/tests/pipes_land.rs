@@ -70,8 +70,8 @@ fn a_gutter_with_no_neighbor_is_not_applicable() {
             "children": [{
                 "tag": "Col",
                 "children": [
-                    { "tag": "Pipe", "dir": "h", "kind": "blue", "label": "VLAN 1" },
-                    { "tag": "Pipe", "dir": "h", "kind": "blue", "label": "VLAN 2" }
+                    { "tag": "Pipe", "dir": "h", "line": "solid", "tint": 1, "label": "VLAN 1" },
+                    { "tag": "Pipe", "dir": "h", "line": "solid", "tint": 1, "label": "VLAN 2" }
                 ]
             }]
         }]),
@@ -85,7 +85,7 @@ fn a_gutter_with_no_neighbor_is_not_applicable() {
 fn a_page_without_pipes_is_not_applicable() {
     let page = page_with_body(
         1280,
-        json!([{ "tag": "Pcard", "fn": "Cloud Run", "pn": "service" }]),
+        json!([{ "tag": "Item", "kind": "product", "title": "Cloud Run", "subtitle": "service" }]),
     );
     let report = pipes_land(&page, &layout(&page));
     assert_eq!(report.outcome(), CheckOutcome::NotApplicable);
@@ -99,15 +99,15 @@ fn a_pipe_missing_from_the_geometry_fails() {
         json!([{
             "tag": "Row",
             "children": [
-                { "tag": "Pcard", "fn": "Client", "pn": "browser" },
-                { "tag": "Pipe", "dir": "h", "kind": "blue", "label": "request" },
-                { "tag": "Pcard", "fn": "Server", "pn": "Cloud Run" }
+                { "tag": "Item", "kind": "product", "title": "Client", "subtitle": "browser" },
+                { "tag": "Pipe", "dir": "h", "line": "solid", "tint": 1, "label": "request" },
+                { "tag": "Item", "kind": "product", "title": "Server", "subtitle": "Cloud Run" }
             ]
         }]),
     );
     let without_pipe = page_with_body(
         1280,
-        json!([{ "tag": "Pcard", "fn": "Cloud Run", "pn": "service" }]),
+        json!([{ "tag": "Item", "kind": "product", "title": "Cloud Run", "subtitle": "service" }]),
     );
     let report = pipes_land(&with_pipe, &layout(&without_pipe));
     assert_eq!(report.outcome(), CheckOutcome::Failed);
@@ -126,17 +126,17 @@ fn tee_arms_are_examined_against_the_tee_neighbors() {
         json!([{
             "tag": "Row",
             "children": [
-                { "tag": "Pcard", "fn": "Client", "pn": "browser" },
+                { "tag": "Item", "kind": "product", "title": "Client", "subtitle": "browser" },
                 {
                     "tag": "Tee",
-                    "kind": "gray",
+                    "line": "gray",
                     "hub": "split",
                     "arms": [
-                        { "tag": "Pipe", "dir": "h", "kind": "blue", "label": "read" },
-                        { "tag": "Pipe", "dir": "h", "kind": "pink", "label": "write" }
+                        { "tag": "Pipe", "dir": "h", "line": "solid", "tint": 1, "label": "read" },
+                        { "tag": "Pipe", "dir": "h", "line": "solid", "tint": 2, "label": "write" }
                     ]
                 },
-                { "tag": "Pcard", "fn": "Server", "pn": "Cloud Run" }
+                { "tag": "Item", "kind": "product", "title": "Server", "subtitle": "Cloud Run" }
             ]
         }]),
     );
@@ -158,12 +158,12 @@ fn a_vertical_pipe_is_examined_against_the_col_neighbors_above_and_below() {
                 {
                     "tag": "Row",
                     "children": [
-                        { "tag": "Pcard", "fn": "Left", "pn": "service" },
-                        { "tag": "Pcard", "fn": "Right", "pn": "service" }
+                        { "tag": "Item", "kind": "product", "title": "Left", "subtitle": "service" },
+                        { "tag": "Item", "kind": "product", "title": "Right", "subtitle": "service" }
                     ]
                 },
-                { "tag": "Pipe", "dir": "v", "kind": "dash", "label": "failover" },
-                { "tag": "Pcard", "fn": "Below", "pn": "service" }
+                { "tag": "Pipe", "dir": "v", "line": "dash", "label": "failover" },
+                { "tag": "Item", "kind": "product", "title": "Below", "subtitle": "service" }
             ]
         }]),
     );

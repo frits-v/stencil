@@ -4,18 +4,20 @@ mod iso_writer;
 
 use std::collections::BTreeSet;
 use stencil_layout::{
-    BoxRect, LinkRoute, NodeGeometry, PageGeometry, Part, PartName, TextAlign, TextRun,
+    BoxRect, ContainerLook, LinkRoute, NodeGeometry, PageGeometry, Part, PartName, TextAlign,
+    TextRun, container_label_style, fact_presentation,
 };
+use stencil_model::grammar::Role;
 use stencil_model::pointer::NodePointer;
 use stencil_model::text::TextStyleName;
 
 use stencil_model::{
-    Arrow, Canvas, IconName, LEGEND_ENTRIES_MAX, LINKS_MAX, LegendEntry, Link, Node, NodeRef,
-    NoteKind, Page, PagePoint, Pipe, PipeDir, PipeKind, Projection, ZoneKind, body_nodes,
+    Arrow, Canvas, Chrome, FactSource, IconName, LEGEND_ENTRIES_MAX, LINKS_MAX, LegendEntry, Link,
+    Node, NodeRef, NoteKind, Page, PagePoint, Pipe, PipeDir, Projection, body_nodes,
 };
 
 use crate::icons::icon_data_uri;
-use crate::palette::{self, BoxPaint, DotStyle, LineStyle, Palette, Stroke};
+use crate::palette::{self, BoxPaint, DotStyle, LineStyle, LineUse, Palette, Stroke};
 use crate::{RenderError, SvgDocument, format_number};
 
 const SVG_NAMESPACE: &str = "http://www.w3.org/2000/svg";
@@ -117,13 +119,16 @@ pub fn render_svg(page: &Page, geometry: &PageGeometry) -> Result<SvgDocument, R
 /// LEGEND_ENTRIES_MAX + 1 entries; a longer geometry then fails as a mismatch.
 fn geometry_order(page: &Page) -> Vec<(NodePointer, DocumentNode<'_>)> {
     let root = NodePointer::root();
-    let mut order = vec![
-        (root.clone(), DocumentNode::Page),
-        (root.child("kicker"), DocumentNode::Kicker),
-        (root.child("title"), DocumentNode::Title),
-        (root.child("lede"), DocumentNode::Lede),
-        (root.child("body"), DocumentNode::Body),
-    ];
+    let mut order = vec![(root.clone(), DocumentNode::Page)];
+    // A captioned figure lays out no badge, kicker, title or lede (section 13.7).
+    if page.chrome == Chrome::Full {
+        order.extend([
+            (root.child("kicker"), DocumentNode::Kicker),
+            (root.child("title"), DocumentNode::Title),
+            (root.child("lede"), DocumentNode::Lede),
+        ]);
+    }
+    order.push((root.child("body"), DocumentNode::Body));
     order.extend(
         body_nodes(page)
             .into_iter()
@@ -151,8 +156,8 @@ fn geometry_order(page: &Page) -> Vec<(NodePointer, DocumentNode<'_>)> {
     order
 }
 
-/// Kinds of the Pipes, Tee arms and links that draw an arrowhead, one marker each.
-fn arrow_kinds(expected: &[(NodePointer, DocumentNode<'_>)], links: &[Link]) -> BTreeSet<PipeKind> {
+/// Lines of the Pipes, Tee arms and links that draw an arrowhead, one marker each.
+fn arrow_kinds(expected: &[(NodePointer, DocumentNode<'_>)], links: &[Link]) -> BTreeSet<LineUse> {
     let pipe_kinds = expected
         .iter()
         .filter_map(|(_, document_node)| match *document_node {
@@ -162,12 +167,12 @@ fn arrow_kinds(expected: &[(NodePointer, DocumentNode<'_>)], links: &[Link]) -> 
             _ => None,
         })
         .filter(|pipe| pipe.arrow != Arrow::None)
-        .map(|pipe| pipe.kind);
+        .map(|pipe| LineUse::new(pipe.line, pipe.tint));
     let link_kinds = links
         .iter()
         .take(LINKS_MAX)
         .filter(|link| link.arrow != Arrow::None)
-        .map(|link| link.kind);
+        .map(|link| LineUse::new(link.line, link.tint));
     pipe_kinds.chain(link_kinds).collect()
 }
 
@@ -291,6 +296,7 @@ fn parent_mismatch(geometry: &PageGeometry, index: usize) -> RenderError {
 fn group_open_tag(node: &NodeGeometry) -> String {
     let kind = node
         .kind
+        .as_deref()
         .map(|kind| format!(r#" data-kind="{}""#, escape_xml(kind)))
         .unwrap_or_default();
     format!(
@@ -303,7 +309,7 @@ fn group_open_tag(node: &NodeGeometry) -> String {
 /// Document facts a part needs that geometry does not carry.
 #[derive(Debug, Clone, Copy, Default)]
 struct PartContext {
-    pipe_kind: Option<PipeKind>,
+    line: Option<LineUse>,
     pipe_dir: Option<PipeDir>,
     arrows: ArrowEnds,
     icon: Option<IconName>,
@@ -347,18 +353,21 @@ impl SvgWriter {
         for part in &node.parts {
             self.write_part_shape(depth, node, part, context)?;
         }
-        if let DocumentNode::Content(NodeRef::Node(Node::Zone(zone))) = document_node
-            && zone.kind == ZoneKind::Gcp
+        if let DocumentNode::Content(NodeRef::Node(Node::Box(_))) = document_node
+            && let Some(look) = node.container
+            && look.role == Role::Frame
         {
-            self.write_gcp_frame_stroke(depth, node.bounds);
+            self.write_gcp_frame_stroke(depth, node.bounds, look, node.tint);
         }
         for part in &node.parts {
             if let Some(run) = &part.text {
-                let style_name = text_style_name(document_node, part.name)
+                let style_name = text_style_name(document_node, node.container, part.name)
                     .ok_or_else(|| part_mismatch(node, part))?;
-                let fill = self
-                    .palette
-                    .text_ink(style_name, self.canvas, context.pipe_kind);
+                let fill = self.palette.text_ink(
+                    style_name,
+                    self.canvas,
+                    context.line.map(|line_use| line_use.line),
+                );
                 self.write_text_run(depth, &node.pointer, part.bounds, run, fill)?;
             }
         }
@@ -389,16 +398,25 @@ impl SvgWriter {
                     );
                 }
                 Node::Frame(_) => self.write_frame_box(depth, node.bounds),
-                Node::Zone(zone) => self.write_zone_box(depth, node.bounds, zone.kind),
-                Node::Pcard(_) => {
+                Node::Box(_) => {
+                    let look = node.container.ok_or_else(|| container_mismatch(node))?;
+                    self.write_zone_box(depth, node.bounds, look, node.tint);
+                }
+                Node::Item(_) => {
                     let card_paint = self.palette.card();
                     self.write_box(depth, node.bounds, CARD_RADIUS_PX, card_paint);
                 }
-                Node::Fact(_) => {
-                    let fill = self.palette.fact_fill();
-                    self.write_rect(depth, node.bounds, FACT_RADIUS_PX, Some(fill), None);
+                Node::Fact(fact) => {
+                    if let Some(fill) = self.fact_box_fill(fact.source) {
+                        self.write_rect(depth, node.bounds, FACT_RADIUS_PX, Some(fill), None);
+                    }
                 }
-                Node::Row(_) | Node::Col(_) | Node::Note(_) | Node::Pipe(_) | Node::Tee(_) => {}
+                Node::Row(_)
+                | Node::Col(_)
+                | Node::Lanes(_)
+                | Node::Note(_)
+                | Node::Pipe(_)
+                | Node::Tee(_) => {}
             }
         }
         Ok(self.part_context(document_node))
@@ -415,11 +433,11 @@ impl SvgWriter {
             | DocumentNode::Legend
             | DocumentNode::Foot => PartContext::default(),
             DocumentNode::LegendEntry(entry) => PartContext {
-                pipe_kind: Some(entry.kind),
+                line: Some(LineUse::new(entry.line, entry.tint)),
                 ..PartContext::default()
             },
             DocumentNode::Content(NodeRef::TeeArm(pipe)) => PartContext {
-                pipe_kind: Some(pipe.kind),
+                line: Some(LineUse::new(pipe.line, pipe.tint)),
                 pipe_dir: Some(pipe.dir),
                 arrows: ArrowEnds::of(pipe),
                 ..PartContext::default()
@@ -427,36 +445,53 @@ impl SvgWriter {
             DocumentNode::Content(NodeRef::Node(content)) => match content {
                 Node::Row(_)
                 | Node::Col(_)
+                | Node::Lanes(_)
                 | Node::Note(_)
                 | Node::Text(_)
                 | Node::Frame(_)
-                | Node::Zone(_)
+                | Node::Box(_)
                 | Node::Fact(_) => PartContext::default(),
                 Node::Callout(callout) => PartContext {
                     accent: Some(self.palette.callout(callout.kind).accent),
                     ..PartContext::default()
                 },
-                Node::Pcard(card) => PartContext {
-                    icon: card.icon,
+                Node::Item(item) => PartContext {
+                    icon: item.icon,
                     ..PartContext::default()
                 },
                 Node::Pipe(pipe) => PartContext {
-                    pipe_kind: Some(pipe.kind),
+                    line: Some(LineUse::new(pipe.line, pipe.tint)),
                     pipe_dir: Some(pipe.dir),
                     arrows: ArrowEnds::of(pipe),
                     ..PartContext::default()
                 },
                 Node::Tee(tee) => PartContext {
-                    pipe_kind: Some(tee.kind),
+                    line: Some(LineUse::new(tee.line, tee.tint)),
                     ..PartContext::default()
                 },
             },
         }
     }
 
-    fn write_zone_box(&mut self, depth: usize, bounds: BoxRect, kind: ZoneKind) {
-        let style = self.palette.zone_style(kind);
-        if kind == ZoneKind::Gcp {
+    /// The box of a fact by source (section 13.7): a doc fact on the fact fill, an ask on
+    /// the ask fill, an as-built name unfilled.
+    fn fact_box_fill(&self, source: FactSource) -> Option<&'static str> {
+        match source {
+            FactSource::Doc => Some(self.palette.fact_fill()),
+            FactSource::Built => None,
+            FactSource::Ask => Some(self.palette.ask_fill()),
+        }
+    }
+
+    fn write_zone_box(
+        &mut self,
+        depth: usize,
+        bounds: BoxRect,
+        look: ContainerLook,
+        tint: Option<u8>,
+    ) {
+        let style = self.palette.zone_style(look, tint);
+        if look.role == Role::Frame {
             let fill = style.fill.unwrap_or("none");
             let path = rounded_path(bounds, GCP_RADII_PX);
             self.line(depth, &format!(r#"<path d="{path}" fill="{fill}"/>"#));
@@ -500,8 +535,14 @@ impl SvgWriter {
     }
 
     /// The frame stroke goes over the bar and body fills, as a CSS border would.
-    fn write_gcp_frame_stroke(&mut self, depth: usize, bounds: BoxRect) {
-        let Some(border) = self.palette.zone_style(ZoneKind::Gcp).border else {
+    fn write_gcp_frame_stroke(
+        &mut self,
+        depth: usize,
+        bounds: BoxRect,
+        look: ContainerLook,
+        tint: Option<u8>,
+    ) {
+        let Some(border) = self.palette.zone_style(look, tint).border else {
             return;
         };
         let inset = border.width_px / 2.0;
@@ -568,8 +609,9 @@ impl SvgWriter {
                 let fill = self.palette.ask_fill();
                 self.write_rect(depth, bounds, FACT_RADIUS_PX, Some(fill), None);
             }
+            PartName::BuiltBox => {}
             PartName::DotStart | PartName::DotEnd => {
-                let kind = context.pipe_kind.ok_or_else(|| part_mismatch(node, part))?;
+                let kind = context.line.ok_or_else(|| part_mismatch(node, part))?;
                 let at_start = part.name == PartName::DotStart;
                 let arrow_here = if at_start {
                     context.arrows.start
@@ -586,12 +628,12 @@ impl SvgWriter {
                 }
             }
             PartName::WireStart | PartName::WireEnd => {
-                let kind = context.pipe_kind.ok_or_else(|| part_mismatch(node, part))?;
+                let kind = context.line.ok_or_else(|| part_mismatch(node, part))?;
                 let dir = context.pipe_dir.ok_or_else(|| part_mismatch(node, part))?;
                 self.write_wire(depth, bounds, dir, kind);
             }
             PartName::Swatch => {
-                let kind = context.pipe_kind.ok_or_else(|| part_mismatch(node, part))?;
+                let kind = context.line.ok_or_else(|| part_mismatch(node, part))?;
                 self.write_wire(depth, bounds, PipeDir::Horizontal, kind);
                 // A kind told apart by its hollow dots shows them on its swatch too, inset
                 // so they stay within the swatch's width.
@@ -602,12 +644,12 @@ impl SvgWriter {
                 }
             }
             PartName::Spine => {
-                let kind = context.pipe_kind.ok_or_else(|| part_mismatch(node, part))?;
+                let kind = context.line.ok_or_else(|| part_mismatch(node, part))?;
                 self.write_wire(depth, bounds, PipeDir::Vertical, kind);
             }
             PartName::Tag | PartName::Hub => {
-                let kind = context.pipe_kind.ok_or_else(|| part_mismatch(node, part))?;
-                let tag_paint = self.palette.tag(kind);
+                let kind = context.line.ok_or_else(|| part_mismatch(node, part))?;
+                let tag_paint = self.palette.tag(kind.line);
                 self.write_box(depth, bounds, TAG_RADIUS_PX, tag_paint);
             }
             PartName::Accent => {
@@ -636,6 +678,7 @@ impl SvgWriter {
             | PartName::FunctionName
             | PartName::ProductName
             | PartName::Fact
+            | PartName::Built
             | PartName::Ask
             | PartName::TagLabel
             | PartName::TagSub
@@ -651,7 +694,7 @@ impl SvgWriter {
 
     /// One `<marker>` per arrow kind in this theme: a triangle 10 long and 8 wide in the wire
     /// color, its tip on the carrier line's last point.
-    fn write_arrow_markers(&mut self, depth: usize, kinds: &BTreeSet<PipeKind>) {
+    fn write_arrow_markers(&mut self, depth: usize, kinds: &BTreeSet<LineUse>) {
         let length = format_number(ARROW_LENGTH_PX);
         let width = format_number(ARROW_WIDTH_PX);
         let half_width = format_number(ARROW_WIDTH_PX / 2.0);
@@ -667,8 +710,9 @@ impl SvgWriter {
         self.line(depth, "</defs>");
     }
 
-    fn arrow_marker_id(&self, kind: PipeKind) -> String {
-        format!("arrow-{}-{}", self.palette.theme_name(), kind.as_str())
+    /// `arrow-<theme>-<line key>` (section 13.1 rule 6).
+    fn arrow_marker_id(&self, kind: LineUse) -> String {
+        format!("arrow-{}-{}", self.palette.theme_name(), kind.key())
     }
 
     /// An arrowhead in place of an end dot, pointing out of the pipe with its tip on the dot
@@ -679,7 +723,7 @@ impl SvgWriter {
         dot_bounds: BoxRect,
         dir: PipeDir,
         at_start: bool,
-        kind: PipeKind,
+        kind: LineUse,
     ) {
         let center_x = dot_bounds.x + dot_bounds.width / 2.0;
         let center_y = dot_bounds.y + dot_bounds.height / 2.0;
@@ -728,9 +772,10 @@ impl SvgWriter {
             &format!(
                 r#"<g data-id="{}" data-tag="Link" data-kind="{}">"#,
                 escape_xml(pointer.as_str()),
-                route.kind.as_str()
+                route.key()
             ),
         );
+        let line_use = LineUse::new(route.line, route.tint);
         let arrows = ArrowEnds::from_arrow(link.arrow);
         let mut points = route.points.clone();
         let start_arrow = if arrows.start {
@@ -743,7 +788,7 @@ impl SvgWriter {
         } else {
             None
         };
-        let stroke = self.palette.wire_style(route.kind).stroke;
+        let stroke = self.palette.wire_style(line_use).stroke;
         self.line(
             depth + 1,
             &format!(
@@ -753,12 +798,12 @@ impl SvgWriter {
             ),
         );
         for (base, tip) in [start_arrow, end_arrow].into_iter().flatten() {
-            self.write_arrow_carrier(depth + 1, base, tip, route.kind);
+            self.write_arrow_carrier(depth + 1, base, tip, line_use);
         }
         for part in &route.parts {
             match (part.name, &part.text) {
                 (PartName::Tag, None) => {
-                    let tag_paint = self.palette.tag(route.kind);
+                    let tag_paint = self.palette.tag(route.line);
                     self.write_box(depth + 1, part.bounds, TAG_RADIUS_PX, tag_paint);
                 }
                 (PartName::TagLabel | PartName::TagSub, Some(run)) => {
@@ -766,7 +811,7 @@ impl SvgWriter {
                         pipe_text_style_name(part.name).ok_or_else(|| link_mismatch(route))?;
                     let fill = self
                         .palette
-                        .text_ink(style_name, self.canvas, Some(route.kind));
+                        .text_ink(style_name, self.canvas, Some(route.line));
                     self.write_text_run(depth + 1, &pointer, part.bounds, run, fill)?;
                 }
                 _ => return Err(link_mismatch(route)),
@@ -782,7 +827,7 @@ impl SvgWriter {
         depth: usize,
         base: PagePoint,
         tip: PagePoint,
-        kind: PipeKind,
+        kind: LineUse,
     ) {
         let marker_id = self.arrow_marker_id(kind);
         self.line(
@@ -798,7 +843,7 @@ impl SvgWriter {
     }
 
     /// An end dot of a wire, filled or hollow as the palette says.
-    fn write_dot(&mut self, depth: usize, center_x: f32, center_y: f32, kind: PipeKind) {
+    fn write_dot(&mut self, depth: usize, center_x: f32, center_y: f32, kind: LineUse) {
         let wire = self.palette.wire_style(kind);
         let circle = match wire.dot {
             DotStyle::Filled => format!(
@@ -829,7 +874,7 @@ impl SvgWriter {
     }
 
     /// A `<line>` along the box's center line in the run direction.
-    fn write_wire(&mut self, depth: usize, bounds: BoxRect, dir: PipeDir, kind: PipeKind) {
+    fn write_wire(&mut self, depth: usize, bounds: BoxRect, dir: PipeDir, kind: LineUse) {
         let stroke = self.palette.wire_style(kind).stroke;
         let (x1, y1, x2, y2) = match dir {
             PipeDir::Horizontal => {
@@ -971,9 +1016,14 @@ impl SvgWriter {
     }
 }
 
-/// The section 2.9 style of a text part, from the node that owns it. Layout resolves the
-/// center color into each run; the other themes pick theirs by the style's role.
-fn text_style_name(document_node: DocumentNode<'_>, part: PartName) -> Option<TextStyleName> {
+/// The section 2.9 style of a text part, from the node that owns it and, for a Box, its
+/// container kind's label style. Layout resolves the center color into each run; the other
+/// themes pick theirs by the style's role.
+fn text_style_name(
+    document_node: DocumentNode<'_>,
+    container: Option<ContainerLook>,
+    part: PartName,
+) -> Option<TextStyleName> {
     match (document_node, part) {
         (DocumentNode::Kicker, PartName::BadgeText) => Some(TextStyleName::Badge),
         (DocumentNode::Kicker, PartName::Text) => Some(TextStyleName::Kicker),
@@ -983,6 +1033,9 @@ fn text_style_name(document_node: DocumentNode<'_>, part: PartName) -> Option<Te
         (DocumentNode::LegendEntry(_), PartName::LegendLabel) => Some(TextStyleName::LegendLabel),
         (DocumentNode::LegendEntry(_), PartName::LegendText) => Some(TextStyleName::LegendText),
         (DocumentNode::Content(NodeRef::TeeArm(_)), part) => pipe_text_style_name(part),
+        (DocumentNode::Content(NodeRef::Node(Node::Box(_))), PartName::Label) => {
+            container.map(|look| container_label_style(look.label))
+        }
         (DocumentNode::Content(NodeRef::Node(content)), part) => {
             content_text_style_name(content, part)
         }
@@ -999,24 +1052,12 @@ fn content_text_style_name(content: &Node, part: PartName) -> Option<TextStyleNa
             NoteKind::Legend => TextStyleName::NoteLegend,
             NoteKind::Foot => TextStyleName::Foot,
         }),
-        (Node::Zone(zone), PartName::Label) => Some(match zone.kind {
-            ZoneKind::Gcp => TextStyleName::GcpBar,
-            ZoneKind::Perimeter => TextStyleName::PerimeterLabel,
-            ZoneKind::Vpc
-            | ZoneKind::RegionA
-            | ZoneKind::RegionB
-            | ZoneKind::Subnet
-            | ZoneKind::OnpremA
-            | ZoneKind::OnpremB
-            | ZoneKind::Project
-            | ZoneKind::Optional
-            | ZoneKind::K8s => TextStyleName::ZoneLabel,
-        }),
-        (Node::Pcard(_), PartName::FunctionName) => Some(TextStyleName::CardFunction),
-        (Node::Pcard(_), PartName::ProductName) => Some(TextStyleName::CardProduct),
-        (Node::Pcard(_), PartName::Fact) => Some(TextStyleName::Fact),
-        (Node::Fact(_), PartName::Text) => Some(TextStyleName::Fact),
-        (Node::Pcard(_), PartName::Ask) => Some(TextStyleName::Ask),
+        (Node::Item(_), PartName::FunctionName) => Some(TextStyleName::CardFunction),
+        (Node::Item(_), PartName::ProductName) => Some(TextStyleName::CardProduct),
+        (Node::Item(_), PartName::Fact) => Some(fact_presentation(FactSource::Doc).1),
+        (Node::Item(_), PartName::Built) => Some(fact_presentation(FactSource::Built).1),
+        (Node::Item(_), PartName::Ask) => Some(fact_presentation(FactSource::Ask).1),
+        (Node::Fact(fact), PartName::Text) => Some(fact_presentation(fact.source).1),
         (Node::Pipe(_), part) => pipe_text_style_name(part),
         (Node::Tee(_), PartName::HubText) => Some(TextStyleName::TagLabel),
         (Node::Text(_) | Node::Callout(_), PartName::Heading) => Some(TextStyleName::CardFunction),
@@ -1032,6 +1073,14 @@ fn pipe_text_style_name(part: PartName) -> Option<TextStyleName> {
         PartName::TagLabel => Some(TextStyleName::TagLabel),
         PartName::TagSub => Some(TextStyleName::TagSub),
         _ => None,
+    }
+}
+
+/// A Box whose geometry carries no container look.
+fn container_mismatch(node: &NodeGeometry) -> RenderError {
+    RenderError::GeometryMismatch {
+        expected: node.pointer.clone(),
+        found: node.pointer.child("kind"),
     }
 }
 

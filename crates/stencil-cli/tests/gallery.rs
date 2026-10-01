@@ -69,14 +69,14 @@ fn row_page(first_card: &str) -> Value {
             {
                 "tag": "Row",
                 "children": [
-                    { "tag": "Pcard", "fn": first_card, "pn": "Cloud Run" },
-                    { "tag": "Pcard", "fn": "Second", "pn": "Cloud Run" },
-                    { "tag": "Pcard", "fn": "Third", "pn": "Cloud Run" }
+                    { "tag": "Item", "kind": "product", "title": first_card, "subtitle": "Cloud Run" },
+                    { "tag": "Item", "kind": "product", "title": "Second", "subtitle": "Cloud Run" },
+                    { "tag": "Item", "kind": "product", "title": "Third", "subtitle": "Cloud Run" }
                 ]
             },
-            { "tag": "Pipe", "dir": "h", "kind": "blue", "label": "request" }
+            { "tag": "Pipe", "dir": "h", "line": "solid", "tint": 1, "label": "request" }
         ],
-        "legend": [{ "kind": "blue", "text": "request path" }]
+        "legend": [{ "line": "solid", "tint": 1, "text": "request path" }]
     })
 }
 

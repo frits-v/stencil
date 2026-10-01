@@ -13,18 +13,18 @@ fn missing_glyph_is_a_measure_error_at_the_text_pointer() {
     let page = page_with_body(
         1280,
         json!([{ "tag": "Row", "children": [
-            { "tag": "Pcard", "fn": "Clean" },
-            { "tag": "Pcard", "fn": "Router \u{4E00}" }
+            { "tag": "Item", "kind": "product", "title": "Clean" },
+            { "tag": "Item", "kind": "product", "title": "Router \u{4E00}" }
         ]}]),
     );
     let mut measurer = FixedMetricsMeasurer {
         advance_em: 0.5,
         missing_glyphs: vec!['\u{4E00}'],
     };
-    let error = layout_page(&page, &mut measurer).unwrap_err();
+    let error = layout_page(&page, &common::gcp(), &mut measurer).unwrap_err();
     match &error {
         LayoutError::Measure { pointer, source } => {
-            assert_eq!(pointer.as_str(), "/body/0/children/1/fn");
+            assert_eq!(pointer.as_str(), "/body/0/children/1/title");
             assert!(matches!(
                 source,
                 MeasureError::MissingGlyph {
@@ -38,7 +38,7 @@ fn missing_glyph_is_a_measure_error_at_the_text_pointer() {
     assert!(
         error
             .to_string()
-            .starts_with("text at /body/0/children/1/fn could not be measured")
+            .starts_with("text at /body/0/children/1/title could not be measured")
     );
 }
 
@@ -49,7 +49,7 @@ fn missing_glyph_in_page_text_names_the_page_field() {
         advance_em: 0.5,
         missing_glyphs: vec!['L'],
     };
-    let error = layout_page(&page, &mut measurer).unwrap_err();
+    let error = layout_page(&page, &common::gcp(), &mut measurer).unwrap_err();
     let LayoutError::Measure { pointer, .. } = error else {
         panic!("expected a measure error");
     };
@@ -60,9 +60,10 @@ fn missing_glyph_in_page_text_names_the_page_field() {
 fn invalid_page_is_rejected_before_layout() {
     let page = page_with_body(
         1280,
-        json!([{ "tag": "Row", "gap": 65, "children": [{ "tag": "Pcard", "fn": " padded" }] }]),
+        json!([{ "tag": "Row", "gap": 65, "children": [{ "tag": "Item", "kind": "product", "title": " padded" }] }]),
     );
-    let error = layout_page(&page, &mut FixedMetricsMeasurer::default()).unwrap_err();
+    let error =
+        layout_page(&page, &common::gcp(), &mut FixedMetricsMeasurer::default()).unwrap_err();
     let LayoutError::Invalid(violations) = &error else {
         panic!("expected Invalid, got {error:?}");
     };
@@ -78,8 +79,9 @@ fn invalid_page_is_rejected_before_layout() {
 #[test]
 fn page_width_outside_the_range_is_rejected() {
     let page = page_with_body(639, json!([{ "tag": "Fact", "text": "narrow" }]));
-    let error = layout_page(&page, &mut FixedMetricsMeasurer::default()).unwrap_err();
+    let error =
+        layout_page(&page, &common::gcp(), &mut FixedMetricsMeasurer::default()).unwrap_err();
     assert!(matches!(error, LayoutError::Invalid(_)));
     let page = page_with_body(640, json!([{ "tag": "Fact", "text": "narrow" }]));
-    assert!(layout_page(&page, &mut FixedMetricsMeasurer::default()).is_ok());
+    assert!(layout_page(&page, &common::gcp(), &mut FixedMetricsMeasurer::default()).is_ok());
 }

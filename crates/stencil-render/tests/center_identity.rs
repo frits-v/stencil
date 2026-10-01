@@ -3,11 +3,15 @@
 //! Pcard and the color-named kinds. The SVG must match byte for byte, and the measured JSON
 //! must match byte for byte once its `document` key, which echoes the input, is removed.
 
+#![allow(clippy::unwrap_used)]
+
 mod common;
 
-use stencil_model::{Page, Projection};
+use stencil_layout::{PageGeometry, layout_page};
+use stencil_model::{Page, Projection, parse_and_vet};
 use stencil_render::iso::project_page;
 use stencil_render::{measured_json, render_svg};
+use stencil_text::CosmicTextMeasurer;
 
 struct Example {
     stem: &'static str,
@@ -55,12 +59,21 @@ const EXAMPLES: [Example; 6] = [
     },
 ];
 
+/// The example vetted and laid out under the built-in gcp grammar it names.
+fn page_and_geometry(example: &Example) -> (Page, PageGeometry) {
+    let grammar = common::gcp();
+    let page = parse_and_vet(example.document, &grammar).unwrap();
+    assert_eq!(page.grammar.as_deref(), Some("gcp"), "{}", example.stem);
+    let mut measurer = CosmicTextMeasurer::new().unwrap();
+    let geometry = layout_page(&page, &grammar, &mut measurer).unwrap();
+    (page, geometry)
+}
+
 #[test]
 fn every_example_renders_its_center_svg_fixture_byte_for_byte() {
     let mut examined = 0;
     for example in &EXAMPLES {
-        let page: Page = serde_json::from_str(example.document).unwrap();
-        let geometry = common::layout_with_cosmic_text(&page);
+        let (page, geometry) = page_and_geometry(example);
         let rendered = render_svg(&page, &geometry).unwrap();
         assert!(
             rendered.svg == example.svg,
@@ -77,9 +90,8 @@ fn every_example_renders_its_center_svg_fixture_byte_for_byte() {
 fn every_example_writes_its_geometry_fixture_byte_for_byte() {
     let mut examined = 0;
     for example in &EXAMPLES {
-        let page: Page = serde_json::from_str(example.document).unwrap();
+        let (page, geometry) = page_and_geometry(example);
         let document: serde_json::Value = serde_json::from_str(example.document).unwrap();
-        let geometry = common::layout_with_cosmic_text(&page);
         let scene = match page.projection {
             Projection::Flat => None,
             Projection::Iso => Some(project_page(&geometry).unwrap()),
