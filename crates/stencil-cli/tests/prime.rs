@@ -441,6 +441,7 @@ fn the_base_briefing_covers_every_check_the_pipeline_runs() {
         &loaded.grammar,
         &rendered.geometry,
         rendered.scene.as_ref(),
+        None,
     );
     let text = base_output();
     for report in &reports {

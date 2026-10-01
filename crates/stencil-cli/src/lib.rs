@@ -15,6 +15,7 @@ use std::path::{Path, PathBuf};
 
 use clap::{Parser, Subcommand, ValueEnum};
 use stencil_layout::LayoutError;
+use stencil_layout::checks::PrintWidth;
 use stencil_model::checks::CheckReport;
 use stencil_model::{ModelError, Projection};
 use stencil_render::DeviceScale;
@@ -24,8 +25,8 @@ pub use exit::ExitCode;
 use exit::{clap_exit_code, failure_exit_code, prime_exit_code, reports_exit_code};
 use pipeline::{
     Failure, LoadedDocument, OutputPaths, ThemeChoice, all_checks, grammar_violations,
-    load_document_from, model_checks, output_names, read_input, render_page, theme_violations,
-    write_outputs,
+    load_document_from, model_checks, output_names, print_fit_report, read_input, render_page,
+    theme_violations, write_outputs,
 };
 use report::{
     check_counts_text, grammar_violation_line, report_lines, theme_violation_line,
@@ -50,7 +51,7 @@ struct Arguments {
 
 #[derive(Debug, Subcommand)]
 enum Command {
-    /// Parse and vet a document, then run the two model checks
+    /// Parse and vet a document, then run the three model checks
     Vet {
         /// Document to vet
         json: PathBuf,
@@ -72,8 +73,11 @@ enum Command {
         /// Projection, overriding the document's `projection`
         #[arg(long, value_enum)]
         projection: Option<ProjectionArgument>,
+        /// Print width in inches, 0.5 to 200; runs print-fit after the files are written
+        #[arg(long, value_name = "INCHES", value_parser = parse_print_width)]
+        print_width: Option<PrintWidth>,
     },
-    /// Lay out and render in memory, then run all ten checks
+    /// Lay out and render in memory, then run all twelve checks
     Check {
         /// Document to check
         json: PathBuf,
@@ -84,6 +88,9 @@ enum Command {
         /// Projection, overriding the document's `projection`
         #[arg(long, value_enum)]
         projection: Option<ProjectionArgument>,
+        /// Print width in inches, 0.5 to 200; makes print-fit applicable
+        #[arg(long, value_name = "INCHES", value_parser = parse_print_width)]
+        print_width: Option<PrintWidth>,
     },
     /// Print the document JSON Schema
     Schema,
@@ -121,6 +128,16 @@ enum ThemeAction {
         /// A built-in theme name or a theme file path ending in .json
         theme: String,
     },
+}
+
+/// `--print-width`: a decimal number of inches that `PrintWidth` accepts (section 13.10).
+/// Anything else is a clap value error, exit 2.
+fn parse_print_width(text: &str) -> Result<PrintWidth, String> {
+    let inches: f32 = text
+        .trim()
+        .parse()
+        .map_err(|_| format!("{text:?} is not a number of inches"))?;
+    PrintWidth::new(inches).map_err(|error| error.to_string())
 }
 
 /// The `--projection` values, one per `Projection` variant (section 12.9).
@@ -204,10 +221,12 @@ fn run_command(
             scale,
             theme,
             projection,
+            print_width,
         } => render(
             &json,
             &out_dir,
             scale,
+            print_width,
             &Overrides { theme, projection },
             stdout,
             stderr,
@@ -216,7 +235,14 @@ fn run_command(
             json,
             theme,
             projection,
-        } => check(&json, &Overrides { theme, projection }, stdout, stderr),
+            print_width,
+        } => check(
+            &json,
+            &Overrides { theme, projection },
+            print_width,
+            stdout,
+            stderr,
+        ),
         Command::Schema => schema(stdout, stderr),
         Command::Prime { topic, name } => prime(topic.as_deref(), name.as_deref(), stdout, stderr),
         Command::Gallery { out_dir, examples } => {
@@ -263,20 +289,31 @@ fn vet(path: &Path, stdout: &mut dyn Write, stderr: &mut dyn Write) -> io::Resul
     Ok(reports_exit_code(&reports))
 }
 
+/// Writes the three outputs and prints their paths. With a print width, print-fit runs
+/// after the files are written: its check and defect lines follow the paths, and a failing
+/// report exits 1 with the files kept (section 13.10).
 fn render(
     path: &Path,
     out_dir: &Path,
     scale: u8,
+    print_width: Option<PrintWidth>,
     overrides: &Overrides,
     stdout: &mut dyn Write,
     stderr: &mut dyn Write,
 ) -> io::Result<ExitCode> {
-    match render_to_disk(path, out_dir, scale, overrides) {
-        Ok(paths) => {
+    match render_to_disk(path, out_dir, scale, overrides, print_width) {
+        Ok((paths, print_report)) => {
             for written in [&paths.svg, &paths.png, &paths.measured] {
                 writeln!(stdout, "{}", written.display())?;
             }
-            Ok(ExitCode::Clean)
+            let Some(report) = print_report else {
+                return Ok(ExitCode::Clean);
+            };
+            let reports = [report];
+            for line in report_lines(&reports) {
+                writeln!(stdout, "{line}")?;
+            }
+            Ok(reports_exit_code(&reports))
         }
         Err(failure) => report_failure("render", &failure, stdout, stderr),
     }
@@ -288,21 +325,26 @@ fn render_to_disk(
     out_dir: &Path,
     scale: u8,
     overrides: &Overrides,
-) -> Result<OutputPaths, Failure> {
+    print_width: Option<PrintWidth>,
+) -> Result<(OutputPaths, Option<CheckReport>), Failure> {
     let scale = DeviceScale::new(scale)?;
     let names = output_names(path)?;
     let loaded = load_overridden_document(path, overrides)?;
     let rendered = render_page(&loaded, scale)?;
-    write_outputs(out_dir, &names, &rendered, path)
+    let paths = write_outputs(out_dir, &names, &rendered, path)?;
+    let print_report = print_width
+        .map(|width| print_fit_report(&rendered.geometry, rendered.scene.as_ref(), Some(width)));
+    Ok((paths, print_report))
 }
 
 fn check(
     path: &Path,
     overrides: &Overrides,
+    print_width: Option<PrintWidth>,
     stdout: &mut dyn Write,
     stderr: &mut dyn Write,
 ) -> io::Result<ExitCode> {
-    let reports = match check_in_memory(path, overrides) {
+    let reports = match check_in_memory(path, overrides, print_width) {
         Ok(reports) => reports,
         Err(failure) => return report_failure("check", &failure, stdout, stderr),
     };
@@ -313,7 +355,11 @@ fn check(
     Ok(reports_exit_code(&reports))
 }
 
-fn check_in_memory(path: &Path, overrides: &Overrides) -> Result<[CheckReport; 10], Failure> {
+fn check_in_memory(
+    path: &Path,
+    overrides: &Overrides,
+    print_width: Option<PrintWidth>,
+) -> Result<[CheckReport; 12], Failure> {
     let loaded = load_overridden_document(path, overrides)?;
     let rendered = render_page(&loaded, DeviceScale::DEFAULT)?;
     Ok(all_checks(
@@ -321,6 +367,7 @@ fn check_in_memory(path: &Path, overrides: &Overrides) -> Result<[CheckReport; 1
         &loaded.grammar,
         &rendered.geometry,
         rendered.scene.as_ref(),
+        print_width,
     ))
 }
 

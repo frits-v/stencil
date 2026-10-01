@@ -84,7 +84,7 @@ fn minimal_page(body: Value, legend: Value) -> Value {
 }
 
 #[test]
-fn vet_g7_passes_both_model_checks() {
+fn vet_g7_passes_the_three_model_checks() {
     let outcome = run_stencil(&["vet", &g7_path()]);
     assert_eq!(outcome.code, ExitCode::Clean);
     assert_eq!(
@@ -92,7 +92,8 @@ fn vet_g7_passes_both_model_checks() {
         vec![
             "check remembered-constants: examined 36 text fields, 0 defects",
             "check legend-consistency: examined 8 relations, 0 defects",
-            "stencil vet: 0 violations, 2 checks, 2 passed, 0 failed",
+            "check icon-matches-product: examined 6 items, 0 defects",
+            "stencil vet: 0 violations, 3 checks, 3 passed, 0 failed",
         ]
     );
     assert_eq!(outcome.stderr, "");
@@ -125,7 +126,7 @@ fn vet_reports_a_remembered_constant_in_a_pipe_sub() {
     assert!(lines[1].contains("64512"), "{}", lines[1]);
     assert_eq!(
         lines.last().unwrap(),
-        &"stencil vet: 0 violations, 2 checks, 1 passed, 1 failed"
+        &"stencil vet: 0 violations, 3 checks, 2 passed, 1 failed"
     );
 }
 
@@ -149,7 +150,7 @@ fn vet_fails_a_page_with_no_pipes_because_nothing_was_examined() {
     );
     assert_eq!(
         outcome.stdout_lines().last().unwrap(),
-        &"stencil vet: 0 violations, 2 checks, 1 passed, 1 failed"
+        &"stencil vet: 0 violations, 3 checks, 2 passed, 1 failed"
     );
 }
 
@@ -506,7 +507,7 @@ fn render_stops_on_a_violation_and_writes_nothing() {
 }
 
 #[test]
-fn check_g7_passes_six_checks_and_skips_the_link_and_iso_checks() {
+fn check_g7_passes_seven_checks_and_skips_the_link_iso_and_print_checks() {
     let outcome = run_stencil(&["check", &g7_path()]);
     assert_eq!(outcome.code, ExitCode::Clean, "{}", outcome.stderr);
     assert_eq!(
@@ -522,7 +523,9 @@ fn check_g7_passes_six_checks_and_skips_the_link_and_iso_checks() {
             "check pipes-land: examined 8 pipe ends, 0 defects",
             "check iso-labels-clear: examined 0 pairs, not applicable: projection is flat",
             "check iso-links-clear: examined 0 link legs, not applicable: projection is flat",
-            "stencil check: 10 checks, 6 passed, 0 failed, 4 not applicable",
+            "check print-fit: examined 0 text runs, not applicable: no print width",
+            "check icon-matches-product: examined 6 items, 0 defects",
+            "stencil check: 12 checks, 7 passed, 0 failed, 5 not applicable",
         ]
     );
     assert_eq!(outcome.stderr, "");
@@ -561,7 +564,7 @@ fn check_reports_overflowing_text_with_its_pointer() {
         .copied()
         .filter(|line| line.starts_with("check "))
         .collect();
-    assert_eq!(check_lines.len(), 10, "{}", outcome.stdout);
+    assert_eq!(check_lines.len(), 12, "{}", outcome.stdout);
     assert!(
         check_lines[0].starts_with("check child-inside-container: examined "),
         "{}",
@@ -609,7 +612,7 @@ fn check_reports_overflowing_text_with_its_pointer() {
     );
     assert_eq!(
         lines.last().copied(),
-        Some("stencil check: 10 checks, 4 passed, 1 failed, 5 not applicable"),
+        Some("stencil check: 12 checks, 5 passed, 1 failed, 6 not applicable"),
         "{}",
         outcome.stdout
     );
@@ -852,4 +855,160 @@ fn two_processes_render_byte_identical_outputs() {
         outputs.push(bytes);
     }
     assert_eq!(outputs[0], outputs[1]);
+}
+
+const G7_BADGE_AT_14_INCHES: &str = "defect print-fit /kicker: badge_text \"CUSTOMER\" prints at 7.64 pt, below 8 pt (10.00 px on a 1320.00 px canvas at 14.00 in)";
+
+#[test]
+fn check_with_print_width_14_fails_print_fit_once_at_the_badge() {
+    let outcome = run_stencil(&["check", &g7_path(), "--print-width", "14"]);
+    assert_eq!(outcome.code, ExitCode::Defects, "{}", outcome.stdout);
+    let lines = outcome.stdout_lines();
+    let print_fit = lines
+        .iter()
+        .position(|line| line.starts_with("check print-fit: "))
+        .unwrap();
+    assert_eq!(
+        lines[print_fit],
+        "check print-fit: examined 40 text runs, 1 defect"
+    );
+    assert_eq!(lines[print_fit + 1], G7_BADGE_AT_14_INCHES);
+    assert_eq!(
+        lines.last().copied(),
+        Some("stencil check: 12 checks, 7 passed, 1 failed, 4 not applicable")
+    );
+}
+
+#[test]
+fn check_with_print_width_16_passes_print_fit() {
+    let outcome = run_stencil(&["check", &g7_path(), "--print-width", "16"]);
+    assert_eq!(outcome.code, ExitCode::Clean, "{}", outcome.stdout);
+    assert!(
+        outcome
+            .stdout_lines()
+            .contains(&"check print-fit: examined 40 text runs, 0 defects"),
+        "{}",
+        outcome.stdout
+    );
+}
+
+#[test]
+fn render_with_a_failing_print_width_writes_the_files_then_exits_1() {
+    let out_dir = scratch_directory("render_print_width");
+    let outcome = run_stencil(&[
+        "render",
+        &g7_path(),
+        "--out-dir",
+        out_dir.to_str().unwrap(),
+        "--print-width",
+        "14",
+    ]);
+    assert_eq!(outcome.code, ExitCode::Defects, "{}", outcome.stderr);
+    let canonical = fs::canonicalize(&out_dir).unwrap();
+    let lines = outcome.stdout_lines();
+    assert_eq!(
+        lines,
+        vec![
+            canonical.join("g7.svg").to_str().unwrap(),
+            canonical.join("g7.png").to_str().unwrap(),
+            canonical.join("g7.measured.json").to_str().unwrap(),
+            "check print-fit: examined 40 text runs, 1 defect",
+            G7_BADGE_AT_14_INCHES,
+        ]
+    );
+    for name in ["g7.svg", "g7.png", "g7.measured.json"] {
+        assert!(out_dir.join(name).is_file(), "{name}");
+    }
+}
+
+#[test]
+fn render_with_a_passing_print_width_exits_0_after_the_check_line() {
+    let out_dir = scratch_directory("render_print_width_passing");
+    let outcome = run_stencil(&[
+        "render",
+        &g7_path(),
+        "--out-dir",
+        out_dir.to_str().unwrap(),
+        "--print-width",
+        "16",
+    ]);
+    assert_eq!(outcome.code, ExitCode::Clean, "{}", outcome.stderr);
+    let lines = outcome.stdout_lines();
+    assert_eq!(lines.len(), 4, "{}", outcome.stdout);
+    assert_eq!(
+        lines[3],
+        "check print-fit: examined 40 text runs, 0 defects"
+    );
+}
+
+#[test]
+fn a_print_width_outside_the_range_or_not_a_number_could_not_run() {
+    let g7 = g7_path();
+    for value in ["0.4", "nan", "200.5", "wide", "inf"] {
+        let out_dir = scratch_directory("render_print_width_rejected");
+        let out_dir_text = out_dir.to_str().unwrap();
+        let check = ["check", g7.as_str(), "--print-width", value];
+        let render = [
+            "render",
+            g7.as_str(),
+            "--out-dir",
+            out_dir_text,
+            "--print-width",
+            value,
+        ];
+        for arguments in [&check[..], &render[..]] {
+            let outcome = run_stencil(arguments);
+            assert_eq!(outcome.code, ExitCode::CouldNotRun, "{value}");
+            assert_eq!(outcome.stdout, "", "{value}");
+            assert!(
+                outcome.stderr.contains("--print-width"),
+                "{}",
+                outcome.stderr
+            );
+        }
+        assert!(!out_dir.join("g7.svg").exists(), "{value}");
+    }
+}
+
+#[test]
+fn a_captioned_page_with_one_line_and_no_legend_checks_clean_without_chrome() {
+    let mut document = minimal_page(
+        json!([{ "tag": "Row", "children": [
+            { "tag": "Item", "id": "api", "kind": "product", "title": "API", "subtitle": "Cloud Run" },
+            { "tag": "Pipe", "dir": "h", "line": "solid", "label": "query", "from": "api", "to": "store" },
+            { "tag": "Item", "id": "store", "kind": "product", "title": "Store", "subtitle": "Cloud SQL" }
+        ] }]),
+        json!([]),
+    );
+    document["chrome"] = json!("none");
+    let path = write_document("check_chrome_none", "captioned.json", &document);
+
+    let outcome = run_stencil(&["check", &path]);
+    assert_eq!(outcome.code, ExitCode::Clean, "{}", outcome.stdout);
+    assert!(
+        outcome
+            .stdout_lines()
+            .contains(&"check legend-consistency: examined 1 relation, 0 defects"),
+        "{}",
+        outcome.stdout
+    );
+
+    let out_dir = scratch_directory("render_chrome_none");
+    let render = run_stencil(&["render", &path, "--out-dir", out_dir.to_str().unwrap()]);
+    assert_eq!(render.code, ExitCode::Clean, "{}", render.stderr);
+    let measured: Value =
+        serde_json::from_slice(&fs::read(out_dir.join("captioned.measured.json")).unwrap())
+            .unwrap();
+    let ids: Vec<&str> = measured["nodes"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|node| node["id"].as_str().unwrap())
+        .collect();
+    assert_eq!(&ids[..2], ["", "/body"]);
+    for absent in ["/kicker", "/title", "/lede", "/legend"] {
+        assert!(!ids.contains(&absent), "{absent} in {ids:?}");
+    }
+    assert_eq!(measured["nodes"][1]["y"].as_f64(), Some(20.0));
+    assert_eq!(measured["document"]["title"], json!("Minimal figure"));
 }

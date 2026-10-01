@@ -9,12 +9,13 @@ use std::sync::atomic::{AtomicU64, Ordering};
 
 use serde_json::Value;
 use stencil_layout::checks::{
-    child_inside_container, links_avoid_boxes, links_routed, pipes_land, siblings_do_not_overlap,
-    text_fits_box,
+    PrintWidth, child_inside_container, links_avoid_boxes, links_routed, pipes_land, print_fit,
+    siblings_do_not_overlap, text_fits_box,
 };
 use stencil_layout::{LayoutError, PageGeometry, layout_page, theme_legend_labels};
 use stencil_model::checks::{CheckReport, legend_consistency, remembered_constants};
 use stencil_model::grammar::GrammarViolation;
+use stencil_model::products::icon_matches_product;
 use stencil_model::text::MeasureError;
 use stencil_model::{
     DATA_FILE_BYTES_MAX, Grammar, GrammarError, ModelError, Page, Projection, Theme, ThemeError,
@@ -379,23 +380,37 @@ pub fn render_page(loaded: &LoadedDocument, scale: DeviceScale) -> Result<Render
     })
 }
 
-/// The two geometry-free checks, in `CheckName` order.
-pub fn model_checks(page: &Page, grammar: &Grammar) -> [CheckReport; 2] {
+/// The three geometry-free checks, in `CheckName` order.
+pub fn model_checks(page: &Page, grammar: &Grammar) -> [CheckReport; 3] {
     [
         remembered_constants(page, grammar),
         legend_consistency(page),
+        icon_matches_product(page, grammar),
     ]
 }
 
-/// All ten checks, in `CheckName` order. `iso-labels-clear` and `iso-links-clear` read the
-/// scene and are not applicable without one.
+/// print-fit against the drawn canvas: the projected canvas under iso, the layout canvas
+/// otherwise.
+pub fn print_fit_report(
+    geometry: &PageGeometry,
+    scene: Option<&IsoScene>,
+    print_width: Option<PrintWidth>,
+) -> CheckReport {
+    let canvas_width = scene.map_or(geometry.canvas.width, |scene| scene.canvas.width);
+    print_fit(geometry, canvas_width, print_width)
+}
+
+/// All twelve checks, in `CheckName` order. `iso-labels-clear` and `iso-links-clear` read
+/// the scene and are not applicable without one; print-fit is not applicable without a
+/// print width.
 pub fn all_checks(
     page: &Page,
     grammar: &Grammar,
     geometry: &PageGeometry,
     scene: Option<&IsoScene>,
-) -> [CheckReport; 10] {
-    let [remembered, legend] = model_checks(page, grammar);
+    print_width: Option<PrintWidth>,
+) -> [CheckReport; 12] {
+    let [remembered, legend, icons] = model_checks(page, grammar);
     [
         child_inside_container(geometry),
         siblings_do_not_overlap(geometry),
@@ -407,6 +422,8 @@ pub fn all_checks(
         pipes_land(page, geometry),
         iso_labels_clear(scene),
         iso_links_clear(scene),
+        print_fit_report(geometry, scene, print_width),
+        icons,
     ]
 }
 
