@@ -36,7 +36,17 @@ pub const ISO_LABEL_CLEARANCE_PX: f32 = 8.0;
 /// halves a run's visible x-height, so the type grows to read. Chrome and legend stay flat.
 pub const ISO_TYPE_SCALE: f32 = 1.3;
 /// Under iso a zone label is this much larger than flat, the floor name of its slab.
-pub const ISO_ZONE_LABEL_SCALE: f32 = 1.5;
+pub const ISO_ZONE_LABEL_SCALE: f32 = 1.25;
+/// Under iso the frame bar label is this much larger than flat: the platform name, a tier
+/// above the zone names.
+pub const ISO_FRAME_LABEL_SCALE: f32 = 1.4;
+/// Under iso a link meets a block through a straight stub of this length, perpendicular
+/// to the visible side it attaches to, so the arrowhead stands clear of the block's base
+/// and the last leg is longer than two arrowheads.
+pub const ISO_APPROACH_PX: f32 = 40.0;
+/// Under iso a wrapping run keeps lines at least this long unless the whole run is
+/// shorter, so names on a plane never stack one word per line.
+pub const ISO_LINE_MIN_PX: f32 = 120.0;
 /// Under iso every container padding, card padding and gap is this much larger than flat:
 /// a floor plan keeps open floor around what stands on it, and the grown type needs it.
 pub const ISO_SPACE_SCALE: f32 = 1.75;

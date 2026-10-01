@@ -4,8 +4,8 @@
   "page": "#0D0F17",
   "ink": {
     "primary": "#E3E7F7",
-    "secondary": "#A4ADCF",
-    "zone_label": "#A4ADCF"
+    "secondary": "#B8C0DD",
+    "zone_label": "#B8C0DD"
   },
   "kicker": "#78A2F7",
   "badge": {
@@ -115,7 +115,7 @@
   "containers": {},
   "lanes": {
     "lifeline": {
-      "color": "#A4ADCF",
+      "color": "#B8C0DD",
       "width": 1.0,
       "pattern": "dashed"
     }
@@ -229,7 +229,7 @@
       "zone": "#E3E7F7"
     },
     "chip": {
-      "fill": "#FFFFFF"
+      "fill": "#E3E7F7"
     },
     "shadow": {
       "color": "#000000",

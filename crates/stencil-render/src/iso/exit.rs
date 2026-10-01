@@ -35,7 +35,7 @@ pub(crate) fn slab_exit_route(
     }
     let from = geometry.nodes.get(route.from_node)?.bounds;
     let via = exit_via(slab.footprint, from, exit);
-    let rerouted = stencil_layout::reroute_link(geometry, route.index, exit, &[via])?;
+    let rerouted = stencil_layout::reroute_link(geometry, route.index, exit, &[via], true)?;
     (rerouted.status == RouteStatus::Routed).then_some(rerouted.points)
 }
 

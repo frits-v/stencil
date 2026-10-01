@@ -294,10 +294,10 @@ fn reroute_link_with_an_unchanged_request_returns_the_layout_route() {
     ];
     for (index, from_side, via) in requests {
         let routed = route_of(&geometry, index);
-        let rerouted = reroute_link(&geometry, index, from_side, &via).unwrap();
+        let rerouted = reroute_link(&geometry, index, from_side, &via, false).unwrap();
         assert_eq!(&rerouted, routed, "link {index}");
     }
-    assert!(reroute_link(&geometry, 3, Side::Right, &[]).is_none());
+    assert!(reroute_link(&geometry, 3, Side::Right, &[], false).is_none());
 }
 
 /// A different request routes through the given via point, leaves from the given side and
@@ -316,7 +316,7 @@ fn reroute_link_routes_through_a_new_via_point() {
         x: a.x + a.width / 2.0,
         y: a.bottom() + 40.0,
     };
-    let rerouted = reroute_link(&geometry, 0, Side::Bottom, &[via]).unwrap();
+    let rerouted = reroute_link(&geometry, 0, Side::Bottom, &[via], false).unwrap();
     assert_eq!(rerouted.status, RouteStatus::Routed);
     assert_orthogonal(&rerouted.points);
     assert_eq!(

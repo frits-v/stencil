@@ -15,7 +15,7 @@ use stencil_model::{
 
 use crate::lanes::{LanesPlan, MessageRow};
 use crate::styles::{text_color, text_style_for};
-use crate::{Axis, turned_box};
+use crate::{Axis, ISO_APPROACH_PX, turned_box};
 use crate::{
     BoxRect, GEOMETRY_EPSILON_PX, LayoutError, LinkRoute, NodeGeometry, NodeTag, PageGeometry,
     Part, PartName, RouteStatus, TextAlign, TextRun,
@@ -72,7 +72,13 @@ pub(crate) fn route_links(
                 message_points(geometry, row, &from.bounds, &to.bounds, &link_pointer)?,
                 RouteStatus::Routed,
             ),
-            None => searched_route(geometry, link, (from_node, from), (to_node, to)),
+            None => searched_route(
+                geometry,
+                link,
+                (from_node, from),
+                (to_node, to),
+                page.projection == Projection::Iso,
+            ),
         };
         let parts = tag_parts(page, link, &link_pointer, &points, measurer)?;
         let tag = parts.first().map(|part| part.bounds);
@@ -91,15 +97,36 @@ pub(crate) fn route_links(
     Ok(routes)
 }
 
-/// The A* route of section 11.2, or the fallback L when there is none.
+/// The A* route of section 11.2, or the fallback L when there is none. Under iso an end
+/// on a block is reached through an approach stub (section 12.4).
 fn searched_route(
     geometry: &PageGeometry,
     link: &Link,
     from: (usize, &NodeGeometry),
     to: (usize, &NodeGeometry),
+    iso: bool,
 ) -> (Vec<PagePoint>, RouteStatus) {
-    let sides = choose_sides(link, &from.1.bounds, &to.1.bounds);
-    route_between(geometry, from, to, sides, &link.via)
+    let sides = choose_sides(
+        link,
+        (&from.1.bounds, &SIDE_ORDER),
+        (&to.1.bounds, &SIDE_ORDER),
+    );
+    let stubs = (iso && is_block(from.1), iso && is_block(to.1));
+    route_between(geometry, from, to, sides, &link.via, stubs)
+}
+
+/// A node drawn as a raised block under iso (section 12.3): a leaf other than a pipe or
+/// tee.
+fn is_block(node: &NodeGeometry) -> bool {
+    matches!(
+        node.tag,
+        NodeTag::Pcard
+            | NodeTag::Fact
+            | NodeTag::Note
+            | NodeTag::Text
+            | NodeTag::Callout
+            | NodeTag::Frame
+    )
 }
 
 /// The section 11.2 route from the `from_side` midpoint of `from` through `via` to the
@@ -110,26 +137,62 @@ fn route_between(
     (to_node, to): (usize, &NodeGeometry),
     (from_side, to_side): (Side, Side),
     via: &[PagePoint],
+    (from_stub, to_stub): (bool, bool),
 ) -> (Vec<PagePoint>, RouteStatus) {
     let start = side_midpoint(&from.bounds, from_side);
     let end = side_midpoint(&to.bounds, to_side);
+    // Under iso a block end is reached through a straight stub outward from its side
+    // (section 12.4): the search runs between the stub ends.
+    let outward = |point: PagePoint, side: Side| {
+        let (dx, dy) = Direction::outward(side).unit();
+        PagePoint {
+            x: point.x + dx * ISO_APPROACH_PX,
+            y: point.y + dy * ISO_APPROACH_PX,
+        }
+    };
+    let search_start = if from_stub {
+        outward(start, from_side)
+    } else {
+        start
+    };
+    let search_end = if to_stub { outward(end, to_side) } else { end };
     let obstacles = link_obstacles(geometry, from_node, to_node);
     let endpoints = Endpoints {
         from: from.bounds,
         to: to.bounds,
-        start,
-        end,
+        start: search_start,
+        end: search_end,
         from_side,
         to_side,
+        from_stub,
+        to_stub,
+    };
+    let with_stubs = |mut points: Vec<PagePoint>| {
+        if from_stub {
+            points.insert(0, start);
+        }
+        if to_stub {
+            points.push(end);
+        }
+        corner_points(points)
     };
     match grid_route(&obstacles, &endpoints, via) {
-        Some(points) if points.len() <= LINK_SEGMENTS_MAX + 1 => (points, RouteStatus::Routed),
-        Some(_) | None => (fallback_route(start, end), RouteStatus::Fallback),
+        Some(points)
+            if points.len() + usize::from(from_stub) + usize::from(to_stub)
+                <= LINK_SEGMENTS_MAX + 1 =>
+        {
+            (with_stubs(points), RouteStatus::Routed)
+        }
+        Some(_) | None => (
+            with_stubs(fallback_route(search_start, search_end)),
+            RouteStatus::Fallback,
+        ),
     }
 }
 
 /// Section 13.11 rule 3: the route of the link at `index` in `geometry.links`, searched again
-/// with `from_side` and `via` in place of the authored ones. The to end keeps the side its
+/// with `from_side` and `via` in place of the authored ones; under iso a block end keeps
+/// its approach stub. The to end keeps the side its
 /// routed polyline ends on, and the tag keeps its size and moves with the midpoint of the
 /// longest segment. Pure: the geometry is read, never changed. None when no routed link has
 /// that index or an endpoint is not a geometry node.
@@ -138,6 +201,7 @@ pub fn reroute_link(
     index: usize,
     from_side: Side,
     via: &[PagePoint],
+    iso: bool,
 ) -> Option<LinkRoute> {
     let route = geometry.links.iter().find(|route| route.index == index)?;
     let from = geometry.nodes.get(route.from_node)?;
@@ -153,6 +217,7 @@ pub fn reroute_link(
         (route.to_node, to),
         (from_side, to_side),
         via,
+        (iso && is_block(from), iso && is_block(to)),
     );
     let (old_center, _) = longest_segment_midpoint(&route.points);
     let (new_center, _) = longest_segment_midpoint(&points);
@@ -363,11 +428,12 @@ fn distance_squared(a: PagePoint, b: PagePoint) -> f32 {
     (a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y)
 }
 
-/// The side of `bounds` whose midpoint is closest to `target`, ties in SIDE_ORDER.
-fn closest_side(bounds: &BoxRect, target: PagePoint) -> Side {
-    let mut best = Side::Right;
+/// The side of `bounds` among `allowed` whose midpoint is closest to `target`, ties in
+/// `allowed` order.
+fn closest_side(bounds: &BoxRect, target: PagePoint, allowed: &[Side]) -> Side {
+    let mut best = allowed.first().copied().unwrap_or(Side::Right);
     let mut best_distance = f32::INFINITY;
-    for side in SIDE_ORDER {
+    for &side in allowed {
         let distance = distance_squared(side_midpoint(bounds, side), target);
         if distance < best_distance {
             best = side;
@@ -380,7 +446,11 @@ fn closest_side(bounds: &BoxRect, target: PagePoint) -> Side {
 /// Section 11.2 attach sides. Both sides given: used as is. Neither given and no `via`: the
 /// pair of facing sides whose midpoints are closest. Otherwise each open end takes the side
 /// closest to what it faces: the first or last via point, or the other end's attach point.
-fn choose_sides(link: &Link, from: &BoxRect, to: &BoxRect) -> (Side, Side) {
+fn choose_sides(
+    link: &Link,
+    (from, from_allowed): (&BoxRect, &[Side]),
+    (to, to_allowed): (&BoxRect, &[Side]),
+) -> (Side, Side) {
     match (link.from_side, link.to_side) {
         (Some(from_side), Some(to_side)) => (from_side, to_side),
         (Some(from_side), None) => {
@@ -389,7 +459,7 @@ fn choose_sides(link: &Link, from: &BoxRect, to: &BoxRect) -> (Side, Side) {
                 .last()
                 .copied()
                 .unwrap_or_else(|| side_midpoint(from, from_side));
-            (from_side, closest_side(to, target))
+            (from_side, closest_side(to, target, to_allowed))
         }
         (None, Some(to_side)) => {
             let target = link
@@ -397,27 +467,51 @@ fn choose_sides(link: &Link, from: &BoxRect, to: &BoxRect) -> (Side, Side) {
                 .first()
                 .copied()
                 .unwrap_or_else(|| side_midpoint(to, to_side));
-            (closest_side(from, target), to_side)
+            (closest_side(from, target, from_allowed), to_side)
         }
         (None, None) => match (link.via.first(), link.via.last()) {
-            (Some(&first), Some(&last)) => (closest_side(from, first), closest_side(to, last)),
-            _ => facing_pair(from, to),
+            (Some(&first), Some(&last)) => (
+                closest_side(from, first, from_allowed),
+                closest_side(to, last, to_allowed),
+            ),
+            _ => facing_pair((from, from_allowed), (to, to_allowed)),
         },
     }
 }
 
-fn facing_pair(from: &BoxRect, to: &BoxRect) -> (Side, Side) {
-    let mut best = (Side::Right, Side::Left);
+/// The pair of facing sides whose midpoints are closest, among the allowed sides of each
+/// end; when no facing pair is allowed, the closest allowed pair.
+fn facing_pair(
+    (from, from_allowed): (&BoxRect, &[Side]),
+    (to, to_allowed): (&BoxRect, &[Side]),
+) -> (Side, Side) {
+    let mut best: Option<(Side, Side)> = None;
     let mut best_distance = f32::INFINITY;
-    for side in SIDE_ORDER {
+    for &side in from_allowed {
         let facing = facing_side(side);
+        if !to_allowed.contains(&facing) {
+            continue;
+        }
         let distance = distance_squared(side_midpoint(from, side), side_midpoint(to, facing));
         if distance < best_distance {
-            best = (side, facing);
+            best = Some((side, facing));
             best_distance = distance;
         }
     }
-    best
+    if let Some(pair) = best {
+        return pair;
+    }
+    for &from_side in from_allowed {
+        for &to_side in to_allowed {
+            let distance =
+                distance_squared(side_midpoint(from, from_side), side_midpoint(to, to_side));
+            if distance < best_distance {
+                best = Some((from_side, to_side));
+                best_distance = distance;
+            }
+        }
+    }
+    best.unwrap_or((Side::Right, Side::Left))
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -463,6 +557,16 @@ impl Direction {
             Side::Left => Direction::Left,
         }
     }
+
+    /// The unit step in page px along the direction.
+    fn unit(self) -> (f32, f32) {
+        match self {
+            Direction::Right => (1.0, 0.0),
+            Direction::Down => (0.0, 1.0),
+            Direction::Left => (-1.0, 0.0),
+            Direction::Up => (0.0, -1.0),
+        }
+    }
 }
 
 struct Endpoints {
@@ -472,6 +576,10 @@ struct Endpoints {
     end: PagePoint,
     from_side: Side,
     to_side: Side,
+    /// True at an end reached through an approach stub (section 12.4): the stub is the
+    /// straight leg out of the side, so the search may meet its end from any direction.
+    from_stub: bool,
+    to_stub: bool,
 }
 
 /// The routing grid: sorted line coordinates and which intersections and unit moves are
@@ -829,9 +937,10 @@ fn grid_route(
         let (Some(&leg_start), Some(&leg_end)) = (leg.first(), leg.get(1)) else {
             return None;
         };
-        let leave = (leg_index == 0).then(|| Direction::outward(endpoints.from_side));
-        let arrive =
-            (leg_index + 1 == leg_count).then(|| Direction::outward(endpoints.to_side).opposite());
+        let leave = (leg_index == 0 && !endpoints.from_stub)
+            .then(|| Direction::outward(endpoints.from_side));
+        let arrive = (leg_index + 1 == leg_count && !endpoints.to_stub)
+            .then(|| Direction::outward(endpoints.to_side).opposite());
         let leg_path = search_leg(
             &grid,
             grid.locate(leg_start)?,
@@ -1153,15 +1262,24 @@ mod tests {
             height: 10.0,
         };
         assert_eq!(
-            facing_pair(&square(0.0, 0.0), &square(40.0, 0.0)),
+            facing_pair(
+                (&square(0.0, 0.0), &SIDE_ORDER),
+                (&square(40.0, 0.0), &SIDE_ORDER)
+            ),
             (Side::Right, Side::Left)
         );
         assert_eq!(
-            facing_pair(&square(0.0, 0.0), &square(0.0, 40.0)),
+            facing_pair(
+                (&square(0.0, 0.0), &SIDE_ORDER),
+                (&square(0.0, 40.0), &SIDE_ORDER)
+            ),
             (Side::Bottom, Side::Top)
         );
         assert_eq!(
-            facing_pair(&square(40.0, 40.0), &square(0.0, 0.0)),
+            facing_pair(
+                (&square(40.0, 40.0), &SIDE_ORDER),
+                (&square(0.0, 0.0), &SIDE_ORDER)
+            ),
             (Side::Left, Side::Right)
         );
     }
