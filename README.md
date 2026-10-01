@@ -50,19 +50,19 @@ stencil prime links
 stencil prime grammar gcp
 ```
 
-`stencil vet <json>` parses the document, loads its grammar, applies the vet rules (field types, text limits, container sizes, nesting depth, the grammar's kinds and where each may sit) and then runs the two checks that need no layout: remembered constants (the literals the grammar lists) and legend consistency (every line and tint in use has one legend entry).
+`stencil vet <json>` parses the document, loads its grammar, applies the vet rules (field types, text limits, container sizes, nesting depth, the grammar's kinds and where each may sit) and then runs the three checks that need no layout: remembered constants (the literals the grammar lists), legend consistency (every line and tint in use has one legend entry) and icon matches product (an item's icon is the product its subtitle names, or a category icon for a product without its own).
 
 ```bash
 stencil vet examples/g7.json
 ```
 
-`stencil render <json> --out-dir <dir> [--scale <1-4>]` lays out the page and writes `<stem>.svg`, `<stem>.png` and `<stem>.measured.json` into the output directory, creating it when missing. It prints the three absolute paths. The PNG scale defaults to 2.
+`stencil render <json> --out-dir <dir> [--scale <1-4>] [--print-width <inches>]` lays out the page and writes `<stem>.svg`, `<stem>.png` and `<stem>.measured.json` into the output directory, creating it when missing. It prints the three absolute paths. The PNG scale defaults to 2. With `--print-width` it then runs print fit, prints its lines and exits 1 when a text run would print below 8 pt; the files stay written.
 
 ```bash
 stencil render examples/g7.json --out-dir out
 ```
 
-`stencil check <json>` does everything `render` does in memory, writes nothing, and runs all ten checks: child inside container, siblings do not overlap, text fits box, remembered constants, legend consistency, links routed, links avoid boxes, pipes land, and under the isometric projection iso labels clear and iso links clear.
+`stencil check <json>` does everything `render` does in memory, writes nothing, and runs all twelve checks: child inside container, siblings do not overlap, text fits box, remembered constants, legend consistency, links routed, links avoid boxes, pipes land, under the isometric projection iso labels clear and iso links clear, print fit when `--print-width <inches>` is given (every text run prints at 8 pt or more at that width), and icon matches product.
 
 ```bash
 stencil check examples/g7.json
