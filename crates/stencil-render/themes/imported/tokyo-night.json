@@ -1,0 +1,255 @@
+{
+  "name": "tokyo-night",
+  "tint_cue": "color",
+  "page": "#1A1B26",
+  "ink": {
+    "primary": "#D5D6DB",
+    "secondary": "#A9B1D6",
+    "zone_label": "#A9B1D6"
+  },
+  "kicker": "#2AC3DE",
+  "badge": {
+    "customer": {
+      "fill": "#1D3947",
+      "ink": "#D5D6DB"
+    },
+    "internal": {
+      "fill": "#37324C",
+      "ink": "#D5D6DB"
+    }
+  },
+  "card": {
+    "fill": "#2F3549",
+    "border": {
+      "color": "#444B6A",
+      "width": 1.5,
+      "pattern": "solid"
+    }
+  },
+  "fact": {
+    "fill": "#16161E",
+    "ink": "#A9B1D6"
+  },
+  "ask": {
+    "fill": "#183746",
+    "ink": "#D5D6DB"
+  },
+  "tag": {
+    "fill": "#2F3549",
+    "border": {
+      "color": "#444B6A",
+      "width": 1.5,
+      "pattern": "solid"
+    },
+    "ink": "#D5D6DB",
+    "sub_ink": "#A9B1D6"
+  },
+  "legend": {
+    "label_ink": "#D5D6DB",
+    "text_ink": "#A9B1D6"
+  },
+  "foot": "#787C99",
+  "callout": {
+    "note": {
+      "accent": "#2AC3DE",
+      "fill": "#1D3947"
+    },
+    "risk": {
+      "accent": "#C0CAF5",
+      "fill": "#383B4B"
+    },
+    "decision": {
+      "accent": "#9ECE6A",
+      "fill": "#323B32"
+    },
+    "open": {
+      "accent": "#0DB9D7",
+      "fill": "#183746"
+    }
+  },
+  "placeholder": {
+    "border": "#444B6A",
+    "diagonal": "#787C99"
+  },
+  "icon_chip": "#FFFFFF",
+  "frame": {
+    "border": "#2AC3DE",
+    "frame_fill": "#1A1B26",
+    "bar_fill": "#2AC3DE",
+    "bar_ink": "#1A1B26",
+    "body_fill": "#16161E"
+  },
+  "tones": {
+    "neutral": {
+      "fill": "#232634",
+      "border": "#444B6A"
+    },
+    "warm": {
+      "fill": "#232634",
+      "border": "#444B6A"
+    },
+    "cool": {
+      "fill": "#232634",
+      "border": "#444B6A"
+    },
+    "soft": {
+      "fill": "#232634"
+    },
+    "strong": {
+      "border": "#444B6A"
+    },
+    "highlight": {
+      "fill": "#232634",
+      "border": "#0DB9D7"
+    },
+    "emphasis": {
+      "fill": "#232634",
+      "border": "#2AC3DE"
+    },
+    "accent": {
+      "fill": "#343646",
+      "border": "#A9B1D6",
+      "label_ink": "#D5D6DB"
+    }
+  },
+  "containers": {},
+  "lanes": {
+    "lifeline": {
+      "color": "#787C99",
+      "width": 1.0,
+      "pattern": "dashed"
+    }
+  },
+  "gray": {
+    "color": "#787C99",
+    "width": 2.0,
+    "pattern": "solid",
+    "dot": "filled"
+  },
+  "solid": {
+    "width": 2.0,
+    "dots": [
+      "filled",
+      "filled",
+      "filled",
+      "filled",
+      "filled",
+      "filled",
+      "filled",
+      "filled"
+    ]
+  },
+  "dash": {
+    "width": 2.0,
+    "pattern": "dashed",
+    "dot": "filled"
+  },
+  "deny": {
+    "color": "#C0CAF5",
+    "width": 2.0,
+    "pattern": "dashed",
+    "dot": "filled",
+    "tag_border": "#6D738E",
+    "tag_ink": "#D5D6DB"
+  },
+  "tints": [
+    {
+      "name": "blue",
+      "fill": "#1D3947",
+      "border": "#226F82",
+      "ink": "#D5D6DB",
+      "wire": "#2AC3DE"
+    },
+    {
+      "name": "pink",
+      "fill": "#37324C",
+      "border": "#6B5B8F",
+      "ink": "#D5D6DB",
+      "wire": "#BB9AF7"
+    },
+    {
+      "name": "cyan",
+      "fill": "#36434C",
+      "border": "#678A8F",
+      "ink": "#D5D6DB",
+      "wire": "#B4F9F8"
+    },
+    {
+      "name": "yellow",
+      "fill": "#183746",
+      "border": "#146A7F",
+      "ink": "#D5D6DB",
+      "wire": "#0DB9D7"
+    },
+    {
+      "name": "red",
+      "fill": "#383B4B",
+      "border": "#6D738E",
+      "ink": "#D5D6DB",
+      "wire": "#C0CAF5"
+    },
+    {
+      "name": "green",
+      "fill": "#323B32",
+      "border": "#5C7548",
+      "ink": "#D5D6DB",
+      "wire": "#9ECE6A"
+    },
+    {
+      "name": "orange",
+      "fill": "#343646",
+      "border": "#62667E",
+      "ink": "#D5D6DB",
+      "wire": "#A9B1D6"
+    },
+    {
+      "name": "brown",
+      "fill": "#422B39",
+      "border": "#89495A",
+      "ink": "#D5D6DB",
+      "wire": "#F7768E"
+    }
+  ],
+  "iso": {
+    "faces": {
+      "top": 0,
+      "left": -8,
+      "right": -16
+    },
+    "slab_thickness": 8.0,
+    "frame_sides": {
+      "left": "#2AC3DE",
+      "right": "#1B99B0"
+    },
+    "frame_outline": 1.5,
+    "solid_edges": "none",
+    "edge_width": 1.5,
+    "plates": false,
+    "tabs": {
+      "frame": {
+        "fill": "#2AC3DE",
+        "ink": "#1A1B26"
+      },
+      "top": {
+        "fill": "#444B6A",
+        "ink": "#D5D6DB"
+      },
+      "nested_width": 1.25
+    },
+    "chip": {
+      "fill": "#FFFFFF",
+      "ring": "#444B6A"
+    },
+    "shadow": {
+      "color": "#000000",
+      "opacity": 0.5,
+      "blur": 3.0,
+      "dy": 3.0
+    },
+    "widths": {
+      "primary": 3.75,
+      "secondary": 2.5,
+      "gray": 2.0
+    }
+  }
+}

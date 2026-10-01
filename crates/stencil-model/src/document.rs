@@ -44,11 +44,36 @@ pub const KIND_PATTERN: &str = r"^[a-z][a-z0-9-]{0,31}$";
 pub const BUILTIN_GRAMMARS: [&str; 2] = ["gcp", "plain"];
 pub const GRAMMAR_DEFAULT: &str = "gcp";
 pub const GRAMMAR_REFERENCE_PATTERN: &str = r"^(gcp|plain|[^\u0000-\u001F]{1,395}\.json)$";
+/// Designed built-ins first (section 13.5), then the imported tier (section 13.9).
+pub const BUILTIN_THEMES: [&str; 13] = [
+    "center",
+    "paper",
+    "dusk",
+    "clear",
+    "clear-dark",
+    "wire",
+    "tokyo-night",
+    "solarized-light",
+    "solarized-dark",
+    "material-dark",
+    "gruvbox-dark",
+    "dracula",
+    "nord",
+];
 /// The designed built-in themes, in the gallery's order (section 13.5).
-pub const BUILTIN_THEMES: [&str; 6] = ["center", "paper", "dusk", "clear", "clear-dark", "wire"];
+pub const DESIGNED_THEMES: [&str; 6] = ["center", "paper", "dusk", "clear", "clear-dark", "wire"];
+/// The imported tier, mapped from pinned base16 schemes (section 13.9).
+pub const IMPORTED_THEMES: [&str; 7] = [
+    "tokyo-night",
+    "solarized-light",
+    "solarized-dark",
+    "material-dark",
+    "gruvbox-dark",
+    "dracula",
+    "nord",
+];
 pub const THEME_DEFAULT: &str = "center";
-pub const THEME_REFERENCE_PATTERN: &str =
-    r"^(center|paper|dusk|clear|clear-dark|wire|[^\u0000-\u001F]{1,395}\.json)$";
+pub const THEME_REFERENCE_PATTERN: &str = r"^(center|paper|dusk|clear|clear-dark|wire|tokyo-night|solarized-light|solarized-dark|material-dark|gruvbox-dark|dracula|nord|[^\u0000-\u001F]{1,395}\.json)$";
 /// Largest grammar or theme file the CLI reads, in bytes.
 pub const DATA_FILE_BYTES_MAX: usize = 65_536;
 

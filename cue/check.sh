@@ -180,13 +180,14 @@ fi
 # faults (crates/stencil-model/tests/theme.rs).
 themes_dir="$repo/crates/stencil-render/themes"
 themes_vetted=0
-for theme in "$themes_dir"/*.json; do
+for theme in "$themes_dir"/*.json "$themes_dir"/imported/*.json; do
 	[[ -e "$theme" ]] || continue
 	"$CUE" vet -c -d '#Theme' . "$theme"
 	themes_vetted=$((themes_vetted + 1))
 done
-if [[ "$themes_vetted" -eq 0 ]]; then
-	echo "FAIL themes: no theme files found under $themes_dir" >&2
+# Six designed themes and seven imported ones (BUILTIN_THEMES).
+if [[ "$themes_vetted" -ne 13 ]]; then
+	echo "FAIL themes: found $themes_vetted theme files under $themes_dir, expected 13" >&2
 	exit 1
 fi
 echo "ok   themes: $themes_vetted built-in theme files vet against #Theme"

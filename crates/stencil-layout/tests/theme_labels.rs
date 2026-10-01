@@ -34,13 +34,48 @@ const BUILTINS: [(&str, &str); 6] = [
     ),
 ];
 
+/// The imported tier (section 13.9), whose slot names are fixed by slot.
+const IMPORTED: [(&str, &str); 7] = [
+    (
+        "tokyo-night",
+        include_str!("../../stencil-render/themes/imported/tokyo-night.json"),
+    ),
+    (
+        "solarized-light",
+        include_str!("../../stencil-render/themes/imported/solarized-light.json"),
+    ),
+    (
+        "solarized-dark",
+        include_str!("../../stencil-render/themes/imported/solarized-dark.json"),
+    ),
+    (
+        "material-dark",
+        include_str!("../../stencil-render/themes/imported/material-dark.json"),
+    ),
+    (
+        "gruvbox-dark",
+        include_str!("../../stencil-render/themes/imported/gruvbox-dark.json"),
+    ),
+    (
+        "dracula",
+        include_str!("../../stencil-render/themes/imported/dracula.json"),
+    ),
+    (
+        "nord",
+        include_str!("../../stencil-render/themes/imported/nord.json"),
+    ),
+];
+
 #[test]
 fn every_builtin_passes_the_legend_label_rule() {
-    for (name, json_text) in BUILTINS {
+    let mut examined = 0;
+    for (name, json_text) in BUILTINS.into_iter().chain(IMPORTED) {
         let theme = parse_theme(json_text, name).unwrap();
         let violations = theme_legend_labels(&theme, &mut FixedMetricsMeasurer::default()).unwrap();
         assert_eq!(violations, Vec::new(), "{name}");
+        examined += 1;
     }
+    assert_eq!(examined, stencil_model::BUILTIN_THEMES.len());
 }
 
 #[test]

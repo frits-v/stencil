@@ -84,7 +84,7 @@ for example `CUE="$(mise which cue)" ./cue/check.sh`.
 - `Lanes` is a container of 1 to 32 lane heads with an optional `gap` of 0 to 64. A `Link` may
   carry `order`, 1 to 256, which makes it a message of the Lanes node whose heads it joins.
 - `#Page` adds `grammar` (`gcp`, `plain` or a path ending in `.json`) and `chrome` (`full` or
-  `none`). `theme` is a built-in theme name (`center`, `paper`, `dusk`, `clear`, `clear-dark`, `wire`) or a theme file path ending in `.json`; `theme_overrides` is an open struct the Rust loader checks against `#Theme`.
+  `none`). `theme` is a built-in theme name (`center`, `paper`, `dusk`, `clear`, `clear-dark`, `wire`, or one of the imported tier: `tokyo-night`, `solarized-light`, `solarized-dark`, `material-dark`, `gruvbox-dark`, `dracula`, `nord`) or a theme file path ending in `.json`; `theme_overrides` is an open struct the Rust loader checks against `#Theme`.
 
 ## What the core enforces
 

@@ -16,7 +16,10 @@ use serde_json::{Value, json};
 use stencil_layout::PartName;
 use stencil_model::grammar::{BorderPattern, Role};
 use stencil_model::theme::{DotStyle, LinePattern, TintCue};
-use stencil_model::{BUILTIN_THEMES, Page, Projection, Theme, apply_overrides, validate_theme};
+use stencil_model::{
+    BUILTIN_THEMES, DESIGNED_THEMES, IMPORTED_THEMES, Page, Projection, Theme, apply_overrides,
+    validate_theme,
+};
 use stencil_render::iso::{SolidInputs, project_page};
 use stencil_render::palette::Palette;
 use stencil_render::{DeviceScale, builtin_theme_json, measured_json, render_png, render_svg};
@@ -125,9 +128,15 @@ fn every_builtin_parses_validates_and_is_written_canonically() {
         );
         examined += 1;
     }
-    assert_eq!(examined, 6);
-    assert_eq!(BUILTIN_THEMES, THEMES);
-    assert!(stencil_render::builtin_theme("nord").is_none());
+    assert_eq!(examined, 13);
+    assert_eq!(DESIGNED_THEMES, THEMES);
+    let designed_then_imported: Vec<&str> = DESIGNED_THEMES
+        .iter()
+        .chain(IMPORTED_THEMES.iter())
+        .copied()
+        .collect();
+    assert_eq!(BUILTIN_THEMES.to_vec(), designed_then_imported);
+    assert!(stencil_render::builtin_theme("nord-light").is_none());
 }
 
 #[test]
@@ -173,6 +182,51 @@ fn measured_json_is_identical_and_svg_differs_across_themes() {
             }
         }
     }
+}
+
+/// Section 13.14: the imported tier changes paint only. `canvas`, `nodes` and `links` equal
+/// center's under every imported theme, and `projection` does wherever the slab thickness
+/// is center's 6 (section 13.9 thickens a slab whose top barely differs from the page).
+#[test]
+fn the_imported_tier_keeps_center_geometry_and_changes_the_svg() {
+    let center = common::theme("center");
+    let mut examined = 0;
+    for (name, document_text) in EXAMPLES {
+        let document: Value = serde_json::from_str(document_text).unwrap();
+        let page: Page = serde_json::from_str(document_text).unwrap();
+        let geometry = common::layout_with_cosmic_text(&page);
+        let measured_under = |theme: &Theme| {
+            let scene = (page.projection == Projection::Iso).then(|| {
+                let inputs = SolidInputs::new(&geometry, &page.links, theme.iso.slab_thickness);
+                project_page(&geometry, &inputs).unwrap()
+            });
+            measured_json(&document, &geometry, scene.as_ref())
+        };
+        let center_measured = measured_under(&center);
+        let center_svg = render_svg(&page, &center, &geometry).unwrap().svg;
+        for theme_name in IMPORTED_THEMES {
+            let theme = common::theme(theme_name);
+            let measured = measured_under(&theme);
+            for key in ["canvas", "nodes", "links"] {
+                assert_eq!(
+                    measured.get(key),
+                    center_measured.get(key),
+                    "{name} {theme_name} {key}"
+                );
+            }
+            if theme.iso.slab_thickness == center.iso.slab_thickness {
+                assert_eq!(
+                    measured.get("projection"),
+                    center_measured.get("projection"),
+                    "{name} {theme_name} projection"
+                );
+            }
+            let svg = render_svg(&page, &theme, &geometry).unwrap().svg;
+            assert_ne!(svg, center_svg, "{name} {theme_name}");
+            examined += 1;
+        }
+    }
+    assert_eq!(examined, EXAMPLES.len() * IMPORTED_THEMES.len());
 }
 
 fn hex_color(hex: &str) -> (u8, u8, u8) {

@@ -9,6 +9,16 @@ A theme sets paint only. Layout, text sizes, icons and the measured JSON are ide
 - clear-dark: the same, dark.
 - wire: one ink, white fills, lines told apart by pattern and end dots; design docs and reviews.
 
+The imported tier maps editor color schemes onto the same roles. None passes the colorblind or contrast thresholds; `stencil theme check <name>` lists every failing row. Use one only when a reader asked for that look.
+
+- tokyo-night: editor heritage, below the colorblind bar; navy with cyan and lavender.
+- solarized-light: editor heritage, below the colorblind bar; cream with muted accents.
+- solarized-dark: editor heritage, below the colorblind bar; deep teal with the same accents.
+- material-dark: editor heritage, below the colorblind bar; near-black with pastel accents.
+- gruvbox-dark: editor heritage, below the colorblind bar; warm brown-gray with earthy accents.
+- dracula: editor heritage, below the colorblind bar; purple-gray with saturated accents.
+- nord: editor heritage, below the colorblind bar; slate with frosted blues.
+
 Tint slots. A Box tint or a solid or dash line's tint picks one of eight slots. Center names them, and legend labels in every theme are measured with these names:
 
 | Slot | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 |

@@ -14,8 +14,8 @@ use crate::pointer::NodePointer;
 
 pub use overrides::apply_overrides;
 pub use quality::{
-    QualityClass, QualityRow, TOLD_APART_BY_LINE, ThemeReport, contrast_ratio, lightness,
-    theme_quality,
+    QualityClass, QualityRow, TOLD_APART_BY_LINE, ThemeReport, channel_contrast_ratio,
+    channel_lightness, contrast_ratio, lightness, theme_quality,
 };
 
 pub const COLOR_PATTERN: &str = r"^#[0-9A-F]{6}$";

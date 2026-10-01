@@ -44,3 +44,12 @@ jobs:
           name: gallery-docs
           path: ${{ runner.temp }}/gallery-docs
           if-no-files-found: ignore
+      - name: docs/themes matches the theme previews
+        if: ${{ !cancelled() }}
+        run: scripts/check-theme-docs.sh target/release/stencil "$RUNNER_TEMP/theme-docs"
+      - uses: actions/upload-artifact@v4
+        if: ${{ failure() }}
+        with:
+          name: theme-docs
+          path: ${{ runner.temp }}/theme-docs
+          if-no-files-found: ignore

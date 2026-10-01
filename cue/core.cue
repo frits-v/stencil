@@ -45,7 +45,7 @@ import (
 
 // A built-in theme name or a path to a theme file, the THEME_REFERENCE_PATTERN
 // of the Rust model.
-#ThemeReference: =~"^(center|paper|dusk|clear|clear-dark|wire|[^\\x00-\\x1F]{1,395}\\.json)$"
+#ThemeReference: =~"^(center|paper|dusk|clear|clear-dark|wire|tokyo-night|solarized-light|solarized-dark|material-dark|gruvbox-dark|dracula|nord|[^\\x00-\\x1F]{1,395}\\.json)$"
 
 // A built-in grammar name or a path to an exported grammar file, the
 // GRAMMAR_REFERENCE_PATTERN of the Rust model.

@@ -3960,7 +3960,9 @@ Example. g7's gutter could be written as one Col holding two slot Cols, the firs
 
 Reading. The importer reads a restricted line format, not general YAML, so the CLI takes no YAML dependency: every line matching `^\s*(base[0-9A-Fa-f]{2})\s*:\s*"?#?([0-9A-Fa-f]{6})"?\s*(#.*)?$` sets one color, the key's hex digits case-insensitive. It accepts both the tinted-theming `palette:` layout (keys indented under `palette:`) and the legacy flat layout (keys at top level, values with or without `#`). An optional `system:` line must say `base16` or `base24`. base24 is a superset: its eight extra keys, `base10` to `base17`, are read and ignored. A key from `base00` to `base0F` that is missing or given twice is an error, as is a file over 65,536 bytes; the command then prints `error base16 <path>: <message>`, writes nothing and exits 1. An unreadable file exits 2.
 
-Mapping. `r` is 0.18 when `base00` has L* below 50 (a dark scheme) and 0.22 otherwise. `mix(a, b, f)` is the section 12.6 function, `a` moved `f` of the way to `b`. "The higher contrast of x and y on z" picks by WCAG contrast ratio against z, the first on a tie.
+A `--name`, or a file stem, that does not match `THEME_NAME_PATTERN` (a leading digit, more than 32 characters) is a base16 error too: nothing is written and the message asks for `--name`.
+
+Mapping. `r` is 0.18 when `base00` has L* below 50 (a dark scheme) and 0.22 otherwise. `mix(a, b, f)` is the section 12.6 function, `a` moved `f` of the way to `b`. "The higher contrast of x and y on z" picks by WCAG contrast ratio against z, the first on a tie. `surface` is `base02` when its L* lies within 14 of `base00`'s, else `mix(base00, base02, 14 / d)` where `d` is that L* difference. base16 defines `base02` as the selection background and the seven pinned schemes put it 9 to 32 L* from the page; solarized puts it at mid gray, where a card drawn in it outweighs every container and holds its secondary ink at 2:1. The cap leaves tokyo-night, material-dark, dracula and nord on `base02` and lifts gruvbox-dark and both solarized themes less far. `base07` is not used as an ink on its own: nord sets it to a teal accent, so every ink this section picks between a light and a dark candidate picks between `ink.primary` and `base00`.
 
 | Theme path | Value |
 |---|---|
@@ -3968,34 +3970,34 @@ Mapping. `r` is 0.18 when `base00` has L* below 50 (a dark scheme) and 0.22 othe
 | `tint_cue` | `color` |
 | `page`, `frame.frame_fill` | `base00` |
 | `frame.body_fill`, `fact.fill` | `base01` |
-| the fill of every tone but `strong` and `accent` | `mix(base01, base02, 0.5)` |
-| `card.fill`, `tag.fill` | `base02` |
+| the fill of every tone but `strong` and `accent` | `mix(base01, surface, 0.5)` |
+| `card.fill`, `tag.fill` | `surface` |
 | `card.border` and `tag.border` colors; the `neutral`, `warm`, `cool` and `strong` tone borders; `placeholder.border` | `base03` |
 | `foot`, `placeholder.diagonal` | `base04` |
 | `ink.secondary`, `ink.zone_label`, `tag.sub_ink`, `fact.ink`, `legend.text_ink` | `base05` |
 | `ink.primary`, `tag.ink`, `legend.label_ink` | the higher contrast of `base06` and `base07` on `base00` |
 | `kicker`, `frame.border`, `frame.bar_fill`, the `emphasis` tone border | `base0D` |
-| `frame.bar_ink` | the higher contrast of `base00` and `base07` on `base0D` |
+| `frame.bar_ink` | the higher contrast of `base00` and `ink.primary` on `base0D` |
 | the `highlight` tone border | `base0A` |
 | the `accent` tone | fill `mix(base00, base09, r)`, border `base09`, label ink the higher contrast of `base09` and `ink.primary` on that fill |
 | the `soft` tone | the shared tone fill, no border |
 | `gray.color` | `base04` |
 | `deny` | color `base08`, tag border `mix(base00, base08, 0.5)`, tag ink the higher contrast of `base08` and `ink.primary` on `tag.fill` |
 | dash | slot 1's wire, which is `base0D` (section 13.1 rule 3) |
-| each tint slot | wire: the accent in the table below; fill `mix(base00, accent, r)`; border `mix(base00, accent, 0.5)`, the accent at half strength; ink the higher contrast of `base07` and `base00` on the fill |
+| each tint slot | wire: the accent in the table below; fill `mix(base00, accent, r)`; border `mix(base00, accent, 0.5)`, the accent at half strength; ink the higher contrast of `ink.primary` and `base00` on the fill |
 | `badge.customer`, `badge.internal`, `ask` | slot 1, slot 2 and slot 4, each its fill and ink |
 | `callout` | note slot 1, decision slot 6, open slot 4 (wire on fill); risk `base08` on `mix(base00, base08, r)` |
 | `icon_chip`, `iso.chip.fill` | `#FFFFFF` |
 | `lanes.lifeline` | `base04`, 1 px, dashed |
 | `iso.faces` | top 0, left `-s`, right `-2s`, where `s` is the L* difference between `base00` and `base02`, rounded and clamped to 4 to 8 |
 | `iso.slab_thickness` | 6 when the L* difference between `base00` and `base01` is at least 4, else 8, so a slab whose top barely differs from the page shows a thicker shaded side |
-| `iso.tabs` | frame: `frame.bar_fill` with `frame.bar_ink`; top-level: `base03` with the higher contrast of `base00` and `base07` on it; nested width 1.25 |
+| `iso.tabs` | frame: `frame.bar_fill` with `frame.bar_ink`; top-level: `base03` with the higher contrast of `base00` and `ink.primary` on it; nested width 1.25 |
 | `iso.plates` | false for a dark scheme, true otherwise |
 | `iso.chip` ring, shadow | ring `base03`, no shadow |
 | `iso.shadow` | dark scheme: `#000000` at 0.5, blur 3, dy 3; otherwise `ink.primary` at 0.18, blur 2.5, dy 3 |
 | widths, patterns, dots, `iso.frame_sides`, `iso.frame_outline`, `solid_edges`, `edge_width`, `iso.widths` | as the derived roles of section 13.5 |
 
-Tint slots. Slot 1 stays the blue, and slots keep the hue families of `TINT_NAMES` where base16 has them; base16 has no violet or teal of its own, so its red and brown take those slots:
+Tint slots. Slot 1 stays the blue, and slots keep the hue families of `TINT_NAMES` where base16 has them: cyan takes teal's slot 3, and base16, which has no violet and only one cyan, puts its red in violet's slot 5 and its brown in the second cyan's slot 8:
 
 | Slot | base16 key | Usual base16 role | Slot name |
 |---|---|---|---|
@@ -4010,7 +4012,7 @@ Tint slots. Slot 1 stays the blue, and slots keep the hue families of `TINT_NAME
 
 Slot 5 and the deny line both take `base08`, so a solid slot 5 line and a deny line share a color. The deny line keeps its dashed pattern and its tag, which carry the distinction, as they do in the accessible palettes, where the research found deny close to vermillion under dichromacy; an author who needs both reaches for another slot. Slot names are fixed by slot, not read from the scheme, and they are short enough for the relabel slack of section 13.4 rule 4.
 
-Report. The importer runs `theme_quality` on the result and writes `<theme file stem>.report.txt` beside the theme file, holding exactly the lines `stencil theme check` prints for it (section 13.12). It always writes both files once the scheme reads. Exit 0 when every row passes; exit 1 when any row fails, after printing every failing row with its roles. Output is deterministic: the theme JSON is `serde_json::to_string_pretty` of the `Theme` in declaration order plus a trailing newline, so a re-import of the same scheme writes the same bytes.
+Report. The importer runs `theme_quality` on the result and writes `<theme file stem>.report.txt` beside the theme file, holding exactly the lines `stencil theme check <name>` prints for it (section 13.12): the summary line names the theme, never the path it was written to, so a report reads the same wherever it is written and equals the output of `stencil theme check` on the built-in of that name. It always writes both files once the scheme reads. It prints the report lines, which name every failing row with its roles, then the two written paths. Exit 0 when every row passes; exit 1 when any row fails. Output is deterministic: the theme JSON is `serde_json::to_string_pretty` of the `Theme` in declaration order plus a trailing newline, so a re-import of the same scheme writes the same bytes.
 
 The imported tier. Seven schemes are committed under `crates/stencil-render/themes/imported/`, each as `<name>.json`, `<name>.base16.yaml` (the pinned source, byte for byte) and `<name>.report.txt`, with `SOURCES.md` listing for each the source URL, the repository commit and the SHA-256 of the YAML. All seven come from `github.com/tinted-theming/schemes` at commit `d70255b752ac8328ee3d549c72a1a55ce5fc794f`, path `base16/<file>`:
 
@@ -4038,7 +4040,7 @@ None of the seven passes the thresholds of section 13.4 rule 10. A prototype of 
 | dracula | 34.56 | 6.75 protanopia | 7.46 | 1.24 protanopia |
 | nord | 13.94 | 6.55 protanopia | 2.77 | 1.12 protanopia |
 
-The separation failures belong to the source accents: eight terminal colors chosen for syntax highlighting collapse in pairs under dichromacy (yellow and green, blue and magenta, red and brown), and no mapping that takes the accents as wires can separate them. tokyo-night's base16 port also assigns lavender to `base08` and two cyans to `base0A` and `base0D`, so its slot names do not describe its colors. Several contrast rows fail as well, for example `ink.secondary on card.fill` at 2.01:1 in both solarized themes, where `base05` sits on `base02`; each report lists them. The imported tier therefore ships with its failures recorded rather than repaired: a repair that moved the accents would stop being a fixed mapping and would change each scheme's look. The tests hold the record exactly instead (section 13.14), the prime themes topic says the imported tier fails the colorblind thresholds and points at `stencil theme check <name>`, and the gallery renders only the six designed themes.
+The separation failures belong to the source accents: eight terminal colors chosen for syntax highlighting collapse in pairs under dichromacy (yellow and green, blue and magenta, red and brown), and no mapping that takes the accents as wires can separate them. tokyo-night's base16 port also assigns lavender to `base08` and two cyans to `base0A` and `base0D`, so its slot names do not describe its colors. Several contrast rows fail as well, for example `ink.secondary on card.fill` at 3.52:1 in solarized-dark and 3.47:1 in solarized-light, where `base05` sits on the capped `surface` (2.01:1 on `base02` itself); each report lists them. The imported tier therefore ships with its failures recorded rather than repaired: a repair that moved the accents would stop being a fixed mapping and would change each scheme's look. The tests hold the record exactly instead (section 13.14), the prime themes topic says the imported tier fails the colorblind thresholds and points at `stencil theme check <name>`, and the gallery renders only the six designed themes.
 
 ### 13.10 Checks
 
@@ -4136,6 +4138,7 @@ stencil gallery <out-dir> [--examples <dir>]
 stencil theme show <name>
 stencil theme check <theme>
 stencil theme import --base16 <scheme.yaml> [--name <name>] -o <theme file>
+stencil theme preview <theme> -o <png> [--scale <1-4>]
 stencil prime [<topic>]
 stencil prime grammar <name>
 ```
@@ -4151,6 +4154,7 @@ stencil prime grammar <name>
 | `theme show` | prints a built-in theme's JSON exactly as embedded, so an author can copy it as the start of a theme file or an override; an unknown name exits 2 | the theme JSON |
 | `theme check` | loads the theme (structural rules exit 1 as in section 13.4 rule 5), runs `theme_quality`, prints one line per row | row lines and a summary |
 | `theme import` | section 13.9 | the report lines, then the two written paths, absolute |
+| `theme preview` | renders the preview figure embedded at `crates/stencil-cli/preview/theme-preview.json` under the theme, with the kicker `theme preview · <theme name>`, to one PNG. The figure is a gcp page 1,100 px wide that uses every container kind, the eight tint slots as region fills, every line kind, a Tee, a routed link, a callout and a text block; a test runs `check` on it under every built-in theme. `mise run theme-docs` writes every built-in's preview to `docs/themes/<name>.png` at scale 1, the README's theme table embeds them, and CI regenerates and compares them byte for byte | the written path, absolute |
 | `prime` | prints the core briefing (`prime/base.md`), which names the built-in grammars and points at `stencil prime grammar <name>` | the briefing |
 | `prime grammar <name>` | prints `prime/grammars/<name>.md` for a built-in grammar, with its kind tables rendered from the grammar data as the vocabulary table is rendered from the schema; an unknown name writes one line to stderr naming the grammars and exits 2 | the grammar briefing |
 

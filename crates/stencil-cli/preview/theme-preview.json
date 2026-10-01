@@ -1,0 +1,207 @@
+{
+  "title": "Every role of a theme in one figure",
+  "kicker": "theme preview · center",
+  "lede": "Eight tint slots, every container tone, the five line kinds, a routed link, a callout and a text block, drawn in the theme named above.",
+  "foot": "stencil theme preview · the same figure under every theme; only paint changes",
+  "canvas": "customer",
+  "grammar": "gcp",
+  "width": 1100,
+  "body": [
+    {
+      "tag": "Row",
+      "gap": 8,
+      "grow": [0, 0, 1],
+      "children": [
+        {
+          "tag": "Col",
+          "grow": [1, 1, 1],
+          "children": [
+            {
+              "tag": "Box",
+              "kind": "onprem",
+              "tint": 1,
+              "label": "On-prem · site 1",
+              "children": [
+                { "tag": "Item", "kind": "product", "icon": "hybrid", "title": "Edge router 1", "subtitle": "port toward Google" }
+              ]
+            },
+            {
+              "tag": "Box",
+              "kind": "onprem",
+              "tint": 2,
+              "label": "On-prem · site 2",
+              "children": [
+                { "tag": "Item", "kind": "product", "icon": "hybrid", "title": "Edge router 2", "subtitle": "port toward Google" }
+              ]
+            },
+            {
+              "tag": "Box",
+              "kind": "optional",
+              "label": "Proposed · partner",
+              "children": [
+                { "tag": "Item", "kind": "product", "icon": "compute", "title": "Partner feed", "subtitle": "batch export" }
+              ]
+            }
+          ]
+        },
+        {
+          "tag": "Col",
+          "grow": [1, 1, 1],
+          "children": [
+            {
+              "tag": "Col",
+              "justify": "center",
+              "children": [
+                {
+                  "tag": "Tee",
+                  "line": "solid",
+                  "tint": 1,
+                  "hub": "Interconnect",
+                  "arms": [
+                    { "tag": "Pipe", "dir": "h", "line": "solid", "tint": 1, "label": "VLAN 1" },
+                    { "tag": "Pipe", "dir": "h", "line": "solid", "tint": 1, "label": "VLAN 2" }
+                  ]
+                }
+              ]
+            },
+            {
+              "tag": "Col",
+              "gap": 12,
+              "justify": "center",
+              "children": [
+                { "tag": "Pipe", "dir": "h", "line": "solid", "tint": 2, "label": "VLAN 3" },
+                { "tag": "Pipe", "dir": "h", "line": "deny", "label": "blocked" }
+              ]
+            },
+            {
+              "tag": "Col",
+              "gap": 12,
+              "justify": "center",
+              "children": [
+                { "tag": "Pipe", "dir": "h", "line": "dash", "label": "failover" },
+                { "tag": "Pipe", "dir": "h", "line": "gray", "label": "logs" }
+              ]
+            }
+          ]
+        },
+        {
+          "tag": "Box",
+          "kind": "gcp",
+          "label": "Google Cloud",
+          "children": [
+            {
+              "tag": "Box",
+              "kind": "vpc",
+              "label": "Shared VPC",
+              "children": [
+                {
+                  "tag": "Row",
+                  "grow": [1, 1, 1, 1],
+                  "children": [
+                    { "tag": "Box", "kind": "region", "tint": 1, "label": "Tint 1", "children": [ { "tag": "Item", "kind": "product", "icon": "cloud-run", "title": "Run", "facts": [ { "text": "svc-a", "source": "built" } ] } ] },
+                    { "tag": "Box", "kind": "region", "tint": 2, "label": "Tint 2", "children": [ { "tag": "Item", "kind": "product", "icon": "gke", "title": "GKE", "facts": [ { "text": "gke-b", "source": "built" } ] } ] },
+                    { "tag": "Box", "kind": "region", "tint": 3, "label": "Tint 3", "children": [ { "tag": "Item", "kind": "product", "icon": "cloud-sql", "title": "SQL", "facts": [ { "text": "db-c", "source": "built" } ] } ] },
+                    { "tag": "Box", "kind": "region", "tint": 4, "label": "Tint 4", "children": [ { "tag": "Item", "kind": "product", "icon": "compute-engine", "title": "VMs", "facts": [ { "text": "vm-d", "source": "built" } ] } ] }
+                  ]
+                },
+                {
+                  "tag": "Row",
+                  "grow": [1, 1, 1, 1],
+                  "children": [
+                    { "tag": "Box", "kind": "region", "tint": 5, "label": "Tint 5", "children": [ { "tag": "Item", "kind": "product", "icon": "vertex-ai", "title": "Vertex", "facts": [ { "text": "ep-e", "source": "built" } ] } ] },
+                    { "tag": "Box", "kind": "region", "tint": 6, "label": "Tint 6", "children": [ { "tag": "Item", "kind": "product", "icon": "networking", "title": "Router", "facts": [ { "text": "cr-f", "source": "built" } ] } ] },
+                    { "tag": "Box", "kind": "region", "tint": 7, "label": "Tint 7", "children": [ { "tag": "Item", "kind": "product", "icon": "security-identity", "title": "IAM", "facts": [ { "text": "sa-g", "source": "built" } ] } ] },
+                    { "tag": "Box", "kind": "region", "tint": 8, "label": "Tint 8", "children": [ { "tag": "Item", "kind": "product", "icon": "observability", "title": "Logs", "facts": [ { "text": "sink-h", "source": "built" } ] } ] }
+                  ]
+                },
+                {
+                  "tag": "Box",
+                  "kind": "subnet",
+                  "label": "Subnet · app",
+                  "children": [
+                    {
+                      "tag": "Box",
+                      "kind": "k8s",
+                      "label": "Cluster · prod",
+                      "children": [
+                        { "tag": "Item", "kind": "product", "icon": "containers", "title": "Workers", "subtitle": "node pool" }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "tag": "Row",
+              "grow": [1, 1, 1],
+              "children": [
+                {
+                  "tag": "Box",
+                  "kind": "project",
+                  "label": "Project · ops",
+                  "children": [
+                    { "tag": "Item", "kind": "product", "icon": "devops", "title": "Deploys", "subtitle": "Cloud Build" }
+                  ]
+                },
+                {
+                  "tag": "Box",
+                  "kind": "perimeter",
+                  "label": "Service perimeter",
+                  "children": [
+                    { "tag": "Item", "kind": "product", "icon": "scc", "title": "Guard", "subtitle": "Security Command Center" }
+                  ]
+                },
+                {
+                  "tag": "Box",
+                  "kind": "apis",
+                  "label": "Google APIs",
+                  "children": [
+                    {
+                      "tag": "Col",
+                      "gap": 48,
+                      "children": [
+                        { "tag": "Item", "kind": "product", "id": "storage", "icon": "cloud-storage", "title": "Lake", "subtitle": "Cloud Storage" },
+                        { "tag": "Item", "kind": "product", "id": "warehouse", "icon": "bigquery", "title": "Warehouse", "subtitle": "BigQuery" }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "Row",
+      "grow": [1, 1],
+      "children": [
+        {
+          "tag": "Text",
+          "heading": "Reading the figure",
+          "list": "bulleted",
+          "body": [
+            "Region labels name their tint slot.",
+            "Each line kind appears once in the gutter."
+          ]
+        },
+        {
+          "tag": "Callout",
+          "kind": "decision",
+          "title": "Decision: one figure per theme",
+          "text": "The layout never changes between themes, so previews compare paint alone."
+        }
+      ]
+    }
+  ],
+  "links": [
+    { "from": "storage", "to": "warehouse", "line": "gray", "label": "load" }
+  ],
+  "legend": [
+    { "line": "solid", "tint": 1, "text": "paired path, site 1" },
+    { "line": "solid", "tint": 2, "text": "paired path, site 2" },
+    { "line": "dash", "text": "failover" },
+    { "line": "gray", "text": "internal call" },
+    { "line": "deny", "text": "blocked path" }
+  ]
+}

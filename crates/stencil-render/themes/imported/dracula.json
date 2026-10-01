@@ -1,0 +1,255 @@
+{
+  "name": "dracula",
+  "tint_cue": "color",
+  "page": "#282A36",
+  "ink": {
+    "primary": "#FFFFFF",
+    "secondary": "#F8F8F2",
+    "zone_label": "#F8F8F2"
+  },
+  "kicker": "#BD93F9",
+  "badge": {
+    "customer": {
+      "fill": "#433D59",
+      "ink": "#FFFFFF"
+    },
+    "internal": {
+      "fill": "#4F3850",
+      "ink": "#FFFFFF"
+    }
+  },
+  "card": {
+    "fill": "#44475A",
+    "border": {
+      "color": "#6272A4",
+      "width": 1.5,
+      "pattern": "solid"
+    }
+  },
+  "fact": {
+    "fill": "#21222C",
+    "ink": "#F8F8F2"
+  },
+  "ask": {
+    "fill": "#4C4F45",
+    "ink": "#FFFFFF"
+  },
+  "tag": {
+    "fill": "#44475A",
+    "border": {
+      "color": "#6272A4",
+      "width": 1.5,
+      "pattern": "solid"
+    },
+    "ink": "#FFFFFF",
+    "sub_ink": "#F8F8F2"
+  },
+  "legend": {
+    "label_ink": "#FFFFFF",
+    "text_ink": "#F8F8F2"
+  },
+  "foot": "#9EA8C7",
+  "callout": {
+    "note": {
+      "accent": "#BD93F9",
+      "fill": "#433D59"
+    },
+    "risk": {
+      "accent": "#FF5555",
+      "fill": "#4F323C"
+    },
+    "decision": {
+      "accent": "#50FA7B",
+      "fill": "#2F4F42"
+    },
+    "open": {
+      "accent": "#F1FA8C",
+      "fill": "#4C4F45"
+    }
+  },
+  "placeholder": {
+    "border": "#6272A4",
+    "diagonal": "#9EA8C7"
+  },
+  "icon_chip": "#FFFFFF",
+  "frame": {
+    "border": "#BD93F9",
+    "frame_fill": "#282A36",
+    "bar_fill": "#BD93F9",
+    "bar_ink": "#282A36",
+    "body_fill": "#21222C"
+  },
+  "tones": {
+    "neutral": {
+      "fill": "#333543",
+      "border": "#6272A4"
+    },
+    "warm": {
+      "fill": "#333543",
+      "border": "#6272A4"
+    },
+    "cool": {
+      "fill": "#333543",
+      "border": "#6272A4"
+    },
+    "soft": {
+      "fill": "#333543"
+    },
+    "strong": {
+      "border": "#6272A4"
+    },
+    "highlight": {
+      "fill": "#333543",
+      "border": "#F1FA8C"
+    },
+    "emphasis": {
+      "fill": "#333543",
+      "border": "#BD93F9"
+    },
+    "accent": {
+      "fill": "#4F4440",
+      "border": "#FFB86C",
+      "label_ink": "#FFFFFF"
+    }
+  },
+  "containers": {},
+  "lanes": {
+    "lifeline": {
+      "color": "#9EA8C7",
+      "width": 1.0,
+      "pattern": "dashed"
+    }
+  },
+  "gray": {
+    "color": "#9EA8C7",
+    "width": 2.0,
+    "pattern": "solid",
+    "dot": "filled"
+  },
+  "solid": {
+    "width": 2.0,
+    "dots": [
+      "filled",
+      "filled",
+      "filled",
+      "filled",
+      "filled",
+      "filled",
+      "filled",
+      "filled"
+    ]
+  },
+  "dash": {
+    "width": 2.0,
+    "pattern": "dashed",
+    "dot": "filled"
+  },
+  "deny": {
+    "color": "#FF5555",
+    "width": 2.0,
+    "pattern": "dashed",
+    "dot": "filled",
+    "tag_border": "#944046",
+    "tag_ink": "#FFFFFF"
+  },
+  "tints": [
+    {
+      "name": "blue",
+      "fill": "#433D59",
+      "border": "#735F98",
+      "ink": "#FFFFFF",
+      "wire": "#BD93F9"
+    },
+    {
+      "name": "pink",
+      "fill": "#4F3850",
+      "border": "#94527E",
+      "ink": "#FFFFFF",
+      "wire": "#FF79C6"
+    },
+    {
+      "name": "cyan",
+      "fill": "#3A4C5A",
+      "border": "#5A8A9A",
+      "ink": "#FFFFFF",
+      "wire": "#8BE9FD"
+    },
+    {
+      "name": "yellow",
+      "fill": "#4C4F45",
+      "border": "#8D9261",
+      "ink": "#FFFFFF",
+      "wire": "#F1FA8C"
+    },
+    {
+      "name": "red",
+      "fill": "#4F323C",
+      "border": "#944046",
+      "ink": "#FFFFFF",
+      "wire": "#FF5555"
+    },
+    {
+      "name": "green",
+      "fill": "#2F4F42",
+      "border": "#3C9259",
+      "ink": "#FFFFFF",
+      "wire": "#50FA7B"
+    },
+    {
+      "name": "orange",
+      "fill": "#4F4440",
+      "border": "#947151",
+      "ink": "#FFFFFF",
+      "wire": "#FFB86C"
+    },
+    {
+      "name": "brown",
+      "fill": "#3C2C35",
+      "border": "#612F35",
+      "ink": "#FFFFFF",
+      "wire": "#993333"
+    }
+  ],
+  "iso": {
+    "faces": {
+      "top": 0,
+      "left": -8,
+      "right": -16
+    },
+    "slab_thickness": 8.0,
+    "frame_sides": {
+      "left": "#BD93F9",
+      "right": "#9A59F6"
+    },
+    "frame_outline": 1.5,
+    "solid_edges": "none",
+    "edge_width": 1.5,
+    "plates": false,
+    "tabs": {
+      "frame": {
+        "fill": "#BD93F9",
+        "ink": "#282A36"
+      },
+      "top": {
+        "fill": "#6272A4",
+        "ink": "#FFFFFF"
+      },
+      "nested_width": 1.25
+    },
+    "chip": {
+      "fill": "#FFFFFF",
+      "ring": "#6272A4"
+    },
+    "shadow": {
+      "color": "#000000",
+      "opacity": 0.5,
+      "blur": 3.0,
+      "dy": 3.0
+    },
+    "widths": {
+      "primary": 3.75,
+      "secondary": 2.5,
+      "gray": 2.0
+    }
+  }
+}
