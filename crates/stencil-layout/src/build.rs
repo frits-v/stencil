@@ -6,9 +6,9 @@ use stencil_model::pointer::NodePointer;
 use stencil_model::text::TextStyleName;
 use stencil_model::{
     Arrow, BoxNode, Callout, Canvas, Chrome, DEPTH_MAX, Fact, FactSource, Frame, GAP_DEFAULT_PX,
-    Grammar, Item, Justify, LANE_GAP_DEFAULT_PX, LegendEntry, ListKind, Node, Note, NoteKind, Page,
-    Pipe, PipeDir, Tee, TeeArm, Text, VetRule, Violation, box_key, box_tint, legend_label,
-    line_key, line_tint,
+    Grammar, Item, Justify, LANE_GAP_DEFAULT_PX, Lanes, LegendEntry, ListKind, Node, Note,
+    NoteKind, Page, Pipe, PipeDir, Tee, TeeArm, Text, VetRule, Violation, box_key, box_tint,
+    legend_label, line_key, line_tint,
 };
 use taffy::prelude::{
     AlignItems, AlignSelf, Dimension, Display, FlexDirection, FlexWrap, JustifyContent,
@@ -16,6 +16,7 @@ use taffy::prelude::{
     fr, length, line,
 };
 
+use crate::lanes::LanesPlan;
 use crate::styles::text_color;
 use crate::{ContainerLook, LayoutError, NodeTag, PartName, TextAlign};
 
@@ -87,13 +88,18 @@ enum Placement {
     TeeArm { row_line: i16 },
 }
 
-pub(crate) fn build_page(page: &Page, grammar: &Grammar) -> Result<BuiltPage, LayoutError> {
+pub(crate) fn build_page(
+    page: &Page,
+    grammar: &Grammar,
+    lanes_plan: &LanesPlan,
+) -> Result<BuiltPage, LayoutError> {
     let mut builder = Builder {
         tree: TaffyTree::new(),
         records: Vec::new(),
         text_leaves: Vec::new(),
         canvas: page.canvas,
         grammar,
+        lanes_plan,
     };
     builder.tree.disable_rounding();
     let root = builder.add_page(page)?;
@@ -105,12 +111,13 @@ pub(crate) fn build_page(page: &Page, grammar: &Grammar) -> Result<BuiltPage, La
     })
 }
 
-struct Builder<'grammar> {
+struct Builder<'page> {
     tree: LayoutTree,
     records: Vec<NodeRecord>,
     text_leaves: Vec<TextLeaf>,
     canvas: Canvas,
-    grammar: &'grammar Grammar,
+    grammar: &'page Grammar,
+    lanes_plan: &'page LanesPlan,
 }
 
 /// Every taffy node starts from this: content that does not fit overflows (section 2.1).
@@ -750,14 +757,8 @@ impl Builder<'_> {
                 placement,
                 depth,
             ),
-            Node::Lanes(lanes) => self.add_flex_container(
-                FlexContainer {
-                    tag: NodeTag::Lanes,
-                    gap: Some(lanes.gap.unwrap_or(LANE_GAP_DEFAULT_PX)),
-                    grow: None,
-                    justify: None,
-                    children: &lanes.children,
-                },
+            Node::Lanes(lanes) => self.add_lanes(
+                lanes,
                 pointer,
                 parent_index,
                 parent_container,
@@ -807,7 +808,7 @@ impl Builder<'_> {
         depth: usize,
     ) -> Result<(), LayoutError> {
         let gap = f32::from(container.gap.unwrap_or(GAP_DEFAULT_PX));
-        let lays_out_as_row = matches!(container.tag, NodeTag::Row | NodeTag::Lanes);
+        let lays_out_as_row = container.tag == NodeTag::Row;
         let (direction, gap_size) = if lays_out_as_row {
             (
                 FlexDirection::Row,
@@ -872,6 +873,78 @@ impl Builder<'_> {
                 index,
                 node,
                 child_placement,
+                depth + 1,
+            )?;
+        }
+        Ok(())
+    }
+
+    /// A Lanes node (section 13.6): a column of two parts, `Heads`, a row of equal columns
+    /// `gap` apart holding the heads, and `Band`, a leaf as wide as the node whose height
+    /// is the sum of its message rows. The heads stay the node's children in geometry.
+    fn add_lanes(
+        &mut self,
+        lanes: &Lanes,
+        pointer: NodePointer,
+        parent_index: usize,
+        parent_container: NodeId,
+        placement: Placement,
+        depth: usize,
+    ) -> Result<(), LayoutError> {
+        let mut style = flex_column(AlignItems::STRETCH);
+        apply_flex_placement(&mut style, placement);
+        let lanes_node = self.container(style, parent_container, &pointer)?;
+        let gap = f32::from(lanes.gap.unwrap_or(LANE_GAP_DEFAULT_PX));
+        let heads_style = Style {
+            gap: taffy::Size {
+                width: length(gap),
+                height: length(0.0),
+            },
+            ..flex_row(AlignItems::STRETCH)
+        };
+        let heads = self.container(heads_style, lanes_node, &pointer)?;
+        let band_height = self.lanes_plan.band_height(&pointer);
+        let band = self.plain_leaf(
+            Style {
+                size: taffy::Size {
+                    width: auto(),
+                    height: length(band_height),
+                },
+                ..base_style()
+            },
+            lanes_node,
+            &pointer,
+        )?;
+        let mut record = Self::record(
+            pointer.clone(),
+            NodeTag::Lanes,
+            None,
+            Some(parent_index),
+            lanes_node,
+        );
+        record.parts = vec![
+            PartRecord {
+                name: PartName::Heads,
+                taffy_node: heads,
+                text_leaf: None,
+            },
+            PartRecord {
+                name: PartName::Band,
+                taffy_node: band,
+                text_leaf: None,
+            },
+        ];
+        let index = self.push_record(record);
+        let children_pointer = pointer.child("children");
+        for (child_index, child) in lanes.children.iter().enumerate() {
+            self.add_body_node(
+                child,
+                children_pointer.index(child_index),
+                index,
+                heads,
+                Placement::RowItem {
+                    weight: default_weight(NodeTag::Lanes, child),
+                },
                 depth + 1,
             )?;
         }

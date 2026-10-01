@@ -443,6 +443,128 @@ fn lanes_too_many_and_lanes_in_iso() {
     );
 }
 
+/// Plain-grammar examples, each with Lanes or links, vetted under the grammar they name.
+const PLAIN_EXAMPLES: [(&str, &str); 3] = [
+    ("sequence", include_str!("../../../examples/sequence.json")),
+    ("org", include_str!("../../../examples/org.json")),
+    (
+        "onprem-network",
+        include_str!("../../../examples/onprem-network.json"),
+    ),
+];
+
+#[test]
+fn every_plain_example_parses_round_trips_and_vets_clean_under_plain() {
+    let grammar = plain();
+    for (name, document) in PLAIN_EXAMPLES {
+        let page =
+            parse_and_vet(document, &grammar).unwrap_or_else(|error| panic!("{name}: {error:?}"));
+        assert_eq!(page.grammar.as_deref(), Some("plain"), "{name}");
+        let written = serde_json::to_string(&page).unwrap();
+        let reparsed = parse_and_vet(&written, &grammar).unwrap();
+        assert_eq!(reparsed, page, "{name}: round trip");
+    }
+}
+
+fn head(id: &str) -> Node {
+    Node::Item(Item {
+        id: Some(id.to_string()),
+        kind: "product".to_string(),
+        icon: None,
+        title: id.to_string(),
+        subtitle: Some("Cloud Run".to_string()),
+        facts: Vec::new(),
+    })
+}
+
+fn lanes_of(heads: &[&str]) -> Node {
+    Node::Lanes(Lanes {
+        id: None,
+        gap: None,
+        children: heads.iter().map(|id| head(id)).collect(),
+    })
+}
+
+fn ordered(from: &str, to: &str, order: u16) -> stencil_model::Link {
+    let mut ordered_link = link(from, to);
+    ordered_link.order = Some(order);
+    ordered_link
+}
+
+/// Two Lanes nodes, `a b c` and `d e`, beside an Item `outside`, with one legend entry for
+/// the solid tint 1 links the tests add.
+fn two_lanes_page(links: Vec<stencil_model::Link>) -> Page {
+    let mut page = page_with_body(vec![
+        lanes_of(&["a", "b", "c"]),
+        lanes_of(&["d", "e"]),
+        head("outside"),
+    ]);
+    page.legend = vec![legend_entry(Line::Solid, Some(1), "call")];
+    page.links = links;
+    page
+}
+
+#[test]
+fn ordered_links_between_two_heads_of_one_lanes_node_vet_clean_and_round_trip() {
+    let page = two_lanes_page(vec![
+        ordered("a", "b", 1),
+        ordered("c", "a", 2),
+        ordered("d", "e", 1),
+    ]);
+    assert_eq!(rules(&page, &gcp()), vec![]);
+    let written = serde_json::to_value(&page).unwrap();
+    assert_eq!(written["links"][1]["order"], 2);
+    let reparsed: Page = serde_json::from_value(written).unwrap();
+    assert_eq!(reparsed, page);
+    let unordered = serde_json::to_value(two_lanes_page(vec![link("a", "outside")])).unwrap();
+    assert!(unordered["links"][0].get("order").is_none());
+}
+
+#[test]
+fn an_ordered_link_that_leaves_its_lanes_node_is_rejected_at_its_order() {
+    let message = "an ordered link joins two lanes of one Lanes node";
+    for (from, to) in [("a", "outside"), ("outside", "b"), ("a", "d")] {
+        let page = two_lanes_page(vec![ordered(from, to, 1)]);
+        assert_eq!(
+            rules(&page, &gcp()),
+            one("/links/0/order", "link-order-outside-lanes", message),
+            "{from} to {to}"
+        );
+    }
+    // A node inside a head is not a head.
+    let mut page = page_with_body(vec![Node::Lanes(Lanes {
+        id: None,
+        gap: None,
+        children: vec![
+            head("a"),
+            box_node("project", None, "Team", vec![head("inner")]),
+        ],
+    })]);
+    page.legend = vec![legend_entry(Line::Solid, Some(1), "call")];
+    page.links = vec![ordered("a", "inner", 1)];
+    assert_eq!(
+        rules(&page, &gcp()),
+        one("/links/0/order", "link-order-outside-lanes", message)
+    );
+}
+
+#[test]
+fn two_messages_of_one_lanes_node_with_one_order_are_rejected_at_the_later_link() {
+    let page = two_lanes_page(vec![
+        ordered("a", "b", 3),
+        ordered("d", "e", 3),
+        ordered("b", "c", 3),
+    ]);
+    assert_eq!(
+        rules(&page, &gcp()),
+        one(
+            "/links/2/order",
+            "link-order-duplicate",
+            "order 3 is already used by /links/0"
+        )
+    );
+}
+
 #[test]
 fn a_link_carries_line_and_tint() {
     let mut page = page_with_link();

@@ -12,6 +12,7 @@ use stencil_model::{
     VetRule, Violation, body_nodes, line_tint,
 };
 
+use crate::lanes::{LanesPlan, MessageRow};
 use crate::styles::text_color;
 use crate::{
     BoxRect, GEOMETRY_EPSILON_PX, LayoutError, LinkRoute, NodeGeometry, NodeTag, PageGeometry,
@@ -42,10 +43,12 @@ pub(crate) struct Obstacle {
     pub bounds: BoxRect,
 }
 
-/// Routes every link of a vetted page against finished geometry, in link order.
+/// Routes every link of a vetted page against finished geometry, in link order. A message
+/// of a Lanes node is not searched for: it runs straight across its row (section 13.6).
 pub(crate) fn route_links(
     page: &Page,
     geometry: &PageGeometry,
+    lanes_plan: &LanesPlan,
     measurer: &mut dyn TextMeasurer,
 ) -> Result<Vec<LinkRoute>, LayoutError> {
     let nodes_by_id = nodes_by_id(page, geometry);
@@ -62,21 +65,12 @@ pub(crate) fn route_links(
                 message: "link endpoint is not a geometry node".to_string(),
             });
         };
-        let (from_side, to_side) = choose_sides(link, &from.bounds, &to.bounds);
-        let start = side_midpoint(&from.bounds, from_side);
-        let end = side_midpoint(&to.bounds, to_side);
-        let obstacles = link_obstacles(geometry, from_node, to_node);
-        let endpoints = Endpoints {
-            from: from.bounds,
-            to: to.bounds,
-            start,
-            end,
-            from_side,
-            to_side,
-        };
-        let (points, status) = match grid_route(&obstacles, &endpoints, &link.via) {
-            Some(points) if points.len() <= LINK_SEGMENTS_MAX + 1 => (points, RouteStatus::Routed),
-            Some(_) | None => (fallback_route(start, end), RouteStatus::Fallback),
+        let (points, status) = match lanes_plan.message(index) {
+            Some(row) => (
+                message_points(geometry, row, &from.bounds, &to.bounds, &link_pointer)?,
+                RouteStatus::Routed,
+            ),
+            None => searched_route(geometry, link, (from_node, from), (to_node, to)),
         };
         let parts = tag_parts(page, link, &link_pointer, &points, measurer)?;
         let tag = parts.first().map(|part| part.bounds);
@@ -93,6 +87,60 @@ pub(crate) fn route_links(
         });
     }
     Ok(routes)
+}
+
+/// The A* route of section 11.2, or the fallback L when there is none.
+fn searched_route(
+    geometry: &PageGeometry,
+    link: &Link,
+    (from_node, from): (usize, &NodeGeometry),
+    (to_node, to): (usize, &NodeGeometry),
+) -> (Vec<PagePoint>, RouteStatus) {
+    let (from_side, to_side) = choose_sides(link, &from.bounds, &to.bounds);
+    let start = side_midpoint(&from.bounds, from_side);
+    let end = side_midpoint(&to.bounds, to_side);
+    let obstacles = link_obstacles(geometry, from_node, to_node);
+    let endpoints = Endpoints {
+        from: from.bounds,
+        to: to.bounds,
+        start,
+        end,
+        from_side,
+        to_side,
+    };
+    match grid_route(&obstacles, &endpoints, &link.via) {
+        Some(points) if points.len() <= LINK_SEGMENTS_MAX + 1 => (points, RouteStatus::Routed),
+        Some(_) | None => (fallback_route(start, end), RouteStatus::Fallback),
+    }
+}
+
+/// A message: two points, from the center x of its `from` head to the center x of its `to`
+/// head, at the middle of its row in the band of its Lanes node.
+fn message_points(
+    geometry: &PageGeometry,
+    row: &MessageRow,
+    from: &BoxRect,
+    to: &BoxRect,
+    link_pointer: &NodePointer,
+) -> Result<Vec<PagePoint>, LayoutError> {
+    let band = geometry
+        .node(&row.lanes)
+        .and_then(|lanes| lanes.part(PartName::Band))
+        .ok_or_else(|| LayoutError::Taffy {
+            pointer: link_pointer.clone(),
+            message: format!("message names Lanes {} that has no band", row.lanes),
+        })?;
+    let y = row.line_y(band.bounds.y);
+    Ok(vec![
+        PagePoint {
+            x: from.x + from.width / 2.0,
+            y,
+        },
+        PagePoint {
+            x: to.x + to.width / 2.0,
+            y,
+        },
+    ])
 }
 
 /// Geometry index of every body node that carries an id.
@@ -763,17 +811,25 @@ fn fallback_route(start: PagePoint, end: PagePoint) -> Vec<PagePoint> {
     ])
 }
 
-/// The tag of a labeled link: sized like a pipe tag from the label and sub measured at
-/// max-content, centered on the midpoint of the longest segment (the first one on a tie).
-fn tag_parts(
+/// The label and sub runs of a labeled link's tag, measured at max-content, and the tag
+/// size they give (section 11.2): the content plus a pipe tag's padding and border.
+pub(crate) struct MeasuredTag {
+    label: TextRun,
+    sub: Option<TextRun>,
+    content_width: f32,
+    pub width: f32,
+    pub height: f32,
+}
+
+/// The measured tag of `link`, or None when it has no label and so no tag.
+pub(crate) fn measure_tag(
     page: &Page,
     link: &Link,
     link_pointer: &NodePointer,
-    points: &[PagePoint],
     measurer: &mut dyn TextMeasurer,
-) -> Result<Vec<Part>, LayoutError> {
+) -> Result<Option<MeasuredTag>, LayoutError> {
     let Some(label) = &link.label else {
-        return Ok(Vec::new());
+        return Ok(None);
     };
     let label_run = tag_run(
         page,
@@ -802,8 +858,34 @@ fn tag_parts(
         + sub_run
             .as_ref()
             .map_or(0.0, |sub| TAG_SUB_GAP_PX + sub.metrics.height_px);
-    let tag_width = content_width + 2.0 * (TAG_PADDING_X_PX + TAG_BORDER_PX);
-    let tag_height = content_height + 2.0 * (TAG_PADDING_Y_PX + TAG_BORDER_PX);
+    Ok(Some(MeasuredTag {
+        label: label_run,
+        sub: sub_run,
+        content_width,
+        width: content_width + 2.0 * (TAG_PADDING_X_PX + TAG_BORDER_PX),
+        height: content_height + 2.0 * (TAG_PADDING_Y_PX + TAG_BORDER_PX),
+    }))
+}
+
+/// The tag of a labeled link: sized like a pipe tag from the label and sub measured at
+/// max-content, centered on the midpoint of the longest segment (the first one on a tie).
+fn tag_parts(
+    page: &Page,
+    link: &Link,
+    link_pointer: &NodePointer,
+    points: &[PagePoint],
+    measurer: &mut dyn TextMeasurer,
+) -> Result<Vec<Part>, LayoutError> {
+    let Some(measured) = measure_tag(page, link, link_pointer, measurer)? else {
+        return Ok(Vec::new());
+    };
+    let MeasuredTag {
+        label: label_run,
+        sub: sub_run,
+        content_width,
+        width: tag_width,
+        height: tag_height,
+    } = measured;
     let center = longest_segment_midpoint(points);
     let tag = BoxRect {
         x: center.x - tag_width / 2.0,

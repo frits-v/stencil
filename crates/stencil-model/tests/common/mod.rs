@@ -191,6 +191,7 @@ pub fn link(from: &str, to: &str) -> Link {
         from_side: None,
         to_side: None,
         via: Vec::new(),
+        order: None,
     }
 }
 

@@ -403,7 +403,8 @@ fn pipe_ends(
     pipe: usize,
     dir: PipeDir,
 ) -> Vec<PipeEnd> {
-    // Lanes lays its heads out as a Row until lane messages land (section 13.6).
+    // A Lanes node holds its heads in a row, so an h pipe among the heads looks along them
+    // as along a Row's children.
     let (containers, before_side, after_side) = match dir {
         PipeDir::Horizontal => ([NodeTag::Row, NodeTag::Lanes], "left", "right"),
         PipeDir::Vertical => ([NodeTag::Col, NodeTag::Col], "above", "below"),

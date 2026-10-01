@@ -1,0 +1,143 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="718" viewBox="0 0 1320 718">
+  <rect x="0" y="0" width="1320" height="718" fill="#FFFFFF"/>
+  <defs>
+    <marker id="arrow-center-blue" viewBox="0 0 10 8" refX="10" refY="4" markerWidth="10" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto"><path d="M 0 0 L 10 4 L 0 8 Z" fill="#1A73E8"/></marker>
+    <marker id="arrow-center-dash" viewBox="0 0 10 8" refX="10" refY="4" markerWidth="10" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto"><path d="M 0 0 L 10 4 L 0 8 Z" fill="#1A73E8"/></marker>
+    <marker id="arrow-center-deny" viewBox="0 0 10 8" refX="10" refY="4" markerWidth="10" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto"><path d="M 0 0 L 10 4 L 0 8 Z" fill="#C5221F"/></marker>
+  </defs>
+  <g data-id="" data-tag="Page">
+    <g data-id="/kicker" data-tag="Kicker">
+      <rect x="20" y="20" width="70.61" height="16" rx="4" fill="#F3E5F5"/>
+      <text x="27" y="31.64" xml:space="preserve" font-family="Inter" font-size="10" font-weight="800" letter-spacing="0.7" fill="#7B1FA2">INTERNAL</text>
+      <text x="96.61" y="32" xml:space="preserve" font-family="Inter" font-size="11" font-weight="700" letter-spacing="0.88" fill="#1A73E8">REQUEST FLOW · JOB SERVICE</text>
+    </g>
+    <g data-id="/title" data-tag="Title">
+      <text x="20" y="61.28" xml:space="preserve" font-family="Inter" font-size="20" font-weight="700" letter-spacing="-0.4" fill="#202124">A batch job from submission to completion</text>
+    </g>
+    <g data-id="/lede" data-tag="Lede">
+      <text x="20" y="82.53" xml:space="preserve" font-family="Inter" font-size="13" font-weight="400" fill="#5F6368">An operator submits a job in the console. The API queues it and answers at once; a worker pulls the job, reports progress and acknowledges it once the result is stored. A cancel that arrives while the job runs</text>
+      <text x="20" y="98.13" xml:space="preserve" font-family="Inter" font-size="13" font-weight="400" fill="#5F6368">is refused.</text>
+    </g>
+    <g data-id="/body" data-tag="Body">
+      <g data-id="/body/0" data-tag="Zone" data-kind="system">
+        <path d="M 24 117.2 H 1296 A 4 4 0 0 1 1300 121.2 V 663.6 A 10 10 0 0 1 1290 673.6 H 30 A 10 10 0 0 1 20 663.6 V 121.2 A 4 4 0 0 1 24 117.2 Z" fill="#FFFFFF"/>
+        <rect x="23" y="120.2" width="1274" height="35.6" fill="#1A73E8"/>
+        <rect x="23" y="155.8" width="1274" height="514.8" fill="#FAFBFC"/>
+        <path d="M 24 118.7 H 1296 A 2.5 2.5 0 0 1 1298.5 121.2 V 663.6 A 8.5 8.5 0 0 1 1290 672.1 H 30 A 8.5 8.5 0 0 1 21.5 663.6 V 121.2 A 2.5 2.5 0 0 1 24 118.7 Z" fill="none" stroke="#1A73E8" stroke-width="3"/>
+        <text x="39" y="144.55" xml:space="preserve" font-family="Inter" font-size="18" font-weight="700" letter-spacing="0.18" fill="#FFFFFF">Job service</text>
+        <g data-id="/body/0/children/0" data-tag="Lanes">
+          <line x1="148.8" y1="217.8" x2="148.8" y2="656.6" stroke="#9AA0A6" stroke-width="1" stroke-dasharray="6 5"/>
+          <line x1="404.4" y1="217.8" x2="404.4" y2="656.6" stroke="#9AA0A6" stroke-width="1" stroke-dasharray="6 5"/>
+          <line x1="660" y1="217.8" x2="660" y2="656.6" stroke="#9AA0A6" stroke-width="1" stroke-dasharray="6 5"/>
+          <line x1="915.6" y1="217.8" x2="915.6" y2="656.6" stroke="#9AA0A6" stroke-width="1" stroke-dasharray="6 5"/>
+          <line x1="1171.2" y1="217.8" x2="1171.2" y2="656.6" stroke="#9AA0A6" stroke-width="1" stroke-dasharray="6 5"/>
+          <g data-id="/body/0/children/0/children/0" data-tag="Pcard">
+            <rect x="37.75" y="172.55" width="222.1" height="44.5" rx="7.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
+            <text x="48.5" y="191.83" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#202124">Operator</text>
+            <text x="48.5" y="207.47" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">submits and cancels jobs</text>
+          </g>
+          <g data-id="/body/0/children/0/children/1" data-tag="Pcard">
+            <rect x="293.35" y="172.55" width="222.1" height="44.5" rx="7.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
+            <text x="304.1" y="191.83" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#202124">Console</text>
+            <text x="304.1" y="207.47" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">web front end</text>
+          </g>
+          <g data-id="/body/0/children/0/children/2" data-tag="Pcard">
+            <rect x="548.95" y="172.55" width="222.1" height="44.5" rx="7.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
+            <text x="559.7" y="191.83" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#202124">Jobs API</text>
+            <text x="559.7" y="207.47" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">owns job state</text>
+          </g>
+          <g data-id="/body/0/children/0/children/3" data-tag="Pcard">
+            <rect x="804.55" y="172.55" width="222.1" height="44.5" rx="7.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
+            <text x="815.3" y="191.83" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#202124">Queue</text>
+            <text x="815.3" y="207.47" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">at-least-once delivery</text>
+          </g>
+          <g data-id="/body/0/children/0/children/4" data-tag="Pcard">
+            <rect x="1060.15" y="172.55" width="222.1" height="44.5" rx="7.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
+            <text x="1070.9" y="191.83" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#202124">Worker</text>
+            <text x="1070.9" y="207.47" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">runs one job at a time</text>
+          </g>
+        </g>
+      </g>
+    </g>
+    <g data-id="/legend" data-tag="Legend">
+      <g data-id="/legend/0" data-tag="LegendEntry" data-kind="blue">
+        <line x1="20" y1="690.8" x2="46" y2="690.8" stroke="#1A73E8" stroke-width="2"/>
+        <text x="52" y="695.17" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">Solid blue</text>
+        <text x="115.56" y="695.17" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">call</text>
+      </g>
+      <g data-id="/legend/1" data-tag="LegendEntry" data-kind="dash">
+        <line x1="151.09" y1="690.8" x2="177.09" y2="690.8" stroke="#1A73E8" stroke-width="2" stroke-dasharray="6 5"/>
+        <text x="183.09" y="695.17" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">Dashed blue</text>
+        <text x="261.9" y="695.17" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">reply</text>
+      </g>
+      <g data-id="/legend/2" data-tag="LegendEntry" data-kind="deny">
+        <line x1="306.27" y1="690.8" x2="332.27" y2="690.8" stroke="#C5221F" stroke-width="2" stroke-dasharray="6 5"/>
+        <text x="338.27" y="695.17" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">Dashed red</text>
+        <text x="410.96" y="695.17" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">rejected call</text>
+      </g>
+    </g>
+  </g>
+  <g data-id="/links/0" data-tag="Link" data-kind="blue">
+    <path d="M 148.8 237.1 L 394.4 237.1" fill="none" stroke="#1A73E8" stroke-width="2" stroke-linejoin="round"/>
+    <line x1="394.4" y1="237.1" x2="404.4" y2="237.1" stroke="none" marker-end="url(#arrow-center-blue)"/>
+    <rect x="237.16" y="222.55" width="78.87" height="29.1" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
+    <text x="245.91" y="241.47" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">submit job</text>
+  </g>
+  <g data-id="/links/1" data-tag="Link" data-kind="blue">
+    <path d="M 404.4 275.7 L 650 275.7" fill="none" stroke="#1A73E8" stroke-width="2" stroke-linejoin="round"/>
+    <line x1="650" y1="275.7" x2="660" y2="275.7" stroke="none" marker-end="url(#arrow-center-blue)"/>
+    <rect x="490.85" y="261.15" width="82.7" height="29.1" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
+    <text x="499.6" y="280.07" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">POST /jobs</text>
+  </g>
+  <g data-id="/links/2" data-tag="Link" data-kind="blue">
+    <path d="M 660 323.1 L 905.6 323.1" fill="none" stroke="#1A73E8" stroke-width="2" stroke-linejoin="round"/>
+    <line x1="905.6" y1="323.1" x2="915.6" y2="323.1" stroke="none" marker-end="url(#arrow-center-blue)"/>
+    <rect x="732.38" y="299.75" width="110.84" height="46.7" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
+    <text x="762.09" y="318.67" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">enqueue</text>
+    <text x="741.13" y="336.27" xml:space="preserve" font-family="Inter" font-size="12" font-weight="600" fill="#5F6368">job id as the key</text>
+  </g>
+  <g data-id="/links/3" data-tag="Link" data-kind="dash">
+    <path d="M 660 370.5 L 414.4 370.5" fill="none" stroke="#1A73E8" stroke-width="2" stroke-dasharray="6 5" stroke-linejoin="round"/>
+    <line x1="414.4" y1="370.5" x2="404.4" y2="370.5" stroke="none" marker-end="url(#arrow-center-dash)"/>
+    <rect x="483.03" y="355.95" width="98.34" height="29.1" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
+    <text x="491.78" y="374.87" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">202 accepted</text>
+  </g>
+  <g data-id="/links/4" data-tag="Link" data-kind="blue">
+    <path d="M 1171.2 409.1 L 925.6 409.1" fill="none" stroke="#1A73E8" stroke-width="2" stroke-linejoin="round"/>
+    <line x1="925.6" y1="409.1" x2="915.6" y2="409.1" stroke="none" marker-end="url(#arrow-center-blue)"/>
+    <rect x="1023.88" y="394.55" width="39.04" height="29.1" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
+    <text x="1032.63" y="413.47" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">pull</text>
+  </g>
+  <g data-id="/links/5" data-tag="Link" data-kind="blue">
+    <path d="M 915.6 447.7 L 1161.2 447.7" fill="none" stroke="#1A73E8" stroke-width="2" stroke-linejoin="round"/>
+    <line x1="1161.2" y1="447.7" x2="1171.2" y2="447.7" stroke="none" marker-end="url(#arrow-center-blue)"/>
+    <rect x="1004.03" y="433.15" width="78.75" height="29.1" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
+    <text x="1012.78" y="452.07" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">deliver job</text>
+  </g>
+  <g data-id="/links/6" data-tag="Link" data-kind="blue">
+    <path d="M 1171.2 486.3 L 670 486.3" fill="none" stroke="#1A73E8" stroke-width="2" stroke-linejoin="round"/>
+    <line x1="670" y1="486.3" x2="660" y2="486.3" stroke="none" marker-end="url(#arrow-center-blue)"/>
+    <rect x="864.54" y="471.75" width="102.13" height="29.1" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
+    <text x="873.29" y="490.67" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">report running</text>
+  </g>
+  <g data-id="/links/7" data-tag="Link" data-kind="blue">
+    <path d="M 148.8 524.9 L 394.4 524.9" fill="none" stroke="#1A73E8" stroke-width="2" stroke-linejoin="round"/>
+    <line x1="394.4" y1="524.9" x2="404.4" y2="524.9" stroke="none" marker-end="url(#arrow-center-blue)"/>
+    <rect x="237.8" y="510.35" width="77.59" height="29.1" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
+    <text x="246.55" y="529.27" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">cancel job</text>
+  </g>
+  <g data-id="/links/8" data-tag="Link" data-kind="deny">
+    <path d="M 404.4 572.3 L 650 572.3" fill="none" stroke="#C5221F" stroke-width="2" stroke-dasharray="6 5" stroke-linejoin="round"/>
+    <line x1="650" y1="572.3" x2="660" y2="572.3" stroke="none" marker-end="url(#arrow-center-deny)"/>
+    <rect x="468.98" y="548.95" width="126.43" height="46.7" rx="5.25" fill="#FFFFFF" stroke="#F4C7C3" stroke-width="1.5"/>
+    <text x="479.87" y="567.87" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#C5221F">DELETE /jobs/{id}</text>
+    <text x="477.73" y="585.47" xml:space="preserve" font-family="Inter" font-size="12" font-weight="600" fill="#5F6368">409: job is running</text>
+  </g>
+  <g data-id="/links/9" data-tag="Link" data-kind="blue">
+    <path d="M 1171.2 628.5 L 925.6 628.5" fill="none" stroke="#1A73E8" stroke-width="2" stroke-linejoin="round"/>
+    <line x1="925.6" y1="628.5" x2="915.6" y2="628.5" stroke="none" marker-end="url(#arrow-center-blue)"/>
+    <rect x="965.75" y="605.15" width="155.3" height="46.7" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
+    <text x="1032.91" y="624.07" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">ack</text>
+    <text x="974.5" y="641.67" xml:space="preserve" font-family="Inter" font-size="12" font-weight="600" fill="#5F6368">after the result is stored</text>
+  </g>
+</svg>

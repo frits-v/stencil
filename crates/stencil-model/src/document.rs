@@ -36,6 +36,9 @@ pub const TINT_NAMES: [&str; 8] = [
 pub const FACTS_MAX: usize = 8;
 pub const LANES_MAX: usize = 32;
 pub const LANE_GAP_DEFAULT_PX: u16 = 32;
+/// Smallest height of one message row in a Lanes band (section 13.6).
+pub const LANE_ROW_MIN_PX: f32 = 36.0;
+pub const LINK_ORDER_MAX: u16 = 256;
 /// A grammar kind name: a Box or Item `kind`.
 pub const KIND_PATTERN: &str = r"^[a-z][a-z0-9-]{0,31}$";
 pub const BUILTIN_GRAMMARS: [&str; 2] = ["gcp", "plain"];
@@ -231,8 +234,9 @@ pub struct Col {
     pub children: Vec<Node>,
 }
 
-/// Lane heads that share one time axis (section 13.6). Until lane messages land, a Lanes
-/// node lays out as a Row of equal columns.
+/// Lane heads that share one time axis (section 13.6). Each child is a lane head; a Link
+/// with `order` between two heads of one Lanes node is a message, drawn as a horizontal
+/// arrow in the band below the heads.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct Lanes {
@@ -490,6 +494,11 @@ pub struct Link {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[schemars(length(max = 8))]
     pub via: Vec<PagePoint>,
+    /// The message position along the time axis when the link joins two lane heads of one
+    /// Lanes node (section 13.6).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(range(min = 1, max = 256))]
+    pub order: Option<u16>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema, Default)]
