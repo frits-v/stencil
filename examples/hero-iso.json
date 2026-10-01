@@ -2,7 +2,7 @@
   "title": "On-prem data reaches three managed services over two private paths.",
   "kicker": "Hybrid platform · cover figure",
   "lede": "One on-prem site, one Google Cloud region, two Interconnect attachments.",
-  "width": 1040,
+  "width": 1280,
   "canvas": "customer",
   "grammar": "gcp",
   "projection": "iso",
@@ -22,7 +22,7 @@
               "tint": 1,
               "label": "On-prem",
               "children": [
-                { "tag": "Item", "id": "router", "kind": "product", "icon": "hybrid", "title": "Edge router" }
+                { "tag": "Item", "id": "router", "kind": "product", "icon": "hybrid", "title": "Edge router", "subtitle": "on-prem · BGP" }
               ]
             }
           ]
@@ -33,29 +33,42 @@
           "label": "Google Cloud",
           "children": [
             {
-              "tag": "Box",
-              "kind": "vpc",
-              "label": "Shared VPC · europe-west4",
+              "tag": "Row",
+              "gap": 64,
+              "grow": [0, 0],
               "children": [
                 {
-                  "tag": "Row",
-                  "gap": 64,
-                  "grow": [0, 0],
+                  "tag": "Box",
+                  "kind": "vpc",
+                  "label": "Shared VPC · europe-west4",
                   "children": [
                     {
-                      "tag": "Col",
+                      "tag": "Row",
+                      "gap": 64,
+                      "grow": [0, 0],
                       "children": [
-                        { "tag": "Item", "id": "gateway", "kind": "product", "icon": "cloud-run", "title": "API gateway" }
-                      ]
-                    },
-                    {
-                      "tag": "Col",
-                      "gap": 48,
-                      "children": [
-                        { "tag": "Item", "id": "warehouse", "kind": "product", "icon": "bigquery", "title": "Warehouse" },
-                        { "tag": "Item", "id": "model", "kind": "product", "icon": "vertex-ai", "title": "Model serving" }
+                        {
+                          "tag": "Col",
+                          "children": [
+                            { "tag": "Item", "id": "gateway", "kind": "product", "icon": "cloud-run", "title": "API gateway", "subtitle": "Cloud Run" }
+                          ]
+                        },
+                        {
+                          "tag": "Col",
+                          "children": [
+                            { "tag": "Item", "id": "model", "kind": "product", "icon": "vertex-ai", "title": "Model serving", "subtitle": "Vertex AI" }
+                          ]
+                        }
                       ]
                     }
+                  ]
+                },
+                {
+                  "tag": "Box",
+                  "kind": "apis",
+                  "label": "Google APIs",
+                  "children": [
+                    { "tag": "Item", "id": "warehouse", "kind": "product", "icon": "bigquery", "title": "Warehouse", "subtitle": "BigQuery" }
                   ]
                 }
               ]
@@ -72,8 +85,8 @@
   ],
   "links": [
     { "from": "router", "to": "gateway", "line": "solid", "tint": 1, "label": "VLAN 1", "from_side": "right", "to_side": "left" },
-    { "from": "router", "to": "gateway", "line": "dash", "label": "VLAN 2", "from_side": "bottom", "to_side": "bottom", "via": [{ "x": 100.92, "y": 304 }, { "x": 344.84, "y": 304 }] },
-    { "from": "gateway", "to": "warehouse", "line": "gray" },
-    { "from": "warehouse", "to": "model", "line": "gray", "from_side": "bottom", "to_side": "top" }
+    { "from": "router", "to": "gateway", "line": "dash", "label": "VLAN 2", "from_side": "bottom", "to_side": "bottom" },
+    { "from": "gateway", "to": "model", "line": "gray" },
+    { "from": "model", "to": "warehouse", "line": "gray" }
   ]
 }

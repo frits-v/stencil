@@ -2512,15 +2512,16 @@ The numbers in this example are illustrative.
 
 ### 12.10 Example and tests
 
-`examples/hero-iso.json` is a cover-slide figure of 11 body nodes and four links: an on-prem zone with the Edge router inside a Col with `justify: center`, and a gcp zone holding a vpc ring labeled `Shared VPC · europe-west4` around a Row of two Cols, the API gateway alone in the first and Warehouse over Model serving, 48 apart, in the second. Both Rows have `grow: [0, 0]`, so every zone and card takes its content width; the Col keeps the on-prem zone to the router and its margin instead of the Row's height, and centers it so the router's right side and the gateway's left side share 16.8 px before the zoom, which section 12.3 rule 8 draws as one straight leg. VLAN 1 (blue) runs from the router's right side to the gateway's left side, VLAN 2 (dash, via two points) from the router's bottom straight out of the on-prem slab's near edge, across the gap and up into the gateway's bottom, and two gray links chain the gateway to Warehouse and Warehouse to Model serving; every link carries the default end arrowhead. The via points are the flat coordinates under the default fonts, 28.7 px past the on-prem slab and 34.6 px short of the ring's front edge.
+`examples/hero-iso.json` is a cover-slide figure of 14 body nodes and four links: an on-prem Box with the Edge router inside a Col with `justify: center`, and a gcp Box holding a Row of a vpc ring labeled `Shared VPC · europe-west4` and an apis Box labeled `Google APIs`. The ring holds a Row of two Cols, the API gateway in the first and Model serving in the second; the apis Box holds Warehouse, a BigQuery product, which never sits inside a VPC (section 13.3, rule 4). Every Row has `grow: [0, 0]`, so every Box and item takes its content width, and the Col keeps the on-prem Box to the router and its margin instead of the Row's height and centers it. Every item carries a subtitle naming what it is, as the gcp hop-fact rule asks. VLAN 1 (solid tint 1) runs from the router's right side to the gateway's left side, VLAN 2 (dash) from the router's bottom to the gateway's bottom, routed with no via point, and two gray links chain the gateway to Model serving and Model serving to Warehouse, across the ring's edge into the apis Box; every link carries the default end arrowhead. The page is 1280 wide: the apis Box beside the ring widens the body, and at 1040 the zoom of section 12.2 rule 7 left the subtitled billboards crossing slab edges.
 
 ```json
 {
   "title": "On-prem data reaches three managed services over two private paths.",
   "kicker": "Hybrid platform · cover figure",
   "lede": "One on-prem site, one Google Cloud region, two Interconnect attachments.",
-  "width": 1040,
+  "width": 1280,
   "canvas": "customer",
+  "grammar": "gcp",
   "projection": "iso",
   "body": [
     {
@@ -2533,44 +2534,58 @@ The numbers in this example are illustrative.
           "justify": "center",
           "children": [
             {
-              "tag": "Zone",
-              "kind": "onprem-a",
+              "tag": "Box",
+              "kind": "onprem",
+              "tint": 1,
               "label": "On-prem",
               "children": [
-                { "tag": "Pcard", "id": "router", "icon": "hybrid", "fn": "Edge router" }
+                { "tag": "Item", "id": "router", "kind": "product", "icon": "hybrid", "title": "Edge router", "subtitle": "on-prem · BGP" }
               ]
             }
           ]
         },
         {
-          "tag": "Zone",
+          "tag": "Box",
           "kind": "gcp",
           "label": "Google Cloud",
           "children": [
             {
-              "tag": "Zone",
-              "kind": "vpc",
-              "label": "Shared VPC · europe-west4",
+              "tag": "Row",
+              "gap": 64,
+              "grow": [0, 0],
               "children": [
                 {
-                  "tag": "Row",
-                  "gap": 64,
-                  "grow": [0, 0],
+                  "tag": "Box",
+                  "kind": "vpc",
+                  "label": "Shared VPC · europe-west4",
                   "children": [
                     {
-                      "tag": "Col",
+                      "tag": "Row",
+                      "gap": 64,
+                      "grow": [0, 0],
                       "children": [
-                        { "tag": "Pcard", "id": "gateway", "icon": "cloud-run", "fn": "API gateway" }
-                      ]
-                    },
-                    {
-                      "tag": "Col",
-                      "gap": 48,
-                      "children": [
-                        { "tag": "Pcard", "id": "warehouse", "icon": "bigquery", "fn": "Warehouse" },
-                        { "tag": "Pcard", "id": "model", "icon": "vertex-ai", "fn": "Model serving" }
+                        {
+                          "tag": "Col",
+                          "children": [
+                            { "tag": "Item", "id": "gateway", "kind": "product", "icon": "cloud-run", "title": "API gateway", "subtitle": "Cloud Run" }
+                          ]
+                        },
+                        {
+                          "tag": "Col",
+                          "children": [
+                            { "tag": "Item", "id": "model", "kind": "product", "icon": "vertex-ai", "title": "Model serving", "subtitle": "Vertex AI" }
+                          ]
+                        }
                       ]
                     }
+                  ]
+                },
+                {
+                  "tag": "Box",
+                  "kind": "apis",
+                  "label": "Google APIs",
+                  "children": [
+                    { "tag": "Item", "id": "warehouse", "kind": "product", "icon": "bigquery", "title": "Warehouse", "subtitle": "BigQuery" }
                   ]
                 }
               ]
@@ -2581,20 +2596,20 @@ The numbers in this example are illustrative.
     }
   ],
   "legend": [
-    { "kind": "blue", "text": "primary attachment" },
-    { "kind": "dash", "text": "failover attachment" },
-    { "kind": "gray", "text": "service call" }
+    { "line": "solid", "tint": 1, "text": "primary attachment" },
+    { "line": "dash", "text": "failover attachment" },
+    { "line": "gray", "text": "service call" }
   ],
   "links": [
-    { "from": "router", "to": "gateway", "kind": "blue", "label": "VLAN 1", "from_side": "right", "to_side": "left" },
-    { "from": "router", "to": "gateway", "kind": "dash", "label": "VLAN 2", "from_side": "bottom", "to_side": "bottom", "via": [{ "x": 100.92, "y": 304 }, { "x": 344.84, "y": 304 }] },
-    { "from": "gateway", "to": "warehouse", "kind": "gray" },
-    { "from": "warehouse", "to": "model", "kind": "gray", "from_side": "bottom", "to_side": "top" }
+    { "from": "router", "to": "gateway", "line": "solid", "tint": 1, "label": "VLAN 1", "from_side": "right", "to_side": "left" },
+    { "from": "router", "to": "gateway", "line": "dash", "label": "VLAN 2", "from_side": "bottom", "to_side": "bottom" },
+    { "from": "gateway", "to": "model", "line": "gray" },
+    { "from": "model", "to": "warehouse", "line": "gray" }
   ]
 }
 ```
 
-Its `iso-labels-clear` count is 80: 9 billboards (3 zone tabs, 4 cards, 2 link tags) give 36 billboard pairs, 9 billboards against 4 blocks less the 4 own-block pairs give 32, and the 4 cards, the billboards that are not opaque, against 3 slabs give 12; no billboard is contained. Its `iso-links-clear` count is 6 legs: one for VLAN 1, three for VLAN 2 and one for each service link. The page has no pipes, so `pipes-land` is not applicable. Without `projection` the document passes the seven flat checks that apply to it.
+Its `iso-labels-clear` count is 97: 10 billboards (4 Box tabs, 4 items, 2 link tags) give 45 billboard pairs, 10 billboards against 4 blocks less the 4 own-block pairs give 36, and the 4 items, the billboards that are not opaque, against 4 slabs give 16; no billboard is contained. Its `iso-links-clear` count is 6 legs. The page has no pipes, so `pipes-land` is not applicable. Without `projection` the document passes the eight flat checks that apply to it.
 
 Tests:
 
@@ -2607,8 +2622,8 @@ Tests:
 - stencil-render, SVG: an iso render parses with usvg; it has one `<g data-id>` per geometry node and one `<g data-billboard>` per billboard, in order; no `<marker>` and no `<defs>`; every g7 dot is an `<ellipse>` with `rx="4.9"` and `ry="2.83"`; the billboard layer is the last child of `<svg>`; `text_elements` equals the flat render's; each zone group's first `<polygon>` precedes every descendant group. The hero's vpc ring is one unfilled dashed or dotted polygon, and every stroked polygon has `stroke-linejoin="round"`. In center and wire the router's name sits on a plate in its block's top fill, and in dusk on none; no text carries a stroke. The on-prem and gcp tabs are filled in the paint of `iso_zone_tab` with its ink, the vpc tab is an outline in the gcp floor fill with its border color, and every tab's left edge and middle sit on its zone's back corner. Every theme draws the iso icon chip before the icon, and the flat hero draws no shadow. Each of the hero's links and its legend swatch are 3.75, 2.5 and 2 px wide in center and dusk and 3.75, 2.5 and 1.25 px in wire; the wire vpc ring is dotted in `#999999` and a wire solid slab outline is 1.5 px, while the flat wire vpc border stays dashed; the wire legend reads `Solid line`, `Dashed line`, `Thin line`, center and dusk keep the flat labels, and the relabeled entry keeps the flat gap before its description.
 - stencil-render, shading: the five test vectors above; a step of 0 returns the input; `shade("#12345", -8)` and `shade("red", -8)` are None; every color constant in `palette.rs` parses; in `wire` every face polygon's fill is `#FFFFFF` or `none`. Under dusk the gcp floor, the on-prem top and a level 1 region top are lighter than the page, the region lighter than the on-prem top, a card top lighter than both floors, its left face darker than its top and its right face darker than its left, and a solid-bordered slab has a top stroke. In center and dusk the gcp slab's sides are `#1A73E8` and `#1257B3`, unstroked, and its outline is 1.5 px, thinner than a wire.
 - stencil-render, check: a gcp zone holding a Row (gap 32) of two Pcards with icon and one-word `fn` examines 9 pairs (3 billboard pairs, 4 billboard and block pairs, 2 card and slab pairs) and passes. The same cards in a Col with gap 8 examine 9, and among the defects the second card's billboard covers the first card's block. A hand-built scene with a slab edge through a label's mark is a defect with the message of rule 5 and the same edge under an opaque chip is not; the edge hidden behind a later opaque block is not a defect either. The flat render returns the not-applicable report. A hand-built `IsoScene` with two billboards overlapping by 0.02 px is a defect, and touching edges are not. A contained mark inside its block passes and one wider than the block leaves it. Placement puts a request on the region center, moves a label off a stroke across it, and puts a tag on the first clear center along its link. `iso-links-clear` passes the hero's 6 legs, reports a hand-built leg 10 px from a zone edge, a leg that turns back and a 30 px last leg of a blue link, and is not applicable for a flat render.
-- stencil-render, measured JSON: for the hero, `nodes` is byte-identical between flat and iso, `projection.billboards` has 9 entries, and the whole output is byte-identical under the three themes while the SVG bytes differ.
-- stencil-cli: `check examples/hero-iso.json` under `--theme center`, `dusk` and `wire` exits 0 with `check iso-labels-clear: examined 80 pairs, 0 defects`, `check iso-links-clear: examined 6 link legs, 0 defects`, the pipes-land not-applicable line and `stencil check: 10 checks, 9 passed, 0 failed, 1 not applicable`. With `--projection flat` it prints the two iso not-applicable lines and `10 checks, 7 passed, 0 failed, 3 not applicable`. `render examples/hero-iso.json` under each theme writes three files, and the PNG width is `ceil(projection.canvas.width * 2)`. `render examples/g7.json --projection iso` writes an iso SVG whose measured JSON `nodes` equal the flat run's. `vet --projection iso` exits 2.
+- stencil-render, measured JSON: for the hero, `nodes` is byte-identical between flat and iso, `projection.billboards` has 10 entries, and the whole output is byte-identical under the three themes while the SVG bytes differ.
+- stencil-cli: `check examples/hero-iso.json` under `--theme center`, `dusk` and `wire` exits 0 with `check iso-labels-clear: examined 97 pairs, 0 defects`, `check iso-links-clear: examined 6 link legs, 0 defects`, the pipes-land and print-fit not-applicable lines and `stencil check: 12 checks, 10 passed, 0 failed, 2 not applicable`. With `--projection flat` it prints the two iso not-applicable lines and `12 checks, 8 passed, 0 failed, 4 not applicable`. `render examples/hero-iso.json` under each theme writes three files, and the PNG width is `ceil(projection.canvas.width * 2)`. `render examples/g7.json --projection iso` writes an iso SVG whose measured JSON `nodes` equal the flat run's. `vet --projection iso` exits 2.
 
 ## 13. Core and grammars
 
@@ -3262,7 +3277,7 @@ gcp has one item kind, `product`: icons `gcp`, parents every container kind and 
 4. Products outside a VPC: a `product` item whose `subtitle` names Cloud Storage, BigQuery, Pub/Sub, Artifact Registry or Cloud Logging at word boundaries, or whose `icon` is `cloud-storage` or `bigquery`, is a defect when a `vpc` Box is among its ancestors: `_productInsideVpc.<title>: "product" & "sits inside a vpc; draw it in an apis box"`. These are Google APIs reached over Private Google Access, never addresses in a VPC.
 5. The `apis` kind holds them: a Box for Google APIs reached over Private Google Access, drawn inside the gcp frame and outside every vpc. Its parents keep it out of a vpc in Rust vet already (`kind-parent-not-allowed`); the CUE rule `_apisOutsideGcp` adds that it has a `gcp` Box among its ancestors, which a parents list cannot say when a project or perimeter sits between.
 
-Two examples break rule 4 today and are corrected in step (d) of section 13.15: `hero-iso.json` draws Warehouse (icon `bigquery`) inside the Shared VPC ring, and `hybrid-ai.json` draws the feature store (`BigQuery · vectors`), the checkpoint bucket (`Cloud Storage · dual-region`), the audit logs (`Cloud Logging · org sink`) and cost and usage (`Billing export · BigQuery`) inside its vpc. Each moves into an `apis` Box beside the vpc inside the gcp frame. `cue/check.sh` vets every example against the gcp `#Page`, so the rules examine them.
+Step (d) of section 13.15 corrects two examples that broke rule 4: `hero-iso.json` drew Warehouse (icon `bigquery`) inside the Shared VPC ring, and `hybrid-ai.json` drew the feature store (`BigQuery · vectors`), the checkpoint bucket (`Cloud Storage · dual-region`), the audit logs (`Cloud Logging · org sink`) and cost and usage (`Billing export · BigQuery`) inside its vpc. Each moves into an `apis` Box outside the vpc inside the gcp frame: in hybrid-ai the feature store and the checkpoint bucket sit in one beside the vpc within the service perimeter, and the audit logs and cost and usage in one inside the evidence project, which sits beside the perimeter. `cue/check.sh` vets every example against the gcp `#Page`, so the rules examine them.
 
 plain. A domain-neutral grammar for system diagrams, with no icons required and no domain rules beyond the core:
 

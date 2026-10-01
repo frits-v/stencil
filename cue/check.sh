@@ -122,12 +122,9 @@ PY
 # Every example is a JSON document authored without CUE; each vets against
 # the #Page of the grammar it names, gcp when it names none. An example listed here is a known defect, reported on every
 # run: it must fail, and every error vet reports must name the listed rule.
-# An entry that starts passing is stale and fails the script.
-#   hero-iso: four items carry no subtitle and no fact, so the hop-fact rule
-#   rejects them.
-known_failures=(
-	'hero-iso|_itemsWithoutSubtitleOrFact'
-)
+# An entry that starts passing is stale and fails the script. The list is
+# empty: every example vets clean.
+known_failures=()
 examples_vetted=0
 examples_clean=0
 examples_known=0
@@ -136,7 +133,7 @@ for example in "$repo"/examples/*.json; do
 	stem="$(basename "$example" .json)"
 	examples_vetted=$((examples_vetted + 1))
 	known_rule=""
-	for entry in "${known_failures[@]}"; do
+	for entry in ${known_failures[@]+"${known_failures[@]}"}; do
 		if [[ "${entry%%|*}" == "$stem" ]]; then
 			known_rule="${entry#*|}"
 		fi
