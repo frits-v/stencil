@@ -5,7 +5,7 @@
 use stencil_layout::{BoxRect, NodeGeometry, NodeTag, PageGeometry, Part};
 use stencil_model::PagePoint;
 
-use super::{ISO_COS_30, billboard_member};
+use super::{ISO_COS_30, plane_member};
 
 /// The zoom stops when the projected body is this fraction of the layout canvas width.
 pub const ISO_FILL_FRACTION: f32 = 0.8;
@@ -59,35 +59,15 @@ impl Scale {
     }
 }
 
-fn translated(bounds: BoxRect, delta: (f32, f32)) -> BoxRect {
-    BoxRect {
-        x: bounds.x + delta.0,
-        y: bounds.y + delta.1,
-        ..bounds
-    }
-}
-
-/// Where a node's billboard members move: with the node's top-left corner, except on a pipe
-/// or tee, whose tag is centered on its box.
-fn member_delta(node: &NodeGeometry, scaled: BoxRect) -> (f32, f32) {
-    match node.tag {
-        NodeTag::Pipe | NodeTag::Tee => (
-            scaled.x + scaled.width / 2.0 - (node.bounds.x + node.bounds.width / 2.0),
-            scaled.y + scaled.height / 2.0 - (node.bounds.y + node.bounds.height / 2.0),
-        ),
-        _ => (scaled.x - node.bounds.x, scaled.y - node.bounds.y),
-    }
-}
-
+/// A plane member keeps its layout box: the label's map zooms it with the plane.
 fn zoomed_node(node: &NodeGeometry, scale: &Scale) -> NodeGeometry {
     let bounds = scale.rectangle(node.bounds);
-    let delta = member_delta(node, bounds);
     let parts = node
         .parts
         .iter()
         .map(|part| Part {
-            bounds: if billboard_member(node.tag, part.name) {
-                translated(part.bounds, delta)
+            bounds: if plane_member(node.tag, part.name) {
+                part.bounds
             } else {
                 scale.rectangle(part.bounds)
             },
@@ -103,8 +83,8 @@ fn zoomed_node(node: &NodeGeometry, scale: &Scale) -> NodeGeometry {
 }
 
 /// The geometry with every body node and every link scaled by `zoom` about `origin`. A
-/// billboard member keeps its size and its offset from its node, and a link tag keeps its
-/// size and moves with its center. A zoom of 1 returns an equal geometry.
+/// plane member and a link tag keep their layout boxes, which the label's map zooms with
+/// the plane. A zoom of 1 returns an equal geometry.
 pub(crate) fn zoomed(
     geometry: &PageGeometry,
     in_body: &[bool],
@@ -136,22 +116,8 @@ pub(crate) fn zoomed(
                     PagePoint { x, y }
                 })
                 .collect();
-            let delta = route.tag.map_or((0.0, 0.0), |tag| {
-                let center = (tag.x + tag.width / 2.0, tag.y + tag.height / 2.0);
-                let moved = scale.point(center.0, center.1);
-                (moved.0 - center.0, moved.1 - center.1)
-            });
             stencil_layout::LinkRoute {
                 points,
-                tag: route.tag.map(|tag| translated(tag, delta)),
-                parts: route
-                    .parts
-                    .iter()
-                    .map(|part| Part {
-                        bounds: translated(part.bounds, delta),
-                        ..part.clone()
-                    })
-                    .collect(),
                 ..route.clone()
             }
         })

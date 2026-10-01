@@ -1,5 +1,6 @@
 //! The section 12.5 SVG: page-level nodes flat, body nodes as faces and surfaces in
-//! geometry order, links on their planes, then every billboard upright on top.
+//! geometry order, each node's label on its plane right after its solid, then links with
+//! their tags on the terrain.
 
 use stencil_layout::{BoxRect, LinkRoute, NodeGeometry, NodeTag, PageGeometry, Part, PartName};
 use stencil_model::pointer::NodePointer;
@@ -12,22 +13,13 @@ use super::{
     link_mismatch, part_mismatch, pipe_text_style_name, stroke_attributes, text_style_name,
 };
 use crate::iso::{
-    Billboard, ISO_COS_30, ISO_DOT_RADIUS_X_PX, ISO_DOT_RADIUS_Y_PX, ISO_SIN_30, IsoPoint, Placard,
-    ScreenPoint, Solid, SolidInputs, SolidShape, arrowhead_vertices, billboard_member,
-    end_direction, has_zone_ancestor, iso_link_arrowhead_length, member_box, project_point,
-    project_zoomed, start_direction, zoomed_geometry,
+    ISO_DOT_RADIUS_X_PX, ISO_DOT_RADIUS_Y_PX, IsoPoint, Label, ScreenPoint, Solid, SolidInputs,
+    SolidShape, arrowhead_vertices, end_direction, has_zone_ancestor, iso_link_arrowhead_length,
+    plane_member, project_point, project_zoomed, start_direction, zoomed_geometry,
 };
 use crate::palette::{DotStyle, FacePaint, LineStyle, LineUse, Palette, Stroke, ZoneTab};
 use crate::{RenderError, SvgDocument, format_number};
 
-/// Radius of a zone tab (section 12.4).
-const ZONE_TAB_RADIUS_PX: f32 = 4.0;
-/// Padding of the plate behind billboard text that has no box of its own, across and down.
-/// The plate is the color of the surface the text stands on, so it is invisible there and
-/// stops every stroke that runs under the text.
-const TEXT_PLATE_PADDING_X_PX: f32 = 3.0;
-const TEXT_PLATE_PADDING_Y_PX: f32 = 1.0;
-const TEXT_PLATE_RADIUS_PX: f32 = 3.0;
 /// The id of the blur filter every block shadow references (section 13.11).
 const SHADOW_FILTER_ID: &str = "stencil-shadow";
 
@@ -75,9 +67,12 @@ pub(super) fn render_iso(
             *slot = Some(solid);
         }
     }
-    // The fill of the surface each node stands on or is, so billboard text can be haloed in
-    // it. Parents precede children, so a node without a filled top inherits its parent's.
-    let mut surfaces: Vec<Option<String>> = vec![None; geometry.nodes.len()];
+    let mut node_labels: Vec<Option<&Label>> = vec![None; geometry.nodes.len()];
+    for label in &scene.labels {
+        if let Some(slot) = label.node.and_then(|index| node_labels.get_mut(index)) {
+            *slot = Some(label);
+        }
+    }
     let mut relabeler = Relabeler::default();
 
     let mut open_groups: Vec<usize> = Vec::new();
@@ -96,11 +91,8 @@ pub(super) fn render_iso(
         } else {
             writer.line(depth, &group_open_tag(node));
         }
-        let inherited = node
-            .parent
-            .and_then(|parent| surfaces.get(parent).cloned().flatten());
         let solid = solids.get(index).copied().flatten();
-        let surface = match (node.tag, solid, document_node) {
+        match (node.tag, solid, document_node) {
             (NodeTag::LegendEntry, _, DocumentNode::LegendEntry(_)) => {
                 let shifted = shifted_node(node, 0.0, scene.footer_shift);
                 let relabeled = relabeler.relabeled(writer.palette, &shifted, *document_node)?;
@@ -109,23 +101,21 @@ pub(super) fn render_iso(
                     relabeled.as_ref().unwrap_or(&shifted),
                     *document_node,
                 )?;
-                None
             }
             (NodeTag::Legend | NodeTag::LegendEntry | NodeTag::Foot, _, _) => {
                 let shifted = shifted_node(node, 0.0, scene.footer_shift);
                 writer.write_node(depth + 1, &shifted, *document_node)?;
-                None
             }
             (_, Some(solid), _) => {
-                writer.write_solid(depth + 1, node, *document_node, solid, scene.offset)?
+                writer.write_solid(depth + 1, node, *document_node, solid, scene.offset)?;
+                if let Some(label) = node_labels.get(index).copied().flatten() {
+                    let nested = has_zone_ancestor(geometry, index);
+                    writer.write_node_label(depth + 1, node, *document_node, label, nested)?;
+                }
             }
             (_, None, _) => {
                 writer.write_node(depth + 1, node, *document_node)?;
-                None
             }
-        };
-        if let Some(slot) = surfaces.get_mut(index) {
-            *slot = surface.or(inherited);
         }
         open_groups.push(index);
     }
@@ -138,17 +128,10 @@ pub(super) fn render_iso(
             .links
             .get(route.index)
             .ok_or_else(|| link_mismatch(route))?;
-        writer.write_iso_link(1, route, link, path, scene.offset);
+        let pointer = NodePointer::root().child("links").index(route.index);
+        let tag = scene.labels.iter().find(|label| label.owner == pointer);
+        writer.write_iso_link(1, route, link, path, scene.offset, tag)?;
     }
-
-    writer.line(1, r#"<g data-layer="billboards">"#);
-    for billboard in &scene.billboards {
-        let ground = billboard
-            .node
-            .and_then(|index| surfaces.get(index).cloned().flatten());
-        writer.write_billboard(2, billboard, geometry, expected, ground.as_deref())?;
-    }
-    writer.line(1, "</g>");
     writer.line(0, "</svg>");
 
     Ok(SvgDocument {
@@ -664,7 +647,8 @@ impl<'a> SvgWriter<'a> {
         link: &Link,
         path: &[IsoPoint],
         offset: ScreenPoint,
-    ) {
+        tag: Option<&Label>,
+    ) -> Result<(), RenderError> {
         let pointer = NodePointer::root().child("links").index(route.index);
         self.line(
             depth,
@@ -736,129 +720,69 @@ impl<'a> SvgWriter<'a> {
                 offset,
             );
         }
-        self.line(depth, "</g>");
-    }
-
-    /// One billboard: its members drawn with the flat drawing, moved by the difference
-    /// between its screen box and its flat box (section 12.4, rule 4).
-    fn write_billboard(
-        &mut self,
-        depth: usize,
-        billboard: &Billboard,
-        geometry: &PageGeometry,
-        expected: &[(NodePointer, DocumentNode<'_>)],
-        ground: Option<&str>,
-    ) -> Result<(), RenderError> {
-        self.line(
-            depth,
-            &format!(
-                r#"<g data-billboard="{}" data-role="{}">"#,
-                escape_xml(billboard.owner.as_str()),
-                billboard.role.as_str()
-            ),
-        );
-        let delta_x = billboard.screen.x - billboard.flat.x;
-        let delta_y = billboard.screen.y - billboard.flat.y;
-        match billboard.node {
-            Some(index) => {
-                let node = geometry
-                    .nodes
-                    .get(index)
-                    .ok_or_else(|| billboard_mismatch(billboard))?;
-                let document_node = expected
-                    .get(index)
-                    .map(|(_, document_node)| *document_node)
-                    .ok_or_else(|| billboard_mismatch(billboard))?;
-                let tab = (node.tag == NodeTag::Zone).then(|| has_zone_ancestor(geometry, index));
-                self.write_node_billboard(
-                    depth + 1,
-                    node,
-                    document_node,
-                    billboard,
-                    (delta_x, delta_y),
-                    BillboardGround { ground, tab },
-                )?;
-            }
-            None => {
-                let route = geometry
-                    .links
-                    .iter()
-                    .take(LINKS_MAX)
-                    .find(|route| {
-                        NodePointer::root().child("links").index(route.index) == billboard.owner
-                    })
-                    .ok_or_else(|| billboard_mismatch(billboard))?;
-                self.write_link_tag_billboard(depth + 1, route, delta_x, delta_y)?;
-            }
+        if let Some(label) = tag {
+            self.write_link_tag_label(depth + 1, route, label)?;
         }
         self.line(depth, "</g>");
         Ok(())
     }
 
-    /// `ground` is the fill of the surface the node stands on or is; chipless runs are drawn
-    /// on a plate of it, or of the page background when there is none.
-    fn write_node_billboard(
+    /// The group every label lies in: the plane's matrix, so each part is written in its
+    /// layout box (section 12.4, rule 4).
+    fn open_plane_group(&mut self, depth: usize, label: &Label) {
+        let map = label.map;
+        self.line(
+            depth,
+            &format!(
+                r#"<g data-plane="{}" data-axis="{}" transform="matrix({} {} {} {} {} {})">"#,
+                format_number(label.z),
+                label.axis.as_str(),
+                format_number(map.a),
+                format_number(map.b),
+                format_number(map.c),
+                format_number(map.d),
+                format_number(map.e),
+                format_number(map.f)
+            ),
+        );
+    }
+
+    /// A node's plane members with the flat drawing, in the plane group. A zone label takes
+    /// the ink of the tab it would carry upright: the top-level tab fill, or a nested zone's
+    /// border color.
+    fn write_node_label(
         &mut self,
         depth: usize,
         node: &NodeGeometry,
         document_node: DocumentNode<'_>,
-        billboard: &Billboard,
-        delta: (f32, f32),
-        under: BillboardGround<'_>,
+        label: &Label,
+        nested: bool,
     ) -> Result<(), RenderError> {
-        let (delta_x, delta_y) = delta;
-        let BillboardGround { ground, tab } = under;
         let context = self.part_context(document_node);
-        if let Some(placard) = &billboard.placard {
-            let nested = tab.unwrap_or(false);
-            return self.write_zone_placard(depth, node, placard, nested);
-        }
-        let tab_ink = match (document_node, tab) {
-            (DocumentNode::Content(NodeRef::Node(Node::Box(_))), Some(nested)) => {
-                let bounds = shifted_box(billboard.flat, delta_x, delta_y);
+        let zone_ink = match document_node {
+            DocumentNode::Content(NodeRef::Node(Node::Box(_))) => {
                 let look = node.container.ok_or_else(|| surface_mismatch(node))?;
-                let (fill, border, ink) = match self.palette.iso_zone_tab(look, node.tint, nested) {
-                    ZoneTab::Filled { fill, ink } => (fill, None, ink),
-                    ZoneTab::Outline { border, ink } => (
-                        ground.unwrap_or(self.palette.page_background()),
-                        Some(border),
-                        ink,
-                    ),
-                };
-                self.write_rect(depth, bounds, ZONE_TAB_RADIUS_PX, Some(fill), border);
-                Some(ink)
+                Some(match self.palette.iso_zone_tab(look, node.tint, nested) {
+                    ZoneTab::Filled { fill, .. } => fill,
+                    ZoneTab::Outline { border, .. } => border.color,
+                })
             }
             _ => None,
         };
-        let members: Vec<Part> = node
+        self.open_plane_group(depth, label);
+        let members: Vec<&Part> = node
             .parts
             .iter()
-            .filter(|part| billboard_member(node.tag, part.name))
-            .map(|part| shifted_part(part, delta_x, delta_y))
+            .filter(|part| plane_member(node.tag, part.name))
             .collect();
-        let plate = ground.unwrap_or(self.palette.page_background());
-        let plates = self.palette.iso_text_plates();
-        for part in members
-            .iter()
-            .filter(|part| plates && part.text.is_some() && needs_plate(node, part.name))
-        {
-            let ink = member_box(part);
-            let bounds = BoxRect {
-                x: ink.x - TEXT_PLATE_PADDING_X_PX,
-                y: ink.y - TEXT_PLATE_PADDING_Y_PX,
-                width: ink.width + 2.0 * TEXT_PLATE_PADDING_X_PX,
-                height: ink.height + 2.0 * TEXT_PLATE_PADDING_Y_PX,
-            };
-            self.write_rect(depth, bounds, TEXT_PLATE_RADIUS_PX, Some(plate), None);
-        }
         for part in &members {
-            self.write_part_shape(depth, node, part, context)?;
+            self.write_part_shape(depth + 1, node, part, context)?;
         }
         for part in &members {
             if let Some(run) = &part.text {
                 let style_name = text_style_name(document_node, node.container, part.name)
                     .ok_or_else(|| part_mismatch(node, part))?;
-                let fill = match tab_ink {
+                let fill = match zone_ink {
                     Some(ink) => ink,
                     None => self.palette.text_ink(
                         style_name,
@@ -866,76 +790,27 @@ impl<'a> SvgWriter<'a> {
                         context.line.map(|line_use| line_use.line),
                     ),
                 };
-                self.write_text_run(depth, &node.pointer, part.bounds, run, fill)?;
+                self.write_text_run(depth + 1, &node.pointer, part.bounds, run, fill)?;
             }
         }
+        self.line(depth, "</g>");
         Ok(())
     }
 
-    /// A zone label lying on its slab (section 12.4 placard): the Label run through the
-    /// face transform at the placard's scale, in the ink of the tab the zone would carry.
-    fn write_zone_placard(
-        &mut self,
-        depth: usize,
-        node: &NodeGeometry,
-        placard: &Placard,
-        nested: bool,
-    ) -> Result<(), RenderError> {
-        let look = node.container.ok_or_else(|| surface_mismatch(node))?;
-        let ink = match self.palette.iso_zone_tab(look, node.tint, nested) {
-            ZoneTab::Filled { fill, .. } => fill,
-            ZoneTab::Outline { border, .. } => border.color,
-        };
-        let scale = placard.scale;
-        let matrix = format!(
-            "matrix({} {} {} {} {} {})",
-            format_number(scale * ISO_COS_30),
-            format_number(scale * ISO_SIN_30),
-            format_number(-scale * ISO_COS_30),
-            format_number(scale * ISO_SIN_30),
-            format_number(placard.origin.x),
-            format_number(placard.origin.y)
-        );
-        for part in node
-            .parts
-            .iter()
-            .filter(|part| part.name == PartName::Label)
-        {
-            if let Some(run) = &part.text {
-                let ink_box = member_box(part);
-                let local = BoxRect {
-                    x: 0.0,
-                    y: 0.0,
-                    width: ink_box.width,
-                    height: ink_box.height,
-                };
-                self.write_text_run_transformed(
-                    depth,
-                    &node.pointer,
-                    local,
-                    run,
-                    ink,
-                    Some(&matrix),
-                )?;
-            }
-        }
-        Ok(())
-    }
-
-    fn write_link_tag_billboard(
+    /// A link's tag box and runs in the plane group on the terrain.
+    fn write_link_tag_label(
         &mut self,
         depth: usize,
         route: &LinkRoute,
-        delta_x: f32,
-        delta_y: f32,
+        label: &Label,
     ) -> Result<(), RenderError> {
         let pointer = NodePointer::root().child("links").index(route.index);
+        self.open_plane_group(depth, label);
         for part in &route.parts {
-            let bounds = shifted_box(part.bounds, delta_x, delta_y);
             match (part.name, &part.text) {
                 (PartName::Tag, None) => {
                     let tag_paint = self.palette.tag(route.line);
-                    self.write_box(depth, bounds, TAG_RADIUS_PX, tag_paint);
+                    self.write_box(depth + 1, part.bounds, TAG_RADIUS_PX, tag_paint);
                 }
                 (PartName::TagLabel | PartName::TagSub, Some(run)) => {
                     let style_name =
@@ -943,45 +818,13 @@ impl<'a> SvgWriter<'a> {
                     let fill = self
                         .palette
                         .text_ink(style_name, self.canvas, Some(route.line));
-                    self.write_text_run(depth, &pointer, bounds, run, fill)?;
+                    self.write_text_run(depth + 1, &pointer, part.bounds, run, fill)?;
                 }
                 _ => return Err(link_mismatch(route)),
             }
         }
+        self.line(depth, "</g>");
         Ok(())
-    }
-}
-
-/// What a node billboard stands on: the fill of the surface under it, and for a zone
-/// whether another zone encloses it, which decides its tab.
-#[derive(Debug, Clone, Copy)]
-struct BillboardGround<'a> {
-    ground: Option<&'a str>,
-    tab: Option<bool>,
-}
-
-/// Billboard runs that are not drawn on a box of their own: every content run except the
-/// gcp label on its chip, a card's fact and ask in their boxes, and a Frame label on its
-/// chip. Tag runs sit on their tag box.
-fn needs_plate(node: &NodeGeometry, part: PartName) -> bool {
-    match node.tag {
-        NodeTag::Zone => false,
-        NodeTag::Pcard => matches!(part, PartName::FunctionName | PartName::ProductName),
-        NodeTag::Fact | NodeTag::Note | NodeTag::Text | NodeTag::Callout => true,
-        NodeTag::Frame
-        | NodeTag::Pipe
-        | NodeTag::Tee
-        | NodeTag::Page
-        | NodeTag::Kicker
-        | NodeTag::Title
-        | NodeTag::Lede
-        | NodeTag::Body
-        | NodeTag::Legend
-        | NodeTag::LegendEntry
-        | NodeTag::Foot
-        | NodeTag::Row
-        | NodeTag::Col
-        | NodeTag::Lanes => false,
     }
 }
 
@@ -997,12 +840,5 @@ fn surface_mismatch(node: &NodeGeometry) -> RenderError {
     RenderError::GeometryMismatch {
         expected: node.pointer.clone(),
         found: node.pointer.child("<surface>"),
-    }
-}
-
-fn billboard_mismatch(billboard: &Billboard) -> RenderError {
-    RenderError::GeometryMismatch {
-        expected: billboard.owner.clone(),
-        found: billboard.owner.child("<absent>"),
     }
 }

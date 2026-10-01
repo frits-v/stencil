@@ -1,9 +1,8 @@
-//! The section 12 isometric projection: solids, billboards, link paths and the drawn canvas,
+//! The section 12 isometric projection: solids, labels on their planes, link paths and the drawn canvas,
 //! computed from `PageGeometry` alone, and the `iso-labels-clear` check over the result.
 
 mod drape;
 mod exit;
-mod placement;
 mod route;
 mod shapes;
 mod zoom;
@@ -12,7 +11,6 @@ use stencil_layout::{
     BoxRect, LinkRoute, NodeGeometry, NodeTag, PageGeometry, Part, PartName, Size, TextAlign,
 };
 use stencil_model::checks::{CheckName, CheckReport, Defect};
-use stencil_model::grammar::Role;
 use stencil_model::pointer::NodePointer;
 use stencil_model::{LINKS_MAX, Line, Link, NODES_MAX, PagePoint};
 
@@ -20,16 +18,14 @@ use crate::RenderError;
 use crate::svg::DOT_RADIUS_PX;
 
 pub(crate) use drape::{end_direction, start_direction};
-pub use placement::ISO_CARD_CLEARANCE_PX;
 pub use route::{ISO_LINK_CLEARANCE_PX, ISO_STRAIGHT_SHARED_MIN_PX};
 pub(crate) use shapes::unit_direction;
 pub use zoom::{ISO_FILL_FRACTION, ISO_ZOOM_MAX};
 
 use drape::Terrain;
-use placement::Obstacles;
-use shapes::{rectangle_overlaps_polygon, rectangles_overlap, segment_crosses_box};
+use shapes::{polygons_overlap, segment_crosses_convex};
 
-pub use stencil_layout::{ISO_BLOCK_HEIGHT_PX, ISO_PLACARD_SCALE};
+pub use stencil_layout::ISO_BLOCK_HEIGHT_PX;
 /// cos 30 degrees, written out so every build uses the same f32.
 pub const ISO_COS_30: f32 = 0.866_025_4;
 /// sin 30 degrees.
@@ -45,10 +41,6 @@ const ARROWHEAD_LENGTH_PX: f32 = stencil_layout::ARROWHEAD_LENGTH_PX;
 /// Half width over length of every arrowhead, as in flat.
 const ARROWHEAD_WIDTH_RATIO: f32 =
     stencil_layout::ARROWHEAD_WIDTH_PX / 2.0 / stencil_layout::ARROWHEAD_LENGTH_PX;
-/// A zone tab grows the Label run box by this padding across and down (section 12.4): the
-/// gcp bar padding for gcp, a smaller one for every other zone.
-const GCP_TAB_PADDING_PX: (f32, f32) = (16.0, 7.0);
-const ZONE_TAB_PADDING_PX: (f32, f32) = (10.0, 5.0);
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct ScreenPoint {
@@ -67,6 +59,12 @@ pub struct IsoPoint {
 /// The projected page. The pipeline builds it once for `measured_json` and
 /// `iso_labels_clear`; `render_svg` builds an equal one itself, because the projection is a
 /// pure function of the geometry.
+///
+/// Two px frames meet here. Solids, link paths and the dots and wires of a pipe are in
+/// scene px: the zoomed flat geometry, projected with `project_point`. The parts a label
+/// draws (`plane_member`) stay in layout px and reach the screen through the label's
+/// `map`, which zooms and projects in one affine step, so text and icons scale with the
+/// body like everything else on the plane.
 #[derive(Debug, Clone, PartialEq)]
 pub struct IsoScene {
     /// The drawn canvas (section 12.2). `PageGeometry.canvas` stays the layout canvas.
@@ -77,17 +75,20 @@ pub struct IsoScene {
     pub footer_shift: f32,
     /// One per body node that draws a solid, in geometry order.
     pub solids: Vec<Solid>,
-    /// Painter order (section 12.5): body nodes in geometry order, then link tags in link
-    /// order.
-    pub billboards: Vec<Billboard>,
+    /// Every label on its plane (section 12.4): one per body node that draws parts on its
+    /// solid, in geometry order, then one per link with a tag, in link order. Each is
+    /// painted right after its solid or link, so later solids cover it.
+    pub labels: Vec<Label>,
     /// One per `PageGeometry.links` entry: the routed polyline adjusted by section 12.3
     /// rule 8, laid over the slabs and cut back at its endpoint blocks (rule 7), in zoomed
     /// flat px.
     pub link_paths: Vec<Vec<IsoPoint>>,
     /// The line and effective tint of each link, in `link_paths` order.
     pub link_kinds: Vec<(Line, Option<u8>)>,
-    /// The body zoom of section 12.2, rule 7.
+    /// The body zoom of section 12.2, rule 7, about `origin`.
     pub zoom: f32,
+    /// The flat top-left corner of `/body`, about which the zoom scales.
+    pub origin: (f32, f32),
 }
 
 /// A body node's solid. Beyond the section 12.2 fields it carries the node's pointer and
@@ -146,57 +147,123 @@ pub enum SolidShape {
     Surface,
 }
 
+/// The reading axis of a label on its plane (section 12.4): along flat x, reading
+/// down-right on screen, or along flat y, reading up-right.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Axis {
+    X,
+    Y,
+}
+
+impl Axis {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Axis::X => "x",
+            Axis::Y => "y",
+        }
+    }
+}
+
+/// An affine map from layout px to screen px: `(a x + c y + e, b x + d y + f)`, the form of
+/// an SVG `matrix(a b c d e f)`.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct PlaneMap {
+    pub a: f32,
+    pub b: f32,
+    pub c: f32,
+    pub d: f32,
+    pub e: f32,
+    pub f: f32,
+}
+
+impl PlaneMap {
+    /// The plane at height `z`: zoom about `origin`, then the projection of section 12.2.
+    pub fn plane(z: f32, zoom: f32, origin: (f32, f32), offset: ScreenPoint) -> PlaneMap {
+        let (origin_x, origin_y) = origin;
+        // project(origin + zoom (p - origin), z) + offset, expanded in p.
+        let shift_x = (1.0 - zoom) * origin_x;
+        let shift_y = (1.0 - zoom) * origin_y;
+        PlaneMap {
+            a: zoom * ISO_COS_30,
+            b: zoom * ISO_SIN_30,
+            c: -zoom * ISO_COS_30,
+            d: zoom * ISO_SIN_30,
+            e: (shift_x - shift_y) * ISO_COS_30 + offset.x,
+            f: (shift_x + shift_y) * ISO_SIN_30 - z + offset.y,
+        }
+    }
+
+    /// `self` after a quarter turn of the layout about `pivot`, so a label laid out along
+    /// x reads along y: layout right becomes flat -y and layout down becomes flat +x.
+    pub fn turned_about(self, pivot: (f32, f32)) -> PlaneMap {
+        // turned(x, y) = (px + (y - py), py - (x - px)); then self.
+        let (px, py) = pivot;
+        let e = self.a * (px - py) + self.c * (py + px) + self.e;
+        let f = self.b * (px - py) + self.d * (py + px) + self.f;
+        PlaneMap {
+            a: -self.c,
+            b: -self.d,
+            c: self.a,
+            d: self.b,
+            e,
+            f,
+        }
+    }
+
+    pub fn apply(&self, x: f32, y: f32) -> ScreenPoint {
+        ScreenPoint {
+            x: self.a * x + self.c * y + self.e,
+            y: self.b * x + self.d * y + self.f,
+        }
+    }
+
+    /// The four corners of a layout box on screen, top-left first then clockwise in layout
+    /// terms.
+    pub fn corners(&self, bounds: BoxRect) -> [ScreenPoint; 4] {
+        [
+            self.apply(bounds.x, bounds.y),
+            self.apply(bounds.right(), bounds.y),
+            self.apply(bounds.right(), bounds.bottom()),
+            self.apply(bounds.x, bounds.bottom()),
+        ]
+    }
+
+    pub fn shifted(self, delta: ScreenPoint) -> PlaneMap {
+        PlaneMap {
+            e: self.e + delta.x,
+            f: self.f + delta.y,
+            ..self
+        }
+    }
+}
+
+/// The parts of one node or link tag, lying on the node's plane (section 12.4). The parts
+/// themselves stay in `NodeGeometry` or `LinkRoute` in layout px; `map` puts them on
+/// screen.
 #[derive(Debug, Clone, PartialEq)]
-pub struct Billboard {
+pub struct Label {
     /// The owning node's pointer, or `/links/<i>` for a link tag.
     pub owner: NodePointer,
     /// Geometry index of the owner; None for a link tag.
     pub node: Option<usize>,
-    pub role: BillboardRole,
-    /// The flat box the billboard redraws, in layout px.
-    pub flat: BoxRect,
+    /// Height of the plane: the slab or block top, a pipe's wire, the terrain under a link
+    /// tag.
     pub z: f32,
-    /// The drawn box, in canvas px, offset included.
-    pub screen: BoxRect,
-    /// True when the billboard is drawn on a box of its own that hides what lies under it:
-    /// the gcp chip and every tag.
-    pub opaque: bool,
-    /// The screen ink boxes of the billboard's text runs, offset included. The check of
-    /// section 12.7 tests these against slab edges.
-    pub marks: Vec<BoxRect>,
-    /// True when every mark must lie inside the owner block's silhouette: the text of a
-    /// Fact, Note, Text, Callout or Frame, which is laid out to fit its block.
-    pub contained: bool,
-    /// Present when the billboard lies on its slab's top face instead of standing upright.
-    pub placard: Option<Placard>,
-}
-
-/// A label lying on a face instead of standing upright: the run is drawn through the
-/// face transform at `scale`, so its ink box on screen is the parallelogram `corners`.
-#[derive(Debug, Clone, PartialEq)]
-pub struct Placard {
-    pub scale: f32,
-    /// Screen position of the run's flat top-left corner, offset included.
-    pub origin: ScreenPoint,
-    /// Screen corners of the run's ink box, top-left first then clockwise in flat terms,
-    /// offset included.
+    pub axis: Axis,
+    /// Layout px to screen px, offset included.
+    pub map: PlaneMap,
+    /// The union of the member part boxes, in layout px.
+    pub flat: BoxRect,
+    /// `flat` through `map`.
     pub corners: [ScreenPoint; 4],
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum BillboardRole {
-    Content,
-    Tag,
-}
-
-impl BillboardRole {
-    /// The `data-role` and measured JSON name.
-    pub fn as_str(self) -> &'static str {
-        match self {
-            BillboardRole::Content => "content",
-            BillboardRole::Tag => "tag",
-        }
-    }
+    /// Each text run's ink box through `map`. The checks of section 12.7 test these.
+    pub marks: Vec<[ScreenPoint; 4]>,
+    /// True when the parts sit on a box of their own that hides what lies under them: a
+    /// pipe, tee or link tag.
+    pub opaque: bool,
+    /// True when every mark must lie on the owner block's top face: the parts of a Pcard,
+    /// Fact, Note, Text, Callout or Frame, which are laid out to fit the block.
+    pub contained: bool,
 }
 
 /// A flat point (x, y) at height z on screen (section 12.2, rule 1).
@@ -231,23 +298,9 @@ pub fn is_ring_zone(node: &NodeGeometry) -> bool {
     node.tag == NodeTag::Zone && node.container.is_some_and(|look| look.is_ring(node.tint))
 }
 
-/// A Box of the frame role, the gcp frame of section 12.3.
-fn is_gcp_zone(node: &NodeGeometry) -> bool {
-    node.tag == NodeTag::Zone && node.container.is_some_and(|look| look.role == Role::Frame)
-}
-
-/// The padding of a zone's tab around its Label run.
-fn tab_padding(node: &NodeGeometry) -> (f32, f32) {
-    if is_gcp_zone(node) {
-        GCP_TAB_PADDING_PX
-    } else {
-        ZONE_TAB_PADDING_PX
-    }
-}
-
-/// The parts a node's billboard redraws (section 12.4), by the node's tag. The Zone label
-/// and the gcp chip are handled by `billboard_flat_box`.
-pub(crate) fn billboard_member(tag: NodeTag, part: PartName) -> bool {
+/// The parts a node draws on its plane (section 12.4), by the node's tag. The rest of a
+/// node's parts belong to its solid: a pipe's dots and wire, a frame's bar and body.
+pub(crate) fn plane_member(tag: NodeTag, part: PartName) -> bool {
     match tag {
         NodeTag::Zone => part == PartName::Label,
         NodeTag::Pcard => matches!(
@@ -315,67 +368,14 @@ fn union(first: BoxRect, second: BoxRect) -> BoxRect {
     }
 }
 
-/// The union of a node's member boxes, grown to the tab for a zone; None when the node has
-/// no member part.
-pub(crate) fn billboard_flat_box(node: &NodeGeometry) -> Option<BoxRect> {
-    let flat = node
-        .parts
-        .iter()
-        .filter(|part| billboard_member(node.tag, part.name))
-        .map(member_box)
-        .reduce(union)?;
-    if node.tag == NodeTag::Zone {
-        let (across, down) = tab_padding(node);
-        return Some(BoxRect {
-            x: flat.x - across,
-            y: flat.y - down,
-            width: flat.width + 2.0 * across,
-            height: flat.height + 2.0 * down,
-        });
-    }
-    Some(flat)
-}
-
-/// The flat ink boxes of a node's billboard text runs. Icons sit on an opaque chip, which
+/// The layout ink boxes of a node's plane text runs. Icons sit on an opaque chip, which
 /// hides a stroke under it the way a tag does, so they are not marks.
 fn flat_marks(node: &NodeGeometry) -> Vec<BoxRect> {
     node.parts
         .iter()
-        .filter(|part| billboard_member(node.tag, part.name) && part.text.is_some())
+        .filter(|part| plane_member(node.tag, part.name) && part.text.is_some())
         .map(member_box)
         .collect()
-}
-
-/// `boxes` moved by `delta`.
-fn moved(boxes: &[BoxRect], delta: (f32, f32)) -> Vec<BoxRect> {
-    boxes
-        .iter()
-        .map(|bounds| BoxRect {
-            x: bounds.x + delta.0,
-            y: bounds.y + delta.1,
-            ..*bounds
-        })
-        .collect()
-}
-
-/// A `width` by `height` screen box whose top-left corner is at `corner`.
-fn box_at(corner: ScreenPoint, width: f32, height: f32) -> BoxRect {
-    BoxRect {
-        x: corner.x,
-        y: corner.y,
-        width,
-        height,
-    }
-}
-
-/// A `width` by `height` screen box centered on `center`.
-fn box_around(center: ScreenPoint, width: f32, height: f32) -> BoxRect {
-    BoxRect {
-        x: center.x - width / 2.0,
-        y: center.y - height / 2.0,
-        width,
-        height,
-    }
 }
 
 fn center(bounds: BoxRect) -> (f32, f32) {
@@ -528,197 +528,140 @@ fn solid_shape(
     }
 }
 
-/// The point of a card's billboard that stands on the projected center of its top face:
-/// the icon's center, or the box center for a card without an icon, relative to the flat
-/// box's top-left corner (section 12.4, rule 2).
-fn card_anchor(node: &NodeGeometry, flat: BoxRect) -> (f32, f32) {
-    match node.part(PartName::Icon) {
-        Some(icon) => {
-            let (icon_x, icon_y) = center(icon.bounds);
-            (icon_x - flat.x, icon_y - flat.y)
-        }
-        None => (flat.width / 2.0, flat.height / 2.0),
-    }
-}
-
-/// The billboard of a body node before any offset, or None for a node without members.
-fn node_billboard(
+/// The parts a body node draws on its plane (section 12.4): a zone's label at its slab
+/// top, a block's content at its top, a pipe's or tee's tag at its wire. None for a node
+/// with no plane member.
+fn node_label(
     index: usize,
     node: &NodeGeometry,
     shape: SolidShape,
-    base_z: f32,
-    height: f32,
-    band: f32,
-) -> Option<Billboard> {
-    let flat = billboard_flat_box(node)?;
-    let top_z = base_z + height;
-    if shape == SolidShape::Slab
-        && let Some(placard) = zone_placard(node, top_z, band)
-    {
-        let screen = corners_bounds(&placard.corners);
-        return Some(Billboard {
-            owner: node.pointer.clone(),
-            node: Some(index),
-            role: BillboardRole::Content,
-            flat,
-            z: top_z,
-            screen,
-            opaque: false,
-            marks: vec![screen],
-            contained: false,
-            placard: Some(placard),
-        });
-    }
-    let (z, screen, role) = match shape {
-        SolidShape::Slab => {
-            let corner = project_point(node.bounds.x, node.bounds.y, top_z, ZERO_OFFSET);
-            let tab_corner = ScreenPoint {
-                x: corner.x,
-                y: corner.y - flat.height / 2.0,
-            };
-            (
-                top_z,
-                box_at(tab_corner, flat.width, flat.height),
-                BillboardRole::Content,
-            )
-        }
-        SolidShape::Block if node.tag == NodeTag::Pcard => {
-            let (center_x, center_y) = center(node.bounds);
-            let anchor = project_point(center_x, center_y, top_z, ZERO_OFFSET);
-            let (across, down) = card_anchor(node, flat);
-            let corner = ScreenPoint {
-                x: anchor.x - across,
-                y: anchor.y - down,
-            };
-            (
-                top_z,
-                box_at(corner, flat.width, flat.height),
-                BillboardRole::Content,
-            )
-        }
-        SolidShape::Block => {
-            let corner = project_point(flat.x, flat.y, top_z, ZERO_OFFSET);
-            (
-                top_z,
-                box_at(corner, flat.width, flat.height),
-                BillboardRole::Content,
-            )
-        }
-        SolidShape::Surface => {
-            let (center_x, center_y) = center(flat);
-            let anchor = project_point(center_x, center_y, base_z, ZERO_OFFSET);
-            (
-                base_z,
-                box_around(anchor, flat.width, flat.height),
-                BillboardRole::Tag,
-            )
-        }
+    top_z: f32,
+    plane: &dyn Fn(f32) -> PlaneMap,
+) -> Option<Label> {
+    let flat = node
+        .parts
+        .iter()
+        .filter(|part| plane_member(node.tag, part.name))
+        .map(member_box)
+        .reduce(union)?;
+    let z = match shape {
+        SolidShape::Slab | SolidShape::Block => top_z,
+        SolidShape::Surface => top_z,
     };
-    let marks = moved(&flat_marks(node), (screen.x - flat.x, screen.y - flat.y));
-    Some(Billboard {
+    let axis = if shape == SolidShape::Surface && pipe_runs_along_y(node) {
+        Axis::Y
+    } else {
+        Axis::X
+    };
+    let map = match axis {
+        Axis::X => plane(z),
+        Axis::Y => plane(z).turned_about(center(flat)),
+    };
+    Some(Label {
         owner: node.pointer.clone(),
         node: Some(index),
-        role,
-        flat,
         z,
-        screen,
-        opaque: role == BillboardRole::Tag || node.tag == NodeTag::Zone,
-        marks,
+        axis,
+        map,
+        flat,
+        corners: map.corners(flat),
+        marks: flat_marks(node)
+            .iter()
+            .map(|mark| map.corners(*mark))
+            .collect(),
+        opaque: shape == SolidShape::Surface,
         contained: matches!(
             node.tag,
-            NodeTag::Fact | NodeTag::Note | NodeTag::Text | NodeTag::Callout | NodeTag::Frame
+            NodeTag::Pcard
+                | NodeTag::Fact
+                | NodeTag::Note
+                | NodeTag::Text
+                | NodeTag::Callout
+                | NodeTag::Frame
         ),
-        placard: None,
     })
 }
 
-/// The zone's Label run lying on the slab top face along the x axis from the run's flat
-/// top-left corner, scaled by `ISO_PLACARD_SCALE`; None when the scaled run would run past
-/// the zone's right padding, in which case the zone keeps its upright tab.
-fn zone_placard(node: &NodeGeometry, top_z: f32, band: f32) -> Option<Placard> {
-    let label = node
-        .parts
-        .iter()
-        .find(|part| part.name == PartName::Label && part.text.is_some())?;
-    let ink = member_box(label);
-    let (across, _) = tab_padding(node);
-    let right_limit = node.bounds.right() - across;
-    let fits_across = (right_limit - ink.x) / ink.width;
-    let fits_down = band / ink.height;
-    let scale = ISO_PLACARD_SCALE.min(fits_across).min(fits_down);
-    if scale < 1.0 {
-        return None;
-    }
-    let at =
-        |u: f32, v: f32| project_point(ink.x + scale * u, ink.y + scale * v, top_z, ZERO_OFFSET);
-    Some(Placard {
-        scale,
-        origin: at(0.0, 0.0),
-        corners: [
-            at(0.0, 0.0),
-            at(ink.width, 0.0),
-            at(ink.width, ink.height),
-            at(0.0, ink.height),
-        ],
-    })
-}
-
-/// Flat px from the top of a zone's Label run to the top of its first child, or to the
-/// zone's bottom padding when it has none: the room a placard may grow into.
-fn label_band(
-    geometry: &PageGeometry,
-    index: usize,
-    node: &NodeGeometry,
-    block_height: f32,
-) -> f32 {
-    let Some(label) = node
-        .parts
-        .iter()
-        .find(|part| part.name == PartName::Label && part.text.is_some())
+/// A pipe whose dots lie one above the other runs along flat y; its tag reads along y.
+fn pipe_runs_along_y(node: &NodeGeometry) -> bool {
+    let (Some(start), Some(end)) = (node.part(PartName::DotStart), node.part(PartName::DotEnd))
     else {
-        return 0.0;
+        return false;
     };
-    let first_child_top = geometry
-        .children(index)
-        .into_iter()
-        .filter_map(|child| geometry.nodes.get(child))
-        .map(|child| child.bounds.y)
-        .fold(f32::INFINITY, f32::min);
-    // A child block of height h covers, on screen, the floor strip h flat px behind it
-    // (a point at z = h projects like the floor point moved by (-h, -h)), so the band stops
-    // that far short of the first child.
-    let floor = if first_child_top.is_finite() {
-        first_child_top - block_height
-    } else {
-        node.content.bottom()
-    };
-    floor - label.bounds.y
+    let (start_x, start_y) = center(start.bounds);
+    let (end_x, end_y) = center(end.bounds);
+    (end_y - start_y).abs() > (end_x - start_x).abs()
 }
 
-/// The axis-aligned box around four screen points.
-fn corners_bounds(corners: &[ScreenPoint; 4]) -> BoxRect {
-    let min_x = corners
+/// A link's tag on the terrain under its center (section 12.4), reading along the leg it
+/// sits on. None for a link without a label.
+fn link_label(
+    route: &LinkRoute,
+    terrain: &[Terrain],
+    zoom: f32,
+    origin: (f32, f32),
+    plane: &dyn Fn(f32) -> PlaneMap,
+) -> Option<Label> {
+    let tag = route.tag?;
+    let (center_x, center_y) = center(tag);
+    let scene_center = (
+        origin.0 + (center_x - origin.0) * zoom,
+        origin.1 + (center_y - origin.1) * zoom,
+    );
+    let z = drape::ground_z(terrain, scene_center.0, scene_center.1);
+    let axis = if tag_leg_runs_along_y(&route.points, scene_center) {
+        Axis::Y
+    } else {
+        Axis::X
+    };
+    let map = match axis {
+        Axis::X => plane(z),
+        Axis::Y => plane(z).turned_about((center_x, center_y)),
+    };
+    let marks = route
+        .parts
         .iter()
-        .map(|point| point.x)
-        .fold(f32::INFINITY, f32::min);
-    let max_x = corners
-        .iter()
-        .map(|point| point.x)
-        .fold(f32::NEG_INFINITY, f32::max);
-    let min_y = corners
-        .iter()
-        .map(|point| point.y)
-        .fold(f32::INFINITY, f32::min);
-    let max_y = corners
-        .iter()
-        .map(|point| point.y)
-        .fold(f32::NEG_INFINITY, f32::max);
-    BoxRect {
-        x: min_x,
-        y: min_y,
-        width: max_x - min_x,
-        height: max_y - min_y,
+        .filter(|part| part.text.is_some())
+        .map(|part| map.corners(member_box(part)))
+        .collect();
+    Some(Label {
+        owner: NodePointer::root().child("links").index(route.index),
+        node: None,
+        z,
+        axis,
+        map,
+        flat: tag,
+        corners: map.corners(tag),
+        marks,
+        opaque: true,
+        contained: false,
+    })
+}
+
+/// True when the route leg nearest `point` runs along flat y.
+fn tag_leg_runs_along_y(points: &[PagePoint], point: (f32, f32)) -> bool {
+    let mut best: Option<(f32, bool)> = None;
+    for pair in points.windows(2).take(stencil_model::LINK_SEGMENTS_MAX) {
+        let (start, end) = (pair[0], pair[1]);
+        let along_y = (end.y - start.y).abs() > (end.x - start.x).abs();
+        let distance = distance_to_segment(point, (start.x, start.y), (end.x, end.y));
+        if best.is_none_or(|(nearest, _)| distance < nearest) {
+            best = Some((distance, along_y));
+        }
     }
+    best.is_some_and(|(_, along_y)| along_y)
+}
+
+fn distance_to_segment(point: (f32, f32), start: (f32, f32), end: (f32, f32)) -> f32 {
+    let (dx, dy) = (end.0 - start.0, end.1 - start.1);
+    let length_squared = dx * dx + dy * dy;
+    let t = if length_squared <= f32::EPSILON {
+        0.0
+    } else {
+        (((point.0 - start.0) * dx + (point.1 - start.1) * dy) / length_squared).clamp(0.0, 1.0)
+    };
+    let (nearest_x, nearest_y) = (start.0 + t * dx, start.1 + t * dy);
+    ((point.0 - nearest_x).powi(2) + (point.1 - nearest_y).powi(2)).sqrt()
 }
 
 /// Screen extremes of every drawn primitive, before any offset (section 12.2, rule 3).
@@ -749,12 +692,6 @@ impl Extent {
         self.max_x = self.max_x.max(point.x);
         self.min_y = self.min_y.min(point.y);
         self.max_y = self.max_y.max(point.y);
-    }
-
-    fn add_box(&mut self, screen: BoxRect) {
-        for corner in shapes::rectangle_corners(screen) {
-            self.add(corner);
-        }
     }
 
     /// A dot at a flat center: the four extreme points of its screen ellipse.
@@ -941,209 +878,7 @@ fn link_paths(
         .collect()
 }
 
-/// Pitch of the candidate tag centers along a link.
-const TAG_CANDIDATE_STEP_PX: f32 = 4.0;
-/// The candidate pitch along a link is coarsened until it gives at most this many.
-const TAG_CANDIDATES_MAX: usize = 1024;
-
-/// Candidate screen centers for a link tag, before any offset, with the terrain height under
-/// each: points along the adjusted route, nearest the middle of its longest leg first
-/// (section 12.4, rule 3).
-fn tag_candidates(points: &[PagePoint], terrain: &[Terrain]) -> Vec<(ScreenPoint, f32)> {
-    let legs = route::legs(points);
-    let total: f32 = legs.iter().map(route::FlatSegment::length).sum();
-    let mut preferred = 0.0;
-    let mut longest = f32::NEG_INFINITY;
-    let mut walked = 0.0;
-    for leg in &legs {
-        let length = leg.length();
-        if length > longest + GEOMETRY_EPSILON {
-            longest = length;
-            preferred = walked + length / 2.0;
-        }
-        walked += length;
-    }
-    let mut step = TAG_CANDIDATE_STEP_PX;
-    for _ in 0..16 {
-        if ((total / step) as usize) < TAG_CANDIDATES_MAX {
-            break;
-        }
-        step *= 2.0;
-    }
-    let count = ((total / step) as usize + 1).min(TAG_CANDIDATES_MAX);
-    let mut distances: Vec<f32> = (0..count).map(|index| index as f32 * step).collect();
-    distances.push(preferred);
-    distances.sort_by(|first, second| {
-        (first - preferred)
-            .abs()
-            .total_cmp(&(second - preferred).abs())
-    });
-    distances
-        .into_iter()
-        .filter_map(|distance| {
-            let mut remaining = distance;
-            for leg in &legs {
-                let length = leg.length();
-                if remaining <= length + GEOMETRY_EPSILON {
-                    let fraction = if length > 0.0 {
-                        (remaining / length).clamp(0.0, 1.0)
-                    } else {
-                        0.0
-                    };
-                    let x = leg.start.x + fraction * (leg.end.x - leg.start.x);
-                    let y = leg.start.y + fraction * (leg.end.y - leg.start.y);
-                    let z = drape::ground_z(terrain, x, y);
-                    return Some((project_point(x, y, z, ZERO_OFFSET), z));
-                }
-                remaining -= length;
-            }
-            None
-        })
-        .collect()
-}
-
 const GEOMETRY_EPSILON: f32 = stencil_layout::GEOMETRY_EPSILON_PX;
-
-/// A link tag waiting for placement: its billboard index, its link index and the candidate
-/// centers along the link.
-struct PendingTag {
-    billboard: usize,
-    link: usize,
-    candidates: Vec<(ScreenPoint, f32)>,
-}
-
-/// Everything the billboard placement of section 12.4 rule 3 reads.
-struct PlacementInput<'a> {
-    solids: &'a [Solid],
-    /// Visible slab edges, every link path and every wire and spine.
-    strokes: &'a [(ScreenPoint, ScreenPoint)],
-    /// The strokes of each link's path, in link order.
-    link_strokes: &'a [Vec<(ScreenPoint, ScreenPoint)>],
-    /// Wires and spines.
-    surface_strokes: &'a [(ScreenPoint, ScreenPoint)],
-}
-
-/// Moves each link tag along its link to the first spot clear of every block, every other
-/// link and every billboard placed before it, then each card billboard to the first clear
-/// spot over its block (section 12.4, rule 3). A billboard with no clear spot keeps its
-/// first placement, which `iso-labels-clear` then reports.
-fn place_billboards(
-    input: &PlacementInput<'_>,
-    billboards: &mut [Billboard],
-    tags: &[PendingTag],
-    cards: &[usize],
-) {
-    let blocks: Vec<&[ScreenPoint]> = input
-        .solids
-        .iter()
-        .filter(|solid| solid.shape == SolidShape::Block)
-        .map(|solid| solid.silhouette.as_slice())
-        .collect();
-    for (position, tag) in tags.iter().enumerate() {
-        let unplaced: Vec<usize> = tags
-            .iter()
-            .skip(position)
-            .map(|pending| pending.billboard)
-            .chain(cards.iter().copied())
-            .collect();
-        let boxes: Vec<BoxRect> = billboards
-            .iter()
-            .enumerate()
-            .filter(|(index, placed)| !unplaced.contains(index) && placed.placard.is_none())
-            .map(|(_, placed)| placed.screen)
-            .collect();
-        let mut strokes: Vec<(ScreenPoint, ScreenPoint)> = input.surface_strokes.to_vec();
-        for (other, other_strokes) in input.link_strokes.iter().enumerate() {
-            if other != tag.link {
-                strokes.extend_from_slice(other_strokes);
-            }
-        }
-        let obstacles = Obstacles {
-            shapes: blocks.clone(),
-            strokes,
-            boxes,
-        };
-        let Some(billboard) = billboards.get(tag.billboard) else {
-            continue;
-        };
-        let size = (billboard.screen.width, billboard.screen.height);
-        let found = placement::place_centered(size, &tag.candidates, &obstacles);
-        if let (Some((screen, z)), Some(slot)) = (found, billboards.get_mut(tag.billboard)) {
-            slot.marks = vec![screen];
-            slot.screen = screen;
-            slot.z = z;
-        }
-    }
-    for (position, &billboard_index) in cards.iter().enumerate() {
-        let Some(billboard) = billboards.get(billboard_index) else {
-            continue;
-        };
-        let Some(owner) = billboard.node else {
-            continue;
-        };
-        let Some(solid) = input.solids.iter().find(|solid| solid.node == owner) else {
-            continue;
-        };
-        let unplaced: Vec<usize> = cards.iter().skip(position).copied().collect();
-        let boxes: Vec<BoxRect> = billboards
-            .iter()
-            .enumerate()
-            .filter(|(index, placed)| !unplaced.contains(index) && placed.placard.is_none())
-            .map(|(_, placed)| placed.screen)
-            .collect();
-        let shapes: Vec<&[ScreenPoint]> = input
-            .solids
-            .iter()
-            .filter(|other| other.shape == SolidShape::Block && other.node != owner)
-            .map(|other| other.silhouette.as_slice())
-            .collect();
-        let obstacles = Obstacles {
-            shapes,
-            strokes: input.strokes.to_vec(),
-            boxes,
-        };
-        let top_z = solid.base_z + solid.height;
-        let origin = billboard.screen;
-        let marks = moved(&billboard.marks, (-origin.x, -origin.y));
-        let anchor = project_point(
-            solid.footprint.x + solid.footprint.width / 2.0,
-            solid.footprint.y + solid.footprint.height / 2.0,
-            top_z,
-            ZERO_OFFSET,
-        );
-        let request = placement::Request {
-            region: solid.footprint,
-            z: top_z,
-            size: (origin.width, origin.height),
-            anchor: (anchor.x - origin.x, anchor.y - origin.y),
-            marks: &marks,
-            clearance: placement::ISO_CARD_CLEARANCE_PX,
-        };
-        if let Some(screen) = placement::place(&request, &obstacles)
-            && let Some(slot) = billboards.get_mut(billboard_index)
-        {
-            slot.marks = moved(&marks, (screen.x, screen.y));
-            slot.screen = screen;
-            slot.z = top_z;
-        }
-    }
-}
-
-/// The pieces of every slab edge that no opaque solid painted after it covers, plus the
-/// given strokes, which are drawn over the faces.
-fn visible_strokes(
-    solids: &[Solid],
-    drawn_over: &[(ScreenPoint, ScreenPoint)],
-) -> Vec<(ScreenPoint, ScreenPoint)> {
-    let all: Vec<&Solid> = solids.iter().collect();
-    let mut strokes: Vec<(ScreenPoint, ScreenPoint)> = solids
-        .iter()
-        .filter(|solid| solid.shape == SolidShape::Slab)
-        .flat_map(|slab| visible_slab_edges(slab, &all))
-        .collect();
-    strokes.extend_from_slice(drawn_over);
-    strokes
-}
 
 /// The body index and per-node facts, after asserting nodes[0] is the root and /body is
 /// present.
@@ -1185,45 +920,8 @@ pub fn zoomed_geometry(geometry: &PageGeometry) -> Result<(PageGeometry, f32), R
         .get(body_index)
         .map_or((0.0, 0.0), |body| (body.bounds.x, body.bounds.y));
     let zoom = zoom::fit_zoom(geometry, &facts.in_body, geometry.canvas.width);
-    let mut zoomed = zoom::zoomed(geometry, &facts.in_body, origin, zoom);
-    for node in &mut zoomed.nodes {
-        if node.tag == NodeTag::Pcard {
-            stack_card(node);
-        }
-    }
+    let zoomed = zoom::zoomed(geometry, &facts.in_body, origin, zoom);
     Ok((zoomed, zoom))
-}
-
-/// Gap between a card's icon chip and the text stacked under it.
-const CARD_STACK_GAP_PX: f32 = 4.0;
-
-/// Moves a card's billboard text under its icon, centered on it (section 12.4, rule 2). The
-/// flat card puts the text beside the icon, which on a thin iso block reaches past the
-/// block's back edge and into the zone edge behind it.
-fn stack_card(node: &mut NodeGeometry) {
-    let Some(icon) = node.part(PartName::Icon).map(|part| part.bounds) else {
-        return;
-    };
-    let text = node
-        .parts
-        .iter()
-        .filter(|part| part.name != PartName::Icon && billboard_member(node.tag, part.name))
-        .map(member_box)
-        .reduce(union);
-    let Some(text) = text else {
-        return;
-    };
-    let delta = (
-        icon.x + icon.width / 2.0 - (text.x + text.width / 2.0),
-        icon.y + icon.height / 2.0 + crate::svg::ICON_CHIP_SIZE_PX / 2.0 + CARD_STACK_GAP_PX
-            - text.y,
-    );
-    for part in &mut node.parts {
-        if part.name != PartName::Icon && billboard_member(node.tag, part.name) {
-            part.bounds.x += delta.0;
-            part.bounds.y += delta.1;
-        }
-    }
 }
 
 /// Asserts nodes[0] is the root and /body is present, then zooms and projects the body.
@@ -1250,11 +948,11 @@ pub fn project_zoomed(
         });
     };
 
+    let origin = (body.bounds.x, body.bounds.y);
+    let unshifted = |z: f32| PlaneMap::plane(z, zoom, origin, ZERO_OFFSET);
     let mut extent = Extent::empty();
     let mut solids = Vec::new();
-    let mut billboards = Vec::new();
-    let mut cards = Vec::new();
-    let mut surface_strokes = Vec::new();
+    let mut labels = Vec::new();
     for (index, node) in geometry.nodes.iter().enumerate() {
         if !facts.in_body.get(index).copied().unwrap_or(false) {
             continue;
@@ -1275,7 +973,6 @@ pub fn project_zoomed(
             }
             SolidShape::Surface => {
                 add_surface_extent(&mut extent, node, base_z);
-                surface_strokes.extend(surface_stroke(node, base_z));
             }
         }
         let opaque = match shape {
@@ -1293,12 +990,11 @@ pub fn project_zoomed(
             opaque,
             footprint: node.bounds,
         });
-        let band = label_band(geometry, index, node, ISO_BLOCK_HEIGHT_PX * zoom);
-        if let Some(billboard) = node_billboard(index, node, shape, base_z, height, band) {
-            if node.tag == NodeTag::Pcard {
-                cards.push(billboards.len());
+        if let Some(label) = node_label(index, node, shape, base_z + height, &unshifted) {
+            for corner in label.corners {
+                extent.add(corner);
             }
-            billboards.push(billboard);
+            labels.push(label);
         }
     }
 
@@ -1311,10 +1007,7 @@ pub fn project_zoomed(
         })
         .collect();
     let routes = link_paths(geometry, &terrain, &solids, inputs);
-    let mut link_strokes = Vec::with_capacity(routes.len());
-    let mut tags = Vec::new();
-    for (position, (route, (points, path))) in geometry.links.iter().zip(&routes).enumerate() {
-        link_strokes.push(path_strokes(path));
+    for (route, (_, path)) in geometry.links.iter().zip(&routes) {
         for point in path {
             extent.add(project_point(point.x, point.y, point.z, ZERO_OFFSET));
         }
@@ -1328,47 +1021,12 @@ pub fn project_zoomed(
                 extent.add(project_point(x, y, tip.z, ZERO_OFFSET));
             }
         }
-        if let Some(tag) = route.tag {
-            let candidates = tag_candidates(points, &terrain);
-            let (anchor, z) = candidates.first().copied().unwrap_or_else(|| {
-                let (center_x, center_y) = center(tag);
-                let z = drape::ground_z(&terrain, center_x, center_y);
-                (project_point(center_x, center_y, z, ZERO_OFFSET), z)
-            });
-            let screen = box_around(anchor, tag.width, tag.height);
-            tags.push(PendingTag {
-                billboard: billboards.len(),
-                link: position,
-                candidates,
-            });
-            billboards.push(Billboard {
-                owner: NodePointer::root().child("links").index(route.index),
-                node: None,
-                role: BillboardRole::Tag,
-                flat: tag,
-                z,
-                screen,
-                opaque: true,
-                marks: vec![screen],
-                contained: false,
-                placard: None,
-            });
+        if let Some(label) = link_label(route, &terrain, zoom, origin, &unshifted) {
+            for corner in label.corners {
+                extent.add(corner);
+            }
+            labels.push(label);
         }
-    }
-    let mut drawn_over = surface_strokes.clone();
-    for strokes in &link_strokes {
-        drawn_over.extend_from_slice(strokes);
-    }
-    let strokes = visible_strokes(&solids, &drawn_over);
-    let input = PlacementInput {
-        solids: &solids,
-        strokes: &strokes,
-        link_strokes: &link_strokes,
-        surface_strokes: &surface_strokes,
-    };
-    place_billboards(&input, &mut billboards, &tags, &cards);
-    for billboard in &billboards {
-        extent.add_box(billboard.screen);
     }
 
     let body_bounds = body.bounds;
@@ -1394,14 +1052,11 @@ pub fn project_zoomed(
             y: point.y + offset.y,
         });
     }
-    for billboard in &mut billboards {
-        billboard.screen.x += offset.x;
-        billboard.screen.y += offset.y;
-        billboard.marks = moved(&billboard.marks, (offset.x, offset.y));
-        if let Some(placard) = &mut billboard.placard {
-            placard.origin.x += offset.x;
-            placard.origin.y += offset.y;
-            for corner in &mut placard.corners {
+    for label in &mut labels {
+        label.map = label.map.shifted(offset);
+        label.corners = label.map.corners(label.flat);
+        for mark in &mut label.marks {
+            for corner in mark {
                 corner.x += offset.x;
                 corner.y += offset.y;
             }
@@ -1418,7 +1073,7 @@ pub fn project_zoomed(
         offset,
         footer_shift,
         solids,
-        billboards,
+        labels,
         link_paths: routes.into_iter().map(|(_, path)| path).collect(),
         link_kinds: geometry
             .links
@@ -1426,6 +1081,7 @@ pub fn project_zoomed(
             .map(|route| (route.line, route.tint))
             .collect(),
         zoom,
+        origin,
     })
 }
 
@@ -1443,15 +1099,23 @@ fn visible_slab_edges(slab: &Solid, solids: &[&Solid]) -> Vec<(ScreenPoint, Scre
         .collect()
 }
 
-fn describe(billboard: &Billboard) -> String {
-    let screen = billboard.screen;
+fn describe(label: &Label) -> String {
+    let x = label
+        .corners
+        .iter()
+        .map(|corner| corner.x)
+        .fold(f32::INFINITY, f32::min);
+    let y = label
+        .corners
+        .iter()
+        .map(|corner| corner.y)
+        .fold(f32::INFINITY, f32::min);
     format!(
-        "{} billboard {:.2},{:.2} {:.2}x{:.2}",
-        billboard.role.as_str(),
-        screen.x,
-        screen.y,
-        screen.width,
-        screen.height
+        "label {} at {:.2},{:.2} along {}",
+        label.owner,
+        x,
+        y,
+        label.axis.as_str()
     )
 }
 
@@ -1460,17 +1124,12 @@ pub fn iso_labels_clear(scene: Option<&IsoScene>) -> CheckReport {
     let Some(scene) = scene else {
         return CheckReport::not_applicable(CheckName::IsoLabelsClear, "projection is flat");
     };
-    let billboard_limit = NODES_MAX + LINKS_MAX;
+    let label_limit = NODES_MAX + LINKS_MAX;
     debug_assert!(
-        scene.billboards.len() <= billboard_limit,
-        "iso-labels-clear would drop billboards past {billboard_limit}"
+        scene.labels.len() <= label_limit,
+        "iso-labels-clear would drop labels past {label_limit}"
     );
-    let billboards: Vec<&Billboard> = scene
-        .billboards
-        .iter()
-        .take(billboard_limit)
-        .filter(|billboard| billboard.placard.is_none())
-        .collect();
+    let labels: Vec<&Label> = scene.labels.iter().take(label_limit).collect();
     debug_assert!(
         scene.solids.len() <= NODES_MAX,
         "iso-labels-clear would drop solids past {NODES_MAX}"
@@ -1478,82 +1137,114 @@ pub fn iso_labels_clear(scene: Option<&IsoScene>) -> CheckReport {
     let solids: Vec<&Solid> = scene.solids.iter().take(NODES_MAX).collect();
     let mut examined: u64 = 0;
     let mut defects = Vec::new();
-    for (later_index, later) in billboards.iter().enumerate() {
-        for earlier in billboards.iter().take(later_index) {
+    // 1. Two labels overlap.
+    for (later_index, later) in labels.iter().enumerate() {
+        for earlier in labels.iter().take(later_index) {
             examined += 1;
-            if rectangles_overlap(earlier.screen, later.screen) {
+            if polygons_overlap(&earlier.corners, &later.corners) {
                 defects.push(Defect {
                     pointer: later.owner.clone(),
-                    message: format!(
-                        "{} overlaps {} billboard {}",
-                        describe(later),
-                        earlier.role.as_str(),
-                        earlier.owner
-                    ),
+                    message: format!("{} overlaps label {}", describe(later), earlier.owner),
                 });
             }
         }
     }
-    for billboard in &billboards {
-        for block in solids
-            .iter()
-            .filter(|solid| solid.shape == SolidShape::Block)
-        {
-            if billboard.node == Some(block.node) {
+    // 2. An opaque solid painted after the label covers one of its marks. Link tags are
+    // painted after every solid, so for them every block counts, the way a tag must not lie
+    // where a block stands.
+    for label in &labels {
+        for solid in solids.iter().filter(|solid| solid.opaque) {
+            let painted_later = match label.node {
+                Some(owner) => solid.node > owner,
+                None => solid.shape == SolidShape::Block,
+            };
+            if !painted_later {
                 continue;
             }
             examined += 1;
-            if rectangle_overlaps_polygon(billboard.screen, &block.silhouette) {
+            let covered = label
+                .marks
+                .iter()
+                .any(|mark| polygons_overlap(mark, &solid.silhouette));
+            if covered {
                 defects.push(Defect {
-                    pointer: billboard.owner.clone(),
-                    message: format!("{} covers block {}", describe(billboard), block.pointer),
+                    pointer: label.owner.clone(),
+                    message: format!("{} is covered by {}", describe(label), solid.pointer),
                 });
             }
         }
     }
+    // 3. A visible slab edge crosses a mark that has no box of its own.
     let slabs: Vec<(&Solid, Vec<(ScreenPoint, ScreenPoint)>)> = solids
         .iter()
         .filter(|solid| solid.shape == SolidShape::Slab)
         .map(|slab| (*slab, visible_slab_edges(slab, &solids)))
         .collect();
-    for billboard in billboards.iter().filter(|billboard| !billboard.opaque) {
+    for label in labels.iter().filter(|label| !label.opaque) {
         for (slab, edges) in &slabs {
             examined += 1;
             let crossed = edges.iter().any(|(start, end)| {
-                billboard
+                label
                     .marks
                     .iter()
-                    .any(|mark| segment_crosses_box(*start, *end, *mark))
+                    .any(|mark| segment_crosses_convex(*start, *end, mark))
             });
             if crossed {
                 defects.push(Defect {
-                    pointer: billboard.owner.clone(),
+                    pointer: label.owner.clone(),
                     message: format!(
                         "{} is crossed by an edge of slab {}",
-                        describe(billboard),
+                        describe(label),
                         slab.pointer
                     ),
                 });
             }
         }
     }
-    for billboard in billboards.iter().filter(|billboard| billboard.contained) {
+    // 4. A link path crosses a mark that has no box of its own.
+    for label in labels.iter().filter(|label| !label.opaque) {
+        for (index, path) in scene.link_paths.iter().enumerate().take(LINKS_MAX) {
+            examined += 1;
+            let crossed = path_strokes(path).iter().any(|(start, end)| {
+                let start = ScreenPoint {
+                    x: start.x + scene.offset.x,
+                    y: start.y + scene.offset.y,
+                };
+                let end = ScreenPoint {
+                    x: end.x + scene.offset.x,
+                    y: end.y + scene.offset.y,
+                };
+                label
+                    .marks
+                    .iter()
+                    .any(|mark| segment_crosses_convex(start, end, mark))
+            });
+            if crossed {
+                defects.push(Defect {
+                    pointer: label.owner.clone(),
+                    message: format!("{} is crossed by link /links/{index}", describe(label)),
+                });
+            }
+        }
+    }
+    // 5. The parts laid out to fit a block stay on its top face.
+    for label in labels.iter().filter(|label| label.contained) {
         let Some(block) = solids
             .iter()
-            .find(|solid| Some(solid.node) == billboard.node && solid.shape == SolidShape::Block)
+            .find(|solid| Some(solid.node) == label.node && solid.shape == SolidShape::Block)
         else {
             continue;
         };
         examined += 1;
-        let leaves = billboard.marks.iter().any(|mark| {
-            !shapes::rectangle_corners(*mark)
-                .into_iter()
-                .all(|corner| shapes::point_in_convex(corner, &block.silhouette))
+        let leaves = label.marks.iter().any(|mark| {
+            !mark
+                .iter()
+                .all(|corner| shapes::point_in_convex(*corner, &block.silhouette))
         });
         if leaves {
             defects.push(Defect {
-                pointer: billboard.owner.clone(),
-                message: format!("{} leaves its block", describe(billboard)),
+                pointer: label.owner.clone(),
+                message: format!("{} leaves its block", describe(label)),
             });
         }
     }
