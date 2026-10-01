@@ -148,7 +148,7 @@ fn measured_json_is_identical_and_svg_differs_across_themes() {
             let page: Page = serde_json::from_str(document_text).unwrap();
             let geometry = common::layout_with_cosmic_text(&page);
             let scene = (page.projection == Projection::Iso).then(|| {
-                let inputs = SolidInputs::new(&geometry, theme.iso.slab_thickness);
+                let inputs = SolidInputs::new(&geometry, &page.links, theme.iso.slab_thickness);
                 project_page(&geometry, &inputs).unwrap()
             });
             let svg = render_svg(&page, &theme, &geometry).unwrap();

@@ -32,17 +32,23 @@ pub fn render_svg(page: &Page, geometry: &PageGeometry) -> Result<SvgDocument, R
 
 /// The projection inputs of `geometry` under the built-in theme `page` names.
 pub fn solid_inputs(page: &Page, geometry: &PageGeometry) -> SolidInputs {
-    SolidInputs::new(geometry, theme(theme_reference(page)).iso.slab_thickness)
+    SolidInputs::new(
+        geometry,
+        &page.links,
+        theme(theme_reference(page)).iso.slab_thickness,
+    )
 }
 
-/// `project_page` with the slab thickness every designed built-in uses.
+/// `project_page` with the slab thickness every designed built-in uses. No link takes a
+/// slab exit (section 13.11), because the page's links are not at hand.
 pub fn project_page(geometry: &PageGeometry) -> Result<IsoScene, RenderError> {
-    stencil_render::iso::project_page(geometry, &SolidInputs::new(geometry, 6.0))
+    stencil_render::iso::project_page(geometry, &SolidInputs::new(geometry, &[], 6.0))
 }
 
-/// `project_zoomed` with the slab thickness every designed built-in uses.
+/// `project_zoomed` with the slab thickness every designed built-in uses. No link takes a
+/// slab exit.
 pub fn project_zoomed(geometry: &PageGeometry, zoom: f32) -> Result<IsoScene, RenderError> {
-    stencil_render::iso::project_zoomed(geometry, zoom, &SolidInputs::new(geometry, 6.0))
+    stencil_render::iso::project_zoomed(geometry, zoom, &SolidInputs::new(geometry, &[], 6.0))
 }
 
 /// `page` with its theme reference set to `name`.

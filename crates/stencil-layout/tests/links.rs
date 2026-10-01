@@ -274,3 +274,84 @@ fn routing_is_a_pure_function_of_the_geometry() {
     ])));
     assert_eq!(layout(&page).links, layout(&page).links);
 }
+
+/// Section 13.11 rule 3: asked for the sides and via points layout used, `reroute_link`
+/// gives back layout's route, tag included.
+#[test]
+fn reroute_link_with_an_unchanged_request_returns_the_layout_route() {
+    use stencil_layout::reroute_link;
+    use stencil_model::Side;
+
+    let geometry = layout(&page_from(row_with_obstacle(json!([
+        { "from": "a", "to": "c", "line": "solid", "tint": 1, "label": "VLAN 1" },
+        { "from": "a", "to": "b", "line": "solid", "tint": 1, "from_side": "bottom", "to_side": "bottom" },
+        { "from": "c", "to": "a", "line": "solid", "tint": 1, "via": [{ "x": 400.0, "y": 300.0 }] }
+    ]))));
+    let requests: [(usize, Side, Vec<PagePoint>); 3] = [
+        (0, Side::Right, Vec::new()),
+        (1, Side::Bottom, Vec::new()),
+        (2, Side::Left, vec![PagePoint { x: 400.0, y: 300.0 }]),
+    ];
+    for (index, from_side, via) in requests {
+        let routed = route_of(&geometry, index);
+        let rerouted = reroute_link(&geometry, index, from_side, &via).unwrap();
+        assert_eq!(&rerouted, routed, "link {index}");
+    }
+    assert!(reroute_link(&geometry, 3, Side::Right, &[]).is_none());
+}
+
+/// A different request routes through the given via point, leaves from the given side and
+/// keeps the to side; the tag moves with the new longest segment.
+#[test]
+fn reroute_link_routes_through_a_new_via_point() {
+    use stencil_layout::reroute_link;
+    use stencil_model::Side;
+
+    let geometry = layout(&page_from(row_with_obstacle(json!([
+        { "from": "a", "to": "c", "line": "solid", "tint": 1, "label": "VLAN 1" }
+    ]))));
+    let routed = route_of(&geometry, 0).clone();
+    let a = node(&geometry, "/body/0/children/0").bounds;
+    let via = PagePoint {
+        x: a.x + a.width / 2.0,
+        y: a.bottom() + 40.0,
+    };
+    let rerouted = reroute_link(&geometry, 0, Side::Bottom, &[via]).unwrap();
+    assert_eq!(rerouted.status, RouteStatus::Routed);
+    assert_orthogonal(&rerouted.points);
+    assert_eq!(
+        rerouted.points[0],
+        PagePoint {
+            x: via.x,
+            y: a.bottom()
+        }
+    );
+    assert!(
+        rerouted
+            .points
+            .windows(2)
+            .any(|pair| on_segment(via, pair[0], pair[1])),
+        "{:?} misses {via:?}",
+        rerouted.points
+    );
+    assert_eq!(rerouted.points.last(), routed.points.last());
+    assert_ne!(rerouted.points, routed.points);
+    let (old_tag, new_tag) = (routed.tag.unwrap(), rerouted.tag.unwrap());
+    assert_eq!(
+        (new_tag.width, new_tag.height),
+        (old_tag.width, old_tag.height)
+    );
+    assert_eq!(rerouted.parts.len(), routed.parts.len());
+    for (new_part, old_part) in rerouted.parts.iter().zip(&routed.parts) {
+        assert_close(
+            new_part.bounds.x - old_part.bounds.x,
+            new_tag.x - old_tag.x,
+            "part moves with the tag",
+        );
+    }
+    assert_eq!(
+        route_of(&geometry, 0),
+        &routed,
+        "the geometry is not changed"
+    );
+}

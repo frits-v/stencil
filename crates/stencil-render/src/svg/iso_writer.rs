@@ -38,7 +38,7 @@ pub(super) fn render_iso(
     expected: &[(NodePointer, DocumentNode<'_>)],
 ) -> Result<SvgDocument, RenderError> {
     let (zoomed, zoom) = zoomed_geometry(geometry)?;
-    let solid_inputs = SolidInputs::new(&zoomed, theme.iso.slab_thickness);
+    let solid_inputs = SolidInputs::new(&zoomed, &page.links, theme.iso.slab_thickness);
     let scene = project_zoomed(&zoomed, zoom, &solid_inputs)?;
     let geometry = &zoomed;
     let palette = Palette::new(theme, Projection::Iso);

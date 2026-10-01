@@ -93,10 +93,22 @@ pub(crate) fn route_links(
 fn searched_route(
     geometry: &PageGeometry,
     link: &Link,
+    from: (usize, &NodeGeometry),
+    to: (usize, &NodeGeometry),
+) -> (Vec<PagePoint>, RouteStatus) {
+    let sides = choose_sides(link, &from.1.bounds, &to.1.bounds);
+    route_between(geometry, from, to, sides, &link.via)
+}
+
+/// The section 11.2 route from the `from_side` midpoint of `from` through `via` to the
+/// `to_side` midpoint of `to`, or the fallback L when the grid has none.
+fn route_between(
+    geometry: &PageGeometry,
     (from_node, from): (usize, &NodeGeometry),
     (to_node, to): (usize, &NodeGeometry),
+    (from_side, to_side): (Side, Side),
+    via: &[PagePoint],
 ) -> (Vec<PagePoint>, RouteStatus) {
-    let (from_side, to_side) = choose_sides(link, &from.bounds, &to.bounds);
     let start = side_midpoint(&from.bounds, from_side);
     let end = side_midpoint(&to.bounds, to_side);
     let obstacles = link_obstacles(geometry, from_node, to_node);
@@ -108,10 +120,76 @@ fn searched_route(
         from_side,
         to_side,
     };
-    match grid_route(&obstacles, &endpoints, &link.via) {
+    match grid_route(&obstacles, &endpoints, via) {
         Some(points) if points.len() <= LINK_SEGMENTS_MAX + 1 => (points, RouteStatus::Routed),
         Some(_) | None => (fallback_route(start, end), RouteStatus::Fallback),
     }
+}
+
+/// Section 13.11 rule 3: the route of the link at `index` in `geometry.links`, searched again
+/// with `from_side` and `via` in place of the authored ones. The to end keeps the side its
+/// routed polyline ends on, and the tag keeps its size and moves with the midpoint of the
+/// longest segment. Pure: the geometry is read, never changed. None when no routed link has
+/// that index or an endpoint is not a geometry node.
+pub fn reroute_link(
+    geometry: &PageGeometry,
+    index: usize,
+    from_side: Side,
+    via: &[PagePoint],
+) -> Option<LinkRoute> {
+    let route = geometry.links.iter().find(|route| route.index == index)?;
+    let from = geometry.nodes.get(route.from_node)?;
+    let to = geometry.nodes.get(route.to_node)?;
+    let to_side = route
+        .points
+        .last()
+        .and_then(|end| side_holding(&to.bounds, *end))
+        .unwrap_or_else(|| facing_side(from_side));
+    let (points, status) = route_between(
+        geometry,
+        (route.from_node, from),
+        (route.to_node, to),
+        (from_side, to_side),
+        via,
+    );
+    let old_center = longest_segment_midpoint(&route.points);
+    let new_center = longest_segment_midpoint(&points);
+    let (delta_x, delta_y) = (new_center.x - old_center.x, new_center.y - old_center.y);
+    let moved = |bounds: BoxRect| BoxRect {
+        x: bounds.x + delta_x,
+        y: bounds.y + delta_y,
+        ..bounds
+    };
+    Some(LinkRoute {
+        points,
+        tag: route.tag.map(moved),
+        parts: route
+            .parts
+            .iter()
+            .map(|part| Part {
+                bounds: moved(part.bounds),
+                ..part.clone()
+            })
+            .collect(),
+        status,
+        ..route.clone()
+    })
+}
+
+/// The first side, in SIDE_ORDER, whose edge line holds `point` within the geometry epsilon
+/// and whose span covers it.
+fn side_holding(bounds: &BoxRect, point: PagePoint) -> Option<Side> {
+    let near = |a: f32, b: f32| (a - b).abs() <= GEOMETRY_EPSILON_PX;
+    let within_x = point.x >= bounds.x - GEOMETRY_EPSILON_PX
+        && point.x <= bounds.right() + GEOMETRY_EPSILON_PX;
+    let within_y = point.y >= bounds.y - GEOMETRY_EPSILON_PX
+        && point.y <= bounds.bottom() + GEOMETRY_EPSILON_PX;
+    SIDE_ORDER.into_iter().find(|side| match side {
+        Side::Right => near(point.x, bounds.right()) && within_y,
+        Side::Bottom => near(point.y, bounds.bottom()) && within_x,
+        Side::Left => near(point.x, bounds.x) && within_y,
+        Side::Top => near(point.y, bounds.y) && within_x,
+    })
 }
 
 /// A message: two points, from the center x of its `from` head to the center x of its `to`

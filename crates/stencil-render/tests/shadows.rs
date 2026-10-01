@@ -47,7 +47,10 @@ fn center_draws_one_filter_and_one_shadow_first_in_each_opaque_block() {
     assert_eq!(svg.matches(FILTER).count(), 1);
     let background_end = svg.find("/>\n").unwrap();
     assert!(
-        svg[background_end..].trim_start_matches("/>\n").trim_start().starts_with("<defs>"),
+        svg[background_end..]
+            .trim_start_matches("/>\n")
+            .trim_start()
+            .starts_with("<defs>"),
         "the defs follow the background rect"
     );
 
@@ -87,7 +90,11 @@ fn a_note_draws_no_shadow() {
     assert_eq!(svg.matches(SHADOW_REFERENCE).count(), 1);
     let document = common::parse_xml(&svg);
     let note = common::group(&document, "/body/0/children/1");
-    assert!(!note.descendants().any(|node| node.attribute("filter").is_some()));
+    assert!(
+        !note
+            .descendants()
+            .any(|node| node.attribute("filter").is_some())
+    );
 }
 
 #[test]
@@ -164,7 +171,11 @@ fn the_shadow_grounds_a_lone_item_and_stays_within_20_px() {
 
     // Silhouette vertices 2, 3 and 4 (section 12.3 rule 3) run along the block's base:
     // right, front and left corner.
-    let base = [block.silhouette[2], block.silhouette[3], block.silhouette[4]];
+    let base = [
+        block.silhouette[2],
+        block.silhouette[3],
+        block.silhouette[4],
+    ];
     let mut shaded_below = 0;
     let mut clear_past = 0;
     for edge in base.windows(2) {
@@ -180,5 +191,8 @@ fn the_shadow_grounds_a_lone_item_and_stays_within_20_px() {
         }
     }
     assert_eq!(clear_past, 38);
-    assert!(shaded_below >= 30, "only {shaded_below} of 38 points are shaded");
+    assert!(
+        shaded_below >= 30,
+        "only {shaded_below} of 38 points are shaded"
+    );
 }

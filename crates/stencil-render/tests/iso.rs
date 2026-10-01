@@ -387,7 +387,11 @@ fn the_iso_svg_has_the_section_12_5_structure() {
         .collect();
     assert_eq!(billboard_ids, scene_ids);
     assert!(!iso.svg.contains("<marker"));
-    assert_eq!(iso.svg.matches("<defs>").count(), 1, "the block shadow filter only");
+    assert_eq!(
+        iso.svg.matches("<defs>").count(),
+        1,
+        "the block shadow filter only"
+    );
     assert!(!iso.svg.contains("<circle"));
     let root = document.root_element();
     let last = root.children().rfind(|node| node.is_element()).unwrap();
@@ -1563,12 +1567,12 @@ fn a_thicker_slab_raises_every_slab_and_grows_the_canvas() {
     let geometry = common::layout_with_fixed_metrics(&page);
     let six = stencil_render::iso::project_page(
         &geometry,
-        &stencil_render::iso::SolidInputs::new(&geometry, 6.0),
+        &stencil_render::iso::SolidInputs::new(&geometry, &page.links, 6.0),
     )
     .unwrap();
     let eight = stencil_render::iso::project_page(
         &geometry,
-        &stencil_render::iso::SolidInputs::new(&geometry, 8.0),
+        &stencil_render::iso::SolidInputs::new(&geometry, &page.links, 8.0),
     )
     .unwrap();
     let (_, zoom) = zoomed_geometry(&geometry).unwrap();
