@@ -28,6 +28,9 @@ const ZONE_TAB_RADIUS_PX: f32 = 4.0;
 const TEXT_PLATE_PADDING_X_PX: f32 = 3.0;
 const TEXT_PLATE_PADDING_Y_PX: f32 = 1.0;
 const TEXT_PLATE_RADIUS_PX: f32 = 3.0;
+/// The id of the blur filter every block shadow references (section 13.11).
+const SHADOW_FILTER_ID: &str = "stencil-shadow";
+
 pub(super) fn render_iso(
     page: &Page,
     theme: &Theme,
@@ -56,6 +59,15 @@ pub(super) fn render_iso(
             writer.palette.page_background()
         ),
     );
+    if let Some(shadow) = writer.palette.iso_block_shadow() {
+        writer.line(
+            1,
+            &format!(
+                r#"<defs><filter id="{SHADOW_FILTER_ID}" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="{}"/></filter></defs>"#,
+                format_number(shadow.blur)
+            ),
+        );
+    }
 
     let mut solids: Vec<Option<&Solid>> = vec![None; geometry.nodes.len()];
     for solid in &scene.solids {
@@ -280,9 +292,46 @@ impl<'a> SvgWriter<'a> {
             return Ok(None);
         };
         let top_z = solid.base_z + solid.height;
+        if solid.shape == SolidShape::Block && solid.opaque {
+            self.write_block_shadow(depth, node.bounds, solid.base_z, offset);
+        }
         self.write_faces(depth, node.bounds, solid.base_z, top_z, &paint, offset);
         self.write_top_face_drawing(depth, node, document_node, top_z, offset);
         Ok(paint.top)
+    }
+
+    /// The block's footprint at its base, moved `dy` down on screen and blurred, so the
+    /// block reads as standing on its surface (section 13.11). Nothing without a theme
+    /// shadow.
+    fn write_block_shadow(
+        &mut self,
+        depth: usize,
+        bounds: BoxRect,
+        base_z: f32,
+        offset: ScreenPoint,
+    ) {
+        let Some(shadow) = self.palette.iso_block_shadow() else {
+            return;
+        };
+        let lowered = ScreenPoint {
+            x: offset.x,
+            y: offset.y + shadow.dy,
+        };
+        let corners = [
+            project_point(bounds.x, bounds.y, base_z, lowered),
+            project_point(bounds.right(), bounds.y, base_z, lowered),
+            project_point(bounds.right(), bounds.bottom(), base_z, lowered),
+            project_point(bounds.x, bounds.bottom(), base_z, lowered),
+        ];
+        self.line(
+            depth,
+            &format!(
+                r#"<polygon points="{}" fill="{}" fill-opacity="{}" filter="url(#{SHADOW_FILTER_ID})"/>"#,
+                points_attribute(&corners),
+                shadow.color,
+                format_number(shadow.opacity)
+            ),
+        );
     }
 
     /// Left, right and top face, in that order (section 12.3, rule 1). A slab with no

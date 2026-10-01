@@ -387,7 +387,7 @@ fn the_iso_svg_has_the_section_12_5_structure() {
         .collect();
     assert_eq!(billboard_ids, scene_ids);
     assert!(!iso.svg.contains("<marker"));
-    assert!(!iso.svg.contains("<defs"));
+    assert_eq!(iso.svg.matches("<defs>").count(), 1, "the block shadow filter only");
     assert!(!iso.svg.contains("<circle"));
     let root = document.root_element();
     let last = root.children().rfind(|node| node.is_element()).unwrap();
