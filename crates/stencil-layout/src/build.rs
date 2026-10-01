@@ -19,8 +19,8 @@ use taffy::prelude::{
 use crate::lanes::LanesPlan;
 use crate::styles::{text_color, text_style_for};
 use crate::{
-    Axis, ContainerLook, ISO_BLOCK_HEIGHT_PX, ISO_LABEL_CLEARANCE_PX, LayoutError, NodeTag,
-    PartName, TextAlign,
+    Axis, ContainerLook, ISO_BLOCK_HEIGHT_PX, ISO_LABEL_CLEARANCE_PX, ISO_SPACE_SCALE,
+    ISO_TAG_CLEARANCE_PX, ISO_WIRE_SCALE, LayoutError, NodeTag, PartName, TextAlign,
 };
 
 /// Taffy's node context is an index into `BuiltPage::text_leaves`.
@@ -361,6 +361,11 @@ impl Builder<'_> {
             .map_err(Self::taffy_error(pointer))?;
         self.attach(parent, node, pointer)?;
         Ok(node)
+    }
+
+    /// A padding or gap: as authored flat, `ISO_SPACE_SCALE` times that under iso.
+    fn space(&self, px: f32) -> f32 {
+        if self.iso { px * ISO_SPACE_SCALE } else { px }
     }
 
     /// A measured text leaf reading along x. Uppercasing runs here, before measurement
@@ -834,7 +839,7 @@ impl Builder<'_> {
         placement: Placement,
         depth: usize,
     ) -> Result<(), LayoutError> {
-        let gap = f32::from(container.gap.unwrap_or(GAP_DEFAULT_PX));
+        let gap = self.space(f32::from(container.gap.unwrap_or(GAP_DEFAULT_PX)));
         let lays_out_as_row = container.tag == NodeTag::Row;
         let (direction, gap_size) = if lays_out_as_row {
             (
@@ -1003,8 +1008,8 @@ impl Builder<'_> {
         };
         let is_frame = kind.role == Role::Frame;
         let border = kind.border.width;
-        let padding = kind.padding;
-        let gap = if is_frame { 0.0 } else { 8.0 };
+        let padding = self.space(kind.padding);
+        let gap = if is_frame { 0.0 } else { self.space(8.0) };
         let mut style = Style {
             border: sides(border, border, border, border),
             padding: sides(padding, padding, padding, padding),
@@ -1046,7 +1051,12 @@ impl Builder<'_> {
 
         let children_container = if is_frame {
             let bar_style = Style {
-                padding: sides(7.0, 16.0, 7.0, 16.0),
+                padding: sides(
+                    self.space(7.0),
+                    self.space(16.0),
+                    self.space(7.0),
+                    self.space(16.0),
+                ),
                 ..flex_column(AlignItems::STRETCH)
             };
             let bar = self.container(bar_style, zone_node, &pointer)?;
@@ -1063,10 +1073,15 @@ impl Builder<'_> {
             )?;
             let body_style = Style {
                 flex_grow: 1.0,
-                padding: sides(16.0, 14.0, 14.0, 14.0),
+                padding: sides(
+                    self.space(16.0),
+                    self.space(14.0),
+                    self.space(14.0),
+                    self.space(14.0),
+                ),
                 gap: taffy::Size {
                     width: length(0.0),
-                    height: length(8.0),
+                    height: length(self.space(8.0)),
                 },
                 ..flex_column(AlignItems::STRETCH)
             };
@@ -1137,10 +1152,15 @@ impl Builder<'_> {
     ) -> Result<(), LayoutError> {
         let mut style = Style {
             gap: taffy::Size {
-                width: length(10.0),
+                width: length(self.space(10.0)),
                 height: length(0.0),
             },
-            padding: sides(6.0, 10.0, 6.0, 10.0),
+            padding: sides(
+                self.space(6.0),
+                self.space(10.0),
+                self.space(6.0),
+                self.space(10.0),
+            ),
             border: sides(1.5, 1.5, 1.5, 1.5),
             min_size: taffy::Size {
                 width: auto(),
@@ -1391,6 +1411,11 @@ impl Builder<'_> {
             (false, stencil_model::Line::Deny) => 16.0,
             (false, _) => 12.0,
         };
+        let wire_minimum = if self.iso {
+            wire_minimum * ISO_WIRE_SCALE
+        } else {
+            wire_minimum
+        };
         let wire_style = if horizontal {
             Style {
                 flex_grow: 1.0,
@@ -1432,10 +1457,18 @@ impl Builder<'_> {
             (true, None, true) => Axis::X,
             (true, None, false) => Axis::Y,
         };
+        // Under iso the pill keeps wire visible on both sides along the run.
+        let clearance = if self.iso { ISO_TAG_CLEARANCE_PX } else { 0.0 };
+        let tag_margin = if horizontal {
+            margins(0.0, clearance, 0.0, clearance)
+        } else {
+            margins(clearance, 0.0, clearance, 0.0)
+        };
         let tag_style = match tag_axis {
             Axis::X => Style {
                 padding: sides(6.0, 8.0, 6.0, 8.0),
                 border: sides(1.5, 1.5, 1.5, 1.5),
+                margin: tag_margin,
                 flex_shrink: if horizontal { 1.0 } else { 0.0 },
                 max_size: taffy::Size {
                     width: LengthPercentageAuto::percent(1.0),
@@ -1446,6 +1479,7 @@ impl Builder<'_> {
             Axis::Y => Style {
                 padding: sides(8.0, 6.0, 8.0, 6.0),
                 border: sides(1.5, 1.5, 1.5, 1.5),
+                margin: tag_margin,
                 flex_shrink: 0.0,
                 ..flex_row(AlignItems::CENTER)
             },

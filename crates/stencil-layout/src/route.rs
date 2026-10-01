@@ -1046,7 +1046,7 @@ fn tag_run(
 
 /// The midpoint of the longest segment (the first on a tie) and whether that segment runs
 /// along flat y.
-fn longest_segment_midpoint(points: &[PagePoint]) -> (PagePoint, bool) {
+pub fn longest_segment_midpoint(points: &[PagePoint]) -> (PagePoint, bool) {
     let mut best: Option<(f32, PagePoint, bool)> = None;
     for segment in points.windows(2) {
         let (Some(a), Some(b)) = (segment.first(), segment.get(1)) else {

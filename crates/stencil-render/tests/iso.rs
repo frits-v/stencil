@@ -14,8 +14,8 @@ use common::{THEMES, project_page, project_zoomed, render_svg};
 use resvg::usvg::roxmltree;
 use serde_json::{Value, json};
 use stencil_layout::{
-    BoxRect, ISO_TYPE_SCALE, ISO_ZONE_LABEL_SCALE, NodeTag, PageGeometry, PartName, Size,
-    TextRun, turned_box, unturned_box,
+    BoxRect, ISO_TYPE_SCALE, ISO_ZONE_LABEL_SCALE, NodeTag, PageGeometry, PartName, Size, TextRun,
+    turned_box, unturned_box,
 };
 use stencil_model::checks::{CheckName, CheckOutcome};
 use stencil_model::grammar::Role;
@@ -275,9 +275,16 @@ fn every_hero_link_reaches_its_endpoints_over_the_cloud_floor() {
     let scene = project_page(&geometry).unwrap();
     let floor = 6.0 * scene.zoom;
     assert_eq!(scene.link_paths.len(), 4);
-    for path in &scene.link_paths[2..] {
-        assert!(path.iter().all(|point| point.z == floor), "{path:?}");
-    }
+    let service_call = &scene.link_paths[2];
+    assert!(
+        service_call.iter().all(|point| point.z == floor),
+        "{service_call:?}"
+    );
+    // The warehouse stands on the apis slab, one slab thickness above the cloud floor, and
+    // the last service call climbs onto it where it enters that slab.
+    let to_warehouse = &scene.link_paths[3];
+    assert_eq!(to_warehouse.first().unwrap().z, floor);
+    assert_eq!(to_warehouse.last().unwrap().z, floor + 6.0 * scene.zoom);
     for path in &scene.link_paths[..2] {
         assert_eq!(path.first().unwrap().z, floor);
         assert_eq!(path.last().unwrap().z, floor);
@@ -390,7 +397,13 @@ fn the_iso_svg_has_the_section_12_5_structure() {
     let plane_owners: Vec<&str> = document
         .descendants()
         .filter(|node| node.attribute("data-plane").is_some())
-        .map(|plane| plane.parent_element().unwrap().attribute("data-id").unwrap())
+        .map(|plane| {
+            plane
+                .parent_element()
+                .unwrap()
+                .attribute("data-id")
+                .unwrap()
+        })
         .collect();
     let label_owners: Vec<&str> = scene
         .labels
@@ -611,10 +624,22 @@ fn a_vertical_pipe_tag_reads_along_y_and_is_drawn_in_its_unturned_box() {
     assert_close(number("x"), local_tag.x + inset, "pill x");
     assert_close(number("y"), local_tag.y + inset, "pill y");
     assert_close(number("width"), local_tag.width - 2.0 * inset, "pill width");
-    assert_close(number("height"), local_tag.height - 2.0 * inset, "pill height");
+    assert_close(
+        number("height"),
+        local_tag.height - 2.0 * inset,
+        "pill height",
+    );
     let lines: u32 = [PartName::TagLabel, PartName::TagSub]
         .into_iter()
-        .map(|name| pipe.part(name).unwrap().text.as_ref().unwrap().metrics.line_count)
+        .map(|name| {
+            pipe.part(name)
+                .unwrap()
+                .text
+                .as_ref()
+                .unwrap()
+                .metrics
+                .line_count
+        })
         .sum();
     assert_eq!(common::children_named(plane, "text").len() as u32, lines);
 }
@@ -894,7 +919,10 @@ fn block(node: usize, left: f32, top: f32, right: f32, bottom: f32) -> Solid {
         silhouette: [
             ScreenPoint { x: left, y: top },
             ScreenPoint { x: right, y: top },
-            ScreenPoint { x: right, y: middle },
+            ScreenPoint {
+                x: right,
+                y: middle,
+            },
             ScreenPoint {
                 x: right,
                 y: bottom,
@@ -991,7 +1019,10 @@ fn a_block_painted_after_a_label_covers_it_and_under_a_link_tag_every_block_coun
     let mut scene = scene_with(vec![painted_over_it]);
     scene.solids = vec![over.clone()];
     let report = iso_labels_clear(Some(&scene));
-    assert_eq!(report.examined, 0, "a block painted before its label is not examined");
+    assert_eq!(
+        report.examined, 0,
+        "a block painted before its label is not examined"
+    );
     assert!(report.defects.is_empty(), "{report:?}");
 
     let mut scene = scene_with(vec![label_at("tag", 20.0)]);
@@ -1110,11 +1141,9 @@ fn text_that_leaves_its_block_is_a_defect() {
 fn the_hero_labels_are_clear() {
     let page = hero_page();
     let geometry = common::layout_with_cosmic_text(&page);
-    let scene = stencil_render::iso::project_page(
-        &geometry,
-        &common::solid_inputs(&page, &geometry),
-    )
-    .unwrap();
+    let scene =
+        stencil_render::iso::project_page(&geometry, &common::solid_inputs(&page, &geometry))
+            .unwrap();
     assert_eq!(scene.labels.len(), 10);
     let report = iso_labels_clear(Some(&scene));
     assert_eq!(report.examined, 45 + (25 + 8) + 32 + 32 + 4);
@@ -1595,13 +1624,15 @@ fn a_wide_body_is_not_zoomed() {
     assert!((1.0..=ISO_ZOOM_MAX).contains(&zoom));
 }
 
+/// Under iso a card lays its icon left of its name; both lie on the block's top face.
 #[test]
-fn a_card_icon_lies_on_its_block_top_face_with_the_name_under_it() {
+fn a_card_icon_and_name_lie_on_its_block_top_face_with_the_name_beside_the_icon() {
     let hero = hero_page();
     let geometry = common::layout_with_cosmic_text(&hero);
     let (zoomed, zoom) = zoomed_geometry(&geometry).unwrap();
     let scene = project_zoomed(&zoomed, zoom).unwrap();
     for owner in [
+        HERO_ROUTER,
         "/body/0/children/1/children/0/children/0/children/0/children/0/children/0",
         "/body/0/children/1/children/0/children/0/children/0/children/1/children/0",
         "/body/0/children/1/children/0/children/1/children/0",
@@ -1612,9 +1643,7 @@ fn a_card_icon_lies_on_its_block_top_face_with_the_name_under_it() {
         assert_eq!(label.axis, Axis::X, "{owner}");
         let icon = node.part(PartName::Icon).unwrap().bounds;
         let name = node.part(PartName::FunctionName).unwrap().bounds;
-        assert!(name.y > icon.bottom(), "{owner}");
-        let (icon_x, icon_y) = center_of(icon);
-        let icon_center = label.map.apply(icon_x, icon_y);
+        assert!(name.x >= icon.right(), "{owner}: {name:?} {icon:?}");
         let top_z = block.base_z + block.height;
         let corner = |x: f32, y: f32| project_point(x, y, top_z, scene.offset);
         let face = block.footprint;
@@ -1624,15 +1653,28 @@ fn a_card_icon_lies_on_its_block_top_face_with_the_name_under_it() {
             corner(face.right(), face.bottom()),
             corner(face.x, face.bottom()),
         ];
-        assert!(
-            inside_convex(icon_center, &top_face),
-            "{owner}: icon {icon_center:?} off the top face {top_face:?}"
-        );
+        let (icon_x, icon_y) = center_of(icon);
+        let (name_x, name_y) = center_of(name);
+        for (what, point) in [
+            ("icon center", label.map.apply(icon_x, icon_y)),
+            ("name center", label.map.apply(name_x, name_y)),
+        ] {
+            assert!(
+                inside_convex(point, &top_face),
+                "{owner}: {what} {point:?} off the top face {top_face:?}"
+            );
+        }
+        for corner in label.corners {
+            assert!(
+                inside_convex(corner, &top_face),
+                "{owner}: label corner {corner:?} off the top face {top_face:?}"
+            );
+        }
     }
 }
 
 #[test]
-fn the_hero_primary_is_one_straight_leg_with_its_tag_on_it() {
+fn the_hero_primary_is_one_straight_leg_with_its_tag_on_the_ground_along_x() {
     let hero = hero_page();
     let geometry = common::layout_with_cosmic_text(&hero);
     assert!(geometry.links[0].points.len() > 2);
@@ -1643,6 +1685,20 @@ fn the_hero_primary_is_one_straight_leg_with_its_tag_on_it() {
         primary.iter().all(|point| (point.y - first.y).abs() < 1e-3),
         "{primary:?}"
     );
+    let tag = label_of(&scene, "/links/0");
+    assert_eq!(tag.axis, Axis::X);
+    assert_eq!(tag.z, 0.0);
+    assert!(tag.opaque);
+}
+
+/// Section 12.3 rule 8 moves the primary's first leg onto one straight leg; its tag must
+/// move with it.
+#[test]
+fn the_hero_primary_tag_lies_on_its_drawn_leg() {
+    let hero = hero_page();
+    let geometry = common::layout_with_cosmic_text(&hero);
+    let scene = project_page(&geometry).unwrap();
+    let primary = &scene.link_paths[0];
     let tag = label_of(&scene, "/links/0");
     assert_eq!(tag.axis, Axis::X);
     let (center_x, center_y) = center_of(tag.flat);
@@ -1903,7 +1959,8 @@ fn inside_convex(point: ScreenPoint, polygon: &[ScreenPoint]) -> bool {
     (0..polygon.len()).all(|index| {
         let start = polygon[index];
         let end = polygon[(index + 1) % polygon.len()];
-        let cross = (end.x - start.x) * (point.y - start.y) - (end.y - start.y) * (point.x - start.x);
+        let cross =
+            (end.x - start.x) * (point.y - start.y) - (end.y - start.y) * (point.x - start.x);
         cross / (end.x - start.x).hypot(end.y - start.y) >= -0.01
     })
 }

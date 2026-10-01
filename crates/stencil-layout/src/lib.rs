@@ -16,7 +16,7 @@ use stencil_model::text::{MeasureError, TextMeasurer, TextMetrics, TextStyle};
 use stencil_model::{Grammar, Line, Page, PagePoint, Violation, line_key, validate_page};
 
 pub use build::{container_label_style, fact_presentation};
-pub use route::reroute_link;
+pub use route::{longest_segment_midpoint, reroute_link};
 pub use stencil_model::text::WRAP_EPSILON_PX;
 pub use theme_labels::theme_legend_labels;
 
@@ -37,6 +37,15 @@ pub const ISO_LABEL_CLEARANCE_PX: f32 = 8.0;
 pub const ISO_TYPE_SCALE: f32 = 1.3;
 /// Under iso a zone label is this much larger than flat, the floor name of its slab.
 pub const ISO_ZONE_LABEL_SCALE: f32 = 1.5;
+/// Under iso every container padding, card padding and gap is this much larger than flat:
+/// a floor plan keeps open floor around what stands on it, and the grown type needs it.
+pub const ISO_SPACE_SCALE: f32 = 1.75;
+/// Under iso a pipe's wire is at least this many times its flat minimum, so its tag lying
+/// on the floor clears the slab edges its dots touch.
+pub const ISO_WIRE_SCALE: f32 = 3.0;
+/// Under iso a pipe tag keeps this much wire visible on each side along the run, so the
+/// pill never reaches the slab edges its dots touch.
+pub const ISO_TAG_CLEARANCE_PX: f32 = 16.0;
 
 pub use stencil_model::Axis;
 

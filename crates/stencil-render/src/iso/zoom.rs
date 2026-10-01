@@ -91,6 +91,9 @@ pub(crate) fn zoomed(
     origin: (f32, f32),
     zoom: f32,
 ) -> PageGeometry {
+    if zoom == 1.0 {
+        return geometry.clone();
+    }
     let scale = Scale { origin, zoom };
     let nodes = geometry
         .nodes

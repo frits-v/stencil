@@ -214,6 +214,15 @@ impl PlaneMap {
         ]
     }
 
+    /// `self` applied to layout points moved by `delta` first: `M'(p) = M(p + delta)`.
+    pub fn shifted_layout(self, delta: (f32, f32)) -> PlaneMap {
+        PlaneMap {
+            e: self.e + self.a * delta.0 + self.c * delta.1,
+            f: self.f + self.b * delta.0 + self.d * delta.1,
+            ..self
+        }
+    }
+
     pub fn shifted(self, delta: ScreenPoint) -> PlaneMap {
         PlaneMap {
             e: self.e + delta.x,
@@ -590,22 +599,26 @@ pub(crate) fn local_part(part: &Part, axis: Axis, pivot: (f32, f32)) -> Part {
     }
 }
 
-/// A link's tag on the terrain under its center (section 12.4), reading along the leg it
-/// sits on. None for a link without a label.
+/// A link's tag on the terrain under the midpoint of the drawn route's longest leg
+/// (section 12.4), reading along the axis layout gave it. The drawn route may differ from
+/// the layout route (section 13.11 rule 2 and the slab exit), so the tag moves with it: the
+/// move is a layout-px shift folded into the map. None for a link without a label.
 fn link_label(
     route: &LinkRoute,
+    drawn: &[PagePoint],
     terrain: &[Terrain],
     zoom: f32,
     origin: (f32, f32),
     plane: &dyn Fn(f32) -> PlaneMap,
 ) -> Option<Label> {
     let tag = route.tag?;
-    let (center_x, center_y) = center(tag);
-    let scene_center = (
-        origin.0 + (center_x - origin.0) * zoom,
-        origin.1 + (center_y - origin.1) * zoom,
+    let (layout_x, layout_y) = center(tag);
+    let (scene_center, _) = stencil_layout::longest_segment_midpoint(drawn);
+    let z = drape::ground_z(terrain, scene_center.x, scene_center.y);
+    let shift = (
+        origin.0 + (scene_center.x - origin.0) / zoom - layout_x,
+        origin.1 + (scene_center.y - origin.1) / zoom - layout_y,
     );
-    let z = drape::ground_z(terrain, scene_center.0, scene_center.1);
     let members: Vec<&Part> = route.parts.iter().collect();
     let (axis, pivot) = label_axis(&members);
     let local: Vec<Part> = members
@@ -614,8 +627,8 @@ fn link_label(
         .collect();
     let flat = local.iter().map(member_box).reduce(union)?;
     let map = match axis {
-        Axis::X => plane(z),
-        Axis::Y => plane(z).turned_about(pivot),
+        Axis::X => plane(z).shifted_layout(shift),
+        Axis::Y => plane(z).shifted_layout(shift).turned_about(pivot),
     };
     let marks = local
         .iter()
@@ -979,7 +992,7 @@ pub fn project_zoomed(
         })
         .collect();
     let routes = link_paths(geometry, &terrain, &solids, inputs);
-    for (route, (_, path)) in geometry.links.iter().zip(&routes) {
+    for (route, (points, path)) in geometry.links.iter().zip(&routes) {
         for point in path {
             extent.add(project_point(point.x, point.y, point.z, ZERO_OFFSET));
         }
@@ -993,7 +1006,7 @@ pub fn project_zoomed(
                 extent.add(project_point(x, y, tip.z, ZERO_OFFSET));
             }
         }
-        if let Some(label) = link_label(route, &terrain, zoom, origin, &unshifted) {
+        if let Some(label) = link_label(route, points, &terrain, zoom, origin, &unshifted) {
             for corner in label.corners {
                 extent.add(corner);
             }
