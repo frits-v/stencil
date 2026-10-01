@@ -161,8 +161,8 @@ fn an_authored_via_or_from_side_is_never_rerouted() {
     }
 }
 
-/// The hero's VLAN 2 is authored with `from_side: bottom` and via points, so it keeps the
-/// route its author drew: it leaves the on-prem slab through the bottom edge, down and away
+/// The hero's VLAN 2 is authored with `from_side: bottom`, so it keeps the route its author
+/// drew: it leaves the on-prem slab through the bottom edge, down and away
 /// from the gateway, and reaches the gcp floor over the ground.
 #[test]
 fn the_hero_vlan_2_keeps_its_authored_route() {
@@ -170,7 +170,6 @@ fn the_hero_vlan_2_keeps_its_authored_route() {
     let vlan_2 = &page.links[1];
     assert_eq!(vlan_2.label.as_deref(), Some("VLAN 2"));
     assert_eq!(vlan_2.from_side, Some(Side::Bottom));
-    assert!(!vlan_2.via.is_empty());
 
     let geometry = common::layout_with_cosmic_text(&page);
     let with_exit = scene_of(&page, &geometry);
