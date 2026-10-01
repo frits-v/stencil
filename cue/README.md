@@ -14,6 +14,7 @@ its rules; a figure file writes one topology against a grammar's `#Page`.
 | `grammars/gcp.cue` | `gcp` | the Google Cloud grammar data and rules, and the gcp `#Page` |
 | `grammars/plain.cue` | `plain` | the domain-neutral grammar data and the plain `#Page` |
 | `figures/g7.cue` | `gcp` | g7, Dedicated Interconnect at 99.99%: `customer` and `internal: customer & {...}` |
+| `figures/sequence.cue` | `plain` | a request flow in five lanes with ten ordered messages: `figure`, exported as `examples/sequence.json` |
 | `check.sh` | | the gate, below |
 | `out/` | | exported JSON and renders, not committed |
 
@@ -25,8 +26,10 @@ Layout notes forced by CUE's package rules:
   package name, so its import path carries the package: `github.com/frits-v/stencil/cue:stencil`.
 - `grammars/` holds two packages, `gcp` and `plain`, so every command names one:
   `./grammars:gcp`. A bare `./grammars` is an error.
-- `figures/g7.cue` is package `gcp` in its own directory, so it is a separate instance from the
-  grammar and imports it (`github.com/frits-v/stencil/cue/grammars:gcp`) to reach `gcp.#Page`.
+- `figures/` holds `g7.cue` (package `gcp`) and `sequence.cue` (package `plain`), so commands
+  name the package: `./figures:gcp`, `./figures:plain`. Each is a separate instance from its
+  grammar and imports it (`github.com/frits-v/stencil/cue/grammars:gcp` or `:plain`) to reach
+  its `#Page`.
 
 ## Vet, export, render
 
@@ -46,17 +49,19 @@ it, vet only says that some instances are incomplete. `stencil render` writes `<
 
 `./cue/check.sh` (from anywhere) runs, in order:
 
-1. `cue vet -c` over the core, `./grammars:gcp`, `./grammars:plain` and `./figures:gcp`.
+1. `cue vet -c` over the core, `./grammars:gcp`, `./grammars:plain`, `./figures:gcp` and
+   `./figures:plain`.
 2. Exports each grammar and compares it byte for byte with
    `crates/stencil-model/grammars/<name>.json`, which the Rust side embeds; a difference prints a
    unified diff and fails. Regenerate the committed file with the export command above.
-3. Exports `customer` and compares it with `examples/g7.json`, normalizing key order only.
-4. Vets every `examples/*.json` against the gcp `#Page`. An example with a standing defect is
+3. Exports `customer` and compares it with `examples/g7.json`, and `figure` from
+   `./figures:plain` with `examples/sequence.json`, normalizing key order only.
+4. Vets every `examples/*.json` against the `#Page` of the grammar it names (`gcp` when absent). An example with a standing defect is
    listed in `known_failures` with the rule it breaks: it is printed as `KNOWN` on every run,
    any other error fails, and an entry that starts vetting clean fails as stale.
 5. Vets a one-key `chrome: "none"` document with an empty legend, which must pass.
-6. Runs every negative case: a copy of the cue tree with one edit to `figures/g7.cue` that vet
-   must reject with a named error.
+6. Runs every negative case: a copy of the cue tree with one edit to `figures/g7.cue` or
+   `figures/sequence.cue` that vet must reject with a named error.
 
 The script fails if the `cue` binary is missing, if an edit does not apply, if vet passes, or if
 vet fails for a different reason. Set `CUE` to the binary path if the `cue` shim is not active,
@@ -75,7 +80,8 @@ for example `CUE="$(mise which cue)" ./cue/check.sh`.
   system) or `ask` (an open question for the reader).
 - `Pipe`, `Tee` (and each Tee arm), `Link` and legend entries carry `line`: `gray`, `solid`,
   `dash` or `deny`, and an optional `tint`. A solid or dash line without tint is slot 1.
-- `Lanes` is a container of 1 to 32 lane heads with an optional `gap` of 0 to 64.
+- `Lanes` is a container of 1 to 32 lane heads with an optional `gap` of 0 to 64. A `Link` may
+  carry `order`, 1 to 256, which makes it a message of the Lanes node whose heads it joins.
 - `#Page` adds `grammar` (`gcp`, `plain` or a path ending in `.json`) and `chrome` (`full` or
   `none`). `theme` is `center`, `dusk` or `wire`.
 
@@ -102,6 +108,9 @@ a hidden struct keyed by the offending item, so the error path names it.
   (`_linkToItself.<id>`). A page holds at most 256 links and a link at most 8 `via` points.
   Each point has x from 0 to the canvas width (`_viaOutsidePage`) and y of 0 or more; the
   canvas height is known only after layout.
+- Ordered links. A link with `order` joins two different heads of one Lanes node, a head being
+  a direct child of it (`_orderedLinkNotBetweenLaneHeads.<link index>`), and no two messages of
+  one Lanes node share an order (`_linkOrderUsedTwice.<order>`).
 - Canvas. `canvas` is `"customer"` or `"internal"` and must be concrete, so each exported
   figure has exactly one.
 - Page and container fields. `width` is optional, 640 to 2560; the renderer defaults it to

@@ -375,6 +375,36 @@ fn prime_grammar_prints_each_built_in_grammar_within_the_topic_budget() {
 }
 
 #[test]
+fn prime_grammar_plain_covers_lanes_and_names_each_plain_example_on_one_line() {
+    let plain = run_stencil(&["prime", "grammar", "plain"]).stdout;
+    let lanes_lines: Vec<&str> = plain
+        .lines()
+        .filter(|line| line.starts_with("Lanes:"))
+        .collect();
+    assert_eq!(lanes_lines.len(), 1, "{plain}");
+    for phrase in [
+        "order",
+        "lifeline",
+        "dash for a reply",
+        "deny for a rejected call",
+    ] {
+        assert!(lanes_lines[0].contains(phrase), "Lanes line lacks {phrase}");
+    }
+    for stem in ["sequence", "org", "onprem-network"] {
+        let path = format!("examples/{stem}.json");
+        let lines = plain.lines().filter(|line| line.contains(&path)).count();
+        assert_eq!(lines, 1, "{stem}: {plain}");
+        assert!(
+            Path::new(env!("CARGO_MANIFEST_DIR"))
+                .join("../..")
+                .join(&path)
+                .is_file(),
+            "{path} is named but missing"
+        );
+    }
+}
+
+#[test]
 fn prime_grammar_with_an_unknown_or_missing_name_exits_2_with_one_line() {
     for arguments in [vec!["prime", "grammar", "nope"], vec!["prime", "grammar"]] {
         let outcome = run_stencil(&arguments);

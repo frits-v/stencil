@@ -128,6 +128,21 @@ import (
 	_linkToItself: {
 		for l in _links if l.from == l.to {(l.from): "link from" & "the same node as link to"}
 	}
+	// Each Lanes node's head ids, one list per node. An ordered link is a message
+	// of exactly the Lanes node whose heads it joins, and one node uses each order
+	// once.
+	_laneSets: list.Concat([for n in body {n._laneSets}])
+	_orderedLinks: [for i, l in _links if l.order != _|_ {
+		index: i
+		order: l.order
+		lanes: [for s, heads in _laneSets if l.from != l.to && list.Contains(heads, l.from) && list.Contains(heads, l.to) {s}]
+	}]
+	_orderedLinkNotBetweenLaneHeads: {
+		for m in _orderedLinks if len(m.lanes) == 0 {"\(m.index)": "ordered link" & "joins two lane heads of one Lanes node"}
+	}
+	_linkOrderUsedTwice: {
+		for a in _orderedLinks for b in _orderedLinks if a.index < b.index && a.order == b.order && len(a.lanes) > 0 && a.lanes == b.lanes {"\(b.order)": "order" & "used by two links of one Lanes node"}
+	}
 	_viaOutsidePage: {
 		for i, l in _links if l.via != _|_ for j, p in l.via if p.x > _canvasWidth {"\(i).\(j)": "via x" & "beyond the canvas width"}
 	}
@@ -153,6 +168,8 @@ import (
 	from_side?: #Side
 	to_side?:   #Side
 	via?: [...#PagePoint] & list.MaxItems(8)
+	// A message of a Lanes node: its place along the time axis.
+	order?: int & >=1 & <=256
 }
 
 #PagePoint: {
@@ -192,6 +209,7 @@ import (
 	}
 	_keys: {for c in children {c._keys}}
 	_ids: list.Concat([[if id != _|_ {id}], for c in children {c._ids}])
+	_laneSets: list.Concat([for c in children {c._laneSets}])
 }
 
 #Row: {
@@ -212,6 +230,8 @@ import (
 	children: [...#Node] & list.MinItems(1) & list.MaxItems(32)
 	_keys: {for c in children {c._keys}}
 	_ids: list.Concat([[if id != _|_ {id}], for c in children {c._ids}])
+	// The ids of this node's lane heads, then the sets of any Lanes below them.
+	_laneSets: list.Concat([[[for c in children if c.id != _|_ {c.id}]], for c in children {c._laneSets}])
 }
 
 // Any container. The grammar's container kind decides how it is drawn and
@@ -225,6 +245,7 @@ import (
 	children: #Children
 	_keys: {for c in children {c._keys}}
 	_ids: list.Concat([[if id != _|_ {id}], for c in children {c._ids}])
+	_laneSets: list.Concat([for c in children {c._laneSets}])
 }
 
 // Any named leaf, drawn with its facts in list order under title and subtitle.
@@ -238,6 +259,7 @@ import (
 	facts?: [...#FactEntry] & list.MaxItems(8)
 	_keys: {}
 	_ids: [if id != _|_ {id}]
+	_laneSets: []
 }
 
 // doc: read from the live documentation when the figure was authored (the
@@ -255,6 +277,7 @@ import (
 	source?: #FactSource
 	_keys: {}
 	_ids: [if id != _|_ {id}]
+	_laneSets: []
 }
 
 #Note: {
@@ -264,6 +287,7 @@ import (
 	text: #Text
 	_keys: {}
 	_ids: [if id != _|_ {id}]
+	_laneSets: []
 }
 
 #Pipe: {
@@ -278,6 +302,7 @@ import (
 	arrow?: #Arrow
 	_keys: {(_lineKey.key): true}
 	_ids: [if id != _|_ {id}]
+	_laneSets: []
 }
 
 // One source fanned to two destinations. line colours the spine; each arm is
@@ -292,6 +317,7 @@ import (
 	arms: [#Pipe, #Pipe]
 	_keys: {(_lineKey.key): true, arms[0]._keys, arms[1]._keys}
 	_ids: list.Concat([[if id != _|_ {id}], arms[0]._ids, arms[1]._ids])
+	_laneSets: []
 }
 
 // The lines of a Text block, as in the Rust model: 1 to 64. Declared outside
@@ -309,6 +335,7 @@ import (
 	list?:    #ListKind
 	_keys: {}
 	_ids: [if id != _|_ {id}]
+	_laneSets: []
 }
 
 #Callout: {
@@ -319,6 +346,7 @@ import (
 	text:   #Text
 	_keys: {}
 	_ids: [if id != _|_ {id}]
+	_laneSets: []
 }
 
 // A wireframe placeholder. height is authored; the Rust default is 200.
@@ -329,4 +357,5 @@ import (
 	height?: int & >=40 & <=1200
 	_keys: {}
 	_ids: [if id != _|_ {id}]
+	_laneSets: []
 }
