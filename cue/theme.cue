@@ -177,11 +177,11 @@ import "list"
 		ring?: #Stroke
 		// The outline of a block whose flat drawing has no border; absent draws none.
 		block_outline?: #Stroke
-		plates:         bool
-		tabs: {
-			frame:        #Swatch
-			top:          #Swatch
-			nested_width: #Width
+		// The ink of a Box name lying on its slab: the frame's, and any untinted Box's; a
+		// tinted Box takes its tint's ink.
+		labels: {
+			frame: #Color
+			zone:  #Color
 		}
 		chip: {
 			fill:  #Color

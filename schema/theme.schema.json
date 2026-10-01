@@ -591,8 +591,9 @@
             }
           ]
         },
-        "plates": {
-          "type": "boolean"
+        "labels": {
+          "description": "The ink of a Box name lying on its slab (section 12.4).",
+          "$ref": "#/$defs/LabelInks"
         },
         "ring": {
           "description": "A ring (a container with no drawn fill); absent draws its flat border.",
@@ -624,9 +625,6 @@
         "solid_edges": {
           "$ref": "#/$defs/SolidEdges"
         },
-        "tabs": {
-          "$ref": "#/$defs/TabRole"
-        },
         "widths": {
           "$ref": "#/$defs/IsoWidths"
         }
@@ -638,8 +636,7 @@
         "frame_outline",
         "solid_edges",
         "edge_width",
-        "plates",
-        "tabs",
+        "labels",
         "chip",
         "widths"
       ]
@@ -673,6 +670,24 @@
         "primary",
         "secondary",
         "gray"
+      ]
+    },
+    "LabelInks": {
+      "type": "object",
+      "properties": {
+        "frame": {
+          "description": "The frame's name on its floor.",
+          "$ref": "#/$defs/Color"
+        },
+        "zone": {
+          "description": "The name of a Box that has no tint; a tinted Box takes its tint's ink.",
+          "$ref": "#/$defs/Color"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "frame",
+        "zone"
       ]
     },
     "LanesRole": {
@@ -782,29 +797,6 @@
       "required": [
         "fill",
         "ink"
-      ]
-    },
-    "TabRole": {
-      "type": "object",
-      "properties": {
-        "frame": {
-          "$ref": "#/$defs/Swatch"
-        },
-        "nested_width": {
-          "type": "number",
-          "format": "float",
-          "maximum": 4.0,
-          "minimum": 0.5
-        },
-        "top": {
-          "$ref": "#/$defs/Swatch"
-        }
-      },
-      "additionalProperties": false,
-      "required": [
-        "frame",
-        "top",
-        "nested_width"
       ]
     },
     "TagRole": {

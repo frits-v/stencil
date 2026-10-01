@@ -2408,15 +2408,9 @@ impl Palette {
     pub fn iso_legend_label(self, kind: PipeKind) -> Option<&'static str>;
     pub fn iso_wire_width(self, kind: PipeKind) -> f32;
     /// Filled for a zone no zone encloses, an outline for a nested one (section 12.4).
-    pub fn iso_zone_tab(self, kind: ZoneKind, nested: bool) -> ZoneTab;
-    /// False in dusk, which draws no text plates (section 12.4, rule 4).
-    pub fn iso_text_plates(self) -> bool;
+    pub fn iso_label_ink(self, look: ContainerLook, tint: Option<u8>) -> &str;
 }
 
-pub enum ZoneTab {
-    Filled { fill: &'static str, ink: &'static str },
-    Outline { border: Stroke, ink: &'static str },
-}
 
 /// `color` (`#RRGGBB`) with its HSL lightness moved by `step_points` percentage points.
 /// None when `color` is not `#` followed by six hex digits.
@@ -3540,11 +3534,9 @@ import "list"
 		ring?: #Stroke
 		// The outline of a block whose flat drawing has no border; absent draws none.
 		block_outline?: #Stroke
-		plates: bool
-		tabs: {
-			frame:        #Swatch
-			top:          #Swatch
-			nested_width: #Width
+		labels: {
+			frame: #Color
+			zone:  #Color
 		}
 		chip: {
 			fill:  #Color
@@ -3646,7 +3638,7 @@ pub struct DenyRole {
 }
 pub struct FaceSteps { pub top: i8, pub left: i8, pub right: i8 }
 pub struct FrameSides { pub left: Color, pub right: Color }
-pub struct TabRole { pub frame: Swatch, pub top: Swatch, pub nested_width: f32 }
+pub struct LabelInks { pub frame: Color, pub zone: Color }
 pub struct ChipShadow { pub color: Color, pub opacity: f32, pub dy: f32 }
 pub struct ChipRole { pub fill: Color, pub ring: Option<Color>, pub shadow: Option<ChipShadow> }
 pub struct BlockShadow { pub color: Color, pub opacity: f32, pub blur: f32, pub dy: f32 }
@@ -3660,8 +3652,7 @@ pub struct IsoRole {
     pub edge_width: f32,
     pub ring: Option<ThemeStroke>,
     pub block_outline: Option<ThemeStroke>,
-    pub plates: bool,
-    pub tabs: TabRole,
+    pub labels: LabelInks,
     pub chip: ChipRole,
     pub shadow: Option<BlockShadow>,
     pub widths: IsoWidths,
@@ -3852,8 +3843,7 @@ The research keys are gcp kind names because the research was run against the gc
 | `iso.slab_thickness` | 6 |
 | `iso.frame_sides` | left `frame.border`, right that color shaded -12, as center's `#1A73E8` and `#1257B3` |
 | `iso.frame_outline`, `solid_edges`, `edge_width` | 1.5, `none`, 1.5 |
-| `iso.plates` | true on a light page, false on a dark one |
-| `iso.tabs` | frame: `frame.bar_fill` with `frame.bar_ink`; top-level: `ink.secondary` with the page as ink on a light page, `card.border.color` with `ink.primary` on a dark page; nested width 1.25 |
+| `iso.labels` | frame: `frame.bar_fill` on a light page, the slot 1 tint ink on a dark one; zone: `ink.secondary` on a light page, `ink.primary` on a dark one |
 | `iso.chip` | light page: `#FFFFFF` ringed in `card.border.color`, with the `ink.primary` shadow at 0.18 opacity 1.5 px down; dark page: `#FFFFFF`, no ring, no shadow |
 | `iso.shadow` | light page: `ink.primary` at 0.18 opacity, blur 2.5, dy 3; dark page: `#000000` at 0.5, blur 3, dy 3 |
 | `iso.widths` | primary 3.75, secondary 2.5, gray 2 |
@@ -3999,8 +3989,7 @@ Mapping. `r` is 0.18 when `base00` has L* below 50 (a dark scheme) and 0.22 othe
 | `lanes.lifeline` | `base04`, 1 px, dashed |
 | `iso.faces` | top 0, left `-s`, right `-2s`, where `s` is the L* difference between `base00` and `base02`, rounded and clamped to 4 to 8 |
 | `iso.slab_thickness` | 6 when the L* difference between `base00` and `base01` is at least 4, else 8, so a slab whose top barely differs from the page shows a thicker shaded side |
-| `iso.tabs` | frame: `frame.bar_fill` with `frame.bar_ink`; top-level: `base03` with the higher contrast of `base00` and `ink.primary` on it; nested width 1.25 |
-| `iso.plates` | false for a dark scheme, true otherwise |
+| `iso.labels` | frame: `base0D` on a light scheme, the bar ink on a dark one; zone: `base03` on a light scheme, `ink.primary` on a dark one |
 | `iso.chip` ring, shadow | ring `base03`, no shadow |
 | `iso.shadow` | dark scheme: `#000000` at 0.5, blur 3, dy 3; otherwise `ink.primary` at 0.18, blur 2.5, dy 3 |
 | widths, patterns, dots, `iso.frame_sides`, `iso.frame_outline`, `solid_edges`, `edge_width`, `iso.widths` | as the derived roles of section 13.5 |

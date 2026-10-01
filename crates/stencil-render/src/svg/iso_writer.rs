@@ -14,11 +14,10 @@ use super::{
 };
 use crate::iso::{
     ISO_DOT_RADIUS_X_PX, ISO_DOT_RADIUS_Y_PX, IsoPoint, Label, ScreenPoint, Solid, SolidInputs,
-    SolidShape, arrowhead_vertices, end_direction, has_zone_ancestor, iso_link_arrowhead_length,
-    label_axis, local_part, plane_member, project_point, project_zoomed, start_direction,
-    zoomed_geometry,
+    SolidShape, arrowhead_vertices, end_direction, iso_link_arrowhead_length, label_axis,
+    local_part, plane_member, project_point, project_zoomed, start_direction, zoomed_geometry,
 };
-use crate::palette::{DotStyle, FacePaint, LineStyle, LineUse, Palette, Stroke, ZoneTab};
+use crate::palette::{DotStyle, FacePaint, LineStyle, LineUse, Palette, Stroke};
 use crate::{RenderError, SvgDocument, format_number};
 
 /// The id of the blur filter every block shadow references (section 13.11).
@@ -110,8 +109,7 @@ pub(super) fn render_iso(
             (_, Some(solid), _) => {
                 writer.write_solid(depth + 1, node, *document_node, solid, scene.offset)?;
                 if let Some(label) = node_labels.get(index).copied().flatten() {
-                    let nested = has_zone_ancestor(geometry, index);
-                    writer.write_node_label(depth + 1, node, *document_node, label, nested)?;
+                    writer.write_node_label(depth + 1, node, *document_node, label)?;
                 }
             }
             (_, None, _) => {
@@ -748,25 +746,20 @@ impl<'a> SvgWriter<'a> {
         );
     }
 
-    /// A node's plane members with the flat drawing, in the plane group. A zone label takes
-    /// the ink of the tab it would carry upright: the top-level tab fill, or a nested zone's
-    /// border color.
+    /// A node's plane members with the flat drawing, in the plane group. A Box name takes
+    /// the ink of `Palette::iso_label_ink`.
     fn write_node_label(
         &mut self,
         depth: usize,
         node: &NodeGeometry,
         document_node: DocumentNode<'_>,
         label: &Label,
-        nested: bool,
     ) -> Result<(), RenderError> {
         let context = self.part_context(document_node);
         let zone_ink = match document_node {
             DocumentNode::Content(NodeRef::Node(Node::Box(_))) => {
                 let look = node.container.ok_or_else(|| surface_mismatch(node))?;
-                Some(match self.palette.iso_zone_tab(look, node.tint, nested) {
-                    ZoneTab::Filled { fill, .. } => fill,
-                    ZoneTab::Outline { border, .. } => border.color,
-                })
+                Some(self.palette.iso_label_ink(look, node.tint))
             }
             _ => None,
         };

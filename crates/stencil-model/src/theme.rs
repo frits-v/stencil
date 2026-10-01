@@ -362,11 +362,11 @@ pub struct FrameSides {
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
-pub struct TabRole {
-    pub frame: Swatch,
-    pub top: Swatch,
-    #[schemars(range(min = 0.5, max = 4.0))]
-    pub nested_width: f32,
+pub struct LabelInks {
+    /// The frame's name on its floor.
+    pub frame: Color,
+    /// The name of a Box that has no tint; a tinted Box takes its tint's ink.
+    pub zone: Color,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
@@ -435,8 +435,8 @@ pub struct IsoRole {
     /// The outline of a block whose flat drawing has no border; absent draws none.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub block_outline: Option<ThemeStroke>,
-    pub plates: bool,
-    pub tabs: TabRole,
+    /// The ink of a Box name lying on its slab (section 12.4).
+    pub labels: LabelInks,
     pub chip: ChipRole,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub shadow: Option<BlockShadow>,
@@ -889,10 +889,9 @@ fn check_iso(checker: &mut Checker, pointer: &NodePointer, iso: &IsoRole) {
     checker.width(pointer.child("edge_width"), iso.edge_width);
     checker.optional_stroke(&pointer.child("ring"), iso.ring.as_ref());
     checker.optional_stroke(&pointer.child("block_outline"), iso.block_outline.as_ref());
-    let tabs = pointer.child("tabs");
-    checker.swatch(&tabs.child("frame"), &iso.tabs.frame);
-    checker.swatch(&tabs.child("top"), &iso.tabs.top);
-    checker.width(tabs.child("nested_width"), iso.tabs.nested_width);
+    let labels = pointer.child("labels");
+    checker.color(labels.child("frame"), &iso.labels.frame);
+    checker.color(labels.child("zone"), &iso.labels.zone);
     let chip = pointer.child("chip");
     checker.color(chip.child("fill"), &iso.chip.fill);
     checker.optional_color(chip.child("ring"), iso.chip.ring.as_ref());

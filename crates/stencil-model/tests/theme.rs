@@ -10,7 +10,7 @@
 //! Section 13.4: the theme document, its structural rules, overrides and quality rows.
 
 use serde_json::{Value, json};
-use stencil_model::theme::{QualityClass, TOLD_APART_BY_LINE, TintCue, contrast_ratio};
+use stencil_model::theme::{QualityClass, SolidEdges, TOLD_APART_BY_LINE, TintCue, contrast_ratio};
 use stencil_model::{
     Line, Theme, ThemeError, ThemeRule, apply_overrides, drawn_legend_label, parse_theme,
     theme_quality, theme_schema, validate_theme,
@@ -215,7 +215,7 @@ fn a_nested_override_merges_key_by_key_and_a_scalar_replaces() {
     let overridden = apply_overrides(
         &base,
         &overrides(json!({
-            "iso": { "chip": { "shadow": { "opacity": 0.3 } }, "plates": false },
+            "iso": { "chip": { "shadow": { "opacity": 0.3 } }, "solid_edges": "outline" },
             "icon_chip": "#F1F3F4",
             "solid": { "dots": ["hollow", "filled", "filled", "filled", "filled", "filled", "filled", "filled"] }
         })),
@@ -224,7 +224,7 @@ fn a_nested_override_merges_key_by_key_and_a_scalar_replaces() {
     let shadow = overridden.iso.chip.shadow.as_ref().unwrap();
     assert_eq!(shadow.opacity, 0.3);
     assert_eq!(shadow.color.as_str(), "#202124");
-    assert!(!overridden.iso.plates);
+    assert_eq!(overridden.iso.solid_edges, SolidEdges::Outline);
     assert_eq!(overridden.icon_chip.unwrap().as_str(), "#F1F3F4");
     assert_eq!(
         overridden.solid.dots[0],
@@ -278,7 +278,7 @@ fn override_faults_point_into_theme_overrides() {
             "/theme_overrides/tints/3/wire".to_string()
         )]
     );
-    let wrong_type = apply_overrides(&base, &overrides(json!({ "iso": { "plates": "yes" } })));
+    let wrong_type = apply_overrides(&base, &overrides(json!({ "iso": { "edge_width": "yes" } })));
     assert!(matches!(wrong_type, Err(ThemeError::Json { .. })));
 }
 

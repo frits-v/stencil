@@ -47,7 +47,7 @@ pub(crate) fn polygons_overlap(first: &[ScreenPoint], second: &[ScreenPoint]) ->
 }
 
 /// True when the segment passes through the inside of the convex polygon shrunk by the
-/// epsilon: a segment that only touches an edge does not cross.
+/// epsilon: a segment that only touches or runs along an edge does not cross.
 pub(crate) fn segment_crosses_convex(
     start: ScreenPoint,
     end: ScreenPoint,
@@ -57,7 +57,20 @@ pub(crate) fn segment_crosses_convex(
         return false;
     };
     let length = ((end.x - start.x).powi(2) + (end.y - start.y).powi(2)).sqrt();
-    (exit - enter) * length > 2.0 * GEOMETRY_EPSILON_PX
+    if (exit - enter) * length <= 2.0 * GEOMETRY_EPSILON_PX {
+        return false;
+    }
+    let middle = (enter + exit) / 2.0;
+    let point = ScreenPoint {
+        x: start.x + middle * (end.x - start.x),
+        y: start.y + middle * (end.y - start.y),
+    };
+    inward_edges(polygon).into_iter().all(|(on_edge, normal)| {
+        let length = (normal.0 * normal.0 + normal.1 * normal.1).sqrt();
+        length > 0.0
+            && (normal.0 * (point.x - on_edge.x) + normal.1 * (point.y - on_edge.y)) / length
+                > GEOMETRY_EPSILON_PX
+    })
 }
 
 /// Twice the signed area of a polygon: positive when its vertices run clockwise on screen,

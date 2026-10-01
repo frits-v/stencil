@@ -408,5 +408,5 @@ fn a_light_ink_is_ink_primary_never_base07_alone() {
     for tint in &nord.tints {
         assert_ne!(tint.ink.as_str(), "#8FBCBB", "{}", tint.name);
     }
-    assert_ne!(nord.iso.tabs.top.ink.as_str(), "#8FBCBB");
+    assert_ne!(nord.iso.labels.zone.as_str(), "#8FBCBB");
 }

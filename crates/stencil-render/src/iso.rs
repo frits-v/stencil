@@ -407,22 +407,6 @@ impl SolidInputs {
     }
 }
 
-/// True when a zone encloses node `index`. Parents precede children, so the walk ends
-/// within `nodes.len()` steps.
-pub(crate) fn has_zone_ancestor(geometry: &PageGeometry, index: usize) -> bool {
-    let mut current = geometry.nodes.get(index).and_then(|node| node.parent);
-    for _ in 0..geometry.nodes.len() {
-        let Some(parent) = current.and_then(|parent| geometry.nodes.get(parent)) else {
-            return false;
-        };
-        if parent.tag == NodeTag::Zone {
-            return true;
-        }
-        current = parent.parent;
-    }
-    false
-}
-
 /// The height of the solid of the zone at geometry index `index`.
 fn zone_height(index: usize, inputs: &SolidInputs) -> f32 {
     if inputs.rings.get(index).copied().unwrap_or(false) {

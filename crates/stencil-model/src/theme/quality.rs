@@ -335,12 +335,12 @@ fn text_rows(theme: &Theme, rows: &mut Rows) {
         );
     }
     rows.text(
-        ("iso.tabs.frame.ink", &theme.iso.tabs.frame.ink),
-        ("iso.tabs.frame.fill", &theme.iso.tabs.frame.fill),
+        ("iso.labels.frame", &theme.iso.labels.frame),
+        ("frame.body_fill", &theme.frame.body_fill),
     );
     rows.text(
-        ("iso.tabs.top.ink", &theme.iso.tabs.top.ink),
-        ("iso.tabs.top.fill", &theme.iso.tabs.top.fill),
+        ("iso.labels.zone", &theme.iso.labels.zone),
+        ("page", &theme.page),
     );
 }
 
