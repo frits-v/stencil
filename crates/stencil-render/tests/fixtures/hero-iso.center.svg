@@ -1,5 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1320" height="775.16" viewBox="0 0 1320 775.16">
   <rect x="0" y="0" width="1320" height="775.16" fill="#FFFFFF"/>
+  <defs><filter id="stencil-shadow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2.5"/></filter></defs>
   <g data-id="" data-tag="Page" data-projection="iso">
     <g data-id="/kicker" data-tag="Kicker">
       <rect x="20" y="20" width="77.14" height="16" rx="4" fill="#E8F0FE"/>
@@ -20,6 +21,7 @@
             <polygon points="412.66,225.23 312.4,283.12 312.4,275.84 412.66,217.95" fill="#85B3F7"/>
             <polygon points="232.26,113.8 412.66,217.95 312.4,275.84 132,171.69" fill="#D2E3FC"/>
             <g data-id="/body/0/children/0/children/0/children/0" data-tag="Pcard">
+              <polygon points="208.72,146.77 360.74,234.55 312.4,262.46 160.38,174.69" fill="#202124" fill-opacity="0.2" filter="url(#stencil-shadow)"/>
               <polygon points="160.38,171.69 312.4,259.46 312.4,237.61 160.38,149.84" fill="#EBEBEB" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
               <polygon points="360.74,231.55 312.4,259.46 312.4,237.61 360.74,209.7" fill="#D6D6D6" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
               <polygon points="208.72,121.93 360.74,209.7 312.4,237.61 160.38,149.84" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
@@ -36,6 +38,7 @@
               <g data-id="/body/0/children/1/children/0/children/0/children/0" data-tag="Row">
                 <g data-id="/body/0/children/1/children/0/children/0/children/0/children/0" data-tag="Col">
                   <g data-id="/body/0/children/1/children/0/children/0/children/0/children/0/children/0" data-tag="Pcard">
+                    <polygon points="454.49,309.66 601.61,394.6 553.27,422.52 406.14,337.57" fill="#202124" fill-opacity="0.2" filter="url(#stencil-shadow)"/>
                     <polygon points="406.14,334.57 553.27,419.52 553.27,397.67 406.14,312.73" fill="#EBEBEB" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
                     <polygon points="601.61,391.6 553.27,419.52 553.27,397.67 601.61,369.76" fill="#D6D6D6" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
                     <polygon points="454.49,284.82 601.61,369.76 553.27,397.67 406.14,312.73" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
@@ -43,6 +46,7 @@
                 </g>
                 <g data-id="/body/0/children/1/children/0/children/0/children/0/children/1" data-tag="Col">
                   <g data-id="/body/0/children/1/children/0/children/0/children/0/children/1/children/0" data-tag="Pcard">
+                    <polygon points="668.87,433.44 828.37,525.53 780.03,553.44 620.53,461.35" fill="#202124" fill-opacity="0.2" filter="url(#stencil-shadow)"/>
                     <polygon points="620.53,458.35 780.03,550.44 780.03,528.59 620.53,436.5" fill="#EBEBEB" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
                     <polygon points="828.37,522.53 780.03,550.44 780.03,528.59 828.37,500.68" fill="#D6D6D6" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
                     <polygon points="668.87,408.59 828.37,500.68 780.03,528.59 620.53,436.5" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
@@ -55,6 +59,7 @@
               <polygon points="1112.75,644.97 1012.49,702.85 1012.49,695.57 1112.75,637.69" fill="#BCD2C7"/>
               <polygon points="944.4,540.49 1112.75,637.69 1012.49,695.57 844.14,598.37" fill="#EDF3F0"/>
               <g data-id="/body/0/children/1/children/0/children/1/children/0" data-tag="Pcard">
+                <polygon points="920.86,573.46 1060.84,654.28 1012.49,682.19 872.51,601.37" fill="#202124" fill-opacity="0.2" filter="url(#stencil-shadow)"/>
                 <polygon points="872.51,598.37 1012.49,679.19 1012.49,657.34 872.51,576.53" fill="#EBEBEB" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
                 <polygon points="1060.84,651.28 1012.49,679.19 1012.49,657.34 1060.84,629.43" fill="#D6D6D6" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
                 <polygon points="920.86,548.62 1060.84,629.43 1012.49,657.34 872.51,576.53" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
