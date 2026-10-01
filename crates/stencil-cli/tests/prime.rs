@@ -16,7 +16,7 @@ use stencil_cli::pipeline::{all_checks, load_document, read_input, render_page};
 use stencil_cli::prime::{BASE_BYTES_MAX, TOPIC_BYTES_MAX, Topic, base_text, field_notes};
 use stencil_cli::{ExitCode, run};
 use stencil_model::{
-    Arrow, CalloutKind, Chrome, FactSource, IconName, Justify, Line, ListKind, Side, Theme,
+    Arrow, CalloutKind, Chrome, FactSource, IconName, Justify, Line, ListKind, Side,
     builtin_grammar, page_schema,
 };
 use stencil_render::DeviceScale;
@@ -125,16 +125,6 @@ fn assert_enum_listed(text: &str, name: &str, expected: Vec<String>) {
 
 // Each list below passes its variants through an exhaustive match, so a new variant does not
 // compile until it is listed here and therefore checked against the briefing.
-
-fn themes() -> Vec<Theme> {
-    let all = [Theme::Center, Theme::Dusk, Theme::Wire];
-    for theme in all {
-        match theme {
-            Theme::Center | Theme::Dusk | Theme::Wire => {}
-        }
-    }
-    all.to_vec()
-}
 
 fn arrows() -> Vec<Arrow> {
     let all = [Arrow::None, Arrow::End, Arrow::Start, Arrow::Both];
@@ -419,13 +409,21 @@ fn prime_grammar_with_an_unknown_or_missing_name_exits_2_with_one_line() {
 }
 
 #[test]
+fn the_base_briefing_names_every_built_in_theme() {
+    let text = base_output();
+    let section = text.split("# Themes").nth(1).unwrap();
+    for name in stencil_model::BUILTIN_THEMES {
+        assert!(section.contains(name), "{name}");
+    }
+}
+
+#[test]
 fn the_base_briefing_lists_every_enum_value_from_the_model() {
     let text = base_output();
     assert_enum_listed(&text, "Line", names(&Line::ALL));
     assert_enum_listed(&text, "FactSource", names(&FactSource::ALL));
     assert_enum_listed(&text, "Chrome", names(&chromes()));
     assert_enum_listed(&text, "IconName", names(&IconName::ALL));
-    assert_enum_listed(&text, "Theme", names(&themes()));
     assert_enum_listed(&text, "Arrow", names(&arrows()));
     assert_enum_listed(&text, "Side", names(&sides()));
     assert_enum_listed(&text, "Justify", names(&justifies()));

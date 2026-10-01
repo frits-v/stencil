@@ -9,7 +9,8 @@ use stencil_model::grammar::{BorderPattern, IconPack, LabelStyle, Role, Tone};
 use stencil_model::{
     Arrow, BUILTIN_GRAMMARS, Chrome, FactSource, GAP_DEFAULT_PX, GRAMMAR_DEFAULT,
     GRAMMAR_REFERENCE_PATTERN, GROW_WEIGHT_MAX, Grammar, GrammarError, ID_PATTERN, Justify,
-    KIND_PATTERN, LANE_GAP_DEFAULT_PX, TEXT_SCALARS_MAX, THEME_DEFAULT, builtin_grammar,
+    KIND_PATTERN, LANE_GAP_DEFAULT_PX, TEXT_SCALARS_MAX, THEME_DEFAULT, THEME_REFERENCE_PATTERN,
+    builtin_grammar,
 };
 
 const BASE_TEXT: &str = include_str!("../prime/base.md");
@@ -271,7 +272,11 @@ pub fn field_notes() -> Result<Vec<FieldNote>, PrimeError> {
             "grammar",
             format!("={GRAMMAR_DEFAULT}; a built-in name or a .json path"),
         ),
-        note("Page", "theme", format!("={theme}")),
+        note(
+            "Page",
+            "theme",
+            format!("={theme}; a built-in name or a .json path"),
+        ),
         note("Page", "chrome", format!("={chrome}")),
         note("Pipe", "arrow", format!("={pipe_arrow}")),
         note("Tee", "arms", "dir h".to_string()),
@@ -499,6 +504,9 @@ fn describe_property(
         Some("string") => Ok(describe_string(property)),
         Some("integer") => Ok(describe_integer(property)),
         Some("number") => Ok("number".to_string()),
+        Some("object") if property.get("additionalProperties") == Some(&Value::Bool(true)) => {
+            Ok("object".to_string())
+        }
         Some("array") => {
             let items = property
                 .get("items")
@@ -545,7 +553,8 @@ fn describe_string(property: &Value) -> String {
         String::new()
     } else if pattern == Some(KIND_PATTERN) {
         "kind".to_string()
-    } else if pattern == Some(GRAMMAR_REFERENCE_PATTERN) {
+    } else if pattern == Some(GRAMMAR_REFERENCE_PATTERN) || pattern == Some(THEME_REFERENCE_PATTERN)
+    {
         "ref".to_string()
     } else {
         // The id pattern and the link endpoints are the only other strings in the model.

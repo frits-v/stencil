@@ -15,7 +15,7 @@ use std::path::{Path, PathBuf};
 use serde_json::{Value, json};
 use stencil_cli::{ExitCode, run};
 
-const THEMES: [&str; 3] = ["center", "dusk", "wire"];
+const THEMES: [&str; 6] = ["center", "paper", "dusk", "clear", "clear-dark", "wire"];
 
 struct Outcome {
     code: ExitCode,
@@ -160,7 +160,7 @@ fn gallery_renders_every_example_under_every_theme() {
     assert_eq!(
         lines.last().unwrap(),
         &format!(
-            "stencil gallery: {render_count} renders of {} examples in 3 themes, 0 failed",
+            "stencil gallery: {render_count} renders of {} examples in 6 themes, 0 failed",
             stems.len()
         )
     );
@@ -196,14 +196,14 @@ fn a_failing_check_exits_1_and_the_index_still_lists_every_render() {
     assert!(
         outcome
             .stdout
-            .ends_with("stencil gallery: 6 renders of 2 examples in 3 themes, 3 failed\n"),
+            .ends_with("stencil gallery: 12 renders of 2 examples in 6 themes, 6 failed\n"),
         "{}",
         outcome.stdout
     );
     let manifest: Value =
         serde_json::from_str(&fs::read_to_string(out_dir.join("gallery.json")).unwrap()).unwrap();
-    assert_eq!(manifest["renders"], json!(6));
-    assert_eq!(manifest["failed"], json!(3));
+    assert_eq!(manifest["renders"], json!(12));
+    assert_eq!(manifest["failed"], json!(6));
     let overflow = &manifest["examples"][0];
     assert_eq!(overflow["name"], json!("overflow"));
     for render in overflow["renders"].as_array().unwrap() {
@@ -229,7 +229,7 @@ fn a_document_that_does_not_parse_is_listed_as_not_rendered_and_exits_1() {
     assert_eq!(lines[1], "gallery broken: not rendered");
     assert_eq!(
         lines.last().unwrap(),
-        &"stencil gallery: 3 renders of 2 examples in 3 themes, 3 failed"
+        &"stencil gallery: 6 renders of 2 examples in 6 themes, 6 failed"
     );
     assert!(!out_dir.join("broken").exists());
     let manifest: Value =

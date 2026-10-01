@@ -526,9 +526,11 @@ mod tests {
     }
 
     #[test]
-    fn the_gallery_covers_every_theme_in_argument_order() {
-        let names: Vec<String> = gallery_themes().into_iter().map(|(name, _)| name).collect();
-        assert_eq!(names, ["center", "dusk", "wire"]);
+    fn the_gallery_covers_the_six_designed_themes_in_order() {
+        assert_eq!(
+            gallery_themes(),
+            ["center", "paper", "dusk", "clear", "clear-dark", "wire"]
+        );
     }
 
     #[test]

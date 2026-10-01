@@ -52,10 +52,6 @@ Every node object carries "tag"; the Page does not. * required, =default. A fiel
 
 # Themes
 
-- center: Architecture Center light, the default.
-- dusk: dark, for dark slides.
-- wire: monochrome wireframe for design docs.
-
-Set theme on the page, or pass --theme to render and check; layout is identical under all three.
+center (default), paper, dusk, clear, clear-dark, wire; `stencil prime themes` says which to pick. Set theme on the page or pass --theme, a name or a theme .json path; layout is identical under every theme.
 
 {{topics}}
