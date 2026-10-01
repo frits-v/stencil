@@ -11,10 +11,11 @@
 
 mod common;
 
+use common::{THEMES, render_svg};
 use serde_json::Value;
 use stencil_layout::{PageGeometry, layout_page};
 use stencil_model::{Page, builtin_grammar, parse_and_vet};
-use stencil_render::{measured_json, render_svg};
+use stencil_render::measured_json;
 use stencil_text::CosmicTextMeasurer;
 
 struct Example {
@@ -44,8 +45,6 @@ const EXAMPLES: [Example; 3] = [
         geometry: include_str!("fixtures/onprem-network.center.geometry.json"),
     },
 ];
-
-const THEMES: [&str; 3] = ["center", "dusk", "wire"];
 
 /// The document with its `theme` set, vetted and laid out under the plain grammar.
 fn page_and_geometry(document: &str, theme: &str) -> (Value, Page, PageGeometry) {
@@ -103,10 +102,10 @@ fn every_theme_renders_every_plain_example_with_the_same_geometry() {
             svgs.push(render_svg(&page, &geometry).unwrap().svg);
             geometries.push(geometry_bytes(&original, &geometry));
         }
-        assert_eq!(geometries[0], geometries[1], "{} dusk", example.stem);
-        assert_eq!(geometries[0], geometries[2], "{} wire", example.stem);
-        assert_ne!(svgs[0], svgs[1], "{} dusk", example.stem);
-        assert_ne!(svgs[0], svgs[2], "{} wire", example.stem);
+        for (index, theme) in THEMES.iter().enumerate().skip(1) {
+            assert_eq!(geometries[0], geometries[index], "{} {theme}", example.stem);
+            assert_ne!(svgs[0], svgs[index], "{} {theme}", example.stem);
+        }
     }
 }
 
@@ -162,8 +161,13 @@ fn each_head_draws_a_dashed_1_px_lifeline_to_the_band_bottom_in_every_theme() {
             assert!((y2 - band.bottom()).abs() < 0.06, "{theme} bottom");
             assert_eq!(width, "1", "{theme}");
             assert!(!dash.is_empty(), "{theme}: dashed");
+            let lifeline = &common::theme(theme).lanes.lifeline;
+            assert_eq!(stroke, lifeline.color.as_str(), "{theme}");
             if theme == "center" {
                 assert_eq!(stroke, "#9AA0A6", "center lifeline is section 13.5's gray");
+            }
+            if theme == "wire" {
+                assert_eq!(stroke, "#555555", "wire lifeline is the secondary ink");
             }
         }
     }

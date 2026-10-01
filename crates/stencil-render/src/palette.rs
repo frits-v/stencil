@@ -393,6 +393,11 @@ impl<'a> Palette<'a> {
         }
     }
 
+    /// A Lanes lifeline (section 13.6).
+    pub fn lifeline(self) -> Stroke<'a> {
+        Stroke::of(&self.theme.lanes.lifeline)
+    }
+
     /// The chip under a Frame label, so the diagonals stop at the words.
     pub fn frame_label_chip(self) -> &'a str {
         self.page_background()

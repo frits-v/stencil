@@ -86,13 +86,27 @@ fn carriers<'a, 'input>(group: roxmltree::Node<'a, 'input>) -> Vec<roxmltree::No
         .collect()
 }
 
+/// The wire colors of solid slot 1, solid slot 2, dash slot 1 and deny under a theme.
+fn marker_colors(theme: &str) -> [String; 4] {
+    let theme = common::theme(theme);
+    [
+        &theme.tints[0].wire,
+        &theme.tints[1].wire,
+        &theme.tints[0].wire,
+        &theme.deny.color,
+    ]
+    .map(|color| color.as_str().to_string())
+}
+
 #[test]
 fn defs_hold_one_marker_per_arrow_kind_in_the_wire_color() {
-    for (theme, colors) in [
-        ("center", ["#1A73E8", "#C2185B", "#1A73E8", "#C5221F"]),
-        ("dusk", ["#5B9CFF", "#FF5C8A", "#5B9CFF", "#FF6B6B"]),
-        ("wire", ["#222222", "#222222", "#222222", "#222222"]),
-    ] {
+    assert_eq!(
+        marker_colors("center"),
+        ["#1A73E8", "#C2185B", "#1A73E8", "#C5221F"]
+    );
+    assert_eq!(marker_colors("wire"), ["#222222"; 4]);
+    for theme in common::THEMES {
+        let colors = marker_colors(theme);
         let rendered = common::render_document_with_fixed_metrics(arrow_document(theme));
         let document = common::parse_xml(&rendered.svg.svg);
         let markers: Vec<_> = document
@@ -117,7 +131,7 @@ fn defs_hold_one_marker_per_arrow_kind_in_the_wire_color() {
             assert_eq!(marker.attribute("refY"), Some("4"));
             let triangle = common::children_named(*marker, "path")[0];
             assert_eq!(triangle.attribute("d"), Some("M 0 0 L 10 4 L 0 8 Z"));
-            assert_eq!(triangle.attribute("fill"), Some(color), "{theme}");
+            assert_eq!(triangle.attribute("fill"), Some(color.as_str()), "{theme}");
         }
     }
 }

@@ -43,19 +43,6 @@ const BULLET_CENTER_INSET_PX: f32 = 5.0;
 /// Corner radii of the gcp frame in CSS order: top-left, top-right, bottom-right, bottom-left.
 const GCP_RADII_PX: [f32; 4] = [4.0, 4.0, 10.0, 10.0];
 
-/// Width of a lifeline (section 13.6).
-const LIFELINE_WIDTH_PX: f32 = 1.0;
-
-/// The stroke of a lifeline: 1 px dashed in the color of a Frame border, which is the
-/// `lanes.lifeline` value of section 13.5 under center; the palette has no lanes role.
-fn lifeline_stroke(palette: Palette) -> Stroke {
-    Stroke {
-        width_px: LIFELINE_WIDTH_PX,
-        line: LineStyle::Dashed,
-        color: palette.frame_border().color,
-    }
-}
-
 /// The document side of one geometry node, in section 4.4 geometry order.
 #[derive(Debug, Clone, Copy)]
 enum DocumentNode<'a> {
@@ -822,7 +809,7 @@ impl<'a> SvgWriter<'a> {
                 format_number(bounds.y),
                 format_number(bounds.x),
                 format_number(bounds.bottom()),
-                stroke_attributes(lifeline_stroke(self.palette))
+                stroke_attributes(self.palette.lifeline())
             ),
         );
     }
