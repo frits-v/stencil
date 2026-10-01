@@ -37,12 +37,15 @@ import (
 #Chrome:      "full" | "none"
 #NoteKind:    "kicker" | "h1" | "lede" | "legend" | "foot"
 #Justify:     "start" | "center" | "end" | "space-between"
-#ThemeName:   "center" | "dusk" | "wire"
 #Projection:  "flat" | "iso"
 #Arrow:       "none" | "end" | "start" | "both"
 #Side:        "top" | "right" | "bottom" | "left"
 #ListKind:    "plain" | "numbered" | "bulleted"
 #CalloutKind: "note" | "risk" | "decision" | "open"
+
+// A built-in theme name or a path to a theme file, the THEME_REFERENCE_PATTERN
+// of the Rust model.
+#ThemeReference: =~"^(center|paper|dusk|clear|clear-dark|wire|[^\\x00-\\x1F]{1,395}\\.json)$"
 
 // A built-in grammar name or a path to an exported grammar file, the
 // GRAMMAR_REFERENCE_PATTERN of the Rust model.
@@ -75,14 +78,18 @@ import (
 }
 
 #Page: {
-	title:       #Text
-	kicker:      #Text
-	lede:        #Text
-	foot?:       #Text
-	width?:      int & >=640 & <=2560
-	canvas:      #Canvas
-	grammar?:    #GrammarReference
-	theme?:      #ThemeName
+	title:    #Text
+	kicker:   #Text
+	lede:     #Text
+	foot?:    #Text
+	width?:   int & >=640 & <=2560
+	canvas:   #Canvas
+	grammar?: #GrammarReference
+	theme?:   #ThemeReference
+	// A partial theme merged onto the chosen one. Open here: the Rust loader
+	// checks it against #Theme, since a partial of a closed definition would
+	// repeat #Theme field by field.
+	theme_overrides?: {...}
 	projection?: #Projection
 	chrome?:     #Chrome
 	body:        #Children

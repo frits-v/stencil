@@ -11,6 +11,7 @@ its rules; a figure file writes one topology against a grammar's `#Page`.
 | `cue.mod/module.cue` | | the module `github.com/frits-v/stencil/cue@v0`, language v0.17.1 |
 | `core.cue` | `stencil` | `#Page` and the core nodes: `Row`, `Col`, `Lanes`, `Box`, `Item`, `Fact`, `Note`, `Pipe`, `Tee`, `Text`, `Callout`, `Frame`, plus `#LegendEntry`, `#Link`, `#Line`, `#TintSlot` and `#FactEntry` |
 | `grammar.cue` | `stencil` | `#Grammar` and its parts, and `#GrammarNesting`, the kind and nesting rules every grammar shares |
+| `theme.cue` | `stencil` | `#Theme`, the closed theme definition every theme file vets against: `cue vet -c -d '#Theme' . <file>.json` |
 | `grammars/gcp.cue` | `gcp` | the Google Cloud grammar data and rules, and the gcp `#Page` |
 | `grammars/plain.cue` | `plain` | the domain-neutral grammar data and the plain `#Page` |
 | `figures/g7.cue` | `gcp` | g7, Dedicated Interconnect at 99.99%: `customer` and `internal: customer & {...}` |
@@ -83,7 +84,7 @@ for example `CUE="$(mise which cue)" ./cue/check.sh`.
 - `Lanes` is a container of 1 to 32 lane heads with an optional `gap` of 0 to 64. A `Link` may
   carry `order`, 1 to 256, which makes it a message of the Lanes node whose heads it joins.
 - `#Page` adds `grammar` (`gcp`, `plain` or a path ending in `.json`) and `chrome` (`full` or
-  `none`). `theme` is `center`, `dusk` or `wire`.
+  `none`). `theme` is a built-in theme name (`center`, `paper`, `dusk`, `clear`, `clear-dark`, `wire`) or a theme file path ending in `.json`; `theme_overrides` is an open struct the Rust loader checks against `#Theme`.
 
 ## What the core enforces
 

@@ -3,7 +3,8 @@
 # figures; exports each grammar and compares it byte for byte with
 # crates/stencil-model/grammars/; compares the g7 customer export with
 # examples/g7.json and the sequence export with examples/sequence.json; vets
-# every example against the #Page of the grammar it names; then runs the
+# every example against the #Page of the grammar it names; vets every built-in
+# theme file against #Theme and rejects the theme negative cases; then runs the
 # negative cases: a copy of the cue tree with one edit to figures/g7.cue or
 # figures/sequence.cue that vet must reject with the named error.
 # Exits non-zero if the cue binary is missing, if any positive step fails, or
@@ -176,6 +177,64 @@ if [[ "$examples_failed" -ne 0 ]]; then
 	exit 1
 fi
 
+# Every built-in theme file vets against the closed #Theme, the definition the
+# Rust loader mirrors. Each negative case is a copy of center with one fault
+# that vet must reject with the named error; the Rust tests reject the same
+# faults (crates/stencil-model/tests/theme.rs).
+themes_dir="$repo/crates/stencil-render/themes"
+themes_vetted=0
+for theme in "$themes_dir"/*.json; do
+	[[ -e "$theme" ]] || continue
+	"$CUE" vet -c -d '#Theme' . "$theme"
+	themes_vetted=$((themes_vetted + 1))
+done
+if [[ "$themes_vetted" -eq 0 ]]; then
+	echo "FAIL themes: no theme files found under $themes_dir" >&2
+	exit 1
+fi
+echo "ok   themes: $themes_vetted built-in theme files vet against #Theme"
+
+theme_work="$(mktemp -d)"
+theme_failed=0
+# name | python expression applied to the parsed center theme `t` | text the
+# vet error must contain
+theme_cases=(
+	'seven-tints|t["tints"].pop()|tints: invalid value'
+	'unknown-role|t.__setitem__("glow", "#FFFFFF")|glow: field not allowed'
+	'unknown-iso-role|t["iso"].__setitem__("glow", 1)|iso.glow: field not allowed'
+	'lowercase-hex|t.__setitem__("page", "#ffffff")|page: invalid value "#ffffff"'
+	'width-above-4|t["card"]["border"].__setitem__("width", 5)|card.border.width: invalid value 5'
+	'strong-tone-filled|t["tones"]["strong"].__setitem__("fill", "#000000")|tones.strong.fill: field not allowed'
+)
+for entry in "${theme_cases[@]}"; do
+	IFS='|' read -r name expression expected <<<"$entry"
+	case_file="$theme_work/$name.json"
+	python3 - "$themes_dir/center.json" "$case_file" "$expression" <<'PY'
+import json, sys
+source, target, expression = sys.argv[1], sys.argv[2], sys.argv[3]
+with open(source, encoding="utf-8") as handle:
+    t = json.load(handle)
+eval(expression)
+with open(target, "w", encoding="utf-8") as handle:
+    json.dump(t, handle)
+PY
+	if report="$("$CUE" vet -c -d '#Theme' . "$case_file" 2>&1)"; then
+		echo "FAIL theme $name: vet passed" >&2
+		theme_failed=$((theme_failed + 1))
+	elif grep -qF -- "$expected" <<<"$report"; then
+		echo "ok   theme $name: rejected ($(grep -F -- "$expected" <<<"$report" | head -1 | cut -c1-120))"
+	else
+		echo "FAIL theme $name: rejected for another reason:" >&2
+		echo "$report" >&2
+		theme_failed=$((theme_failed + 1))
+	fi
+done
+rm -rf "$theme_work"
+echo "${#theme_cases[@]} theme negative cases, $((${#theme_cases[@]} - theme_failed)) rejected as expected"
+if [[ "$theme_failed" -ne 0 ]]; then
+	exit 1
+fi
+
 # A captioned figure (chrome none) whose lines share one key may leave the
 # legend empty. A solid pipe without tint is slot 1, so both pipes below
 # share the key solid-1. The two items without a subtitle satisfy the
@@ -283,7 +342,7 @@ for entry in "${cases[@]}"; do
 	esac
 	dir="$work/$name"
 	mkdir -p "$dir"
-	cp -R "$here/cue.mod" "$here/core.cue" "$here/grammar.cue" "$here/grammars" "$here/figures" "$dir/"
+	cp -R "$here/cue.mod" "$here/core.cue" "$here/grammar.cue" "$here/theme.cue" "$here/grammars" "$here/figures" "$dir/"
 	sed -e "$expression" "$here/figures/$figure.cue" >"$dir/figures/$figure.cue"
 	if cmp -s "$here/figures/$figure.cue" "$dir/figures/$figure.cue"; then
 		echo "FAIL $name: edit did not change figures/$figure.cue" >&2
