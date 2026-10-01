@@ -60,6 +60,9 @@ pub enum VetRule {
     KindUnknown,
     KindParentNotAllowed,
     IconOutsidePack,
+    PipeTargetUnknown,
+    PipeTargetsEqual,
+    PipeTargetOnTeeArm,
     FactsTooMany,
     LanesTooMany,
     LinkOrderOutsideLanes,
@@ -102,6 +105,9 @@ impl VetRule {
             VetRule::KindUnknown => "kind-unknown",
             VetRule::KindParentNotAllowed => "kind-parent-not-allowed",
             VetRule::IconOutsidePack => "icon-outside-pack",
+            VetRule::PipeTargetUnknown => "pipe-target-unknown",
+            VetRule::PipeTargetsEqual => "pipe-targets-equal",
+            VetRule::PipeTargetOnTeeArm => "pipe-target-on-tee-arm",
             VetRule::FactsTooMany => "facts-too-many",
             VetRule::LanesTooMany => "lanes-too-many",
             VetRule::LinkOrderOutsideLanes => "link-order-outside-lanes",
@@ -215,9 +221,17 @@ pub fn validate_page(page: &Page, grammar: &Grammar) -> Vec<Violation> {
     // The nearest Box kind above each walked container, keyed by its pointer, so a child
     // reads its parent's entry. Row, Col and Lanes pass their parent's value through.
     let mut box_context: BTreeMap<NodePointer, &str> = BTreeMap::new();
+    // A pipe target may name a node later in document order, so targets are checked
+    // against every well-formed id of the walk.
+    let all_ids: BTreeSet<&str> = entries
+        .iter()
+        .filter_map(|entry| entry.node.id())
+        .filter(|id| is_valid_id(id))
+        .collect();
     for entry in &entries {
         let context = enclosing_box_kind(entry, &box_context);
         check_entry(entry, context, grammar, &mut ids, &mut violations);
+        check_pipe_targets(entry, &all_ids, &mut violations);
         match entry.node {
             // A Box of an unknown kind is reported once and is transparent for its
             // children, so they are not reported again against a kind that does not exist.
@@ -260,6 +274,52 @@ pub fn validate_page(page: &Page, grammar: &Grammar) -> Vec<Violation> {
     check_links(page, &ids, &lane_heads, &mut violations);
 
     violations.0
+}
+
+/// `pipe-target-on-tee-arm` for a Tee arm with `from` or `to`; for a Pipe node,
+/// `pipe-target-unknown` for a `from` or `to` that names no node id and `pipe-targets-equal`
+/// when both name the same id. `from` and `to` follow the Pipe's other fields.
+fn check_pipe_targets(
+    entry: &NodeEntry<'_>,
+    all_ids: &BTreeSet<&str>,
+    violations: &mut Violations,
+) {
+    match entry.node {
+        NodeRef::TeeArm(arm) => {
+            for (field, target) in [("from", &arm.from), ("to", &arm.to)] {
+                if target.is_some() {
+                    violations.push(
+                        entry.pointer.child(field),
+                        VetRule::PipeTargetOnTeeArm,
+                        "a Tee arm cannot name a target".to_string(),
+                    );
+                }
+            }
+        }
+        NodeRef::Node(Node::Pipe(pipe)) => {
+            for (field, target) in [("from", &pipe.from), ("to", &pipe.to)] {
+                if let Some(target) = target
+                    && !all_ids.contains(target.as_str())
+                {
+                    violations.push(
+                        entry.pointer.child(field),
+                        VetRule::PipeTargetUnknown,
+                        format!("pipe target \"{target}\" names no node id"),
+                    );
+                }
+            }
+            if let (Some(from), Some(to)) = (&pipe.from, &pipe.to)
+                && from == to
+            {
+                violations.push(
+                    entry.pointer.child("to"),
+                    VetRule::PipeTargetsEqual,
+                    format!("pipe from and to both name \"{to}\""),
+                );
+            }
+        }
+        NodeRef::Node(_) => {}
+    }
 }
 
 /// The Lanes node each lane head belongs to, keyed by the head's id. A lane head is a

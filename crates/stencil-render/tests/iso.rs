@@ -399,7 +399,7 @@ fn the_iso_svg_has_the_section_12_5_structure() {
         .descendants()
         .filter(|node| node.attribute("data-tag") == Some("Zone"))
         .collect();
-    assert_eq!(zone_groups.len(), 3);
+    assert_eq!(zone_groups.len(), 4);
     for zone in zone_groups {
         let children: Vec<_> = zone.children().filter(|node| node.is_element()).collect();
         let first_polygon = children
@@ -768,7 +768,10 @@ fn the_hero_measured_json_is_theme_independent_and_keeps_the_flat_nodes() {
             serde_json::to_vec(&iso["nodes"]).unwrap(),
             serde_json::to_vec(&flat["nodes"]).unwrap()
         );
-        assert_eq!(iso["projection"]["billboards"].as_array().unwrap().len(), 9);
+        assert_eq!(
+            iso["projection"]["billboards"].as_array().unwrap().len(),
+            10
+        );
         assert_eq!(iso["projection"]["kind"], "iso");
         for billboard in iso["projection"]["billboards"].as_array().unwrap() {
             let id = billboard["id"].as_str().unwrap();
@@ -807,7 +810,8 @@ fn billboard_parts<'a>(
 const HERO_ON_PREM: &str = "/body/0/children/0/children/0";
 const HERO_ROUTER: &str = "/body/0/children/0/children/0/children/0";
 const HERO_GCP: &str = "/body/0/children/1";
-const HERO_VPC: &str = "/body/0/children/1/children/0";
+const HERO_VPC: &str = "/body/0/children/1/children/0/children/0";
+const HERO_APIS: &str = "/body/0/children/1/children/0/children/1";
 
 #[test]
 fn card_text_sits_on_a_plate_on_a_light_page_and_on_none_on_a_dark_one() {
@@ -880,7 +884,7 @@ fn every_zone_tab_hangs_from_its_zone_back_corner() {
     let page = hero_page();
     let geometry = common::layout_with_cosmic_text(&page);
     let scene = project_page(&geometry).unwrap();
-    for owner in [HERO_ON_PREM, HERO_GCP, HERO_VPC] {
+    for owner in [HERO_ON_PREM, HERO_GCP, HERO_VPC, HERO_APIS] {
         let solid = scene
             .solids
             .iter()
@@ -1072,7 +1076,7 @@ fn a_dashed_zone_border_is_drawn_once_on_the_top_face() {
         let geometry = common::layout_with_cosmic_text(&page);
         let svg = render_svg(&page, &geometry).unwrap();
         let parsed = common::parse_xml(&svg.svg);
-        let ring = common::group(&parsed, "/body/0/children/1/children/0");
+        let ring = common::group(&parsed, HERO_VPC);
         let faces = common::children_named(ring, "polygon");
         assert_eq!(faces.len(), 1, "{theme:?}");
         assert!(faces[0].attribute("stroke-dasharray").is_some());
@@ -1293,9 +1297,9 @@ fn a_card_icon_stands_on_its_block_top_center_with_the_name_under_it() {
     let (zoomed, zoom) = zoomed_geometry(&geometry).unwrap();
     let scene = project_zoomed(&zoomed, zoom).unwrap();
     for owner in [
-        "/body/0/children/1/children/0/children/0/children/0/children/0",
-        "/body/0/children/1/children/0/children/0/children/1/children/0",
-        "/body/0/children/1/children/0/children/0/children/1/children/1",
+        "/body/0/children/1/children/0/children/0/children/0/children/0/children/0",
+        "/body/0/children/1/children/0/children/0/children/0/children/1/children/0",
+        "/body/0/children/1/children/0/children/1/children/0",
     ] {
         let node = &zoomed.nodes[index_of(&zoomed, owner)];
         let block = scene

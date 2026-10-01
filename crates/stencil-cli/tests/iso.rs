@@ -68,7 +68,7 @@ fn check_hero_passes_every_applicable_check_in_every_theme() {
         assert_eq!(outcome.code, ExitCode::Clean, "{theme}: {}", outcome.stdout);
         let lines = outcome.stdout_lines();
         assert!(
-            lines.contains(&"check iso-labels-clear: examined 80 pairs, 0 defects"),
+            lines.contains(&"check iso-labels-clear: examined 97 pairs, 0 defects"),
             "{theme}: {}",
             outcome.stdout
         );
@@ -86,7 +86,7 @@ fn check_hero_passes_every_applicable_check_in_every_theme() {
         );
         assert_eq!(
             lines.last().copied(),
-            Some("stencil check: 10 checks, 9 passed, 0 failed, 1 not applicable"),
+            Some("stencil check: 12 checks, 10 passed, 0 failed, 2 not applicable"),
             "{theme}"
         );
         assert_eq!(outcome.stderr, "");
@@ -113,21 +113,63 @@ fn check_hero_with_projection_flat_skips_the_iso_checks() {
     ));
     assert_eq!(
         lines.last().copied(),
-        Some("stencil check: 10 checks, 7 passed, 0 failed, 3 not applicable")
+        Some("stencil check: 12 checks, 8 passed, 0 failed, 4 not applicable")
     );
 }
 
 #[test]
-fn check_prints_the_two_iso_checks_last() {
+fn check_prints_the_two_iso_checks_before_print_fit_and_icon_matches_product() {
     let outcome = run_stencil(&["check", &example_path("hero-iso.json")]);
     let check_lines: Vec<&str> = outcome
         .stdout_lines()
         .into_iter()
         .filter(|line| line.starts_with("check "))
         .collect();
-    assert_eq!(check_lines.len(), 10);
+    assert_eq!(check_lines.len(), 12);
     assert!(check_lines[8].starts_with("check iso-labels-clear: "));
     assert!(check_lines[9].starts_with("check iso-links-clear: "));
+    assert!(check_lines[10].starts_with("check print-fit: "));
+    assert!(check_lines[11].starts_with("check icon-matches-product: "));
+}
+
+#[test]
+fn print_fit_under_iso_reads_the_drawn_canvas_width() {
+    let out_dir = scratch_directory("g7-iso-print");
+    let render = run_stencil(&[
+        "render",
+        &example_path("g7.json"),
+        "--out-dir",
+        out_dir.to_str().unwrap(),
+        "--projection",
+        "iso",
+    ]);
+    assert_eq!(render.code, ExitCode::Clean, "{}", render.stderr);
+    let measured: Value =
+        serde_json::from_slice(&fs::read(out_dir.join("g7.measured.json")).unwrap()).unwrap();
+    let flat_width = measured["canvas"]["width"].as_f64().unwrap();
+    let drawn_width = measured["projection"]["canvas"]["width"].as_f64().unwrap();
+    assert!(drawn_width > flat_width + 1.0, "{drawn_width} {flat_width}");
+
+    let outcome = run_stencil(&[
+        "check",
+        &example_path("g7.json"),
+        "--projection",
+        "iso",
+        "--print-width",
+        "16",
+    ]);
+    assert_eq!(outcome.code, ExitCode::Defects, "{}", outcome.stdout);
+    let badge = outcome
+        .stdout_lines()
+        .into_iter()
+        .find(|line| line.starts_with("defect print-fit /kicker: badge_text "))
+        .unwrap_or_else(|| panic!("{}", outcome.stdout));
+    assert!(
+        badge.ends_with(&format!(
+            "(10.00 px on a {drawn_width:.2} px canvas at 16.00 in)"
+        )),
+        "{badge}"
+    );
 }
 
 #[test]

@@ -348,6 +348,7 @@ fn render_theme(
         &themed.grammar,
         &rendered.geometry,
         rendered.scene.as_ref(),
+        None,
     );
     write_outputs(&out_dir.join(name).join(theme_name), names, &rendered, path)?;
 

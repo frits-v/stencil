@@ -309,9 +309,21 @@ fn the_base_briefing_names_every_node_tag_in_its_vocabulary() {
 fn the_base_briefing_describes_the_core_vocabulary() {
     let text = base_output();
     assert!(text.contains("Every node object carries \"tag\"; the Page does not."));
+    let sequence_lines: Vec<&str> = text
+        .lines()
+        .filter(|line| line.contains("Sequence and timeline figures"))
+        .collect();
+    assert_eq!(sequence_lines.len(), 1, "{text}");
+    for phrase in ["Lanes", "`stencil prime grammar plain`"] {
+        assert!(sequence_lines[0].contains(phrase), "{}", sequence_lines[0]);
+    }
+    assert!(!text.contains("refused"), "{text}");
     assert!(
-        text.contains("Sequence and timeline figures are refused until a timeline grammar exists.")
+        text.contains("from id"),
+        "Pipe targets are in the vocabulary"
     );
+    assert!(text.contains("chrome none drops badge, kicker, title and lede"));
+    assert!(text.contains("--print-width"));
     for word in [
         "Box", "Item", "Lanes", "facts", "source", "line", "tint", "chrome", "grammar",
     ] {
@@ -441,6 +453,7 @@ fn the_base_briefing_covers_every_check_the_pipeline_runs() {
         &loaded.grammar,
         &rendered.geometry,
         rendered.scene.as_ref(),
+        None,
     );
     let text = base_output();
     for report in &reports {
@@ -459,6 +472,14 @@ fn the_base_briefing_covers_every_check_the_pipeline_runs() {
             report.check.as_str()
         );
     }
+    assert!(
+        topic.contains("runs remembered-constants, legend-consistency and icon-matches-product"),
+        "{topic}"
+    );
+    assert!(
+        topic.contains("`--print-width <inches>` (0.5 to 200)"),
+        "{topic}"
+    );
 }
 
 #[test]

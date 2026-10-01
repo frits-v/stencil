@@ -1395,7 +1395,9 @@ Every check returns a `CheckReport` with the number of units it examined. A repo
 | `legend-consistency` | model | each pipe-kind use (every Pipe, every Tee arm, every Tee spine) plus each of the first LEGEND_ENTRIES_MAX + 1 legend entries | a used kind has no legend entry, a legend entry's kind is never used, or a kind appears twice in the legend | |
 | `links-routed` | layout | each link | the route has `status: Fallback` | |
 | `links-avoid-boxes` | layout | each (segment, obstacle) pair of every link, with the link's section 11.2 obstacles, plus each (tag, node) pair for every geometry node that is not a strict ancestor of an endpoint | a segment enters an obstacle's interior by more than the epsilon, or the tag overlaps the node box with both overlap width and height above the epsilon | 0.01 px |
-| `pipes-land` | layout | each pipe end that faces a neighbor: for every Pipe and Tee arm, one per side (left and right for h, above and below for v) that has a neighbor, as defined below | the pipe's center on the cross axis lies outside every box in the neighbor's subtree that is not a Row or Col | 0.01 px |
+| `pipes-land` | layout | each pipe end that faces a neighbor: for every Pipe and Tee arm, one per side (left and right for h, above and below for v) that has a neighbor, as defined below; a side whose Pipe names a `from` or `to` target examines the target instead (section 13.8) | the pipe's center on the cross axis lies outside every box in the neighbor's subtree that is not a Row or Col | 0.01 px |
+| `print-fit` | layout | each text run, as `text-fits-box` counts them, when `--print-width` is set (section 13.10) | the run prints below 8 pt at the print width | 0.01 pt |
+| `icon-matches-product` | model | each Item whose kind has a products table and that has an `icon` or a `subtitle` (section 13.10) | the subtitle names a product whose own icon is another, or a product without one and the item carries a product icon | |
 
 `CheckName::unit(count)` returns the noun printed after the examined count:
 
@@ -1409,6 +1411,10 @@ Every check returns a `CheckReport` with the number of units it examined. A repo
 | `links-routed` | link | links |
 | `links-avoid-boxes` | pair | pairs |
 | `pipes-land` | pipe end | pipe ends |
+| `iso-labels-clear` | pair | pairs |
+| `iso-links-clear` | link leg | link legs |
+| `print-fit` | text run | text runs |
+| `icon-matches-product` | item | items |
 
 `text-fits-box` also examines the TagLabel and TagSub runs of every link tag, with `/links/<i>` as the owner and the tag box as the box the run must stay inside.
 
@@ -1437,14 +1443,16 @@ Remembered constants. The literals and reasons match `drafting-diagrams/scripts/
 
 Matching follows the `\b` boundaries used in `cue/stencil.cue`. An occurrence counts only when the character before it and the character after it are not ASCII alphanumeric or `_`. `AS64512` does not match, and neither does `10.8.0.0/280`, while `ASN 64512` does. The check scans the authored text before any uppercase transform and does not use a regex dependency.
 
+print-fit is not applicable without `--print-width` (`no print width`), and icon-matches-product on a page whose items have no products table (`grammar has no icon table`).
+
 Exit codes: `stencil vet` and `stencil check` exit 1 when any report fails, including a failure because nothing was examined. They exit 0 only when every report passes.
 
 ## 7. CLI
 
 ```
 stencil vet <json>
-stencil render <json> --out-dir <dir> [--scale <1-4>]
-stencil check <json>
+stencil render <json> --out-dir <dir> [--scale <1-4>] [--print-width <inches>]
+stencil check <json> [--print-width <inches>]
 stencil schema
 stencil prime [<topic>]
 stencil gallery <out-dir> [--examples <dir>]
@@ -1452,12 +1460,12 @@ stencil gallery <out-dir> [--examples <dir>]
 
 | Command | Does | Output on stdout |
 |---|---|---|
-| `vet` | parse, `validate_page`, then, only when there is no violation, `remembered-constants` and `legend-consistency` | one line per violation, or one line per check and one line per defect; one summary line |
-| `render` | parse and `validate_page` only (violations stop the command with exit 1; the two model checks do not run, so a legend inconsistency does not stop a render), layout with `CosmicTextMeasurer`, SVG, PNG at `--scale` (default 2), measured JSON; creates `--out-dir` if missing and overwrites existing outputs | the three written paths, absolute |
-| `check` | everything `render` does, held in memory without writing files, then all ten checks | one line per check, one line per defect, one summary line; or an `error` line and the summary line when layout or render fails with exit 1 |
+| `vet` | parse, `validate_page`, then, only when there is no violation, `remembered-constants`, `legend-consistency` and `icon-matches-product` | one line per violation, or one line per check and one line per defect; one summary line |
+| `render` | parse and `validate_page` only (violations stop the command with exit 1; the model checks do not run, so a legend inconsistency does not stop a render), layout with `CosmicTextMeasurer`, SVG, PNG at `--scale` (default 2), measured JSON; creates `--out-dir` if missing and overwrites existing outputs | the three written paths, absolute |
+| `check` | everything `render` does, held in memory without writing files, then all twelve checks | one line per check, one line per defect, one summary line; or an `error` line and the summary line when layout or render fails with exit 1 |
 | `schema` | prints `page_schema()` as pretty JSON | the schema |
 | `prime` | prints the authoring briefing for an agent: `crates/stencil-cli/prime/base.md` with the vocabulary table rendered from `page_schema()`, so tag names, field names, bounds and enum values come from the model; at most 6,000 bytes. With a topic (`themes`, `links`, `blocks`, `layout`, `checks`, `cue`, `example`), that topic's text instead, each at most 4,000 bytes except `example`, which is `examples/g7.json` verbatim. An unknown topic writes one line to stderr naming the topics and exits 2 | the briefing or the topic |
-| `gallery` | for every regular `.json` file directly inside `--examples` (default `examples`), in file-name order and at most 256 of them: parse and `validate_page` once, then for every theme in `--theme` order (center, dusk, wire) layout, SVG, PNG at scale 2 and measured JSON written to `<out-dir>/<stem>/<theme>/` as `render` writes them, followed by all ten checks. Then writes `<out-dir>/index.html` and `<out-dir>/gallery.json` | per render its failing check and defect lines, then `gallery <stem> <theme>: <check counts>`; the two index paths, absolute; one summary line |
+| `gallery` | for every regular `.json` file directly inside `--examples` (default `examples`), in file-name order and at most 256 of them: parse and `validate_page` once, then for every theme in `--theme` order (center, dusk, wire) layout, SVG, PNG at scale 2 and measured JSON written to `<out-dir>/<stem>/<theme>/` as `render` writes them, followed by all twelve checks, print-fit not applicable. Then writes `<out-dir>/index.html` and `<out-dir>/gallery.json` | per render its failing check and defect lines, then `gallery <stem> <theme>: <check counts>`; the two index paths, absolute; one summary line |
 
 Line formats, stable for scripts:
 
@@ -1467,13 +1475,14 @@ check text-fits-box: examined 40 text runs, 1 defect
 defect text-fits-box /body/0/children/2/children/0/children/0/children/1: fact "BGP peering · link-local /29" measured 571.20x16.20 in box 560.00x16.20
 check legend-consistency: examined 0 relations, FAILED: nothing examined
 check links-routed: examined 0 links, not applicable: page has no links
-stencil check: 10 checks, 3 passed, 2 failed, 5 not applicable
+stencil check: 12 checks, 3 passed, 2 failed, 7 not applicable
 violation gap-out-of-range /body/0/gap: gap 65 is above 64
 violation text-untrimmed /title: text starts or ends with whitespace
 stencil vet: 2 violations, checks not run
 check remembered-constants: examined 36 text fields, 0 defects
 check legend-consistency: examined 8 relations, 0 defects
-stencil vet: 0 violations, 2 checks, 2 passed, 0 failed
+check icon-matches-product: examined 6 items, 0 defects
+stencil vet: 0 violations, 3 checks, 3 passed, 0 failed
 error document is not valid stencil JSON at line 3, column 7: missing field `kind`
 stencil vet: document does not parse, checks not run
 ```
@@ -1482,7 +1491,8 @@ stencil vet: document does not parse, checks not run
 - A defect line is `defect <check> <pointer>: <message>`, and a violation line is `violation <rule> <pointer>: <message>`, with the rule in kebab-case as in section 1.3. An empty pointer prints as `""`.
 - The `vet` summary always starts with the violation count, `1 violation` or `<n> violations`, 0 included. A `render` or `check` summary carries a violation count only when violations stopped the run; otherwise `check` prints `stencil check: <n> checks, <p> passed, <f> failed`, followed by `, <a> not applicable` when a report did not apply. A document with violations or a parse failure prints `checks not run` in place of the check counts.
 - `render` and `check` print violations and parse errors in the same formats, followed by the summary line `stencil <command>: …`.
-- `check` prints the ten check lines in `CheckName` declaration order (child-inside-container, siblings-do-not-overlap, text-fits-box, remembered-constants, legend-consistency, links-routed, links-avoid-boxes, pipes-land, iso-labels-clear, iso-links-clear), and `vet` prints its two in the same relative order. Each check's defect lines follow its check line directly, in the order the `CheckReport` lists them.
+- `check` prints the twelve check lines in `CheckName` declaration order (child-inside-container, siblings-do-not-overlap, text-fits-box, remembered-constants, legend-consistency, links-routed, links-avoid-boxes, pipes-land, iso-labels-clear, iso-links-clear, print-fit, icon-matches-product), and `vet` prints its three in the same relative order.
+- With `--print-width`, `render` prints the print-fit check line and its defect lines after the three paths, once the files are written, and exits 1 when the report fails. Each check's defect lines follow its check line directly, in the order the `CheckReport` lists them.
 - On success `render` prints the three absolute paths, one per line, in the order SVG, PNG, measured JSON, and nothing after them.
 - `gallery` prints, for each render, the check and defect lines of the checks that failed (none when every check passed or did not apply) followed by `gallery <stem> <theme>: <n> checks, <p> passed, <f> failed[, <a> not applicable]`. A document that does not parse or has violations prints its `error` or `violation` lines and `gallery <stem>: not rendered`; a render that fails with exit 1 (`MissingGlyph`) prints its `error` line and `gallery <stem> <theme>: not rendered`. After the renders come the absolute paths of `index.html` and `gallery.json`, then `stencil gallery: <r> renders of <e> examples in <t> themes, <f> failed`, where r counts the renders whose three files were written and f counts the renders that failed a check or were not rendered.
 - `index.html` is a static page with no script: one anchor per theme (`<a href="#center">`) leading to one `<section id="<theme>">` per theme, which lists every example with its kicker and title read from the document, the PNG as a thumbnail linking to the full PNG, links to the SVG and the measured JSON, and the check counts line. Every link is relative to the gallery directory, so the page works from a download, a zip or a static host. `gallery.json` holds the same data: `themes`, `examples` (each with `name`, `source`, `title`, `kicker` and one entry per theme holding `theme`, `passed`, `summary` and, when the render was written, `files` with the relative `png`, `svg` and `measured` paths), `renders` and `failed`. A document that does not load is listed under its file name with every render not rendered. Neither file carries a timestamp, so two runs over the same examples write the same bytes.
@@ -1844,14 +1854,14 @@ All tests except the wrap-epsilon regression use `FixedMetricsMeasurer::default(
 
 ### stencil-cli
 
-- `vet examples/g7.json` exits 0 and prints the two model checks with examined 36 and 8.
+- `vet examples/g7.json` exits 0 and prints the three model checks with examined 36, 8 and 6.
 - `vet` on a copy containing `64512` in a pipe sub exits 1 and prints the defect with its pointer.
 - `vet` on a document with no pipes and an empty legend exits 1 and prints `FAILED: nothing examined`.
 - `vet` on a document with one vet violation prints its `violation` line and `stencil vet: 1 violation, checks not run`, and exits 1.
 - `vet` on malformed JSON exits 1. `vet`, `check` and `render` on a missing file exit 2 with empty stdout, and `render` creates no out-dir. `vet /dev/zero` exits 2 naming the 67,108,864-byte limit, and an input of exactly that many bytes (g7 padded with spaces) is read and vets clean. `vet` and `check` on a 4097-node document exit 1 with `violation nodes-exceeded /body: more than 4096 nodes`. An unknown subcommand or flag exits 2. `--help` and `--version` exit 0, write the text to stdout and write nothing to stderr.
 - `render` writes the three files to a temporary directory and prints exactly their three absolute paths in the order SVG, PNG, measured JSON. `--scale 5` exits 2. An `--out-dir` under a read-only directory exits 2.
-- `check examples/g7.json` exits 0 and prints the eight lines in `CheckName` order: the five with the counts from section 9.4, both link checks as not applicable, pipes-land with 8 pipe ends and no defect, and the summary `8 checks, 6 passed, 0 failed, 2 not applicable`.
-- `check` on a document whose text overflows exits 1 and names the pointer. The document has one Pipe and a matching legend entry, so child-inside-container is the only failing check. The Pipe sits in the body with no Row or Col sibling, so pipes-land is not applicable, and the summary is `8 checks, 4 passed, 1 failed, 3 not applicable`.
+- `check examples/g7.json` exits 0 and prints the twelve lines in `CheckName` order: the five with the counts from section 9.4, both link checks as not applicable, pipes-land with 8 pipe ends and no defect, both iso checks and print-fit as not applicable, icon-matches-product with 6 items, and the summary `12 checks, 7 passed, 0 failed, 5 not applicable`.
+- `check` on a document whose text overflows exits 1 and names the pointer. The document has one Pipe and a matching legend entry, so child-inside-container is the only failing check. The Pipe sits in the body with no Row or Col sibling, so pipes-land is not applicable, and the summary is `12 checks, 5 passed, 1 failed, 6 not applicable`.
 - `vet` and `check` on a file whose bytes are not UTF-8 exit 1 and print the `error` line with the line and column of the first invalid byte and `document does not parse, checks not run`.
 - `render d/figure.svg --out-dir d` exits 2 and leaves the input unchanged. A symlink planted at `<out-dir>/g7.svg` is replaced by the rendered file, its target keeps its bytes, and no temporary file is left behind. With an old `g7.svg` and a directory at `<out-dir>/g7.png`, `render` exits 2, `g7.svg` keeps its old bytes, no `g7.measured.json` appears and no temporary file is left behind. Two temporary names from one process differ, and a file already at a temporary name fails the write and keeps its bytes.
 - A vetted page of 160 stacked Pcards exits 2 from `render --scale 4` with a `PixmapAllocation` message and writes nothing, and renders at `--scale 1`.
@@ -2502,25 +2512,26 @@ The numbers in this example are illustrative.
 | Command | Change |
 |---|---|
 | `render` | accepts `--projection flat` or `--projection iso`, which overrides `Page.projection` as `--theme` overrides `Page.theme` |
-| `check` | accepts the same flag; runs ten checks, `iso-labels-clear` and `iso-links-clear` last |
+| `check` | accepts the same flag; runs twelve checks, `iso-labels-clear` and `iso-links-clear` before print-fit and icon-matches-product |
 | `vet` | unchanged; `--projection` is an unknown flag and exits 2 |
 
 - `pipeline::render_page` calls `project_page` once when the effective projection is `Iso` and keeps the result in `RenderedPage.scene: Option<IsoScene>`, which `measured_json` and the check read.
-- `pipeline::all_checks(page, geometry, scene: Option<&IsoScene>) -> [CheckReport; 10]`, in `CheckName` order.
-- `check` prints ten check lines. A flat page prints `check iso-labels-clear: examined 0 pairs, not applicable: projection is flat` and `check iso-links-clear: examined 0 link legs, not applicable: projection is flat`, so the g7 summary becomes `stencil check: 10 checks, 6 passed, 0 failed, 4 not applicable`. Check stdout changes for every document; render outputs do not.
+- `pipeline::all_checks(page, grammar, geometry, scene: Option<&IsoScene>, print_width: Option<PrintWidth>) -> [CheckReport; 12]`, in `CheckName` order.
+- `check` prints twelve check lines. A flat page prints `check iso-labels-clear: examined 0 pairs, not applicable: projection is flat` and `check iso-links-clear: examined 0 link legs, not applicable: projection is flat`, so the g7 summary is `stencil check: 12 checks, 7 passed, 0 failed, 5 not applicable`. Check stdout changes for every document; render outputs do not.
 - `cue/stencil.cue` gains `projection?: "flat" | "iso"`.
 
 ### 12.10 Example and tests
 
-`examples/hero-iso.json` is a cover-slide figure of 11 body nodes and four links: an on-prem zone with the Edge router inside a Col with `justify: center`, and a gcp zone holding a vpc ring labeled `Shared VPC · europe-west4` around a Row of two Cols, the API gateway alone in the first and Warehouse over Model serving, 48 apart, in the second. Both Rows have `grow: [0, 0]`, so every zone and card takes its content width; the Col keeps the on-prem zone to the router and its margin instead of the Row's height, and centers it so the router's right side and the gateway's left side share 16.8 px before the zoom, which section 12.3 rule 8 draws as one straight leg. VLAN 1 (blue) runs from the router's right side to the gateway's left side, VLAN 2 (dash, via two points) from the router's bottom straight out of the on-prem slab's near edge, across the gap and up into the gateway's bottom, and two gray links chain the gateway to Warehouse and Warehouse to Model serving; every link carries the default end arrowhead. The via points are the flat coordinates under the default fonts, 28.7 px past the on-prem slab and 34.6 px short of the ring's front edge.
+`examples/hero-iso.json` is a cover-slide figure of 14 body nodes and four links: an on-prem Box with the Edge router inside a Col with `justify: center`, and a gcp Box holding a Row of a vpc ring labeled `Shared VPC · europe-west4` and an apis Box labeled `Google APIs`. The ring holds a Row of two Cols, the API gateway in the first and Model serving in the second; the apis Box holds Warehouse, a BigQuery product, which never sits inside a VPC (section 13.3, rule 4). Every Row has `grow: [0, 0]`, so every Box and item takes its content width, and the Col keeps the on-prem Box to the router and its margin instead of the Row's height and centers it. Every item carries a subtitle naming what it is, as the gcp hop-fact rule asks. VLAN 1 (solid tint 1) runs from the router's right side to the gateway's left side, VLAN 2 (dash) from the router's bottom to the gateway's bottom, routed with no via point, and two gray links chain the gateway to Model serving and Model serving to Warehouse, across the ring's edge into the apis Box; every link carries the default end arrowhead. The page is 1280 wide: the apis Box beside the ring widens the body, and at 1040 the zoom of section 12.2 rule 7 left the subtitled billboards crossing slab edges.
 
 ```json
 {
   "title": "On-prem data reaches three managed services over two private paths.",
   "kicker": "Hybrid platform · cover figure",
   "lede": "One on-prem site, one Google Cloud region, two Interconnect attachments.",
-  "width": 1040,
+  "width": 1280,
   "canvas": "customer",
+  "grammar": "gcp",
   "projection": "iso",
   "body": [
     {
@@ -2533,44 +2544,58 @@ The numbers in this example are illustrative.
           "justify": "center",
           "children": [
             {
-              "tag": "Zone",
-              "kind": "onprem-a",
+              "tag": "Box",
+              "kind": "onprem",
+              "tint": 1,
               "label": "On-prem",
               "children": [
-                { "tag": "Pcard", "id": "router", "icon": "hybrid", "fn": "Edge router" }
+                { "tag": "Item", "id": "router", "kind": "product", "icon": "hybrid", "title": "Edge router", "subtitle": "on-prem · BGP" }
               ]
             }
           ]
         },
         {
-          "tag": "Zone",
+          "tag": "Box",
           "kind": "gcp",
           "label": "Google Cloud",
           "children": [
             {
-              "tag": "Zone",
-              "kind": "vpc",
-              "label": "Shared VPC · europe-west4",
+              "tag": "Row",
+              "gap": 64,
+              "grow": [0, 0],
               "children": [
                 {
-                  "tag": "Row",
-                  "gap": 64,
-                  "grow": [0, 0],
+                  "tag": "Box",
+                  "kind": "vpc",
+                  "label": "Shared VPC · europe-west4",
                   "children": [
                     {
-                      "tag": "Col",
+                      "tag": "Row",
+                      "gap": 64,
+                      "grow": [0, 0],
                       "children": [
-                        { "tag": "Pcard", "id": "gateway", "icon": "cloud-run", "fn": "API gateway" }
-                      ]
-                    },
-                    {
-                      "tag": "Col",
-                      "gap": 48,
-                      "children": [
-                        { "tag": "Pcard", "id": "warehouse", "icon": "bigquery", "fn": "Warehouse" },
-                        { "tag": "Pcard", "id": "model", "icon": "vertex-ai", "fn": "Model serving" }
+                        {
+                          "tag": "Col",
+                          "children": [
+                            { "tag": "Item", "id": "gateway", "kind": "product", "icon": "cloud-run", "title": "API gateway", "subtitle": "Cloud Run" }
+                          ]
+                        },
+                        {
+                          "tag": "Col",
+                          "children": [
+                            { "tag": "Item", "id": "model", "kind": "product", "icon": "vertex-ai", "title": "Model serving", "subtitle": "Vertex AI" }
+                          ]
+                        }
                       ]
                     }
+                  ]
+                },
+                {
+                  "tag": "Box",
+                  "kind": "apis",
+                  "label": "Google APIs",
+                  "children": [
+                    { "tag": "Item", "id": "warehouse", "kind": "product", "icon": "bigquery", "title": "Warehouse", "subtitle": "BigQuery" }
                   ]
                 }
               ]
@@ -2581,20 +2606,20 @@ The numbers in this example are illustrative.
     }
   ],
   "legend": [
-    { "kind": "blue", "text": "primary attachment" },
-    { "kind": "dash", "text": "failover attachment" },
-    { "kind": "gray", "text": "service call" }
+    { "line": "solid", "tint": 1, "text": "primary attachment" },
+    { "line": "dash", "text": "failover attachment" },
+    { "line": "gray", "text": "service call" }
   ],
   "links": [
-    { "from": "router", "to": "gateway", "kind": "blue", "label": "VLAN 1", "from_side": "right", "to_side": "left" },
-    { "from": "router", "to": "gateway", "kind": "dash", "label": "VLAN 2", "from_side": "bottom", "to_side": "bottom", "via": [{ "x": 100.92, "y": 304 }, { "x": 344.84, "y": 304 }] },
-    { "from": "gateway", "to": "warehouse", "kind": "gray" },
-    { "from": "warehouse", "to": "model", "kind": "gray", "from_side": "bottom", "to_side": "top" }
+    { "from": "router", "to": "gateway", "line": "solid", "tint": 1, "label": "VLAN 1", "from_side": "right", "to_side": "left" },
+    { "from": "router", "to": "gateway", "line": "dash", "label": "VLAN 2", "from_side": "bottom", "to_side": "bottom" },
+    { "from": "gateway", "to": "model", "line": "gray" },
+    { "from": "model", "to": "warehouse", "line": "gray" }
   ]
 }
 ```
 
-Its `iso-labels-clear` count is 80: 9 billboards (3 zone tabs, 4 cards, 2 link tags) give 36 billboard pairs, 9 billboards against 4 blocks less the 4 own-block pairs give 32, and the 4 cards, the billboards that are not opaque, against 3 slabs give 12; no billboard is contained. Its `iso-links-clear` count is 6 legs: one for VLAN 1, three for VLAN 2 and one for each service link. The page has no pipes, so `pipes-land` is not applicable. Without `projection` the document passes the seven flat checks that apply to it.
+Its `iso-labels-clear` count is 97: 10 billboards (4 Box tabs, 4 items, 2 link tags) give 45 billboard pairs, 10 billboards against 4 blocks less the 4 own-block pairs give 36, and the 4 items, the billboards that are not opaque, against 4 slabs give 16; no billboard is contained. Its `iso-links-clear` count is 6 legs. The page has no pipes, so `pipes-land` is not applicable. Without `projection` the document passes the eight flat checks that apply to it.
 
 Tests:
 
@@ -2607,8 +2632,8 @@ Tests:
 - stencil-render, SVG: an iso render parses with usvg; it has one `<g data-id>` per geometry node and one `<g data-billboard>` per billboard, in order; no `<marker>` and no `<defs>`; every g7 dot is an `<ellipse>` with `rx="4.9"` and `ry="2.83"`; the billboard layer is the last child of `<svg>`; `text_elements` equals the flat render's; each zone group's first `<polygon>` precedes every descendant group. The hero's vpc ring is one unfilled dashed or dotted polygon, and every stroked polygon has `stroke-linejoin="round"`. In center and wire the router's name sits on a plate in its block's top fill, and in dusk on none; no text carries a stroke. The on-prem and gcp tabs are filled in the paint of `iso_zone_tab` with its ink, the vpc tab is an outline in the gcp floor fill with its border color, and every tab's left edge and middle sit on its zone's back corner. Every theme draws the iso icon chip before the icon, and the flat hero draws no shadow. Each of the hero's links and its legend swatch are 3.75, 2.5 and 2 px wide in center and dusk and 3.75, 2.5 and 1.25 px in wire; the wire vpc ring is dotted in `#999999` and a wire solid slab outline is 1.5 px, while the flat wire vpc border stays dashed; the wire legend reads `Solid line`, `Dashed line`, `Thin line`, center and dusk keep the flat labels, and the relabeled entry keeps the flat gap before its description.
 - stencil-render, shading: the five test vectors above; a step of 0 returns the input; `shade("#12345", -8)` and `shade("red", -8)` are None; every color constant in `palette.rs` parses; in `wire` every face polygon's fill is `#FFFFFF` or `none`. Under dusk the gcp floor, the on-prem top and a level 1 region top are lighter than the page, the region lighter than the on-prem top, a card top lighter than both floors, its left face darker than its top and its right face darker than its left, and a solid-bordered slab has a top stroke. In center and dusk the gcp slab's sides are `#1A73E8` and `#1257B3`, unstroked, and its outline is 1.5 px, thinner than a wire.
 - stencil-render, check: a gcp zone holding a Row (gap 32) of two Pcards with icon and one-word `fn` examines 9 pairs (3 billboard pairs, 4 billboard and block pairs, 2 card and slab pairs) and passes. The same cards in a Col with gap 8 examine 9, and among the defects the second card's billboard covers the first card's block. A hand-built scene with a slab edge through a label's mark is a defect with the message of rule 5 and the same edge under an opaque chip is not; the edge hidden behind a later opaque block is not a defect either. The flat render returns the not-applicable report. A hand-built `IsoScene` with two billboards overlapping by 0.02 px is a defect, and touching edges are not. A contained mark inside its block passes and one wider than the block leaves it. Placement puts a request on the region center, moves a label off a stroke across it, and puts a tag on the first clear center along its link. `iso-links-clear` passes the hero's 6 legs, reports a hand-built leg 10 px from a zone edge, a leg that turns back and a 30 px last leg of a blue link, and is not applicable for a flat render.
-- stencil-render, measured JSON: for the hero, `nodes` is byte-identical between flat and iso, `projection.billboards` has 9 entries, and the whole output is byte-identical under the three themes while the SVG bytes differ.
-- stencil-cli: `check examples/hero-iso.json` under `--theme center`, `dusk` and `wire` exits 0 with `check iso-labels-clear: examined 80 pairs, 0 defects`, `check iso-links-clear: examined 6 link legs, 0 defects`, the pipes-land not-applicable line and `stencil check: 10 checks, 9 passed, 0 failed, 1 not applicable`. With `--projection flat` it prints the two iso not-applicable lines and `10 checks, 7 passed, 0 failed, 3 not applicable`. `render examples/hero-iso.json` under each theme writes three files, and the PNG width is `ceil(projection.canvas.width * 2)`. `render examples/g7.json --projection iso` writes an iso SVG whose measured JSON `nodes` equal the flat run's. `vet --projection iso` exits 2.
+- stencil-render, measured JSON: for the hero, `nodes` is byte-identical between flat and iso, `projection.billboards` has 10 entries, and the whole output is byte-identical under the three themes while the SVG bytes differ.
+- stencil-cli: `check examples/hero-iso.json` under `--theme center`, `dusk` and `wire` exits 0 with `check iso-labels-clear: examined 97 pairs, 0 defects`, `check iso-links-clear: examined 6 link legs, 0 defects`, the pipes-land and print-fit not-applicable lines and `stencil check: 12 checks, 10 passed, 0 failed, 2 not applicable`. With `--projection flat` it prints the two iso not-applicable lines and `12 checks, 8 passed, 0 failed, 4 not applicable`. `render examples/hero-iso.json` under each theme writes three files, and the PNG width is `ceil(projection.canvas.width * 2)`. `render examples/g7.json --projection iso` writes an iso SVG whose measured JSON `nodes` equal the flat run's. `vet --projection iso` exits 2.
 
 ## 13. Core and grammars
 
@@ -3262,7 +3287,7 @@ gcp has one item kind, `product`: icons `gcp`, parents every container kind and 
 4. Products outside a VPC: a `product` item whose `subtitle` names Cloud Storage, BigQuery, Pub/Sub, Artifact Registry or Cloud Logging at word boundaries, or whose `icon` is `cloud-storage` or `bigquery`, is a defect when a `vpc` Box is among its ancestors: `_productInsideVpc.<title>: "product" & "sits inside a vpc; draw it in an apis box"`. These are Google APIs reached over Private Google Access, never addresses in a VPC.
 5. The `apis` kind holds them: a Box for Google APIs reached over Private Google Access, drawn inside the gcp frame and outside every vpc. Its parents keep it out of a vpc in Rust vet already (`kind-parent-not-allowed`); the CUE rule `_apisOutsideGcp` adds that it has a `gcp` Box among its ancestors, which a parents list cannot say when a project or perimeter sits between.
 
-Two examples break rule 4 today and are corrected in step (d) of section 13.15: `hero-iso.json` draws Warehouse (icon `bigquery`) inside the Shared VPC ring, and `hybrid-ai.json` draws the feature store (`BigQuery · vectors`), the checkpoint bucket (`Cloud Storage · dual-region`), the audit logs (`Cloud Logging · org sink`) and cost and usage (`Billing export · BigQuery`) inside its vpc. Each moves into an `apis` Box beside the vpc inside the gcp frame. `cue/check.sh` vets every example against the gcp `#Page`, so the rules examine them.
+Step (d) of section 13.15 corrects two examples that broke rule 4: `hero-iso.json` drew Warehouse (icon `bigquery`) inside the Shared VPC ring, and `hybrid-ai.json` drew the feature store (`BigQuery · vectors`), the checkpoint bucket (`Cloud Storage · dual-region`), the audit logs (`Cloud Logging · org sink`) and cost and usage (`Billing export · BigQuery`) inside its vpc. Each moves into an `apis` Box outside the vpc inside the gcp frame: in hybrid-ai the feature store and the checkpoint bucket sit in one beside the vpc within the service perimeter, and the audit logs and cost and usage in one inside the evidence project, which sits beside the perimeter. `cue/check.sh` vets every example against the gcp `#Page`, so the rules examine them.
 
 plain. A domain-neutral grammar for system diagrams, with no icons required and no domain rules beyond the core:
 
@@ -4156,7 +4181,7 @@ CUE. `cue/stencil.cue` splits:
 
 Prime:
 
-- `prime/base.md` becomes the core briefing: the loop, the core vocabulary rendered from the schema (Box, Item, facts with their sources, lines, tints, Lanes, chrome, pipe targets), layout, the checks table with rows for `print-fit` (each text run, only with --print-width; prints below 8 pt; widen the print or shorten the figure) and `icon-matches-product` (each item with an icon or subtitle whose kind has an icon table; the subtitle names a product whose own icon is another, or a product icon on a product without one; use the product's icon or a category icon), themes, and one line per built-in grammar. The vocabulary sentence becomes "Every node object carries "tag"; the Page does not." `field_notes` adds `tint 1-8`, `source =doc`, `chrome =full`, `grammar =gcp; a built-in name or a .json path` and `theme =center; a built-in name or a .json path`. Under "Rules no check enforces" a new line reads "Sequence and timeline figures are refused until a timeline grammar exists."
+- `prime/base.md` becomes the core briefing: the loop, the core vocabulary rendered from the schema (Box, Item, facts with their sources, lines, tints, Lanes, chrome, pipe targets), layout, the checks table with rows for `print-fit` (each text run, only with --print-width; prints below 8 pt; widen the print or shorten the figure) and `icon-matches-product` (each item with an icon or subtitle whose kind has an icon table; the subtitle names a product whose own icon is another, or a product icon on a product without one; use the product's icon or a category icon), themes, and one line per built-in grammar. The vocabulary sentence becomes "Every node object carries "tag"; the Page does not." `field_notes` adds `tint 1-8`, `source =doc`, `chrome =full`, `grammar =gcp; a built-in name or a .json path` and `theme =center; a built-in name or a .json path`. Under "Rules no check enforces" a line points sequence and timeline figures at Lanes with ordered links and `stencil prime grammar plain`.
 - `prime/grammars/gcp.md` holds what was GCP-specific in the base briefing and the layout and cue topics: the kind table with meanings, the nesting, the tint pairing in slot terms, the apis kind and the products that never sit inside a VPC, and the rules no check enforces: "Every product on a hop carries a fact read from the live doc at authoring time (source doc), or an explicit ask; never a remembered value. A built fact holds as-built names (bucket names, VLAN IDs, project ids) and needs no live doc." "One audience per figure: canvas customer or internal." "Official product names in subtitle: Cloud Run, Cloud SQL, Pub/Sub." `prime/grammars/plain.md` lists the plain kinds.
 - `prime/themes.md` is rewritten around tint slots: the slot table with center's names, the six designed themes with one line each, the imported tier with its warning, theme files, `stencil theme show` and `check`, and overrides with the `tints` slot-object form. The per-theme color table goes; `stencil theme show <name>` prints the values.
 - `prime/layout.md`, `prime/cue.md`, `prime/links.md` (its example link becomes `"line": "solid", "tint": 1`, and it gains ordered links and Lanes), `prime/blocks.md` (callout tints by kind without naming colors) and `prime/checks.md` (the two new rows and their line formats) follow the core vocabulary. `stencil prime example` stays `examples/g7.json` verbatim.
@@ -4179,11 +4204,11 @@ Documents (step a). Each of `examples/g7.json`, `examples/hero-iso.json`, `examp
 
 `tint` is written directly after `kind` or `line`. The same rewrite applies to `cue/g7.cue` (moved to `cue/figures/g7.cue`), the negative cases in `cue/check.sh`, `cue/README.md`, the hand-built documents in the test helpers (`crates/*/tests/common/mod.rs`) and every test that names a tag, kind or field, and to the spec's own JSON blocks and tables (sections 1.1, 1.2, 2.2, 2.4, 2.5, 2.11, 5.2, 9.3, 10 and 12.10). `crates/stencil-render/tests/fixtures/` gains the identity fixtures of section 13.14.
 
-Model (steps a, c, d, e): `crates/stencil-model/src/document.rs` (section 13.1 types, keys, labels; Lanes in step c; pipe targets in step e), `vet.rs` (the section 13.1 rules, each in the step that adds its field), `walk.rs` (fact entries in `text_fields`, Lanes in `body_nodes`), `checks.rs` (legend consistency on keys, remembered constants from the grammar, `CheckName` gains two variants in step d), new `grammar.rs` with `grammars/gcp.json` (step a) and `grammars/plain.json` (step c), new `theme.rs` (step b), new `products.rs` (`named_product`, `icon_matches_product`, step d), `lib.rs` (exports, `grammar_schema`, `theme_schema`, `validate_page` taking the grammar), `text.rs` (fake break opportunities, step e), `schema/stencil.schema.json` (regenerated at each step that changes a type), new `schema/grammar.schema.json` and `schema/theme.schema.json`.
+Model (steps a, c, d, e): `crates/stencil-model/src/document.rs` (section 13.1 types, keys, labels; Lanes in step c; pipe targets in step d), `vet.rs` (the section 13.1 rules, each in the step that adds its field), `walk.rs` (fact entries in `text_fields`, Lanes in `body_nodes`), `checks.rs` (legend consistency on keys, remembered constants from the grammar, `CheckName` gains two variants in step d), new `grammar.rs` with `grammars/gcp.json` (step a) and `grammars/plain.json` (step c), new `theme.rs` (step b), new `products.rs` (`named_product`, `icon_matches_product`, step d), `lib.rs` (exports, `grammar_schema`, `theme_schema`, `validate_page` taking the grammar), `text.rs` (fake break opportunities, step e), `schema/stencil.schema.json` (regenerated at each step that changes a type), new `schema/grammar.schema.json` and `schema/theme.schema.json`.
 
 Text (step e): `crates/stencil-text/src/measurer.rs` (U+200B insertion and offset mapping), tests `measure.rs` and `coverage.rs` (U+2022 lands in step a with the built facts).
 
-Layout (steps a, c, d, e): `src/build.rs` (Box layout from the container kind, Item layout, fact parts by source, canonical legend labels, chrome; Lanes in step c), `src/lib.rs` (`layout_page` takes the grammar, `NodeGeometry.kind` as `String` and `tint`, `PartName::BuiltBox` and `Built`, `NodeTag::Lanes`, `LinkRoute.line` and `tint`), `src/compute.rs` (the slot translation of section 13.8, step e), `src/route.rs` (lane messages in step c, `reroute_link` in step e), `src/checks.rs` (`print_fit` in step d, pipes-land targets in step e), `src/styles.rs` (colors unchanged; the test of section 13.4 rule 13), new `src/theme_labels.rs` (`theme_legend_labels`, step b); every test file under `crates/stencil-layout/tests/`.
+Layout (steps a, c, d, e): `src/build.rs` (Box layout from the container kind, Item layout, fact parts by source, canonical legend labels, chrome; Lanes in step c), `src/lib.rs` (`layout_page` takes the grammar, `NodeGeometry.kind` as `String` and `tint`, `PartName::BuiltBox` and `Built`, `NodeTag::Lanes`, `LinkRoute.line` and `tint`), `src/compute.rs` (the slot translation of section 13.8, step d), `src/route.rs` (lane messages in step c, `reroute_link` in step e), `src/checks.rs` (`print_fit` and the pipes-land targets in step d), `src/styles.rs` (colors unchanged; the test of section 13.4 rule 13), new `src/theme_labels.rs` (`theme_legend_labels`, step b); every test file under `crates/stencil-layout/tests/`.
 
 Render (steps a, b, b2, c, e): `src/palette.rs` (step a re-keys today's tables from `ZoneKind` and `PipeKind` to role, tone and tint and to line and tint; step b rewrites it over `Theme` and removes the constants), new `src/themes.rs` and `themes/center.json`, `paper.json`, `dusk.json`, `clear.json`, `clear-dark.json`, `wire.json` (step b) and `themes/imported/` (step b2), `src/svg.rs` and `src/svg/iso_writer.rs` (keys and roles in step a; relabel in step b; lifelines and lane messages in step c; shadows and `<defs>` in step e), `src/iso.rs` with `drape`, `route` and `shapes` (rings from the grammar in step a; slab thickness from the theme in step b; slab exit in step e), `src/measured.rs` (keys), `src/lib.rs`; tests `center_identity.rs`, `themes.rs`, `svg.rs`, `iso.rs`, `arrows.rs`, `blocks.rs`, `links.rs`, `icons.rs`, `measured.rs` and `common/mod.rs`.
 
@@ -4197,7 +4222,7 @@ Repository: `README.md` (grammars, six themes, the imported tier, `stencil theme
 
 ### 13.14 Tests
 
-Identity proofs. Before step (a) changes any code, the implementer runs `origin/main` over every example and commits, under `crates/stencil-render/tests/fixtures/`, two files per example: `<stem>.center.svg`, the center SVG in the example's own projection (g7, hybrid-ai and network-hub-spoke already have theirs; onepager, stress-dense and hero-iso are added, hero-iso in iso), and `<stem>.center.geometry.json`, the measured JSON with the top-level `document` key removed, serialized as `render` writes it. `document` echoes the input, which the migration rewrites, so it is the one key that cannot stay equal; `canvas`, `nodes`, `links` and `projection` must, and they can because the output vocabulary does not change (section 13.1 rule 5). `crates/stencil-render/tests/center_identity.rs` then asserts, for every example, that the migrated document renders under center to SVG bytes equal to the fixture and to measured JSON whose bytes, with `document` removed, equal the geometry fixture, and `golden_g7.rs` keeps its section 9.4 counts and geometry assertions on the migrated g7. These hold unchanged through steps (a), (b) and (c). Step (d) regenerates exactly the fixtures of the three examples it corrects (section 13.13), step (e) regenerates hero-iso's fixtures for the shadows and the slab exit and nothing else, and step (e)'s layout changes (pipe targets, break opportunities) regenerate nothing, which is their proof. Each regeneration is its own commit with the side-by-side PNGs attached to the pull request.
+Identity proofs. Before step (a) changes any code, the implementer runs `origin/main` over every example and commits, under `crates/stencil-render/tests/fixtures/`, two files per example: `<stem>.center.svg`, the center SVG in the example's own projection (g7, hybrid-ai and network-hub-spoke already have theirs; onepager, stress-dense and hero-iso are added, hero-iso in iso), and `<stem>.center.geometry.json`, the measured JSON with the top-level `document` key removed, serialized as `render` writes it. `document` echoes the input, which the migration rewrites, so it is the one key that cannot stay equal; `canvas`, `nodes`, `links` and `projection` must, and they can because the output vocabulary does not change (section 13.1 rule 5). `crates/stencil-render/tests/center_identity.rs` then asserts, for every example, that the migrated document renders under center to SVG bytes equal to the fixture and to measured JSON whose bytes, with `document` removed, equal the geometry fixture, and `golden_g7.rs` keeps its section 9.4 counts and geometry assertions on the migrated g7. These hold unchanged through steps (a), (b) and (c). Step (d) regenerates exactly the fixtures of the three examples it corrects (section 13.13), step (e) regenerates hero-iso's fixtures for the shadows and the slab exit and nothing else, and the pipe targets of step (d) and the break opportunities of step (e) regenerate nothing, which is their proof. Each regeneration is its own commit with the side-by-side PNGs attached to the pull request.
 
 stencil-model:
 
@@ -4248,7 +4273,7 @@ stencil-cli:
 - `theme show center` prints `themes/center.json` byte for byte; `theme check center` prints 223 row lines, the ask failure and `stencil theme check center: 223 rows, 222 passed, 1 failed`, and exits 1; `theme check paper` exits 0; `theme check wire` prints 8 not-applicable rows and exits 0.
 - `theme import`: every pinned scheme in `themes/imported/` re-imports to its committed theme file byte for byte and writes a report equal to the committed one row for row; the command exits 1 for each, as the committed reports say. A scheme missing `base0B` exits 1 and writes nothing; a base24 scheme imports with `base10` to `base17` ignored and gives the same theme as its first sixteen keys alone; a legacy flat-layout file with bare hex values imports.
 - `gallery` writes six themes per example, and `index.html` has a section for each.
-- `prime` is at most 7,000 bytes and each topic and grammar briefing at most 5,000; the base text contains "the Page does not" and "Sequence and timeline figures are refused until a timeline grammar exists."; the vocabulary lists `Box`, `Item`, `Lanes`, `facts`, `source`, `line`, `tint`, `chrome` and `grammar`; the checks table lists `print-fit` and `icon-matches-product`; `prime grammar gcp` lists every gcp kind and `apis`; `prime grammar nope` exits 2.
+- `prime` is at most 7,000 bytes and each topic and grammar briefing at most 5,000; the base text contains "the Page does not" and one line pointing sequence and timeline figures at Lanes and `stencil prime grammar plain`; the vocabulary lists `Box`, `Item`, `Lanes`, `facts`, `source`, `line`, `tint`, `chrome` and `grammar`; the checks table lists `print-fit` and `icon-matches-product`; `prime grammar gcp` lists every gcp kind and `apis`; `prime grammar nope` exits 2.
 
 CUE: `cue/check.sh` passes, with every negative case of section 13.12 rejected by its named error, and both grammar exports equal their committed JSON.
 
@@ -4262,8 +4287,8 @@ b. Themes as data and the six designed built-ins: `theme.rs`, `cue/theme.cue`, t
 b2. The base16 importer and the imported tier: `stencil theme import`, the seven pinned schemes with their theme files, reports and `SOURCES.md`, and the re-import and report tests.
 
 c. The plain grammar and Lanes: `plain.cue` and `plain.json`, `prime grammar`, the Lanes node with ordered links, lifelines and lane messages, its vet rules and theme role, and `examples/plain-system.json` with its fixtures and gallery PNGs.
-d. Checks and CLI flags: `print-fit` with `--print-width`, `icon-matches-product` reading the grammar's table, twelve checks, three in `vet`; the gcp CUE rules `_productInsideVpc` and `_apisOutsideGcp` and `check.sh` over every example; the example corrections of section 13.13 with their regenerated fixtures and gallery PNGs; the prime base and checks topics with the raised budgets. Sections 6, 7, 9.4, 10, 12.9 and 12.10 are edited in this step for twelve checks, the three checks of `vet` and the new summary lines.
-e. Layout and render polish: pipe targets with the slot translation and the pipes-land revision; the break opportunities in both measurers, after the U+200B probe; block shadows with the `<defs>` filter; the slab exit with `reroute_link`. Only hero-iso's center fixtures and gallery PNG are regenerated.
+d. Checks and CLI flags: `print-fit` with `--print-width`, `icon-matches-product` reading the grammar's table, twelve checks, three in `vet`; pipe targets with the slot translation and the pipes-land revision; the gcp CUE rules `_productInsideVpc` and `_apisOutsideGcp` and `check.sh` over every example; the example corrections of section 13.13 with their regenerated fixtures and gallery PNGs; the prime base and checks topics with the raised budgets. Sections 6, 7, 9.4, 10, 12.9 and 12.10 are edited in this step for twelve checks, the three checks of `vet` and the new summary lines.
+e. Layout and render polish: the break opportunities in both measurers, after the U+200B probe; block shadows with the `<defs>` filter; the slab exit with `reroute_link`. Only hero-iso's center fixtures and gallery PNG are regenerated.
 
 ## Conventions
 

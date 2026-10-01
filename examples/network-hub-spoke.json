@@ -388,7 +388,7 @@
                                 {
                                   "tag": "Item",
                                   "kind": "product",
-                                  "icon": "serverless",
+                                  "icon": "cloud-run",
                                   "title": "Async workers",
                                   "subtitle": "Cloud Run · Direct VPC"
                                 }

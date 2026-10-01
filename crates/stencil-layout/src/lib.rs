@@ -28,7 +28,8 @@ pub const ARROWHEAD_WIDTH_PX: f32 = 8.0;
 
 /// Asserts validate_page(page, grammar) is empty, sizes each Lanes band from its messages,
 /// builds the taffy tree with each Box laid out from its container kind, computes layout,
-/// re-measures text at final widths, adds the lifelines, routes the links, and returns
+/// re-measures text at final widths, centers the slot of every pipe that names its targets
+/// on them, adds the lifelines, routes the links, and returns
 /// absolute geometry in canvas px.
 pub fn layout_page(
     page: &Page,
@@ -42,6 +43,7 @@ pub fn layout_page(
     let lanes_plan = lanes::plan_lanes(page, measurer)?;
     let built = build::build_page(page, grammar, &lanes_plan)?;
     let mut geometry = compute::compute_geometry(built, page.width, measurer)?;
+    compute::translate_pipe_slots(page, &mut geometry);
     lanes::add_lifelines(&mut geometry);
     geometry.links = route::route_links(page, &geometry, &lanes_plan, measurer)?;
     Ok(geometry)

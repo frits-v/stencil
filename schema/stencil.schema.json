@@ -664,6 +664,14 @@
             "dir": {
               "$ref": "#/$defs/PipeDir"
             },
+            "from": {
+              "description": "The id of the node on the pipe's left (h) or upper (v) end. Layout centers the pipe's\nslot on its targets (section 13.8); a Tee arm cannot carry one.",
+              "type": [
+                "string",
+                "null"
+              ],
+              "pattern": "^[a-z0-9][a-z0-9-]{0,63}$"
+            },
             "id": {
               "type": [
                 "string",
@@ -699,6 +707,14 @@
               "format": "uint8",
               "maximum": 8,
               "minimum": 1
+            },
+            "to": {
+              "description": "The id of the node on the pipe's right (h) or lower (v) end.",
+              "type": [
+                "string",
+                "null"
+              ],
+              "pattern": "^[a-z0-9][a-z0-9-]{0,63}$"
             }
           },
           "additionalProperties": false,
@@ -936,6 +952,14 @@
             "dir": {
               "$ref": "#/$defs/PipeDir"
             },
+            "from": {
+              "description": "The id of the node on the pipe's left (h) or upper (v) end. Layout centers the pipe's\nslot on its targets (section 13.8); a Tee arm cannot carry one.",
+              "type": [
+                "string",
+                "null"
+              ],
+              "pattern": "^[a-z0-9][a-z0-9-]{0,63}$"
+            },
             "id": {
               "type": [
                 "string",
@@ -971,6 +995,14 @@
               "format": "uint8",
               "maximum": 8,
               "minimum": 1
+            },
+            "to": {
+              "description": "The id of the node on the pipe's right (h) or lower (v) end.",
+              "type": [
+                "string",
+                "null"
+              ],
+              "pattern": "^[a-z0-9][a-z0-9-]{0,63}$"
             }
           },
           "additionalProperties": false,

@@ -122,12 +122,9 @@ PY
 # Every example is a JSON document authored without CUE; each vets against
 # the #Page of the grammar it names, gcp when it names none. An example listed here is a known defect, reported on every
 # run: it must fail, and every error vet reports must name the listed rule.
-# An entry that starts passing is stale and fails the script.
-#   hero-iso: four items carry no subtitle and no fact, so the hop-fact rule
-#   rejects them.
-known_failures=(
-	'hero-iso|_itemsWithoutSubtitleOrFact'
-)
+# An entry that starts passing is stale and fails the script. The list is
+# empty: every example vets clean.
+known_failures=()
 examples_vetted=0
 examples_clean=0
 examples_known=0
@@ -136,7 +133,7 @@ for example in "$repo"/examples/*.json; do
 	stem="$(basename "$example" .json)"
 	examples_vetted=$((examples_vetted + 1))
 	known_rule=""
-	for entry in "${known_failures[@]}"; do
+	for entry in ${known_failures[@]+"${known_failures[@]}"}; do
 		if [[ "${entry%%|*}" == "$stem" ]]; then
 			known_rule="${entry#*|}"
 		fi
@@ -252,10 +249,10 @@ cat >"$chrome_none" <<'JSON'
     {
       "tag": "Row",
       "children": [
-        { "tag": "Item", "kind": "product", "title": "Source", "subtitle": "Cloud Run" },
-        { "tag": "Pipe", "dir": "h", "line": "solid", "label": "request" },
+        { "tag": "Item", "id": "source", "kind": "product", "title": "Source", "subtitle": "Cloud Run" },
+        { "tag": "Pipe", "dir": "h", "line": "solid", "label": "request", "from": "source", "to": "sink" },
         { "tag": "Pipe", "dir": "h", "line": "solid", "tint": 1, "label": "retry" },
-        { "tag": "Item", "kind": "product", "title": "Sink", "subtitle": "Cloud SQL" },
+        { "tag": "Item", "id": "sink", "kind": "product", "title": "Sink", "subtitle": "Cloud SQL" },
         { "tag": "Item", "kind": "product", "title": "Queue", "facts": [{ "text": "ordering keys on" }] },
         { "tag": "Item", "kind": "product", "title": "Cache", "facts": [{ "text": "eviction policy?", "source": "ask" }] }
       ]
@@ -265,13 +262,14 @@ cat >"$chrome_none" <<'JSON'
 }
 JSON
 "$CUE" vet -c -d '#Page' ./grammars:gcp "$chrome_none"
-echo "ok   chrome-none-one-key: an empty legend with one key in use vets clean, as do items with only a doc or ask fact"
+echo "ok   chrome-none-one-key: an empty legend with one key in use vets clean, as do items with only a doc or ask fact and a pipe naming its targets"
 
 # Fillers for the length bounds: 401 characters for a text field, 255 facts
 # added beside the one in Region A for 257 children.
 long_text="$(printf 'x%.0s' {1..401})"
 many_facts="$(printf '{tag: "Fact", text: "filler"},%.0s' {1..255})"
 stray_subnet='{tag: "Box", kind: "subnet", label: "stray subnet", children: [{tag: "Fact", text: "no region around it"}]},'
+stray_apis='{tag: "Box", kind: "project", label: "Data project", children: [{tag: "Box", kind: "apis", label: "Stray APIs", children: [{tag: "Fact", text: "no gcp frame around it"}]}]},'
 
 # figure | name | sed expression applied to figures/<figure>.cue | text the
 # vet error must contain [| second text the error must also contain]. A g7
@@ -311,6 +309,12 @@ g7_cases=(
 	'legend-solid-tint-3-unused|s/{line: "dash", text: "region failover, not a fifth line"},/&\n\t\t{line: "solid", tint: 3, text: "unused slot"},/|_legendKeysUnusedInBody."solid-3"'
 	'tint-on-untintable-vpc|s/kind:  "vpc"/kind:  "vpc", tint: 1/|customer.body.0.children.2.children.0._tintWithoutEffect|has no effect on a vpc box'
 	"built-fact-without-subtitle|s/subtitle: \"private ASN · RFC 6996\"/facts: [{text: \"cr-region-a\", source: \"built\"}]/|_itemsWithoutSubtitleOrFact.\"Cloud Router A\""
+	'bigquery-product-inside-vpc|s/{tag: "Fact", text: "BGP peering[^}]*},/&\n{tag: "Item", kind: "product", icon: "bigquery", title: "Warehouse", subtitle: "BigQuery"},/|_productInsideVpc.Warehouse|sits inside a vpc; draw it in an apis box'
+	'cloud-storage-icon-inside-vpc|s/{tag: "Fact", text: "BGP peering[^}]*},/&\n{tag: "Item", kind: "product", icon: "cloud-storage", title: "Landing bucket", facts: [{text: "dual-region"}]},/|_productInsideVpc."Landing bucket"'
+	"apis-box-outside-gcp|s/^\tbody: \[{\$/\tbody: [$stray_apis {/|_apisOutsideGcp.\"Stray APIs\"|sits outside the gcp frame"
+	'pipe-target-unknown|s/label: "VLAN 1", sub: "EAD 1 · BGP"/&, to: "nowhere"/|_pipeTargetsUnknown.nowhere'
+	'pipe-targets-equal|s/title: "On-prem router 1"/id: "r1", &/; s/label: "VLAN 1", sub: "EAD 1 · BGP"/&, from: "r1", to: "r1"/|_pipeTargetsEqual|the same node as pipe to'
+	'pipe-target-on-tee-arm|s/title: "On-prem router 1"/id: "r1", &/; s/{tag: "Fact", text: "BGP peering[^}]*},/&\n{tag: "Tee", line: "solid", tint: 1, hub: "hub", arms: [{tag: "Pipe", dir: "h", line: "solid", tint: 1, label: "arm 1", to: "r1"}, {tag: "Pipe", dir: "h", line: "solid", tint: 1, label: "arm 2"}]},/|_targetOnTeeArm."0"'
 	'chrome-none-three-keys-empty-legend|s/^\ttitle: /\tchrome: "none"\n&/; /^\tlegend: \[$/,/^\t\]$/d; s/^}$/\tlegend: []\n}/|_pipeKeysMissingFromLegend'
 )
 sequence_cases=(

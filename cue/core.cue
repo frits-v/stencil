@@ -132,6 +132,10 @@ import (
 	_linkEndpointsUnknown: {
 		for l in _links for e in [l.from, l.to] if !list.Contains(_ids, e) {(e): "link endpoint" & "names no node id"}
 	}
+	_pipeTargets: list.Concat([for n in body {n._pipeTargets}])
+	_pipeTargetsUnknown: {
+		for t in _pipeTargets if !list.Contains(_ids, t) {(t): "pipe target" & "names no node id"}
+	}
 	_linkToItself: {
 		for l in _links if l.from == l.to {(l.from): "link from" & "the same node as link to"}
 	}
@@ -202,6 +206,11 @@ import (
 	if tag == "Text" {#TextBlock}
 	if tag == "Callout" {#Callout}
 	if tag == "Frame" {#Frame}
+	// The ids a Pipe names in from and to, gathered up the tree. A Tee's arms
+	// cannot name one, so a Tee gathers none.
+	if !list.Contains(["Row", "Col", "Lanes", "Box", "Pipe"], tag) {
+		_pipeTargets: []
+	}
 }
 
 // Shared by Row and Col. grow carries one weight per child.
@@ -217,6 +226,7 @@ import (
 	_keys: {for c in children {c._keys}}
 	_ids: list.Concat([[if id != _|_ {id}], for c in children {c._ids}])
 	_laneSets: list.Concat([for c in children {c._laneSets}])
+	_pipeTargets: list.Concat([for c in children {c._pipeTargets}])
 }
 
 #Row: {
@@ -239,6 +249,7 @@ import (
 	_ids: list.Concat([[if id != _|_ {id}], for c in children {c._ids}])
 	// The ids of this node's lane heads, then the sets of any Lanes below them.
 	_laneSets: list.Concat([[[for c in children if c.id != _|_ {c.id}]], for c in children {c._laneSets}])
+	_pipeTargets: list.Concat([for c in children {c._pipeTargets}])
 }
 
 // Any container. The grammar's container kind decides how it is drawn and
@@ -253,6 +264,7 @@ import (
 	_keys: {for c in children {c._keys}}
 	_ids: list.Concat([[if id != _|_ {id}], for c in children {c._ids}])
 	_laneSets: list.Concat([for c in children {c._laneSets}])
+	_pipeTargets: list.Concat([for c in children {c._pipeTargets}])
 }
 
 // Any named leaf, drawn with its facts in list order under title and subtitle.
@@ -307,9 +319,17 @@ import (
 	label:  #Text
 	sub?:   #Text
 	arrow?: #Arrow
+	// The nodes the pipe joins: from on its left (h) or upper (v) end, to on
+	// the other. Layout centers the pipe's slot on them.
+	from?: #Id
+	to?:   #Id
+	if from != _|_ if to != _|_ if from == to {
+		_pipeTargetsEqual: "pipe from \(from)" & "the same node as pipe to"
+	}
 	_keys: {(_lineKey.key): true}
 	_ids: [if id != _|_ {id}]
 	_laneSets: []
+	_pipeTargets: [if from != _|_ {from}, if to != _|_ {to}]
 }
 
 // One source fanned to two destinations. line colours the spine; each arm is
@@ -322,6 +342,10 @@ import (
 	_lineKey: #LineKey & {#line: line, if tint != _|_ {#tint: tint}}
 	hub: #Text
 	arms: [#Pipe, #Pipe]
+	// The Tee's grid places its arms, so an arm names no target.
+	_targetOnTeeArm: {
+		for i, a in arms if a.from != _|_ || a.to != _|_ {"\(i)": "tee arm" & "cannot name a target"}
+	}
 	_keys: {(_lineKey.key): true, arms[0]._keys, arms[1]._keys}
 	_ids: list.Concat([[if id != _|_ {id}], arms[0]._ids, arms[1]._ids])
 	_laneSets: []

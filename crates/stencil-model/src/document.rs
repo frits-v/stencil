@@ -383,6 +383,15 @@ pub struct Pipe {
         skip_serializing_if = "is_pipe_arrow_default"
     )]
     pub arrow: Arrow,
+    /// The id of the node on the pipe's left (h) or upper (v) end. Layout centers the pipe's
+    /// slot on its targets (section 13.8); a Tee arm cannot carry one.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(regex(pattern = ID_PATTERN))]
+    pub from: Option<String>,
+    /// The id of the node on the pipe's right (h) or lower (v) end.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(regex(pattern = ID_PATTERN))]
+    pub to: Option<String>,
 }
 
 /// A Tee arm is written with `"tag": "Pipe"`, the same object shape as a Pipe node.

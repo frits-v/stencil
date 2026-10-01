@@ -113,6 +113,7 @@ fn golden_g7() {
         &loaded.grammar,
         geometry,
         rendered.scene.as_ref(),
+        None,
     );
     let examined: Vec<(CheckName, u64)> = reports
         .iter()
@@ -131,6 +132,8 @@ fn golden_g7() {
             (CheckName::PipesLand, 8),
             (CheckName::IsoLabelsClear, 0),
             (CheckName::IsoLinksClear, 0),
+            (CheckName::PrintFit, 0),
+            (CheckName::IconMatchesProduct, 6),
         ]
     );
     for report in &reports {
@@ -138,13 +141,15 @@ fn golden_g7() {
             CheckName::LinksRouted
             | CheckName::LinksAvoidBoxes
             | CheckName::IsoLabelsClear
-            | CheckName::IsoLinksClear => CheckOutcome::NotApplicable,
+            | CheckName::IsoLinksClear
+            | CheckName::PrintFit => CheckOutcome::NotApplicable,
             CheckName::ChildInsideContainer
             | CheckName::SiblingsDoNotOverlap
             | CheckName::TextFitsBox
             | CheckName::RememberedConstants
             | CheckName::LegendConsistency
-            | CheckName::PipesLand => CheckOutcome::Passed,
+            | CheckName::PipesLand
+            | CheckName::IconMatchesProduct => CheckOutcome::Passed,
         };
         assert_eq!(report.outcome(), expected, "{report:?}");
     }

@@ -53,6 +53,7 @@ fn write_json(path: &Path, value: &Value) {
 }
 
 /// A one-item page in the given grammar reference, with a solid pipe and its legend entry.
+/// The item's subtitle gives icon-matches-product an item to examine under gcp.
 fn page(grammar: &str, item_kind: &str) -> Value {
     json!({
         "title": "Grammar figure",
@@ -61,7 +62,7 @@ fn page(grammar: &str, item_kind: &str) -> Value {
         "canvas": "internal",
         "grammar": grammar,
         "body": [
-            { "tag": "Item", "kind": item_kind, "title": "API" },
+            { "tag": "Item", "kind": item_kind, "title": "API", "subtitle": "Cloud Run" },
             { "tag": "Pipe", "dir": "h", "line": "solid", "label": "call" }
         ],
         "legend": [{ "line": "solid", "text": "request path" }]
@@ -88,7 +89,7 @@ fn a_plain_page_vets_and_remembered_constants_is_not_applicable() {
     );
     assert_eq!(
         lines.last().copied(),
-        Some("stencil vet: 0 violations, 2 checks, 1 passed, 0 failed, 1 not applicable")
+        Some("stencil vet: 0 violations, 3 checks, 1 passed, 0 failed, 2 not applicable")
     );
 }
 
@@ -128,7 +129,7 @@ fn a_grammar_path_resolves_against_the_document_directory() {
     assert!(
         outcome
             .stdout
-            .contains("check remembered-constants: examined 6 text fields, 0 defects"),
+            .contains("check remembered-constants: examined 7 text fields, 0 defects"),
         "{}",
         outcome.stdout
     );
@@ -225,7 +226,7 @@ fn an_absent_grammar_is_gcp() {
     assert!(
         outcome
             .stdout
-            .contains("check remembered-constants: examined 6 text fields, 0 defects")
+            .contains("check remembered-constants: examined 7 text fields, 0 defects")
     );
 }
 
