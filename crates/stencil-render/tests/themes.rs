@@ -197,7 +197,7 @@ fn the_imported_tier_keeps_center_geometry_and_changes_the_svg() {
         let geometry = common::layout_with_cosmic_text(&page);
         let measured_under = |theme: &Theme| {
             let scene = (page.projection == Projection::Iso).then(|| {
-                let inputs = SolidInputs::new(&geometry, theme.iso.slab_thickness);
+                let inputs = SolidInputs::new(&geometry, &page.links, theme.iso.slab_thickness);
                 project_page(&geometry, &inputs).unwrap()
             });
             measured_json(&document, &geometry, scene.as_ref())
