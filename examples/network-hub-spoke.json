@@ -5,6 +5,7 @@
   "foot": "Illustrative topology · hop facts are placeholders, not looked-up values",
   "width": 1440,
   "canvas": "customer",
+  "grammar": "gcp",
   "body": [
     {
       "tag": "Row",
@@ -20,65 +21,74 @@
           "gap": 8,
           "children": [
             {
-              "tag": "Zone",
-              "kind": "onprem-a",
+              "tag": "Box",
+              "kind": "onprem",
+              "tint": 1,
               "label": "On-prem · Metro 1",
               "children": [
                 {
-                  "tag": "Pcard",
+                  "tag": "Item",
+                  "kind": "product",
                   "icon": "hybrid",
-                  "fn": "Edge router 1",
-                  "pn": "port toward Google"
+                  "title": "Edge router 1",
+                  "subtitle": "port toward Google"
                 },
                 {
-                  "tag": "Pcard",
+                  "tag": "Item",
+                  "kind": "product",
                   "icon": "hybrid",
-                  "fn": "Edge router 2",
-                  "pn": "port toward Google"
+                  "title": "Edge router 2",
+                  "subtitle": "port toward Google"
                 }
               ]
             },
             {
-              "tag": "Zone",
-              "kind": "onprem-b",
+              "tag": "Box",
+              "kind": "onprem",
+              "tint": 2,
               "label": "On-prem · Metro 2",
               "children": [
                 {
-                  "tag": "Pcard",
+                  "tag": "Item",
+                  "kind": "product",
                   "icon": "hybrid",
-                  "fn": "Edge router 3",
-                  "pn": "port toward Google"
+                  "title": "Edge router 3",
+                  "subtitle": "port toward Google"
                 },
                 {
-                  "tag": "Pcard",
+                  "tag": "Item",
+                  "kind": "product",
                   "icon": "hybrid",
-                  "fn": "Edge router 4",
-                  "pn": "port toward Google"
+                  "title": "Edge router 4",
+                  "subtitle": "port toward Google"
                 }
               ]
             },
             {
-              "tag": "Zone",
+              "tag": "Box",
               "kind": "project",
               "label": "Corporate network",
               "children": [
                 {
-                  "tag": "Pcard",
+                  "tag": "Item",
+                  "kind": "product",
                   "icon": "security-identity",
-                  "fn": "Perimeter firewall",
-                  "pn": "on-prem · inspects both metros"
+                  "title": "Perimeter firewall",
+                  "subtitle": "on-prem · inspects both metros"
                 },
                 {
-                  "tag": "Pcard",
+                  "tag": "Item",
+                  "kind": "product",
                   "icon": "networking",
-                  "fn": "Corporate DNS",
-                  "pn": "authoritative for corp zones"
+                  "title": "Corporate DNS",
+                  "subtitle": "authoritative for corp zones"
                 },
                 {
-                  "tag": "Pcard",
+                  "tag": "Item",
+                  "kind": "product",
                   "icon": "compute",
-                  "fn": "Branch users",
-                  "pn": "SD-WAN · no direct cloud path"
+                  "title": "Branch users",
+                  "subtitle": "SD-WAN · no direct cloud path"
                 }
               ]
             }
@@ -103,20 +113,23 @@
               "children": [
                 {
                   "tag": "Tee",
-                  "kind": "blue",
+                  "line": "solid",
+                  "tint": 1,
                   "hub": "Dedicated Interconnect · Metro 1",
                   "arms": [
                     {
                       "tag": "Pipe",
                       "dir": "h",
-                      "kind": "blue",
+                      "line": "solid",
+                      "tint": 1,
                       "label": "VLAN 1",
                       "sub": "EAD 1 · BGP"
                     },
                     {
                       "tag": "Pipe",
                       "dir": "h",
-                      "kind": "blue",
+                      "line": "solid",
+                      "tint": 1,
                       "label": "VLAN 2",
                       "sub": "EAD 2 · BGP"
                     }
@@ -130,20 +143,23 @@
               "children": [
                 {
                   "tag": "Tee",
-                  "kind": "pink",
+                  "line": "solid",
+                  "tint": 2,
                   "hub": "Dedicated Interconnect · Metro 2",
                   "arms": [
                     {
                       "tag": "Pipe",
                       "dir": "h",
-                      "kind": "pink",
+                      "line": "solid",
+                      "tint": 2,
                       "label": "VLAN 3",
                       "sub": "EAD 1 · BGP"
                     },
                     {
                       "tag": "Pipe",
                       "dir": "h",
-                      "kind": "pink",
+                      "line": "solid",
+                      "tint": 2,
                       "label": "VLAN 4",
                       "sub": "EAD 2 · BGP"
                     }
@@ -159,14 +175,14 @@
                 {
                   "tag": "Pipe",
                   "dir": "h",
-                  "kind": "dash",
+                  "line": "dash",
                   "label": "HA VPN",
                   "sub": "backup path · IPsec · BGP"
                 },
                 {
                   "tag": "Pipe",
                   "dir": "h",
-                  "kind": "dash",
+                  "line": "dash",
                   "label": "DNS forwarding",
                   "sub": "corp zones · both directions"
                 }
@@ -175,12 +191,12 @@
           ]
         },
         {
-          "tag": "Zone",
+          "tag": "Box",
           "kind": "gcp",
           "label": "Google Cloud",
           "children": [
             {
-              "tag": "Zone",
+              "tag": "Box",
               "kind": "vpc",
               "label": "Transit hub VPC · NCC hub · one network, two regions",
               "children": [
@@ -194,60 +210,72 @@
                   ],
                   "children": [
                     {
-                      "tag": "Zone",
-                      "kind": "region-a",
+                      "tag": "Box",
+                      "kind": "region",
+                      "tint": 1,
                       "label": "Region A",
                       "children": [
                         {
-                          "tag": "Pcard",
+                          "tag": "Item",
+                          "kind": "product",
                           "icon": "networking",
-                          "fn": "Cloud Router A",
-                          "pn": "private ASN · RFC 6996",
-                          "fact": "BGP timers from the Cloud Router doc"
+                          "title": "Cloud Router A",
+                          "subtitle": "private ASN · RFC 6996",
+                          "facts": [
+                            {
+                              "text": "BGP timers from the Cloud Router doc"
+                            }
+                          ]
                         },
                         {
-                          "tag": "Pcard",
+                          "tag": "Item",
+                          "kind": "product",
                           "icon": "networking",
-                          "fn": "Cloud NAT A",
-                          "pn": "egress for private subnets"
+                          "title": "Cloud NAT A",
+                          "subtitle": "egress for private subnets"
                         },
                         {
-                          "tag": "Pcard",
+                          "tag": "Item",
+                          "kind": "product",
                           "icon": "networking",
-                          "fn": "HA VPN gateway A",
-                          "pn": "backup to Metro 1"
+                          "title": "HA VPN gateway A",
+                          "subtitle": "backup to Metro 1"
                         }
                       ]
                     },
                     {
                       "tag": "Pipe",
                       "dir": "h",
-                      "kind": "dash",
+                      "line": "dash",
                       "label": "failover",
                       "sub": "Region A ↔ Region B"
                     },
                     {
-                      "tag": "Zone",
-                      "kind": "region-b",
+                      "tag": "Box",
+                      "kind": "region",
+                      "tint": 2,
                       "label": "Region B",
                       "children": [
                         {
-                          "tag": "Pcard",
+                          "tag": "Item",
+                          "kind": "product",
                           "icon": "networking",
-                          "fn": "Cloud Router B",
-                          "pn": "same private ASN as Region A"
+                          "title": "Cloud Router B",
+                          "subtitle": "same private ASN as Region A"
                         },
                         {
-                          "tag": "Pcard",
+                          "tag": "Item",
+                          "kind": "product",
                           "icon": "networking",
-                          "fn": "Cloud NAT B",
-                          "pn": "egress for private subnets"
+                          "title": "Cloud NAT B",
+                          "subtitle": "egress for private subnets"
                         },
                         {
-                          "tag": "Pcard",
+                          "tag": "Item",
+                          "kind": "product",
                           "icon": "networking",
-                          "fn": "HA VPN gateway B",
-                          "pn": "backup to Metro 2"
+                          "title": "HA VPN gateway B",
+                          "subtitle": "backup to Metro 2"
                         }
                       ]
                     }
@@ -273,20 +301,20 @@
                   "children": [
                     {
                       "tag": "Tee",
-                      "kind": "gray",
+                      "line": "gray",
                       "hub": "NCC spokes",
                       "arms": [
                         {
                           "tag": "Pipe",
                           "dir": "h",
-                          "kind": "gray",
+                          "line": "gray",
                           "label": "prod spoke",
                           "sub": "routes exchanged"
                         },
                         {
                           "tag": "Pipe",
                           "dir": "h",
-                          "kind": "gray",
+                          "line": "gray",
                           "label": "nonprod spoke",
                           "sub": "routes exchanged"
                         }
@@ -299,7 +327,7 @@
                   "gap": 0,
                   "children": [
                     {
-                      "tag": "Zone",
+                      "tag": "Box",
                       "kind": "project",
                       "label": "Shared VPC · prod · host project",
                       "children": [
@@ -313,48 +341,56 @@
                           ],
                           "children": [
                             {
-                              "tag": "Zone",
+                              "tag": "Box",
                               "kind": "subnet",
                               "label": "web subnet · Region A",
                               "children": [
                                 {
-                                  "tag": "Pcard",
+                                  "tag": "Item",
+                                  "kind": "product",
                                   "icon": "networking",
-                                  "fn": "Ingress",
-                                  "pn": "External Application LB",
-                                  "fact": "Cloud Armor · IAP"
+                                  "title": "Ingress",
+                                  "subtitle": "External Application LB",
+                                  "facts": [
+                                    {
+                                      "text": "Cloud Armor · IAP"
+                                    }
+                                  ]
                                 },
                                 {
-                                  "tag": "Pcard",
+                                  "tag": "Item",
+                                  "kind": "product",
                                   "icon": "compute-engine",
-                                  "fn": "Web tier",
-                                  "pn": "MIG · no public IP"
+                                  "title": "Web tier",
+                                  "subtitle": "MIG · no public IP"
                                 }
                               ]
                             },
                             {
                               "tag": "Pipe",
                               "dir": "h",
-                              "kind": "gray",
+                              "line": "gray",
                               "label": "to app",
                               "sub": "internal LB"
                             },
                             {
-                              "tag": "Zone",
+                              "tag": "Box",
                               "kind": "subnet",
                               "label": "app subnet · Region A",
                               "children": [
                                 {
-                                  "tag": "Pcard",
+                                  "tag": "Item",
+                                  "kind": "product",
                                   "icon": "compute-engine",
-                                  "fn": "App tier",
-                                  "pn": "Compute Engine MIG"
+                                  "title": "App tier",
+                                  "subtitle": "Compute Engine MIG"
                                 },
                                 {
-                                  "tag": "Pcard",
+                                  "tag": "Item",
+                                  "kind": "product",
                                   "icon": "serverless",
-                                  "fn": "Async workers",
-                                  "pn": "Cloud Run · Direct VPC"
+                                  "title": "Async workers",
+                                  "subtitle": "Cloud Run · Direct VPC"
                                 }
                               ]
                             }
@@ -363,12 +399,12 @@
                         {
                           "tag": "Pipe",
                           "dir": "v",
-                          "kind": "gray",
+                          "line": "gray",
                           "label": "to data",
                           "sub": "private IP only · no route from web"
                         },
                         {
-                          "tag": "Zone",
+                          "tag": "Box",
                           "kind": "subnet",
                           "label": "data subnet · Region A",
                           "children": [
@@ -381,17 +417,23 @@
                               ],
                               "children": [
                                 {
-                                  "tag": "Pcard",
+                                  "tag": "Item",
+                                  "kind": "product",
                                   "icon": "cloud-sql",
-                                  "fn": "Primary database",
-                                  "pn": "Cloud SQL · private IP",
-                                  "fact": "CMEK · PSA path"
+                                  "title": "Primary database",
+                                  "subtitle": "Cloud SQL · private IP",
+                                  "facts": [
+                                    {
+                                      "text": "CMEK · PSA path"
+                                    }
+                                  ]
                                 },
                                 {
-                                  "tag": "Pcard",
+                                  "tag": "Item",
+                                  "kind": "product",
                                   "icon": "databases",
-                                  "fn": "Cache",
-                                  "pn": "Memorystore · private"
+                                  "title": "Cache",
+                                  "subtitle": "Memorystore · private"
                                 }
                               ]
                             }
@@ -402,12 +444,12 @@
                     {
                       "tag": "Pipe",
                       "dir": "v",
-                      "kind": "deny",
+                      "line": "deny",
                       "label": "prod ↔ nonprod",
                       "sub": "no peering · no shared routes"
                     },
                     {
-                      "tag": "Zone",
+                      "tag": "Box",
                       "kind": "project",
                       "label": "Shared VPC · nonprod · host project",
                       "children": [
@@ -421,47 +463,51 @@
                           ],
                           "children": [
                             {
-                              "tag": "Zone",
+                              "tag": "Box",
                               "kind": "k8s",
                               "label": "GKE · private cluster · Region B",
                               "children": [
                                 {
-                                  "tag": "Pcard",
+                                  "tag": "Item",
+                                  "kind": "product",
                                   "icon": "gke",
-                                  "fn": "Control plane",
-                                  "pn": "private endpoint only"
+                                  "title": "Control plane",
+                                  "subtitle": "private endpoint only"
                                 },
                                 {
-                                  "tag": "Pcard",
+                                  "tag": "Item",
+                                  "kind": "product",
                                   "icon": "containers",
-                                  "fn": "Node pool",
-                                  "pn": "no external IPs · alias IPs"
+                                  "title": "Node pool",
+                                  "subtitle": "no external IPs · alias IPs"
                                 }
                               ]
                             },
                             {
                               "tag": "Pipe",
                               "dir": "h",
-                              "kind": "gray",
+                              "line": "gray",
                               "label": "shared services",
                               "sub": "internal only"
                             },
                             {
-                              "tag": "Zone",
+                              "tag": "Box",
                               "kind": "optional",
                               "label": "Optional · shared services · Region B",
                               "children": [
                                 {
-                                  "tag": "Pcard",
+                                  "tag": "Item",
+                                  "kind": "product",
                                   "icon": "networking",
-                                  "fn": "Private DNS",
-                                  "pn": "Cloud DNS · private zones"
+                                  "title": "Private DNS",
+                                  "subtitle": "Cloud DNS · private zones"
                                 },
                                 {
-                                  "tag": "Pcard",
+                                  "tag": "Item",
+                                  "kind": "product",
                                   "icon": "observability",
-                                  "fn": "Flow logs and audit",
-                                  "pn": "Cloud Logging · org sink"
+                                  "title": "Flow logs and audit",
+                                  "subtitle": "Cloud Logging · org sink"
                                 }
                               ]
                             }
@@ -480,23 +526,25 @@
   ],
   "legend": [
     {
-      "kind": "blue",
+      "line": "solid",
+      "tint": 1,
       "text": "Metro 1 ↔ Region A"
     },
     {
-      "kind": "pink",
+      "line": "solid",
+      "tint": 2,
       "text": "Metro 2 ↔ Region B"
     },
     {
-      "kind": "dash",
+      "line": "dash",
       "text": "backup path, DNS forwarding and region failover"
     },
     {
-      "kind": "gray",
+      "line": "gray",
       "text": "east-west inside Google Cloud"
     },
     {
-      "kind": "deny",
+      "line": "deny",
       "text": "prohibited path"
     }
   ]
