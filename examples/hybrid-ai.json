@@ -186,13 +186,13 @@
           "children": [
             {
               "tag": "Box",
-              "kind": "vpc",
-              "label": "Shared VPC · prod · one network, two regions",
+              "kind": "perimeter",
+              "label": "VPC Service Controls perimeter · every AI and data service",
               "children": [
                 {
                   "tag": "Box",
-                  "kind": "perimeter",
-                  "label": "VPC Service Controls perimeter · every AI and data service",
+                  "kind": "vpc",
+                  "label": "Shared VPC · prod · one network, two regions",
                   "children": [
                     {
                       "tag": "Box",
@@ -226,13 +226,6 @@
                                       "text": "CMEK · private endpoint"
                                     }
                                   ]
-                                },
-                                {
-                                  "tag": "Item",
-                                  "kind": "product",
-                                  "icon": "bigquery",
-                                  "title": "Feature store",
-                                  "subtitle": "BigQuery · vectors"
                                 }
                               ]
                             },
@@ -327,30 +320,9 @@
                           "grow": [
                             1,
                             0,
-                            1,
-                            0,
                             1
                           ],
                           "children": [
-                            {
-                              "tag": "Item",
-                              "kind": "product",
-                              "icon": "cloud-storage",
-                              "title": "Checkpoint bucket",
-                              "subtitle": "Cloud Storage · dual-region",
-                              "facts": [
-                                {
-                                  "text": "CMEK · retention lock"
-                                }
-                              ]
-                            },
-                            {
-                              "tag": "Pipe",
-                              "dir": "h",
-                              "line": "gray",
-                              "label": "load",
-                              "sub": "on failover"
-                            },
                             {
                               "tag": "Item",
                               "kind": "product",
@@ -380,8 +352,51 @@
                 },
                 {
                   "tag": "Box",
-                  "kind": "project",
-                  "label": "Evidence · common folder, outside the perimeter",
+                  "kind": "apis",
+                  "label": "Google APIs · Private Google Access · data the regions read and write",
+                  "children": [
+                    {
+                      "tag": "Row",
+                      "gap": 8,
+                      "grow": [
+                        1,
+                        1
+                      ],
+                      "children": [
+                        {
+                          "tag": "Item",
+                          "kind": "product",
+                          "icon": "bigquery",
+                          "title": "Feature store",
+                          "subtitle": "BigQuery · vectors"
+                        },
+                        {
+                          "tag": "Item",
+                          "kind": "product",
+                          "icon": "cloud-storage",
+                          "title": "Checkpoint bucket",
+                          "subtitle": "Cloud Storage · dual-region",
+                          "facts": [
+                            {
+                              "text": "CMEK · retention lock"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "tag": "Box",
+              "kind": "project",
+              "label": "Evidence · common folder, outside the perimeter",
+              "children": [
+                {
+                  "tag": "Box",
+                  "kind": "apis",
+                  "label": "Google APIs · org-level",
                   "children": [
                     {
                       "tag": "Row",
@@ -455,7 +470,7 @@
     },
     {
       "line": "gray",
-      "text": "east-west inside the VPC"
+      "text": "east-west inside Google Cloud"
     },
     {
       "line": "deny",
