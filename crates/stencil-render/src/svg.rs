@@ -1097,6 +1097,22 @@ impl<'a> SvgWriter<'a> {
         run: &TextRun,
         fill: &str,
     ) -> Result<(), RenderError> {
+        self.write_text_run_transformed(depth, pointer, bounds, run, fill, None)
+    }
+
+    /// `transform`, when present, is written on each `<text>` element; the bounds are then
+    /// read in the transform's local space.
+    pub(crate) fn write_text_run_transformed(
+        &mut self,
+        depth: usize,
+        pointer: &NodePointer,
+        bounds: BoxRect,
+        run: &TextRun,
+        fill: &str,
+        transform: Option<&str>,
+    ) -> Result<(), RenderError> {
+        let transform =
+            transform.map_or(String::new(), |matrix| format!(r#" transform="{matrix}""#));
         let style = run.style;
         let letter_spacing_px = style.letter_spacing_em * style.size_px;
         let letter_spacing = if format_number(letter_spacing_px) == crate::NumberRepr::Integer(0) {
@@ -1123,7 +1139,7 @@ impl<'a> SvgWriter<'a> {
             self.line(
                 depth,
                 &format!(
-                    r#"<text x="{}" y="{}" xml:space="preserve" font-family="{}" font-size="{}" font-weight="{}"{letter_spacing} fill="{}">{}</text>"#,
+                    r#"<text x="{}" y="{}"{transform} xml:space="preserve" font-family="{}" font-size="{}" font-weight="{}"{letter_spacing} fill="{}">{}</text>"#,
                     format_number(x),
                     format_number(y),
                     style.family.css_name(),

@@ -29,8 +29,7 @@ use drape::Terrain;
 use placement::Obstacles;
 use shapes::{rectangle_overlaps_polygon, rectangles_overlap, segment_crosses_box};
 
-/// Height of a leaf block (Pcard, Fact, Note, Text, Callout, Frame).
-pub const ISO_BLOCK_HEIGHT_PX: f32 = 18.0;
+pub use stencil_layout::{ISO_BLOCK_HEIGHT_PX, ISO_PLACARD_SCALE};
 /// cos 30 degrees, written out so every build uses the same f32.
 pub const ISO_COS_30: f32 = 0.866_025_4;
 /// sin 30 degrees.
@@ -168,6 +167,20 @@ pub struct Billboard {
     /// True when every mark must lie inside the owner block's silhouette: the text of a
     /// Fact, Note, Text, Callout or Frame, which is laid out to fit its block.
     pub contained: bool,
+    /// Present when the billboard lies on its slab's top face instead of standing upright.
+    pub placard: Option<Placard>,
+}
+
+/// A label lying on a face instead of standing upright: the run is drawn through the
+/// face transform at `scale`, so its ink box on screen is the parallelogram `corners`.
+#[derive(Debug, Clone, PartialEq)]
+pub struct Placard {
+    pub scale: f32,
+    /// Screen position of the run's flat top-left corner, offset included.
+    pub origin: ScreenPoint,
+    /// Screen corners of the run's ink box, top-left first then clockwise in flat terms,
+    /// offset included.
+    pub corners: [ScreenPoint; 4],
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -535,9 +548,27 @@ fn node_billboard(
     shape: SolidShape,
     base_z: f32,
     height: f32,
+    band: f32,
 ) -> Option<Billboard> {
     let flat = billboard_flat_box(node)?;
     let top_z = base_z + height;
+    if shape == SolidShape::Slab
+        && let Some(placard) = zone_placard(node, top_z, band)
+    {
+        let screen = corners_bounds(&placard.corners);
+        return Some(Billboard {
+            owner: node.pointer.clone(),
+            node: Some(index),
+            role: BillboardRole::Content,
+            flat,
+            z: top_z,
+            screen,
+            opaque: false,
+            marks: vec![screen],
+            contained: false,
+            placard: Some(placard),
+        });
+    }
     let (z, screen, role) = match shape {
         SolidShape::Slab => {
             let corner = project_point(node.bounds.x, node.bounds.y, top_z, ZERO_OFFSET);
@@ -597,7 +628,97 @@ fn node_billboard(
             node.tag,
             NodeTag::Fact | NodeTag::Note | NodeTag::Text | NodeTag::Callout | NodeTag::Frame
         ),
+        placard: None,
     })
+}
+
+/// The zone's Label run lying on the slab top face along the x axis from the run's flat
+/// top-left corner, scaled by `ISO_PLACARD_SCALE`; None when the scaled run would run past
+/// the zone's right padding, in which case the zone keeps its upright tab.
+fn zone_placard(node: &NodeGeometry, top_z: f32, band: f32) -> Option<Placard> {
+    let label = node
+        .parts
+        .iter()
+        .find(|part| part.name == PartName::Label && part.text.is_some())?;
+    let ink = member_box(label);
+    let (across, _) = tab_padding(node);
+    let right_limit = node.bounds.right() - across;
+    let fits_across = (right_limit - ink.x) / ink.width;
+    let fits_down = band / ink.height;
+    let scale = ISO_PLACARD_SCALE.min(fits_across).min(fits_down);
+    if scale < 1.0 {
+        return None;
+    }
+    let at =
+        |u: f32, v: f32| project_point(ink.x + scale * u, ink.y + scale * v, top_z, ZERO_OFFSET);
+    Some(Placard {
+        scale,
+        origin: at(0.0, 0.0),
+        corners: [
+            at(0.0, 0.0),
+            at(ink.width, 0.0),
+            at(ink.width, ink.height),
+            at(0.0, ink.height),
+        ],
+    })
+}
+
+/// Flat px from the top of a zone's Label run to the top of its first child, or to the
+/// zone's bottom padding when it has none: the room a placard may grow into.
+fn label_band(
+    geometry: &PageGeometry,
+    index: usize,
+    node: &NodeGeometry,
+    block_height: f32,
+) -> f32 {
+    let Some(label) = node
+        .parts
+        .iter()
+        .find(|part| part.name == PartName::Label && part.text.is_some())
+    else {
+        return 0.0;
+    };
+    let first_child_top = geometry
+        .children(index)
+        .into_iter()
+        .filter_map(|child| geometry.nodes.get(child))
+        .map(|child| child.bounds.y)
+        .fold(f32::INFINITY, f32::min);
+    // A child block of height h covers, on screen, the floor strip h flat px behind it
+    // (a point at z = h projects like the floor point moved by (-h, -h)), so the band stops
+    // that far short of the first child.
+    let floor = if first_child_top.is_finite() {
+        first_child_top - block_height
+    } else {
+        node.content.bottom()
+    };
+    floor - label.bounds.y
+}
+
+/// The axis-aligned box around four screen points.
+fn corners_bounds(corners: &[ScreenPoint; 4]) -> BoxRect {
+    let min_x = corners
+        .iter()
+        .map(|point| point.x)
+        .fold(f32::INFINITY, f32::min);
+    let max_x = corners
+        .iter()
+        .map(|point| point.x)
+        .fold(f32::NEG_INFINITY, f32::max);
+    let min_y = corners
+        .iter()
+        .map(|point| point.y)
+        .fold(f32::INFINITY, f32::min);
+    let max_y = corners
+        .iter()
+        .map(|point| point.y)
+        .fold(f32::NEG_INFINITY, f32::max);
+    BoxRect {
+        x: min_x,
+        y: min_y,
+        width: max_x - min_x,
+        height: max_y - min_y,
+    }
 }
 
 /// Screen extremes of every drawn primitive, before any offset (section 12.2, rule 3).
@@ -928,7 +1049,7 @@ fn place_billboards(
         let boxes: Vec<BoxRect> = billboards
             .iter()
             .enumerate()
-            .filter(|(index, _)| !unplaced.contains(index))
+            .filter(|(index, placed)| !unplaced.contains(index) && placed.placard.is_none())
             .map(|(_, placed)| placed.screen)
             .collect();
         let mut strokes: Vec<(ScreenPoint, ScreenPoint)> = input.surface_strokes.to_vec();
@@ -967,7 +1088,7 @@ fn place_billboards(
         let boxes: Vec<BoxRect> = billboards
             .iter()
             .enumerate()
-            .filter(|(index, _)| !unplaced.contains(index))
+            .filter(|(index, placed)| !unplaced.contains(index) && placed.placard.is_none())
             .map(|(_, placed)| placed.screen)
             .collect();
         let shapes: Vec<&[ScreenPoint]> = input
@@ -1172,7 +1293,8 @@ pub fn project_zoomed(
             opaque,
             footprint: node.bounds,
         });
-        if let Some(billboard) = node_billboard(index, node, shape, base_z, height) {
+        let band = label_band(geometry, index, node, ISO_BLOCK_HEIGHT_PX * zoom);
+        if let Some(billboard) = node_billboard(index, node, shape, base_z, height, band) {
             if node.tag == NodeTag::Pcard {
                 cards.push(billboards.len());
             }
@@ -1229,6 +1351,7 @@ pub fn project_zoomed(
                 opaque: true,
                 marks: vec![screen],
                 contained: false,
+                placard: None,
             });
         }
     }
@@ -1275,6 +1398,14 @@ pub fn project_zoomed(
         billboard.screen.x += offset.x;
         billboard.screen.y += offset.y;
         billboard.marks = moved(&billboard.marks, (offset.x, offset.y));
+        if let Some(placard) = &mut billboard.placard {
+            placard.origin.x += offset.x;
+            placard.origin.y += offset.y;
+            for corner in &mut placard.corners {
+                corner.x += offset.x;
+                corner.y += offset.y;
+            }
+        }
     }
     let projected_height = extent.max_y - extent.min_y;
     let footer_shift = projected_height - body_bounds.height;
@@ -1334,7 +1465,12 @@ pub fn iso_labels_clear(scene: Option<&IsoScene>) -> CheckReport {
         scene.billboards.len() <= billboard_limit,
         "iso-labels-clear would drop billboards past {billboard_limit}"
     );
-    let billboards: Vec<&Billboard> = scene.billboards.iter().take(billboard_limit).collect();
+    let billboards: Vec<&Billboard> = scene
+        .billboards
+        .iter()
+        .take(billboard_limit)
+        .filter(|billboard| billboard.placard.is_none())
+        .collect();
     debug_assert!(
         scene.solids.len() <= NODES_MAX,
         "iso-labels-clear would drop solids past {NODES_MAX}"

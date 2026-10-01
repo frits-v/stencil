@@ -12,10 +12,10 @@ use super::{
     link_mismatch, part_mismatch, pipe_text_style_name, stroke_attributes, text_style_name,
 };
 use crate::iso::{
-    Billboard, ISO_DOT_RADIUS_X_PX, ISO_DOT_RADIUS_Y_PX, IsoPoint, ScreenPoint, Solid, SolidInputs,
-    SolidShape, arrowhead_vertices, billboard_member, end_direction, has_zone_ancestor,
-    iso_link_arrowhead_length, member_box, project_point, project_zoomed, start_direction,
-    zoomed_geometry,
+    Billboard, ISO_COS_30, ISO_DOT_RADIUS_X_PX, ISO_DOT_RADIUS_Y_PX, ISO_SIN_30, IsoPoint, Placard,
+    ScreenPoint, Solid, SolidInputs, SolidShape, arrowhead_vertices, billboard_member,
+    end_direction, has_zone_ancestor, iso_link_arrowhead_length, member_box, project_point,
+    project_zoomed, start_direction, zoomed_geometry,
 };
 use crate::palette::{DotStyle, FacePaint, LineStyle, LineUse, Palette, Stroke, ZoneTab};
 use crate::{RenderError, SvgDocument, format_number};
@@ -809,6 +809,10 @@ impl<'a> SvgWriter<'a> {
         let (delta_x, delta_y) = delta;
         let BillboardGround { ground, tab } = under;
         let context = self.part_context(document_node);
+        if let Some(placard) = &billboard.placard {
+            let nested = tab.unwrap_or(false);
+            return self.write_zone_placard(depth, node, placard, nested);
+        }
         let tab_ink = match (document_node, tab) {
             (DocumentNode::Content(NodeRef::Node(Node::Box(_))), Some(nested)) => {
                 let bounds = shifted_box(billboard.flat, delta_x, delta_y);
@@ -863,6 +867,56 @@ impl<'a> SvgWriter<'a> {
                     ),
                 };
                 self.write_text_run(depth, &node.pointer, part.bounds, run, fill)?;
+            }
+        }
+        Ok(())
+    }
+
+    /// A zone label lying on its slab (section 12.4 placard): the Label run through the
+    /// face transform at the placard's scale, in the ink of the tab the zone would carry.
+    fn write_zone_placard(
+        &mut self,
+        depth: usize,
+        node: &NodeGeometry,
+        placard: &Placard,
+        nested: bool,
+    ) -> Result<(), RenderError> {
+        let look = node.container.ok_or_else(|| surface_mismatch(node))?;
+        let ink = match self.palette.iso_zone_tab(look, node.tint, nested) {
+            ZoneTab::Filled { fill, .. } => fill,
+            ZoneTab::Outline { border, .. } => border.color,
+        };
+        let scale = placard.scale;
+        let matrix = format!(
+            "matrix({} {} {} {} {} {})",
+            format_number(scale * ISO_COS_30),
+            format_number(scale * ISO_SIN_30),
+            format_number(-scale * ISO_COS_30),
+            format_number(scale * ISO_SIN_30),
+            format_number(placard.origin.x),
+            format_number(placard.origin.y)
+        );
+        for part in node
+            .parts
+            .iter()
+            .filter(|part| part.name == PartName::Label)
+        {
+            if let Some(run) = &part.text {
+                let ink_box = member_box(part);
+                let local = BoxRect {
+                    x: 0.0,
+                    y: 0.0,
+                    width: ink_box.width,
+                    height: ink_box.height,
+                };
+                self.write_text_run_transformed(
+                    depth,
+                    &node.pointer,
+                    local,
+                    run,
+                    ink,
+                    Some(&matrix),
+                )?;
             }
         }
         Ok(())

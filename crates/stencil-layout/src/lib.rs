@@ -26,6 +26,15 @@ pub const GEOMETRY_EPSILON_PX: f32 = 0.01;
 pub const ARROWHEAD_LENGTH_PX: f32 = 10.0;
 /// Width of an arrowhead across its line, at the base.
 pub const ARROWHEAD_WIDTH_PX: f32 = 8.0;
+/// Height of a leaf block under iso (section 12.3): a Pcard, Fact, Note, Text, Callout or
+/// Frame. Layout reserves this much floor behind a zone's label, because a block covers
+/// the strip of floor its height spans on screen.
+pub const ISO_BLOCK_HEIGHT_PX: f32 = 18.0;
+/// Largest multiple of its flat size at which a zone label lies on its slab under iso
+/// (section 12.4 placard); the face transform halves the visible x-height, so the run
+/// grows to read. Layout reserves the band for this scale; the scene shrinks a label
+/// that does not fit across its zone, or keeps the upright tab below scale 1.
+pub const ISO_PLACARD_SCALE: f32 = 2.0;
 
 /// Asserts validate_page(page, grammar) is empty, sizes each Lanes band from its messages,
 /// builds the taffy tree with each Box laid out from its container kind, computes layout,

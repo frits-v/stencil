@@ -7,8 +7,8 @@ use stencil_model::text::TextStyleName;
 use stencil_model::{
     Arrow, BoxNode, Callout, Canvas, Chrome, DEPTH_MAX, Fact, FactSource, Frame, GAP_DEFAULT_PX,
     Grammar, Item, Justify, LANE_GAP_DEFAULT_PX, Lanes, LegendEntry, ListKind, Node, Note,
-    NoteKind, Page, Pipe, PipeDir, Tee, TeeArm, Text, VetRule, Violation, box_key, box_tint,
-    legend_label, line_key, line_tint,
+    NoteKind, Page, Pipe, PipeDir, Projection, Tee, TeeArm, Text, VetRule, Violation, box_key,
+    box_tint, legend_label, line_key, line_tint,
 };
 use taffy::prelude::{
     AlignItems, AlignSelf, Dimension, Display, FlexDirection, FlexWrap, JustifyContent,
@@ -18,7 +18,10 @@ use taffy::prelude::{
 
 use crate::lanes::LanesPlan;
 use crate::styles::text_color;
-use crate::{ContainerLook, LayoutError, NodeTag, PartName, TextAlign};
+use crate::{
+    ContainerLook, ISO_BLOCK_HEIGHT_PX, ISO_PLACARD_SCALE, LayoutError, NodeTag, PartName,
+    TextAlign,
+};
 
 /// Taffy's node context is an index into `BuiltPage::text_leaves`.
 pub(crate) type LayoutTree = TaffyTree<usize>;
@@ -100,6 +103,7 @@ pub(crate) fn build_page(
         canvas: page.canvas,
         grammar,
         lanes_plan,
+        iso: page.projection == Projection::Iso,
     };
     builder.tree.disable_rounding();
     let root = builder.add_page(page)?;
@@ -118,6 +122,16 @@ struct Builder<'page> {
     canvas: Canvas,
     grammar: &'page Grammar,
     lanes_plan: &'page LanesPlan,
+    /// True under iso: every zone label reserves the floor its placard needs.
+    iso: bool,
+}
+
+/// Extra floor under a zone label under iso: the strip a child block of
+/// `ISO_BLOCK_HEIGHT_PX` covers on screen, plus the growth of the label to
+/// `ISO_PLACARD_SCALE` times its line height (section 12.4).
+fn iso_label_reserve(label_style: TextStyleName) -> f32 {
+    let line_height = label_style.text_style().style.line_height_px;
+    ISO_BLOCK_HEIGHT_PX + (ISO_PLACARD_SCALE - 1.0) * line_height
 }
 
 /// Every taffy node starts from this: content that does not fit overflows (section 2.1).
@@ -1008,6 +1022,14 @@ impl Builder<'_> {
             label: kind.label,
         });
         let label_style = container_label_style(kind.label);
+        let label_leaf_style = if self.iso {
+            Style {
+                margin: margins(0.0, 0.0, iso_label_reserve(label_style), 0.0),
+                ..base_style()
+            }
+        } else {
+            base_style()
+        };
 
         let children_container = if is_frame {
             let bar_style = Style {
@@ -1016,7 +1038,7 @@ impl Builder<'_> {
             };
             let bar = self.container(bar_style, zone_node, &pointer)?;
             let (label, label_leaf) = self.text_leaf(
-                base_style(),
+                label_leaf_style,
                 Some(bar),
                 TextSpec {
                     text: &box_node.label,
@@ -1057,7 +1079,7 @@ impl Builder<'_> {
             body
         } else {
             let (label, label_leaf) = self.text_leaf(
-                base_style(),
+                label_leaf_style,
                 Some(zone_node),
                 TextSpec {
                     text: &box_node.label,
