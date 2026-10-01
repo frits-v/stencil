@@ -2594,6 +2594,1661 @@ Tests:
 - stencil-render, measured JSON: for the hero, `nodes` is byte-identical between flat and iso, `projection.billboards` has 9 entries, and the whole output is byte-identical under the three themes while the SVG bytes differ.
 - stencil-cli: `check examples/hero-iso.json` under `--theme center`, `dusk` and `wire` exits 0 with `check iso-labels-clear: examined 80 pairs, 0 defects`, `check iso-links-clear: examined 6 link legs, 0 defects`, the pipes-land not-applicable line and `stencil check: 10 checks, 9 passed, 0 failed, 1 not applicable`. With `--projection flat` it prints the two iso not-applicable lines and `10 checks, 7 passed, 0 failed, 3 not applicable`. `render examples/hero-iso.json` under each theme writes three files, and the PNG width is `ceil(projection.canvas.width * 2)`. `render examples/g7.json --projection iso` writes an iso SVG whose measured JSON `nodes` equal the flat run's. `vet --projection iso` exits 2.
 
+## 13. Core and grammars
+
+This section splits the vocabulary into a core and grammars. The core is what every figure shares: layout containers, a generic container (`Box`) and a generic named leaf (`Item`), facts, document blocks, pipes, tees, links, lanes, the legend, themes and checks. A grammar is a data module that gives a domain its kinds: which container kinds exist, how each is drawn, where each may sit, which item kinds exist and which icons they carry, and the domain rules that CUE enforces. The Google Cloud vocabulary of sections 1 to 12 becomes the first grammar, `gcp`, and a domain-neutral grammar, `plain`, ships beside it. Themes become data files whose roles are generic, so every theme applies to every grammar, and numbered tint slots replace the color-named kinds.
+
+Every rule in sections 1 to 12 still holds unless this section names the change. Where this section and an earlier one disagree, this section wins, and implementation step (a) of section 13.15 edits the earlier tables and JSON blocks (sections 1.1, 1.2, 1.3, 2.2, 2.4, 2.5, 2.11, 5.2, 9.3, 10, 11.1, 11.4, 12.6 and 12.10) in the same change that migrates the files they describe, so the spec and the repository agree at every commit.
+
+Superseded by this section:
+
+- The `Zone` and `Pcard` tags, the `ZoneKind` and `PipeKind` enums and the Pcard fields `fn`, `pn`, `fact` and `ask` (section 1). `Box`, `Item`, grammar kinds, `line` and `Fact` entries replace them (section 13.1).
+- The `Theme` enum of section 11.1 and the dusk and wire palette tables there. A theme is a data file (section 13.4), and `dusk` takes new values (section 13.5).
+- The legend label table of section 2.2 and the wire color table of section 5.2. Labels follow section 13.1 rule 7, colors follow the theme.
+- The per-kind table of section 2.4. Layout reads padding, radius, border width and label style from the grammar (section 13.2), and colors come from the theme.
+- The dusk mixing rules of section 12.6 (`ISO_SURFACE_TARGET`, the lifts and the rim). Every theme shades faces by lightness steps (section 13.4).
+- The wire legend relabel of section 12.6 rule 5, which applied under iso only. It now applies in both projections to every theme whose labels differ from the canonical ones (section 13.4, rule 9).
+- Section 12.3 rule 7, "an iso SVG writes no `<marker>` and no `<defs>`". An iso SVG still writes no `<marker>`; it writes one `<defs>` when the theme has a block shadow (section 13.11).
+- The definition of a word in section 3. Break opportunities are listed in section 13.11.
+
+### 13.1 Core vocabulary
+
+Core node tags: `Row`, `Col`, `Lanes` (section 13.6), `Box`, `Item`, `Fact`, `Note`, `Text`, `Callout`, `Frame`, `Pipe` and `Tee`. `Link` and `LegendEntry` are page-level objects, as before. `Zone` becomes `Box` and `Pcard` becomes `Item`; `Note` is unchanged.
+
+| Retired | Core replacement |
+|---|---|
+| `Zone` with `kind` from `ZoneKind` | `Box` with `kind` from the page's grammar, plus `tint` |
+| `Pcard` | `Item` with `kind` from the grammar (`product` in gcp) |
+| Pcard `fn`, `pn` | Item `title`, `subtitle` |
+| Pcard `fact`, `ask` | Item `facts`: a list of Fact entries, each with a `source` of `doc`, `built` or `ask` |
+| `kind` on Pipe, Tee, Link and LegendEntry (`PipeKind`) | `line`: `solid`, `dash`, `deny` or `gray`, plus `tint` |
+| `blue`, `pink` | `"line": "solid"` with `"tint": 1` or `2` |
+| `region-a`, `region-b`, `onprem-a`, `onprem-b` | `"kind": "region"` or `"onprem"` with `"tint": 1` or `2` |
+
+Field summary additions and changes (section 1.1):
+
+| Tag | Field | Type | Required | Default |
+|---|---|---|---|---|
+| Page | grammar | `gcp`, `plain` or a path ending in `.json` | no | `gcp` |
+| Page | theme | a built-in theme name or a path ending in `.json` | no | `center` |
+| Page | theme_overrides | object, a partial theme (section 13.4 rule 8) | no | absent |
+| Page | chrome | `full` or `none` | no | `full` |
+| Box | kind | a container kind of the grammar | yes | |
+| Box | tint | integer 1 to 8 | no | the kind's default (rule 2) |
+| Box | label, children | as Zone | yes | |
+| Item | kind | an item kind of the grammar | yes | |
+| Item | icon | IconName, from the kind's icon pack | no | absent |
+| Item | title | text | yes | |
+| Item | subtitle | text | no | absent |
+| Item | facts | list of Fact entries, 0 to 8 | no | empty |
+| Fact (node and entry) | text | text | yes | |
+| Fact (node and entry) | source | `doc`, `built` or `ask` | no | `doc` |
+| Pipe | line | Line | yes | |
+| Pipe | tint | integer 1 to 8 | no | rule 2 |
+| Pipe | from, to | node id | no | absent |
+| Tee | line | Line | yes | |
+| Tee | tint | integer 1 to 8 | no | rule 2 |
+| Link | line | Line | yes | |
+| Link | tint | integer 1 to 8 | no | rule 2 |
+| Link | order | integer 1 to 256 | no | absent (section 13.6) |
+| LegendEntry | line | Line | yes | |
+| LegendEntry | tint | integer 1 to 8 | no | rule 2 |
+
+Line: `gray`, `solid`, `dash`, `deny`.
+
+Rust types. These replace their section 1.2 and 11.2 definitions in `crates/stencil-model/src/document.rs`; types not shown keep their definitions.
+
+```rust
+pub const TINT_SLOTS: u8 = 8;
+/// The slot names of the built-in center theme, in slot order. Layout measures every
+/// legend label with these names (rule 7), so geometry never depends on the theme.
+pub const TINT_NAMES: [&str; 8] = [
+    "blue", "pink", "teal", "amber", "violet", "green", "orange", "cyan",
+];
+pub const FACTS_MAX: usize = 8;
+pub const LANES_MAX: usize = 32;
+pub const LINK_ORDER_MAX: u16 = 256;
+/// A grammar kind name: a Box or Item `kind`.
+pub const KIND_PATTERN: &str = r"^[a-z][a-z0-9-]{0,31}$";
+pub const BUILTIN_GRAMMARS: [&str; 2] = ["gcp", "plain"];
+/// Designed built-ins first (section 13.5), then the imported tier (section 13.9).
+pub const BUILTIN_THEMES: [&str; 13] = [
+    "center", "paper", "dusk", "clear", "clear-dark", "wire",
+    "tokyo-night", "solarized-light", "solarized-dark", "material-dark",
+    "gruvbox-dark", "dracula", "nord",
+];
+pub const GRAMMAR_REFERENCE_PATTERN: &str = r"^(gcp|plain|[^\u0000-\u001F]{1,395}\.json)$";
+pub const THEME_REFERENCE_PATTERN: &str = r"^(center|paper|dusk|clear|clear-dark|wire|tokyo-night|solarized-light|solarized-dark|material-dark|gruvbox-dark|dracula|nord|[^\u0000-\u001F]{1,395}\.json)$";
+/// Largest grammar or theme file the CLI reads, in bytes.
+pub const DATA_FILE_BYTES_MAX: usize = 65_536;
+
+fn is_default_chrome(chrome: &Chrome) -> bool {
+    *chrome == Chrome::Full
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct Page {
+    #[schemars(length(min = 1, max = 400))]
+    pub title: String,
+    #[schemars(length(min = 1, max = 400))]
+    pub kicker: String,
+    #[schemars(length(min = 1, max = 400))]
+    pub lede: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(length(min = 1, max = 400))]
+    pub foot: Option<String>,
+    #[serde(default = "page_width_default")]
+    #[schemars(range(min = 640, max = 2560))]
+    pub width: u32,
+    pub canvas: Canvas,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(regex(pattern = GRAMMAR_REFERENCE_PATTERN))]
+    pub grammar: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(regex(pattern = THEME_REFERENCE_PATTERN))]
+    pub theme: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub theme_overrides: Option<serde_json::Map<String, serde_json::Value>>,
+    #[serde(default, skip_serializing_if = "is_default_projection")]
+    pub projection: Projection,
+    #[serde(default, skip_serializing_if = "is_default_chrome")]
+    pub chrome: Chrome,
+    #[schemars(length(min = 1, max = 256))]
+    pub body: Vec<Node>,
+    #[schemars(length(max = 16))]
+    pub legend: Vec<LegendEntry>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[schemars(length(max = 256))]
+    pub links: Vec<Link>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema, Default)]
+#[serde(rename_all = "lowercase")]
+pub enum Chrome {
+    #[default]
+    Full,
+    None,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(tag = "tag")]
+pub enum Node {
+    Row(Row),
+    Col(Col),
+    Lanes(Lanes),
+    Box(BoxNode),
+    Item(Item),
+    Fact(Fact),
+    Note(Note),
+    Pipe(Pipe),
+    Tee(Tee),
+    Text(Text),
+    Callout(Callout),
+    Frame(Frame),
+}
+
+#[derive(
+    Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize, JsonSchema,
+)]
+#[serde(rename_all = "lowercase")]
+pub enum Line {
+    Gray,
+    Solid,
+    Dash,
+    Deny,
+}
+
+/// Any container. `kind` names one of the grammar's container kinds.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct BoxNode {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(regex(pattern = ID_PATTERN))]
+    pub id: Option<String>,
+    #[schemars(regex(pattern = KIND_PATTERN))]
+    pub kind: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(range(min = 1, max = 8))]
+    pub tint: Option<u8>,
+    #[schemars(length(min = 1, max = 400))]
+    pub label: String,
+    #[schemars(length(min = 1, max = 256))]
+    pub children: Vec<Node>,
+}
+
+/// Any named leaf. `kind` names one of the grammar's item kinds.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct Item {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(regex(pattern = ID_PATTERN))]
+    pub id: Option<String>,
+    #[schemars(regex(pattern = KIND_PATTERN))]
+    pub kind: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub icon: Option<IconName>,
+    #[schemars(length(min = 1, max = 400))]
+    pub title: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(length(min = 1, max = 400))]
+    pub subtitle: Option<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[schemars(length(max = 8))]
+    pub facts: Vec<FactEntry>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema, Default)]
+#[serde(rename_all = "lowercase")]
+pub enum FactSource {
+    /// Read from the live documentation when the figure was authored.
+    #[default]
+    Doc,
+    /// An as-built name read off the running system: a bucket, a VLAN ID, a project id.
+    Built,
+    /// An open question for the reader.
+    Ask,
+}
+
+fn is_default_fact_source(source: &FactSource) -> bool {
+    *source == FactSource::Doc
+}
+
+/// A fact inside an Item.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct FactEntry {
+    #[schemars(length(min = 1, max = 400))]
+    pub text: String,
+    #[serde(default, skip_serializing_if = "is_default_fact_source")]
+    pub source: FactSource,
+}
+
+/// The Fact node: a fact standing on its own in a container.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct Fact {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(regex(pattern = ID_PATTERN))]
+    pub id: Option<String>,
+    #[schemars(length(min = 1, max = 400))]
+    pub text: String,
+    #[serde(default, skip_serializing_if = "is_default_fact_source")]
+    pub source: FactSource,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct Pipe {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(regex(pattern = ID_PATTERN))]
+    pub id: Option<String>,
+    pub dir: PipeDir,
+    pub line: Line,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(range(min = 1, max = 8))]
+    pub tint: Option<u8>,
+    #[schemars(length(min = 1, max = 400))]
+    pub label: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(length(min = 1, max = 400))]
+    pub sub: Option<String>,
+    #[serde(
+        default = "pipe_arrow_default",
+        skip_serializing_if = "is_pipe_arrow_default"
+    )]
+    pub arrow: Arrow,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(regex(pattern = ID_PATTERN))]
+    pub from: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(regex(pattern = ID_PATTERN))]
+    pub to: Option<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct Tee {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(regex(pattern = ID_PATTERN))]
+    pub id: Option<String>,
+    pub line: Line,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(range(min = 1, max = 8))]
+    pub tint: Option<u8>,
+    #[schemars(length(min = 1, max = 400))]
+    pub hub: String,
+    pub arms: [TeeArm; 2],
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct Link {
+    pub from: String,
+    pub to: String,
+    pub line: Line,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(range(min = 1, max = 8))]
+    pub tint: Option<u8>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(length(min = 1, max = 400))]
+    pub label: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(length(min = 1, max = 400))]
+    pub sub: Option<String>,
+    #[serde(default)]
+    pub arrow: Arrow,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub from_side: Option<Side>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub to_side: Option<Side>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[schemars(length(max = 8))]
+    pub via: Vec<PagePoint>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(range(min = 1, max = 256))]
+    pub order: Option<u16>,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct LegendEntry {
+    pub line: Line,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(range(min = 1, max = 8))]
+    pub tint: Option<u8>,
+    #[schemars(length(min = 1, max = 400))]
+    pub text: String,
+}
+
+/// The tint a Box is painted with (rule 2); `None` for a kind that takes no tint.
+pub fn box_tint(kind: &ContainerKind, tint: Option<u8>) -> Option<u8>;
+/// The tint a line is painted with: a solid or dash line's tint or slot 1, none for gray
+/// and deny.
+pub fn line_tint(line: Line, tint: Option<u8>) -> Option<u8>;
+/// The output keys of rule 6.
+pub fn box_key(kind: &str, tint: Option<u8>) -> String;
+pub fn line_key(line: Line, tint: Option<u8>) -> &'static str;
+/// The canonical legend label of rule 7, for example "Solid blue".
+pub fn legend_label(line: Line, tint: Option<u8>) -> &'static str;
+```
+
+`Line::ALL` and `Line::as_str` replace the `PipeKind` ones. `Node::tag_name` returns `Box` and `Item` for the new variants. The Rust type is `BoxNode` so the standard library's `Box` stays unshadowed; the serialized tag is `Box`.
+
+Rules:
+
+1. `tint` is optional on Box, Pipe (Tee arms included), Tee, Link and LegendEntry. Vet rejects a value outside 1 to 8 with rule `tint-out-of-range`, pointer `/…/tint`, message `tint <n> is outside 1 to 8`. serde reads any `u8`, so 0 and 9 to 255 parse and reach vet, as `gap` does.
+2. Effective tint. A Box takes its own `tint`, or the default tint its container kind declares (section 13.2), when the kind is tintable; a kind that is not tintable ignores `tint`. A `solid` or `dash` line (Pipe, Tee spine, Link, LegendEntry) without `tint` is slot 1. `tint` on a `gray` or `deny` line has no effect. `box_tint` and `line_tint` return None for an ignored tint, the renderer ignores it, and legend consistency keys the line without it; the core CUE schema reports such a field as `_tintWithoutEffect` so an author learns it does nothing.
+3. A dash line takes its slot's wire color, as center's dash took the blue wire. The dash pattern tells it apart from the solid line of the same slot.
+4. Fact entries. An Item's `facts` are drawn in list order under its title and subtitle (section 13.7). The standalone `Fact` node takes the same `source`, and a Fact node without one is a `doc` fact drawn exactly as section 2.6 draws a Fact today.
+5. Output vocabulary. The SVG, the measured JSON and the check messages keep the identifiers they use today, so the identity proofs of section 13.14 are a plain byte comparison and every consumer of the measured JSON keeps working: `NodeTag` keeps `Zone` for a Box and `Pcard` for an Item (`data-tag` and the measured `tag`), the title and subtitle runs keep the part names `FunctionName` and `ProductName`, and a Box or line writes its key (rule 6) as `data-kind` and the measured `kind`. Renaming the output vocabulary to the core names is a separate later change with its own fixture regeneration; it is listed as an open item.
+6. Keys. The key of a Box is its kind, followed by `-a` to `-h` for effective tint 1 to 8 when the kind is tintable, so gcp's `region` with tint 1 is `region-a` and `onprem` without tint is `onprem`. The key of a line keeps the pre-section-13 names for slots 1 and 2:
+
+   | Line | Effective tint | Key |
+   |---|---|---|
+   | gray, deny | none | `gray`, `deny` |
+   | solid | 1, 2 | `blue`, `pink` |
+   | solid | 3 to 8 | `solid-3` to `solid-8` |
+   | dash | 1 | `dash` |
+   | dash | 2 to 8 | `dash-2` to `dash-8` |
+
+   Arrow marker ids are `arrow-<theme name>-<line key>`. The keys are identifiers, not color claims: `blue` under the paper theme is drawn in paper's slot 1 wire.
+7. Canonical legend labels. Layout measures the LegendLabel run of each legend entry with the canonical label of its (line, effective tint), in every theme: `Solid gray` for gray, `Dashed red` for deny, `Solid <name>` for solid and `Dashed <name>` for dash, where `<name>` is `TINT_NAMES[tint - 1]`. For slots 1 and 2 these are the section 2.2 labels (`Solid blue`, `Solid pink`, `Dashed blue`), so center geometry does not move. What the renderer draws in place of the canonical label is section 13.4, rule 9.
+8. Legend consistency (section 6) keys every use and every legend entry on (line, effective tint). A used key with no entry, an entry whose key is never used, and a key listed twice are the three defects, with messages that name the key in document terms, for example `Pipe line solid tint 2 has no legend entry`. The examined count is unchanged: one per use plus one per examined legend entry. Section 13.7 adds one exception, for figures with `chrome: none`.
+9. `NodeGeometry.kind` becomes `Option<String>` and holds the key of rule 6; `NodeGeometry` gains `tint: Option<u8>`, the effective tint, which the measured JSON does not write (rule 5). `LinkRoute` gains `line: Line` in place of `kind` and `tint: Option<u8>`.
+
+Vet rules added to section 1.3. `validate_page` takes the resolved grammar: `validate_page(page: &Page, grammar: &Grammar) -> Vec<Violation>`.
+
+| Rule | Condition | Pointer | Message |
+|---|---|---|---|
+| `tint-out-of-range` | `tint` is 0 or above 8 | `/…/tint` | `tint <n> is outside 1 to 8` |
+| `grammar-unknown` | `grammar` is neither a `BUILTIN_GRAMMARS` name nor a string ending in `.json` | `/grammar` | `grammar "<value>" is neither a built-in grammar nor a .json path` |
+| `theme-unknown` | `theme` is neither a `BUILTIN_THEMES` name nor a string ending in `.json` | `/theme` | `theme "<value>" is neither a built-in theme nor a .json path` |
+| `kind-unknown` | a Box kind is not a container kind of the grammar, or an Item kind not an item kind | `/…/kind` | `kind "<kind>" is not a <container or item> kind of grammar <name>` |
+| `kind-parent-not-allowed` | the nearest Box ancestor's kind, or `page` when there is none, is not in the kind's `parents` (Row, Col and Lanes are transparent) | `/…/kind` | `<kind> cannot sit in <parent kind>` |
+| `icon-outside-pack` | an Item carries `icon` and its kind's icon pack is `none` | `/…/icon` | `item kind <kind> takes no icon` |
+| `pipe-target-unknown` | a Pipe `from` or `to` names no node id | `/…/from` or `/…/to` | `pipe target "<id>" names no node id` |
+| `pipe-targets-equal` | a Pipe's `from` and `to` are the same id | `/…/to` | `pipe from and to both name "<id>"` |
+| `pipe-target-on-tee-arm` | a Tee arm carries `from` or `to` | `/…/arms/<i>/from` or `/…/arms/<i>/to` | `a Tee arm cannot name a target` |
+| `facts-too-many` | an Item has more than 8 facts | `/…/facts` | `<n> facts, above 8` |
+| `lanes-too-many` | a Lanes node has more than 32 children | `/…/children` | `<n> lanes, above 32` |
+| `link-order-outside-lanes` | a Link with `order` does not join two different children of one Lanes node | `/links/<i>/order` | `an ordered link joins two lanes of one Lanes node` |
+| `link-order-duplicate` | two ordered links of one Lanes node share an `order` | `/links/<j>/order` | `order <n> is already used by /links/<i>` |
+| `lanes-in-iso` | the page has a Lanes node and `projection` is `iso` | `/projection` | `a page with Lanes cannot be drawn in iso` |
+
+`VetRule` gains one variant per row, with `as_str` as in the first column. Because the grammar a page names is known only after parsing, `parse_page(json_text)` becomes serde parsing alone, and callers run `validate_page(&page, &grammar)` once `page.grammar` is resolved; `pipeline::load_document` does both, and `grammar-unknown` is checked before resolution. Pipe ids join the id namespace of section 11.2, so `id-duplicate` covers them. `kind-parent-not-allowed` follows the section 1.3 walk bounds; it reads the nearest Box ancestor from `NodeEntry` parents.
+
+Document order (section 4.2): an Item gives `title`, `subtitle`, then each fact's `text`; a Page gives `title`, `kicker`, `lede`, `foot`, `width`, `canvas`, `grammar`, `theme`, `theme_overrides`, `projection`, `chrome`, `body`, `legend`, `links`. `text_fields` includes every fact entry, at `/…/facts/<i>/text`.
+
+Layout. A Box reads everything layout needs from its container kind: the role (a `frame` lays out as the section 2.4 gcp zone with bar and body; every other role as the non-gcp zone), the border width, padding, radius and label style. An Item lays out as the section 2.5 Pcard. Neither reads the tint or the theme, so geometry depends on the document and the grammar alone. A drawn border width never changes a box: layout reserves the grammar's width whatever the theme draws, as the wire theme already does.
+
+### 13.2 Grammars
+
+A grammar is a data module. Its source is a CUE file under `cue/grammars/`, which declares a `grammar` value against `#Grammar` and adds the domain's rules in CUE. The data part is exported to JSON (`cue export ./cue/grammars:<name> -e grammar --out json`) and committed as `crates/stencil-model/grammars/<name>.json`, which the Rust side embeds and reads; Rust never evaluates CUE (section 9.2). `cue/check.sh` re-exports every built-in grammar and fails when the export differs from the committed JSON, as it does for g7.
+
+`Page.grammar` names a built-in grammar or a `.json` grammar file (an export of a CUE grammar), resolved like a theme reference (section 13.4 rule 1). Absent means `gcp`, so every existing figure keeps its meaning. A grammar given by path carries its data only; its CUE rules apply when the figure is authored in CUE against that grammar's package.
+
+The renderer draws roles, never kinds. Each container kind declares one of four roles. The `frame` role names the outermost container, the gcp frame; it is unrelated to the `Frame` node tag of section 11.3, the wireframe placeholder, whose theme role is called `placeholder` for that reason. Every theme paints roles and tones (section 13.4), so a theme needs no knowledge of a grammar's kinds:
+
+| Role | Drawn as | Layout |
+|---|---|---|
+| frame | the outermost system or cloud: a filled bar holding the label over a filled body, with a border | section 2.4's gcp construction: bar and body parts, padding 0 on the frame |
+| boundary | a network, trust or security edge: the border in the kind's pattern, filled with its tone when the tone has a fill; under iso a boundary with no drawn fill is a ring (section 12.3) | section 2.4's non-gcp construction |
+| group | a locality, cluster or site: filled with its tint when tinted, else with its tone | as boundary |
+| tile | an ownership scope (project, folder, account): filled with its tone | as boundary |
+
+Group and tile draw alike in every built-in theme; the role tells the grammar's rules and a future theme which containers scope ownership and which gather things in a place.
+
+`#Grammar` lives in `cue/grammar.cue`:
+
+```cue
+package stencil
+
+import (
+	"list"
+	"strings"
+)
+
+#KindName: =~"^[a-z][a-z0-9-]{0,31}$"
+#Tone:     "neutral" | "warm" | "cool" | "soft" | "strong" | "highlight" | "emphasis" | "accent"
+
+#Grammar: {
+	name: #KindName
+	containers: [...#ContainerKind] & list.MinItems(1) & list.MaxItems(32)
+	items: [...#ItemKind] & list.MinItems(1) & list.MaxItems(32)
+	// Literals no text field may carry, checked by remembered-constants.
+	remembered: [...#Remembered] & list.MaxItems(64)
+}
+
+#ContainerKind: {
+	name: #KindName
+	role: "frame" | "boundary" | "group" | "tile"
+	// Every role but frame names a tone; a frame paints from the theme's frame role.
+	tone?:    #Tone
+	tintable: bool
+	// The slot a tintable kind takes when the Box sets none; absent leaves it untinted.
+	default_tint?: int & >=1 & <=8
+	border: {
+		pattern: "solid" | "dashed" | "dotted" | "none"
+		// Layout reserves this width; 0 exactly when pattern is none.
+		width: number & >=0 & <=4
+	}
+	padding: number & >=0 & <=32
+	radius:  number & >=0 & <=16
+	// plain: zone_label; accent: perimeter_label; bar: gcp_bar, frame only.
+	label: "plain" | "accent" | "bar"
+	// Container kinds a Box of this kind may sit in, or "page" for the top level.
+	parents: [...#KindName] & list.MinItems(1)
+}
+
+#ItemKind: {
+	name: #KindName
+	// The bundled icon pack the kind draws from; none takes no icon.
+	icons: "gcp" | "none"
+	// The icon-to-name table of icon-matches-product; empty when icons is none.
+	products: [...#IconProducts]
+	parents: [...#KindName] & list.MinItems(1)
+}
+
+#IconProducts: {
+	icon:  #Icon
+	class: "product" | "category"
+	names: [...string & !="" & strings.MaxRunes(64)] & list.MinItems(1)
+}
+
+#Remembered: {
+	literal: string & !="" & strings.MaxRunes(64)
+	reason:  string & !="" & strings.MaxRunes(400)
+}
+```
+
+The Rust mirror, in `crates/stencil-model/src/grammar.rs`:
+
+```rust
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct Grammar {
+    #[schemars(regex(pattern = KIND_PATTERN))]
+    pub name: String,
+    #[schemars(length(min = 1, max = 32))]
+    pub containers: Vec<ContainerKind>,
+    #[schemars(length(min = 1, max = 32))]
+    pub items: Vec<ItemKind>,
+    #[schemars(length(max = 64))]
+    pub remembered: Vec<Remembered>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "lowercase")]
+pub enum Role {
+    Frame,
+    Boundary,
+    Group,
+    Tile,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "lowercase")]
+pub enum Tone {
+    Neutral,
+    Warm,
+    Cool,
+    Soft,
+    Strong,
+    Highlight,
+    Emphasis,
+    Accent,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "lowercase")]
+pub enum BorderPattern {
+    Solid,
+    Dashed,
+    Dotted,
+    None,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct KindBorder {
+    pub pattern: BorderPattern,
+    #[schemars(range(min = 0.0, max = 4.0))]
+    pub width: f32,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "lowercase")]
+pub enum LabelStyle {
+    Plain,
+    Accent,
+    Bar,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct ContainerKind {
+    #[schemars(regex(pattern = KIND_PATTERN))]
+    pub name: String,
+    pub role: Role,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub tone: Option<Tone>,
+    pub tintable: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(range(min = 1, max = 8))]
+    pub default_tint: Option<u8>,
+    pub border: KindBorder,
+    #[schemars(range(min = 0.0, max = 32.0))]
+    pub padding: f32,
+    #[schemars(range(min = 0.0, max = 16.0))]
+    pub radius: f32,
+    pub label: LabelStyle,
+    #[schemars(length(min = 1))]
+    pub parents: Vec<String>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "lowercase")]
+pub enum IconPack {
+    Gcp,
+    None,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "lowercase")]
+pub enum IconClass {
+    /// From the archive's Unique Icons: stands for one product.
+    Product,
+    /// From the archive's Category Icons: stands for a product family.
+    Category,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct IconProducts {
+    pub icon: IconName,
+    pub class: IconClass,
+    #[schemars(length(min = 1))]
+    pub names: Vec<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct ItemKind {
+    #[schemars(regex(pattern = KIND_PATTERN))]
+    pub name: String,
+    pub icons: IconPack,
+    pub products: Vec<IconProducts>,
+    #[schemars(length(min = 1))]
+    pub parents: Vec<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct Remembered {
+    #[schemars(length(min = 1, max = 64))]
+    pub literal: String,
+    #[schemars(length(min = 1, max = 400))]
+    pub reason: String,
+}
+
+/// The embedded built-in of that name, parsed and validated.
+pub fn builtin_grammar(name: &str) -> Option<Result<Grammar, GrammarError>>;
+/// serde_json parse followed by validate_grammar.
+pub fn parse_grammar(json_text: &str, origin: &str) -> Result<Grammar, GrammarError>;
+pub fn validate_grammar(grammar: &Grammar) -> Vec<GrammarViolation>;
+pub fn grammar_schema() -> schemars::Schema;
+
+impl Grammar {
+    pub fn container(&self, kind: &str) -> Option<&ContainerKind>;
+    pub fn item(&self, kind: &str) -> Option<&ItemKind>;
+}
+```
+
+`GrammarViolation` and `GrammarError` have the shape of the theme ones in section 13.4 (pointer into the grammar document, a `GrammarRule`, a message; `Json` and `Invalid` variants with an `origin` naming the file or built-in).
+
+Grammar rules, in `validate_grammar`, all reported in field order: container and item names are unique across both lists (`grammar-name-duplicate`); every parent is a container kind of the grammar or `page` (`grammar-parent-unknown`); at least one kind lists `page` (`grammar-no-top-level`); a `frame` kind has no tone and label `bar`, and every other kind has a tone and a label other than `bar` (`grammar-role-mismatch`); `default_tint` only on a tintable kind (`grammar-default-tint-untintable`); border width 0 exactly when the pattern is `none` (`grammar-border-mismatch`); an item kind with icons `none` has no products, and within one item kind each icon appears at most once (`grammar-icon-table`); `remembered` literals are distinct (`grammar-remembered-duplicate`). A grammar file that fails stops `vet`, `render`, `check` and `gallery` before layout, printed and mapped to exit codes exactly as a theme failure is (section 13.4 rule 5).
+
+What a grammar decides and what it does not:
+
+- Vet enforces the grammar's kind lists and nesting (`kind-unknown`, `kind-parent-not-allowed`, `icon-outside-pack`, section 13.1) in Rust, so a JSON figure gets them without CUE.
+- Layout reads role, border width, padding, radius and label style from the kind.
+- The renderer reads role, tone, tintability and border pattern from the kind and every color from the theme.
+- `remembered-constants` scans text fields for the grammar's `remembered` literals, and is not applicable (reason `grammar has no remembered constants`) when the list is empty. `icon-matches-product` reads the item kinds' `products` tables (section 13.10).
+- The domain rules that need more than a list (tint pairing, products outside a VPC, the hop-fact rule) live in the grammar's CUE file and run under `cue vet`, as the CUE rules of section 9.2 always have.
+
+### 13.3 Built-in grammars
+
+gcp. The vocabulary of sections 1 to 12 as a grammar. Its container kinds reproduce section 2.4 exactly, so every gcp figure lays out as before:
+
+| Kind | Role | Tone | Tint | Border | Padding | Radius | Label | Parents |
+|---|---|---|---|---|---|---|---|---|
+| gcp | frame | | no | solid 3 | 0 | 10 | bar | page |
+| vpc | boundary | strong | no | dashed 2 | 10 | 8 | plain | gcp, project, perimeter |
+| region | group | neutral | yes, default 1 | solid 1.5 | 12 | 8 | plain | gcp, vpc, perimeter, project |
+| subnet | group | cool | no | dashed 1.5 | 12 | 8 | plain | region, vpc, project |
+| onprem | group | warm | yes, no default | solid 1.5 | 12 | 8 | plain | page, optional |
+| project | tile | highlight | no | solid 1.5 | 12 | 8 | plain | page, gcp, vpc, perimeter, project |
+| optional | group | emphasis | no | dashed 2 | 12 | 8 | plain | page, gcp, vpc, region, subnet, project, perimeter |
+| k8s | group | soft | no | none 0 | 12 | 8 | plain | gcp, vpc, region, subnet, project, perimeter, optional |
+| perimeter | boundary | accent | no | dashed 2.5 | 12 | 10 | accent | gcp, vpc, project |
+| apis | group | neutral | no | solid 1.5 | 12 | 8 | plain | gcp, project, perimeter |
+
+The parents include every nesting in today's examples (page holds gcp, onprem and project; gcp holds vpc, project and perimeter; vpc holds region, project and perimeter; perimeter holds region; project holds subnet, optional and k8s) and the nestings the prime layout topic describes. subnet keeps its dashed border: center draws it dashed today and the identity proof holds center to it; wire's dotted subnet was a wire-only choice and goes (section 13.5). k8s keeps no border and its pink-tint fill comes from the `soft` tone, not from slot 2, so a k8s Box is not tinted and stays outside the pairing rule, as `#TintOf` had it.
+
+gcp has one item kind, `product`: icons `gcp`, parents every container kind and `page`, and the 23-row products table of section 13.10. Its `remembered` list is the four literals of section 6.
+
+`cue/grammars/gcp.cue` carries the gcp rules, every one a vet-time defect under `cue vet`:
+
+1. Remembered constants: the four literals stay in `#NoRememberedConstant` in `core.cue`, because the core `#Text` applies it inside every node and a grammar package cannot reach into it. CUE therefore rejects them under every grammar, while the Rust check reads the grammar's `remembered` list and is not applicable under plain; a grammar with its own literals adds a CUE rule over its text fields.
+2. The hop-fact rule: every `product` item carries a `subtitle` or a fact whose source is `doc` or `ask` (`_itemsWithoutSubtitleOrFact`, which replaces `_pcardsWithoutPnFactOrAsk`). A `built` fact does not satisfy it: as-built names need no live doc, and they say nothing about what the product is.
+3. Tint pairing, moved from color names to slot numbers: a `solid` pipe beside or inside a tinted Box (a `region`, or an `onprem` with a tint) of another slot is the defect it was for blue and pink (`_pipeBesideZoneOfOtherTint`, `_otherTintInsideZone`). `dash`, `gray` and `deny` stay outside the rule, as `dash` was before: the g7 failover pipe sits between Region A and Region B.
+4. Products outside a VPC: a `product` item whose `subtitle` names Cloud Storage, BigQuery, Pub/Sub, Artifact Registry or Cloud Logging at word boundaries, or whose `icon` is `cloud-storage` or `bigquery`, is a defect when a `vpc` Box is among its ancestors: `_productInsideVpc.<title>: "product" & "sits inside a vpc; draw it in an apis box"`. These are Google APIs reached over Private Google Access, never addresses in a VPC.
+5. The `apis` kind holds them: a Box for Google APIs reached over Private Google Access, drawn inside the gcp frame and outside every vpc. Its parents keep it out of a vpc in Rust vet already (`kind-parent-not-allowed`); the CUE rule `_apisOutsideGcp` adds that it has a `gcp` Box among its ancestors, which a parents list cannot say when a project or perimeter sits between.
+
+Two examples break rule 4 today and are corrected in step (d) of section 13.15: `hero-iso.json` draws Warehouse (icon `bigquery`) inside the Shared VPC ring, and `hybrid-ai.json` draws the feature store (`BigQuery · vectors`), the checkpoint bucket (`Cloud Storage · dual-region`), the audit logs (`Cloud Logging · org sink`) and cost and usage (`Billing export · BigQuery`) inside its vpc. Each moves into an `apis` Box beside the vpc inside the gcp frame. `cue/check.sh` vets every example against the gcp `#Page`, so the rules examine them.
+
+plain. A domain-neutral grammar for system diagrams, with no icons required and no domain rules beyond the core:
+
+| Kind | Role | Tone | Tint | Border | Padding | Radius | Label | Parents |
+|---|---|---|---|---|---|---|---|---|
+| system | frame | | no | solid 3 | 0 | 10 | bar | page |
+| boundary | boundary | strong | no | dashed 2 | 10 | 8 | plain | page, system, group, tile |
+| group | group | neutral | yes, no default | solid 1.5 | 12 | 8 | plain | page, system, boundary, group, tile |
+| tile | tile | highlight | no | solid 1.5 | 12 | 8 | plain | page, system, boundary, tile |
+
+Item kinds `service`, `store`, `external` and `person`, each with icons `none`, an empty products table and every container kind and `page` as parents. `remembered` is empty, so remembered-constants is not applicable under plain, and so is icon-matches-product. `cue/grammars/plain.cue` declares the data and no extra rules.
+
+Other domains, sketched to show the model carries them. None ships in this section; each would be a CUE file and an exported JSON like gcp and plain.
+
+`org` (an organization chart):
+
+| Declares | Value |
+|---|---|
+| containers | `company` frame; `division` tile (tone highlight); `team` group (tone neutral, tintable, so teams pair with tinted reporting lines) |
+| items | `person` and `role`, icons none |
+| lines | solid for reporting, dash for dotted-line reporting |
+| CUE rules | a person sits in exactly one team; every team has one item marked lead (a fact with source doc naming the role) |
+
+`onprem-network`:
+
+| Declares | Value |
+|---|---|
+| containers | `site` frame; `zone` boundary (tone strong, a firewall zone); `vlan` group (tintable, default 1); `rack` tile |
+| items | `router`, `switch`, `firewall`, `server`, `storage`, icons none (a network icon pack would be a new bundled pack) |
+| lines | solid tinted per VLAN, deny for a blocked path, dash for a backup path |
+| CUE rules | a pipe between two vlan boxes passes a firewall item or carries a deny line; VLAN ids appear as built facts |
+
+`sequence` (uses Lanes, section 13.6):
+
+| Declares | Value |
+|---|---|
+| containers | `system` frame around the lanes; `group` boundary around several lane heads |
+| items | `actor`, `service`, `store`, icons none |
+| lines | ordered links: solid for a call, dash for a reply, deny for a rejected call |
+| CUE rules | every ordered link's `to` is a lane head; a reply follows the call it answers in `order`; each lane head is an item |
+
+`c4` (C4 model, container level):
+
+| Declares | Value |
+|---|---|
+| containers | `software-system` frame; `boundary` boundary (enterprise boundary); `container-group` group |
+| items | `person`, `container`, `database`, `external-system`, icons none; the C4 element text maps to title (name), subtitle (technology) and a doc fact (description) |
+| lines | solid for synchronous calls, dash for asynchronous, each labeled with the protocol in `sub` |
+| CUE rules | every item has a subtitle (its technology); external systems sit outside the software-system frame |
+
+### 13.4 Themes as data
+
+A theme is a JSON document that sets every role the renderer reads: surfaces, inks, the container frame and eight container tones, the tag, fact and ask boxes, the four line kinds with their patterns and end dots, drawn stroke widths, the icon chip, the isometric face shading and slab thickness, the block shadow and the eight tint slots. No drawing code names a color literal; `stencil-render` reads every paint from a `Theme` value. A theme never changes layout, type sizes or icons.
+
+Theme roles are generic. A theme knows roles and tones, never a grammar's kinds, so every theme applies to every grammar: the grammar maps each container kind to a role and a tone (section 13.2), and the theme paints the role and tone. For gcp the mapping is the table in section 13.3; read through center it gives exactly the colors of section 2.4:
+
+| gcp kind | Role, tone | Center fill | Center border |
+|---|---|---|---|
+| gcp | frame | `frame.body_fill` `#FAFBFC`, bar `#1A73E8` | `frame.border` `#1A73E8` |
+| vpc | boundary, strong | none | `#5F6368` |
+| region | group, neutral, tinted | the slot's fill (`#D2E3FC`, `#FCE4EC`) | `#BDC1C6` |
+| subnet | group, cool | `#EDE7F6` | `#9AA0A6` |
+| onprem | group, warm, tinted when set | the slot's fill, or `#EFEBE9` untinted | `#D7CCC8` |
+| project | tile, highlight | `#FFF8E1` | `#FFE082` |
+| optional | group, emphasis | `#F8FBFF` | `#4284F3` |
+| k8s | group, soft | `#FCE4EC` | none |
+| perimeter | boundary, accent | `#FFFBF5`, label `#B06000` | `#E37400` |
+| apis | group, neutral | `#EDF3F0` | `#BDC1C6` |
+
+A container's paint, in every theme: the fill is the slot fill of its effective tint when it has one, else its tone's fill, else none; the border color is its tone's border (a frame's is `frame.border`), drawn in the grammar's pattern when the pattern is not `none`; the label ink is the slot ink when tinted, else the tone's `label_ink` when set, else `ink.zone_label`, and a frame's label is `frame.bar_ink`. A tinted group therefore keeps its tone's border, as center's region keeps `#BDC1C6` whatever its slot; the slot's `border` is used where a container has a tint and its tone has no border.
+
+`#Theme` lives in `cue/theme.cue`. It is closed at every level, so an unknown role is a vet error. A theme file vets with `cue vet -c -d '#Theme' ./cue <file>.json`.
+
+```cue
+package stencil
+
+import "list"
+
+// Uppercase #RRGGBB.
+#Color:   =~"^#[0-9A-F]{6}$"
+#Pattern: "solid" | "dashed" | "dotted"
+#Dot:     "filled" | "hollow" | "none"
+// A drawn stroke width in px. Layout reserves the grammar's widths whatever is drawn.
+#Width: number & >=0.5 & <=4
+// HSL lightness step of an isometric face, in percentage points.
+#Step:    int & >=-40 & <=40
+#Opacity: number & >=0 & <=1
+
+#Stroke: {
+	color:   #Color
+	width:   #Width
+	pattern: #Pattern
+}
+
+#Swatch: {
+	fill: #Color
+	ink:  #Color
+}
+
+#Accent: {
+	accent: #Color
+	fill:   #Color
+}
+
+#ToneRole: {
+	fill?:      #Color
+	border?:    #Color
+	label_ink?: #Color
+}
+
+#Tint: {
+	name:   =~"^[a-z]{1,12}$"
+	fill:   #Color
+	border: #Color
+	ink:    #Color
+	wire:   #Color
+}
+
+#Theme: {
+	name: =~"^[a-z][a-z0-9-]{0,31}$"
+	// color: tints are told apart by color, legend labels name the color, and the
+	// separation thresholds apply. line: tints are told apart by end dots and pattern,
+	// legend labels name the line, and the separation thresholds do not apply.
+	tint_cue: "color" | "line"
+	page:     #Color
+	ink: {
+		primary:    #Color // title, item title, block body, list bullets
+		secondary:  #Color // lede, item subtitle
+		zone_label: #Color // an untinted container's label, a Frame block's label
+	}
+	kicker: #Color
+	badge: {
+		customer: #Swatch
+		internal: #Swatch
+		border?:  #Stroke
+	}
+	card: {
+		fill:   #Color
+		border: #Stroke
+	}
+	fact: #Swatch
+	ask:  #Swatch
+	tag: {
+		fill:    #Color
+		border:  #Stroke
+		ink:     #Color
+		sub_ink: #Color
+	}
+	legend: {
+		label_ink: #Color
+		text_ink:  #Color // legend text and Note kind legend
+	}
+	foot: #Color
+	callout: {
+		note:     #Accent
+		risk:     #Accent
+		decision: #Accent
+		open:     #Accent
+	}
+	// The Frame block of section 11.3, a wireframe placeholder.
+	placeholder: {
+		border:   #Color
+		diagonal: #Color
+	}
+	// The flat chip under every icon; absent draws none.
+	icon_chip?: #Color
+	// The frame role.
+	frame: {
+		border:     #Color
+		frame_fill: #Color
+		bar_fill:   #Color
+		bar_ink:    #Color
+		bar_rule?:  #Stroke
+		body_fill:  #Color
+	}
+	tones: {
+		neutral:   #ToneRole
+		warm:      #ToneRole
+		cool:      #ToneRole
+		soft:      #ToneRole
+		// strong never fills: a container of this tone is a ring under iso.
+		strong: {
+			border?:    #Color
+			label_ink?: #Color
+		}
+		highlight: #ToneRole
+		emphasis:  #ToneRole
+		accent:    #ToneRole
+	}
+	containers: {
+		// Draw every container border but a frame's at this width; absent draws the
+		// grammar's width.
+		draw_width?:       #Width
+		frame_draw_width?: #Width
+		// A border for containers whose grammar pattern is none; absent draws none.
+		borderless_outline?: #Stroke
+	}
+	lanes: lifeline: #Stroke
+	gray: {
+		color:   #Color
+		width:   #Width
+		pattern: #Pattern
+		dot:     #Dot
+	}
+	// Solid and dash lines take their color from the tint slot's wire.
+	solid: {
+		width: #Width
+		dots:  [...#Dot] & list.MinItems(8) & list.MaxItems(8)
+	}
+	dash: {
+		width:   #Width
+		pattern: #Pattern
+		dot:     #Dot
+	}
+	deny: {
+		color:      #Color
+		width:      #Width
+		pattern:    #Pattern
+		dot:        #Dot
+		tag_border: #Color
+		tag_ink:    #Color
+	}
+	tints: [...#Tint] & list.MinItems(8) & list.MaxItems(8)
+	iso: {
+		faces: {
+			top:   #Step
+			left:  #Step
+			right: #Step
+		}
+		slab_thickness: number & >=2 & <=16
+		// The frame slab's side faces; absent shades the frame body fill like any slab.
+		frame_sides?: {
+			left:  #Color
+			right: #Color
+		}
+		frame_outline: #Width
+		// none: a solid container border is not drawn on the slab, the shaded sides carry
+		// the edge. outline: drawn at edge_width on the top face and the sides.
+		solid_edges: "none" | "outline"
+		edge_width:  #Width
+		// A ring (a container with no drawn fill); absent draws its flat border.
+		ring?: #Stroke
+		// The outline of a block whose flat drawing has no border; absent draws none.
+		block_outline?: #Stroke
+		plates: bool
+		tabs: {
+			frame:        #Swatch
+			top:          #Swatch
+			nested_width: #Width
+		}
+		chip: {
+			fill:  #Color
+			ring?: #Color
+			shadow?: {
+				color:   #Color
+				opacity: #Opacity
+				dy:      number & >=0 & <=4
+			}
+		}
+		// A soft shadow under every opaque block (section 13.11); absent draws none.
+		shadow?: {
+			color:   #Color
+			opacity: #Opacity
+			blur:    number & >0 & <=8
+			dy:      number & >=0 & <=8
+		}
+		widths: {
+			primary:   #Width // solid slot 1
+			secondary: #Width // solid slots 2 to 8, dash, deny
+			gray:      #Width
+		}
+	}
+}
+```
+
+The Rust mirror lives in `crates/stencil-model/src/theme.rs`, re-exported from the crate root. `schema/theme.schema.json` is generated from it by schemars, committed, and compared in a test as `schema/stencil.schema.json` is. Field declaration order is the CUE order above, so a serialized theme lists its roles in that order. Every struct carries `#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]` and `#[serde(deny_unknown_fields)]`, every enum `#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]` and `#[serde(rename_all = "lowercase")]`, and every `Option` field `#[serde(default, skip_serializing_if = "Option::is_none")]`; the range attributes follow the CUE bounds.
+
+```rust
+pub const COLOR_PATTERN: &str = r"^#[0-9A-F]{6}$";
+pub const THEME_NAME_PATTERN: &str = r"^[a-z][a-z0-9-]{0,31}$";
+pub const TINT_NAME_PATTERN: &str = r"^[a-z]{1,12}$";
+/// The widest a drawn legend label may run past its canonical label (rule 9): the
+/// legend's column gap, so a relabeled entry never reaches the next one.
+pub const LEGEND_RELABEL_SLACK_PX: f32 = 16.0;
+
+#[serde(transparent)]
+pub struct Color(#[schemars(regex(pattern = COLOR_PATTERN))] pub String);
+
+pub enum TintCue { Color, Line }
+pub enum LinePattern { Solid, Dashed, Dotted }
+pub enum DotStyle { Filled, Hollow, None }
+pub enum SolidEdges { None, Outline }
+
+pub struct ThemeStroke { pub color: Color, pub width: f32, pub pattern: LinePattern }
+pub struct Swatch { pub fill: Color, pub ink: Color }
+pub struct Accent { pub accent: Color, pub fill: Color }
+pub struct ToneRole { pub fill: Option<Color>, pub border: Option<Color>, pub label_ink: Option<Color> }
+pub struct Tint {
+    #[schemars(regex(pattern = TINT_NAME_PATTERN))]
+    pub name: String,
+    pub fill: Color,
+    pub border: Color,
+    pub ink: Color,
+    pub wire: Color,
+}
+
+pub struct Inks { pub primary: Color, pub secondary: Color, pub zone_label: Color }
+pub struct BadgeRole { pub customer: Swatch, pub internal: Swatch, pub border: Option<ThemeStroke> }
+pub struct CardRole { pub fill: Color, pub border: ThemeStroke }
+pub struct TagRole { pub fill: Color, pub border: ThemeStroke, pub ink: Color, pub sub_ink: Color }
+pub struct LegendRole { pub label_ink: Color, pub text_ink: Color }
+pub struct CalloutRole { pub note: Accent, pub risk: Accent, pub decision: Accent, pub open: Accent }
+pub struct PlaceholderRole { pub border: Color, pub diagonal: Color }
+pub struct FrameRole {
+    pub border: Color,
+    pub frame_fill: Color,
+    pub bar_fill: Color,
+    pub bar_ink: Color,
+    pub bar_rule: Option<ThemeStroke>,
+    pub body_fill: Color,
+}
+pub struct Tones {
+    pub neutral: ToneRole,
+    pub warm: ToneRole,
+    pub cool: ToneRole,
+    pub soft: ToneRole,
+    pub strong: ToneRole,
+    pub highlight: ToneRole,
+    pub emphasis: ToneRole,
+    pub accent: ToneRole,
+}
+pub struct ContainerRole {
+    pub draw_width: Option<f32>,
+    pub frame_draw_width: Option<f32>,
+    pub borderless_outline: Option<ThemeStroke>,
+}
+pub struct LanesRole { pub lifeline: ThemeStroke }
+pub struct GrayRole { pub color: Color, pub width: f32, pub pattern: LinePattern, pub dot: DotStyle }
+pub struct SolidRole { pub width: f32, pub dots: [DotStyle; 8] }
+pub struct DashRole { pub width: f32, pub pattern: LinePattern, pub dot: DotStyle }
+pub struct DenyRole {
+    pub color: Color,
+    pub width: f32,
+    pub pattern: LinePattern,
+    pub dot: DotStyle,
+    pub tag_border: Color,
+    pub tag_ink: Color,
+}
+pub struct FaceSteps { pub top: i8, pub left: i8, pub right: i8 }
+pub struct FrameSides { pub left: Color, pub right: Color }
+pub struct TabRole { pub frame: Swatch, pub top: Swatch, pub nested_width: f32 }
+pub struct ChipShadow { pub color: Color, pub opacity: f32, pub dy: f32 }
+pub struct ChipRole { pub fill: Color, pub ring: Option<Color>, pub shadow: Option<ChipShadow> }
+pub struct BlockShadow { pub color: Color, pub opacity: f32, pub blur: f32, pub dy: f32 }
+pub struct IsoWidths { pub primary: f32, pub secondary: f32, pub gray: f32 }
+pub struct IsoRole {
+    pub faces: FaceSteps,
+    pub slab_thickness: f32,
+    pub frame_sides: Option<FrameSides>,
+    pub frame_outline: f32,
+    pub solid_edges: SolidEdges,
+    pub edge_width: f32,
+    pub ring: Option<ThemeStroke>,
+    pub block_outline: Option<ThemeStroke>,
+    pub plates: bool,
+    pub tabs: TabRole,
+    pub chip: ChipRole,
+    pub shadow: Option<BlockShadow>,
+    pub widths: IsoWidths,
+}
+
+pub struct Theme {
+    #[schemars(regex(pattern = THEME_NAME_PATTERN))]
+    pub name: String,
+    pub tint_cue: TintCue,
+    pub page: Color,
+    pub ink: Inks,
+    pub kicker: Color,
+    pub badge: BadgeRole,
+    pub card: CardRole,
+    pub fact: Swatch,
+    pub ask: Swatch,
+    pub tag: TagRole,
+    pub legend: LegendRole,
+    pub foot: Color,
+    pub callout: CalloutRole,
+    pub placeholder: PlaceholderRole,
+    pub icon_chip: Option<Color>,
+    pub frame: FrameRole,
+    pub tones: Tones,
+    pub containers: ContainerRole,
+    pub lanes: LanesRole,
+    pub gray: GrayRole,
+    pub solid: SolidRole,
+    pub dash: DashRole,
+    pub deny: DenyRole,
+    pub tints: [Tint; 8],
+    pub iso: IsoRole,
+}
+
+impl Tones {
+    pub fn get(&self, tone: Tone) -> &ToneRole;
+}
+
+/// serde_json parse followed by validate_theme. `origin` names the file or built-in.
+pub fn parse_theme(json_text: &str, origin: &str) -> Result<Theme, ThemeError>;
+/// Structural rules serde does not express (rule 3). Empty means loadable.
+pub fn validate_theme(theme: &Theme) -> Vec<ThemeViolation>;
+/// Deep-merges `overrides` onto `base` (rule 8), then parses and validates the result.
+pub fn apply_overrides(
+    base: &Theme,
+    overrides: &serde_json::Map<String, serde_json::Value>,
+) -> Result<Theme, ThemeError>;
+/// The contrast and separation rows of rule 10, in row order.
+pub fn theme_quality(theme: &Theme) -> ThemeReport;
+pub fn theme_schema() -> schemars::Schema;
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct ThemeViolation {
+    /// RFC 6901 pointer into the theme document, or into `/theme_overrides` of the page.
+    pub pointer: NodePointer,
+    pub rule: ThemeRule,
+    pub message: String,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ThemeRule {
+    ColorMalformed,
+    WidthOutOfRange,
+    StepOutOfRange,
+    OpacityOutOfRange,
+    SlabThicknessOutOfRange,
+    ShadowOutOfRange,
+    NameMalformed,
+    TintNameMalformed,
+    TintNameDuplicate,
+    StrongToneFilled,
+    OverrideNotObject,
+    LegendLabelTooWide,
+}
+
+#[derive(Debug, thiserror::Error)]
+pub enum ThemeError {
+    #[error("theme {origin} is not valid theme JSON at line {line}, column {column}: {message}")]
+    Json { origin: String, line: usize, column: usize, message: String },
+    #[error("theme {origin} violates {} rule(s)", .violations.len())]
+    Invalid { origin: String, violations: Vec<ThemeViolation> },
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct ThemeReport {
+    pub theme: String,
+    pub rows: Vec<QualityRow>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct QualityRow {
+    pub class: QualityClass,
+    /// For example "ink.primary on page" or "wires deuteranopia".
+    pub subject: String,
+    /// The contrast ratio or the minimum delta E; None when not applicable.
+    pub value: Option<f64>,
+    pub threshold: f64,
+    /// For a separation row, the closest pair of slot names.
+    pub closest: Option<(String, String)>,
+    pub not_applicable: Option<&'static str>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum QualityClass {
+    Contrast,
+    Separation,
+}
+```
+
+Rules:
+
+1. A theme reference is resolved once per run, before layout. A `BUILTIN_THEMES` name selects the embedded file of that name (sections 13.5 and 13.9). Any other value ends in `.json` (vet guarantees it) and is a path: `--theme` resolves against the current directory, `Page.theme` against the directory of the input document. The CLI reads at most `DATA_FILE_BYTES_MAX` bytes, the same bounded read as `read_input`. `--theme` overrides `Page.theme`, and an absent reference is `center`.
+2. Built-in themes are embedded with `include_str!` from `crates/stencil-render/themes/<name>.json` and `crates/stencil-render/themes/imported/<name>.json`, and `stencil_render::themes::builtin_theme(name) -> Option<Result<Theme, ThemeError>>` parses one on demand. Library code never unwraps the result; a test parses and validates every built-in, and `cue/check.sh` vets every built-in file against `#Theme`, so a broken built-in fails CI, never a user's run.
+3. Structural rules, in `validate_theme`, return every violation in field order: every `Color` matches `COLOR_PATTERN` (`theme-color-malformed`); every width is 0.5 to 4 (`theme-width-out-of-range`); every face step is -40 to 40; every opacity is 0 to 1; `slab_thickness` is 2 to 16; a block shadow's `blur` is above 0 and at most 8 and its `dy` 0 to 8; `name` matches `THEME_NAME_PATTERN`; each tint name matches `TINT_NAME_PATTERN` and the eight names are distinct; `tones.strong` sets no fill (`theme-strong-tone-filled`). `ThemeRule::as_str` gives the kebab-case names with a `theme-` prefix.
+4. The legend label width is the one structural rule that needs a measurer, so it lives in stencil-layout: `pub fn theme_legend_labels(theme: &Theme, measurer: &mut dyn TextMeasurer) -> Result<Vec<ThemeViolation>, MeasureError>` measures, in the `legend_label` style, every label rule 9 draws for this theme and the canonical label of the same (line, tint), and reports each drawn label wider than its canonical label by more than `LEGEND_RELABEL_SLACK_PX`, at `/tints/<i>/name` or at `/tint_cue`, with rule `theme-legend-label-too-wide`. The CLI runs it on every theme it loads, with `CosmicTextMeasurer`.
+5. A theme that fails a structural rule, or a file that is not valid theme JSON, stops `vet`, `render`, `check` and `gallery` before layout. The CLI prints `error <ThemeError display>` followed by one `violation <rule> <pointer>: <message>` line per violation and `stencil <command>: checks not run`, and exits 1: the theme file is authored input like the document. An unreadable theme file (missing, a directory, over the byte limit) exits 2, as an unreadable input does.
+6. Quality rows (rule 10) never gate `render` or `check`. They are reported by `stencil theme check` and enforced on the built-ins by tests (section 13.14). A user may render with a theme that fails contrast; the theme check tells them so.
+7. Validation runs in both places. `cue vet -c -d '#Theme'` checks a theme file against the closed definition, and the Rust loader checks the same structure through serde (`deny_unknown_fields` at every level, fixed-length `[Tint; 8]` and `[DotStyle; 8]`) and `validate_theme`. Where the two disagree, the Rust types win and `cue/theme.cue` is updated, as for the document schema.
+8. Overrides. `Page.theme_overrides` is a JSON object merged onto the resolved base theme before validation. Objects merge key by key, recursively; a string, number, boolean or array replaces the base value. `tints` is the one exception: in an override it is an object whose keys are slot numbers `"1"` to `"8"`, and each value merges into that slot, so `{"tints": {"3": {"wire": "#00796B"}}}` recolors one wire. The merge descends only where the base holds an object, so it is bounded by the theme's depth (4). The merged JSON is then parsed with `parse_theme`, so an unknown key, a wrong type or a bad value is a `ThemeError` whose pointers start with `/theme_overrides`. A non-object value where the base holds an object is `theme-override-not-object`. The CUE side types `theme_overrides` as an open struct of `_` and leaves the check to the loader, because a partial of a closed definition would duplicate `#Theme` field by field.
+9. Legend wording. The renderer draws each legend label from the theme. Under `tint_cue: color` a label is `<Pattern> <name>`: `Solid gray` for gray, `<Pattern> red` for deny, `Solid <tint name>` for solid and `<Pattern> <tint name>` for dash, where `<Pattern>` is `Solid`, `Dashed` or `Dotted` from the role's pattern. Under `tint_cue: line` a label names the line: `Thin line` for gray, `Solid line`, `Ringed line` or `Plain line` for a solid slot whose dot is filled, hollow or none, `Dashed line` for dash, and `<Pattern> line` for deny. When the drawn label differs from the canonical label of section 13.1 rule 7, the writer measures the drawn label in the label run's style and moves the description by the change in width, as section 12.6 rule 5 did for wire under iso; the gap between label and description keeps its size. Rule 4 bounds the change, so a relabeled entry never reaches the next entry and the last entry of a row stays inside the page's 20 px padding. For center every drawn label equals its canonical label, and no entry moves.
+10. Quality rows, computed by `theme_quality` in row order:
+
+    | Class | Subject | Threshold |
+    |---|---|---|
+    | contrast | text on its ground (WCAG 2.2 contrast ratio): `ink.primary`, `ink.secondary`, `ink.zone_label`, `kicker`, `foot`, `legend.label_ink` and `legend.text_ink` on `page`; `ink.primary` and `ink.secondary` on `card.fill`; `tag.ink`, `tag.sub_ink` and `deny.tag_ink` on `tag.fill`; `fact.ink` on `fact.fill`; `ask.ink` on `ask.fill`; each badge ink on its fill; `frame.bar_ink` on `frame.bar_fill`; `ink.zone_label` on `frame.body_fill` and on every tone fill the theme sets; each tone `label_ink` on its tone's fill; each tint ink on its fill; `ink.primary` on each callout fill; each iso tab ink on its fill | 4.5 |
+    | contrast | non-text on its ground: the gray wire, the deny wire and each of the eight tint wires against `page`, `frame.body_fill`, every tone fill the theme sets and every tint fill; `frame.border` against `page`; each callout accent against its fill | 3.0 |
+    | separation | minimum pairwise CIE76 delta E over the eight tint wires, under normal vision and under deuteranopia, protanopia and tritanopia (Machado, Oliveira and Fernandes 2009, severity 1.0, applied in linear sRGB, clipped to 0 to 1, then CIELAB D65) | 20 normal, 12 each dichromacy |
+    | separation | the same over the eight tint fills | 8 normal, 5 each dichromacy |
+
+    The separation rows are not applicable under `tint_cue: line` (reason `tints are told apart by line`): that theme draws every slot in one ink by design, and its slots differ by end dot. A theme that sets no tone fill still examines its page, card and tint rows, so no theme examines zero rows. The checker of the palette research (`accessible/scripts/palette-check.py`) is the reference for the numbers; a test compares `theme_quality` with recorded values from it for center and dusk to 2 decimals.
+11. Rendering reads the theme through `Palette`, which holds the resolved `Theme` and the projection: `Palette::new(theme: &Theme, projection: Projection) -> Palette<'_>`. Every method returns colors borrowed from the theme. `shade`, `mix`, `Face` and `FacePaint` keep their section 12.6 definitions; `face_lightness_step` reads `iso.faces`, `slab_faces` and `block_faces` follow section 12.6 with every constant replaced by its role (`iso.frame_sides`, `iso.frame_outline`, `iso.solid_edges` and `iso.edge_width`, `iso.ring`, `iso.block_outline`) and every gcp rule applied to the frame role; `slab_faces` takes the container's resolved paint (fill, border color, the grammar's pattern) instead of a `ZoneKind`, and `iso_wire_width` gives `iso.widths.primary` for solid slot 1, `iso.widths.gray` for gray and `iso.widths.secondary` for everything else. The constants of section 12.6 (`ISO_PRIMARY_WIRE_PX` and the rest) are removed from `palette.rs`; their values live in the theme files.
+12. Isometric slab thickness is a theme role, so the drawn iso canvas depends on it. `ISO_SLAB_THICKNESS_PX` is removed; `project_page` takes the thickness and the ring flags: `project_page(geometry: &PageGeometry, solids: &SolidInputs)`, where `SolidInputs` holds the slab thickness and, per Box, whether it is a ring. A Box is a ring (section 12.3's vpc) when its tone is `strong` and it has no effective tint. The `strong` tone never has a fill (rule 3), so which Boxes are rings depends on the document and the grammar, never on the theme. Every designed built-in uses 6. The section 11.1 and 12.8 invariance is restated: the measured JSON `canvas`, `nodes` and `links` are byte-identical under every theme, and `projection` is byte-identical under every theme with the same slab thickness. The iso link arrowhead lengths of section 12.3 rule 7 stay theme-independent and key on the line key: 18 for `blue`, 15 for every dash key, 14 for every other key.
+13. Text runs keep their center color from `stencil_layout::styles` in `TextRun.color`, as today; the writer replaces it with the theme ink. A test asserts that the center theme's inks equal `stencil_layout::styles`, so the two never drift.
+
+### 13.5 Built-in themes
+
+Six designed themes ship as data files under `crates/stencil-render/themes/`, and seven imported ones under `themes/imported/` (section 13.9). Every one applies to every grammar. The designed six, in the gallery's order:
+
+| Name | File | Source | Use for |
+|---|---|---|---|
+| center | `center.json` | today's center values, plus the new roles below | customer slides and documents on white; the default |
+| paper | `paper.json` | editorial-light from the palette research | print and long documents: warm paper, one saturated blue |
+| dusk | `dusk.json` | dusk-deep from the palette research, surface ladder widened | dark slides and screens |
+| clear | `clear.json` | accessible-light from the palette research | audiences with color-vision deficiency, light |
+| clear-dark | `clear-dark.json` | accessible-dark from the palette research | the same, dark |
+| wire | `wire.json` | today's wire values | design docs and reviews: one ink, kinds told apart by line |
+
+The palette research is the `stencil-palettes-2026-09-30` run: five candidate palettes, each checked against the thresholds of section 13.4 rule 10 by its own checker and by an independent one. The judges' findings are folded in here: dusk-deep's surface ladder was too tight and is widened below; material-tonal and catppuccin-nord are not adopted; the accessible dark palette's warm slots (ochre, vermillion, olive) lean brown, which is accepted because they pass every threshold and the alternative searched by the research gave up worst-case separation for hue.
+
+Mapping a research palette onto `#Theme`. Every research role maps to one theme path; the roles the research does not have are derived by the rules in the second table, and the same rules derive them for every research palette.
+
+| Research key | Theme path |
+|---|---|
+| `page_bg` | `page`; `frame.frame_fill` |
+| `ink` | `ink.primary`; `legend.label_ink` |
+| `ink_secondary` | `ink.secondary`; `ink.zone_label` |
+| `line` | `placeholder.diagonal` |
+| `card_fill`, `card_border` | `card.fill`, `card.border.color` |
+| `tag_fill`, `tag_border`, `tag_ink`, `tag_sub_ink` | `tag.fill`, `tag.border.color`, `tag.ink`, `tag.sub_ink` |
+| `fact_fill`, `fact_ink` | `fact.fill`, `fact.ink` |
+| `badge_fill`, `badge_ink` | `badge.customer` |
+| `kicker_ink`, `legend_ink`, `foot_ink` | `kicker`, `legend.text_ink`, `foot` |
+| `gcp_bar_fill`, `gcp_bar_ink`, `gcp_frame_border`, `gcp_body_fill` | `frame.bar_fill`, `frame.bar_ink`, `frame.border`, `frame.body_fill` |
+| `vpc_border` | `tones.strong.border`; `placeholder.border` |
+| `apis_fill`, `apis_border` | `tones.neutral` |
+| `onprem_fill`, `onprem_border` | `tones.warm` |
+| `subnet_fill`, `subnet_border` | `tones.cool` |
+| `k8s_fill` | `tones.soft.fill` (no border) |
+| `project_fill`, `project_border` | `tones.highlight` |
+| `optional_fill`, `optional_border` | `tones.emphasis` |
+| `perimeter_fill`, `perimeter_border`, `perimeter_ink` | `tones.accent` fill, border and `label_ink` |
+| `wire_gray` | `gray.color` |
+| `wire_dash` | not mapped: a dash line draws its slot's wire (section 13.1 rule 3). It equals slot 1 in editorial-light and accessible; dusk-deep's gray-blue dash (`#8F98BD`) is dropped so a dashed slot 1 line matches its solid partner, as in center |
+| `wire_deny`, `deny_tag_ink`, `deny_tag_border` | `deny.color`, `deny.tag_ink`, `deny.tag_border` |
+| `icon_chip` | `icon_chip` in light themes; dark themes use `#FFFFFF`, because the chip exists so that the unaltered Google icons, several of them dark gray on transparent, stay visible on a dark card (section 11.1), and the research's dark chips defeat that |
+| `tints` | `tints`, names lowercased, hex uppercased |
+
+The research keys are gcp kind names because the research was run against the gcp vocabulary; the tone each maps to is the one the gcp grammar gives that kind (section 13.3), so a research palette drawn through gcp gives the colors its authors checked, and the same theme draws plain and every other grammar through the same tones.
+
+| Derived role | Rule |
+|---|---|
+| widths and patterns | center's: card and tag borders 1.5, every line 2 px; gray and solid lines solid, dash and deny dashed; every dot filled; no `containers` overrides (container widths and patterns come from the grammar) |
+| `lanes.lifeline` | `ink.secondary`, 1 px, dashed |
+| `ask` | slot 4: its fill and ink |
+| `badge.internal` | slot 5. When the customer badge is filled with slot 1's wire (dusk), the internal badge is slot 5's wire with the page as ink; otherwise slot 5's fill and ink |
+| `callout` | note: slot 1 wire on slot 1 fill; risk: the deny wire on `mix(page, deny wire, r)`; decision: slot 6 wire on slot 6 fill; open: slot 4 wire on slot 4 fill; r is 0.22 on a light page and 0.18 on a dark one (L* of `page` below 50) |
+| `iso.faces` | top 0, left -8, right -16 on a light page (center's steps); 0, -4, -8 on a dark page (the steps section 12.6 gave dusk) |
+| `iso.slab_thickness` | 6 |
+| `iso.frame_sides` | left `frame.border`, right that color shaded -12, as center's `#1A73E8` and `#1257B3` |
+| `iso.frame_outline`, `solid_edges`, `edge_width` | 1.5, `none`, 1.5 |
+| `iso.plates` | true on a light page, false on a dark one |
+| `iso.tabs` | frame: `frame.bar_fill` with `frame.bar_ink`; top-level: `ink.secondary` with the page as ink on a light page, `card.border.color` with `ink.primary` on a dark page; nested width 1.25 |
+| `iso.chip` | light page: `#FFFFFF` ringed in `card.border.color`, with the `ink.primary` shadow at 0.18 opacity 1.5 px down; dark page: `#FFFFFF`, no ring, no shadow |
+| `iso.shadow` | light page: `ink.primary` at 0.18 opacity, blur 2.5, dy 3; dark page: `#000000` at 0.5, blur 3, dy 3 |
+| `iso.widths` | primary 3.75, secondary 2.5, gray 2 |
+| `tint_cue` | `color` |
+
+Center. Every value of today's center palette carries over unchanged: the colors of sections 2.4 to 2.9, 5.2 and 11.3 (section 2.4's per-kind colors through the tones, as the table of section 13.4 shows), the iso values of section 12.6 and `palette.rs` (faces 0, -8, -16; frame sides `#1A73E8` and `#1257B3`; frame outline 1.5; solid edges `none`; tabs `#1A73E8` and `#5F6368` with white ink; chip `#FFFFFF` ringed `#DADCE0` with the `#202124` shadow at 0.18 and 1.5 px; widths 3.75, 2.5 and 2), and no `icon_chip`, so center draws no flat chip. Slots 1 and 2 are today's tints: blue fill `#D2E3FC`, wire `#1A73E8`; pink fill `#FCE4EC`, wire `#C2185B`; both with border `#BDC1C6` and ink `#5F6368`. New center values, needed because the roles are new:
+
+| Role | Value | How it was chosen |
+|---|---|---|
+| slot 3 teal | fill `#E1FCFD`, border `#BDC1C6`, ink `#004845`, wire `#007D78` | wires and inks from editorial-light slots 3 to 8; fills fit by a bounded search against the separation thresholds with slots 1 and 2 held at today's values |
+| slot 4 amber | fill `#FAF9CA`, border `#BDC1C6`, ink `#5A3900`, wire `#A36E14` | as above |
+| slot 5 violet | fill `#EFEBFF`, border `#BDC1C6`, ink `#4B3275`, wire `#593894` | as above |
+| slot 6 green | fill `#E5F7E3`, border `#BDC1C6`, ink `#26481B`, wire `#497938` | as above |
+| slot 7 orange | fill `#FCDBCD`, border `#BDC1C6`, ink `#6E2B12`, wire `#9D3E1B` | as above |
+| slot 8 cyan | fill `#BFDDE8`, border `#BDC1C6`, ink `#18445E`, wire `#005276` | as above |
+| `tones.warm.fill` | `#EFEBE9` | an untinted onprem had no fill before; the pale of the on-prem border hue, zone label 5.11:1 |
+| `tones.neutral.fill` | `#EDF3F0` | a region is always tinted, so the neutral fill shows only on apis (new) and plain groups; a cool green-gray apart from the frame body `#FAFBFC`, zone label 5.38:1 |
+| `lanes.lifeline` | `#9AA0A6`, 1 px, dashed | the frame and subnet gray |
+| `iso.shadow` | `#202124` at 0.2, blur 2.5, dy 3 | added in step (e) |
+
+With these, center examines 223 quality rows and passes 222. The one failing row is `ask.ink on ask.fill`, `#B06000` on `#FEF7E0` at 4.34:1. Changing either color would change center output, which section 13.14 holds byte-identical, so the row stays failed and the center test names it as the only expected failure. The separation minima are wires 29.55 normal and 13.16 worst case (deuteranopia), fills 8.53 and 5.38.
+
+Paper takes editorial-light as mapped, with tint names `blue`, `rose`, `teal`, `ochre`, `violet`, `green`, `clay`, `petrol`. Its page is `#FCFBF8`, frame body `#F7F6F2`, card `#FFFFFF`.
+
+Dusk takes dusk-deep as mapped, with the surface ladder widened. The research ladder put page, frame body, the tone fills and the card within 8 L* of each other (page 4.4, body 7.5, zones 6.4 to 10.9, card 12.5), so nested surfaces read as one. Each rung now keeps the research hue and chroma (CIELAB a and b) at a new L*, at least 4 above the rung below:
+
+| Rung | Roles | Research | Dusk | L* |
+|---|---|---|---|---|
+| page | `page` | `#0D0F17` | `#0D0F17` | 4.4 |
+| frame body | `frame.body_fill` | `#131623` | `#161926` | 9.0 |
+| tones | `tones.cool`, `warm`, `highlight`, `emphasis`, `soft`, `accent` and `neutral` fills (research subnet, onprem, project, optional, k8s, perimeter, apis) | `#171B2A`, `#18181F`, `#151928`, `#11141E`, `#141E2B`, `#1C1812`, `#141C26` | `#1E2231`, `#222229`, `#1E2232`, `#1F222D`, `#192331`, `#26221C`, `#1B232E` | 13.4 to 13.5 |
+| card | `card.fill`, `tag.fill` | `#1B2031`, `#191E2F` | `#272B3D` | 17.9 |
+| fact box | `fact.fill` | `#1F2640` | `#2E3450` | 22.4 |
+
+The fact box moves with the card so it stays above the card it sits in. The tint fills (L* 17 to 25) are governed by the separation rows, not the ladder. With the widened ladder dusk passes all 223 rows; its lowest non-text contrast is 3.16 (the gray wire on the slot 1 fill). The face steps shade every surface darker than its own top, and the ladder keeps each top lighter than the one it stands on, which section 12.6 rule 4 achieved by mixing toward a blue gray; the mix, the lifts and the rim are no longer needed.
+
+Clear and clear-dark take the accessible palettes, with the slots reordered so each slot keeps its hue family across themes: blue, pink, teal, ochre, indigo, green, vermillion, olive (the research order was blue, pink, teal, vermillion, indigo, ochre, olive, green). Separation is a minimum over all pairs, so the order does not change any row. The vermillion slot is named `orange`, because `Solid vermillion` would exceed the relabel slack of section 13.4 rule 4. Both pass all 223 rows.
+
+Wire carries today's values: page and every fill `#FFFFFF`, ink `#222222`, secondary ink `#555555`; `containers.draw_width` 1.25 and `frame_draw_width` 2, with a 2 px bar rule; every tone border `#222222`, every tone fill `#FFFFFF` where center's tone has one; `borderless_outline` `#222222` at 1.25 solid, so a k8s box keeps the outline wire draws today; gray 1.25 solid, every other line 2 px, dash dashed, deny dotted; `tint_cue: line`; every tint slot fill `#FFFFFF`, border and wire `#222222`, ink `#555555`, with the canonical names; solid dots by slot filled, hollow, none, filled, hollow, none, filled, hollow, so slot 1 draws as today's blue and slot 2 as today's pink, and wire tells at most three solid slots apart; lifeline `#555555` 1 px dashed; iso faces 0, 0, 0 (every face takes its flat fill, which is the page white), solid edges `outline` at 1.5, ring dotted `#999999` at 1.5, block outline `#222222` at 1.25, tabs `#222222` with white ink, chip white ringed `#222222`, widths 3.75, 2.5 and 1.25, no shadow. Wire passes its 215 contrast rows, and its 8 separation rows are not applicable. Two wire outputs change. Its flat legend labels read `Solid line` and so on in place of `Solid blue` (section 13.4 rule 9), which closes the first open item of section 11.1. Its subnet border is dashed like every other dashed container, because the pattern now comes from the grammar; today's wire drew subnet dotted.
+
+### 13.6 Lanes
+
+`Lanes` is a core container for figures that read along time: columns that share one vertical axis, with the messages between them drawn as horizontal arrows in order. It is what a sequence grammar is built on (section 13.3).
+
+```rust
+pub const LANE_GAP_DEFAULT_PX: u16 = 32;
+/// Smallest height of one message row in the band.
+pub const LANE_ROW_MIN_PX: f32 = 36.0;
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct Lanes {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(regex(pattern = ID_PATTERN))]
+    pub id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(range(max = 64))]
+    pub gap: Option<u16>,
+    /// The lane heads, left to right: 1 to 32 nodes, usually Items.
+    #[schemars(length(min = 1, max = 32))]
+    pub children: Vec<Node>,
+}
+```
+
+1. Each child of a Lanes node is a lane head. A Link with `order` whose `from` and `to` are two different heads of the same Lanes node is a message of that node; vet rejects any other ordered link (`link-order-outside-lanes`) and two messages of one node with the same order (`link-order-duplicate`).
+2. Layout. A Lanes node is a flex column with two parts, `Heads` and `Band`. `Heads` is a flex row with gap `gap` (default 32) whose children are the heads, each with weight 1 as in a Row with no `grow`, so the lanes are equal columns. `Band` is a leaf below it, as wide as the node, whose height is the sum of the message rows: messages are sorted by `order`, then by link index, and row k is `max(LANE_ROW_MIN_PX, tag height + 8)` tall, where the tag is sized from the link's `label` and `sub` as a link tag is (section 11.2); a message without a label has no tag and its row is `LANE_ROW_MIN_PX` tall. A Lanes node with no message has a band of height 0.
+3. Messages are routed by layout, not by the A* router. Message k is a two-point `LinkRoute` from the center x of its `from` head to the center x of its `to` head, at y = band top + the heights of rows 0 to k-1 + half of row k, with status `Routed`. Its tag is centered on the segment's midpoint, as section 11.2 places a link tag. `arrow` places the arrowheads as for any link.
+4. Lifelines. Each head draws a lifeline: part `Lifeline` of the Lanes node, repeated once per head in head order (`lifeline/<i>` in the measured JSON), a vertical line from the head's bottom center to the band's bottom, in `lanes.lifeline`. Lifelines are not obstacles, so links-avoid-boxes ignores a message crossing them.
+5. Section 2.11 gains the row: Lanes, parts Heads, Band and Lifeline per head, none carrying a TextRun. `NodeTag` gains `Lanes`. Lanes is transparent for grammar nesting, like Row and Col, and a column container for pipes (section 2.7).
+6. Checks count messages as links: links-routed examines each (always `Routed`), links-avoid-boxes examines each segment against the obstacles of section 11.2, and legend consistency counts each as a use. text-fits-box examines each message tag's runs.
+7. A page with a Lanes node cannot be iso (`lanes-in-iso`): the projection has no rule for a time axis.
+
+### 13.7 Facts with a source, and figure chrome
+
+A fact carries its `source`. `doc` (the default) is a value read from the live documentation when the figure was authored, the hop-fact value of earlier sections. `built` is an as-built name read off the running system: a bucket name, a VLAN ID, a project id; it carries no live-doc requirement. `ask` is an open question for the reader, as Pcard `ask` was.
+
+Layout and paint by source, for each entry of an Item's `facts` in list order after the title and subtitle, and for a Fact node:
+
+| Source | Item parts | Box | Text style and prefix | Paint |
+|---|---|---|---|---|
+| doc | `FactBox`, `Fact` | margin-top 4, padding 4/8, radius 4, filled | `fact`, no prefix | `fact.fill`, `fact.ink` |
+| built | `BuiltBox`, `Built` | the same, unfilled | `fact`, prefix `• ` (U+2022 and a space) | no fill, `fact.ink` |
+| ask | `AskBox`, `Ask` | the same, filled | `ask`, prefix `Ask: ` | `ask.fill`, `ask.ink` |
+
+The prefix is part of the measured and rendered text, as `Ask: ` was. The bullet and the unfilled box tell an as-built line from a fact, since the bundled faces have no monospace. A Fact node keeps its one `Text` part and takes the box paint, style and prefix of its source. Section 2.11's Item row (the Pcard row) becomes: [Icon], Text, FunctionName, [ProductName], then the parts of each fact entry, with FunctionName, ProductName and each Fact, Built and Ask run carrying a `TextRun`. In the measured JSON the first entry of each source uses the bare part names (`fact_box`, `fact`, `built_box`, `built`, `ask_box`, `ask`) and every later entry of that source adds `/<i>`, its index in `facts`, as `body_line/<i>` does; a migrated Pcard has at most one doc fact and one ask, so its keys do not change. Under iso the Item billboard stacks every fact part under the icon (section 12.4). `PartName` gains `BuiltBox` and `Built`. The stencil-text coverage test adds U+2022 in the SemiBold face.
+
+The hop-fact rule (a product on a hop carries a fact read from the live doc, or an explicit ask) is a gcp grammar rule (section 13.3, rule 2) and counts `doc` and `ask` facts only. Remembered constants scan every fact entry like every text field.
+
+`Page.chrome` is `full` (default) or `none`. A figure captioned by the document it sits in sets `none`. Then:
+
+1. Layout omits the badge, `/kicker`, `/title` and `/lede`: the root's children are `/body`, then `/legend` when the legend is not empty, then `/foot` when set. The geometry order of section 4.4 drops the three pointers, and the body starts at the root padding.
+2. `title`, `kicker` and `lede` stay required. They label the figure in the gallery index and in `gallery.json`, remembered constants scan them, and they are not drawn. A captioned figure that wants none of them still writes a one-word title.
+3. A figure with `chrome: none` whose uses (every Pipe, Tee arm, Tee spine and Link) share exactly one (line, effective tint) may have an empty legend. Legend consistency then reports the uses as examined and clean: examined is the number of uses, no defect, so the report passes. With two or more keys, or with any legend entry, section 13.1 rule 8 applies unchanged. A `chrome: full` figure keeps the full rule: every figure that names itself also names its lines.
+
+### 13.8 Pipes aimed at named nodes
+
+`Pipe.from` and `Pipe.to` name nodes by id. They tell layout which boxes the pipe joins, so a gutter can line up with what it connects without the matching grow lists of section 9.4.
+
+1. The slot of a Pipe is its parent when the parent is a Row or Col whose children are all Pipes or Tees, and otherwise the Pipe itself. The move axis is the Pipe's cross axis: y for `h`, x for `v`.
+2. The aim span of a Pipe with targets is the intersection of the named nodes' extents on the move axis (border boxes), or the one named node's extent when only one is set. When the two extents do not overlap, the aim span is the `to` node's extent, and pipes-land reports the `from` side.
+3. The aim of a slot is the midpoint of the union of the aim spans of the Pipes in it that have targets. A slot holding no Pipe with targets does not move.
+4. After taffy computes the layout and the absolute positions are known, and before the text re-measure and link routing, layout translates every slot with an aim along its move axis so the slot's center lies on the aim, clamped so the slot stays inside its parent's content box. The translation moves the slot's box, its descendants and their parts by the same amount and changes no size. Slots are processed in geometry order, each once; a slot holds only pipes and tees, so no slot lies inside another.
+5. Nothing else moves, and taffy is not run again. A translated slot that overlaps a sibling is reported by siblings-do-not-overlap, and one clamped short of its aim by pipes-land.
+6. `pipes-land` (section 6) examines, for a Pipe with targets, one end per named target instead of the neighbor on that side: the `from` target is the left (h) or upper (v) end, and `to` the right or lower end. The end lands when the pipe's center on the move axis lies within the named node's extent on that axis, the epsilon included, and the node lies on its side: its center on the run axis is before the pipe's center for `from` and after it for `to`. A side without a target keeps the neighbor rule. Messages name the target: `from target /body/0/children/0/children/1 has no box across the pipe's center y 418.35` and `to target /body/0/children/2 lies on the left of the pipe`.
+7. A Tee arm cannot carry a target (vet rule `pipe-target-on-tee-arm`): the Tee's grid places its arms.
+
+Example. g7's gutter could be written as one Col holding two slot Cols, the first with VLAN 1 and VLAN 2 (`"from": "metro-1"`, the id of the Metro 1 Box) and the second with VLAN 3 and VLAN 4 (`"from": "metro-2"`), with no grow list on either Col: each slot then centers on its metro Box. `examples/g7.json` keeps its grow lists, so its geometry does not change.
+
+### 13.9 base16 import and the imported tier
+
+`stencil theme import --base16 <scheme.yaml> [--name <name>] -o <theme file>` maps a base16 color scheme onto `#Theme` by fixed rules, writes the theme file and a report next to it, and prints the report. The result is a theme like any other, so it applies to every grammar.
+
+Reading. The importer reads a restricted line format, not general YAML, so the CLI takes no YAML dependency: every line matching `^\s*(base[0-9A-Fa-f]{2})\s*:\s*"?#?([0-9A-Fa-f]{6})"?\s*(#.*)?$` sets one color, the key's hex digits case-insensitive. It accepts both the tinted-theming `palette:` layout (keys indented under `palette:`) and the legacy flat layout (keys at top level, values with or without `#`). An optional `system:` line must say `base16` or `base24`. base24 is a superset: its eight extra keys, `base10` to `base17`, are read and ignored. A key from `base00` to `base0F` that is missing or given twice is an error, as is a file over 65,536 bytes; the command then prints `error base16 <path>: <message>`, writes nothing and exits 1. An unreadable file exits 2.
+
+Mapping. `r` is 0.18 when `base00` has L* below 50 (a dark scheme) and 0.22 otherwise. `mix(a, b, f)` is the section 12.6 function, `a` moved `f` of the way to `b`. "The higher contrast of x and y on z" picks by WCAG contrast ratio against z, the first on a tie.
+
+| Theme path | Value |
+|---|---|
+| `name` | `--name`, or the file stem lowercased with every character outside `a-z0-9-` replaced by `-` |
+| `tint_cue` | `color` |
+| `page`, `frame.frame_fill` | `base00` |
+| `frame.body_fill`, `fact.fill` | `base01` |
+| the fill of every tone but `strong` and `accent` | `mix(base01, base02, 0.5)` |
+| `card.fill`, `tag.fill` | `base02` |
+| `card.border` and `tag.border` colors; the `neutral`, `warm`, `cool` and `strong` tone borders; `placeholder.border` | `base03` |
+| `foot`, `placeholder.diagonal` | `base04` |
+| `ink.secondary`, `ink.zone_label`, `tag.sub_ink`, `fact.ink`, `legend.text_ink` | `base05` |
+| `ink.primary`, `tag.ink`, `legend.label_ink` | the higher contrast of `base06` and `base07` on `base00` |
+| `kicker`, `frame.border`, `frame.bar_fill`, the `emphasis` tone border | `base0D` |
+| `frame.bar_ink` | the higher contrast of `base00` and `base07` on `base0D` |
+| the `highlight` tone border | `base0A` |
+| the `accent` tone | fill `mix(base00, base09, r)`, border `base09`, label ink the higher contrast of `base09` and `ink.primary` on that fill |
+| the `soft` tone | the shared tone fill, no border |
+| `gray.color` | `base04` |
+| `deny` | color `base08`, tag border `mix(base00, base08, 0.5)`, tag ink the higher contrast of `base08` and `ink.primary` on `tag.fill` |
+| dash | slot 1's wire, which is `base0D` (section 13.1 rule 3) |
+| each tint slot | wire: the accent in the table below; fill `mix(base00, accent, r)`; border `mix(base00, accent, 0.5)`, the accent at half strength; ink the higher contrast of `base07` and `base00` on the fill |
+| `badge.customer`, `badge.internal`, `ask` | slot 1, slot 2 and slot 4, each its fill and ink |
+| `callout` | note slot 1, decision slot 6, open slot 4 (wire on fill); risk `base08` on `mix(base00, base08, r)` |
+| `icon_chip`, `iso.chip.fill` | `#FFFFFF` |
+| `lanes.lifeline` | `base04`, 1 px, dashed |
+| `iso.faces` | top 0, left `-s`, right `-2s`, where `s` is the L* difference between `base00` and `base02`, rounded and clamped to 4 to 8 |
+| `iso.slab_thickness` | 6 when the L* difference between `base00` and `base01` is at least 4, else 8, so a slab whose top barely differs from the page shows a thicker shaded side |
+| `iso.tabs` | frame: `frame.bar_fill` with `frame.bar_ink`; top-level: `base03` with the higher contrast of `base00` and `base07` on it; nested width 1.25 |
+| `iso.plates` | false for a dark scheme, true otherwise |
+| `iso.chip` ring, shadow | ring `base03`, no shadow |
+| `iso.shadow` | dark scheme: `#000000` at 0.5, blur 3, dy 3; otherwise `ink.primary` at 0.18, blur 2.5, dy 3 |
+| widths, patterns, dots, `iso.frame_sides`, `iso.frame_outline`, `solid_edges`, `edge_width`, `iso.widths` | as the derived roles of section 13.5 |
+
+Tint slots. Slot 1 stays the blue, and slots keep the hue families of `TINT_NAMES` where base16 has them; base16 has no violet or teal of its own, so its red and brown take those slots:
+
+| Slot | base16 key | Usual base16 role | Slot name |
+|---|---|---|---|
+| 1 | `base0D` | blue (functions) | blue |
+| 2 | `base0E` | magenta or purple (keywords) | pink |
+| 3 | `base0C` | cyan (support, regex) | cyan |
+| 4 | `base0A` | yellow (classes) | yellow |
+| 5 | `base08` | red (variables) | red |
+| 6 | `base0B` | green (strings) | green |
+| 7 | `base09` | orange (constants) | orange |
+| 8 | `base0F` | brown (deprecated, embedded) | brown |
+
+Slot 5 and the deny line both take `base08`, so a solid slot 5 line and a deny line share a color. The deny line keeps its dashed pattern and its tag, which carry the distinction, as they do in the accessible palettes, where the research found deny close to vermillion under dichromacy; an author who needs both reaches for another slot. Slot names are fixed by slot, not read from the scheme, and they are short enough for the relabel slack of section 13.4 rule 4.
+
+Report. The importer runs `theme_quality` on the result and writes `<theme file stem>.report.txt` beside the theme file, holding exactly the lines `stencil theme check` prints for it (section 13.12). It always writes both files once the scheme reads. Exit 0 when every row passes; exit 1 when any row fails, after printing every failing row with its roles. Output is deterministic: the theme JSON is `serde_json::to_string_pretty` of the `Theme` in declaration order plus a trailing newline, so a re-import of the same scheme writes the same bytes.
+
+The imported tier. Seven schemes are committed under `crates/stencil-render/themes/imported/`, each as `<name>.json`, `<name>.base16.yaml` (the pinned source, byte for byte) and `<name>.report.txt`, with `SOURCES.md` listing for each the source URL, the repository commit and the SHA-256 of the YAML. All seven come from `github.com/tinted-theming/schemes` at commit `d70255b752ac8328ee3d549c72a1a55ce5fc794f`, path `base16/<file>`:
+
+| Theme name | Source file | SHA-256 |
+|---|---|---|
+| tokyo-night | `tokyo-night-dark.yaml` | `98e88daa15855821c156441c1db963e97fbf89d40912b10d11ee2226c9f48755` |
+| solarized-light | `solarized-light.yaml` | `9e9ab6cfab64904e85250ae097a52dfd2de7bde320d28a64997e86b1fe42e306` |
+| solarized-dark | `solarized-dark.yaml` | `22d8250ac9958985dddcff9f438435a5c0429a672ff86f6fc984332c991bc5a9` |
+| material-dark | `material-darker.yaml` | `b427528303ad3b625e0b40b721f7c72f09c9732c831140dcbc53dc0861c5e0ef` |
+| gruvbox-dark | `gruvbox-dark.yaml` | `b17930d08392c161d609ba5490d9f52c174ae38321557192d871d5d9fe61d6cc` |
+| dracula | `dracula.yaml` | `f6f5a7f3a28a3c305a021328b32a8849ca76cfce3da340dc2c1e69f3cbd8bc17` |
+| nord | `nord.yaml` | `bf0620d47f2326576d9f7f28302c9acd67fb4c753c5d496986d34687027c717b` |
+
+`material-dark` is built from `material-darker.yaml`; the upstream `material.yaml` is also dark and is not imported.
+
+None of the seven passes the thresholds of section 13.4 rule 10. A prototype of this mapping, run with the palette research checker, measured these separation minima (CIE76; the worst dichromacy named):
+
+| Theme | Wires, normal (need 20) | Wires, worst dichromacy (need 12) | Fills, normal (need 8) | Fills, worst dichromacy (need 5) |
+|---|---|---|---|---|
+| tokyo-night | 3.98 | 1.50 protanopia | 1.35 | 0.36 protanopia |
+| solarized-light | 18.59 | 3.42 protanopia | 5.75 | 0.34 deuteranopia |
+| solarized-dark | 18.59 | 3.42 protanopia | 3.70 | 0.69 deuteranopia |
+| material-dark | 17.41 | 3.61 deuteranopia | 4.43 | 0.85 deuteranopia |
+| gruvbox-dark | 14.51 | 5.50 protanopia | 3.69 | 0.82 protanopia |
+| dracula | 34.56 | 6.75 protanopia | 7.46 | 1.24 protanopia |
+| nord | 13.94 | 6.55 protanopia | 2.77 | 1.12 protanopia |
+
+The separation failures belong to the source accents: eight terminal colors chosen for syntax highlighting collapse in pairs under dichromacy (yellow and green, blue and magenta, red and brown), and no mapping that takes the accents as wires can separate them. tokyo-night's base16 port also assigns lavender to `base08` and two cyans to `base0A` and `base0D`, so its slot names do not describe its colors. Several contrast rows fail as well, for example `ink.secondary on card.fill` at 2.01:1 in both solarized themes, where `base05` sits on `base02`; each report lists them. The imported tier therefore ships with its failures recorded rather than repaired: a repair that moved the accents would stop being a fixed mapping and would change each scheme's look. The tests hold the record exactly instead (section 13.14), the prime themes topic says the imported tier fails the colorblind thresholds and points at `stencil theme check <name>`, and the gallery renders only the six designed themes.
+
+### 13.10 Checks
+
+`CheckName` gains `PrintFit` and `IconMatchesProduct`, appended after `IsoLinksClear`, so the CLI prints twelve check lines in this order: child-inside-container, siblings-do-not-overlap, text-fits-box, remembered-constants, legend-consistency, links-routed, links-avoid-boxes, pipes-land, iso-labels-clear, iso-links-clear, print-fit, icon-matches-product. `vet` runs the three model checks, remembered-constants, legend-consistency and icon-matches-product, in that order. Two model checks now read the grammar: `remembered_constants(page, grammar)` scans for the grammar's `remembered` literals (section 13.2), and `icon_matches_product(page, grammar)` reads its products tables. `REMEMBERED_CONSTANTS` moves into the gcp grammar's data, with the same four literals and reasons.
+
+| Check | Crate | Unit examined | Defect when | Epsilon |
+|---|---|---|---|---|
+| `print-fit` | layout | each text run (every `TextRun` of every node part and every link tag), as text-fits-box counts them | the run would print below 8 pt at the print width: `size_px * 72 / (canvas_px / inches)` is below 8, where `canvas_px` is the drawn canvas width (`IsoScene.canvas.width` under iso, `PageGeometry.canvas.width` otherwise) and `inches` the `--print-width` value | 0.01 pt |
+| `icon-matches-product` | model | each Item whose kind has a non-empty products table and that has an `icon` or a `subtitle` | the `subtitle` names a product that has a product icon and the item carries a different icon; or the `subtitle` names a product with no product icon and the item carries a product icon | |
+
+| Check | Count 1 | Any other count, 0 included |
+|---|---|---|
+| `print-fit` | text run | text runs |
+| `icon-matches-product` | item | items |
+
+print-fit:
+
+1. Without `--print-width` the report is `CheckReport::not_applicable(CheckName::PrintFit, "no print width")`. With it, a page always has text runs (the title at least, or under `chrome: none` the body), so examined 0 fails as section 6 requires.
+2. `--print-width <inches>` takes a decimal from 0.5 to 200 on `render` and `check`. A value outside that range, not finite or not a number is a clap error, exit 2.
+3. `pub fn print_fit(geometry: &PageGeometry, canvas_width_px: f32, print_width: Option<PrintWidth>) -> CheckReport`, where `PrintWidth` is a newtype over f32 whose constructor enforces rule 2. The pipeline passes the drawn canvas width.
+4. Defect pointer: the node that owns the run, or `/links/<i>` for a link tag. Message: `<part> <text> prints at <p> pt, below 8 pt (<s> px on a <c> px canvas at <w> in)`, every number with 2 decimals, for example `print-fit /kicker: badge_text "CUSTOMER" prints at 7.64 pt, below 8 pt (10.00 px on a 1320.00 px canvas at 14.00 in)`.
+5. `render` runs print-fit when `--print-width` is set, after it has written the three files: it prints the three paths, then the print-fit check line and its defect lines, and exits 1 when the report fails. The files stay written, as a gallery render that fails a check stays written.
+
+icon-matches-product:
+
+1. The table is grammar data: each item kind's `products` (section 13.2) lists icons with their class and the product names each may stand for. The class follows the archive path in section 8.2: `Unique Icons/` is `product` and `Category Icons/` is `category`. The gcp `product` kind carries this table, one row per `IconName` in `IconName::ALL` order:
+
+   | Icon | Class | Names |
+   |---|---|---|
+   | agents | category | Vertex AI Agent Builder, Vertex AI Agent Engine, Agent Engine, Agentspace, Gemini Enterprise, Dialogflow |
+   | ai-ml | category | Vertex AI, Gemini, Document AI, Vision AI, Speech-to-Text, Text-to-Speech, Translation AI, Natural Language AI, Cloud TPU |
+   | bigquery | product | BigQuery |
+   | cloud-run-flat | product | Cloud Run, Cloud Run functions |
+   | cloud-run | product | Cloud Run, Cloud Run functions |
+   | cloud-sql | product | Cloud SQL |
+   | cloud-storage | product | Cloud Storage |
+   | compute-engine | product | Compute Engine |
+   | compute | category | Compute Engine, Cloud Run, Cloud Run functions, App Engine, Cloud Functions, Batch, Bare Metal Solution, Google Cloud VMware Engine |
+   | containers | category | Google Kubernetes Engine, GKE, Cloud Run, Artifact Registry |
+   | data-analytics | category | BigQuery, Dataflow, Dataproc, Pub/Sub, Looker, Dataplex, Cloud Data Fusion, Cloud Composer, Datastream, Dataform |
+   | databases | category | Cloud SQL, AlloyDB, Spanner, Firestore, Bigtable, Memorystore, Database Migration Service |
+   | devops | category | Cloud Build, Artifact Registry, Cloud Deploy, Infrastructure Manager |
+   | gke | product | Google Kubernetes Engine, GKE |
+   | hybrid | category | Google Distributed Cloud, Cloud Interconnect, Dedicated Interconnect, Partner Interconnect, Cross-Cloud Interconnect |
+   | integration | category | Pub/Sub, Application Integration, Workflows, Eventarc, Apigee, API Gateway, Cloud Tasks, Cloud Scheduler |
+   | networking | category | Cloud Load Balancing, Cloud CDN, Cloud DNS, Cloud NAT, Cloud Router, Cloud VPN, Cloud Interconnect, Network Connectivity Center, Private Service Connect, Virtual Private Cloud |
+   | observability | category | Cloud Logging, Cloud Monitoring, Cloud Trace, Cloud Profiler, Error Reporting |
+   | scc | product | Security Command Center |
+   | security-identity | category | Security Command Center, Cloud KMS, Secret Manager, Identity and Access Management, Identity-Aware Proxy, Cloud Armor, VPC Service Controls, Certificate Authority Service, Sensitive Data Protection |
+   | serverless | category | Cloud Run, Cloud Run functions, Cloud Functions, App Engine, Workflows, Eventarc |
+   | storage | category | Cloud Storage, Filestore, Persistent Disk, Hyperdisk, Backup and DR Service, Storage Transfer Service, Google Cloud NetApp Volumes |
+   | vertex-ai | product | Vertex AI |
+
+2. `pub fn named_product(table: &[IconProducts], subtitle: &str) -> Option<&str>` finds every name of the table in the subtitle, ASCII case-insensitive, at the word boundaries of the remembered-constants rule (section 6), and returns the longest; on a tie, the one that starts first. `Vertex AI Agent Engine` therefore names Vertex AI Agent Engine, not Vertex AI, and `Cloud Run jobs` names Cloud Run. The scan is bounded by the table (at most 32 item kinds of at most 64 rows, enforced by `validate_grammar`) times the 400-scalar text limit, and uses no regex dependency.
+3. The product icons of a name are the `product`-class rows that list it. An item is examined when its kind has a non-empty products table and it has an `icon` or a `subtitle`. It is a defect when the subtitle names a product with product icons and the item's icon is set and not one of them, or when the subtitle names a product with no product icon and the item's icon is a `product`-class icon. Category icons are allowed for any product with no product icon. An item with no subtitle, or whose subtitle names nothing in the table, is examined and clean, as is one that names a product with a product icon and carries no icon.
+4. When no item of the page has a kind with a products table (every plain figure), the report is not applicable with the reason `grammar has no icon table`.
+5. Defect pointer: the item. Messages: `subtitle names Vertex AI, whose icon is vertex-ai; the item carries ai-ml`, with every product icon listed and joined by ` or ` (`cloud-run or cloud-run-flat`), and `subtitle names Cloud Logging, which has no product icon; the item carries the product icon bigquery`.
+6. Run over the examples, the check finds three real mismatches, corrected in step (d): `hybrid-ai.json` `/body/0/children/2/children/0/children/0/children/0/children/0/children/2/children/0` (`Vertex AI Registry` on `ai-ml`, becomes `vertex-ai`) and `/body/0/children/2/children/0/children/1/children/0/children/4` (`Billing export · BigQuery` on `data-analytics`, becomes `bigquery`), and `network-hub-spoke.json` `/body/0/children/2/children/1/children/1/children/0/children/0/children/2/children/1` (`Cloud Run · Direct VPC` on `serverless`, becomes `cloud-run`). Icon boxes keep their size, so the geometry is unchanged; the `hybrid-ai.json` pointers change when step (d) moves those items into an apis Box.
+
+New check lines after section 13 lands, for the examples as corrected in step (d), with no `--print-width`:
+
+| Example | Summary |
+|---|---|
+| g7 | `stencil check: 12 checks, 7 passed, 0 failed, 5 not applicable` (icon-matches-product examines 6 items) |
+| hero-iso | `stencil check: 12 checks, 10 passed, 0 failed, 2 not applicable` (4 items; pipes-land and print-fit not applicable) |
+| hybrid-ai, network-hub-spoke, stress-dense | `stencil check: 12 checks, 7 passed, 0 failed, 5 not applicable` |
+| onepager | `stencil check: 12 checks, 8 passed, 0 failed, 4 not applicable` (7 items) |
+
+`vet examples/g7.json` prints three check lines (remembered-constants 36 text fields, legend-consistency 8 relations, icon-matches-product 6 items) and `stencil vet: 0 violations, 3 checks, 3 passed, 0 failed`. `check examples/g7.json --print-width 14` fails print-fit with one defect, the 10 px badge at 7.64 pt (examined 40 text runs; the 11 px kicker and foot print at 8.40 pt), and `--print-width 16` passes, the badge at 8.73 pt.
+
+### 13.11 Break opportunities and isometric polish
+
+Break opportunities. A long bucket name such as `acme-prod.analytics.raw-events` is one word to a measurer that breaks only at spaces, so its min-content width can widen an item past its column. Section 3's definition of a word changes for both measurers: a line may break after a run of U+0020, after a `-` or `/` that is followed by an ASCII letter, and after a `.` that is followed by an ASCII letter. A word is the text between two consecutive opportunities, and the min-content floor of sections 2.1 and 2.5 is the widest word. A dot between digits (`10.8.0.0`) and a hyphen before a digit (`-29`) stay unbreakable, so addresses and ranges never split.
+
+1. `FixedMetricsMeasurer` breaks at exactly these opportunities. A break after `-`, `/` or `.` keeps the character on the earlier line, and no width is subtracted for it (it is not a trailing space). The worked example of section 3.1 is unchanged at max-content; at `Some(0.0)` `"On-prem router 1"` now gives `On-`, `prem`, `router` and `1`, as cosmic-text already does.
+2. `CosmicTextMeasurer` keeps `Wrap::Word`, whose UAX #14 opportunities already include the hyphen and slash cases. For the dot case it shapes a copy of the string with U+200B ZERO WIDTH SPACE inserted after every `.` followed by an ASCII letter, and maps each layout run's byte range back to the original string through the table of inserted offsets, so `TextLine` ranges, the drawn text and the SVG never contain U+200B. The asset probe of section 8.3 step 5 gains one check before step (e) starts: each bundled face maps U+200B to a glyph other than 0 with zero advance. If a face does not, the measurer instead splits the string at those dots into segments, shapes each with `Wrap::Word`, and joins the lines greedily; the spec is revised before the change lands.
+3. Cosmic-text also breaks at UAX #14 opportunities the fake does not have (after an em dash or a question mark, for example). The contract states the shared set; tests that compare the two use strings whose only opportunities are in that set.
+4. No example has a dotted word, and cosmic-text already broke at their hyphens and slashes, so step (e) leaves every example's geometry unchanged; the geometry fixtures prove it. Layout tests that measure hyphenated strings with the fake are re-derived in step (e).
+
+Isometric polish, carried from the judges of the hero figure:
+
+1. Block shadow. When the theme sets `iso.shadow`, every block solid with `opaque` true (every Item, Fact, Text and Callout; not Note or Frame) draws a shadow first in its group: one `<polygon>` of the block's footprint projected at its base_z and moved `dy` px down on screen, with `fill` the shadow color, `fill-opacity` the opacity and `filter="url(#stencil-shadow)"`. The SVG writes, directly after the background `<rect>`, `<defs><filter id="stencil-shadow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="<blur>"/></filter></defs>`. The filter region is relative to the shadow polygon's bounding box, so 50 percent on each side covers three standard deviations of blur for every block wider than `6 * blur`. resvg rasterizes the blur on the CPU from the same inputs to the same pixels, so two renders stay byte-identical, and a test holds it. Shadows are not in the extent set E of section 12.2 rule 3: they lie under their blocks, and with the built-in values the blur reaches at most `3 * 3 + 3` = 12 px past a footprint, inside the 20 px margin; a theme file with a larger blur can reach the canvas edge, where it is clipped. A theme without `iso.shadow` writes neither the shadows nor the `<defs>`, and an iso SVG still writes no `<marker>`.
+2. A link leaves its slab toward its target. Under iso only, after the adjustments of section 12.3 rule 8: let S be the slab (a Box that is not a ring) nearest the from node among its ancestors, when S does not contain the to node and the link has no authored `via` and no `from_side`. The exit edge of S is the side of S's footprint whose outer line is nearest the to node's border-box center, among the sides that center lies beyond (ties in the order right, bottom, left, top). When the adjusted route crosses S's footprint boundary more than once, or crosses it first on a side other than the exit edge, the link is re-routed: `stencil_layout::reroute_link(geometry, index, from_side, via)` runs the section 11.2 router for that link with `from_side` facing the exit edge and one via point on the line through the from attach point perpendicular to the exit edge, `ISO_LINK_CLEARANCE_PX` (24) beyond the edge. The re-routed polyline replaces the adjusted one when its status is `Routed`; otherwise the adjusted route stays and iso-links-clear reports what it finds. The flat route and `PageGeometry.links` do not change.
+3. `reroute_link` is public in stencil-layout and pure: it reads the geometry and returns a `LinkRoute` without modifying anything.
+
+Step (e) changes every iso render: hero-iso in every theme but wire gains block shadows, and any link that leaves its slab on the wrong edge is re-routed. Its center fixtures are regenerated in step (e) (the SVG, and the geometry fixture when a re-routed link moves a tag billboard) and reviewed as an image at 200 percent, as section 9.4 asks for golden changes.
+
+### 13.12 CLI, CUE and prime
+
+```
+stencil vet <json>
+stencil render <json> --out-dir <dir> [--scale <1-4>] [--theme <theme>] [--projection flat|iso] [--print-width <inches>]
+stencil check <json> [--theme <theme>] [--projection flat|iso] [--print-width <inches>]
+stencil gallery <out-dir> [--examples <dir>]
+stencil theme show <name>
+stencil theme check <theme>
+stencil theme import --base16 <scheme.yaml> [--name <name>] -o <theme file>
+stencil prime [<topic>]
+stencil prime grammar <name>
+```
+
+`<theme>` is a built-in theme name or a path ending in `.json`. The grammar has no flag: it is part of what the document means, so it is set on the page, where a theme is a presentation choice the flag may override.
+
+| Command | Change | Output on stdout |
+|---|---|---|
+| `vet` | parses, resolves and loads the grammar (section 13.2), runs the vet rules with it, then resolves and loads the theme and overrides (section 13.4 rules 1 to 5), then runs the three model checks | as before, three check lines; a grammar or theme failure prints its `error` and `violation` lines and `stencil vet: checks not run` |
+| `render` | `--theme` takes any theme reference; `--print-width` runs print-fit after the files are written (section 13.10) | the three paths, then the print-fit lines when the flag is set |
+| `check` | `--theme` as render; runs twelve checks; `--print-width` makes print-fit applicable | twelve check lines, defects, summary |
+| `gallery` | renders every example under the six designed themes, in the order center, paper, dusk, clear, clear-dark, wire | as before; the summary counts six themes |
+| `theme show` | prints a built-in theme's JSON exactly as embedded, so an author can copy it as the start of a theme file or an override; an unknown name exits 2 | the theme JSON |
+| `theme check` | loads the theme (structural rules exit 1 as in section 13.4 rule 5), runs `theme_quality`, prints one line per row | row lines and a summary |
+| `theme import` | section 13.9 | the report lines, then the two written paths, absolute |
+| `prime` | prints the core briefing (`prime/base.md`), which names the built-in grammars and points at `stencil prime grammar <name>` | the briefing |
+| `prime grammar <name>` | prints `prime/grammars/<name>.md` for a built-in grammar, with its kind tables rendered from the grammar data as the vocabulary table is rendered from the schema; an unknown name writes one line to stderr naming the grammars and exits 2 | the grammar briefing |
+
+Row lines, stable for scripts:
+
+```
+row contrast ink.primary on page: 16.10, at least 4.50, passed
+row contrast ask.ink on ask.fill: 4.34, at least 4.50, FAILED
+row separation wires deuteranopia: 13.16 between pink and green, at least 12.00, passed
+row separation fills normal: not applicable: tints are told apart by line
+stencil theme check center: 223 rows, 222 passed, 1 failed
+stencil theme check wire: 223 rows, 215 passed, 0 failed, 8 not applicable
+```
+
+A theme with zero rows cannot occur (section 13.4 rule 10); if the row builder returned none, the summary would print `FAILED: nothing examined` and exit 1. Exit codes for `theme check`: 0 when every applicable row passed, 1 when a row failed or the theme is structurally invalid, 2 when the file cannot be read.
+
+New error mappings for section 7's exhaustive table: `GrammarError` and `ThemeError`, any variant, exit 1; an unreadable grammar or theme file (`ReadGrammar`, `ReadTheme`) exits 2; a base16 scheme that does not read (`Base16`: a missing or repeated key, an oversize file) exits 1; an unreadable scheme exits 2; a failed write of the theme or report file exits 2.
+
+`pipeline::load_document` returns the page with its resolved `Grammar` and `Theme`. `pipeline::all_checks(page, grammar, geometry, scene, print_width) -> [CheckReport; 12]`. `layout_page(page, grammar, measurer)` and `render_svg(page, grammar, theme, geometry)` take the grammar, and the renderer the theme, as arguments.
+
+CUE. `cue/stencil.cue` splits:
+
+- `cue/core.cue` (package `stencil`): the core `#Page`, `#Node` and every core tag, with `#Box` and `#Item` taking `kind: #KindName`; `#Line: "gray" | "solid" | "dash" | "deny"` as `line` on `#Pipe`, `#Tee`, `#Link` and `#LegendEntry`; `#TintSlot: int & >=1 & <=8` as `tint?` on `#Box` and the four line carriers; `#FactEntry` and `source?` on `#Fact`; `from?` and `to?` on `#Pipe`; `order?` on `#Link`; `#Lanes`; `grammar?`, `theme?` (the reference patterns), `theme_overrides?: {...}` and `chrome?: "full" | "none"` on `#Page`. The core checks stay here: ids, link endpoints, pipe targets (`_pipeTargetsUnknown`), ordered links, legend keys (`"\(line)-\(tint)"` for solid and dash, slot 1 when absent, the line alone for gray and deny; `_legendKeysAreUnique`; the `chrome: "none"` exception) and `_tintWithoutEffect` for a tint on a gray or deny line. The old `#Theme` enum is gone; `#Theme` names the theme definition.
+- `cue/theme.cue` (package `stencil`): `#Theme` (section 13.4). `cue/grammar.cue` (package `stencil`): `#Grammar` (section 13.2).
+- `cue/grammars/gcp.cue` (package `gcp`) and `cue/grammars/plain.cue` (package `plain`): each imports the core package, declares `grammar: stencil.#Grammar & {...}`, narrows `#Box.kind` and `#Item.kind` to its kind names, and adds its rules: for gcp the hop-fact rule, tint pairing over slot keys, `_productInsideVpc` and `_apisOutsideGcp` (section 13.3); for plain none. `_tintWithoutEffect` also names a tint on a Box whose kind is not tintable. A `cue.mod/module.cue` declares the module so the grammar packages can import the core; where CUE's package rules force a different file layout, `cue/README.md` records it.
+- `cue/g7.cue` moves to `cue/figures/g7.cue` under package `gcp` and unifies with the gcp `#Page`.
+- `cue/check.sh` vets the core and both grammar packages; exports both grammars and compares them with `crates/stencil-model/grammars/<name>.json`; exports g7 and compares it with `examples/g7.json`; vets every example against the gcp `#Page` and every built-in theme file against `#Theme`; and runs the negative cases, migrated to the new vocabulary (the pink cases become solid tint 2 cases) plus: tint 9 on a pipe, a tint on a deny pipe, a BigQuery product inside the vpc, an apis Box outside gcp, a Box of kind `zone`, a subnet at the top level, a pipe target naming no id, two ordered links with one order, a legend entry for solid tint 3 that no pipe uses, a theme file with seven tints and a theme file with an unknown role.
+
+Prime:
+
+- `prime/base.md` becomes the core briefing: the loop, the core vocabulary rendered from the schema (Box, Item, facts with their sources, lines, tints, Lanes, chrome, pipe targets), layout, the checks table with rows for `print-fit` (each text run, only with --print-width; prints below 8 pt; widen the print or shorten the figure) and `icon-matches-product` (each item with an icon or subtitle whose kind has an icon table; the subtitle names a product whose own icon is another, or a product icon on a product without one; use the product's icon or a category icon), themes, and one line per built-in grammar. The vocabulary sentence becomes "Every node object carries "tag"; the Page does not." `field_notes` adds `tint 1-8`, `source =doc`, `chrome =full`, `grammar =gcp; a built-in name or a .json path` and `theme =center; a built-in name or a .json path`. Under "Rules no check enforces" a new line reads "Sequence and timeline figures are refused until a timeline grammar exists."
+- `prime/grammars/gcp.md` holds what was GCP-specific in the base briefing and the layout and cue topics: the kind table with meanings, the nesting, the tint pairing in slot terms, the apis kind and the products that never sit inside a VPC, and the rules no check enforces: "Every product on a hop carries a fact read from the live doc at authoring time (source doc), or an explicit ask; never a remembered value. A built fact holds as-built names (bucket names, VLAN IDs, project ids) and needs no live doc." "One audience per figure: canvas customer or internal." "Official product names in subtitle: Cloud Run, Cloud SQL, Pub/Sub." `prime/grammars/plain.md` lists the plain kinds.
+- `prime/themes.md` is rewritten around tint slots: the slot table with center's names, the six designed themes with one line each, the imported tier with its warning, theme files, `stencil theme show` and `check`, and overrides with the `tints` slot-object form. The per-theme color table goes; `stencil theme show <name>` prints the values.
+- `prime/layout.md`, `prime/cue.md`, `prime/links.md` (its example link becomes `"line": "solid", "tint": 1`, and it gains ordered links and Lanes), `prime/blocks.md` (callout tints by kind without naming colors) and `prime/checks.md` (the two new rows and their line formats) follow the core vocabulary. `stencil prime example` stays `examples/g7.json` verbatim.
+- `BASE_BYTES_MAX` rises from 6,000 to 7,000 bytes and `TOPIC_BYTES_MAX` from 4,000 to 5,000, which also bounds each grammar briefing. Today's briefing is 6,000 bytes exactly and the themes and checks topics are within 20 bytes of their limit; moving the GCP text into `grammars/gcp.md` frees some of the base, and the raised limits leave room for the core additions. The prime tests enforce the new limits.
+
+### 13.13 Migration
+
+Every file that changes, by area. The step letters refer to section 13.15.
+
+Documents (step a). Each of `examples/g7.json`, `examples/hero-iso.json`, `examples/hybrid-ai.json`, `examples/network-hub-spoke.json`, `examples/onepager.json` and `examples/stress-dense.json` is rewritten field for field and gains `"grammar": "gcp"` after `canvas`:
+
+| Before | After |
+|---|---|
+| `{"tag": "Zone", "kind": "gcp", ...}` and every other zone kind | `{"tag": "Box", "kind": "gcp", ...}` |
+| `"kind": "region-a"`, `"region-b"` | `"kind": "region", "tint": 1`, `"tint": 2` |
+| `"kind": "onprem-a"`, `"onprem-b"` | `"kind": "onprem", "tint": 1`, `"tint": 2` |
+| `{"tag": "Pcard", "icon": I, "fn": F, "pn": P, "fact": T, "ask": A}` | `{"tag": "Item", "kind": "product", "icon": I, "title": F, "subtitle": P, "facts": [{"text": T}, {"text": A, "source": "ask"}]}`, absent fields staying absent |
+| `"kind": "blue"`, `"pink"` on a Pipe, Tee arm, Tee, Link or legend entry | `"line": "solid", "tint": 1`, `"tint": 2` |
+| `"kind": "gray"`, `"dash"`, `"deny"` on the same | `"line": "gray"`, `"dash"`, `"deny"` |
+
+`tint` is written directly after `kind` or `line`. The same rewrite applies to `cue/g7.cue` (moved to `cue/figures/g7.cue`), the negative cases in `cue/check.sh`, `cue/README.md`, the hand-built documents in the test helpers (`crates/*/tests/common/mod.rs`) and every test that names a tag, kind or field, and to the spec's own JSON blocks and tables (sections 1.1, 1.2, 2.2, 2.4, 2.5, 2.11, 5.2, 9.3, 10 and 12.10). `crates/stencil-render/tests/fixtures/` gains the identity fixtures of section 13.14.
+
+Model (steps a, c, d, e): `crates/stencil-model/src/document.rs` (section 13.1 types, keys, labels; Lanes in step c; pipe targets in step e), `vet.rs` (the section 13.1 rules, each in the step that adds its field), `walk.rs` (fact entries in `text_fields`, Lanes in `body_nodes`), `checks.rs` (legend consistency on keys, remembered constants from the grammar, `CheckName` gains two variants in step d), new `grammar.rs` with `grammars/gcp.json` (step a) and `grammars/plain.json` (step c), new `theme.rs` (step b), new `products.rs` (`named_product`, `icon_matches_product`, step d), `lib.rs` (exports, `grammar_schema`, `theme_schema`, `validate_page` taking the grammar), `text.rs` (fake break opportunities, step e), `schema/stencil.schema.json` (regenerated at each step that changes a type), new `schema/grammar.schema.json` and `schema/theme.schema.json`.
+
+Text (step e): `crates/stencil-text/src/measurer.rs` (U+200B insertion and offset mapping), tests `measure.rs` and `coverage.rs` (U+2022 lands in step a with the built facts).
+
+Layout (steps a, c, d, e): `src/build.rs` (Box layout from the container kind, Item layout, fact parts by source, canonical legend labels, chrome; Lanes in step c), `src/lib.rs` (`layout_page` takes the grammar, `NodeGeometry.kind` as `String` and `tint`, `PartName::BuiltBox` and `Built`, `NodeTag::Lanes`, `LinkRoute.line` and `tint`), `src/compute.rs` (the slot translation of section 13.8, step e), `src/route.rs` (lane messages in step c, `reroute_link` in step e), `src/checks.rs` (`print_fit` in step d, pipes-land targets in step e), `src/styles.rs` (colors unchanged; the test of section 13.4 rule 13), new `src/theme_labels.rs` (`theme_legend_labels`, step b); every test file under `crates/stencil-layout/tests/`.
+
+Render (steps a, b, b2, c, e): `src/palette.rs` (step a re-keys today's tables from `ZoneKind` and `PipeKind` to role, tone and tint and to line and tint; step b rewrites it over `Theme` and removes the constants), new `src/themes.rs` and `themes/center.json`, `paper.json`, `dusk.json`, `clear.json`, `clear-dark.json`, `wire.json` (step b) and `themes/imported/` (step b2), `src/svg.rs` and `src/svg/iso_writer.rs` (keys and roles in step a; relabel in step b; lifelines and lane messages in step c; shadows and `<defs>` in step e), `src/iso.rs` with `drape`, `route` and `shapes` (rings from the grammar in step a; slab thickness from the theme in step b; slab exit in step e), `src/measured.rs` (keys), `src/lib.rs`; tests `center_identity.rs`, `themes.rs`, `svg.rs`, `iso.rs`, `arrows.rs`, `blocks.rs`, `links.rs`, `icons.rs`, `measured.rs` and `common/mod.rs`.
+
+CLI (steps a to e): `src/lib.rs` (flags, the `theme` subcommand, `prime grammar`), `src/pipeline.rs` (grammar and theme resolution, twelve checks, print width), `src/report.rs` (row lines), `src/exit.rs` (new error mappings), `src/gallery.rs` (six themes), `src/prime.rs` (budgets, field notes, grammar topic), new `src/theme_import.rs` (step b2), `prime/base.md`, `themes.md`, `layout.md`, `cue.md`, `links.md`, `blocks.md` and `checks.md`, new `prime/grammars/gcp.md` and `prime/grammars/plain.md`; tests `cli.rs`, `gallery.rs`, `golden_g7.rs`, `golden_onepager.rs`, `iso.rs`, `prime.rs`, `theme.rs` and new `theme_import.rs` and `grammar.rs`.
+
+CUE (steps a to d): `cue/stencil.cue` splits into `cue/core.cue`, `cue/grammar.cue` and `cue/grammars/gcp.cue` (step a), `cue/theme.cue` (step b), `cue/grammars/plain.cue` (step c), new `cue/cue.mod/module.cue`, `cue/g7.cue` moved to `cue/figures/g7.cue`, `cue/check.sh`, `cue/README.md`.
+
+Examples corrected (step d): `examples/hero-iso.json` (Warehouse into an apis Box; the via points and the section 12.10 counts re-derived), `examples/hybrid-ai.json` (four items into an apis Box; two icons), `examples/network-hub-spoke.json` (one icon). Section 12.10's JSON block and its counts are replaced in the same change. A new `examples/plain-system.json` (step c) draws a small system in the plain grammar with a Lanes node of three heads and four ordered messages, so the gallery renders the second grammar and the time axis in every theme.
+
+Repository: `README.md` (grammars, six themes, the imported tier, `stencil theme`), `docs/gallery/*.png` regenerated by `mise run gallery-docs` whenever an example's center render or the one-pager's dusk or wire render changes (dusk and wire in step b; the new plain example in step c; hero-iso, hybrid-ai and network-hub-spoke in step d; hero-iso in step e), and `scripts/gallery-docs.sh` (adds the plain example).
+
+### 13.14 Tests
+
+Identity proofs. Before step (a) changes any code, the implementer runs `origin/main` over every example and commits, under `crates/stencil-render/tests/fixtures/`, two files per example: `<stem>.center.svg`, the center SVG in the example's own projection (g7, hybrid-ai and network-hub-spoke already have theirs; onepager, stress-dense and hero-iso are added, hero-iso in iso), and `<stem>.center.geometry.json`, the measured JSON with the top-level `document` key removed, serialized as `render` writes it. `document` echoes the input, which the migration rewrites, so it is the one key that cannot stay equal; `canvas`, `nodes`, `links` and `projection` must, and they can because the output vocabulary does not change (section 13.1 rule 5). `crates/stencil-render/tests/center_identity.rs` then asserts, for every example, that the migrated document renders under center to SVG bytes equal to the fixture and to measured JSON whose bytes, with `document` removed, equal the geometry fixture, and `golden_g7.rs` keeps its section 9.4 counts and geometry assertions on the migrated g7. These hold unchanged through steps (a), (b) and (c). Step (d) regenerates exactly the fixtures of the three examples it corrects (section 13.13), step (e) regenerates hero-iso's fixtures for the shadows and the slab exit and nothing else, and step (e)'s layout changes (pipe targets, break opportunities) regenerate nothing, which is their proof. Each regeneration is its own commit with the side-by-side PNGs attached to the pull request.
+
+stencil-model:
+
+- The migrated examples parse, round-trip and validate against the regenerated schema; a copy with `"tag": "Zone"`, `"tag": "Pcard"`, `"kind": "blue"` on a pipe or `"fn"` on an item is a `ModelError::Json`.
+- Grammars: `gcp.json` and `plain.json` parse and pass `validate_grammar`; gcp's container kinds equal section 13.3's table field for field, and its border widths, paddings, radii and label styles equal section 2.4's; a copy with each grammar fault (a duplicate name, an unknown parent, no kind under `page`, a frame with a tone, a group without one, a default tint on an untintable kind, a solid border of width 0, an item with icons none and a products row, a repeated icon) is rejected with the named rule. `grammar_schema()` equals the committed `schema/grammar.schema.json`.
+- Vet with a grammar: `kind-unknown` for a Box of kind `zone` and an Item of kind `service` under gcp; `kind-parent-not-allowed` for a subnet at the top level and for a vpc inside a region, and none for a subnet inside a project inside a Row (Row is transparent); `icon-outside-pack` for a plain `service` with an icon; `grammar-unknown` for `"gcpx"`. Every example vets clean under gcp.
+- `tint`: 1 and 8 vet clean on every carrier, 0 and 9 give `tint-out-of-range`; `box_tint` for region (absent gives 1), onprem (absent gives none) and subnet (ignored); `line_tint`, `box_key`, `line_key` and `legend_label` against section 13.1's tables for every line and slot.
+- Legend consistency: solid tint 2 used with only a solid tint 1 entry gives one defect at the pipe and one at the entry; a tint on a deny pipe and on its entry are the same key; an entry for solid with no tint matches a pipe with tint 1; a dash tint 2 needs its own entry. Under `chrome: none`, one key in use with an empty legend passes with examined equal to the uses; two keys with an empty legend fail; one key with a legend entry follows the normal rule.
+- Facts: an Item's fact entries appear in `text_fields` after title and subtitle at `/…/facts/<i>/text`; remembered constants are found in a built fact; a Fact node without `source` serializes without it.
+- Themes: every built-in parses and passes `validate_theme`; a copy of center with each structural fault (lowercase hex, width 5, step 41, opacity 1.5, slab thickness 1, blur 0, an uppercase tint name, two equal tint names, seven tints, a fill on the strong tone, an unknown key at the top and inside `iso`) is rejected with the named rule and pointer, all faults of one document reported together in field order. `apply_overrides`: one wire through the `tints` slot form changes that slot only; a nested object merges; an unknown key reports `/theme_overrides/...`; a string where the base holds an object is `theme-override-not-object`. `theme_schema()` equals `schema/theme.schema.json`.
+- `theme_quality`: center gives 223 rows, 222 passed, and exactly one failure, `ask.ink on ask.fill` at 4.34; paper, dusk, clear and clear-dark give 223 rows and no failure; wire gives 215 passed and 8 not applicable; the center and dusk values match the research checker to 2 decimals (recorded in the test, with the checker's file named as the source). A hand-built theme with eight equal wires fails the four wire separation rows, and the same theme with `tint_cue: line` reports them not applicable. Center's inks equal `stencil_layout::styles`, and `TINT_NAMES` equals center's slot names.
+- icon-matches-product: gcp's table has every icon once in `IconName::ALL` order, with the class of its section 8.2 archive path; `named_product` picks the longest match (`Vertex AI Agent Engine`, `Cloud Run functions`), respects word boundaries (`BigQueryX` names nothing) and ignores ASCII case; each defect kind fires once and its clean neighbor does not (subtitle BigQuery with icon bigquery, with no icon, with data-analytics; subtitle Pub/Sub with integration, with cloud-run); g7 examines 6 items clean; a plain page is not applicable; the three example mismatches of section 13.10 are found at their pointers before step (d) corrects them.
+- Lanes and ordered links: `link-order-outside-lanes` for an ordered link between a head and a node outside the Lanes, `link-order-duplicate` for two messages with one order, `lanes-in-iso` for a Lanes page with `projection: iso`.
+
+stencil-text:
+
+- `"acme-prod.analytics.raw-events"` at `Some(0.0)` gives `acme-`, `prod.`, `analytics.`, `raw-` and `events`, and the lines' byte ranges index the original string, which contains no U+200B; `"10.8.0.0/28"` and `"v1.2"` stay one word; `"gs://acme/raw"` breaks after each `/` followed by a letter. The fake gives the same lines for the same strings.
+- Coverage adds U+2022 in SemiBold, and the U+200B probe of section 13.11 runs as a test.
+
+stencil-layout:
+
+- Box: a gcp region with tints 1 and 8 and an onprem without tint lay out as section 2.4's region-a did; an apis Box lays out like a region; a plain `group` lays out with the plain grammar's padding and radius.
+- Item facts: an Item with one doc fact, one built fact and one ask has the parts of section 13.7 in order, keyed `fact_box`, `fact`, `built_box`, `built`, `ask_box` and `ask`; a second doc fact at index 3 is keyed `fact_box/3` and `fact/3`; the Built run reads `• ` plus the value.
+- Chrome: a `chrome: none` page has geometry nodes `""`, `/body`, `/legend` and its entries, `/foot`; the body starts at y 20; text-fits-box examines no kicker, title or lede run.
+- Lanes: three heads and four messages give equal head columns at gap 32, a band of four rows each at least 36 px, message k at its row's middle from head center to head center, one lifeline per head from the head's bottom to the band's bottom; a labeled message with a sub widens its row to the tag height plus 8; links-routed passes the four, links-avoid-boxes passes across the lifelines, and legend consistency counts them.
+- Pipe targets: a gutter Col of two slot Cols with no grow, beside a Col of two Boxes of different heights, whose pipes name the Boxes, centers each slot on its Box within 0.01 px, and pipes-land examines one end per target and passes; with the targets swapped it reports both; a slot whose aim lies past its parent is clamped to the parent's content box and pipes-land reports the miss; a pipe with only `to` keeps the neighbor rule on its left; no node outside the slots moves.
+- print-fit: g7 at 14 in examines 40 runs with one defect at `/kicker` (7.64 pt), at 16 in passes, without the flag is not applicable; an iso page uses the drawn canvas width.
+- `theme_legend_labels`: every built-in passes; a theme whose slot 2 is named `vermillion` fails at `/tints/1/name`.
+- `reroute_link` returns the same route as layout for an unchanged request, and a route through a given via point otherwise.
+
+stencil-render:
+
+- The identity proofs above.
+- Every color the center SVG writes for every gcp kind, slot and line key equals sections 2.4, 5.2 and 13.5; the theme name is the marker id prefix; `data-kind` carries the key.
+- Each designed theme renders every example under its own grammar; the measured JSON `canvas`, `nodes` and `links` are byte-identical across the six themes and the seven imported ones, and `projection` across every theme with slab thickness 6; the SVG bytes differ between any two themes. The plain example renders under every theme, so every theme is exercised on a second grammar.
+- Relabel: under wire the legend reads `Solid line`, `Ringed line`, `Dashed line`, `Thin line` and `Dotted line` in flat and iso, each description moved by the label's change in width; under paper a solid tint 2 entry reads `Solid rose`; under center no entry moves.
+- Overrides: a page whose overrides recolor slot 3's wire draws that wire and nothing else differently from the base theme.
+- A dusk iso render: every slab top is lighter than the surface it stands on, item tops lighter than the Box floors, left faces darker than tops and right faces darker than left.
+- Shadows (step e): an iso render under center has one `<defs>` holding one `<filter id="stencil-shadow">` and one shadow polygon per opaque block, first in its group; wire has neither; two renders are byte-identical; the PNG of a lone item shows non-white pixels below the block's bottom silhouette edge and none 20 px past it.
+- Slab exit (step e): a link from an item on a slab to an item off it, whose flat route leaves the slab on the far edge, is re-routed to leave through the edge nearest its target; one whose route already leaves through that edge keeps its route; one with an authored via or `from_side` is never re-routed.
+- `project_page` with thickness 8 gives slabs 8 high and a taller canvas than with 6; a vpc is a ring under every theme.
+
+stencil-cli:
+
+- `check` on every example prints twelve lines in `CheckName` order and the summaries of section 13.10; `vet examples/g7.json` prints three check lines and `stencil vet: 0 violations, 3 checks, 3 passed, 0 failed`.
+- `--theme` with each built-in name renders and checks g7; with a theme file path renders; with a missing path exits 2 with empty stdout; with a malformed file exits 1 with `error` and `violation` lines; `Page.theme` and `Page.grammar` resolve a path relative to the document's directory, and `--theme` relative to the current one; a grammar file with an unknown parent exits 1.
+- `--print-width 14` on `check examples/g7.json` exits 1 with the one defect; on `render` writes the three files, prints the paths and the print-fit lines, and exits 1; `--print-width 0.4` and `--print-width nan` exit 2.
+- `theme show center` prints `themes/center.json` byte for byte; `theme check center` prints 223 row lines, the ask failure and `stencil theme check center: 223 rows, 222 passed, 1 failed`, and exits 1; `theme check paper` exits 0; `theme check wire` prints 8 not-applicable rows and exits 0.
+- `theme import`: every pinned scheme in `themes/imported/` re-imports to its committed theme file byte for byte and writes a report equal to the committed one row for row; the command exits 1 for each, as the committed reports say. A scheme missing `base0B` exits 1 and writes nothing; a base24 scheme imports with `base10` to `base17` ignored and gives the same theme as its first sixteen keys alone; a legacy flat-layout file with bare hex values imports.
+- `gallery` writes six themes per example, and `index.html` has a section for each.
+- `prime` is at most 7,000 bytes and each topic and grammar briefing at most 5,000; the base text contains "the Page does not" and "Sequence and timeline figures are refused until a timeline grammar exists."; the vocabulary lists `Box`, `Item`, `Lanes`, `facts`, `source`, `line`, `tint`, `chrome` and `grammar`; the checks table lists `print-fit` and `icon-matches-product`; `prime grammar gcp` lists every gcp kind and `apis`; `prime grammar nope` exits 2.
+
+CUE: `cue/check.sh` passes, with every negative case of section 13.12 rejected by its named error, and both grammar exports equal their committed JSON.
+
+### 13.15 Implementation order
+
+Each step is one pull request that leaves CI green.
+
+a. Core model and gcp grammar extraction, with identity proofs. Commit the identity fixtures from `origin/main` first. Then the section 13.1 types (Box, Item, fact entries with sources, Line, tint, chrome, grammar on the Page), keys, canonical labels and vet rules; the grammar types, `validate_grammar` and the gcp grammar as CUE and exported JSON; layout and vet reading the grammar; legend consistency on keys; remembered constants from the grammar; the CUE split into core, grammar and gcp; every document and test of section 13.13 migrated; the spec's earlier sections edited to match. Themes do not exist yet: `Page.theme` keeps the section 11.1 three-name enum and `theme_overrides` is not yet a field (it is an unknown field until step b), and `palette.rs` keeps today's three palettes, re-keyed by role, tone and tint and by line and tint, which is how the identity proof holds before themes are data. Step (b) changes `theme` to the reference string of section 13.1 and adds `theme_overrides`; the three names keep their meaning.
+b. Themes as data and the six designed built-ins: `theme.rs`, `cue/theme.cue`, the six theme files, `themes.rs` and the `Palette` rewrite over `Theme`, theme resolution and overrides, `theme_legend_labels`, the relabel rule, `stencil theme show` and `check`, the six-theme gallery, the prime themes topic. Center stays byte-identical; dusk takes its new values and wire its new legend labels and dashed subnet, and their gallery PNGs are regenerated.
+
+b2. The base16 importer and the imported tier: `stencil theme import`, the seven pinned schemes with their theme files, reports and `SOURCES.md`, and the re-import and report tests.
+
+c. The plain grammar and Lanes: `plain.cue` and `plain.json`, `prime grammar`, the Lanes node with ordered links, lifelines and lane messages, its vet rules and theme role, and `examples/plain-system.json` with its fixtures and gallery PNGs.
+d. Checks and CLI flags: `print-fit` with `--print-width`, `icon-matches-product` reading the grammar's table, twelve checks, three in `vet`; the gcp CUE rules `_productInsideVpc` and `_apisOutsideGcp` and `check.sh` over every example; the example corrections of section 13.13 with their regenerated fixtures and gallery PNGs; the prime base and checks topics with the raised budgets. Sections 6, 7, 9.4, 10, 12.9 and 12.10 are edited in this step for twelve checks, the three checks of `vet` and the new summary lines.
+e. Layout and render polish: pipe targets with the slot translation and the pipes-land revision; the break opportunities in both measurers, after the U+200B probe; block shadows with the `<defs>` filter; the slab exit with `reroute_link`. Only hero-iso's center fixtures and gallery PNG are regenerated.
+
 ## Conventions
 
 - TigerStyle, adapted: bounded loops over document content, assertions at public entry points and at every external-tool boundary (serde input, cosmic-text output, usvg output), specific names without abbreviations, and a test for every behavior.
