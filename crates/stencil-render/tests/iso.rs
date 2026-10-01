@@ -768,7 +768,10 @@ fn the_hero_measured_json_is_theme_independent_and_keeps_the_flat_nodes() {
             serde_json::to_vec(&iso["nodes"]).unwrap(),
             serde_json::to_vec(&flat["nodes"]).unwrap()
         );
-        assert_eq!(iso["projection"]["billboards"].as_array().unwrap().len(), 10);
+        assert_eq!(
+            iso["projection"]["billboards"].as_array().unwrap().len(),
+            10
+        );
         assert_eq!(iso["projection"]["kind"], "iso");
         for billboard in iso["projection"]["billboards"].as_array().unwrap() {
             let id = billboard["id"].as_str().unwrap();

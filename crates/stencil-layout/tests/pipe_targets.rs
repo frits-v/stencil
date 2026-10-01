@@ -240,3 +240,37 @@ fn a_slot_aimed_past_its_parent_is_clamped_and_reported() {
         "{found:?}"
     );
 }
+
+#[test]
+fn a_v_pipe_reports_targets_on_the_wrong_side_as_above_and_below() {
+    let page = page_from(json!({
+        "title": "Title", "kicker": "Kicker", "lede": "Lede", "canvas": "customer",
+        "body": [{ "tag": "Col", "children": [
+            { "tag": "Box", "id": "upper", "kind": "onprem", "label": "Upper", "children": [
+                { "tag": "Fact", "text": "router" }
+            ] },
+            { "tag": "Row", "children": [
+                { "tag": "Pipe", "dir": "v", "line": "solid", "label": "hop", "from": "lower", "to": "upper" }
+            ] },
+            { "tag": "Box", "id": "lower", "kind": "project", "label": "Lower", "children": [
+                { "tag": "Fact", "text": "service" }
+            ] }
+        ] }],
+        "legend": [{ "line": "solid", "text": "path" }]
+    }));
+    let geometry = layout(&page);
+    let pipe = "/body/0/children/1/children/0";
+    assert_eq!(
+        defects(&geometry, &page),
+        [
+            (
+                pipe.to_string(),
+                "from target /body/0/children/2 lies below the pipe".to_string()
+            ),
+            (
+                pipe.to_string(),
+                "to target /body/0/children/0 lies above the pipe".to_string()
+            ),
+        ]
+    );
+}
