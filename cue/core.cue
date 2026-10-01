@@ -30,16 +30,19 @@ import (
 // the Rust model.
 #Children: [...#Node] & list.MinItems(1) & list.MaxItems(256)
 
-#Canvas:      "customer" | "internal"
-#Line:        "gray" | "solid" | "dash" | "deny"
-#TintSlot:    int & >=1 & <=8
-#FactSource:  "doc" | "built" | "ask"
-#Chrome:      "full" | "none"
-#NoteKind:    "kicker" | "h1" | "lede" | "legend" | "foot"
-#Justify:     "start" | "center" | "end" | "space-between"
-#Projection:  "flat" | "iso"
-#Arrow:       "none" | "end" | "start" | "both"
-#Side:        "top" | "right" | "bottom" | "left"
+#Canvas:     "customer" | "internal"
+#Line:       "gray" | "solid" | "dash" | "deny"
+#TintSlot:   int & >=1 & <=8
+#FactSource: "doc" | "built" | "ask"
+#Chrome:     "full" | "none"
+#NoteKind:   "kicker" | "h1" | "lede" | "legend" | "foot"
+#Justify:    "start" | "center" | "end" | "space-between"
+#Projection: "flat" | "iso"
+#Arrow:      "none" | "end" | "start" | "both"
+#Side:       "top" | "right" | "bottom" | "left"
+
+// The reading axis of a tag under iso (section 12.4).
+#Axis:        "x" | "y"
 #ListKind:    "plain" | "numbered" | "bulleted"
 #CalloutKind: "note" | "risk" | "decision" | "open"
 
@@ -173,9 +176,11 @@ import (
 	line:  #Line
 	tint?: #TintSlot
 	_lineKey: #LineKey & {#line: line, if tint != _|_ {#tint: tint}}
-	label?:     #Text
-	sub?:       #Text
-	arrow?:     #Arrow
+	label?: #Text
+	sub?:   #Text
+	arrow?: #Arrow
+	// Under iso, the axis the tag reads along; absent follows the leg it sits on.
+	axis?:      #Axis
 	from_side?: #Side
 	to_side?:   #Side
 	via?: [...#PagePoint] & list.MaxItems(8)
@@ -206,6 +211,7 @@ import (
 	if tag == "Text" {#TextBlock}
 	if tag == "Callout" {#Callout}
 	if tag == "Frame" {#Frame}
+
 	// The ids a Pipe names in from and to, gathered up the tree. A Tee's arms
 	// cannot name one, so a Tee gathers none.
 	if !list.Contains(["Row", "Col", "Lanes", "Box", "Pipe"], tag) {
@@ -319,6 +325,8 @@ import (
 	label:  #Text
 	sub?:   #Text
 	arrow?: #Arrow
+	// Under iso, the axis the tag reads along; absent follows dir.
+	axis?: #Axis
 	// The nodes the pipe joins: from on its left (h) or upper (v) end, to on
 	// the other. Layout centers the pipe's slot on them.
 	from?: #Id

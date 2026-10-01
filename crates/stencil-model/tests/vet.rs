@@ -516,6 +516,7 @@ fn every_text_field_is_vetted() {
         Node::Pipe(stencil_model::Pipe {
             id: None,
             arrow: stencil_model::Arrow::None,
+            axis: None,
             dir: PipeDir::Horizontal,
             line: Line::Solid,
             tint: Some(1),
@@ -539,6 +540,7 @@ fn every_text_field_is_vetted() {
                 stencil_model::TeeArm::Pipe(stencil_model::Pipe {
                     id: None,
                     arrow: stencil_model::Arrow::None,
+                    axis: None,
                     dir: PipeDir::Horizontal,
                     line: Line::Solid,
                     tint: Some(1),

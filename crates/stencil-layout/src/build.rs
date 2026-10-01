@@ -1426,10 +1426,11 @@ impl Builder<'_> {
         // Under iso a vertical pipe's tag reads along y (section 12.4): the pill and its
         // runs are laid out as strips, the label left of the sub, with the pill's padding
         // turned with it.
-        let tag_axis = if self.iso && !horizontal {
-            Axis::Y
-        } else {
-            Axis::X
+        let tag_axis = match (self.iso, pipe.axis, horizontal) {
+            (false, _, _) => Axis::X,
+            (true, Some(axis), _) => axis,
+            (true, None, true) => Axis::X,
+            (true, None, false) => Axis::Y,
         };
         let tag_style = match tag_axis {
             Axis::X => Style {

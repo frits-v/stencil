@@ -168,40 +168,69 @@ mod tests {
         ScreenPoint { x, y }
     }
 
-    const SQUARE: BoxRect = BoxRect {
-        x: 0.0,
-        y: 0.0,
-        width: 10.0,
-        height: 10.0,
-    };
+    fn square() -> [ScreenPoint; 4] {
+        [
+            point(0.0, 0.0),
+            point(10.0, 0.0),
+            point(10.0, 10.0),
+            point(0.0, 10.0),
+        ]
+    }
 
     #[test]
-    fn a_segment_through_a_box_crosses_it_and_one_along_its_edge_does_not() {
-        assert!(segment_crosses_box(
+    fn a_segment_through_a_polygon_crosses_it_and_one_along_its_edge_does_not() {
+        let square = square();
+        assert!(segment_crosses_convex(
             point(-5.0, 5.0),
             point(15.0, 5.0),
-            SQUARE
+            &square
         ));
-        assert!(!segment_crosses_box(
+        assert!(!segment_crosses_convex(
             point(-5.0, 0.0),
             point(15.0, 0.0),
-            SQUARE
+            &square
         ));
-        assert!(!segment_crosses_box(
+        assert!(!segment_crosses_convex(
             point(-5.0, 20.0),
             point(15.0, 20.0),
-            SQUARE
+            &square
         ));
-        assert!(segment_crosses_box(
+        assert!(segment_crosses_convex(
             point(2.0, 2.0),
             point(3.0, 3.0),
-            SQUARE
+            &square
         ));
     }
 
     #[test]
+    fn polygons_overlap_when_they_share_area_and_not_when_they_touch() {
+        let square = square();
+        let touching = [
+            point(10.0, 0.0),
+            point(20.0, 0.0),
+            point(20.0, 10.0),
+            point(10.0, 10.0),
+        ];
+        let sheared = [
+            point(5.0, 5.0),
+            point(25.0, 15.0),
+            point(15.0, 20.0),
+            point(-5.0, 10.0),
+        ];
+        let apart = [
+            point(30.0, 30.0),
+            point(40.0, 30.0),
+            point(40.0, 40.0),
+            point(30.0, 40.0),
+        ];
+        assert!(!polygons_overlap(&square, &touching));
+        assert!(polygons_overlap(&square, &sheared));
+        assert!(!polygons_overlap(&square, &apart));
+    }
+
+    #[test]
     fn the_inside_interval_of_a_segment_entering_a_square_starts_at_the_edge() {
-        let square = rectangle_corners(SQUARE);
+        let square = square();
         let (entry, exit) =
             segment_inside_interval(point(-10.0, 5.0), point(10.0, 5.0), &square).unwrap();
         assert!((entry - 0.5).abs() < 1e-5, "{entry}");
@@ -211,7 +240,7 @@ mod tests {
 
     #[test]
     fn a_segment_behind_a_square_shows_only_the_pieces_outside_it() {
-        let square = rectangle_corners(SQUARE);
+        let square = square();
         let pieces = visible_pieces(point(-10.0, 5.0), point(20.0, 5.0), &[&square]);
         assert_eq!(pieces.len(), 2);
         assert!((pieces[0].1.x - 0.0).abs() < 1e-4);
@@ -221,7 +250,7 @@ mod tests {
 
     #[test]
     fn point_in_convex_accepts_either_winding() {
-        let clockwise = rectangle_corners(SQUARE);
+        let clockwise = square();
         let mut counter = clockwise;
         counter.reverse();
         for polygon in [clockwise, counter] {

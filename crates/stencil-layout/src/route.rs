@@ -15,7 +15,7 @@ use stencil_model::{
 
 use crate::lanes::{LanesPlan, MessageRow};
 use crate::styles::{text_color, text_style_for};
-use crate::turned_box;
+use crate::{Axis, turned_box};
 use crate::{
     BoxRect, GEOMETRY_EPSILON_PX, LayoutError, LinkRoute, NodeGeometry, NodeTag, PageGeometry,
     Part, PartName, RouteStatus, TextAlign, TextRun,
@@ -1006,6 +1006,11 @@ fn tag_parts(
     }
     // Under iso a tag on a leg along flat y reads along y (section 12.4): every part box is
     // the strip its turned drawing covers.
+    let along_y = match link.axis {
+        Some(Axis::Y) => true,
+        Some(Axis::X) => false,
+        None => along_y,
+    };
     if page.projection == Projection::Iso && along_y {
         let pivot = (center.x, center.y);
         for part in &mut parts {

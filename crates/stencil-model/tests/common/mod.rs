@@ -52,6 +52,7 @@ pub fn pipe_value(dir: PipeDir, line: Line, tint: Option<u8>, label: &str) -> Pi
     Pipe {
         id: None,
         arrow: stencil_model::Arrow::None,
+        axis: None,
         dir,
         line,
         tint,
@@ -191,6 +192,7 @@ pub fn link(from: &str, to: &str) -> Link {
         label: None,
         sub: None,
         arrow: Arrow::End,
+        axis: None,
         from_side: None,
         to_side: None,
         via: Vec::new(),

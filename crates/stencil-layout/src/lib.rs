@@ -38,23 +38,7 @@ pub const ISO_TYPE_SCALE: f32 = 1.3;
 /// Under iso a zone label is this much larger than flat, the floor name of its slab.
 pub const ISO_ZONE_LABEL_SCALE: f32 = 1.5;
 
-/// The reading axis of a text run under iso (section 12.4): along flat x, reading
-/// down-right on screen, or along flat y, reading up-right. A y run is laid out as a strip
-/// with its width and height swapped, the box its turned text covers.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum Axis {
-    X,
-    Y,
-}
-
-impl Axis {
-    pub fn as_str(self) -> &'static str {
-        match self {
-            Axis::X => "x",
-            Axis::Y => "y",
-        }
-    }
-}
+pub use stencil_model::Axis;
 
 /// `bounds` after a quarter turn about `pivot` that takes layout right to flat -y: the
 /// strip a y run covers.
