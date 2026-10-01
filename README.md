@@ -1,6 +1,8 @@
 # stencil
 
-Stencil turns a JSON description of an architecture figure into an SVG, a PNG and a measured JSON. The document describes structure only: zones, product cards, facts, notes and the labeled pipes between them. It carries no coordinates. taffy computes every box, cosmic-text measures every string with the Inter font files bundled in this repository, and resvg renders with the same files, so a measured width is the rendered width. The visual grammar is the Google Cloud Architecture Center stencil. The contract is `docs/SPEC.md`.
+Stencil turns a JSON description of an architecture figure into an SVG, a PNG and a measured JSON. The document describes structure only: boxes, items, facts, notes and the labeled pipes and links between them. It carries no coordinates. taffy computes every box, cosmic-text measures every string with the Inter font files bundled in this repository, and resvg renders with the same files, so a measured width is the rendered width. The contract is `docs/SPEC.md`.
+
+The vocabulary splits into a core and grammars (`docs/SPEC.md` section 13). The core is what every figure shares: `Row`, `Col`, `Lanes`, a generic container `Box`, a generic named leaf `Item` with facts whose `source` is `doc`, `built` or `ask`, notes and text blocks, and pipes, tees and links drawn with a `line` (`gray`, `solid`, `dash`, `deny`) and an optional `tint` slot 1 to 8. A grammar is a data module that gives a domain its kinds: which container kinds a `Box` may take, how each is drawn, where each may sit, which item kinds exist and which icons they carry. Two grammars ship. `gcp`, the default, is the Google Cloud Architecture Center vocabulary (`gcp`, `vpc`, `region`, `subnet`, `onprem`, `project`, `optional`, `k8s`, `perimeter`, `apis`, and the `product` item). `plain` is domain-neutral (`system`, `boundary`, `group`, `tile`, and the items `service`, `store`, `external`, `person`). A page names its grammar with `"grammar"`, a built-in name or a path to a grammar `.json` file beside the document.
 
 Build the binary with `cargo build --release`; it lands at `target/release/stencil`.
 
@@ -26,14 +28,15 @@ These PNGs are the center theme at scale 1, regenerated with `mise run gallery-d
 
 ## Commands
 
-An agent runs `stencil prime` first. It prints a briefing of about 1,500 tokens: the authoring loop, the vocabulary with every field and enum value taken from the model, the layout rules, the checks and how to fix each defect. `stencil prime <topic>` prints one deeper section: `themes`, `links`, `blocks`, `layout`, `checks`, `cue`, or `example` (the g7 document).
+An agent runs `stencil prime` first. It prints a briefing of about 1,500 tokens: the authoring loop, the vocabulary with every field and enum value taken from the model, the layout rules, the checks and how to fix each defect. `stencil prime <topic>` prints one deeper section: `themes`, `links`, `blocks`, `layout`, `checks`, `cue`, or `example` (the g7 document). `stencil prime grammar <name>` prints a grammar's kinds, rendered from its data, and its rules.
 
 ```bash
 stencil prime
 stencil prime links
+stencil prime grammar gcp
 ```
 
-`stencil vet <json>` parses the document, applies the vet rules (field types, text limits, container sizes, nesting depth) and then runs the two checks that need no layout: remembered constants and legend consistency.
+`stencil vet <json>` parses the document, loads its grammar, applies the vet rules (field types, text limits, container sizes, nesting depth, the grammar's kinds and where each may sit) and then runs the two checks that need no layout: remembered constants (the literals the grammar lists) and legend consistency (every line and tint in use has one legend entry).
 
 ```bash
 stencil vet examples/g7.json
@@ -45,7 +48,7 @@ stencil vet examples/g7.json
 stencil render examples/g7.json --out-dir out
 ```
 
-`stencil check <json>` does everything `render` does in memory, writes nothing, and runs all eight checks: child inside container, siblings do not overlap, text fits box, remembered constants, legend consistency, links routed, links avoid boxes and pipes land.
+`stencil check <json>` does everything `render` does in memory, writes nothing, and runs all ten checks: child inside container, siblings do not overlap, text fits box, remembered constants, legend consistency, links routed, links avoid boxes, pipes land, and under the isometric projection iso labels clear and iso links clear.
 
 ```bash
 stencil check examples/g7.json
@@ -67,16 +70,17 @@ Every check line reports how many units it examined, and a check that examined n
 
 ## The CUE gate
 
-Figures are authored in CUE against `cue/stencil.cue`, which carries rules the Rust side does not evaluate, such as region tint pairing and the requirement that every product card has a product name, fact or ask. A figure passes three steps in order, and each one stops the pipeline on failure:
+Figures are authored in CUE against a grammar package. `cue/core.cue` holds the core vocabulary, `cue/grammar.cue` the `#Grammar` definition, and `cue/grammars/gcp.cue` and `cue/grammars/plain.cue` each grammar's data and the domain rules the Rust side does not evaluate, such as tint pairing and the requirement that every gcp product carries a subtitle, a doc fact or an ask. `cue/` is the module root, so the commands run from inside it. A figure passes three steps in order, and each one stops the pipeline on failure:
 
 ```bash
-cue vet -c ./cue
-cue export ./cue -e customer --out json -o figure.json
-stencil render figure.json --out-dir out
+cd cue
+cue vet -c ./figures:gcp
+cue export ./figures:gcp -e customer --out json -o ../figure.json
+cd .. && stencil render figure.json --out-dir out
 ```
 
-`cue vet` enforces the authoring rules, `cue export` writes the structural JSON, and `stencil render` vets that JSON again before it lays out and renders. Run `stencil check figure.json` between the export and the render to see every check result before any file is written. `cue/README.md` describes the CUE package and `cue/check.sh` runs its negative cases.
+`cue vet` enforces the authoring rules, `cue export` writes the structural JSON, and `stencil render` vets that JSON again before it lays out and renders. Run `stencil check figure.json` between the export and the render to see every check result before any file is written. `cue/README.md` describes the CUE packages; `cue/check.sh` re-exports both grammars and fails when either differs from the JSON the Rust side embeds (`crates/stencil-model/grammars/`), vets every example and runs the negative cases.
 
 ## Fonts and icons
 
-The four Inter faces in `assets/fonts/` are unmodified files from the Inter 4.1 release under the SIL Open Font License 1.1, whose text ships next to them as `OFL.txt`. The Google Cloud icons in `assets/icons/` are unaltered copies from the official icon library at cloud.google.com/icons, used on labeled product cards in technical figures under the terms recorded in `assets/icons/PROVENANCE.md`.
+The four Inter faces in `assets/fonts/` are unmodified files from the Inter 4.1 release under the SIL Open Font License 1.1, whose text ships next to them as `OFL.txt`. The Google Cloud icons in `assets/icons/` are unaltered copies from the official icon library at cloud.google.com/icons, used on labeled product items in technical figures under the terms recorded in `assets/icons/PROVENANCE.md`.
