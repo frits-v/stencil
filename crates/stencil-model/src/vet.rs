@@ -1,4 +1,4 @@
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 use crate::document::{
     BUILTIN_GRAMMARS, FACTS_MAX, LANES_MAX, Link, Node, Page, PipeDir, Projection, TINT_SLOTS,
@@ -61,6 +61,8 @@ pub enum VetRule {
     IconOutsidePack,
     FactsTooMany,
     LanesTooMany,
+    LinkOrderOutsideLanes,
+    LinkOrderDuplicate,
     LanesInIso,
 }
 
@@ -100,6 +102,8 @@ impl VetRule {
             VetRule::IconOutsidePack => "icon-outside-pack",
             VetRule::FactsTooMany => "facts-too-many",
             VetRule::LanesTooMany => "lanes-too-many",
+            VetRule::LinkOrderOutsideLanes => "link-order-outside-lanes",
+            VetRule::LinkOrderDuplicate => "link-order-duplicate",
             VetRule::LanesInIso => "lanes-in-iso",
         }
     }
@@ -234,14 +238,83 @@ pub fn validate_page(page: &Page, grammar: &Grammar) -> Vec<Violation> {
         );
     }
 
-    check_links(page, &ids, &mut violations);
+    let lane_heads = lane_heads(&entries);
+    check_links(page, &ids, &lane_heads, &mut violations);
 
     violations.0
 }
 
+/// The Lanes node each lane head belongs to, keyed by the head's id. A lane head is a
+/// direct child of a Lanes node (section 13.6); a node inside a head is not one.
+fn lane_heads<'a>(entries: &[NodeEntry<'a>]) -> BTreeMap<&'a str, NodePointer> {
+    let lanes_pointers: BTreeSet<&NodePointer> = entries
+        .iter()
+        .filter(|entry| matches!(entry.node, NodeRef::Node(Node::Lanes(_))))
+        .map(|entry| &entry.pointer)
+        .collect();
+    let mut heads = BTreeMap::new();
+    for entry in entries {
+        let (Some(parent), Some(id)) = (&entry.parent, entry.node.id()) else {
+            continue;
+        };
+        if lanes_pointers.contains(parent) {
+            heads.entry(id).or_insert_with(|| parent.clone());
+        }
+    }
+    heads
+}
+
+/// `link-order-outside-lanes` and `link-order-duplicate` for a link with `order`. `orders`
+/// holds the first link index of each (Lanes node, order) pair seen so far.
+fn check_link_order<'a>(
+    (link_index, link): (usize, &Link),
+    link_pointer: &NodePointer,
+    lane_heads: &'a BTreeMap<&str, NodePointer>,
+    orders: &mut BTreeMap<(&'a NodePointer, u16), usize>,
+    violations: &mut Violations,
+) {
+    let Some(order) = link.order else {
+        return;
+    };
+    let order_pointer = link_pointer.child("order");
+    let from_lanes = lane_heads.get(link.from.as_str());
+    let to_lanes = lane_heads.get(link.to.as_str());
+    let lanes = match (from_lanes, to_lanes) {
+        (Some(from_lanes), Some(to_lanes)) if from_lanes == to_lanes && link.from != link.to => {
+            from_lanes
+        }
+        _ => {
+            violations.push(
+                order_pointer,
+                VetRule::LinkOrderOutsideLanes,
+                "an ordered link joins two lanes of one Lanes node".to_string(),
+            );
+            return;
+        }
+    };
+    match orders.get(&(lanes, order)) {
+        Some(&first_index) => violations.push(
+            order_pointer,
+            VetRule::LinkOrderDuplicate,
+            format!(
+                "order {order} is already used by {}",
+                NodePointer::root().child("links").index(first_index)
+            ),
+        ),
+        None => {
+            orders.insert((lanes, order), link_index);
+        }
+    }
+}
+
 /// `links-too-many` once at `/links`, then each of the first LINKS_MAX + 1 links in field
-/// order: the link itself (`link-self`), `from`, `to`, the text fields, then `via`.
-fn check_links(page: &Page, ids: &BTreeMap<&str, NodePointer>, violations: &mut Violations) {
+/// order: the link itself (`link-self`), `from`, `to`, the text fields, `via`, then `order`.
+fn check_links(
+    page: &Page,
+    ids: &BTreeMap<&str, NodePointer>,
+    lane_heads: &BTreeMap<&str, NodePointer>,
+    violations: &mut Violations,
+) {
     let links_pointer = NodePointer::root().child("links");
     if page.links.len() > LINKS_MAX {
         violations.push(
@@ -251,6 +324,7 @@ fn check_links(page: &Page, ids: &BTreeMap<&str, NodePointer>, violations: &mut 
         );
     }
     let canvas_width = page.width as f32 + CANVAS_PADDING_TOTAL_PX;
+    let mut orders = BTreeMap::new();
     for (index, link) in page.links.iter().enumerate().take(LINKS_MAX + 1) {
         let link_pointer = links_pointer.index(index);
         if link.from == link.to {
@@ -274,6 +348,13 @@ fn check_links(page: &Page, ids: &BTreeMap<&str, NodePointer>, violations: &mut 
         push_one_link_text_fields(link, &link_pointer, &mut text_fields);
         check_text_fields(&text_fields, violations);
         check_via(link, &link_pointer, canvas_width, violations);
+        check_link_order(
+            (index, link),
+            &link_pointer,
+            lane_heads,
+            &mut orders,
+            violations,
+        );
     }
 }
 

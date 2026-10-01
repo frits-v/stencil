@@ -236,3 +236,153 @@ fn lanes_lay_their_heads_out_as_equal_columns_32_apart() {
         assert_close(pair[1].x - pair[0].right(), 32.0, "lane gap");
     }
 }
+
+/// Three lanes `a b c` and four ordered messages written out of order: link 0 has order 3,
+/// link 1 order 1 without a label, link 2 order 2 with a sub, link 3 order 4.
+fn lanes_with_messages() -> Value {
+    json!({
+        "title": "Title", "kicker": "Kicker", "lede": "Lede",
+        "canvas": "internal", "grammar": "plain",
+        "body": [{ "tag": "Lanes", "children": [
+            { "tag": "Item", "id": "a", "kind": "person", "title": "Client" },
+            { "tag": "Item", "id": "b", "kind": "service", "title": "A much longer service name" },
+            { "tag": "Item", "id": "c", "kind": "store", "title": "Store" }
+        ]}],
+        "legend": [{ "line": "solid", "text": "call" }],
+        "links": [
+            { "from": "a", "to": "b", "line": "solid", "label": "three", "order": 3 },
+            { "from": "b", "to": "c", "line": "solid", "order": 1 },
+            { "from": "c", "to": "a", "line": "solid", "label": "two", "sub": "with a sub", "order": 2 },
+            { "from": "a", "to": "c", "line": "solid", "label": "four", "order": 4 }
+        ]
+    })
+}
+
+#[test]
+fn lanes_draw_messages_in_order_across_a_band_of_rows_with_lifelines() {
+    let page = page_from(lanes_with_messages());
+    let geometry = layout(&page);
+    let lanes = node(&geometry, "/body/0");
+    let heads: Vec<_> = (0..3)
+        .map(|index| node(&geometry, &format!("/body/0/children/{index}")).bounds)
+        .collect();
+    for head in &heads {
+        assert_close(head.width, heads[0].width, "equal lane width");
+        assert_close(head.height, heads[0].height, "equal lane height");
+    }
+    for pair in heads.windows(2) {
+        assert_close(pair[1].x - pair[0].right(), 32.0, "lane gap");
+    }
+    let parts: Vec<PartName> = lanes.parts.iter().map(|part| part.name).collect();
+    assert_eq!(
+        parts,
+        [
+            PartName::Heads,
+            PartName::Band,
+            PartName::Lifeline,
+            PartName::Lifeline,
+            PartName::Lifeline
+        ]
+    );
+    assert!(lanes.parts.iter().all(|part| part.text.is_none()));
+    let band = part(lanes, PartName::Band).bounds;
+    assert_close(band.y, heads[0].bottom(), "band top");
+    assert_close(band.width, lanes.bounds.width, "band width");
+    assert_close(band.bottom(), lanes.bounds.bottom(), "band bottom");
+
+    // Rows top to bottom: link 1, link 2, link 0, link 3.
+    let mut row_top = band.y;
+    let mut row_heights = Vec::new();
+    for link_index in [1, 2, 0, 3] {
+        let route = &geometry.links[link_index];
+        assert_eq!(route.points.len(), 2, "link {link_index}");
+        let (start, end) = (route.points[0], route.points[1]);
+        assert_close(start.y, end.y, "a message is horizontal");
+        let row_height = 2.0 * (start.y - row_top);
+        assert!(row_height >= 36.0 - 0.01, "row of link {link_index}");
+        row_heights.push(row_height);
+        row_top += row_height;
+        let from = &geometry.nodes[route.from_node].bounds;
+        let to = &geometry.nodes[route.to_node].bounds;
+        assert_close(start.x, from.x + from.width / 2.0, "from head center");
+        assert_close(end.x, to.x + to.width / 2.0, "to head center");
+        if let Some(tag) = route.tag {
+            assert_close(tag.y + tag.height / 2.0, start.y, "tag on the message");
+            assert_close(
+                tag.x + tag.width / 2.0,
+                (start.x + end.x) / 2.0,
+                "tag centered",
+            );
+        }
+    }
+    assert_close(row_top, band.bottom(), "rows fill the band");
+    assert_eq!(geometry.links[1].tag, None);
+    assert_close(row_heights[0], 36.0, "a message without a label");
+    let sub_tag = geometry.links[2].tag.unwrap();
+    assert!(sub_tag.height + 8.0 > 36.0);
+    assert_close(row_heights[1], sub_tag.height + 8.0, "a sub widens its row");
+
+    for (index, lifeline) in lanes
+        .parts
+        .iter()
+        .filter(|part| part.name == PartName::Lifeline)
+        .enumerate()
+    {
+        let head = heads[index];
+        assert_close(lifeline.bounds.x, head.x + head.width / 2.0, "lifeline x");
+        assert_close(lifeline.bounds.y, head.bottom(), "lifeline top");
+        assert_close(lifeline.bounds.width, 0.0, "lifeline width");
+        assert_close(lifeline.bounds.bottom(), band.bottom(), "lifeline bottom");
+    }
+
+    let routed = stencil_layout::checks::links_routed(&geometry);
+    assert!(routed.passed());
+    assert_eq!(routed.examined, 4);
+    let avoid = stencil_layout::checks::links_avoid_boxes(&geometry);
+    assert!(avoid.passed(), "{:?}", avoid.defects);
+    assert!(avoid.examined > 0);
+    let legend = stencil_model::checks::legend_consistency(&page);
+    assert!(legend.passed());
+    assert_eq!(legend.examined, 5, "four messages and one legend entry");
+    assert!(stencil_layout::checks::child_inside_container(&geometry).passed());
+    assert!(stencil_layout::checks::siblings_do_not_overlap(&geometry).passed());
+}
+
+#[test]
+fn lanes_without_messages_have_a_band_of_height_0() {
+    let mut document = lanes_with_messages();
+    document["links"] = json!([]);
+    document["legend"] = json!([]);
+    let geometry = layout(&page_from(document));
+    let lanes = node(&geometry, "/body/0");
+    let band = part(lanes, PartName::Band).bounds;
+    assert_close(band.height, 0.0, "band height");
+    let head = node(&geometry, "/body/0/children/0").bounds;
+    assert_close(
+        lanes.bounds.bottom(),
+        head.bottom(),
+        "lanes end at the heads",
+    );
+    let lifelines = lanes
+        .parts
+        .iter()
+        .filter(|part| part.name == PartName::Lifeline)
+        .count();
+    assert_eq!(lifelines, 3);
+}
+
+#[test]
+fn an_unordered_link_between_lane_heads_is_routed_by_the_router() {
+    let mut document = lanes_with_messages();
+    document["links"] = json!([{ "from": "a", "to": "b", "line": "solid" }]);
+    let geometry = layout(&page_from(document));
+    let lanes = node(&geometry, "/body/0");
+    assert_close(
+        part(lanes, PartName::Band).bounds.height,
+        0.0,
+        "band height",
+    );
+    let route = &geometry.links[0];
+    let from = &geometry.nodes[route.from_node].bounds;
+    assert_close(route.points[0].x, from.right(), "leaves the right side");
+}

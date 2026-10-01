@@ -1,0 +1,154 @@
+{
+  "title": "Who reports to whom across three divisions",
+  "kicker": "Organization chart · Northwind Labs",
+  "lede": "Each division head reports to the chief executive. Teams sit inside their division, each led by the person on its left. The head of operations also answers, on a dotted line, to the head of product for the support roadmap.",
+  "canvas": "internal",
+  "grammar": "plain",
+  "body": [
+    {
+      "tag": "Box",
+      "kind": "system",
+      "label": "Northwind Labs",
+      "children": [
+        {
+          "tag": "Row",
+          "justify": "center",
+          "grow": [0],
+          "children": [
+            { "tag": "Item", "id": "ceo", "kind": "person", "title": "Dana Reyes", "subtitle": "Chief executive" }
+          ]
+        },
+        {
+          "tag": "Row",
+          "gap": 24,
+          "children": [
+            {
+              "tag": "Box",
+              "kind": "tile",
+              "label": "Engineering",
+              "children": [
+                { "tag": "Item", "id": "head-engineering", "kind": "person", "title": "Sam Okafor", "subtitle": "Head of engineering" },
+                {
+                  "tag": "Box",
+                  "kind": "group",
+                  "tint": 1,
+                  "label": "Platform team",
+                  "children": [
+                    {
+                      "tag": "Row",
+                      "children": [
+                        { "tag": "Item", "kind": "person", "title": "Lee Park", "subtitle": "Team lead" },
+                        { "tag": "Item", "kind": "person", "title": "Ana Silva", "subtitle": "Engineer" }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "tag": "Box",
+                  "kind": "group",
+                  "tint": 1,
+                  "label": "Product engineering",
+                  "children": [
+                    {
+                      "tag": "Row",
+                      "children": [
+                        { "tag": "Item", "kind": "person", "title": "Raj Mehta", "subtitle": "Team lead" },
+                        { "tag": "Item", "kind": "person", "title": "Kim Berg", "subtitle": "Engineer" }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "tag": "Box",
+              "kind": "tile",
+              "label": "Product",
+              "children": [
+                { "tag": "Item", "id": "head-product", "kind": "person", "title": "Mia Laurent", "subtitle": "Head of product" },
+                {
+                  "tag": "Box",
+                  "kind": "group",
+                  "tint": 2,
+                  "label": "Design",
+                  "children": [
+                    {
+                      "tag": "Row",
+                      "children": [
+                        { "tag": "Item", "kind": "person", "title": "Jo Tanaka", "subtitle": "Design lead" },
+                        { "tag": "Item", "kind": "person", "title": "Eli Moss", "subtitle": "Designer" }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "tag": "Box",
+                  "kind": "group",
+                  "tint": 2,
+                  "label": "Research",
+                  "children": [
+                    {
+                      "tag": "Row",
+                      "children": [
+                        { "tag": "Item", "kind": "person", "title": "Noor Haddad", "subtitle": "Research lead" },
+                        { "tag": "Item", "kind": "person", "title": "Tom Ruiz", "subtitle": "Researcher" }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "tag": "Box",
+              "kind": "tile",
+              "label": "Operations",
+              "children": [
+                { "tag": "Item", "id": "head-operations", "kind": "person", "title": "Ivy Chen", "subtitle": "Head of operations" },
+                {
+                  "tag": "Box",
+                  "kind": "group",
+                  "tint": 3,
+                  "label": "Site reliability",
+                  "children": [
+                    {
+                      "tag": "Row",
+                      "children": [
+                        { "tag": "Item", "kind": "person", "title": "Ola Nowak", "subtitle": "Team lead" },
+                        { "tag": "Item", "kind": "person", "title": "Ben Adler", "subtitle": "Engineer" }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "tag": "Box",
+                  "kind": "group",
+                  "tint": 3,
+                  "label": "Support",
+                  "children": [
+                    {
+                      "tag": "Row",
+                      "children": [
+                        { "tag": "Item", "kind": "person", "title": "Zoe Grant", "subtitle": "Team lead" },
+                        { "tag": "Item", "kind": "person", "title": "Max Weber", "subtitle": "Agent" }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "legend": [
+    { "line": "solid", "text": "reports to" },
+    { "line": "dash", "text": "dotted-line reporting" }
+  ],
+  "links": [
+    { "from": "head-engineering", "to": "ceo", "line": "solid", "from_side": "top", "to_side": "left" },
+    { "from": "head-product", "to": "ceo", "line": "solid", "from_side": "top", "to_side": "bottom" },
+    { "from": "head-operations", "to": "ceo", "line": "solid", "from_side": "top", "to_side": "right" },
+    { "from": "head-operations", "to": "head-product", "line": "dash", "from_side": "left", "to_side": "right" }
+  ]
+}

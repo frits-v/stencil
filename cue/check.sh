@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
-# Vets the core package, both grammar packages and the g7 figure; exports each
-# grammar and compares it byte for byte with crates/stencil-model/grammars/;
-# compares the g7 customer export with examples/g7.json; vets every example
-# against the gcp #Page; then runs the negative cases: a copy of the cue tree
-# with one edit to figures/g7.cue that vet must reject with the named error.
+# Vets the core package, both grammar packages and the g7 and sequence
+# figures; exports each grammar and compares it byte for byte with
+# crates/stencil-model/grammars/; compares the g7 customer export with
+# examples/g7.json and the sequence export with examples/sequence.json; vets
+# every example against the #Page of the grammar it names; then runs the
+# negative cases: a copy of the cue tree with one edit to figures/g7.cue or
+# figures/sequence.cue that vet must reject with the named error.
 # Exits non-zero if the cue binary is missing, if any positive step fails, or
 # if any negative case passes or fails for a different reason.
 #
@@ -15,6 +17,7 @@ CUE="${CUE:-cue}"
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 repo="$(cd "$here/.." && pwd)"
 golden="$repo/examples/g7.json"
+sequence_golden="$repo/examples/sequence.json"
 committed_grammars="$repo/crates/stencil-model/grammars"
 out="$here/out"
 mkdir -p "$out"
@@ -29,7 +32,8 @@ cd "$here"
 "$CUE" vet -c ./grammars:gcp
 "$CUE" vet -c ./grammars:plain
 "$CUE" vet -c ./figures:gcp
-echo "ok   vet: core, grammars gcp and plain, figures"
+"$CUE" vet -c ./figures:plain
+echo "ok   vet: core, grammars gcp and plain, figures gcp and plain"
 
 # The committed grammar JSON is what the Rust side embeds; it must be exactly
 # this export, so the comparison is byte for byte. To regenerate, from cue/:
@@ -89,8 +93,33 @@ if nodes == 0:
 print(f"ok   g7-customer: equals examples/g7.json, {nodes} nodes, {len(golden)} canonical lines")
 PY
 
+# sequence.cue is the authored source of examples/sequence.json. As for g7,
+# key order may differ; values and list order may not.
+"$CUE" export ./figures:plain -e figure --out json -o "$out/sequence.json" --force
+python3 - "$sequence_golden" "$out/sequence.json" <<'PY'
+import difflib, json, sys
+
+def canonical(path):
+    with open(path, encoding="utf-8") as handle:
+        return json.dumps(json.load(handle), indent=2, sort_keys=True, ensure_ascii=False).splitlines()
+
+golden_path, export_path = sys.argv[1], sys.argv[2]
+golden, exported = canonical(golden_path), canonical(export_path)
+if golden != exported:
+    sys.stderr.writelines(line + "\n" for line in difflib.unified_diff(golden, exported, golden_path, export_path, lineterm=""))
+    print("FAIL sequence: export differs from examples/sequence.json", file=sys.stderr)
+    sys.exit(1)
+with open(export_path, encoding="utf-8") as handle:
+    links = json.load(handle).get("links", [])
+messages = sum(1 for link in links if "order" in link)
+if messages == 0:
+    print("FAIL sequence: export has no ordered links", file=sys.stderr)
+    sys.exit(1)
+print(f"ok   sequence: equals examples/sequence.json, {messages} ordered links, {len(golden)} canonical lines")
+PY
+
 # Every example is a JSON document authored without CUE; each vets against
-# the gcp #Page. An example listed here is a known defect, reported on every
+# the #Page of the grammar it names, gcp when it names none. An example listed here is a known defect, reported on every
 # run: it must fail, and every error vet reports must name the listed rule.
 # An entry that starts passing is stale and fails the script.
 #   hero-iso: four items carry no subtitle and no fact, so the hop-fact rule
@@ -111,12 +140,18 @@ for example in "$repo"/examples/*.json; do
 			known_rule="${entry#*|}"
 		fi
 	done
-	if report="$("$CUE" vet -c -d '#Page' ./grammars:gcp "$example" 2>&1)"; then
+	grammar="$(python3 -c 'import json, sys; print(json.load(open(sys.argv[1], encoding="utf-8")).get("grammar", "gcp"))' "$example")"
+	if [[ "$grammar" != "gcp" && "$grammar" != "plain" ]]; then
+		echo "FAIL example $stem: names grammar $grammar, which has no package under grammars/" >&2
+		examples_failed=$((examples_failed + 1))
+		continue
+	fi
+	if report="$("$CUE" vet -c -d '#Page' "./grammars:$grammar" "$example" 2>&1)"; then
 		if [[ -n "$known_rule" ]]; then
 			echo "FAIL example $stem: listed as failing $known_rule but vets clean; remove the entry" >&2
 			examples_failed=$((examples_failed + 1))
 		else
-			echo "ok   example $stem: vets against the gcp #Page"
+			echo "ok   example $stem: vets against the $grammar #Page"
 			examples_clean=$((examples_clean + 1))
 		fi
 		continue
@@ -179,9 +214,10 @@ long_text="$(printf 'x%.0s' {1..401})"
 many_facts="$(printf '{tag: "Fact", text: "filler"},%.0s' {1..255})"
 stray_subnet='{tag: "Box", kind: "subnet", label: "stray subnet", children: [{tag: "Fact", text: "no region around it"}]},'
 
-# name | sed expression applied to figures/g7.cue | text the vet error must
-# contain [| second text the error must also contain]
-cases=(
+# figure | name | sed expression applied to figures/<figure>.cue | text the
+# vet error must contain [| second text the error must also contain]. A g7
+# case vets ./figures:gcp and a sequence case ./figures:plain.
+g7_cases=(
 	'asn-64512|s/subtitle: "private ASN · RFC 6996"/subtitle: "private ASN 64512"/|.subtitle: invalid value "private ASN 64512"'
 	'legend-unused-line|s/{line: "dash", text: "region failover, not a fifth line"},/&\n\t\t{line: "deny", text: "prohibited path"},/|_legendKeysUnusedInBody.deny'
 	'pipe-line-missing-from-legend|/{line: "dash", text: "region failover, not a fifth line"},/d|_pipeKeysMissingFromLegend."dash-1"'
@@ -218,23 +254,43 @@ cases=(
 	"built-fact-without-subtitle|s/subtitle: \"private ASN · RFC 6996\"/facts: [{text: \"cr-region-a\", source: \"built\"}]/|_itemsWithoutSubtitleOrFact.\"Cloud Router A\""
 	'chrome-none-three-keys-empty-legend|s/^\ttitle: /\tchrome: "none"\n&/; /^\tlegend: \[$/,/^\t\]$/d; s/^}$/\tlegend: []\n}/|_pipeKeysMissingFromLegend'
 )
+sequence_cases=(
+	'ordered-link-to-a-node-that-is-not-a-lane-head|s/label: "Job service"/id: "job-service", &/; s/to: "console", line: "solid", label: "submit job"/to: "job-service", line: "solid", label: "submit job"/|_orderedLinkNotBetweenLaneHeads."0"'
+	'two-ordered-links-with-one-order|s/label: "POST \/jobs", order: 2/label: "POST \/jobs", order: 1/|_linkOrderUsedTwice."1"'
+)
+cases=()
+for entry in "${g7_cases[@]}"; do
+	cases+=("g7|$entry")
+done
+for entry in "${sequence_cases[@]}"; do
+	cases+=("sequence|$entry")
+done
 
 work="$(mktemp -d)"
 trap 'rm -rf "$work"' EXIT
 failed=0
 for entry in "${cases[@]}"; do
 	also=""
-	IFS='|' read -r name expression expected also <<<"$entry"
+	IFS='|' read -r figure name expression expected also <<<"$entry"
+	case "$figure" in
+	g7) package=gcp ;;
+	sequence) package=plain ;;
+	*)
+		echo "FAIL $name: no package for figure $figure" >&2
+		failed=$((failed + 1))
+		continue
+		;;
+	esac
 	dir="$work/$name"
 	mkdir -p "$dir"
 	cp -R "$here/cue.mod" "$here/core.cue" "$here/grammar.cue" "$here/grammars" "$here/figures" "$dir/"
-	sed -e "$expression" "$here/figures/g7.cue" >"$dir/figures/g7.cue"
-	if cmp -s "$here/figures/g7.cue" "$dir/figures/g7.cue"; then
-		echo "FAIL $name: edit did not change figures/g7.cue" >&2
+	sed -e "$expression" "$here/figures/$figure.cue" >"$dir/figures/$figure.cue"
+	if cmp -s "$here/figures/$figure.cue" "$dir/figures/$figure.cue"; then
+		echo "FAIL $name: edit did not change figures/$figure.cue" >&2
 		failed=$((failed + 1))
 		continue
 	fi
-	if report="$(cd "$dir" && "$CUE" vet -c ./figures:gcp 2>&1)"; then
+	if report="$(cd "$dir" && "$CUE" vet -c "./figures:$package" 2>&1)"; then
 		echo "FAIL $name: vet passed" >&2
 		failed=$((failed + 1))
 	elif grep -qF -- "$expected" <<<"$report" && { [[ -z "$also" ]] || grep -qF -- "$also" <<<"$report"; }; then

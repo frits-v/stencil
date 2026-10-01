@@ -136,13 +136,15 @@ fn link_json(route: &LinkRoute, geometry: &PageGeometry) -> Value {
 }
 
 /// Parts keyed by snake_case name. A Text block repeats `body_line` and `marker` once per
-/// body line, so those two are keyed `<name>/<line>` with the zero-based line index. An
+/// body line, so those two are keyed `<name>/<line>` with the zero-based line index, and a
+/// Lanes node keys its lifelines `lifeline/<i>` by head index (section 13.6). An
 /// Item's fact parts come in box and run pairs in `facts` order: the first entry of each
 /// source keeps the bare names, and every later one adds `/<i>`, its index in `facts`
 /// (section 13.7).
 fn parts_json(parts: &[Part]) -> Map<String, Value> {
     let mut body_lines = 0_usize;
     let mut markers = 0_usize;
+    let mut lifelines = 0_usize;
     let mut fact_entries = 0_usize;
     let mut seen_sources: [bool; 3] = [false; 3];
     let mut fact_suffix: Option<usize> = None;
@@ -170,6 +172,10 @@ fn parts_json(parts: &[Part]) -> Map<String, Value> {
             PartName::Marker => {
                 markers += 1;
                 format!("{}/{}", part.name.as_str(), markers - 1)
+            }
+            PartName::Lifeline => {
+                lifelines += 1;
+                format!("{}/{}", part.name.as_str(), lifelines - 1)
             }
             _ => part.name.as_str().to_string(),
         };

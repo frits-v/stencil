@@ -250,6 +250,16 @@
         "line": {
           "$ref": "#/$defs/Line"
         },
+        "order": {
+          "description": "The message position along the time axis when the link joins two lane heads of one\nLanes node (section 13.6).",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint16",
+          "maximum": 256,
+          "minimum": 1
+        },
         "sub": {
           "type": [
             "string",
@@ -426,7 +436,7 @@
           ]
         },
         {
-          "description": "Lane heads that share one time axis (section 13.6). Until lane messages land, a Lanes\nnode lays out as a Row of equal columns.",
+          "description": "Lane heads that share one time axis (section 13.6). Each child is a lane head; a Link\nwith `order` between two heads of one Lanes node is a message, drawn as a horizontal\narrow in the band below the heads.",
           "type": "object",
           "properties": {
             "children": {

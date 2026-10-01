@@ -12,12 +12,13 @@ A link is a routed orthogonal line between two nodes, drawn after layout on top 
 | arrow | none, end (default), start or both; the arrowhead sits on the endpoint's edge |
 | from_side, to_side | top, right, bottom or left: the side whose midpoint the end attaches to |
 | via | up to 8 {"x","y"} points in canvas px, passed in order |
+| order | 1-256; only between two heads of one Lanes node, where it makes the link a message row (stencil prime grammar plain) |
 
 At most 256 links per page. The canvas is width + 40 px wide; read coordinates for via from out/<stem>.measured.json, where every node has x, y, width and height.
 
 Attach points: with both sides set, those. With neither and no via, the facing pair (right to left, bottom to top, left to right, top to bottom) whose midpoints are closest. Otherwise each open end takes the side nearest what it faces: the first via point, the last via point, or the other end.
 
-Router:
+Router (every link but a Lanes message, which runs straight across its row):
 
 - Obstacles are every leaf box (Item, Fact, Note, Text, Callout, Frame, each Pipe and Tee tag, each whole Tee), every Box label, and the page kicker, title, lede, legend entries and foot, except the two endpoints and whatever contains them. Box borders are not obstacles: a line entering a Box is how a path reaches it. Running along an edge is allowed.
 - A* over a grid built from obstacle edges pushed out 8 px, costing 1 per px plus 40 per turn. The first move leaves through the from side and the last enters through the to side. With via, each leg is routed in turn. The same geometry always gives the same route.

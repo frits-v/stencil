@@ -117,6 +117,7 @@ fn page_with_field(field: &str, text: &str) -> (Page, &'static str) {
         from_side: None,
         to_side: None,
         via: Vec::new(),
+        order: None,
     }];
     let pointer = match field {
         "page title" => "/title",

@@ -6,6 +6,7 @@ pub mod styles;
 
 mod build;
 mod compute;
+mod lanes;
 mod route;
 
 use stencil_model::grammar::{BorderPattern, LabelStyle, Role, Tone};
@@ -23,9 +24,10 @@ pub const ARROWHEAD_LENGTH_PX: f32 = 10.0;
 /// Width of an arrowhead across its line, at the base.
 pub const ARROWHEAD_WIDTH_PX: f32 = 8.0;
 
-/// Asserts validate_page(page, grammar) is empty, builds the taffy tree with each Box laid
-/// out from its container kind, computes layout, re-measures text at final widths, routes
-/// the links, and returns absolute geometry in canvas px.
+/// Asserts validate_page(page, grammar) is empty, sizes each Lanes band from its messages,
+/// builds the taffy tree with each Box laid out from its container kind, computes layout,
+/// re-measures text at final widths, adds the lifelines, routes the links, and returns
+/// absolute geometry in canvas px.
 pub fn layout_page(
     page: &Page,
     grammar: &Grammar,
@@ -35,9 +37,11 @@ pub fn layout_page(
     if !violations.is_empty() {
         return Err(LayoutError::Invalid(violations));
     }
-    let built = build::build_page(page, grammar)?;
+    let lanes_plan = lanes::plan_lanes(page, measurer)?;
+    let built = build::build_page(page, grammar, &lanes_plan)?;
     let mut geometry = compute::compute_geometry(built, page.width, measurer)?;
-    geometry.links = route::route_links(page, &geometry, measurer)?;
+    lanes::add_lifelines(&mut geometry);
+    geometry.links = route::route_links(page, &geometry, &lanes_plan, measurer)?;
     Ok(geometry)
 }
 
@@ -271,6 +275,9 @@ pub enum PartName {
     BodyLine,
     Accent,
     LabelChip,
+    Heads,
+    Band,
+    Lifeline,
 }
 
 impl PartName {
@@ -310,6 +317,9 @@ impl PartName {
             PartName::BodyLine => "body_line",
             PartName::Accent => "accent",
             PartName::LabelChip => "label_chip",
+            PartName::Heads => "heads",
+            PartName::Band => "band",
+            PartName::Lifeline => "lifeline",
         }
     }
 }

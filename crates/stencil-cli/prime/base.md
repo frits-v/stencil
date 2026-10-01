@@ -6,7 +6,7 @@ stencil turns structural JSON (boxes, items, facts, pipes, links; no coordinates
 
 Write fig.json, `stencil vet fig.json`, `stencil check fig.json`, `stencil render fig.json --out-dir out --scale 2`, Read out/fig.png, fix, repeat until check shows 0 failed and the PNG reads right. Exit 0 clean; 1 defect in the document (the line names a JSON pointer such as /body/0/children/2; fix the JSON); 2 could not run (arguments, paths, fonts). `stencil schema` prints the JSON Schema.
 
-`stencil gallery out [--examples dir]` renders every example in every theme, with index.html and gallery.json; a failed check exits 1.
+`stencil gallery out` renders every example in every theme, with index.html; a failed check exits 1.
 
 # Grammars
 
@@ -26,7 +26,7 @@ Every node object carries "tag"; the Page does not. * required, =default. A fiel
 - Gutter: Row [producer Col, gutter Col, target Box]. The gutter Col holds one slot per producer Box: a Col with justify center and gap 12 holding that Box's h Pipes. Give the producer Col the same grow list as the gutter Col ([1,1,1]) so each slot matches its Box's height and the pipes land beside it.
 - Item text wraps at the item width with the widest word as the floor, so one long word widens the item past its container.
 - The legend lists each line and tint a Pipe, Tee or Link uses, once, and nothing else. Its label (Solid blue) is fixed by line and slot; write the text as meaning.
-- Lanes lays its heads out as equal columns.
+- Lanes: equal head columns; a link with order between two heads is a message row below.
 
 # Checks
 
@@ -37,7 +37,7 @@ Every node object carries "tag"; the Page does not. * required, =default. A fiel
 | child-inside-container | each parent-child pair | child box leaves the parent's content box | raise that column's weight, shorten the longest word, or widen the page |
 | siblings-do-not-overlap | each sibling pair | two sibling boxes intersect | fix the overflow reported with it |
 | text-fits-box | each text run | text larger than its box | shorten the text or widen its container |
-| remembered-constants | each text field | contains a literal the grammar lists, doc examples rather than requirements | write the value from the live doc, or an ask |
+| remembered-constants | each text field | contains a literal the grammar lists (a doc example) | write the value from the live doc, or an ask |
 | legend-consistency | each line use and legend entry | a line and tint without an entry, an unused entry, or one listed twice | add or drop the entry |
 | links-routed | each link | no clear route; drawn as a fallback L | set from_side and to_side, add via, or move an endpoint |
 | links-avoid-boxes | each segment-obstacle and tag-node pair | the line crosses a box or its tag covers one | same as links-routed; raise gap where links run |

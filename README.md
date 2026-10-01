@@ -2,7 +2,7 @@
 
 Stencil turns a JSON description of an architecture figure into an SVG, a PNG and a measured JSON. The document describes structure only: boxes, items, facts, notes and the labeled pipes and links between them. It carries no coordinates. taffy computes every box, cosmic-text measures every string with the Inter font files bundled in this repository, and resvg renders with the same files, so a measured width is the rendered width. The contract is `docs/SPEC.md`.
 
-The vocabulary splits into a core and grammars (`docs/SPEC.md` section 13). The core is what every figure shares: `Row`, `Col`, `Lanes`, a generic container `Box`, a generic named leaf `Item` with facts whose `source` is `doc`, `built` or `ask`, notes and text blocks, and pipes, tees and links drawn with a `line` (`gray`, `solid`, `dash`, `deny`) and an optional `tint` slot 1 to 8. A grammar is a data module that gives a domain its kinds: which container kinds a `Box` may take, how each is drawn, where each may sit, which item kinds exist and which icons they carry. Two grammars ship. `gcp`, the default, is the Google Cloud Architecture Center vocabulary (`gcp`, `vpc`, `region`, `subnet`, `onprem`, `project`, `optional`, `k8s`, `perimeter`, `apis`, and the `product` item). `plain` is domain-neutral (`system`, `boundary`, `group`, `tile`, and the items `service`, `store`, `external`, `person`). A page names its grammar with `"grammar"`, a built-in name or a path to a grammar `.json` file beside the document.
+The vocabulary splits into a core and grammars (`docs/SPEC.md` section 13). The core is what every figure shares: `Row`, `Col`, `Lanes`, a generic container `Box`, a generic named leaf `Item` with facts whose `source` is `doc`, `built` or `ask`, notes and text blocks, and pipes, tees and links drawn with a `line` (`gray`, `solid`, `dash`, `deny`) and an optional `tint` slot 1 to 8. A grammar is a data module that gives a domain its kinds: which container kinds a `Box` may take, how each is drawn, where each may sit, which item kinds exist and which icons they carry. Two grammars ship. `gcp`, the default, is the Google Cloud Architecture Center vocabulary (`gcp`, `vpc`, `region`, `subnet`, `onprem`, `project`, `optional`, `k8s`, `perimeter`, `apis`, and the `product` item). `plain` is domain-neutral (`system`, `boundary`, `group`, `tile`, and the items `service`, `store`, `external`, `person`). A `Lanes` node lays its children out as lane heads, and a link with `order` between two of them is a message drawn across the band below, in order, with a lifeline under each head. A page names its grammar with `"grammar"`, a built-in name or a path to a grammar `.json` file beside the document.
 
 Build the binary with `cargo build --release`; it lands at `target/release/stencil`.
 
@@ -23,6 +23,20 @@ Build the binary with `cargo build --release`; it lands at `target/release/stenc
 ![Design one-pager for a trigger evaluation service](docs/gallery/onepager.png)
 
 `examples/onepager.json`: a design one-pager with text blocks, callouts and numbered links tracing one request.
+
+The next three figures use the `plain` grammar.
+
+![A batch job from submission to completion, drawn as five lanes](docs/gallery/sequence.png)
+
+`examples/sequence.json`: a request flow as five lanes with ten ordered messages, among them a reply and a rejected call; authored in `cue/figures/sequence.cue`.
+
+![Reporting lines across three divisions](docs/gallery/org.png)
+
+`examples/org.json`: an organization chart with divisions as tiles, teams as tinted groups of people, and reporting links.
+
+![Two firewall zones and four VLANs at a head office](docs/gallery/onprem-network.png)
+
+`examples/onprem-network.json`: an on-prem site with two firewall zones, a tinted group and a pipe per VLAN, and a blocked path between the zones.
 
 These PNGs are the center theme at scale 1, regenerated with `mise run gallery-docs`; CI fails when they drift from the examples. The full gallery, every example in all three themes with its SVG, 2x PNG and measured JSON, is the `gallery` artifact of the CI run on main, and `gallery.zip` plus the center PNGs are attached to the release of every `v*` tag.
 

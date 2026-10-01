@@ -228,3 +228,36 @@ fn an_absent_grammar_is_gcp() {
             .contains("check remembered-constants: examined 6 text fields, 0 defects")
     );
 }
+
+#[test]
+fn every_plain_example_checks_clean_in_center_dusk_and_wire() {
+    let mut examined = 0;
+    for stem in ["sequence", "org", "onprem-network"] {
+        let document = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../examples")
+            .join(format!("{stem}.json"));
+        let document = document.to_str().unwrap();
+        for theme in ["center", "dusk", "wire"] {
+            let outcome = run_stencil(&["check", document, "--theme", theme]);
+            assert_eq!(
+                outcome.code,
+                ExitCode::Clean,
+                "{stem} {theme}: {}",
+                outcome.stdout
+            );
+            assert!(
+                outcome.stdout.contains(", 0 failed, "),
+                "{stem} {theme}: {}",
+                outcome.stdout
+            );
+            assert!(
+                outcome
+                    .stdout
+                    .contains("check remembered-constants: examined 0 text fields, not applicable: grammar has no remembered constants"),
+                "{stem} {theme}"
+            );
+            examined += 1;
+        }
+    }
+    assert_eq!(examined, 9);
+}
