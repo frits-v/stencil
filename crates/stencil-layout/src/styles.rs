@@ -55,6 +55,41 @@ pub fn badge_fill(canvas: Canvas) -> &'static str {
     }
 }
 
+/// The style a run is measured and drawn in: the named style flat; under iso the body
+/// styles grown by `ISO_TYPE_SCALE`, a zone label by `ISO_ZONE_LABEL_SCALE`, and the frame
+/// bar label to the title's size, so a figure's floor name never outranks its headline.
+/// Chrome and the legend keep their flat size.
+pub(crate) fn text_style_for(name: TextStyleName, iso: bool) -> TextStyle {
+    let flat = name.text_style().style;
+    if !iso {
+        return flat;
+    }
+    let scale = match name {
+        TextStyleName::Badge
+        | TextStyleName::Kicker
+        | TextStyleName::Title
+        | TextStyleName::Lede
+        | TextStyleName::NoteLegend
+        | TextStyleName::LegendLabel
+        | TextStyleName::LegendText
+        | TextStyleName::Foot => return flat,
+        TextStyleName::ZoneLabel | TextStyleName::PerimeterLabel => ISO_ZONE_LABEL_SCALE,
+        TextStyleName::GcpBar => TextStyleName::Title.text_style().style.size_px / flat.size_px,
+        TextStyleName::CardFunction
+        | TextStyleName::CardProduct
+        | TextStyleName::Fact
+        | TextStyleName::Ask
+        | TextStyleName::TagLabel
+        | TextStyleName::TagSub
+        | TextStyleName::BlockBody => ISO_TYPE_SCALE,
+    };
+    TextStyle {
+        size_px: flat.size_px * scale,
+        line_height_px: flat.line_height_px * scale,
+        ..flat
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -119,40 +154,5 @@ mod tests {
                 "{name}"
             );
         }
-    }
-}
-
-/// The style a run is measured and drawn in: the named style flat; under iso the body
-/// styles grown by `ISO_TYPE_SCALE`, a zone label by `ISO_ZONE_LABEL_SCALE`, and the frame
-/// bar label to the title's size, so a figure's floor name never outranks its headline.
-/// Chrome and the legend keep their flat size.
-pub(crate) fn text_style_for(name: TextStyleName, iso: bool) -> TextStyle {
-    let flat = name.text_style().style;
-    if !iso {
-        return flat;
-    }
-    let scale = match name {
-        TextStyleName::Badge
-        | TextStyleName::Kicker
-        | TextStyleName::Title
-        | TextStyleName::Lede
-        | TextStyleName::NoteLegend
-        | TextStyleName::LegendLabel
-        | TextStyleName::LegendText
-        | TextStyleName::Foot => return flat,
-        TextStyleName::ZoneLabel | TextStyleName::PerimeterLabel => ISO_ZONE_LABEL_SCALE,
-        TextStyleName::GcpBar => TextStyleName::Title.text_style().style.size_px / flat.size_px,
-        TextStyleName::CardFunction
-        | TextStyleName::CardProduct
-        | TextStyleName::Fact
-        | TextStyleName::Ask
-        | TextStyleName::TagLabel
-        | TextStyleName::TagSub
-        | TextStyleName::BlockBody => ISO_TYPE_SCALE,
-    };
-    TextStyle {
-        size_px: flat.size_px * scale,
-        line_height_px: flat.line_height_px * scale,
-        ..flat
     }
 }
