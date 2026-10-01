@@ -4138,6 +4138,7 @@ stencil gallery <out-dir> [--examples <dir>]
 stencil theme show <name>
 stencil theme check <theme>
 stencil theme import --base16 <scheme.yaml> [--name <name>] -o <theme file>
+stencil theme preview <theme> -o <png> [--scale <1-4>]
 stencil prime [<topic>]
 stencil prime grammar <name>
 ```
@@ -4153,6 +4154,7 @@ stencil prime grammar <name>
 | `theme show` | prints a built-in theme's JSON exactly as embedded, so an author can copy it as the start of a theme file or an override; an unknown name exits 2 | the theme JSON |
 | `theme check` | loads the theme (structural rules exit 1 as in section 13.4 rule 5), runs `theme_quality`, prints one line per row | row lines and a summary |
 | `theme import` | section 13.9 | the report lines, then the two written paths, absolute |
+| `theme preview` | renders the preview figure embedded at `crates/stencil-cli/preview/theme-preview.json` under the theme, with the kicker `theme preview · <theme name>`, to one PNG. The figure is a gcp page 1,100 px wide that uses every container kind, the eight tint slots as region fills, every line kind, a Tee, a routed link, a callout and a text block; a test runs `check` on it under every built-in theme. `mise run theme-docs` writes every built-in's preview to `docs/themes/<name>.png` at scale 1, the README's theme table embeds them, and CI regenerates and compares them byte for byte | the written path, absolute |
 | `prime` | prints the core briefing (`prime/base.md`), which names the built-in grammars and points at `stencil prime grammar <name>` | the briefing |
 | `prime grammar <name>` | prints `prime/grammars/<name>.md` for a built-in grammar, with its kind tables rendered from the grammar data as the vocabulary table is rendered from the schema; an unknown name writes one line to stderr naming the grammars and exits 2 | the grammar briefing |
 

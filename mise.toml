@@ -12,3 +12,7 @@ run = ["cargo build --release", "scripts/gallery-docs.sh docs/gallery target/rel
 [tasks.import-themes]
 description = "Re-import the pinned base16 schemes of the imported theme tier"
 run = ["cargo build --release", "scripts/import-themes.sh target/release/stencil"]
+
+[tasks.theme-docs]
+description = "Regenerate the README theme previews in docs/themes"
+run = ["cargo build --release", "scripts/theme-docs.sh docs/themes target/release/stencil"]

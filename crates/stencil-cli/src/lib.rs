@@ -110,8 +110,7 @@ enum Command {
         #[arg(long, value_name = "DIR", default_value = "examples")]
         examples: PathBuf,
     },
-    /// Print a built-in theme, check a theme's contrast and separation, or import a base16
-    /// scheme
+    /// Print, check or preview a theme, or import a base16 scheme
     Theme {
         #[command(subcommand)]
         action: ThemeAction,
@@ -131,6 +130,17 @@ enum ThemeAction {
     Check {
         /// A built-in theme name or a theme file path ending in .json
         theme: String,
+    },
+    /// Render the built-in preview figure under a theme to a PNG
+    Preview {
+        /// A built-in theme name or a theme file path ending in .json
+        theme: String,
+        /// The PNG to write
+        #[arg(short = 'o', long = "out", value_name = "PNG")]
+        out: PathBuf,
+        /// PNG device scale, 1 to 4
+        #[arg(long, default_value_t = DeviceScale::DEFAULT.get())]
+        scale: u8,
     },
     /// Map a base16 or base24 color scheme onto a theme file and write its quality report
     Import {
@@ -267,6 +277,9 @@ fn run_command(
         Command::Theme { action } => match action {
             ThemeAction::Show { name } => theme_command::show(&name, stdout, stderr),
             ThemeAction::Check { theme } => theme_command::check(&theme, stdout, stderr),
+            ThemeAction::Preview { theme, out, scale } => {
+                theme_command::preview(&theme, &out, scale, stdout, stderr)
+            }
             ThemeAction::Import { base16, name, out } => {
                 theme_import::import(&base16, name.as_deref(), &out, stdout, stderr)
             }
