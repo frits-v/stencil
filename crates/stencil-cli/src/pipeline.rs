@@ -4,7 +4,7 @@
 use std::ffi::OsString;
 use std::fs;
 use std::io::{self, Read, Write};
-use std::path::{Path, PathBuf};
+use std::path::{Component, Path, PathBuf};
 use std::sync::atomic::{AtomicU64, Ordering};
 
 use serde_json::Value;
@@ -287,6 +287,13 @@ pub fn resolve_theme(reference: &str, directory: &Path) -> Result<Theme, Failure
 
 /// The bytes of a grammar or theme file, at most DATA_FILE_BYTES_MAX of them.
 fn read_data_file(path: &Path, what: &str) -> io::Result<Vec<u8>> {
+    // Prevent path traversal attacks by rejecting paths containing '..'.
+    if path.components().any(|c| c == Component::ParentDir) {
+        return Err(io::Error::new(
+            io::ErrorKind::InvalidInput,
+            format!("Invalid input: {}", path.display()),
+        ));
+    }
     let file = fs::File::open(path)?;
     if file.metadata()?.is_dir() {
         return Err(io::Error::from(io::ErrorKind::IsADirectory));
