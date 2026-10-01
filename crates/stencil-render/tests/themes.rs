@@ -906,3 +906,148 @@ fn only_the_wire_theme_tells_tints_apart_by_line() {
         assert_eq!(common::theme(name).tint_cue, TintCue::Color, "{name}");
     }
 }
+
+/// Section 13.5's derived roles, which hold for every theme taken from the palette research.
+#[test]
+fn research_themes_follow_the_derivation_rules() {
+    use stencil_model::theme::{SolidEdges, lightness};
+    use stencil_render::palette::{mix, shade};
+    for name in ["paper", "dusk", "clear", "clear-dark"] {
+        let theme = common::theme(name);
+        let dark = lightness(&theme.page).unwrap() < 50.0;
+        let slot = |number: u8| theme.tint(number);
+        assert_eq!(theme.frame.frame_fill, theme.page, "{name}");
+        assert_eq!(theme.ink.zone_label, theme.ink.secondary, "{name}");
+        assert_eq!(theme.legend.label_ink, theme.ink.primary, "{name}");
+        assert_eq!(
+            theme.placeholder.border,
+            theme.tones.strong.border.clone().unwrap()
+        );
+        assert_eq!(theme.ask.fill, slot(4).fill, "{name}");
+        assert_eq!(theme.ask.ink, slot(4).ink, "{name}");
+        let internal = if theme.badge.customer.fill == slot(1).wire {
+            (&slot(5).wire, &theme.page)
+        } else {
+            (&slot(5).fill, &slot(5).ink)
+        };
+        assert_eq!(
+            (&theme.badge.internal.fill, &theme.badge.internal.ink),
+            internal,
+            "{name}"
+        );
+        assert_eq!(theme.callout.note.accent, slot(1).wire, "{name}");
+        assert_eq!(theme.callout.note.fill, slot(1).fill, "{name}");
+        assert_eq!(theme.callout.decision.accent, slot(6).wire, "{name}");
+        assert_eq!(theme.callout.decision.fill, slot(6).fill, "{name}");
+        assert_eq!(theme.callout.open.accent, slot(4).wire, "{name}");
+        assert_eq!(theme.callout.open.fill, slot(4).fill, "{name}");
+        assert_eq!(theme.callout.risk.accent, theme.deny.color, "{name}");
+        let ratio = if dark { 0.18 } else { 0.22 };
+        assert_eq!(
+            Some(theme.callout.risk.fill.as_str().to_string()),
+            mix(theme.page.as_str(), theme.deny.color.as_str(), ratio),
+            "{name}"
+        );
+        let faces = &theme.iso.faces;
+        let steps = if dark { (0, -4, -8) } else { (0, -8, -16) };
+        assert_eq!((faces.top, faces.left, faces.right), steps, "{name}");
+        let sides = theme.iso.frame_sides.as_ref().unwrap();
+        assert_eq!(sides.left, theme.frame.border, "{name}");
+        assert_eq!(
+            Some(sides.right.as_str().to_string()),
+            shade(theme.frame.border.as_str(), -12)
+        );
+        assert_eq!(theme.iso.solid_edges, SolidEdges::None);
+        assert_eq!(theme.iso.plates, !dark, "{name}");
+        assert_eq!(theme.iso.tabs.frame.fill, theme.frame.bar_fill);
+        assert_eq!(theme.iso.tabs.frame.ink, theme.frame.bar_ink);
+        let top_tab = if dark {
+            (&theme.card.border.color, &theme.ink.primary)
+        } else {
+            (&theme.ink.secondary, &theme.page)
+        };
+        assert_eq!(
+            (&theme.iso.tabs.top.fill, &theme.iso.tabs.top.ink),
+            top_tab,
+            "{name}"
+        );
+        assert_eq!(theme.iso.chip.fill.as_str(), "#FFFFFF");
+        assert_eq!(theme.iso.chip.ring.is_some(), !dark, "{name}");
+        assert_eq!(theme.iso.chip.shadow.is_some(), !dark, "{name}");
+        if dark {
+            assert_eq!(
+                theme.icon_chip.as_ref().map(|chip| chip.as_str()),
+                Some("#FFFFFF")
+            );
+        }
+        assert_eq!(theme.lanes.lifeline.color, theme.ink.secondary, "{name}");
+        assert_eq!(theme.lanes.lifeline.width, 1.0);
+        assert_eq!(theme.lanes.lifeline.pattern, LinePattern::Dashed);
+        assert_eq!(
+            (
+                theme.iso.widths.primary,
+                theme.iso.widths.secondary,
+                theme.iso.widths.gray
+            ),
+            (3.75, 2.5, 2.0)
+        );
+        assert_eq!(theme.tint_cue, TintCue::Color);
+        assert!(theme.solid.dots.iter().all(|dot| *dot == DotStyle::Filled));
+    }
+}
+
+#[test]
+fn dusk_takes_the_widened_surface_ladder() {
+    let dusk = common::theme("dusk");
+    let fill = |tone: &stencil_model::theme::ToneRole| tone.fill.clone().unwrap();
+    assert_eq!(dusk.page.as_str(), "#0D0F17");
+    assert_eq!(dusk.frame.body_fill.as_str(), "#161926");
+    let tones = &dusk.tones;
+    let ladder = [
+        fill(&tones.cool),
+        fill(&tones.warm),
+        fill(&tones.highlight),
+        fill(&tones.emphasis),
+        fill(&tones.soft),
+        fill(&tones.accent),
+        fill(&tones.neutral),
+    ];
+    let expected = [
+        "#1E2231", "#222229", "#1E2232", "#1F222D", "#192331", "#26221C", "#1B232E",
+    ];
+    for (color, expected) in ladder.iter().zip(expected) {
+        assert_eq!(color.as_str(), expected);
+    }
+    assert_eq!(dusk.card.fill.as_str(), "#272B3D");
+    assert_eq!(dusk.tag.fill.as_str(), "#272B3D");
+    assert_eq!(dusk.fact.fill.as_str(), "#2E3450");
+}
+
+#[test]
+fn clear_keeps_each_slot_in_its_hue_family() {
+    for name in ["clear", "clear-dark"] {
+        let names: Vec<String> = common::theme(name)
+            .tints
+            .iter()
+            .map(|tint| tint.name.clone())
+            .collect();
+        assert_eq!(
+            names,
+            [
+                "blue", "pink", "teal", "ochre", "indigo", "green", "orange", "olive"
+            ],
+            "{name}"
+        );
+    }
+    let paper: Vec<String> = common::theme("paper")
+        .tints
+        .iter()
+        .map(|tint| tint.name.clone())
+        .collect();
+    assert_eq!(
+        paper,
+        [
+            "blue", "rose", "teal", "ochre", "violet", "green", "clay", "petrol"
+        ]
+    );
+}

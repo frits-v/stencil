@@ -1552,3 +1552,55 @@ fn the_wire_vpc_ring_is_dotted_light_gray_and_solid_slab_outlines_are_heavier() 
         stencil_render::palette::LineStyle::Dashed
     );
 }
+
+#[test]
+fn a_thicker_slab_raises_every_slab_and_grows_the_canvas() {
+    let page = hero_page();
+    let geometry = common::layout_with_fixed_metrics(&page);
+    let six = stencil_render::iso::project_page(
+        &geometry,
+        &stencil_render::iso::SolidInputs::new(&geometry, 6.0),
+    )
+    .unwrap();
+    let eight = stencil_render::iso::project_page(
+        &geometry,
+        &stencil_render::iso::SolidInputs::new(&geometry, 8.0),
+    )
+    .unwrap();
+    let (_, zoom) = zoomed_geometry(&geometry).unwrap();
+    let slabs = |scene: &IsoScene| -> Vec<f32> {
+        scene
+            .solids
+            .iter()
+            .filter(|solid| solid.shape == SolidShape::Slab && solid.height > 0.0)
+            .map(|solid| solid.height)
+            .collect()
+    };
+    assert!(!slabs(&six).is_empty());
+    for height in slabs(&six) {
+        assert_close(height, 6.0 * zoom, "slab at 6");
+    }
+    for height in slabs(&eight) {
+        assert_close(height, 8.0 * zoom, "slab at 8");
+    }
+    assert!(eight.canvas.height > six.canvas.height);
+}
+
+#[test]
+fn the_vpc_is_a_ring_under_every_theme() {
+    for name in THEMES {
+        let page = common::with_theme(hero_page(), name);
+        let geometry = common::layout_with_fixed_metrics(&page);
+        let inputs = common::solid_inputs(&page, &geometry);
+        let vpc = index_of(&geometry, HERO_VPC);
+        assert!(inputs.rings[vpc], "{name}");
+        assert_eq!(
+            inputs.rings.iter().filter(|ring| **ring).count(),
+            1,
+            "{name}"
+        );
+        let scene = stencil_render::iso::project_page(&geometry, &inputs).unwrap();
+        let solid = scene.solids.iter().find(|solid| solid.node == vpc).unwrap();
+        assert_eq!(solid.height, 0.0, "{name}");
+    }
+}
