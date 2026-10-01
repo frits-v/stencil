@@ -15,7 +15,8 @@ use super::{
 use crate::iso::{
     ISO_DOT_RADIUS_X_PX, ISO_DOT_RADIUS_Y_PX, IsoPoint, Label, ScreenPoint, Solid, SolidInputs,
     SolidShape, arrowhead_vertices, end_direction, has_zone_ancestor, iso_link_arrowhead_length,
-    plane_member, project_point, project_zoomed, start_direction, zoomed_geometry,
+    label_axis, local_part, plane_member, project_point, project_zoomed, start_direction,
+    zoomed_geometry,
 };
 use crate::palette::{DotStyle, FacePaint, LineStyle, LineUse, Palette, Stroke, ZoneTab};
 use crate::{RenderError, SvgDocument, format_number};
@@ -775,6 +776,11 @@ impl<'a> SvgWriter<'a> {
             .iter()
             .filter(|part| plane_member(node.tag, part.name))
             .collect();
+        let (axis, pivot) = label_axis(&members);
+        let members: Vec<Part> = members
+            .iter()
+            .map(|part| local_part(part, axis, pivot))
+            .collect();
         for part in &members {
             self.write_part_shape(depth + 1, node, part, context)?;
         }
@@ -806,7 +812,9 @@ impl<'a> SvgWriter<'a> {
     ) -> Result<(), RenderError> {
         let pointer = NodePointer::root().child("links").index(route.index);
         self.open_plane_group(depth, label);
-        for part in &route.parts {
+        let members: Vec<&Part> = route.parts.iter().collect();
+        let (axis, pivot) = label_axis(&members);
+        for part in members.iter().map(|part| local_part(part, axis, pivot)) {
             match (part.name, &part.text) {
                 (PartName::Tag, None) => {
                     let tag_paint = self.palette.tag(route.line);

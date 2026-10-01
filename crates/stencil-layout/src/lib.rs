@@ -30,11 +30,54 @@ pub const ARROWHEAD_WIDTH_PX: f32 = 8.0;
 /// Frame. Layout reserves this much floor behind a zone's label, because a block covers
 /// the strip of floor its height spans on screen.
 pub const ISO_BLOCK_HEIGHT_PX: f32 = 18.0;
-/// Largest multiple of its flat size at which a zone label lies on its slab under iso
-/// (section 12.4 placard); the face transform halves the visible x-height, so the run
-/// grows to read. Layout reserves the band for this scale; the scene shrinks a label
-/// that does not fit across its zone, or keeps the upright tab below scale 1.
-pub const ISO_PLACARD_SCALE: f32 = 2.0;
+/// Floor kept clear between a zone's label and the strip its first child covers under iso.
+pub const ISO_LABEL_CLEARANCE_PX: f32 = 8.0;
+/// Under iso every body text style is this much larger than flat (section 12.4): the plane
+/// halves a run's visible x-height, so the type grows to read. Chrome and legend stay flat.
+pub const ISO_TYPE_SCALE: f32 = 1.3;
+/// Under iso a zone label is this much larger than flat, the floor name of its slab.
+pub const ISO_ZONE_LABEL_SCALE: f32 = 1.5;
+
+/// The reading axis of a text run under iso (section 12.4): along flat x, reading
+/// down-right on screen, or along flat y, reading up-right. A y run is laid out as a strip
+/// with its width and height swapped, the box its turned text covers.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Axis {
+    X,
+    Y,
+}
+
+impl Axis {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Axis::X => "x",
+            Axis::Y => "y",
+        }
+    }
+}
+
+/// `bounds` after a quarter turn about `pivot` that takes layout right to flat -y: the
+/// strip a y run covers.
+pub fn turned_box(bounds: BoxRect, pivot: (f32, f32)) -> BoxRect {
+    let (px, py) = pivot;
+    BoxRect {
+        x: px + bounds.y - py,
+        y: py + px - bounds.right(),
+        width: bounds.height,
+        height: bounds.width,
+    }
+}
+
+/// The inverse of `turned_box`: the layout box a y run is drawn in before its turn.
+pub fn unturned_box(bounds: BoxRect, pivot: (f32, f32)) -> BoxRect {
+    let (px, py) = pivot;
+    BoxRect {
+        x: px + py - bounds.bottom(),
+        y: py + bounds.x - px,
+        width: bounds.height,
+        height: bounds.width,
+    }
+}
 
 /// Asserts validate_page(page, grammar) is empty, sizes each Lanes band from its messages,
 /// builds the taffy tree with each Box laid out from its container kind, computes layout,

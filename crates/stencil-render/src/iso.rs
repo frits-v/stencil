@@ -26,6 +26,7 @@ use drape::Terrain;
 use shapes::{polygons_overlap, segment_crosses_convex};
 
 pub use stencil_layout::ISO_BLOCK_HEIGHT_PX;
+use stencil_layout::unturned_box;
 /// cos 30 degrees, written out so every build uses the same f32.
 pub const ISO_COS_30: f32 = 0.866_025_4;
 /// sin 30 degrees.
@@ -147,22 +148,7 @@ pub enum SolidShape {
     Surface,
 }
 
-/// The reading axis of a label on its plane (section 12.4): along flat x, reading
-/// down-right on screen, or along flat y, reading up-right.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum Axis {
-    X,
-    Y,
-}
-
-impl Axis {
-    pub fn as_str(self) -> &'static str {
-        match self {
-            Axis::X => "x",
-            Axis::Y => "y",
-        }
-    }
-}
+pub use stencil_layout::Axis;
 
 /// An affine map from layout px to screen px: `(a x + c y + e, b x + d y + f)`, the form of
 /// an SVG `matrix(a b c d e f)`.
@@ -368,16 +354,6 @@ fn union(first: BoxRect, second: BoxRect) -> BoxRect {
     }
 }
 
-/// The layout ink boxes of a node's plane text runs. Icons sit on an opaque chip, which
-/// hides a stroke under it the way a tag does, so they are not marks.
-fn flat_marks(node: &NodeGeometry) -> Vec<BoxRect> {
-    node.parts
-        .iter()
-        .filter(|part| plane_member(node.tag, part.name) && part.text.is_some())
-        .map(member_box)
-        .collect()
-}
-
 fn center(bounds: BoxRect) -> (f32, f32) {
     (
         bounds.x + bounds.width / 2.0,
@@ -538,24 +514,21 @@ fn node_label(
     top_z: f32,
     plane: &dyn Fn(f32) -> PlaneMap,
 ) -> Option<Label> {
-    let flat = node
+    let members: Vec<&Part> = node
         .parts
         .iter()
         .filter(|part| plane_member(node.tag, part.name))
-        .map(member_box)
-        .reduce(union)?;
-    let z = match shape {
-        SolidShape::Slab | SolidShape::Block => top_z,
-        SolidShape::Surface => top_z,
-    };
-    let axis = if shape == SolidShape::Surface && pipe_runs_along_y(node) {
-        Axis::Y
-    } else {
-        Axis::X
-    };
+        .collect();
+    let (axis, pivot) = label_axis(&members);
+    let local: Vec<Part> = members
+        .iter()
+        .map(|part| local_part(part, axis, pivot))
+        .collect();
+    let flat = local.iter().map(member_box).reduce(union)?;
+    let z = top_z;
     let map = match axis {
         Axis::X => plane(z),
-        Axis::Y => plane(z).turned_about(center(flat)),
+        Axis::Y => plane(z).turned_about(pivot),
     };
     Some(Label {
         owner: node.pointer.clone(),
@@ -565,9 +538,10 @@ fn node_label(
         map,
         flat,
         corners: map.corners(flat),
-        marks: flat_marks(node)
+        marks: local
             .iter()
-            .map(|mark| map.corners(*mark))
+            .filter(|part| part.text.is_some())
+            .map(|part| map.corners(member_box(part)))
             .collect(),
         opaque: shape == SolidShape::Surface,
         contained: matches!(
@@ -582,15 +556,38 @@ fn node_label(
     })
 }
 
-/// A pipe whose dots lie one above the other runs along flat y; its tag reads along y.
-fn pipe_runs_along_y(node: &NodeGeometry) -> bool {
-    let (Some(start), Some(end)) = (node.part(PartName::DotStart), node.part(PartName::DotEnd))
-    else {
-        return false;
-    };
-    let (start_x, start_y) = center(start.bounds);
-    let (end_x, end_y) = center(end.bounds);
-    (end_y - start_y).abs() > (end_x - start_x).abs()
+/// The axis a set of parts reads along, and the pivot of its turn: layout lays a y run out
+/// as a strip taller than its text is wide (section 12.4), turned about the center of the
+/// parts' union. Parts without a strip read along x.
+pub(crate) fn label_axis(parts: &[&Part]) -> (Axis, (f32, f32)) {
+    let strip = parts.iter().any(|part| {
+        part.text.as_ref().is_some_and(|run| {
+            run.metrics.width_px > part.bounds.width + stencil_layout::GEOMETRY_EPSILON_PX
+                && part.bounds.height > part.bounds.width
+        })
+    });
+    let pivot = parts
+        .iter()
+        .map(|part| part.bounds)
+        .reduce(union)
+        .map_or((0.0, 0.0), center);
+    if strip {
+        (Axis::Y, pivot)
+    } else {
+        (Axis::X, pivot)
+    }
+}
+
+/// The part in the frame it is drawn in: its own box along x, its strip turned back about
+/// `pivot` along y.
+pub(crate) fn local_part(part: &Part, axis: Axis, pivot: (f32, f32)) -> Part {
+    match axis {
+        Axis::X => part.clone(),
+        Axis::Y => Part {
+            bounds: unturned_box(part.bounds, pivot),
+            ..part.clone()
+        },
+    }
 }
 
 /// A link's tag on the terrain under its center (section 12.4), reading along the leg it
@@ -609,17 +606,18 @@ fn link_label(
         origin.1 + (center_y - origin.1) * zoom,
     );
     let z = drape::ground_z(terrain, scene_center.0, scene_center.1);
-    let axis = if tag_leg_runs_along_y(&route.points, scene_center) {
-        Axis::Y
-    } else {
-        Axis::X
-    };
+    let members: Vec<&Part> = route.parts.iter().collect();
+    let (axis, pivot) = label_axis(&members);
+    let local: Vec<Part> = members
+        .iter()
+        .map(|part| local_part(part, axis, pivot))
+        .collect();
+    let flat = local.iter().map(member_box).reduce(union)?;
     let map = match axis {
         Axis::X => plane(z),
-        Axis::Y => plane(z).turned_about((center_x, center_y)),
+        Axis::Y => plane(z).turned_about(pivot),
     };
-    let marks = route
-        .parts
+    let marks = local
         .iter()
         .filter(|part| part.text.is_some())
         .map(|part| map.corners(member_box(part)))
@@ -630,38 +628,12 @@ fn link_label(
         z,
         axis,
         map,
-        flat: tag,
-        corners: map.corners(tag),
+        flat,
+        corners: map.corners(flat),
         marks,
         opaque: true,
         contained: false,
     })
-}
-
-/// True when the route leg nearest `point` runs along flat y.
-fn tag_leg_runs_along_y(points: &[PagePoint], point: (f32, f32)) -> bool {
-    let mut best: Option<(f32, bool)> = None;
-    for pair in points.windows(2).take(stencil_model::LINK_SEGMENTS_MAX) {
-        let (start, end) = (pair[0], pair[1]);
-        let along_y = (end.y - start.y).abs() > (end.x - start.x).abs();
-        let distance = distance_to_segment(point, (start.x, start.y), (end.x, end.y));
-        if best.is_none_or(|(nearest, _)| distance < nearest) {
-            best = Some((distance, along_y));
-        }
-    }
-    best.is_some_and(|(_, along_y)| along_y)
-}
-
-fn distance_to_segment(point: (f32, f32), start: (f32, f32), end: (f32, f32)) -> f32 {
-    let (dx, dy) = (end.0 - start.0, end.1 - start.1);
-    let length_squared = dx * dx + dy * dy;
-    let t = if length_squared <= f32::EPSILON {
-        0.0
-    } else {
-        (((point.0 - start.0) * dx + (point.1 - start.1) * dy) / length_squared).clamp(0.0, 1.0)
-    };
-    let (nearest_x, nearest_y) = (start.0 + t * dx, start.1 + t * dy);
-    ((point.0 - nearest_x).powi(2) + (point.1 - nearest_y).powi(2)).sqrt()
 }
 
 /// Screen extremes of every drawn primitive, before any offset (section 12.2, rule 3).

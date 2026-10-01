@@ -5,6 +5,7 @@
 use std::cmp::Ordering;
 use std::collections::{BinaryHeap, HashMap};
 
+use stencil_model::Projection;
 use stencil_model::pointer::NodePointer;
 use stencil_model::text::{TextMeasurer, TextMetrics, TextStyleName};
 use stencil_model::{
@@ -13,7 +14,8 @@ use stencil_model::{
 };
 
 use crate::lanes::{LanesPlan, MessageRow};
-use crate::styles::text_color;
+use crate::styles::{text_color, text_style_for};
+use crate::turned_box;
 use crate::{
     BoxRect, GEOMETRY_EPSILON_PX, LayoutError, LinkRoute, NodeGeometry, NodeTag, PageGeometry,
     Part, PartName, RouteStatus, TextAlign, TextRun,
@@ -152,8 +154,8 @@ pub fn reroute_link(
         (from_side, to_side),
         via,
     );
-    let old_center = longest_segment_midpoint(&route.points);
-    let new_center = longest_segment_midpoint(&points);
+    let (old_center, _) = longest_segment_midpoint(&route.points);
+    let (new_center, _) = longest_segment_midpoint(&points);
     let (delta_x, delta_y) = (new_center.x - old_center.x, new_center.y - old_center.y);
     let moved = |bounds: BoxRect| BoxRect {
         x: bounds.x + delta_x,
@@ -964,7 +966,7 @@ fn tag_parts(
         width: tag_width,
         height: tag_height,
     } = measured;
-    let center = longest_segment_midpoint(points);
+    let (center, along_y) = longest_segment_midpoint(points);
     let tag = BoxRect {
         x: center.x - tag_width / 2.0,
         y: center.y - tag_height / 2.0,
@@ -1002,6 +1004,14 @@ fn tag_parts(
             text: Some(sub_run),
         });
     }
+    // Under iso a tag on a leg along flat y reads along y (section 12.4): every part box is
+    // the strip its turned drawing covers.
+    if page.projection == Projection::Iso && along_y {
+        let pivot = (center.x, center.y);
+        for part in &mut parts {
+            part.bounds = turned_box(part.bounds, pivot);
+        }
+    }
     Ok(parts)
 }
 
@@ -1013,7 +1023,7 @@ fn tag_run(
     source: NodePointer,
     measurer: &mut dyn TextMeasurer,
 ) -> Result<TextRun, LayoutError> {
-    let style = style_name.text_style().style;
+    let style = text_style_for(style_name, page.projection == Projection::Iso);
     let metrics = measurer
         .measure(text, &style, None)
         .map_err(|source_error| LayoutError::Measure {
@@ -1029,8 +1039,10 @@ fn tag_run(
     })
 }
 
-fn longest_segment_midpoint(points: &[PagePoint]) -> PagePoint {
-    let mut best: Option<(f32, PagePoint)> = None;
+/// The midpoint of the longest segment (the first on a tie) and whether that segment runs
+/// along flat y.
+fn longest_segment_midpoint(points: &[PagePoint]) -> (PagePoint, bool) {
+    let mut best: Option<(f32, PagePoint, bool)> = None;
     for segment in points.windows(2) {
         let (Some(a), Some(b)) = (segment.first(), segment.get(1)) else {
             continue;
@@ -1040,18 +1052,22 @@ fn longest_segment_midpoint(points: &[PagePoint]) -> PagePoint {
             x: (a.x + b.x) / 2.0,
             y: (a.y + b.y) / 2.0,
         };
-        if best.is_none_or(|(best_length, _)| length > best_length) {
-            best = Some((length, midpoint));
+        let along_y = (b.y - a.y).abs() > (b.x - a.x).abs();
+        if best.is_none_or(|(best_length, _, _)| length > best_length) {
+            best = Some((length, midpoint, along_y));
         }
     }
     best.map_or_else(
         || {
-            points
-                .first()
-                .copied()
-                .unwrap_or(PagePoint { x: 0.0, y: 0.0 })
+            (
+                points
+                    .first()
+                    .copied()
+                    .unwrap_or(PagePoint { x: 0.0, y: 0.0 }),
+                false,
+            )
         },
-        |(_, midpoint)| midpoint,
+        |(_, midpoint, along_y)| (midpoint, along_y),
     )
 }
 

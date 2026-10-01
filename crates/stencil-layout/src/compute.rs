@@ -10,6 +10,7 @@ use stencil_model::{Node, NodeRef, Page, PipeDir, body_nodes};
 use taffy::prelude::{AvailableSpace, NodeId};
 use taffy::{LayoutInput, LayoutOutput};
 
+use crate::Axis;
 use crate::build::{ArrowEnds, BuiltPage, LayoutTree, TextLeaf};
 use crate::{
     ARROWHEAD_LENGTH_PX, BoxRect, LayoutError, NodeGeometry, NodeTag, PageGeometry, Part, PartName,
@@ -84,7 +85,7 @@ pub(crate) fn compute_geometry(
         for part in &record.parts {
             let part_bounds = absolute_box(&tree, &origins, part.taffy_node, &record.pointer)?;
             let text = match part.text_leaf.and_then(|index| text_leaves.get(index)) {
-                Some(leaf) => Some(remeasure(leaf, part_bounds.width, measurer)?),
+                Some(leaf) => Some(remeasure(leaf, part_bounds, measurer)?),
                 None => None,
             };
             parts.push(Part {
@@ -168,19 +169,34 @@ fn measure_in_layout(
     if let (Some(width), Some(height)) = (known.width, known.height) {
         return taffy::Size { width, height };
     }
-    let max_width_px = match (known.width, available.width) {
+    // A y run's text runs along the leaf's height, so it wraps at the height the layout
+    // offers and reports its size swapped (section 12.4).
+    let (known_along, known_across, available_along) = match leaf.axis {
+        Axis::X => (known.width, known.height, available.width),
+        Axis::Y => (known.height, known.width, available.height),
+    };
+    let max_width_px = match (known_along, available_along) {
         (Some(width), _) | (None, AvailableSpace::Definite(width)) => {
             Some(width.max(0.0) + WRAP_EPSILON_PX)
         }
         (None, AvailableSpace::MinContent) => Some(0.0),
         (None, AvailableSpace::MaxContent) => None,
     };
-    let style = leaf.style_name.text_style().style;
-    match measurer.measure(&leaf.text, &style, max_width_px) {
-        Ok(metrics) => taffy::Size {
-            width: known.width.unwrap_or(metrics.width_px),
-            height: known.height.unwrap_or(metrics.height_px),
-        },
+    match measurer.measure(&leaf.text, &leaf.style, max_width_px) {
+        Ok(metrics) => {
+            let along = known_along.unwrap_or(metrics.width_px);
+            let across = known_across.unwrap_or(metrics.height_px);
+            match leaf.axis {
+                Axis::X => taffy::Size {
+                    width: along,
+                    height: across,
+                },
+                Axis::Y => taffy::Size {
+                    width: across,
+                    height: along,
+                },
+            }
+        }
         Err(error) => {
             if first_error.is_none() {
                 *first_error = Some((leaf.source.clone(), error));
@@ -192,10 +208,14 @@ fn measure_in_layout(
 
 fn remeasure(
     leaf: &TextLeaf,
-    final_width: f32,
+    final_box: BoxRect,
     measurer: &mut dyn TextMeasurer,
 ) -> Result<TextRun, LayoutError> {
-    let style = leaf.style_name.text_style().style;
+    let style = leaf.style;
+    let final_width = match leaf.axis {
+        Axis::X => final_box.width,
+        Axis::Y => final_box.height,
+    };
     let metrics = measurer
         .measure(
             &leaf.text,

@@ -3,7 +3,7 @@
 
 use stencil_model::grammar::{LabelStyle, Role};
 use stencil_model::pointer::NodePointer;
-use stencil_model::text::TextStyleName;
+use stencil_model::text::{TextStyle, TextStyleName};
 use stencil_model::{
     Arrow, BoxNode, Callout, Canvas, Chrome, DEPTH_MAX, Fact, FactSource, Frame, GAP_DEFAULT_PX,
     Grammar, Item, Justify, LANE_GAP_DEFAULT_PX, Lanes, LegendEntry, ListKind, Node, Note,
@@ -17,10 +17,10 @@ use taffy::prelude::{
 };
 
 use crate::lanes::LanesPlan;
-use crate::styles::text_color;
+use crate::styles::{text_color, text_style_for};
 use crate::{
-    ContainerLook, ISO_BLOCK_HEIGHT_PX, ISO_PLACARD_SCALE, LayoutError, NodeTag, PartName,
-    TextAlign,
+    Axis, ContainerLook, ISO_BLOCK_HEIGHT_PX, ISO_LABEL_CLEARANCE_PX, LayoutError, NodeTag,
+    PartName, TextAlign,
 };
 
 /// Taffy's node context is an index into `BuiltPage::text_leaves`.
@@ -28,9 +28,12 @@ pub(crate) type LayoutTree = TaffyTree<usize>;
 
 pub(crate) struct TextLeaf {
     pub text: String,
-    pub style_name: TextStyleName,
+    /// The resolved style: the named one flat, grown under iso (`text_style_for`).
+    pub style: TextStyle,
     pub color: &'static str,
     pub align: TextAlign,
+    /// A y run is measured with its width and height swapped (section 12.4).
+    pub axis: Axis,
     /// The field the string comes from; a measure error is reported at this pointer.
     pub source: NodePointer,
 }
@@ -127,11 +130,9 @@ struct Builder<'page> {
 }
 
 /// Extra floor under a zone label under iso: the strip a child block of
-/// `ISO_BLOCK_HEIGHT_PX` covers on screen, plus the growth of the label to
-/// `ISO_PLACARD_SCALE` times its line height (section 12.4).
-fn iso_label_reserve(label_style: TextStyleName) -> f32 {
-    let line_height = label_style.text_style().style.line_height_px;
-    ISO_BLOCK_HEIGHT_PX + (ISO_PLACARD_SCALE - 1.0) * line_height
+/// `ISO_BLOCK_HEIGHT_PX` covers on screen, plus the clearance (section 12.4).
+fn iso_label_reserve() -> f32 {
+    ISO_BLOCK_HEIGHT_PX + ISO_LABEL_CLEARANCE_PX
 }
 
 /// Every taffy node starts from this: content that does not fit overflows (section 2.1).
@@ -362,12 +363,23 @@ impl Builder<'_> {
         Ok(node)
     }
 
-    /// A measured text leaf. Uppercasing runs here, before measurement (section 2.9).
+    /// A measured text leaf reading along x. Uppercasing runs here, before measurement
+    /// (section 2.9).
     fn text_leaf(
         &mut self,
         style: Style,
         parent: Option<NodeId>,
         spec: TextSpec<'_>,
+    ) -> Result<(NodeId, usize), LayoutError> {
+        self.text_leaf_along(style, parent, spec, Axis::X)
+    }
+
+    fn text_leaf_along(
+        &mut self,
+        style: Style,
+        parent: Option<NodeId>,
+        spec: TextSpec<'_>,
+        axis: Axis,
     ) -> Result<(NodeId, usize), LayoutError> {
         let text = if spec.style_name.text_style().uppercase {
             spec.text.to_uppercase()
@@ -384,9 +396,10 @@ impl Builder<'_> {
         }
         self.text_leaves.push(TextLeaf {
             text,
-            style_name: spec.style_name,
+            style: text_style_for(spec.style_name, self.iso),
             color: text_color(spec.style_name, self.canvas, spec.line),
             align: spec.align,
+            axis,
             source: spec.source,
         });
         Ok((node, index))
@@ -1024,7 +1037,7 @@ impl Builder<'_> {
         let label_style = container_label_style(kind.label);
         let label_leaf_style = if self.iso {
             Style {
-                margin: margins(0.0, 0.0, iso_label_reserve(label_style), 0.0),
+                margin: margins(0.0, 0.0, iso_label_reserve(), 0.0),
                 ..base_style()
             }
         } else {
@@ -1410,18 +1423,34 @@ impl Builder<'_> {
 
         let dot_start = self.plain_leaf(dot_style.clone(), pipe_node, &pointer)?;
         let wire_start = self.plain_leaf(wire_style.clone(), pipe_node, &pointer)?;
-        let tag_style = Style {
-            padding: sides(6.0, 8.0, 6.0, 8.0),
-            border: sides(1.5, 1.5, 1.5, 1.5),
-            flex_shrink: if horizontal { 1.0 } else { 0.0 },
-            max_size: taffy::Size {
-                width: LengthPercentageAuto::percent(1.0),
-                height: auto(),
+        // Under iso a vertical pipe's tag reads along y (section 12.4): the pill and its
+        // runs are laid out as strips, the label left of the sub, with the pill's padding
+        // turned with it.
+        let tag_axis = if self.iso && !horizontal {
+            Axis::Y
+        } else {
+            Axis::X
+        };
+        let tag_style = match tag_axis {
+            Axis::X => Style {
+                padding: sides(6.0, 8.0, 6.0, 8.0),
+                border: sides(1.5, 1.5, 1.5, 1.5),
+                flex_shrink: if horizontal { 1.0 } else { 0.0 },
+                max_size: taffy::Size {
+                    width: LengthPercentageAuto::percent(1.0),
+                    height: auto(),
+                },
+                ..flex_column(AlignItems::CENTER)
             },
-            ..flex_column(AlignItems::CENTER)
+            Axis::Y => Style {
+                padding: sides(8.0, 6.0, 8.0, 6.0),
+                border: sides(1.5, 1.5, 1.5, 1.5),
+                flex_shrink: 0.0,
+                ..flex_row(AlignItems::CENTER)
+            },
         };
         let tag = self.container(tag_style, pipe_node, &pointer)?;
-        let (label, label_leaf) = self.text_leaf(
+        let (label, label_leaf) = self.text_leaf_along(
             base_style(),
             Some(tag),
             TextSpec {
@@ -1431,6 +1460,7 @@ impl Builder<'_> {
                 align: TextAlign::Center,
                 source: pointer.child("label"),
             },
+            tag_axis,
         )?;
         let mut parts = vec![
             PartRecord {
@@ -1455,9 +1485,13 @@ impl Builder<'_> {
             },
         ];
         if let Some(sub) = &pipe.sub {
-            let (sub_node, sub_leaf) = self.text_leaf(
+            let sub_margin = match tag_axis {
+                Axis::X => margins(2.0, 0.0, 0.0, 0.0),
+                Axis::Y => margins(0.0, 0.0, 0.0, 2.0),
+            };
+            let (sub_node, sub_leaf) = self.text_leaf_along(
                 Style {
-                    margin: margins(2.0, 0.0, 0.0, 0.0),
+                    margin: sub_margin,
                     ..base_style()
                 },
                 Some(tag),
@@ -1468,6 +1502,7 @@ impl Builder<'_> {
                     align: TextAlign::Center,
                     source: pointer.child("sub"),
                 },
+                tag_axis,
             )?;
             parts.push(PartRecord {
                 name: PartName::TagSub,
