@@ -12,6 +12,7 @@ A link is a routed orthogonal line between two nodes, drawn after layout on top 
 | arrow | none, end (default), start or both; the arrowhead sits on the endpoint's edge |
 | from_side, to_side | top, right, bottom or left: the side whose midpoint the end attaches to |
 | via | up to 8 {"x","y"} points in canvas px, passed in order |
+| axis | iso only: x or y, the axis the tag reads along; absent follows the leg it sits on (a Pipe tag follows its dir) |
 | order | 1-256; only between two heads of one Lanes node, where it makes the link a message row (stencil prime grammar plain) |
 
 At most 256 links per page. The canvas is width + 40 px wide; read coordinates for via from out/<stem>.measured.json, where every node has x, y, width and height.

@@ -368,6 +368,24 @@ pub struct Note {
     pub text: String,
 }
 
+/// The reading axis of a tag under iso (section 12.4): along flat x, reading down-right on
+/// screen, or along flat y, reading up-right.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "lowercase")]
+pub enum Axis {
+    X,
+    Y,
+}
+
+impl Axis {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Axis::X => "x",
+            Axis::Y => "y",
+        }
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
 pub enum PipeDir {
     #[serde(rename = "h")]
@@ -408,6 +426,9 @@ pub struct Pipe {
         skip_serializing_if = "is_pipe_arrow_default"
     )]
     pub arrow: Arrow,
+    /// Under iso, the axis the tag reads along; absent follows dir.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub axis: Option<Axis>,
     /// The id of the node on the pipe's left (h) or upper (v) end. Layout centers the pipe's
     /// slot on its targets (section 13.8); a Tee arm cannot carry one.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -518,6 +539,9 @@ pub struct Link {
     pub sub: Option<String>,
     #[serde(default)]
     pub arrow: Arrow,
+    /// Under iso, the axis the tag reads along; absent follows the leg it sits on.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub axis: Option<Axis>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub from_side: Option<Side>,
     #[serde(default, skip_serializing_if = "Option::is_none")]

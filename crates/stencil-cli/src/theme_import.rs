@@ -14,8 +14,8 @@ use std::path::{Path, PathBuf};
 use stencil_model::theme::{
     Accent, BadgeRole, BlockShadow, CalloutRole, CardRole, ChipRole, Color, ContainerRole,
     DashRole, DenyRole, DotStyle, FaceSteps, FrameRole, FrameSides, GrayRole, Inks, IsoRole,
-    IsoWidths, LanesRole, LegendRole, LinePattern, PlaceholderRole, SolidEdges, SolidRole, Swatch,
-    THEME_NAME_PATTERN, TabRole, TagRole, ThemeStroke, Tint, TintCue, ToneRole, Tones,
+    IsoWidths, LabelInks, LanesRole, LegendRole, LinePattern, PlaceholderRole, SolidEdges,
+    SolidRole, Swatch, THEME_NAME_PATTERN, TagRole, ThemeStroke, Tint, TintCue, ToneRole, Tones,
     channel_contrast_ratio, channel_lightness, is_valid_theme_name,
 };
 use stencil_model::{Theme, theme_quality};
@@ -366,7 +366,6 @@ pub fn base16_theme(
     let accent_fill = page.mix(base[0x09], fill_mix);
     let red = base[0x08];
     let bar_ink = higher_contrast(page, primary, blue);
-    let top_tab_ink = higher_contrast(page, primary, rule);
     let frame_right =
         shade(blue.color().as_str(), FRAME_RIGHT_SIDE_STEP).ok_or_else(|| ImportError::Shade {
             path: scheme_path.to_path_buf(),
@@ -520,17 +519,9 @@ pub fn base16_theme(
             edge_width: 1.5,
             ring: None,
             block_outline: None,
-            plates: !dark,
-            tabs: TabRole {
-                frame: Swatch {
-                    fill: blue.color(),
-                    ink: bar_ink.color(),
-                },
-                top: Swatch {
-                    fill: rule.color(),
-                    ink: top_tab_ink.color(),
-                },
-                nested_width: 1.25,
+            labels: LabelInks {
+                frame: if dark { bar_ink.color() } else { blue.color() },
+                zone: if dark { primary.color() } else { rule.color() },
             },
             chip: ChipRole {
                 fill: white.color(),

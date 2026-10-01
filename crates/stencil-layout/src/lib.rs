@@ -16,7 +16,7 @@ use stencil_model::text::{MeasureError, TextMeasurer, TextMetrics, TextStyle};
 use stencil_model::{Grammar, Line, Page, PagePoint, Violation, line_key, validate_page};
 
 pub use build::{container_label_style, fact_presentation};
-pub use route::reroute_link;
+pub use route::{longest_segment_midpoint, reroute_link};
 pub use stencil_model::text::WRAP_EPSILON_PX;
 pub use theme_labels::theme_legend_labels;
 
@@ -26,6 +26,51 @@ pub const GEOMETRY_EPSILON_PX: f32 = 0.01;
 pub const ARROWHEAD_LENGTH_PX: f32 = 10.0;
 /// Width of an arrowhead across its line, at the base.
 pub const ARROWHEAD_WIDTH_PX: f32 = 8.0;
+/// Height of a leaf block under iso (section 12.3): a Pcard, Fact, Note, Text, Callout or
+/// Frame. Layout reserves this much floor behind a zone's label, because a block covers
+/// the strip of floor its height spans on screen.
+pub const ISO_BLOCK_HEIGHT_PX: f32 = 18.0;
+/// Floor kept clear between a zone's label and the strip its first child covers under iso.
+pub const ISO_LABEL_CLEARANCE_PX: f32 = 8.0;
+/// Under iso every body text style is this much larger than flat (section 12.4): the plane
+/// halves a run's visible x-height, so the type grows to read. Chrome and legend stay flat.
+pub const ISO_TYPE_SCALE: f32 = 1.3;
+/// Under iso a zone label is this much larger than flat, the floor name of its slab.
+pub const ISO_ZONE_LABEL_SCALE: f32 = 1.5;
+/// Under iso every container padding, card padding and gap is this much larger than flat:
+/// a floor plan keeps open floor around what stands on it, and the grown type needs it.
+pub const ISO_SPACE_SCALE: f32 = 1.75;
+/// Under iso a pipe's wire is at least this many times its flat minimum, so its tag lying
+/// on the floor clears the slab edges its dots touch.
+pub const ISO_WIRE_SCALE: f32 = 3.0;
+/// Under iso a pipe tag keeps this much wire visible on each side along the run, so the
+/// pill never reaches the slab edges its dots touch.
+pub const ISO_TAG_CLEARANCE_PX: f32 = 16.0;
+
+pub use stencil_model::Axis;
+
+/// `bounds` after a quarter turn about `pivot` that takes layout right to flat -y: the
+/// strip a y run covers.
+pub fn turned_box(bounds: BoxRect, pivot: (f32, f32)) -> BoxRect {
+    let (px, py) = pivot;
+    BoxRect {
+        x: px + bounds.y - py,
+        y: py + px - bounds.right(),
+        width: bounds.height,
+        height: bounds.width,
+    }
+}
+
+/// The inverse of `turned_box`: the layout box a y run is drawn in before its turn.
+pub fn unturned_box(bounds: BoxRect, pivot: (f32, f32)) -> BoxRect {
+    let (px, py) = pivot;
+    BoxRect {
+        x: px + py - bounds.bottom(),
+        y: py + bounds.x - px,
+        width: bounds.height,
+        height: bounds.width,
+    }
+}
 
 /// Asserts validate_page(page, grammar) is empty, sizes each Lanes band from its messages,
 /// builds the taffy tree with each Box laid out from its container kind, computes layout,

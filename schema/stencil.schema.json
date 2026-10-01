@@ -108,6 +108,14 @@
         "both"
       ]
     },
+    "Axis": {
+      "description": "The reading axis of a tag under iso (section 12.4): along flat x, reading down-right on\nscreen, or along flat y, reading up-right.",
+      "type": "string",
+      "enum": [
+        "x",
+        "y"
+      ]
+    },
     "CalloutKind": {
       "type": "string",
       "enum": [
@@ -238,6 +246,17 @@
         "arrow": {
           "$ref": "#/$defs/Arrow",
           "default": "end"
+        },
+        "axis": {
+          "description": "Under iso, the axis the tag reads along; absent follows the leg it sits on.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Axis"
+            },
+            {
+              "type": "null"
+            }
+          ]
         },
         "from": {
           "type": "string"
@@ -661,6 +680,17 @@
             "arrow": {
               "$ref": "#/$defs/Arrow"
             },
+            "axis": {
+              "description": "Under iso, the axis the tag reads along; absent follows dir.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Axis"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
             "dir": {
               "$ref": "#/$defs/PipeDir"
             },
@@ -948,6 +978,17 @@
           "properties": {
             "arrow": {
               "$ref": "#/$defs/Arrow"
+            },
+            "axis": {
+              "description": "Under iso, the axis the tag reads along; absent follows dir.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Axis"
+                },
+                {
+                  "type": "null"
+                }
+              ]
             },
             "dir": {
               "$ref": "#/$defs/PipeDir"

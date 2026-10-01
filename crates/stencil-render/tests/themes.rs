@@ -1012,17 +1012,14 @@ fn research_themes_follow_the_derivation_rules() {
             shade(theme.frame.border.as_str(), -12)
         );
         assert_eq!(theme.iso.solid_edges, SolidEdges::None);
-        assert_eq!(theme.iso.plates, !dark, "{name}");
-        assert_eq!(theme.iso.tabs.frame.fill, theme.frame.bar_fill);
-        assert_eq!(theme.iso.tabs.frame.ink, theme.frame.bar_ink);
-        let top_tab = if dark {
-            (&theme.card.border.color, &theme.ink.primary)
+        let labels = if dark {
+            (&theme.tints[0].ink, &theme.ink.primary)
         } else {
-            (&theme.ink.secondary, &theme.page)
+            (&theme.frame.bar_fill, &theme.ink.secondary)
         };
         assert_eq!(
-            (&theme.iso.tabs.top.fill, &theme.iso.tabs.top.ink),
-            top_tab,
+            (&theme.iso.labels.frame, &theme.iso.labels.zone),
+            labels,
             "{name}"
         );
         assert_eq!(theme.iso.chip.fill.as_str(), "#FFFFFF");

@@ -4,7 +4,7 @@ stencil turns structural JSON (boxes, items, facts, pipes, links; no coordinates
 
 # Loop
 
-Write fig.json, `stencil vet fig.json`, `stencil check fig.json`, `stencil render fig.json --out-dir out --scale 2`, Read out/fig.png, fix, repeat until check shows 0 failed and the PNG reads right. Exit 0 clean; 1 defect in the document (fix the JSON at the pointer the line names); 2 could not run (arguments, paths, fonts). `stencil schema` prints the JSON Schema.
+Write fig.json, `stencil vet fig.json`, `stencil check fig.json`, `stencil render fig.json --out-dir out --scale 2`, Read out/fig.png, fix, repeat until check shows 0 failed and the PNG reads right. Exit 0 clean; 1 defect in the document (fix the JSON at the named pointer); 2 could not run (arguments, paths, fonts). `stencil schema` prints the JSON Schema.
 
 `stencil gallery out` renders the examples in the designed themes; a failed check exits 1.
 
@@ -24,7 +24,7 @@ Every node object carries "tag"; the Page does not. * required, =default. A fiel
 - A Box is a column: its label, then its children at full width; its kind sets border, padding and label style.
 - A pipe tag sizes to its label on one line and widens its gutter. Keep labels to 1-3 words; put detail in sub.
 - Gutter: Row [producer Col, gutter Col, target Box]. The gutter Col holds one slot per producer Box: a Col, gap 12, of that Box's h Pipes. Name the Boxes in each Pipe's from and to so its slot centers on them, or give both Cols one grow list and each slot justify center.
-- One long word widens an Item past its container: its widest word is its floor.
+- An Item is never narrower than its widest word.
 - The legend lists each line and tint in use once, and nothing else; its label (Solid blue) is fixed, so write the text as meaning.
 - Lanes: equal head columns; a link with order between two heads is a message row below.
 

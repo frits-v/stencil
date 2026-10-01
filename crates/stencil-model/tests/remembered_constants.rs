@@ -58,6 +58,7 @@ fn page_with_field(field: &str, text: &str) -> (Page, &'static str) {
         Node::Pipe(Pipe {
             id: None,
             arrow: stencil_model::Arrow::None,
+            axis: None,
             dir: PipeDir::Horizontal,
             line: Line::Solid,
             tint: Some(1),
@@ -116,6 +117,7 @@ fn page_with_field(field: &str, text: &str) -> (Page, &'static str) {
         label: Some(pick("link label")),
         sub: Some(pick("link sub")),
         arrow: Arrow::End,
+        axis: None,
         from_side: None,
         to_side: None,
         via: Vec::new(),

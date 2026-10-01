@@ -249,17 +249,9 @@
       "width": 1.25,
       "pattern": "solid"
     },
-    "plates": true,
-    "tabs": {
-      "frame": {
-        "fill": "#222222",
-        "ink": "#FFFFFF"
-      },
-      "top": {
-        "fill": "#222222",
-        "ink": "#FFFFFF"
-      },
-      "nested_width": 1.25
+    "labels": {
+      "frame": "#222222",
+      "zone": "#555555"
     },
     "chip": {
       "fill": "#FFFFFF",

@@ -68,7 +68,7 @@ fn check_hero_passes_every_applicable_check_in_every_theme() {
         assert_eq!(outcome.code, ExitCode::Clean, "{theme}: {}", outcome.stdout);
         let lines = outcome.stdout_lines();
         assert!(
-            lines.contains(&"check iso-labels-clear: examined 97 pairs, 0 defects"),
+            lines.contains(&"check iso-labels-clear: examined 146 pairs, 0 defects"),
             "{theme}: {}",
             outcome.stdout
         );
@@ -203,7 +203,7 @@ fn render_hero_writes_a_png_as_wide_as_the_drawn_canvas() {
 }
 
 #[test]
-fn render_g7_with_projection_iso_keeps_the_flat_nodes() {
+fn render_g7_with_projection_iso_lays_the_page_out_again_and_adds_the_projection() {
     let flat_dir = scratch_directory("g7-flat");
     let iso_dir = scratch_directory("g7-iso");
     let g7 = example_path("g7.json");
@@ -223,7 +223,13 @@ fn render_g7_with_projection_iso_keeps_the_flat_nodes() {
     };
     let flat_measured = read(&flat_dir);
     let iso_measured = read(&iso_dir);
-    assert_eq!(flat_measured["nodes"], iso_measured["nodes"]);
+    // Under iso the body type grows and every zone keeps floor under its name (section
+    // 12.4 rule 4), so the layout nodes differ; the canvas width is the page's in both.
+    assert_ne!(flat_measured["nodes"], iso_measured["nodes"]);
+    assert_eq!(
+        flat_measured["canvas"]["width"],
+        iso_measured["canvas"]["width"]
+    );
     assert!(flat_measured.get("projection").is_none());
     assert_eq!(iso_measured["projection"]["kind"], "iso");
     let iso_svg = fs::read_to_string(iso_dir.join("g7.svg")).unwrap();

@@ -469,13 +469,6 @@ pub enum Face {
     Right,
 }
 
-/// A zone tab's paint: a filled box, or an outline on the surface under it.
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub enum ZoneTab<'a> {
-    Filled { fill: &'a str, ink: &'a str },
-    Outline { border: Stroke<'a>, ink: &'a str },
-}
-
 /// Fills and strokes of the three faces of an isometric solid (section 12.6). A None fill
 /// draws the face unfilled; a None stroke draws it unstroked.
 #[derive(Debug, Clone, PartialEq)]
@@ -515,40 +508,16 @@ impl<'a> Palette<'a> {
         self.page_background()
     }
 
-    /// True when a chipless billboard run is drawn on a plate of its surface (section 12.4,
-    /// rule 4).
-    pub fn iso_text_plates(self) -> bool {
-        self.theme.iso.plates
-    }
-
-    /// The tab of a Box label under iso (section 12.4): the frame tab for a frame, the
-    /// top-level tab for a Box with no Box around it, and an outline in the Box's border
-    /// color for a nested Box.
-    pub fn iso_zone_tab(self, look: ContainerLook, tint: Option<u8>, nested: bool) -> ZoneTab<'a> {
-        let tabs = &self.theme.iso.tabs;
-        let ink = self.theme.ink.primary.as_str();
-        if nested {
-            let color = self
-                .zone_style(look, tint)
-                .border
-                .map_or(ink, |stroke| stroke.color);
-            return ZoneTab::Outline {
-                border: Stroke {
-                    width_px: tabs.nested_width,
-                    line: LineStyle::Solid,
-                    color,
-                },
-                ink,
-            };
+    /// The ink of a Box name lying on its slab (section 12.6 rule 8): the frame's name in
+    /// `iso.labels.frame`; a tinted Box in its tint's ink; any other Box in
+    /// `iso.labels.zone`.
+    pub fn iso_label_ink(self, look: ContainerLook, tint: Option<u8>) -> &'a str {
+        if look.role == Role::Frame {
+            return self.theme.iso.labels.frame.as_str();
         }
-        let swatch = if look.role == Role::Frame {
-            &tabs.frame
-        } else {
-            &tabs.top
-        };
-        ZoneTab::Filled {
-            fill: swatch.fill.as_str(),
-            ink: swatch.ink.as_str(),
+        match self.box_tint(look, tint) {
+            Some(slot) => slot.ink.as_str(),
+            None => self.theme.iso.labels.zone.as_str(),
         }
     }
 

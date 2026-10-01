@@ -36,8 +36,8 @@ row contrast ink.primary on callout.note.fill: 10.86, at least 4.50, passed
 row contrast ink.primary on callout.risk.fill: 12.08, at least 4.50, passed
 row contrast ink.primary on callout.decision.fill: 10.22, at least 4.50, passed
 row contrast ink.primary on callout.open.fill: 9.77, at least 4.50, passed
-row contrast iso.tabs.frame.ink on iso.tabs.frame.fill: 3.84, at least 4.50, FAILED
-row contrast iso.tabs.top.ink on iso.tabs.top.fill: 5.92, at least 4.50, passed
+row contrast iso.labels.frame on frame.body_fill: 10.53, at least 4.50, passed
+row contrast iso.labels.zone on page: 13.39, at least 4.50, passed
 row contrast gray.color on page: 4.02, at least 3.00, passed
 row contrast gray.color on frame.body_fill: 3.16, at least 3.00, passed
 row contrast gray.color on tones.neutral.fill: 2.83, at least 3.00, FAILED
@@ -221,4 +221,4 @@ row separation fills normal: 3.69 between red and brown, at least 8.00, FAILED
 row separation fills deuteranopia: 1.17 between blue and pink, at least 5.00, FAILED
 row separation fills protanopia: 0.82 between yellow and green, at least 5.00, FAILED
 row separation fills tritanopia: 3.49 between blue and cyan, at least 5.00, FAILED
-stencil theme check gruvbox-dark: 223 rows, 114 passed, 109 failed
+stencil theme check gruvbox-dark: 223 rows, 115 passed, 108 failed

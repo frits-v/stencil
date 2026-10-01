@@ -5,7 +5,7 @@ use stencil_layout::{BoxRect, LinkRoute, NodeGeometry, PageGeometry, Part, PartN
 use stencil_model::pointer::NodePointer;
 
 use crate::format_number;
-use crate::iso::IsoScene;
+use crate::iso::{IsoScene, ScreenPoint};
 
 /// Section 5.4 shape; with Some(scene) the output also carries `projection` (section 12.8).
 pub fn measured_json(document: &Value, geometry: &PageGeometry, scene: Option<&IsoScene>) -> Value {
@@ -47,22 +47,24 @@ pub fn measured_json(document: &Value, geometry: &PageGeometry, scene: Option<&I
     Value::Object(root)
 }
 
-/// The drawn canvas, the offset and footer shift, and every billboard's screen box in
-/// painter order.
+/// The drawn canvas, the offset and footer shift, and every label on its plane in painter
+/// order: its screen corners, top-left first then clockwise in layout terms, and its axis.
 fn projection_json(scene: &IsoScene) -> Value {
-    let billboards: Vec<Value> = scene
-        .billboards
+    let labels: Vec<Value> = scene
+        .labels
         .iter()
-        .map(|billboard| {
-            let mut object = box_json(billboard.screen);
+        .map(|label| {
+            let mut object = Map::new();
+            object.insert(
+                "axis".to_string(),
+                Value::String(label.axis.as_str().to_string()),
+            );
+            object.insert("corners".to_string(), corners_json(&label.corners));
             object.insert(
                 "id".to_string(),
-                Value::String(billboard.owner.as_str().to_string()),
+                Value::String(label.owner.as_str().to_string()),
             );
-            object.insert(
-                "role".to_string(),
-                Value::String(billboard.role.as_str().to_string()),
-            );
+            object.insert("z".to_string(), format_number(label.z).to_json());
             Value::Object(object)
         })
         .collect();
@@ -79,7 +81,7 @@ fn projection_json(scene: &IsoScene) -> Value {
     offset.insert("x".to_string(), format_number(scene.offset.x).to_json());
     offset.insert("y".to_string(), format_number(scene.offset.y).to_json());
     let mut object = Map::new();
-    object.insert("billboards".to_string(), Value::Array(billboards));
+    object.insert("labels".to_string(), Value::Array(labels));
     object.insert("canvas".to_string(), Value::Object(canvas));
     object.insert(
         "footer_shift".to_string(),
@@ -226,4 +228,18 @@ fn box_json(bounds: BoxRect) -> Map<String, Value> {
     object.insert("x".to_string(), format_number(bounds.x).to_json());
     object.insert("y".to_string(), format_number(bounds.y).to_json());
     object
+}
+
+fn corners_json(corners: &[ScreenPoint; 4]) -> Value {
+    Value::Array(
+        corners
+            .iter()
+            .map(|corner| {
+                let mut point = Map::new();
+                point.insert("x".to_string(), format_number(corner.x).to_json());
+                point.insert("y".to_string(), format_number(corner.y).to_json());
+                Value::Object(point)
+            })
+            .collect(),
+    )
 }

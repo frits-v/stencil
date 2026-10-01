@@ -224,17 +224,9 @@
     "frame_outline": 1.5,
     "solid_edges": "none",
     "edge_width": 1.5,
-    "plates": false,
-    "tabs": {
-      "frame": {
-        "fill": "#BD93F9",
-        "ink": "#282A36"
-      },
-      "top": {
-        "fill": "#6272A4",
-        "ink": "#FFFFFF"
-      },
-      "nested_width": 1.25
+    "labels": {
+      "frame": "#282A36",
+      "zone": "#FFFFFF"
     },
     "chip": {
       "fill": "#FFFFFF",
