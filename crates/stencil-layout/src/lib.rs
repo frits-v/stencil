@@ -8,10 +8,12 @@ mod build;
 mod compute;
 mod route;
 
+use stencil_model::grammar::{BorderPattern, LabelStyle, Role, Tone};
 use stencil_model::pointer::NodePointer;
 use stencil_model::text::{MeasureError, TextMeasurer, TextMetrics, TextStyle};
-use stencil_model::{Page, PagePoint, PipeKind, Violation, validate_page};
+use stencil_model::{Grammar, Line, Page, PagePoint, Violation, line_key, validate_page};
 
+pub use build::{container_label_style, fact_presentation};
 pub use stencil_model::text::WRAP_EPSILON_PX;
 
 pub const GEOMETRY_EPSILON_PX: f32 = 0.01;
@@ -21,18 +23,19 @@ pub const ARROWHEAD_LENGTH_PX: f32 = 10.0;
 /// Width of an arrowhead across its line, at the base.
 pub const ARROWHEAD_WIDTH_PX: f32 = 8.0;
 
-/// Asserts validate_page(page) is empty, builds the taffy tree, computes layout,
-/// re-measures text at final widths, routes the links, and returns absolute geometry in
-/// canvas px.
+/// Asserts validate_page(page, grammar) is empty, builds the taffy tree with each Box laid
+/// out from its container kind, computes layout, re-measures text at final widths, routes
+/// the links, and returns absolute geometry in canvas px.
 pub fn layout_page(
     page: &Page,
+    grammar: &Grammar,
     measurer: &mut dyn TextMeasurer,
 ) -> Result<PageGeometry, LayoutError> {
-    let violations = validate_page(page);
+    let violations = validate_page(page, grammar);
     if !violations.is_empty() {
         return Err(LayoutError::Invalid(violations));
     }
-    let built = build::build_page(page)?;
+    let built = build::build_page(page, grammar)?;
     let mut geometry = compute::compute_geometry(built, page.width, measurer)?;
     geometry.links = route::route_links(page, &geometry, measurer)?;
     Ok(geometry)
@@ -52,7 +55,10 @@ pub struct PageGeometry {
 pub struct LinkRoute {
     /// Position in `Page.links`; the link's pointer is `/links/<index>`.
     pub index: usize,
-    pub kind: PipeKind,
+    pub line: Line,
+    /// The effective tint (section 13.1 rule 2): slot 1 for an untinted solid or dash line,
+    /// None for gray and deny.
+    pub tint: Option<u8>,
     /// Geometry index of the node named by `from`.
     pub from_node: usize,
     /// Geometry index of the node named by `to`.
@@ -66,6 +72,13 @@ pub struct LinkRoute {
     /// label.
     pub parts: Vec<Part>,
     pub status: RouteStatus,
+}
+
+impl LinkRoute {
+    /// The output key of the link's line (section 13.1 rule 6), for example "blue".
+    pub fn key(&self) -> &'static str {
+        line_key(self.line, self.tint)
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -94,9 +107,14 @@ impl PageGeometry {
 pub struct NodeGeometry {
     pub pointer: NodePointer,
     pub tag: NodeTag,
-    /// Serialized kind for Zone, Pipe (Tee arms included), Tee and LegendEntry,
-    /// for example "region-a" or "blue"; None for every other tag.
-    pub kind: Option<&'static str>,
+    /// The output key (section 13.1 rule 6) of a Box, Pipe (Tee arms included), Tee and
+    /// LegendEntry, for example "region-a" or "blue"; None for every other tag.
+    pub kind: Option<String>,
+    /// The effective tint of a Box or line (section 13.1 rule 2). The measured JSON does not
+    /// write it.
+    pub tint: Option<u8>,
+    /// How a Box's container kind is drawn, read from the grammar; None for every other tag.
+    pub container: Option<ContainerLook>,
     pub parent: Option<usize>,
     /// Border box.
     pub bounds: BoxRect,
@@ -105,6 +123,25 @@ pub struct NodeGeometry {
     pub content: BoxRect,
     /// In the order of section 2.11.
     pub parts: Vec<Part>,
+}
+
+/// The parts of a container kind the renderer reads (section 13.2): role, tone, border
+/// pattern and width, corner radius and label style.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct ContainerLook {
+    pub role: Role,
+    pub tone: Option<Tone>,
+    pub pattern: BorderPattern,
+    pub border_width: f32,
+    pub radius: f32,
+    pub label: LabelStyle,
+}
+
+impl ContainerLook {
+    /// A boundary drawn as a ring under iso (section 12.3): the strong tone, untinted.
+    pub fn is_ring(&self, tint: Option<u8>) -> bool {
+        self.tone == Some(Tone::Strong) && tint.is_none()
+    }
 }
 
 impl NodeGeometry {
@@ -126,7 +163,10 @@ pub enum NodeTag {
     Foot,
     Row,
     Col,
+    Lanes,
+    /// A Box; the output name stays `Zone` (section 13.1 rule 5).
     Zone,
+    /// An Item; the output name stays `Pcard` (section 13.1 rule 5).
     Pcard,
     Fact,
     Note,
@@ -151,6 +191,7 @@ impl NodeTag {
             NodeTag::Foot => "Foot",
             NodeTag::Row => "Row",
             NodeTag::Col => "Col",
+            NodeTag::Lanes => "Lanes",
             NodeTag::Zone => "Zone",
             NodeTag::Pcard => "Pcard",
             NodeTag::Fact => "Fact",
@@ -208,6 +249,8 @@ pub enum PartName {
     ProductName,
     FactBox,
     Fact,
+    BuiltBox,
+    Built,
     AskBox,
     Ask,
     DotStart,
@@ -245,6 +288,8 @@ impl PartName {
             PartName::ProductName => "product_name",
             PartName::FactBox => "fact_box",
             PartName::Fact => "fact",
+            PartName::BuiltBox => "built_box",
+            PartName::Built => "built",
             PartName::AskBox => "ask_box",
             PartName::Ask => "ask",
             PartName::DotStart => "dot_start",
@@ -271,7 +316,7 @@ impl PartName {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct TextRun {
-    /// The string as drawn, after any uppercase transform and the "Ask: " prefix.
+    /// The string as drawn, after any uppercase transform and the "• " or "Ask: " prefix.
     pub text: String,
     pub style: TextStyle,
     pub color: &'static str,

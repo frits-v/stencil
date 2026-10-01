@@ -5,18 +5,18 @@
 mod common;
 
 use common::{
-    col, fact, g7_page, legend_entry, nested_cols, page_with_body, pcard, pipe, pipe_value, row,
-    tee, zone,
+    box_node, col, fact, g7_page, item, legend_entry, nested_cols, page_with_body, pipe,
+    pipe_value, row, tee,
 };
 use stencil_model::{
-    CHILDREN_MAX, LEGEND_ENTRIES_MAX, NODES_MAX, Node, Page, Pcard, PipeDir, PipeKind, VetRule,
-    ZoneKind, body_nodes, validate_page,
+    CHILDREN_MAX, FactEntry, FactSource, Item, LEGEND_ENTRIES_MAX, Line, NODES_MAX, Node, Page,
+    PipeDir, VetRule, body_nodes, validate_page,
 };
 
 /// (pointer, rule name, message) for every violation, with the rule name taken from
 /// `VetRule::as_str` so each assertion also pins the section 1.3 first column.
 fn violations(page: &Page) -> Vec<(String, &'static str, String)> {
-    validate_page(page)
+    validate_page(page, &common::gcp())
         .into_iter()
         .map(|violation| {
             (
@@ -70,7 +70,7 @@ fn vet_rule_names_match_section_1_3() {
 
 #[test]
 fn text_empty() {
-    let mut page = page_with_body(vec![pcard("a")]);
+    let mut page = page_with_body(vec![item("a")]);
     page.title = String::new();
     assert_eq!(
         violations(&page),
@@ -81,13 +81,13 @@ fn text_empty() {
 #[test]
 fn text_of_400_scalars_passes_and_401_fails() {
     // Multi-byte scalars, so a byte count would give the wrong answer.
-    let mut page = page_with_body(vec![pcard(&"é".repeat(400))]);
+    let mut page = page_with_body(vec![item(&"é".repeat(400))]);
     assert_eq!(violations(&page), vec![]);
-    page.body = vec![pcard(&"é".repeat(401))];
+    page.body = vec![item(&"é".repeat(401))];
     assert_eq!(
         violations(&page),
         one(
-            "/body/0/fn",
+            "/body/0/title",
             "text-too-long",
             "text has 401 scalar values, above 400"
         )
@@ -96,10 +96,10 @@ fn text_of_400_scalars_passes_and_401_fails() {
 
 #[test]
 fn text_with_newline_is_a_control_character() {
-    let mut page = page_with_body(vec![pcard("a")]);
+    let mut page = page_with_body(vec![item("a")]);
     page.legend = vec![
-        legend_entry(PipeKind::Blue, "a"),
-        legend_entry(PipeKind::Pink, "b\nc"),
+        legend_entry(Line::Solid, Some(1), "a"),
+        legend_entry(Line::Solid, Some(2), "b\nc"),
     ];
     assert_eq!(
         violations(&page),
@@ -113,11 +113,11 @@ fn text_with_newline_is_a_control_character() {
 
 #[test]
 fn delete_character_is_a_control_character_and_the_first_is_named() {
-    let page = page_with_body(vec![pcard("a\u{7f}b\u{1}")]);
+    let page = page_with_body(vec![item("a\u{7f}b\u{1}")]);
     assert_eq!(
         violations(&page),
         one(
-            "/body/0/fn",
+            "/body/0/title",
             "text-control-character",
             "text contains control character U+007F"
         )
@@ -160,7 +160,7 @@ fn trailing_space_fails() {
 
 #[test]
 fn width_limits() {
-    let mut page = page_with_body(vec![pcard("a")]);
+    let mut page = page_with_body(vec![item("a")]);
     for width in [640, 2560] {
         page.width = width;
         assert_eq!(violations(&page), vec![], "width {width}");
@@ -198,7 +198,7 @@ fn empty_body_is_body_empty_not_children_empty() {
 fn container_without_children() {
     let page = page_with_body(vec![row(vec![
         col(vec![]),
-        zone(ZoneKind::Vpc, "VPC", vec![]),
+        box_node("project", None, "VPC", vec![]),
     ])]);
     assert_eq!(
         violations(&page),
@@ -219,9 +219,9 @@ fn container_without_children() {
 
 #[test]
 fn children_limit() {
-    let mut page = page_with_body(vec![row(vec![pcard("a"); CHILDREN_MAX])]);
+    let mut page = page_with_body(vec![row(vec![item("a"); CHILDREN_MAX])]);
     assert_eq!(violations(&page), vec![]);
-    page.body = vec![row(vec![pcard("a"); CHILDREN_MAX + 1])];
+    page.body = vec![row(vec![item("a"); CHILDREN_MAX + 1])];
     assert_eq!(
         violations(&page),
         one(
@@ -234,8 +234,9 @@ fn children_limit() {
 
 #[test]
 fn zone_children_limit() {
-    let page = page_with_body(vec![zone(
-        ZoneKind::Project,
+    let page = page_with_body(vec![box_node(
+        "project",
+        None,
         "Project",
         vec![fact("a"); 257],
     )]);
@@ -251,9 +252,9 @@ fn zone_children_limit() {
 
 #[test]
 fn body_node_limit() {
-    let mut page = page_with_body(vec![pcard("a"); 256]);
+    let mut page = page_with_body(vec![item("a"); 256]);
     assert_eq!(violations(&page), vec![]);
-    page.body = vec![pcard("a"); 257];
+    page.body = vec![item("a"); 257];
     assert_eq!(
         violations(&page),
         one("/body", "children-too-many", "257 children, above 256")
@@ -262,10 +263,10 @@ fn body_node_limit() {
 
 #[test]
 fn legend_limit() {
-    let mut page = page_with_body(vec![pcard("a")]);
-    page.legend = vec![legend_entry(PipeKind::Blue, "a"); 16];
+    let mut page = page_with_body(vec![item("a")]);
+    page.legend = vec![legend_entry(Line::Solid, Some(1), "a"); 16];
     assert_eq!(violations(&page), vec![]);
-    page.legend = vec![legend_entry(PipeKind::Blue, "a"); 17];
+    page.legend = vec![legend_entry(Line::Solid, Some(1), "a"); 17];
     assert_eq!(
         violations(&page),
         one(
@@ -278,7 +279,7 @@ fn legend_limit() {
 
 #[test]
 fn gap_limit() {
-    let mut page = page_with_body(vec![row(vec![pcard("a")])]);
+    let mut page = page_with_body(vec![row(vec![item("a")])]);
     first_row_mut(&mut page).gap = Some(64);
     assert_eq!(violations(&page), vec![]);
     first_row_mut(&mut page).gap = Some(65);
@@ -290,7 +291,7 @@ fn gap_limit() {
 
 #[test]
 fn col_gap_limit() {
-    let mut page = page_with_body(vec![col(vec![pcard("a")])]);
+    let mut page = page_with_body(vec![col(vec![item("a")])]);
     if let Some(Node::Col(column)) = page.body.first_mut() {
         column.gap = Some(65);
     }
@@ -302,7 +303,7 @@ fn col_gap_limit() {
 
 #[test]
 fn grow_length_must_match_children() {
-    let mut page = page_with_body(vec![row(vec![pcard("a"), pcard("b")])]);
+    let mut page = page_with_body(vec![row(vec![item("a"), item("b")])]);
     first_row_mut(&mut page).grow = Some(vec![1, 0]);
     assert_eq!(violations(&page), vec![]);
     first_row_mut(&mut page).grow = Some(vec![1, 0, 1]);
@@ -327,7 +328,7 @@ fn grow_length_must_match_children() {
 
 #[test]
 fn grow_weight_limit_reports_each_weight() {
-    let mut page = page_with_body(vec![row(vec![pcard("a"), pcard("b"), pcard("c")])]);
+    let mut page = page_with_body(vec![row(vec![item("a"), item("b"), item("c")])]);
     first_row_mut(&mut page).grow = Some(vec![100, 0, 100]);
     assert_eq!(violations(&page), vec![]);
     first_row_mut(&mut page).grow = Some(vec![101, 0, 200]);
@@ -350,15 +351,16 @@ fn grow_weight_limit_reports_each_weight() {
 
 #[test]
 fn tee_arm_must_be_horizontal() {
-    let horizontal = pipe_value(PipeDir::Horizontal, PipeKind::Blue, "a");
-    let vertical = pipe_value(PipeDir::Vertical, PipeKind::Blue, "b");
+    let horizontal = pipe_value(PipeDir::Horizontal, Line::Solid, Some(1), "a");
+    let vertical = pipe_value(PipeDir::Vertical, Line::Solid, Some(1), "b");
     let mut page = page_with_body(vec![tee(
-        PipeKind::Blue,
+        Line::Solid,
+        Some(1),
         horizontal.clone(),
         horizontal.clone(),
     )]);
     assert_eq!(violations(&page), vec![]);
-    page.body = vec![tee(PipeKind::Blue, horizontal, vertical)];
+    page.body = vec![tee(Line::Solid, Some(1), horizontal, vertical)];
     assert_eq!(
         violations(&page),
         one(
@@ -371,7 +373,7 @@ fn tee_arm_must_be_horizontal() {
 
 #[test]
 fn depth_limit() {
-    // 23 Cols around a Pcard: the Pcard is at depth 24.
+    // 23 Cols around an Item: the Item is at depth 24.
     let mut page = page_with_body(vec![nested_cols(23)]);
     assert_eq!(body_nodes(&page).last().map(|entry| entry.depth), Some(24));
     assert_eq!(violations(&page), vec![]);
@@ -396,8 +398,8 @@ fn depth_exceeded_is_reported_once_per_subtree() {
 
 #[test]
 fn tee_arm_depth_counts() {
-    let arm = pipe_value(PipeDir::Horizontal, PipeKind::Blue, "a");
-    let mut inner = tee(PipeKind::Blue, arm.clone(), arm);
+    let arm = pipe_value(PipeDir::Horizontal, Line::Solid, Some(1), "a");
+    let mut inner = tee(Line::Solid, Some(1), arm.clone(), arm);
     for _ in 0..23 {
         inner = col(vec![inner]);
     }
@@ -423,11 +425,11 @@ fn tee_arm_depth_counts() {
 
 /// 16 Rows. The first holds `first_row_cards` Pcards and one Tee, the others 255 Pcards each.
 fn page_with_row_grid(first_row_cards: usize) -> Page {
-    let arm = pipe_value(PipeDir::Horizontal, PipeKind::Blue, "a");
-    let mut first_row_children = vec![pcard("a"); first_row_cards];
-    first_row_children.push(tee(PipeKind::Blue, arm.clone(), arm));
+    let arm = pipe_value(PipeDir::Horizontal, Line::Solid, Some(1), "a");
+    let mut first_row_children = vec![item("a"); first_row_cards];
+    first_row_children.push(tee(Line::Solid, Some(1), arm.clone(), arm));
     let mut body = vec![row(first_row_children)];
-    body.extend((0..15).map(|_| row(vec![pcard("a"); 255])));
+    body.extend((0..15).map(|_| row(vec![item("a"); 255])));
     page_with_body(body)
 }
 
@@ -449,7 +451,7 @@ fn node_limit_counts_tee_arms() {
 
 #[test]
 fn page_far_past_node_limit_stops_the_walk() {
-    let page = page_with_body(vec![row(vec![pcard("a"); 256]); 256]);
+    let page = page_with_body(vec![row(vec![item("a"); 256]); 256]);
     assert_eq!(body_nodes(&page).len(), NODES_MAX + 1);
     assert_eq!(
         violations(&page),
@@ -459,9 +461,9 @@ fn page_far_past_node_limit_stops_the_walk() {
 
 #[test]
 fn page_past_node_limit_still_reports_per_node_violations_of_walked_entries() {
-    let mut rows = vec![row(vec![pcard(" untrimmed")])];
-    rows.extend((0..254).map(|_| row(vec![pcard("a"); 256])));
-    rows.push(row(vec![pcard(" not walked")]));
+    let mut rows = vec![row(vec![item(" untrimmed")])];
+    rows.extend((0..254).map(|_| row(vec![item("a"); 256])));
+    rows.push(row(vec![item(" not walked")]));
     let page = page_with_body(rows);
     assert_eq!(
         violations(&page),
@@ -472,7 +474,7 @@ fn page_past_node_limit_still_reports_per_node_violations_of_walked_entries() {
                 "more than 4096 nodes".to_string()
             ),
             (
-                "/body/0/children/0/fn".to_string(),
+                "/body/0/children/0/title".to_string(),
                 "text-untrimmed",
                 "text starts or ends with whitespace".to_string()
             ),
@@ -484,16 +486,26 @@ fn page_past_node_limit_still_reports_per_node_violations_of_walked_entries() {
 fn every_text_field_is_vetted() {
     let untrimmed = " x";
     let mut page = page_with_body(vec![
-        zone(
-            ZoneKind::RegionA,
+        box_node(
+            "onprem",
+            Some(1),
             untrimmed,
-            vec![Node::Pcard(Pcard {
+            vec![Node::Item(Item {
                 id: None,
+                kind: "product".to_string(),
                 icon: None,
-                function_name: untrimmed.to_string(),
-                product_name: Some(untrimmed.to_string()),
-                fact: Some(untrimmed.to_string()),
-                ask: Some(untrimmed.to_string()),
+                title: untrimmed.to_string(),
+                subtitle: Some(untrimmed.to_string()),
+                facts: vec![
+                    FactEntry {
+                        text: untrimmed.to_string(),
+                        source: FactSource::Doc,
+                    },
+                    FactEntry {
+                        text: untrimmed.to_string(),
+                        source: FactSource::Ask,
+                    },
+                ],
             })],
         ),
         Node::Note(stencil_model::Note {
@@ -505,25 +517,29 @@ fn every_text_field_is_vetted() {
             id: None,
             arrow: stencil_model::Arrow::None,
             dir: PipeDir::Horizontal,
-            kind: PipeKind::Blue,
+            line: Line::Solid,
+            tint: Some(1),
             label: untrimmed.to_string(),
             sub: Some(untrimmed.to_string()),
         }),
         Node::Tee(stencil_model::Tee {
             id: None,
-            kind: PipeKind::Blue,
+            line: Line::Solid,
+            tint: Some(1),
             hub: untrimmed.to_string(),
             arms: [
                 stencil_model::TeeArm::Pipe(pipe_value(
                     PipeDir::Horizontal,
-                    PipeKind::Blue,
+                    Line::Solid,
+                    Some(1),
                     untrimmed,
                 )),
                 stencil_model::TeeArm::Pipe(stencil_model::Pipe {
                     id: None,
                     arrow: stencil_model::Arrow::None,
                     dir: PipeDir::Horizontal,
-                    kind: PipeKind::Blue,
+                    line: Line::Solid,
+                    tint: Some(1),
                     label: "a".to_string(),
                     sub: Some(untrimmed.to_string()),
                 }),
@@ -534,7 +550,7 @@ fn every_text_field_is_vetted() {
     page.kicker = untrimmed.to_string();
     page.lede = untrimmed.to_string();
     page.foot = Some(untrimmed.to_string());
-    page.legend = vec![legend_entry(PipeKind::Blue, untrimmed)];
+    page.legend = vec![legend_entry(Line::Solid, Some(1), untrimmed)];
 
     let pointers: Vec<String> = violations(&page)
         .into_iter()
@@ -551,10 +567,10 @@ fn every_text_field_is_vetted() {
             "/lede",
             "/foot",
             "/body/0/label",
-            "/body/0/children/0/fn",
-            "/body/0/children/0/pn",
-            "/body/0/children/0/fact",
-            "/body/0/children/0/ask",
+            "/body/0/children/0/title",
+            "/body/0/children/0/subtitle",
+            "/body/0/children/0/facts/0/text",
+            "/body/0/children/0/facts/1/text",
             "/body/1/text",
             "/body/2/label",
             "/body/2/sub",
@@ -572,10 +588,10 @@ fn several_faults_are_all_reported_in_document_order() {
     // struct declaration order, so /title still comes first.
     let json_text = r#"{
         "canvas": "internal",
-        "legend": [ { "kind": "blue", "text": "request path" } ],
+        "legend": [ { "line": "solid", "tint": 1, "text": "request path" } ],
         "kicker": "Kicker ",
         "body": [
-            { "tag": "Row", "children": [ { "tag": "Pipe", "dir": "h", "kind": "blue", "label": "a" } ], "gap": 65 }
+            { "tag": "Row", "children": [ { "tag": "Pipe", "dir": "h", "line": "solid", "tint": 1, "label": "a" } ], "gap": 65 }
         ],
         "lede": "Lede",
         "title": " Title"
@@ -606,8 +622,8 @@ fn several_faults_are_all_reported_in_document_order() {
 #[test]
 fn node_fields_precede_children_and_container_rules_follow_zone_label() {
     let page = page_with_body(vec![
-        zone(ZoneKind::Vpc, "VPC ", vec![]),
-        row(vec![pipe(PipeKind::Blue, " a")]),
+        box_node("project", None, "VPC ", vec![]),
+        row(vec![pipe(Line::Solid, Some(1), " a")]),
     ]);
     let pointers: Vec<String> = violations(&page)
         .into_iter()
@@ -625,8 +641,8 @@ fn node_fields_precede_children_and_container_rules_follow_zone_label() {
 
 #[test]
 fn legend_text_rules_stop_one_entry_past_the_legend_limit() {
-    let mut page = page_with_body(vec![pcard("a")]);
-    page.legend = vec![legend_entry(PipeKind::Blue, " untrimmed"); LEGEND_ENTRIES_MAX + 4];
+    let mut page = page_with_body(vec![item("a")]);
+    page.legend = vec![legend_entry(Line::Solid, Some(1), " untrimmed"); LEGEND_ENTRIES_MAX + 4];
     let found = violations(&page);
     assert_eq!(
         found.first(),
@@ -649,7 +665,7 @@ fn legend_text_rules_stop_one_entry_past_the_legend_limit() {
 
 #[test]
 fn grow_weights_are_checked_up_to_one_past_the_children_limit() {
-    let mut page = page_with_body(vec![row(vec![pcard("a")])]);
+    let mut page = page_with_body(vec![row(vec![item("a")])]);
     first_row_mut(&mut page).grow = Some(vec![101; CHILDREN_MAX + 1]);
     let at_bound = violations(&page);
     assert_eq!(at_bound.len(), 1 + CHILDREN_MAX + 1);
@@ -676,7 +692,7 @@ fn grow_weights_are_checked_up_to_one_past_the_children_limit() {
 
 #[test]
 fn a_huge_children_list_is_walked_only_to_the_node_limit() {
-    let page = page_with_body(vec![row(vec![pcard("a"); 200_000])]);
+    let page = page_with_body(vec![row(vec![item("a"); 200_000])]);
     let entries = body_nodes(&page);
     assert_eq!(entries.len(), NODES_MAX + 1);
     assert_eq!(

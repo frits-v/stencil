@@ -50,8 +50,8 @@ fn kind_appears_on_exactly_the_kinded_tags() {
             NodeTag::Zone | NodeTag::Pipe | NodeTag::Tee | NodeTag::LegendEntry
         );
         assert_eq!(node.get("kind").is_some(), kinded, "{}", node["id"]);
-        if let Some(kind) = geometry_node.kind {
-            assert_eq!(node["kind"], kind);
+        if let Some(kind) = &geometry_node.kind {
+            assert_eq!(node["kind"], kind.as_str());
         }
     }
 }
@@ -127,8 +127,9 @@ fn serialized_keys_are_in_ascending_byte_order() {
     let document = serialized.find("\"document\"").unwrap();
     let nodes = serialized.find("\"nodes\"").unwrap();
     assert!(canvas < document && document < nodes);
+    // Items carry `title` too, inside `body`, so the page's own title is found by its value.
     let kicker = serialized.find("\"kicker\"").unwrap();
-    let title = serialized.find("\"title\"").unwrap();
+    let title = serialized.find("\"title\":\"Four lines").unwrap();
     assert!(kicker < title, "kicker sorts before title inside document");
 
     fn assert_sorted(value: &Value) {

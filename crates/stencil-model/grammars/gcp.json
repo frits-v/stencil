@@ -1,0 +1,480 @@
+{
+    "name": "gcp",
+    "containers": [
+        {
+            "name": "gcp",
+            "role": "frame",
+            "tintable": false,
+            "border": {
+                "pattern": "solid",
+                "width": 3
+            },
+            "padding": 0,
+            "radius": 10,
+            "label": "bar",
+            "parents": [
+                "page"
+            ]
+        },
+        {
+            "name": "vpc",
+            "role": "boundary",
+            "tone": "strong",
+            "tintable": false,
+            "border": {
+                "pattern": "dashed",
+                "width": 2
+            },
+            "padding": 10,
+            "radius": 8,
+            "label": "plain",
+            "parents": [
+                "gcp",
+                "project",
+                "perimeter"
+            ]
+        },
+        {
+            "name": "region",
+            "role": "group",
+            "tone": "neutral",
+            "tintable": true,
+            "default_tint": 1,
+            "border": {
+                "pattern": "solid",
+                "width": 1.5
+            },
+            "padding": 12,
+            "radius": 8,
+            "label": "plain",
+            "parents": [
+                "gcp",
+                "vpc",
+                "perimeter",
+                "project"
+            ]
+        },
+        {
+            "name": "subnet",
+            "role": "group",
+            "tone": "cool",
+            "tintable": false,
+            "border": {
+                "pattern": "dashed",
+                "width": 1.5
+            },
+            "padding": 12,
+            "radius": 8,
+            "label": "plain",
+            "parents": [
+                "region",
+                "vpc",
+                "project"
+            ]
+        },
+        {
+            "name": "onprem",
+            "role": "group",
+            "tone": "warm",
+            "tintable": true,
+            "border": {
+                "pattern": "solid",
+                "width": 1.5
+            },
+            "padding": 12,
+            "radius": 8,
+            "label": "plain",
+            "parents": [
+                "page",
+                "optional"
+            ]
+        },
+        {
+            "name": "project",
+            "role": "tile",
+            "tone": "highlight",
+            "tintable": false,
+            "border": {
+                "pattern": "solid",
+                "width": 1.5
+            },
+            "padding": 12,
+            "radius": 8,
+            "label": "plain",
+            "parents": [
+                "page",
+                "gcp",
+                "vpc",
+                "perimeter",
+                "project"
+            ]
+        },
+        {
+            "name": "optional",
+            "role": "group",
+            "tone": "emphasis",
+            "tintable": false,
+            "border": {
+                "pattern": "dashed",
+                "width": 2
+            },
+            "padding": 12,
+            "radius": 8,
+            "label": "plain",
+            "parents": [
+                "page",
+                "gcp",
+                "vpc",
+                "region",
+                "subnet",
+                "project",
+                "perimeter"
+            ]
+        },
+        {
+            "name": "k8s",
+            "role": "group",
+            "tone": "soft",
+            "tintable": false,
+            "border": {
+                "pattern": "none",
+                "width": 0
+            },
+            "padding": 12,
+            "radius": 8,
+            "label": "plain",
+            "parents": [
+                "gcp",
+                "vpc",
+                "region",
+                "subnet",
+                "project",
+                "perimeter",
+                "optional"
+            ]
+        },
+        {
+            "name": "perimeter",
+            "role": "boundary",
+            "tone": "accent",
+            "tintable": false,
+            "border": {
+                "pattern": "dashed",
+                "width": 2.5
+            },
+            "padding": 12,
+            "radius": 10,
+            "label": "accent",
+            "parents": [
+                "gcp",
+                "vpc",
+                "project"
+            ]
+        },
+        {
+            "name": "apis",
+            "role": "group",
+            "tone": "neutral",
+            "tintable": false,
+            "border": {
+                "pattern": "solid",
+                "width": 1.5
+            },
+            "padding": 12,
+            "radius": 8,
+            "label": "plain",
+            "parents": [
+                "gcp",
+                "project",
+                "perimeter"
+            ]
+        }
+    ],
+    "items": [
+        {
+            "name": "product",
+            "icons": "gcp",
+            "products": [
+                {
+                    "icon": "agents",
+                    "class": "category",
+                    "names": [
+                        "Vertex AI Agent Builder",
+                        "Vertex AI Agent Engine",
+                        "Agent Engine",
+                        "Agentspace",
+                        "Gemini Enterprise",
+                        "Dialogflow"
+                    ]
+                },
+                {
+                    "icon": "ai-ml",
+                    "class": "category",
+                    "names": [
+                        "Vertex AI",
+                        "Gemini",
+                        "Document AI",
+                        "Vision AI",
+                        "Speech-to-Text",
+                        "Text-to-Speech",
+                        "Translation AI",
+                        "Natural Language AI",
+                        "Cloud TPU"
+                    ]
+                },
+                {
+                    "icon": "bigquery",
+                    "class": "product",
+                    "names": [
+                        "BigQuery"
+                    ]
+                },
+                {
+                    "icon": "cloud-run-flat",
+                    "class": "product",
+                    "names": [
+                        "Cloud Run",
+                        "Cloud Run functions"
+                    ]
+                },
+                {
+                    "icon": "cloud-run",
+                    "class": "product",
+                    "names": [
+                        "Cloud Run",
+                        "Cloud Run functions"
+                    ]
+                },
+                {
+                    "icon": "cloud-sql",
+                    "class": "product",
+                    "names": [
+                        "Cloud SQL"
+                    ]
+                },
+                {
+                    "icon": "cloud-storage",
+                    "class": "product",
+                    "names": [
+                        "Cloud Storage"
+                    ]
+                },
+                {
+                    "icon": "compute-engine",
+                    "class": "product",
+                    "names": [
+                        "Compute Engine"
+                    ]
+                },
+                {
+                    "icon": "compute",
+                    "class": "category",
+                    "names": [
+                        "Compute Engine",
+                        "Cloud Run",
+                        "Cloud Run functions",
+                        "App Engine",
+                        "Cloud Functions",
+                        "Batch",
+                        "Bare Metal Solution",
+                        "Google Cloud VMware Engine"
+                    ]
+                },
+                {
+                    "icon": "containers",
+                    "class": "category",
+                    "names": [
+                        "Google Kubernetes Engine",
+                        "GKE",
+                        "Cloud Run",
+                        "Artifact Registry"
+                    ]
+                },
+                {
+                    "icon": "data-analytics",
+                    "class": "category",
+                    "names": [
+                        "BigQuery",
+                        "Dataflow",
+                        "Dataproc",
+                        "Pub/Sub",
+                        "Looker",
+                        "Dataplex",
+                        "Cloud Data Fusion",
+                        "Cloud Composer",
+                        "Datastream",
+                        "Dataform"
+                    ]
+                },
+                {
+                    "icon": "databases",
+                    "class": "category",
+                    "names": [
+                        "Cloud SQL",
+                        "AlloyDB",
+                        "Spanner",
+                        "Firestore",
+                        "Bigtable",
+                        "Memorystore",
+                        "Database Migration Service"
+                    ]
+                },
+                {
+                    "icon": "devops",
+                    "class": "category",
+                    "names": [
+                        "Cloud Build",
+                        "Artifact Registry",
+                        "Cloud Deploy",
+                        "Infrastructure Manager"
+                    ]
+                },
+                {
+                    "icon": "gke",
+                    "class": "product",
+                    "names": [
+                        "Google Kubernetes Engine",
+                        "GKE"
+                    ]
+                },
+                {
+                    "icon": "hybrid",
+                    "class": "category",
+                    "names": [
+                        "Google Distributed Cloud",
+                        "Cloud Interconnect",
+                        "Dedicated Interconnect",
+                        "Partner Interconnect",
+                        "Cross-Cloud Interconnect"
+                    ]
+                },
+                {
+                    "icon": "integration",
+                    "class": "category",
+                    "names": [
+                        "Pub/Sub",
+                        "Application Integration",
+                        "Workflows",
+                        "Eventarc",
+                        "Apigee",
+                        "API Gateway",
+                        "Cloud Tasks",
+                        "Cloud Scheduler"
+                    ]
+                },
+                {
+                    "icon": "networking",
+                    "class": "category",
+                    "names": [
+                        "Cloud Load Balancing",
+                        "Cloud CDN",
+                        "Cloud DNS",
+                        "Cloud NAT",
+                        "Cloud Router",
+                        "Cloud VPN",
+                        "Cloud Interconnect",
+                        "Network Connectivity Center",
+                        "Private Service Connect",
+                        "Virtual Private Cloud"
+                    ]
+                },
+                {
+                    "icon": "observability",
+                    "class": "category",
+                    "names": [
+                        "Cloud Logging",
+                        "Cloud Monitoring",
+                        "Cloud Trace",
+                        "Cloud Profiler",
+                        "Error Reporting"
+                    ]
+                },
+                {
+                    "icon": "scc",
+                    "class": "product",
+                    "names": [
+                        "Security Command Center"
+                    ]
+                },
+                {
+                    "icon": "security-identity",
+                    "class": "category",
+                    "names": [
+                        "Security Command Center",
+                        "Cloud KMS",
+                        "Secret Manager",
+                        "Identity and Access Management",
+                        "Identity-Aware Proxy",
+                        "Cloud Armor",
+                        "VPC Service Controls",
+                        "Certificate Authority Service",
+                        "Sensitive Data Protection"
+                    ]
+                },
+                {
+                    "icon": "serverless",
+                    "class": "category",
+                    "names": [
+                        "Cloud Run",
+                        "Cloud Run functions",
+                        "Cloud Functions",
+                        "App Engine",
+                        "Workflows",
+                        "Eventarc"
+                    ]
+                },
+                {
+                    "icon": "storage",
+                    "class": "category",
+                    "names": [
+                        "Cloud Storage",
+                        "Filestore",
+                        "Persistent Disk",
+                        "Hyperdisk",
+                        "Backup and DR Service",
+                        "Storage Transfer Service",
+                        "Google Cloud NetApp Volumes"
+                    ]
+                },
+                {
+                    "icon": "vertex-ai",
+                    "class": "product",
+                    "names": [
+                        "Vertex AI"
+                    ]
+                }
+            ],
+            "parents": [
+                "gcp",
+                "vpc",
+                "region",
+                "subnet",
+                "onprem",
+                "project",
+                "optional",
+                "k8s",
+                "perimeter",
+                "apis",
+                "page"
+            ]
+        }
+    ],
+    "remembered": [
+        {
+            "literal": "64512",
+            "reason": "doc example ASN, not a requirement. Dedicated Interconnect takes any private ASN (RFC 6996); Partner Interconnect is fixed at 16550."
+        },
+        {
+            "literal": "130.211.0.0/22",
+            "reason": "GFE health-check probe range. Applies only to backend types the health-check doc names. Not serverless NEG or Cloud Run."
+        },
+        {
+            "literal": "35.191.0.0/16",
+            "reason": "GFE health-check probe range. Applies only to backend types the health-check doc names. Not serverless NEG or Cloud Run."
+        },
+        {
+            "literal": "10.8.0.0/28",
+            "reason": "Serverless VPC Access connector range. Direct VPC egress does not use a connector; label it Private Google Access on the subnet instead."
+        }
+    ]
+}

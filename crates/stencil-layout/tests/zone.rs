@@ -7,18 +7,22 @@ use serde_json::json;
 use stencil_layout::PartName;
 
 fn zone_page(kind: &str) -> stencil_layout::PageGeometry {
+    zone_page_tinted(kind, None)
+}
+
+fn zone_page_tinted(kind: &str, tint: Option<u8>) -> stencil_layout::PageGeometry {
     layout(&page_with_body(
         1280,
         json!([{
-            "tag": "Zone", "kind": kind, "label": "Zone label",
-            "children": [{ "tag": "Pcard", "fn": "Inside" }, { "tag": "Fact", "text": "Second" }]
+            "tag": "Box", "kind": kind, "tint": tint, "label": "Zone label",
+            "children": [{ "tag": "Item", "kind": "product", "title": "Inside" }, { "tag": "Fact", "text": "Second" }]
         }]),
     ))
 }
 
 #[test]
 fn region_first_child_sits_under_the_label_band() {
-    let geometry = zone_page("region-a");
+    let geometry = zone_page_tinted("region", Some(1));
     let zone = node(&geometry, "/body/0");
     let first = node(&geometry, "/body/0/children/0");
     assert_close(

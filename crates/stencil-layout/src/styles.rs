@@ -2,7 +2,7 @@
 //! `stencil_model::text::TEXT_STYLES`.
 
 use stencil_model::text::TextStyleName;
-use stencil_model::{Canvas, PipeKind};
+use stencil_model::{Canvas, Line};
 
 pub const TEXT_DARK: &str = "#202124";
 pub const TEXT_MUTED: &str = "#5F6368";
@@ -15,13 +15,9 @@ pub const BADGE_TEXT_INTERNAL: &str = "#7B1FA2";
 pub const BADGE_FILL_CUSTOMER: &str = "#E8F0FE";
 pub const BADGE_FILL_INTERNAL: &str = "#F3E5F5";
 
-/// Text color of a style. `canvas` decides `badge`; `pipe_kind` is the kind of the Pipe or
-/// Tee a `tag_label` run belongs to, and `deny` turns it red. Other styles ignore both.
-pub fn text_color(
-    name: TextStyleName,
-    canvas: Canvas,
-    pipe_kind: Option<PipeKind>,
-) -> &'static str {
+/// Text color of a style. `canvas` decides `badge`; `line` is the line of the Pipe, Tee or
+/// Link a `tag_label` run belongs to, and `deny` turns it red. Other styles ignore both.
+pub fn text_color(name: TextStyleName, canvas: Canvas, line: Option<Line>) -> &'static str {
     match name {
         TextStyleName::Badge => match canvas {
             Canvas::Customer => BADGE_TEXT_CUSTOMER,
@@ -32,11 +28,9 @@ pub fn text_color(
         | TextStyleName::CardFunction
         | TextStyleName::LegendLabel
         | TextStyleName::BlockBody => TEXT_DARK,
-        TextStyleName::TagLabel => match pipe_kind {
-            Some(PipeKind::Deny) => TEXT_DENY,
-            Some(PipeKind::Gray | PipeKind::Blue | PipeKind::Pink | PipeKind::Dash) | None => {
-                TEXT_DARK
-            }
+        TextStyleName::TagLabel => match line {
+            Some(Line::Deny) => TEXT_DENY,
+            Some(Line::Gray | Line::Solid | Line::Dash) | None => TEXT_DARK,
         },
         TextStyleName::GcpBar => TEXT_WHITE,
         TextStyleName::PerimeterLabel | TextStyleName::Ask => TEXT_AMBER,
@@ -80,14 +74,14 @@ mod tests {
 
     #[test]
     fn tag_label_is_red_only_for_deny() {
-        for kind in PipeKind::ALL {
-            let expected = if kind == PipeKind::Deny {
+        for line in Line::ALL {
+            let expected = if line == Line::Deny {
                 "#C5221F"
             } else {
                 "#202124"
             };
             assert_eq!(
-                text_color(TextStyleName::TagLabel, Canvas::Customer, Some(kind)),
+                text_color(TextStyleName::TagLabel, Canvas::Customer, Some(line)),
                 expected
             );
         }

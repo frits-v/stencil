@@ -1,0 +1,11 @@
+check child-inside-container: examined 35 relations, 0 defects
+check siblings-do-not-overlap: examined 46 pairs, 0 defects
+check text-fits-box: examined 58 text runs, 0 defects
+check remembered-constants: examined 51 text fields, 0 defects
+check legend-consistency: examined 9 relations, 0 defects
+check links-routed: examined 7 links, 0 defects
+check links-avoid-boxes: examined 387 pairs, 0 defects
+check pipes-land: examined 0 pipe ends, not applicable: page has no pipes
+check iso-labels-clear: examined 0 pairs, not applicable: projection is flat
+check iso-links-clear: examined 0 link legs, not applicable: projection is flat
+stencil check: 10 checks, 7 passed, 0 failed, 3 not applicable

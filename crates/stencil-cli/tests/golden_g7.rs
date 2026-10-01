@@ -108,7 +108,12 @@ fn golden_g7() {
     );
 
     // Step 2: exact examined counts, derived in SPEC section 9.4.
-    let reports = all_checks(&loaded.page, geometry, rendered.scene.as_ref());
+    let reports = all_checks(
+        &loaded.page,
+        &loaded.grammar,
+        geometry,
+        rendered.scene.as_ref(),
+    );
     let examined: Vec<(CheckName, u64)> = reports
         .iter()
         .map(|report| (report.check, report.examined))

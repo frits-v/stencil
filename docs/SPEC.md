@@ -28,6 +28,8 @@ docs/api-notes/                 verified third-party API notes (taffy, cosmic-te
 
 A document is one `Page`. `Page.body` is a list of nodes. Every node object carries a `tag` field naming its type. Unknown fields are rejected at every level, and so are unknown tags and unknown enum values.
 
+The vocabulary is split into a core and grammars in section 13. The tables below follow it: `Box` and `Item` replace `Zone` and `Pcard`, a grammar supplies the kinds a Box or Item may take (section 13.2), and `line` with `tint` replaces the color-named `kind` on lines (section 13.1). Where this section and section 13 differ, section 13 wins.
+
 ### 1.1 Field summary
 
 | Tag | Field | Type | Required | Default |
@@ -38,30 +40,38 @@ A document is one `Page`. `Page.body` is a list of nodes. Every node object carr
 | Page | foot | text | no | absent |
 | Page | width | integer 640 to 2560 | no | 1280 |
 | Page | canvas | `customer` or `internal` | yes | |
+| Page | grammar | `gcp`, `plain` or a path ending in `.json` (section 13.2) | no | `gcp` |
+| Page | chrome | `full` or `none` (section 13.7) | no | `full` |
 | Page | body | list of Node, 1 to 256 | yes | |
 | Page | legend | list of LegendEntry, 0 to 16 | yes | |
-| LegendEntry | kind | PipeKind | yes | |
+| LegendEntry | line | Line | yes | |
+| LegendEntry | tint | integer 1 to 8 (section 13.1) | no | section 13.1 rule 2 |
 | LegendEntry | text | text | yes | |
 | Row, Col | gap | integer 0 to 64, px | no | 8 |
 | Row, Col | grow | list of integers 0 to 100, one per child | no | see section 2.3 |
 | Row, Col | justify | `start`, `center`, `end`, `space-between` | no | `start` |
 | Row, Col | children | list of Node, 1 to 256 | yes | |
-| Zone | kind | ZoneKind | yes | |
-| Zone | label | text | yes | |
-| Zone | children | list of Node, 1 to 256 | yes | |
-| Pcard | icon | IconName | no | absent |
-| Pcard | fn | text | yes | |
-| Pcard | pn | text | no | absent |
-| Pcard | fact | text | no | absent |
-| Pcard | ask | text | no | absent |
+| Lanes | gap, children | as Row, children 1 to 32 (section 13.6) | | 32 |
+| Box | kind | a container kind of the grammar (section 13.3 for gcp) | yes | |
+| Box | tint | integer 1 to 8 | no | the kind's default |
+| Box | label | text | yes | |
+| Box | children | list of Node, 1 to 256 | yes | |
+| Item | kind | an item kind of the grammar (`product` in gcp) | yes | |
+| Item | icon | IconName | no | absent |
+| Item | title | text | yes | |
+| Item | subtitle | text | no | absent |
+| Item | facts | list of fact entries (`text`, `source`), 0 to 8 (section 13.7) | no | empty |
 | Fact | text | text | yes | |
+| Fact | source | `doc`, `built` or `ask` | no | `doc` |
 | Note | kind | `kicker`, `h1`, `lede`, `legend`, `foot` | yes | |
 | Note | text | text | yes | |
 | Pipe | dir | `h` or `v` | yes | |
-| Pipe | kind | PipeKind | yes | |
+| Pipe | line | Line | yes | |
+| Pipe | tint | integer 1 to 8 | no | section 13.1 rule 2 |
 | Pipe | label | text | yes | |
 | Pipe | sub | text | no | absent |
-| Tee | kind | PipeKind | yes | |
+| Tee | line | Line | yes | |
+| Tee | tint | integer 1 to 8 | no | section 13.1 rule 2 |
 | Tee | hub | text | yes | |
 | Tee | arms | exactly two Pipe objects, each `dir: "h"` | yes | |
 
@@ -69,13 +79,15 @@ A text value is a string of 1 to 400 Unicode scalar values with no control chara
 
 An optional field (default `absent`, or `gap`, `grow` and `justify`) written as `null` means absent. serde reads `null` as `None`, and the generated schema admits `null` for every optional field, so the two agree. The measured JSON `document` carries the `null` through unchanged (section 5.4). `width` is not optional in this sense: `"width": null` is a parse error, and only an absent `width` takes the default. `cue export` never writes `null`.
 
-PipeKind: `gray`, `blue`, `pink`, `dash`, `deny`.
+Line: `gray`, `solid`, `dash`, `deny`. The retired PipeKind maps to it as section 13.1's table shows: `blue` and `pink` are `solid` with tint 1 and 2.
 
-ZoneKind: `gcp`, `vpc`, `region-a`, `region-b`, `subnet`, `onprem-a`, `onprem-b`, `project`, `optional`, `k8s`, `perimeter`.
+Container and item kinds come from the page's grammar (section 13.2). The retired ZoneKind maps onto the gcp grammar of section 13.3: `region-a` and `region-b` are `region` with tint 1 and 2, `onprem-a` and `onprem-b` are `onprem` with tint 1 and 2, and every other zone kind keeps its name.
 
 IconName: the file stem of one of the 23 icons in `assets/icons/` (section 8).
 
 ### 1.2 Rust types
+
+Section 13.1 replaces `Zone`, `Pcard`, `ZoneKind`, `PipeKind` and the `kind` fields of Pipe, Tee, Link and LegendEntry in the block below; `crates/stencil-model/src/document.rs` follows section 13.1, and the grammar types live in `crates/stencil-model/src/grammar.rs` (section 13.2).
 
 These definitions are copied verbatim into `crates/stencil-model/src/document.rs`. `schema/stencil.schema.json` is generated from them by schemars.
 
@@ -336,6 +348,8 @@ pub enum IconName {
 Two serde behaviors are load-bearing and each has a test (section 10). First, `deny_unknown_fields` on the payload structs must reject an unknown field inside a tagged node, even though the tag is on the enum. Second, the generated schema must accept the `tag` property on every node object and reject unknown properties.
 
 ### 1.3 Validation (vet rules)
+
+Section 13.1 adds the grammar-aware rules (`tint-out-of-range`, `grammar-unknown`, `kind-unknown`, `kind-parent-not-allowed`, `icon-outside-pack`, `facts-too-many`, `lanes-too-many`, `lanes-in-iso`) and makes `validate_page` take the resolved grammar. Pointers below that name `fn` or `pn` read `title` and `subtitle` on an Item.
 
 serde handles types and required fields. `validate_page` then enforces the rules below and returns every violation it finds, not only the first. Each violation carries the JSON Pointer and the message listed for its rule. Pointers use the serialized field names (`fn`, `pn`, `dir`), and `…` stands for the pointer of the node that holds the field. In a message, `<n>`, `<g>`, `<c>` and `<w>` are decimal integers and `<XXXX>` is four uppercase hex digits. `VetRule::as_str(self) -> &'static str` returns the rule name in kebab-case as in the first column, so the CLI does not carry a second copy of the names.
 
@@ -1602,6 +1616,8 @@ The eight tags in section 1, layout by taffy, measurement by cosmic-text over bu
 | CUE export of g7 compared with `examples/g7.json` | `examples/g7.json` is maintained by hand, and no Rust test runs `cue`. The comparison belongs to `cue/check.sh`, which fails when the `cue` binary is missing, and is added there together with the `cue/g7.cue` update in section 9.3. No file in the repository pins the `cue` version. |
 
 ### 9.3 examples/g7.json
+
+The block below is the g7 document in the vocabulary of sections 1 to 12. `examples/g7.json` is written in the core vocabulary of section 13 (Box, Item, `line` and `tint`, `"grammar": "gcp"`), migrated field for field by section 13.13's table, and lays out to the same geometry.
 
 This is the g7 customer canvas as data. `examples/g7.json` is maintained by hand. For `cue export ./cue -e customer --out json` to produce this document, `cue/g7.cue` and `cue/stencil.cue` need an update outside the MVP (section 9.2): `grow` and `justify` on `#Container`, no Col wrapper inside the VPC zone, and the VLAN column split into two halves as the gold does.
 

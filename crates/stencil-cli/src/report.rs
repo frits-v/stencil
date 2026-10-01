@@ -2,6 +2,7 @@
 
 use stencil_model::Violation;
 use stencil_model::checks::{CheckName, CheckOutcome, CheckReport, Defect};
+use stencil_model::grammar::GrammarViolation;
 
 pub fn count_text(count: u64, singular: &str, plural: &str) -> String {
     if count == 1 {
@@ -16,6 +17,16 @@ pub fn violation_count_text(count: usize) -> String {
 }
 
 pub fn violation_line(violation: &Violation) -> String {
+    format!(
+        "violation {} {}: {}",
+        violation.rule.as_str(),
+        violation.pointer,
+        violation.message
+    )
+}
+
+/// `violation <rule> <pointer>: <message>` for a grammar file, the shape of a vet line.
+pub fn grammar_violation_line(violation: &GrammarViolation) -> String {
     format!(
         "violation {} {}: {}",
         violation.rule.as_str(),

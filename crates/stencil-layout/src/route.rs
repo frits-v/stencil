@@ -8,8 +8,8 @@ use std::collections::{BinaryHeap, HashMap};
 use stencil_model::pointer::NodePointer;
 use stencil_model::text::{TextMeasurer, TextMetrics, TextStyleName};
 use stencil_model::{
-    LINK_SEGMENTS_MAX, LINKS_MAX, Link, Page, PagePoint, PipeKind, ROUTER_GRID_LINES_MAX, Side,
-    VetRule, Violation, body_nodes,
+    LINK_SEGMENTS_MAX, LINKS_MAX, Line, Link, Page, PagePoint, ROUTER_GRID_LINES_MAX, Side,
+    VetRule, Violation, body_nodes, line_tint,
 };
 
 use crate::styles::text_color;
@@ -82,7 +82,8 @@ pub(crate) fn route_links(
         let tag = parts.first().map(|part| part.bounds);
         routes.push(LinkRoute {
             index,
-            kind: link.kind,
+            line: link.line,
+            tint: line_tint(link.line, link.tint),
             from_node,
             to_node,
             points,
@@ -178,7 +179,12 @@ fn obstacle_box(node: &NodeGeometry) -> Option<BoxRect> {
         | NodeTag::Foot => Some(node.bounds),
         NodeTag::Pipe => node.part(PartName::Tag).map(|part| part.bounds),
         NodeTag::Zone => node.part(PartName::Label).map(|part| part.bounds),
-        NodeTag::Page | NodeTag::Body | NodeTag::Legend | NodeTag::Row | NodeTag::Col => None,
+        NodeTag::Page
+        | NodeTag::Body
+        | NodeTag::Legend
+        | NodeTag::Row
+        | NodeTag::Col
+        | NodeTag::Lanes => None,
     }
 }
 
@@ -771,7 +777,7 @@ fn tag_parts(
     };
     let label_run = tag_run(
         page,
-        link.kind,
+        link.line,
         label,
         TextStyleName::TagLabel,
         link_pointer.child("label"),
@@ -780,7 +786,7 @@ fn tag_parts(
     let sub_run = match &link.sub {
         Some(sub) => Some(tag_run(
             page,
-            link.kind,
+            link.line,
             sub,
             TextStyleName::TagSub,
             link_pointer.child("sub"),
@@ -841,7 +847,7 @@ fn tag_parts(
 
 fn tag_run(
     page: &Page,
-    kind: PipeKind,
+    line: Line,
     text: &str,
     style_name: TextStyleName,
     source: NodePointer,
@@ -857,7 +863,7 @@ fn tag_run(
     Ok(TextRun {
         text: text.to_string(),
         style,
-        color: text_color(style_name, page.canvas, Some(kind)),
+        color: text_color(style_name, page.canvas, Some(line)),
         align: TextAlign::Center,
         metrics,
     })

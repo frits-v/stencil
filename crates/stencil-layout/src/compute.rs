@@ -97,7 +97,9 @@ pub(crate) fn compute_geometry(
         nodes.push(NodeGeometry {
             pointer: record.pointer.clone(),
             tag: record.tag,
-            kind: record.kind,
+            kind: record.kind.clone(),
+            tint: record.tint,
+            container: record.container,
             parent: record.parent,
             bounds,
             content,

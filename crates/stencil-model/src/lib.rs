@@ -3,6 +3,7 @@
 
 pub mod checks;
 pub mod document;
+pub mod grammar;
 pub mod pointer;
 pub mod text;
 
@@ -10,8 +11,12 @@ mod vet;
 mod walk;
 
 pub use document::*;
+pub use grammar::{
+    Grammar, GrammarError, GrammarRule, GrammarViolation, builtin_grammar, grammar_schema,
+    parse_grammar, validate_grammar,
+};
 pub use pointer::NodePointer;
-pub use vet::{VetRule, Violation, validate_page};
+pub use vet::{VetRule, Violation, is_grammar_reference, validate_page};
 pub use walk::{NodeEntry, NodeRef, TextField, body_nodes, text_fields};
 
 #[derive(Debug, thiserror::Error)]
@@ -26,15 +31,31 @@ pub enum ModelError {
     Invalid(Vec<Violation>),
 }
 
-/// serde_json parse followed by validate_page.
+/// serde_json parsing alone. The grammar a page names is known only after parsing, so
+/// callers resolve it and then run `validate_page`, or call `parse_and_vet`.
 pub fn parse_page(json_text: &str) -> Result<Page, ModelError> {
-    let page: Page = serde_json::from_str(json_text).map_err(|error| json_error(&error))?;
-    let violations = validate_page(&page);
+    serde_json::from_str(json_text).map_err(|error| json_error(&error))
+}
+
+/// `parse_page` followed by `validate_page` against `grammar`.
+pub fn parse_and_vet(json_text: &str, grammar: &Grammar) -> Result<Page, ModelError> {
+    let page = parse_page(json_text)?;
+    vet_page(page, grammar)
+}
+
+/// `validate_page`, returning the page when it is valid.
+pub fn vet_page(page: Page, grammar: &Grammar) -> Result<Page, ModelError> {
+    let violations = validate_page(&page, grammar);
     if violations.is_empty() {
         Ok(page)
     } else {
         Err(ModelError::Invalid(violations))
     }
+}
+
+/// The grammar reference a page names, `gcp` when it names none.
+pub fn grammar_reference(page: &Page) -> &str {
+    page.grammar.as_deref().unwrap_or(GRAMMAR_DEFAULT)
 }
 
 /// serde_json's Display appends " at line L column C"; the location is carried in its own

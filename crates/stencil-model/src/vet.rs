@@ -1,10 +1,14 @@
 use std::collections::BTreeMap;
 
-use crate::document::{Link, Node, Page, PipeDir, Text, is_valid_id};
+use crate::document::{
+    BUILTIN_GRAMMARS, FACTS_MAX, LANES_MAX, Link, Node, Page, PipeDir, Projection, TINT_SLOTS,
+    Text, is_valid_id,
+};
+use crate::grammar::{Grammar, IconPack, PAGE_PARENT};
 use crate::pointer::NodePointer;
 use crate::walk::{
-    NodeEntry, NodeRef, TextField, body_nodes, push_legend_text_fields, push_node_text_fields,
-    push_one_link_text_fields, push_page_head_text_fields,
+    NodeEntry, NodeRef, TextField, body_nodes, push_node_text_fields, push_one_link_text_fields,
+    push_page_head_text_fields,
 };
 use crate::{
     CHILDREN_MAX, DEPTH_MAX, FRAME_HEIGHT_MAX, FRAME_HEIGHT_MIN, GAP_MAX_PX, GROW_WEIGHT_MAX,
@@ -50,6 +54,14 @@ pub enum VetRule {
     LinkUnknownId,
     LinkViaTooMany,
     LinkViaOutside,
+    TintOutOfRange,
+    GrammarUnknown,
+    KindUnknown,
+    KindParentNotAllowed,
+    IconOutsidePack,
+    FactsTooMany,
+    LanesTooMany,
+    LanesInIso,
 }
 
 impl VetRule {
@@ -81,6 +93,14 @@ impl VetRule {
             VetRule::LinkUnknownId => "link-unknown-id",
             VetRule::LinkViaTooMany => "link-via-too-many",
             VetRule::LinkViaOutside => "link-via-outside",
+            VetRule::TintOutOfRange => "tint-out-of-range",
+            VetRule::GrammarUnknown => "grammar-unknown",
+            VetRule::KindUnknown => "kind-unknown",
+            VetRule::KindParentNotAllowed => "kind-parent-not-allowed",
+            VetRule::IconOutsidePack => "icon-outside-pack",
+            VetRule::FactsTooMany => "facts-too-many",
+            VetRule::LanesTooMany => "lanes-too-many",
+            VetRule::LanesInIso => "lanes-in-iso",
         }
     }
 }
@@ -97,8 +117,15 @@ impl Violations {
     }
 }
 
-/// All vet violations, in document order (section 4.2). Empty means valid.
-pub fn validate_page(page: &Page) -> Vec<Violation> {
+/// True when `reference` is a built-in grammar name or a string ending in `.json`, the
+/// condition of `grammar-unknown`.
+pub fn is_grammar_reference(reference: &str) -> bool {
+    BUILTIN_GRAMMARS.contains(&reference) || reference.ends_with(".json")
+}
+
+/// All vet violations against `grammar`, the grammar `page.grammar` resolved to, in
+/// document order (section 4.2). Empty means valid.
+pub fn validate_page(page: &Page, grammar: &Grammar) -> Vec<Violation> {
     let mut violations = Violations(Vec::new());
     let root = NodePointer::root();
 
@@ -117,6 +144,28 @@ pub fn validate_page(page: &Page) -> Vec<Violation> {
         );
     }
 
+    if let Some(reference) = &page.grammar
+        && !is_grammar_reference(reference)
+    {
+        violations.push(
+            root.child("grammar"),
+            VetRule::GrammarUnknown,
+            format!("grammar \"{reference}\" is neither a built-in grammar nor a .json path"),
+        );
+    }
+
+    let entries = body_nodes(page);
+    let has_lanes = entries
+        .iter()
+        .any(|entry| matches!(entry.node, NodeRef::Node(Node::Lanes(_))));
+    if has_lanes && page.projection == Projection::Iso {
+        violations.push(
+            root.child("projection"),
+            VetRule::LanesInIso,
+            "a page with Lanes cannot be drawn in iso".to_string(),
+        );
+    }
+
     let body_pointer = root.child("body");
     if page.body.is_empty() {
         violations.push(
@@ -131,7 +180,6 @@ pub fn validate_page(page: &Page) -> Vec<Violation> {
             children_too_many_message(page.body.len()),
         );
     }
-    let entries = body_nodes(page);
     if entries.len() > NODES_MAX {
         violations.push(
             body_pointer,
@@ -142,8 +190,26 @@ pub fn validate_page(page: &Page) -> Vec<Violation> {
     // Well-formed ids of the walked nodes, each with the pointer of the first node holding
     // it. Bounded by the walk, like every other per-node rule.
     let mut ids: BTreeMap<&str, NodePointer> = BTreeMap::new();
+    // The nearest Box kind above each walked container, keyed by its pointer, so a child
+    // reads its parent's entry. Row, Col and Lanes pass their parent's value through.
+    let mut box_context: BTreeMap<NodePointer, &str> = BTreeMap::new();
     for entry in &entries {
-        check_entry(entry, &mut ids, &mut violations);
+        let context = enclosing_box_kind(entry, &box_context);
+        check_entry(entry, context, grammar, &mut ids, &mut violations);
+        match entry.node {
+            // A Box of an unknown kind is reported once and is transparent for its
+            // children, so they are not reported again against a kind that does not exist.
+            NodeRef::Node(Node::Box(box_node)) if grammar.container(&box_node.kind).is_some() => {
+                box_context.insert(entry.pointer.clone(), box_node.kind.as_str());
+            }
+            NodeRef::Node(Node::Box(_)) => {
+                box_context.insert(entry.pointer.clone(), context);
+            }
+            NodeRef::Node(Node::Row(_) | Node::Col(_) | Node::Lanes(_)) => {
+                box_context.insert(entry.pointer.clone(), context);
+            }
+            _ => {}
+        }
     }
 
     if page.legend.len() > LEGEND_ENTRIES_MAX {
@@ -156,9 +222,17 @@ pub fn validate_page(page: &Page) -> Vec<Violation> {
             ),
         );
     }
-    let mut legend_fields = Vec::new();
-    push_legend_text_fields(page, &mut legend_fields);
-    check_text_fields(&legend_fields, &mut violations);
+    let legend_pointer = root.child("legend");
+    for (index, entry) in page.legend.iter().enumerate().take(LEGEND_ENTRIES_MAX + 1) {
+        check_tint(entry.tint, &legend_pointer.index(index), &mut violations);
+        check_text(
+            &TextField {
+                pointer: legend_pointer.index(index).child("text"),
+                text: &entry.text,
+            },
+            &mut violations,
+        );
+    }
 
     check_links(page, &ids, &mut violations);
 
@@ -195,6 +269,7 @@ fn check_links(page: &Page, ids: &BTreeMap<&str, NodePointer>, violations: &mut 
                 );
             }
         }
+        check_tint(link.tint, &link_pointer, violations);
         let mut text_fields = Vec::new();
         push_one_link_text_fields(link, &link_pointer, &mut text_fields);
         check_text_fields(&text_fields, violations);
@@ -249,6 +324,8 @@ fn check_via(
 /// lines, and a Frame its `height` after its label.
 fn check_entry<'a>(
     entry: &NodeEntry<'a>,
+    enclosing_box: &str,
+    grammar: &Grammar,
     ids: &mut BTreeMap<&'a str, NodePointer>,
     violations: &mut Violations,
 ) {
@@ -274,9 +351,25 @@ fn check_entry<'a>(
         );
     }
 
+    check_kind_and_tint(entry, enclosing_box, grammar, violations);
+
     let mut fields = Vec::new();
     push_node_text_fields(entry, &mut fields);
-    if let NodeRef::Node(Node::Text(text)) = entry.node {
+    if let NodeRef::Node(Node::Item(item)) = entry.node {
+        let head_count = 1 + usize::from(item.subtitle.is_some());
+        let (head_fields, fact_fields) = fields
+            .split_at_checked(head_count)
+            .unwrap_or((&fields, &[]));
+        check_text_fields(head_fields, violations);
+        if item.facts.len() > FACTS_MAX {
+            violations.push(
+                entry.pointer.child("facts"),
+                VetRule::FactsTooMany,
+                format!("{} facts, above {FACTS_MAX}", item.facts.len()),
+            );
+        }
+        check_text_fields(fact_fields, violations);
+    } else if let NodeRef::Node(Node::Text(text)) = entry.node {
         let heading_count = usize::from(text.heading.is_some());
         let (heading_fields, line_fields) = fields
             .split_at_checked(heading_count)
@@ -309,8 +402,19 @@ fn check_entry<'a>(
             );
             check_children_count(entry, col.children.len(), violations);
         }
-        NodeRef::Node(Node::Zone(zone)) => {
-            check_children_count(entry, zone.children.len(), violations);
+        NodeRef::Node(Node::Lanes(lanes)) => {
+            check_gap_and_grow(entry, lanes.gap, None, lanes.children.len(), violations);
+            check_children_count(entry, lanes.children.len(), violations);
+            if lanes.children.len() > LANES_MAX {
+                violations.push(
+                    entry.pointer.child("children"),
+                    VetRule::LanesTooMany,
+                    format!("{} lanes, above {LANES_MAX}", lanes.children.len()),
+                );
+            }
+        }
+        NodeRef::Node(Node::Box(box_node)) => {
+            check_children_count(entry, box_node.children.len(), violations);
         }
         NodeRef::Node(Node::Frame(frame)) => {
             if !(FRAME_HEIGHT_MIN..=FRAME_HEIGHT_MAX).contains(&frame.height) {
@@ -325,7 +429,7 @@ fn check_entry<'a>(
             }
         }
         NodeRef::Node(
-            Node::Pcard(_)
+            Node::Item(_)
             | Node::Fact(_)
             | Node::Note(_)
             | Node::Pipe(_)
@@ -334,6 +438,122 @@ fn check_entry<'a>(
             | Node::Callout(_),
         )
         | NodeRef::TeeArm(_) => {}
+    }
+}
+
+/// The nearest Box kind above `entry`, or `page` when there is none.
+fn enclosing_box_kind<'a>(
+    entry: &NodeEntry<'_>,
+    box_context: &BTreeMap<NodePointer, &'a str>,
+) -> &'a str {
+    entry
+        .parent
+        .as_ref()
+        .and_then(|parent| box_context.get(parent).copied())
+        .unwrap_or(PAGE_PARENT)
+}
+
+/// `kind-unknown`, `kind-parent-not-allowed` and `icon-outside-pack` for a Box or Item, and
+/// `tint-out-of-range` for every tint carrier, in field order.
+fn check_kind_and_tint(
+    entry: &NodeEntry<'_>,
+    enclosing_box: &str,
+    grammar: &Grammar,
+    violations: &mut Violations,
+) {
+    let kind_pointer = entry.pointer.child("kind");
+    match entry.node {
+        NodeRef::Node(Node::Box(box_node)) => {
+            match grammar.container(&box_node.kind) {
+                None => violations.push(
+                    kind_pointer,
+                    VetRule::KindUnknown,
+                    format!(
+                        "kind \"{}\" is not a container kind of grammar {}",
+                        box_node.kind, grammar.name
+                    ),
+                ),
+                Some(container) => {
+                    check_parent(
+                        &container.parents,
+                        &box_node.kind,
+                        enclosing_box,
+                        kind_pointer,
+                        violations,
+                    );
+                }
+            }
+            check_tint(box_node.tint, &entry.pointer, violations);
+        }
+        NodeRef::Node(Node::Item(item)) => match grammar.item(&item.kind) {
+            None => violations.push(
+                kind_pointer,
+                VetRule::KindUnknown,
+                format!(
+                    "kind \"{}\" is not an item kind of grammar {}",
+                    item.kind, grammar.name
+                ),
+            ),
+            Some(item_kind) => {
+                check_parent(
+                    &item_kind.parents,
+                    &item.kind,
+                    enclosing_box,
+                    kind_pointer,
+                    violations,
+                );
+                if item.icon.is_some() && item_kind.icons == IconPack::None {
+                    violations.push(
+                        entry.pointer.child("icon"),
+                        VetRule::IconOutsidePack,
+                        format!("item kind {} takes no icon", item.kind),
+                    );
+                }
+            }
+        },
+        NodeRef::Node(Node::Pipe(pipe)) | NodeRef::TeeArm(pipe) => {
+            check_tint(pipe.tint, &entry.pointer, violations);
+        }
+        NodeRef::Node(Node::Tee(tee)) => check_tint(tee.tint, &entry.pointer, violations),
+        NodeRef::Node(
+            Node::Row(_)
+            | Node::Col(_)
+            | Node::Lanes(_)
+            | Node::Fact(_)
+            | Node::Note(_)
+            | Node::Text(_)
+            | Node::Callout(_)
+            | Node::Frame(_),
+        ) => {}
+    }
+}
+
+fn check_parent(
+    parents: &[String],
+    kind: &str,
+    enclosing_box: &str,
+    kind_pointer: NodePointer,
+    violations: &mut Violations,
+) {
+    if !parents.iter().any(|parent| parent == enclosing_box) {
+        violations.push(
+            kind_pointer,
+            VetRule::KindParentNotAllowed,
+            format!("{kind} cannot sit in {enclosing_box}"),
+        );
+    }
+}
+
+/// `tint-out-of-range` at `<holder>/tint`.
+fn check_tint(tint: Option<u8>, holder: &NodePointer, violations: &mut Violations) {
+    if let Some(tint) = tint
+        && !(1..=TINT_SLOTS).contains(&tint)
+    {
+        violations.push(
+            holder.child("tint"),
+            VetRule::TintOutOfRange,
+            format!("tint {tint} is outside 1 to {TINT_SLOTS}"),
+        );
     }
 }
 

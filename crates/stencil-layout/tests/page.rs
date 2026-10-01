@@ -7,7 +7,7 @@ use serde_json::json;
 use stencil_layout::PartName;
 
 fn one_pipe_body() -> serde_json::Value {
-    json!([{ "tag": "Pipe", "dir": "h", "kind": "blue", "label": "link" }])
+    json!([{ "tag": "Pipe", "dir": "h", "line": "solid", "tint": 1, "label": "link" }])
 }
 
 #[test]

@@ -11,7 +11,7 @@ mod common;
 
 use common::{G7_JSON, g7_value};
 use stencil_model::checks::CheckName;
-use stencil_model::{ModelError, Projection, page_schema, parse_page};
+use stencil_model::{ModelError, Projection, page_schema, parse_and_vet};
 
 fn validator() -> jsonschema::Validator {
     let schema = serde_json::to_value(page_schema()).unwrap();
@@ -20,11 +20,14 @@ fn validator() -> jsonschema::Validator {
 
 #[test]
 fn projection_parses_iso_and_flat_and_defaults_to_flat() {
-    assert_eq!(parse_page(G7_JSON).unwrap().projection, Projection::Flat);
+    assert_eq!(
+        parse_and_vet(G7_JSON, &common::gcp()).unwrap().projection,
+        Projection::Flat
+    );
     for (name, projection) in [("flat", Projection::Flat), ("iso", Projection::Iso)] {
         let mut document = g7_value();
         document["projection"] = serde_json::json!(name);
-        let page = parse_page(&document.to_string()).unwrap();
+        let page = parse_and_vet(&document.to_string(), &common::gcp()).unwrap();
         assert_eq!(page.projection, projection, "{name}");
     }
 }
@@ -34,7 +37,7 @@ fn an_unknown_projection_is_a_json_error() {
     let mut document = g7_value();
     document["projection"] = serde_json::json!("oblique");
     assert!(matches!(
-        parse_page(&document.to_string()),
+        parse_and_vet(&document.to_string(), &common::gcp()),
         Err(ModelError::Json { .. })
     ));
 }
@@ -43,11 +46,13 @@ fn an_unknown_projection_is_a_json_error() {
 fn flat_is_not_serialized_and_iso_is() {
     let mut document = g7_value();
     document["projection"] = serde_json::json!("flat");
-    let flat = serde_json::to_value(parse_page(&document.to_string()).unwrap()).unwrap();
+    let flat = serde_json::to_value(parse_and_vet(&document.to_string(), &common::gcp()).unwrap())
+        .unwrap();
     assert_eq!(flat.get("projection"), None);
 
     document["projection"] = serde_json::json!("iso");
-    let iso = serde_json::to_value(parse_page(&document.to_string()).unwrap()).unwrap();
+    let iso = serde_json::to_value(parse_and_vet(&document.to_string(), &common::gcp()).unwrap())
+        .unwrap();
     assert_eq!(iso.get("projection"), Some(&serde_json::json!("iso")));
 }
 

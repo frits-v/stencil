@@ -23,19 +23,19 @@ Examined counts: each check reports how many units it looked at, and a check tha
 | siblings-do-not-overlap | pair of siblings | the later sibling | box WxH at (X, Y) overlaps OTHER box WxH at (X, Y) by WxH |
 | text-fits-box | text run | the node owning the run | PART "TEXT" measured WxH in box WxH; or PART box WxH at (X, Y) extends outside the node box WxH at (X, Y) |
 | remembered-constants | text field | the field | contains LITERAL: REASON |
-| legend-consistency | relation: each kind use (Pipe, Tee arm, Tee spine, Link) and each legend entry | the use, or /legend/i | USER kind K has no legend entry; legend kind K is never used; legend kind K is already listed at /legend/j |
+| legend-consistency | relation: each line use (Pipe, Tee arm, Tee spine, Link) and each legend entry, keyed on line and tint | the use, or /legend/i | USER line L tint T has no legend entry; legend line L tint T is never used; legend line L tint T is already listed at /legend/j |
 | links-routed | link | /links/i | no route from A to B avoids every obstacle; drawn as a fallback L |
 | links-avoid-boxes | pair: segment and obstacle, tag and node | /links/i | segment N from (X, Y) to (X, Y) enters NODE box WxH at (X, Y); tag WxH at (X, Y) overlaps NODE box WxH at (X, Y) |
 | pipes-land | each pipe end with a neighbor | /body/... (the pipe) | center Y outside every box of neighbor NODE on the left or right (top or bottom for dir v) |
-| iso-labels-clear | pair: label and label, label and block, label and zone, text and its block (iso only) | the later label's owner | ROLE billboard X,Y WxH overlaps ROLE billboard OWNER; or covers block NODE; or is crossed by an edge of slab NODE; or leaves its block |
+| iso-labels-clear | pair: label and label, label and block, label and Box, text and its block (iso only) | the later label's owner | ROLE billboard X,Y WxH overlaps ROLE billboard OWNER; or covers block NODE; or is crossed by an edge of slab NODE; or leaves its block |
 | iso-links-clear | link leg (iso only) | /links/i | leg N runs D px beside an edge of zone NODE, closer than 24; or turns back; or last leg is L px, under 2 arrowheads |
 
-Numbers carry 2 decimals; the tolerance is 0.01 px, and touching edges pass. text-fits-box also checks the tag of every labeled link. PART is a snake_case part name: function_name, product_name, fact, ask, tag_label, tag_sub, hub_text, label, text, badge_text, legend_label, legend_text, heading, marker, body_line.
+Numbers carry 2 decimals; the tolerance is 0.01 px, and touching edges pass. text-fits-box also checks the tag of every labeled link. PART is a snake_case part name: function_name (an Item's title), product_name (its subtitle), fact, built, ask, tag_label, tag_sub, hub_text, label, text, badge_text, legend_label, legend_text, heading, marker, body_line.
 
 Reading defects:
 
-- child-inside-container on a Pcard: a word wider than its column. Raise the column's weight or shorten the word.
-- pipes-land: a gutter slot taller or shorter than the zone beside it. Give the producer Col the gutter Col's grow list.
+- child-inside-container on an Item: a word wider than its column. Raise the column's weight or shorten the word.
+- pipes-land: a gutter slot taller or shorter than the Box beside it. Give the producer Col the gutter Col's grow list.
 - child-inside-container on a gutter or pipe: the gutter weight is too small for the tag. Shorten the label or raise the weight.
 - text-fits-box at /title or another page field: one unbreakable string wider than the page.
 - siblings-do-not-overlap follows an overflow; fix the child-inside-container defect first.

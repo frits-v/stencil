@@ -10,10 +10,10 @@
 mod common;
 
 use common::{G7_JSON, g7_page, g7_value};
-use stencil_model::{Arrow, ModelError, Node, PAGE_WIDTH_DEFAULT, Pcard, Theme, parse_page};
+use stencil_model::{Arrow, Item, ModelError, Node, PAGE_WIDTH_DEFAULT, Theme, parse_and_vet};
 
 fn assert_json_error(json_text: &str) {
-    match parse_page(json_text) {
+    match parse_and_vet(json_text, &common::gcp()) {
         Err(ModelError::Json { .. }) => {}
         other => panic!("expected ModelError::Json for {json_text}, got {other:?}"),
     }
@@ -28,16 +28,16 @@ fn g7_with_first_node(node: serde_json::Value) -> String {
 
 #[test]
 fn g7_parses_and_round_trips() {
-    let page = parse_page(G7_JSON).expect("g7 is valid");
+    let page = parse_and_vet(G7_JSON, &common::gcp()).expect("g7 is valid");
     let serialized = serde_json::to_string(&page).unwrap();
-    let reparsed = parse_page(&serialized).unwrap();
+    let reparsed = parse_and_vet(&serialized, &common::gcp()).unwrap();
     assert_eq!(page, reparsed);
     assert_eq!(page, g7_page());
 }
 
 #[test]
 fn width_defaults_to_1280_when_absent() {
-    let page = parse_page(G7_JSON).unwrap();
+    let page = parse_and_vet(G7_JSON, &common::gcp()).unwrap();
     assert!(g7_value().get("width").is_none());
     assert_eq!(page.width, PAGE_WIDTH_DEFAULT);
     assert_eq!(page.width, 1280);
@@ -47,7 +47,7 @@ fn width_defaults_to_1280_when_absent() {
 fn explicit_width_is_kept() {
     let mut document = g7_value();
     document["width"] = serde_json::json!(1600);
-    let page = parse_page(&document.to_string()).unwrap();
+    let page = parse_and_vet(&document.to_string(), &common::gcp()).unwrap();
     assert_eq!(page.width, 1600);
 }
 
@@ -61,7 +61,7 @@ fn unknown_field_on_zone_is_rejected() {
 #[test]
 fn unknown_field_on_pipe_is_rejected() {
     assert_json_error(&g7_with_first_node(serde_json::json!(
-        { "tag": "Pipe", "dir": "h", "kind": "blue", "label": "a", "weight": 2 }
+        { "tag": "Pipe", "dir": "h", "line": "solid", "tint": 1, "label": "a", "weight": 2 }
     )));
 }
 
@@ -82,30 +82,52 @@ fn unknown_tag_is_rejected() {
 #[test]
 fn unknown_icon_is_rejected() {
     assert_json_error(&g7_with_first_node(serde_json::json!(
-        { "tag": "Pcard", "icon": "bigtable", "fn": "Store" }
+        { "tag": "Item", "kind": "product", "icon": "bigtable", "title": "Store" }
     )));
 }
 
 #[test]
-fn unknown_zone_kind_is_rejected() {
-    assert_json_error(&g7_with_first_node(serde_json::json!(
-        { "tag": "Zone", "kind": "region-c", "label": "Region C", "children": [ { "tag": "Fact", "text": "a" } ] }
-    )));
+fn retired_tags_and_fields_are_json_errors() {
+    for node in [
+        serde_json::json!({ "tag": "Zone", "kind": "region-a", "label": "Region A", "children": [ { "tag": "Fact", "text": "a" } ] }),
+        serde_json::json!({ "tag": "Pcard", "fn": "Store" }),
+        serde_json::json!({ "tag": "Pipe", "dir": "h", "kind": "blue", "label": "a" }),
+        serde_json::json!({ "tag": "Item", "kind": "product", "title": "Store", "fn": "Store" }),
+        serde_json::json!({ "tag": "Item", "kind": "product", "title": "Store", "ask": "Which?" }),
+    ] {
+        assert_json_error(&g7_with_first_node(node));
+    }
 }
 
 #[test]
-fn pipe_without_kind_is_rejected() {
+fn a_box_kind_outside_the_grammar_is_a_vet_violation() {
+    let json_text = g7_with_first_node(serde_json::json!(
+        { "tag": "Box", "kind": "region-c", "label": "Region C", "children": [ { "tag": "Fact", "text": "a" } ] }
+    ));
+    let Err(ModelError::Invalid(violations)) = parse_and_vet(&json_text, &common::gcp()) else {
+        panic!("expected vet violations");
+    };
+    assert_eq!(violations.len(), 1);
+    assert_eq!(violations[0].pointer.as_str(), "/body/0/kind");
+    assert_eq!(
+        violations[0].message,
+        "kind \"region-c\" is not a container kind of grammar gcp"
+    );
+}
+
+#[test]
+fn pipe_without_line_is_rejected() {
     assert_json_error(&g7_with_first_node(serde_json::json!(
         { "tag": "Pipe", "dir": "h", "label": "a" }
     )));
 }
 
 fn tee_json(arms: serde_json::Value) -> serde_json::Value {
-    serde_json::json!({ "tag": "Tee", "kind": "blue", "hub": "hub", "arms": arms })
+    serde_json::json!({ "tag": "Tee", "line": "solid", "tint": 1, "hub": "hub", "arms": arms })
 }
 
 fn arm_json(tag: &str) -> serde_json::Value {
-    serde_json::json!({ "tag": tag, "dir": "h", "kind": "blue", "label": "arm" })
+    serde_json::json!({ "tag": tag, "dir": "h", "line": "solid", "tint": 1, "label": "arm" })
 }
 
 #[test]
@@ -114,7 +136,8 @@ fn tee_with_two_pipe_arms_parses() {
         arm_json("Pipe"),
         arm_json("Pipe")
     ])));
-    let page = parse_page(&json_text).expect("a Tee with two Pipe arms is valid");
+    let page =
+        parse_and_vet(&json_text, &common::gcp()).expect("a Tee with two Pipe arms is valid");
     assert!(matches!(page.body.first(), Some(Node::Tee(_))));
 }
 
@@ -138,7 +161,7 @@ fn tee_with_one_arm_is_rejected() {
 fn tee_arm_tagged_zone_is_rejected() {
     assert_json_error(&g7_with_first_node(tee_json(serde_json::json!([
         arm_json("Pipe"),
-        { "tag": "Zone", "kind": "vpc", "label": "VPC", "children": [ { "tag": "Fact", "text": "a" } ] }
+        { "tag": "Box", "kind": "vpc", "label": "VPC", "children": [ { "tag": "Fact", "text": "a" } ] }
     ]))));
 }
 
@@ -146,10 +169,10 @@ fn tee_arm_tagged_zone_is_rejected() {
 fn null_optional_fields_parse_as_absent() {
     let json_text = g7_with_first_node(serde_json::json!(
         { "tag": "Row", "gap": null, "grow": null, "justify": null, "children": [
-            { "tag": "Pcard", "icon": null, "fn": "Store", "pn": null, "fact": null, "ask": null }
+            { "tag": "Item", "kind": "product", "icon": null, "title": "Store", "subtitle": null }
         ] }
     ));
-    let page = parse_page(&json_text).unwrap();
+    let page = parse_and_vet(&json_text, &common::gcp()).unwrap();
     let Some(Node::Row(row)) = page.body.first() else {
         panic!("first body node is a Row");
     };
@@ -159,13 +182,13 @@ fn null_optional_fields_parse_as_absent() {
     );
     assert_eq!(
         row.children.first(),
-        Some(&Node::Pcard(Pcard {
+        Some(&Node::Item(Item {
             id: None,
+            kind: "product".to_string(),
             icon: None,
-            function_name: "Store".to_string(),
-            product_name: None,
-            fact: None,
-            ask: None,
+            title: "Store".to_string(),
+            subtitle: None,
+            facts: Vec::new(),
         }))
     );
 }
@@ -174,7 +197,12 @@ fn null_optional_fields_parse_as_absent() {
 fn null_foot_parses_as_absent() {
     let mut document = g7_value();
     document["foot"] = serde_json::Value::Null;
-    assert_eq!(parse_page(&document.to_string()).unwrap().foot, None);
+    assert_eq!(
+        parse_and_vet(&document.to_string(), &common::gcp())
+            .unwrap()
+            .foot,
+        None
+    );
 }
 
 #[test]
@@ -192,11 +220,11 @@ fn json_error_carries_location_and_bare_message() {
         line,
         column,
         message,
-    }) = parse_page(json_text)
+    }) = parse_and_vet(json_text, &common::gcp())
     else {
         panic!("expected a JSON error");
     };
-    assert_eq!(message, "missing field `kind`");
+    assert_eq!(message, "missing field `line`");
     // serde_json reports a tagged node's error where the buffered node ends.
     assert!(line >= 3, "line {line}");
     assert!(column > 0);
@@ -209,7 +237,7 @@ fn json_error_carries_location_and_bare_message() {
     assert_eq!(
         display,
         format!(
-            "document is not valid stencil JSON at line {line}, column {column}: missing field `kind`"
+            "document is not valid stencil JSON at line {line}, column {column}: missing field `line`"
         )
     );
 }
@@ -223,7 +251,7 @@ fn malformed_json_is_a_json_error() {
 fn vet_violation_is_model_error_invalid() {
     let mut document = g7_value();
     document["title"] = serde_json::json!(" untrimmed");
-    match parse_page(&document.to_string()) {
+    match parse_and_vet(&document.to_string(), &common::gcp()) {
         Err(ModelError::Invalid(violations)) => assert_eq!(violations.len(), 1),
         other => panic!("expected ModelError::Invalid, got {other:?}"),
     }
@@ -233,7 +261,7 @@ fn vet_violation_is_model_error_invalid() {
 fn g7_serializes_to_its_input_plus_the_width_default() {
     // `width` is the one field serialized at its default; theme, links, id and a Pipe's
     // arrow are skipped at theirs, so a document without them keeps its bytes.
-    let page = parse_page(G7_JSON).unwrap();
+    let page = parse_and_vet(G7_JSON, &common::gcp()).unwrap();
     let mut expected = g7_value();
     expected["width"] = serde_json::json!(PAGE_WIDTH_DEFAULT);
     assert_eq!(serde_json::to_value(&page).unwrap(), expected);
@@ -241,7 +269,7 @@ fn g7_serializes_to_its_input_plus_the_width_default() {
 
 #[test]
 fn theme_defaults_to_center_and_is_not_serialized_as_default() {
-    let page = parse_page(G7_JSON).unwrap();
+    let page = parse_and_vet(G7_JSON, &common::gcp()).unwrap();
     assert_eq!(page.theme, Theme::Center);
 
     for (name, theme) in [
@@ -251,7 +279,7 @@ fn theme_defaults_to_center_and_is_not_serialized_as_default() {
     ] {
         let mut document = g7_value();
         document["theme"] = serde_json::json!(name);
-        let page = parse_page(&document.to_string()).unwrap();
+        let page = parse_and_vet(&document.to_string(), &common::gcp()).unwrap();
         assert_eq!(page.theme, theme);
         let serialized = serde_json::to_value(&page).unwrap();
         let expected = (theme != Theme::Center).then(|| serde_json::json!(name));
@@ -270,8 +298,9 @@ fn unknown_or_null_theme_is_a_json_error() {
 
 #[test]
 fn pipe_arrow_defaults_to_none_and_link_arrow_to_end() {
-    let page = parse_page(G7_JSON).unwrap();
-    let pipe_json = serde_json::json!({ "tag": "Pipe", "dir": "h", "kind": "blue", "label": "a" });
+    let page = parse_and_vet(G7_JSON, &common::gcp()).unwrap();
+    let pipe_json =
+        serde_json::json!({ "tag": "Pipe", "dir": "h", "line": "solid", "tint": 1, "label": "a" });
     let pipe: Node = serde_json::from_value(pipe_json.clone()).unwrap();
     let Node::Pipe(pipe_value) = &pipe else {
         panic!("a Pipe node");
@@ -280,14 +309,15 @@ fn pipe_arrow_defaults_to_none_and_link_arrow_to_end() {
     assert_eq!(serde_json::to_value(&pipe).unwrap(), pipe_json);
 
     let arrowed_json = serde_json::json!(
-        { "tag": "Pipe", "dir": "h", "kind": "blue", "label": "a", "arrow": "both" }
+        { "tag": "Pipe", "dir": "h", "line": "solid", "tint": 1, "label": "a", "arrow": "both" }
     );
     let arrowed: Node = serde_json::from_value(arrowed_json.clone()).unwrap();
     assert_eq!(serde_json::to_value(&arrowed).unwrap(), arrowed_json);
 
-    let link: stencil_model::Link =
-        serde_json::from_value(serde_json::json!({ "from": "a", "to": "b", "kind": "blue" }))
-            .unwrap();
+    let link: stencil_model::Link = serde_json::from_value(
+        serde_json::json!({ "from": "a", "to": "b", "line": "solid", "tint": 1 }),
+    )
+    .unwrap();
     assert_eq!(link.arrow, Arrow::End);
     assert!(page.links.is_empty());
 }
@@ -295,11 +325,11 @@ fn pipe_arrow_defaults_to_none_and_link_arrow_to_end() {
 #[test]
 fn unknown_arrow_side_or_link_field_is_a_json_error() {
     for links in [
-        serde_json::json!([{ "from": "a", "to": "b", "kind": "blue", "arrow": "tail" }]),
-        serde_json::json!([{ "from": "a", "to": "b", "kind": "blue", "from_side": "north" }]),
-        serde_json::json!([{ "from": "a", "to": "b", "kind": "blue", "colour": "red" }]),
-        serde_json::json!([{ "from": "a", "to": "b", "kind": "blue", "via": [{ "x": 1, "y": 2, "z": 3 }] }]),
-        serde_json::json!([{ "from": "a", "kind": "blue" }]),
+        serde_json::json!([{ "from": "a", "to": "b", "line": "solid", "tint": 1, "arrow": "tail" }]),
+        serde_json::json!([{ "from": "a", "to": "b", "line": "solid", "tint": 1, "from_side": "north" }]),
+        serde_json::json!([{ "from": "a", "to": "b", "line": "solid", "tint": 1, "colour": "red" }]),
+        serde_json::json!([{ "from": "a", "to": "b", "line": "solid", "tint": 1, "via": [{ "x": 1, "y": 2, "z": 3 }] }]),
+        serde_json::json!([{ "from": "a", "line": "solid", "tint": 1 }]),
         serde_json::Value::Null,
     ] {
         let mut document = g7_value();
@@ -315,12 +345,12 @@ fn links_with_sides_and_via_round_trip() {
         serde_json::json!("router-1");
     document["body"][0]["children"][2]["id"] = serde_json::json!("cloud");
     document["links"] = serde_json::json!([{
-        "from": "router-1", "to": "cloud", "kind": "blue", "label": "1", "sub": "request",
+        "from": "router-1", "to": "cloud", "line": "solid", "tint": 1, "label": "1", "sub": "request",
         "arrow": "both", "from_side": "right", "to_side": "left",
         "via": [ { "x": 400.5, "y": 120.25 } ]
     }]);
     document["width"] = serde_json::json!(1440);
-    let page = parse_page(&document.to_string()).unwrap();
+    let page = parse_and_vet(&document.to_string(), &common::gcp()).unwrap();
     assert_eq!(page.links.len(), 1);
     assert_eq!(serde_json::to_value(&page).unwrap(), document);
 }

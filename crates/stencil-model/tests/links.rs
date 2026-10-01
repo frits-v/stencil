@@ -5,16 +5,16 @@
 mod common;
 
 use common::{
-    legend_entry, link, page_with_body, page_with_link, pcard, pcard_with_id, pipe, pipe_value,
+    item, item_with_id, legend_entry, link, page_with_body, page_with_link, pipe, pipe_value,
 };
 use stencil_model::checks::{legend_consistency, remembered_constants};
 use stencil_model::{
-    LINK_VIA_MAX, LINKS_MAX, Node, Page, PagePoint, PipeDir, PipeKind, Tee, TeeArm, VetRule,
+    LINK_VIA_MAX, LINKS_MAX, Line, Node, Page, PagePoint, PipeDir, Tee, TeeArm, VetRule,
     text_fields, validate_page,
 };
 
 fn violations(page: &Page) -> Vec<(String, &'static str, String)> {
-    validate_page(page)
+    validate_page(page, &common::gcp())
         .into_iter()
         .map(|violation| {
             (
@@ -32,8 +32,8 @@ fn one(pointer: &str, rule: &'static str, message: &str) -> Vec<(String, &'stati
 
 fn set_first_id(page: &mut Page, id: &str) {
     match page.body.first_mut() {
-        Some(Node::Pcard(pcard)) => pcard.id = Some(id.to_string()),
-        _ => panic!("first body node is a Pcard"),
+        Some(Node::Item(item)) => item.id = Some(id.to_string()),
+        _ => panic!("first body node is an Item"),
     }
 }
 
@@ -61,7 +61,7 @@ fn a_link_between_two_ids_passes() {
 #[test]
 fn duplicate_id_is_reported_at_the_later_node() {
     let mut page = page_with_link();
-    page.body.push(pcard_with_id("api", "Second API"));
+    page.body.push(item_with_id("api", "Second API"));
     assert_eq!(
         violations(&page),
         one(
@@ -74,16 +74,22 @@ fn duplicate_id_is_reported_at_the_later_node() {
 
 #[test]
 fn tee_arm_ids_take_part_in_uniqueness_and_resolution() {
-    let mut arm = pipe_value(PipeDir::Horizontal, PipeKind::Blue, "arm");
+    let mut arm = pipe_value(PipeDir::Horizontal, Line::Solid, Some(1), "arm");
     arm.id = Some("api".to_string());
     let mut page = page_with_link();
     page.body.push(Node::Tee(Tee {
         id: None,
-        kind: PipeKind::Blue,
+        line: Line::Solid,
+        tint: Some(1),
         hub: "hub".to_string(),
         arms: [
             TeeArm::Pipe(arm),
-            TeeArm::Pipe(pipe_value(PipeDir::Horizontal, PipeKind::Blue, "other")),
+            TeeArm::Pipe(pipe_value(
+                PipeDir::Horizontal,
+                Line::Solid,
+                Some(1),
+                "other",
+            )),
         ],
     }));
     assert_eq!(
@@ -95,7 +101,7 @@ fn tee_arm_ids_take_part_in_uniqueness_and_resolution() {
         )
     );
 
-    let mut arm = pipe_value(PipeDir::Horizontal, PipeKind::Blue, "arm");
+    let mut arm = pipe_value(PipeDir::Horizontal, Line::Solid, Some(1), "arm");
     arm.id = Some("arm".to_string());
     if let Some(Node::Tee(tee)) = page.body.last_mut() {
         tee.arms[0] = TeeArm::Pipe(arm);
@@ -245,9 +251,9 @@ fn via_outside_follows_the_page_width() {
 fn an_overflowing_json_coordinate_is_outside() {
     let document = serde_json::json!({
         "title": "t", "kicker": "k", "lede": "l", "canvas": "internal",
-        "body": [ { "tag": "Pcard", "id": "a", "fn": "A" }, { "tag": "Pcard", "id": "b", "fn": "B" } ],
-        "legend": [ { "kind": "blue", "text": "b" } ],
-        "links": [ { "from": "a", "to": "b", "kind": "blue", "via": [ { "x": 1e39, "y": 0 } ] } ]
+        "body": [ { "tag": "Item", "kind": "product", "id": "a", "title": "A" }, { "tag": "Item", "kind": "product", "id": "b", "title": "B" } ],
+        "legend": [ { "line": "solid", "tint": 1, "text": "b" } ],
+        "links": [ { "from": "a", "to": "b", "line": "solid", "tint": 1, "via": [ { "x": 1e39, "y": 0 } ] } ]
     });
     let page: Page = serde_json::from_value(document).unwrap();
     let rules: Vec<&str> = violations(&page).iter().map(|found| found.1).collect();
@@ -364,15 +370,15 @@ fn link_label_and_sub_are_text_fields_after_the_legend() {
             "/title",
             "/kicker",
             "/lede",
-            "/body/0/fn",
-            "/body/1/fn",
+            "/body/0/title",
+            "/body/1/title",
             "/legend/0/text",
             "/links/0/label",
             "/links/0/sub"
         ]
     );
     page.links[0].sub = Some("ASN 64512".to_string());
-    let report = remembered_constants(&page);
+    let report = remembered_constants(&page, &common::gcp());
     assert_eq!(report.defects.len(), 1);
     assert_eq!(report.defects[0].pointer.as_str(), "/links/0/sub");
 }
@@ -389,7 +395,8 @@ fn link_kind_counts_as_a_legend_use() {
 fn link_kind_missing_from_legend_is_a_defect_at_the_link() {
     let mut page = page_with_link();
     page.links.push(link("worker", "api"));
-    page.links[1].kind = PipeKind::Deny;
+    page.links[1].line = Line::Deny;
+    page.links[1].tint = None;
     let report = legend_consistency(&page);
     assert_eq!(report.examined, 3);
     let defects: Vec<(&str, &str)> = report
@@ -399,20 +406,21 @@ fn link_kind_missing_from_legend_is_a_defect_at_the_link() {
         .collect();
     assert_eq!(
         defects,
-        [("/links/1", "Link kind deny has no legend entry")]
+        [("/links/1", "Link line deny has no legend entry")]
     );
 }
 
 #[test]
 fn legend_kind_used_by_a_pipe_and_a_link_is_one_entry() {
     let mut page = page_with_body(vec![
-        pcard_with_id("api", "API"),
-        pipe(PipeKind::Gray, "internal"),
-        pcard_with_id("worker", "Worker"),
+        item_with_id("api", "API"),
+        pipe(Line::Gray, None, "internal"),
+        item_with_id("worker", "Worker"),
     ]);
-    page.legend = vec![legend_entry(PipeKind::Gray, "internal call")];
+    page.legend = vec![legend_entry(Line::Gray, None, "internal call")];
     page.links = vec![link("api", "worker")];
-    page.links[0].kind = PipeKind::Gray;
+    page.links[0].line = Line::Gray;
+    page.links[0].tint = None;
     let report = legend_consistency(&page);
     assert_eq!(report.examined, 3);
     assert!(report.passed(), "{:?}", report.defects);
@@ -420,7 +428,7 @@ fn legend_kind_used_by_a_pipe_and_a_link_is_one_entry() {
 
 #[test]
 fn legend_counts_links_up_to_one_past_the_limit() {
-    let mut page = page_with_body(vec![pcard("a")]);
+    let mut page = page_with_body(vec![item("a")]);
     page.links = vec![link("a", "b"); 300];
     let report = legend_consistency(&page);
     assert_eq!(report.examined, (LINKS_MAX + 1 + 1) as u64);

@@ -124,10 +124,7 @@ fn link_json(route: &LinkRoute, geometry: &PageGeometry) -> Value {
                 .to_string(),
         ),
     );
-    object.insert(
-        "kind".to_string(),
-        Value::String(route.kind.as_str().to_string()),
-    );
+    object.insert("kind".to_string(), Value::String(route.key().to_string()));
     object.insert("parts".to_string(), Value::Object(parts_json(&route.parts)));
     object.insert("points".to_string(), Value::Array(points));
     object.insert("status".to_string(), Value::String(status.to_string()));
@@ -139,13 +136,33 @@ fn link_json(route: &LinkRoute, geometry: &PageGeometry) -> Value {
 }
 
 /// Parts keyed by snake_case name. A Text block repeats `body_line` and `marker` once per
-/// body line, so those two are keyed `<name>/<line>` with the zero-based line index.
+/// body line, so those two are keyed `<name>/<line>` with the zero-based line index. An
+/// Item's fact parts come in box and run pairs in `facts` order: the first entry of each
+/// source keeps the bare names, and every later one adds `/<i>`, its index in `facts`
+/// (section 13.7).
 fn parts_json(parts: &[Part]) -> Map<String, Value> {
     let mut body_lines = 0_usize;
     let mut markers = 0_usize;
+    let mut fact_entries = 0_usize;
+    let mut seen_sources: [bool; 3] = [false; 3];
+    let mut fact_suffix: Option<usize> = None;
     let mut object = Map::new();
     for part in parts {
         let key = match part.name {
+            PartName::FactBox | PartName::BuiltBox | PartName::AskBox => {
+                let source = match part.name {
+                    PartName::FactBox => 0,
+                    PartName::BuiltBox => 1,
+                    _ => 2,
+                };
+                let first = seen_sources
+                    .get_mut(source)
+                    .is_some_and(|seen| !std::mem::replace(seen, true));
+                fact_suffix = if first { None } else { Some(fact_entries) };
+                fact_entries += 1;
+                suffixed(part.name, fact_suffix)
+            }
+            PartName::Fact | PartName::Built | PartName::Ask => suffixed(part.name, fact_suffix),
             PartName::BodyLine => {
                 body_lines += 1;
                 format!("{}/{}", part.name.as_str(), body_lines - 1)
@@ -161,14 +178,21 @@ fn parts_json(parts: &[Part]) -> Map<String, Value> {
     object
 }
 
+fn suffixed(name: PartName, index: Option<usize>) -> String {
+    match index {
+        Some(index) => format!("{}/{index}", name.as_str()),
+        None => name.as_str().to_string(),
+    }
+}
+
 fn node_json(node: &NodeGeometry) -> Value {
     let mut object = box_json(node.bounds);
     object.insert(
         "id".to_string(),
         Value::String(node.pointer.as_str().to_string()),
     );
-    if let Some(kind) = node.kind {
-        object.insert("kind".to_string(), Value::String(kind.to_string()));
+    if let Some(kind) = &node.kind {
+        object.insert("kind".to_string(), Value::String(kind.clone()));
     }
     object.insert("parts".to_string(), Value::Object(parts_json(&node.parts)));
     object.insert(

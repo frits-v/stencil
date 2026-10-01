@@ -5,6 +5,7 @@
   "foot": "The numbered links follow one request from the console to a stored verdict.",
   "width": 1440,
   "canvas": "internal",
+  "grammar": "gcp",
   "body": [
     {
       "tag": "Row",
@@ -82,11 +83,11 @@
               "justify": "end",
               "grow": [0],
               "children": [
-                { "tag": "Pcard", "id": "console", "icon": "devops", "fn": "Operator console", "pn": "web client" }
+                { "tag": "Item", "id": "console", "kind": "product", "icon": "devops", "title": "Operator console", "subtitle": "web client" }
               ]
             },
             {
-              "tag": "Zone",
+              "tag": "Box",
               "id": "cloud",
               "kind": "gcp",
               "label": "Google Cloud",
@@ -100,7 +101,7 @@
                       "justify": "center",
                       "grow": [0],
                       "children": [
-                        { "tag": "Pcard", "id": "gateway", "icon": "networking", "fn": "Gateway", "pn": "API Gateway" }
+                        { "tag": "Item", "id": "gateway", "kind": "product", "icon": "networking", "title": "Gateway", "subtitle": "API Gateway" }
                       ]
                     },
                     {
@@ -108,7 +109,7 @@
                       "justify": "center",
                       "grow": [0],
                       "children": [
-                        { "tag": "Pcard", "id": "api", "icon": "cloud-run", "fn": "Trigger API", "pn": "Cloud Run" }
+                        { "tag": "Item", "id": "api", "kind": "product", "icon": "cloud-run", "title": "Trigger API", "subtitle": "Cloud Run" }
                       ]
                     },
                     {
@@ -116,7 +117,7 @@
                       "justify": "center",
                       "grow": [0],
                       "children": [
-                        { "tag": "Pcard", "id": "queue", "icon": "integration", "fn": "Evaluation queue", "pn": "Pub/Sub" }
+                        { "tag": "Item", "id": "queue", "kind": "product", "icon": "integration", "title": "Evaluation queue", "subtitle": "Pub/Sub" }
                       ]
                     },
                     {
@@ -124,7 +125,7 @@
                       "justify": "center",
                       "grow": [0],
                       "children": [
-                        { "tag": "Pcard", "id": "worker", "icon": "cloud-run", "fn": "Clip worker", "pn": "Cloud Run" }
+                        { "tag": "Item", "id": "worker", "kind": "product", "icon": "cloud-run", "title": "Clip worker", "subtitle": "Cloud Run" }
                       ]
                     },
                     {
@@ -132,8 +133,8 @@
                       "grow": [0, 0],
                       "justify": "space-between",
                       "children": [
-                        { "tag": "Pcard", "id": "evaluator", "icon": "vertex-ai", "fn": "Clip evaluator", "pn": "Vertex AI" },
-                        { "tag": "Pcard", "id": "database", "icon": "cloud-sql", "fn": "Verdict store", "pn": "Cloud SQL" }
+                        { "tag": "Item", "id": "evaluator", "kind": "product", "icon": "vertex-ai", "title": "Clip evaluator", "subtitle": "Vertex AI" },
+                        { "tag": "Item", "id": "database", "kind": "product", "icon": "cloud-sql", "title": "Verdict store", "subtitle": "Cloud SQL" }
                       ]
                     }
                   ]
@@ -154,16 +155,16 @@
     }
   ],
   "legend": [
-    { "kind": "blue", "text": "request path, numbered in order" },
-    { "kind": "deny", "text": "blocked path" }
+    { "line": "solid", "tint": 1, "text": "request path, numbered in order" },
+    { "line": "deny", "text": "blocked path" }
   ],
   "links": [
-    { "from": "console", "to": "gateway", "kind": "blue", "label": "1 submit trigger", "from_side": "bottom", "to_side": "right" },
-    { "from": "gateway", "to": "api", "kind": "blue", "label": "2 authorized call" },
-    { "from": "api", "to": "queue", "kind": "blue", "label": "3 queue plan" },
-    { "from": "queue", "to": "worker", "kind": "blue", "label": "4 deliver job" },
-    { "from": "worker", "to": "evaluator", "kind": "blue", "label": "5 evaluate clip", "from_side": "left", "to_side": "top" },
-    { "from": "worker", "to": "database", "kind": "blue", "label": "6 write verdict", "from_side": "right", "to_side": "top" },
-    { "from": "evaluator", "to": "database", "kind": "deny", "label": "no direct write" }
+    { "from": "console", "to": "gateway", "line": "solid", "tint": 1, "label": "1 submit trigger", "from_side": "bottom", "to_side": "right" },
+    { "from": "gateway", "to": "api", "line": "solid", "tint": 1, "label": "2 authorized call" },
+    { "from": "api", "to": "queue", "line": "solid", "tint": 1, "label": "3 queue plan" },
+    { "from": "queue", "to": "worker", "line": "solid", "tint": 1, "label": "4 deliver job" },
+    { "from": "worker", "to": "evaluator", "line": "solid", "tint": 1, "label": "5 evaluate clip", "from_side": "left", "to_side": "top" },
+    { "from": "worker", "to": "database", "line": "solid", "tint": 1, "label": "6 write verdict", "from_side": "right", "to_side": "top" },
+    { "from": "evaluator", "to": "database", "line": "deny", "label": "no direct write" }
   ]
 }

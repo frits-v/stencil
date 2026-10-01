@@ -4,10 +4,8 @@
 
 mod common;
 
-use common::{g7_page, g7_value, page_with_body, pcard, pipe, pipe_value, row, tee};
-use stencil_model::{
-    IconName, Node, NodeRef, PipeDir, PipeKind, ZoneKind, body_nodes, text_fields,
-};
+use common::{g7_page, g7_value, item, page_with_body, pipe, pipe_value, row, tee};
+use stencil_model::{FactSource, IconName, Line, Node, NodeRef, PipeDir, body_nodes, text_fields};
 
 #[test]
 fn g7_has_24_body_nodes_in_pre_order() {
@@ -64,11 +62,12 @@ fn depth_and_parent() {
 fn tee_arms_follow_the_tee_before_its_next_sibling() {
     let page = page_with_body(vec![row(vec![
         tee(
-            PipeKind::Blue,
-            pipe_value(PipeDir::Horizontal, PipeKind::Blue, "a"),
-            pipe_value(PipeDir::Horizontal, PipeKind::Pink, "b"),
+            Line::Solid,
+            Some(1),
+            pipe_value(PipeDir::Horizontal, Line::Solid, Some(1), "a"),
+            pipe_value(PipeDir::Horizontal, Line::Solid, Some(2), "b"),
         ),
-        pcard("sibling"),
+        item("sibling"),
     ])]);
     let entries = body_nodes(&page);
     let summary: Vec<(&str, usize, Option<&str>)> = entries
@@ -128,7 +127,7 @@ fn g7_text_fields_in_document_order() {
 
 #[test]
 fn text_fields_skip_absent_optionals() {
-    let page = page_with_body(vec![pcard("a"), pipe(PipeKind::Blue, "b")]);
+    let page = page_with_body(vec![item("a"), pipe(Line::Solid, Some(1), "b")]);
     let pointers: Vec<String> = text_fields(&page)
         .iter()
         .map(|field| field.pointer.to_string())
@@ -139,7 +138,7 @@ fn text_fields_skip_absent_optionals() {
             "/title",
             "/kicker",
             "/lede",
-            "/body/0/fn",
+            "/body/0/title",
             "/body/1/label",
             "/legend/0/text"
         ]
@@ -154,8 +153,8 @@ fn tag_names() {
         .take(4)
         .map(|entry| entry.node.tag_name())
         .collect();
-    assert_eq!(tags, ["Row", "Col", "Zone", "Pcard"]);
-    assert_eq!(pipe(PipeKind::Blue, "a").tag_name(), "Pipe");
+    assert_eq!(tags, ["Row", "Col", "Box", "Item"]);
+    assert_eq!(pipe(Line::Solid, Some(1), "a").tag_name(), "Pipe");
     assert!(matches!(page.body.first(), Some(Node::Row(_))));
 }
 
@@ -188,10 +187,13 @@ fn icon_file_names_match_serde_and_assets() {
 
 #[test]
 fn kind_names_match_serde() {
-    for kind in PipeKind::ALL {
-        assert_eq!(serde_json::to_value(kind).unwrap(), kind.as_str());
+    for line in Line::ALL {
+        assert_eq!(serde_json::to_value(line).unwrap(), line.as_str());
     }
-    for kind in ZoneKind::ALL {
-        assert_eq!(serde_json::to_value(kind).unwrap(), kind.as_str());
+    for source in FactSource::ALL {
+        assert_eq!(serde_json::to_value(source).unwrap(), source.as_str());
+    }
+    for icon in IconName::ALL {
+        assert_eq!(serde_json::to_value(icon).unwrap(), icon.as_str());
     }
 }

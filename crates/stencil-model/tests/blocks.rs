@@ -6,12 +6,12 @@ mod common;
 
 use common::{callout, col, frame, page_with_body, pipe, text_block};
 use stencil_model::{
-    CalloutKind, FRAME_HEIGHT_DEFAULT, ListKind, ModelError, Node, Page, PipeKind,
-    TEXT_BODY_LINES_MAX, VetRule, body_nodes, parse_page, text_fields, validate_page,
+    CalloutKind, FRAME_HEIGHT_DEFAULT, Line, ListKind, ModelError, Node, Page, TEXT_BODY_LINES_MAX,
+    VetRule, body_nodes, parse_and_vet, text_fields, validate_page,
 };
 
 fn violations(page: &Page) -> Vec<(String, &'static str, String)> {
-    validate_page(page)
+    validate_page(page, &common::gcp())
         .into_iter()
         .map(|violation| {
             (
@@ -36,7 +36,7 @@ fn text_pointers(page: &Page) -> Vec<String> {
 
 /// A page whose body holds `node` and a blue pipe, so the page is valid apart from `node`.
 fn page_with(node: Node) -> Page {
-    page_with_body(vec![node, pipe(PipeKind::Blue, "hop")])
+    page_with_body(vec![node, pipe(Line::Solid, Some(1), "hop")])
 }
 
 fn page_json(body: serde_json::Value) -> String {
@@ -61,11 +61,14 @@ fn vet_rule_names_for_blocks() {
 
 #[test]
 fn blocks_parse_with_their_tags_and_defaults() {
-    let page = parse_page(&page_json(serde_json::json!([
-        { "tag": "Text", "id": "problem", "heading": "Problem", "body": ["One line."] },
-        { "tag": "Callout", "kind": "risk", "text": "Clips can arrive late." },
-        { "tag": "Frame", "label": "Trigger editor" }
-    ])))
+    let page = parse_and_vet(
+        &page_json(serde_json::json!([
+            { "tag": "Text", "id": "problem", "heading": "Problem", "body": ["One line."] },
+            { "tag": "Callout", "kind": "risk", "text": "Clips can arrive late." },
+            { "tag": "Frame", "label": "Trigger editor" }
+        ])),
+        &common::gcp(),
+    )
     .unwrap();
     let tags: Vec<&str> = page.body.iter().map(Node::tag_name).collect();
     assert_eq!(tags, ["Text", "Callout", "Frame"]);
@@ -93,7 +96,7 @@ fn block_enums_and_fields_reject_unknown_values() {
         serde_json::json!([{ "tag": "Frame", "label": "a", "width": 300 }]),
         serde_json::json!([{ "tag": "Frame", "label": "a", "height": 70000 }]),
     ] {
-        let parsed = parse_page(&page_json(body.clone()));
+        let parsed = parse_and_vet(&page_json(body.clone()), &common::gcp());
         assert!(
             matches!(parsed, Err(ModelError::Json { .. })),
             "{body} parsed: {parsed:?}"
@@ -164,7 +167,7 @@ fn every_block_text_is_vetted() {
         text_block(Some(untrimmed), &["ok", untrimmed], ListKind::Numbered),
         callout(CalloutKind::Note, Some(untrimmed), untrimmed),
         frame(untrimmed),
-        pipe(PipeKind::Blue, "hop"),
+        pipe(Line::Solid, Some(1), "hop"),
     ]);
     let pointers: Vec<String> = violations(&page)
         .into_iter()
@@ -277,7 +280,7 @@ fn block_ids_are_checked_like_every_node_id() {
     if let Node::Callout(callout) = &mut second {
         callout.id = Some("screen".to_string());
     }
-    let page = page_with_body(vec![first, second, pipe(PipeKind::Blue, "hop")]);
+    let page = page_with_body(vec![first, second, pipe(Line::Solid, Some(1), "hop")]);
     assert_eq!(
         violations(&page),
         one(

@@ -1,6 +1,6 @@
 use crate::document::{Link, Node, Page, Pipe, TeeArm};
 use crate::pointer::NodePointer;
-use crate::{LEGEND_ENTRIES_MAX, LINKS_MAX, NODES_MAX, TEXT_BODY_LINES_MAX};
+use crate::{FACTS_MAX, LEGEND_ENTRIES_MAX, LINKS_MAX, NODES_MAX, TEXT_BODY_LINES_MAX};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct NodeEntry<'a> {
@@ -8,8 +8,8 @@ pub struct NodeEntry<'a> {
     /// The enclosing node: `/body` for body elements, the container for its children and
     /// the Tee for its arms.
     pub parent: Option<NodePointer>,
-    /// Section 1.3 depth: body elements have depth 1, and the children of a Row, Col or
-    /// Zone and the arms of a Tee have their parent's depth plus 1.
+    /// Section 1.3 depth: body elements have depth 1, and the children of a Row, Col,
+    /// Lanes or Box and the arms of a Tee have their parent's depth plus 1.
     pub depth: usize,
     pub node: NodeRef<'a>,
 }
@@ -94,7 +94,8 @@ fn push_children_reversed<'a>(entry: &NodeEntry<'a>, pending: &mut Vec<NodeEntry
     match entry.node {
         NodeRef::Node(Node::Row(row)) => push_nodes(pending, &row.children),
         NodeRef::Node(Node::Col(col)) => push_nodes(pending, &col.children),
-        NodeRef::Node(Node::Zone(zone)) => push_nodes(pending, &zone.children),
+        NodeRef::Node(Node::Lanes(lanes)) => push_nodes(pending, &lanes.children),
+        NodeRef::Node(Node::Box(box_node)) => push_nodes(pending, &box_node.children),
         NodeRef::Node(Node::Tee(tee)) => {
             let arms_pointer = entry.pointer.child("arms");
             for (index, arm) in tee.arms.iter().enumerate().rev() {
@@ -108,7 +109,7 @@ fn push_children_reversed<'a>(entry: &NodeEntry<'a>, pending: &mut Vec<NodeEntry
             }
         }
         NodeRef::Node(
-            Node::Pcard(_)
+            Node::Item(_)
             | Node::Fact(_)
             | Node::Note(_)
             | Node::Pipe(_)
@@ -205,18 +206,20 @@ pub(crate) fn push_node_text_fields<'a>(entry: &NodeEntry<'a>, fields: &mut Vec<
         });
     };
     match entry.node {
-        NodeRef::Node(Node::Row(_) | Node::Col(_)) => {}
-        NodeRef::Node(Node::Zone(zone)) => push("label", &zone.label),
-        NodeRef::Node(Node::Pcard(pcard)) => {
-            push("fn", &pcard.function_name);
-            if let Some(product_name) = &pcard.product_name {
-                push("pn", product_name);
+        NodeRef::Node(Node::Row(_) | Node::Col(_) | Node::Lanes(_)) => {}
+        NodeRef::Node(Node::Box(box_node)) => push("label", &box_node.label),
+        NodeRef::Node(Node::Item(item)) => {
+            push("title", &item.title);
+            if let Some(subtitle) = &item.subtitle {
+                push("subtitle", subtitle);
             }
-            if let Some(fact) = &pcard.fact {
-                push("fact", fact);
-            }
-            if let Some(ask) = &pcard.ask {
-                push("ask", ask);
+            let facts_pointer = entry.pointer.child("facts");
+            // One fact past the limit is enough for vet to report `facts-too-many`.
+            for (index, fact) in item.facts.iter().enumerate().take(FACTS_MAX + 1) {
+                fields.push(TextField {
+                    pointer: facts_pointer.index(index).child("text"),
+                    text: &fact.text,
+                });
             }
         }
         NodeRef::Node(Node::Fact(fact)) => push("text", &fact.text),

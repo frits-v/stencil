@@ -12,8 +12,12 @@ const ONEPAGER_JSON: &str = include_str!("../../../examples/onepager.json");
 #[test]
 fn onepager_lays_out_with_every_link_routed_and_no_geometry_defect() {
     let page = parse_page(ONEPAGER_JSON).expect("onepager vets");
-    let geometry =
-        layout_page(&page, &mut FixedMetricsMeasurer::default()).expect("onepager lays out");
+    let geometry = layout_page(
+        &page,
+        &stencil_model::builtin_grammar("gcp").unwrap().unwrap(),
+        &mut FixedMetricsMeasurer::default(),
+    )
+    .expect("onepager lays out");
 
     for tag in [NodeTag::Text, NodeTag::Callout, NodeTag::Frame] {
         assert!(

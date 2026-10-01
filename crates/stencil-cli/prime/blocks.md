@@ -6,7 +6,7 @@ Text: an optional heading (13 px bold) over 1 to 64 body lines (12 px). Each lin
 
 { "tag": "Text", "id": "goals", "heading": "Goals", "list": "numbered", "body": ["Accept a trigger written in plain language.", "Evaluate every new clip against each active trigger."] }
 
-Callout: a boxed note with a 4 px accent bar and a tint by kind: note blue, risk red, decision green, open amber. title is optional, text required. Under wire the kind shows only through the title, so write it there.
+Callout: a boxed note with a 4 px accent bar and a fill by kind (note, risk, decision, open), each with its own accent. title is optional, text required. Under wire the kind shows only through the title, so write it there.
 
 { "tag": "Callout", "kind": "risk", "title": "Risk: plan drift", "text": "A model update can change how a description is read. Each verdict records the plan version." }
 

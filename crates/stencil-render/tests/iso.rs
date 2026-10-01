@@ -20,7 +20,7 @@ use stencil_render::iso::{
     SolidShape, iso_labels_clear, iso_links_clear, project_page, project_point, project_zoomed,
     zoomed_geometry,
 };
-use stencil_render::palette::{self, Face, Palette, ZoneTab, shade};
+use stencil_render::palette::{self, Face, LineUse, Palette, ZoneTab, shade};
 use stencil_render::{DeviceScale, measured_json, render_png, render_svg};
 
 const HERO_JSON: &str = include_str!("../../../examples/hero-iso.json");
@@ -51,7 +51,7 @@ fn assert_close(actual: f32, expected: f32, what: &str) {
 }
 
 fn card(fn_text: &str, icon: &str) -> Value {
-    json!({ "tag": "Pcard", "icon": icon, "fn": fn_text })
+    json!({ "tag": "Item", "kind": "product", "icon": icon, "title": fn_text })
 }
 
 fn iso_page(body: Value) -> Page {
@@ -75,7 +75,7 @@ fn the_point_map_matches_section_12_2() {
 #[test]
 fn a_one_zone_page_is_centered_across_and_starts_at_the_body_top() {
     let page = iso_page(json!([
-        { "tag": "Zone", "kind": "region-a", "label": "Region", "children": [card("Router", "networking")] }
+        { "tag": "Box", "kind": "region", "tint": 1, "label": "Region", "children": [card("Router", "networking")] }
     ]));
     let geometry = common::layout_with_fixed_metrics(&page);
     let scene = project_page(&geometry).unwrap();
@@ -126,12 +126,12 @@ fn solids_stack_by_zone_depth_and_rows_draw_none() {
             "tag": "Row",
             "children": [
                 {
-                    "tag": "Zone", "kind": "region-a", "label": "Outer",
+                    "tag": "Box", "kind": "region", "tint": 1, "label": "Outer",
                     "children": [
-                        { "tag": "Zone", "kind": "subnet", "label": "Inner", "children": [card("Router", "networking")] }
+                        { "tag": "Box", "kind": "subnet", "label": "Inner", "children": [card("Router", "networking")] }
                     ]
                 },
-                { "tag": "Col", "children": [ { "tag": "Pipe", "dir": "h", "kind": "blue", "label": "hop" } ] }
+                { "tag": "Col", "children": [ { "tag": "Pipe", "dir": "h", "line": "solid", "tint": 1, "label": "hop" } ] }
             ]
         }
     ]));
@@ -168,8 +168,8 @@ fn solids_stack_by_zone_depth_and_rows_draw_none() {
 #[test]
 fn a_vpc_zone_is_a_ring_on_its_parent_top_and_adds_no_height() {
     let page = iso_page(json!([
-        { "tag": "Zone", "kind": "gcp", "label": "Google Cloud", "children": [
-            { "tag": "Zone", "kind": "vpc", "label": "Shared VPC", "children": [
+        { "tag": "Box", "kind": "gcp", "label": "Google Cloud", "children": [
+            { "tag": "Box", "kind": "vpc", "label": "Shared VPC", "children": [
                 card("Warehouse", "bigquery") ] } ] }
     ]));
     let geometry = common::layout_with_fixed_metrics(&page);
@@ -199,17 +199,17 @@ fn two_zone_link_page(to_side: &str) -> Page {
             {
                 "tag": "Row", "gap": 32,
                 "children": [
-                    { "tag": "Zone", "kind": "region-a", "label": "A", "children": [
-                        { "tag": "Pcard", "id": "left", "fn": "Left" } ] },
-                    { "tag": "Zone", "kind": "region-b", "label": "B", "children": [
-                        { "tag": "Pcard", "id": "right", "fn": "Right" } ] }
+                    { "tag": "Box", "kind": "region", "tint": 1, "label": "A", "children": [
+                        { "tag": "Item", "kind": "product", "id": "left", "title": "Left" } ] },
+                    { "tag": "Box", "kind": "region", "tint": 2, "label": "B", "children": [
+                        { "tag": "Item", "kind": "product", "id": "right", "title": "Right" } ] }
                 ]
             }
         ]),
-        json!([{ "kind": "blue", "text": "request path" }]),
+        json!([{ "line": "solid", "tint": 1, "text": "request path" }]),
     );
     document["links"] =
-        json!([{ "from": "left", "to": "right", "kind": "blue", "to_side": to_side }]);
+        json!([{ "from": "left", "to": "right", "line": "solid", "tint": 1, "to_side": to_side }]);
     document["projection"] = json!("iso");
     serde_json::from_value(document).unwrap()
 }
@@ -278,14 +278,14 @@ fn every_hero_link_reaches_its_endpoints_over_the_cloud_floor() {
 fn a_link_from_a_zone_to_its_own_child_rises_onto_that_zone_where_it_enters_it() {
     let mut document = common::page_document(
         json!([
-            { "tag": "Zone", "kind": "gcp", "label": "Google Cloud", "children": [
-                { "tag": "Zone", "kind": "region-a", "id": "reg", "label": "europe-west4",
+            { "tag": "Box", "kind": "gcp", "label": "Google Cloud", "children": [
+                { "tag": "Box", "kind": "region", "tint": 1, "id": "reg", "label": "europe-west4",
                   "children": [
-                    { "tag": "Pcard", "id": "wh", "fn": "Warehouse" } ] } ] }
+                    { "tag": "Item", "kind": "product", "id": "wh", "title": "Warehouse" } ] } ] }
         ]),
-        json!([{ "kind": "blue", "text": "request path" }]),
+        json!([{ "line": "solid", "tint": 1, "text": "request path" }]),
     );
-    document["links"] = json!([{ "from": "reg", "to": "wh", "kind": "blue" }]);
+    document["links"] = json!([{ "from": "reg", "to": "wh", "line": "solid", "tint": 1 }]);
     document["projection"] = json!("iso");
     let page: Page = serde_json::from_value(document).unwrap();
     let geometry = common::layout_with_fixed_metrics(&page);
@@ -551,7 +551,7 @@ fn wire_faces_are_white_or_unfilled() {
 /// cards.
 fn two_card_zone(container: Value) -> Page {
     iso_page(json!([
-        { "tag": "Zone", "kind": "gcp", "label": "Google Cloud", "children": [container] }
+        { "tag": "Box", "kind": "gcp", "label": "Google Cloud", "children": [container] }
     ]))
 }
 
@@ -846,10 +846,10 @@ fn zone_tabs_are_filled_at_the_top_level_and_outlined_when_nested() {
         let parsed = common::parse_xml(&svg.svg);
         let palette = Palette::for_projection(theme, stencil_model::Projection::Iso);
         for (owner, kind) in [
-            (HERO_ON_PREM, stencil_model::ZoneKind::OnpremA),
-            (HERO_GCP, stencil_model::ZoneKind::Gcp),
+            (HERO_ON_PREM, common::zone("onprem", Some(1))),
+            (HERO_GCP, common::zone("gcp", None)),
         ] {
-            let ZoneTab::Filled { fill, ink } = palette.iso_zone_tab(kind, false) else {
+            let ZoneTab::Filled { fill, ink } = palette.iso_zone_tab(kind.0, kind.1, false) else {
                 panic!("a top-level tab is filled");
             };
             let (tab, texts) = billboard_parts(&parsed, owner);
@@ -859,12 +859,12 @@ fn zone_tabs_are_filled_at_the_top_level_and_outlined_when_nested() {
             assert_eq!(texts[0].attribute("fill"), Some(ink), "{theme:?} {owner}");
         }
         let gcp_top = palette
-            .slab_faces(stencil_model::ZoneKind::Gcp, 0)
+            .slab_faces(common::zone("gcp", None).0, common::zone("gcp", None).1, 0)
             .unwrap()
             .top
             .unwrap();
         let ZoneTab::Outline { border, ink } =
-            palette.iso_zone_tab(stencil_model::ZoneKind::Vpc, true)
+            palette.iso_zone_tab(common::zone("vpc", None).0, None, true)
         else {
             panic!("a nested tab is an outline");
         };
@@ -905,7 +905,7 @@ fn every_zone_tab_hangs_from_its_zone_back_corner() {
 #[test]
 fn a_wire_fact_block_is_outlined_although_its_flat_box_has_no_border() {
     let mut page = iso_page(json!([
-        { "tag": "Zone", "kind": "region-a", "label": "Region", "children": [
+        { "tag": "Box", "kind": "region", "tint": 1, "label": "Region", "children": [
             { "tag": "Fact", "text": "BGP peering" } ] }
     ]));
     page.theme = Theme::Wire;
@@ -970,12 +970,22 @@ fn luminance(color: &str) -> f64 {
 fn dusk_surfaces_get_lighter_from_the_page_to_the_floor_to_the_blocks() {
     let dusk = Palette::for_projection(Theme::Dusk, stencil_model::Projection::Iso);
     let page = luminance(dusk.page_background());
-    let floor = dusk.slab_faces(stencil_model::ZoneKind::Gcp, 0).unwrap();
+    let floor = dusk
+        .slab_faces(common::zone("gcp", None).0, common::zone("gcp", None).1, 0)
+        .unwrap();
     let on_prem = dusk
-        .slab_faces(stencil_model::ZoneKind::OnpremA, 0)
+        .slab_faces(
+            common::zone("onprem", Some(1)).0,
+            common::zone("onprem", Some(1)).1,
+            0,
+        )
         .unwrap();
     let region = dusk
-        .slab_faces(stencil_model::ZoneKind::RegionA, 1)
+        .slab_faces(
+            common::zone("region", Some(1)).0,
+            common::zone("region", Some(1)).1,
+            1,
+        )
         .unwrap();
     let card = dusk.card();
     let block = dusk.block_faces(Some(card.fill), card.border).unwrap();
@@ -995,7 +1005,9 @@ fn dusk_surfaces_get_lighter_from_the_page_to_the_floor_to_the_blocks() {
 fn the_gcp_slab_carries_the_brand_on_its_sides_and_a_thin_outline_on_top() {
     for theme in [Theme::Center, Theme::Dusk] {
         let palette = Palette::for_projection(theme, stencil_model::Projection::Iso);
-        let faces = palette.slab_faces(stencil_model::ZoneKind::Gcp, 0).unwrap();
+        let faces = palette
+            .slab_faces(common::zone("gcp", None).0, common::zone("gcp", None).1, 0)
+            .unwrap();
         assert_eq!(faces.left.as_deref(), Some(palette::GCP_BORDER));
         assert_eq!(
             faces.right.as_deref(),
@@ -1007,7 +1019,7 @@ fn the_gcp_slab_carries_the_brand_on_its_sides_and_a_thin_outline_on_top() {
         assert!(
             outline.width_px
                 < palette
-                    .wire_style(stencil_model::PipeKind::Blue)
+                    .wire_style(LineUse::new(stencil_model::Line::Solid, Some(1)))
                     .stroke
                     .width_px
         );
@@ -1151,7 +1163,7 @@ fn a_relabeled_wire_legend_keeps_the_gap_before_its_description() {
 fn a_narrow_body_is_zoomed_to_the_cap_with_heights_and_text_sizes_kept_in_proportion() {
     let page = iso_page(json!([
         { "tag": "Row", "grow": [0], "children": [
-            { "tag": "Zone", "kind": "region-a", "label": "Region", "children": [
+            { "tag": "Box", "kind": "region", "tint": 1, "label": "Region", "children": [
                 card("Gateway", "cloud-run") ] } ] }
     ]));
     let geometry = common::layout_with_cosmic_text(&page);
@@ -1330,7 +1342,7 @@ fn link_scene(path: Vec<IsoPoint>, zone: BoxRect) -> IsoScene {
         footprint: zone,
     }];
     scene.link_paths = vec![path];
-    scene.link_kinds = vec![stencil_model::PipeKind::Blue];
+    scene.link_kinds = vec![(stencil_model::Line::Solid, Some(1))];
     scene
 }
 
@@ -1456,19 +1468,23 @@ fn a_dashed_link_skips_its_risers_and_a_solid_one_draws_them() {
 fn the_wire_vpc_ring_is_dotted_light_gray_and_solid_slab_outlines_are_heavier() {
     let palette = Palette::for_projection(Theme::Wire, stencil_model::Projection::Iso);
     let ring = palette
-        .slab_faces(stencil_model::ZoneKind::Vpc, 1)
+        .slab_faces(common::zone("vpc", None).0, common::zone("vpc", None).1, 1)
         .unwrap()
         .top_stroke
         .unwrap();
     assert_eq!(ring.line, palette::LineStyle::Dotted);
     assert_eq!(ring.color, palette::ISO_WIRE_RING_INK);
     let on_prem = palette
-        .slab_faces(stencil_model::ZoneKind::OnpremA, 0)
+        .slab_faces(
+            common::zone("onprem", Some(1)).0,
+            common::zone("onprem", Some(1)).1,
+            0,
+        )
         .unwrap();
     assert_eq!(
         on_prem.top_stroke.unwrap().width_px,
         palette::ISO_WIRE_SLAB_OUTLINE_PX
     );
-    let flat = Palette::new(Theme::Wire).zone_style(stencil_model::ZoneKind::Vpc);
+    let flat = Palette::new(Theme::Wire).zone_style(common::zone("vpc", None).0, None);
     assert_eq!(flat.border.unwrap().line, palette::LineStyle::Dashed);
 }

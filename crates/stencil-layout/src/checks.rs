@@ -311,8 +311,9 @@ pub fn pipes_land(page: &Page, geometry: &PageGeometry) -> CheckReport {
             NodeRef::Node(
                 Node::Row(_)
                 | Node::Col(_)
-                | Node::Zone(_)
-                | Node::Pcard(_)
+                | Node::Lanes(_)
+                | Node::Box(_)
+                | Node::Item(_)
                 | Node::Fact(_)
                 | Node::Note(_)
                 | Node::Tee(_)
@@ -402,9 +403,10 @@ fn pipe_ends(
     pipe: usize,
     dir: PipeDir,
 ) -> Vec<PipeEnd> {
-    let (container, before_side, after_side) = match dir {
-        PipeDir::Horizontal => (NodeTag::Row, "left", "right"),
-        PipeDir::Vertical => (NodeTag::Col, "above", "below"),
+    // Lanes lays its heads out as a Row until lane messages land (section 13.6).
+    let (containers, before_side, after_side) = match dir {
+        PipeDir::Horizontal => ([NodeTag::Row, NodeTag::Lanes], "left", "right"),
+        PipeDir::Vertical => ([NodeTag::Col, NodeTag::Col], "above", "below"),
     };
     let mut current = pipe;
     for _ in 0..geometry.nodes.len() {
@@ -414,7 +416,7 @@ fn pipe_ends(
         let Some(parent_node) = geometry.nodes.get(parent) else {
             return Vec::new();
         };
-        if parent_node.tag != container {
+        if !containers.contains(&parent_node.tag) {
             current = parent;
             continue;
         }
@@ -450,8 +452,8 @@ fn pipe_ends(
     Vec::new()
 }
 
-/// True when some node in the subtree rooted at `root`, `root` included, that is not a Row
-/// or Col spans `center` on the pipe's cross axis: y for a Pipe h, x for a Pipe v.
+/// True when some node in the subtree rooted at `root`, `root` included, that is not a Row,
+/// Col or Lanes spans `center` on the pipe's cross axis: y for a Pipe h, x for a Pipe v.
 fn subtree_spans(
     geometry: &PageGeometry,
     children_by_parent: &[Vec<usize>],
@@ -484,8 +486,8 @@ fn subtree_spans(
     false
 }
 
-/// A pipe points at a box it can land on. A Row or Col only arranges its children, so it
-/// never counts; the page-level tags never occur inside a body subtree.
+/// A pipe points at a box it can land on. A Row, Col or Lanes only arranges its children,
+/// so it never counts; the page-level tags never occur inside a body subtree.
 fn pipe_lands_on(tag: NodeTag) -> bool {
     match tag {
         NodeTag::Zone
@@ -499,6 +501,7 @@ fn pipe_lands_on(tag: NodeTag) -> bool {
         | NodeTag::Frame => true,
         NodeTag::Row
         | NodeTag::Col
+        | NodeTag::Lanes
         | NodeTag::Page
         | NodeTag::Kicker
         | NodeTag::Title

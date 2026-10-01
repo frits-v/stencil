@@ -132,7 +132,7 @@ fn vet_reports_a_remembered_constant_in_a_pipe_sub() {
 #[test]
 fn vet_fails_a_page_with_no_pipes_because_nothing_was_examined() {
     let document = minimal_page(
-        json!([{ "tag": "Pcard", "fn": "Service", "pn": "Cloud Run" }]),
+        json!([{ "tag": "Item", "kind": "product", "title": "Service", "subtitle": "Cloud Run" }]),
         json!([]),
     );
     let path = write_document("vet_nothing_examined", "no-pipes.json", &document);
@@ -200,14 +200,14 @@ fn vet_on_a_missing_required_field_is_a_defect() {
     document["legend"][0]
         .as_object_mut()
         .unwrap()
-        .remove("kind");
-    let path = write_document("vet_missing_field", "g7-no-kind.json", &document);
+        .remove("line");
+    let path = write_document("vet_missing_field", "g7-no-line.json", &document);
 
     let outcome = run_stencil(&["vet", &path]);
 
     assert_eq!(outcome.code, ExitCode::Defects);
     assert!(
-        outcome.stdout.contains("missing field `kind`"),
+        outcome.stdout.contains("missing field `line`"),
         "{}",
         outcome.stdout
     );
@@ -289,7 +289,7 @@ fn input_at_the_byte_limit_is_read() {
 #[test]
 fn a_document_past_the_node_limit_is_a_vet_violation() {
     // 16 Rows + 256 cards + 15 * 255 cards = 4097 nodes, no list above 256.
-    let card = json!({ "tag": "Pcard", "fn": "a" });
+    let card = json!({ "tag": "Item", "kind": "product", "title": "a" });
     let mut rows = vec![json!({ "tag": "Row", "children": vec![card.clone(); 256] })];
     rows.extend((0..15).map(|_| json!({ "tag": "Row", "children": vec![card.clone(); 255] })));
     let document = minimal_page(Value::Array(rows), json!([]));
@@ -540,14 +540,14 @@ fn check_reports_overflowing_text_with_its_pointer() {
             {
                 "tag": "Row",
                 "children": [
-                    { "tag": "Pcard", "fn": long_word, "pn": "Cloud Run" },
-                    { "tag": "Pcard", "fn": "Second", "pn": "Cloud Run" },
-                    { "tag": "Pcard", "fn": "Third", "pn": "Cloud Run" }
+                    { "tag": "Item", "kind": "product", "title": long_word, "subtitle": "Cloud Run" },
+                    { "tag": "Item", "kind": "product", "title": "Second", "subtitle": "Cloud Run" },
+                    { "tag": "Item", "kind": "product", "title": "Third", "subtitle": "Cloud Run" }
                 ]
             },
-            { "tag": "Pipe", "dir": "h", "kind": "blue", "label": "request" }
+            { "tag": "Pipe", "dir": "h", "line": "solid", "tint": 1, "label": "request" }
         ]),
-        json!([{ "kind": "blue", "text": "request path" }]),
+        json!([{ "line": "solid", "tint": 1, "text": "request path" }]),
     );
     document["width"] = json!(640);
     let path = write_document("check_overflow", "overflow.json", &document);
@@ -617,7 +617,7 @@ fn check_reports_overflowing_text_with_its_pointer() {
 
 fn document_with_missing_glyph() -> Value {
     let mut document = g7_document();
-    document["body"][0]["children"][0]["children"][0]["children"][0]["fn"] =
+    document["body"][0]["children"][0]["children"][0]["children"][0]["title"] =
         json!("On-prem router \u{4E00}");
     document
 }
@@ -637,7 +637,7 @@ fn check_reports_a_missing_glyph_as_an_error_line() {
     assert_eq!(lines.len(), 2, "{}", outcome.stdout);
     assert!(
         lines[0].starts_with(
-            "error text at /body/0/children/0/children/0/children/0/fn could not be measured: "
+            "error text at /body/0/children/0/children/0/children/0/title could not be measured: "
         ),
         "{}",
         lines[0]
@@ -802,7 +802,7 @@ fn a_directory_at_an_output_name_leaves_existing_outputs_untouched() {
 #[test]
 fn a_vetted_tall_document_is_rejected_above_the_pixel_budget() {
     let cards: Vec<Value> = (0..160)
-        .map(|index| json!({ "tag": "Pcard", "fn": format!("Card {index}") }))
+        .map(|index| json!({ "tag": "Item", "kind": "product", "title": format!("Card {index}") }))
         .collect();
     let document = minimal_page(Value::Array(cards), json!([]));
     let path = write_document("tall_budget", "tall.json", &document);

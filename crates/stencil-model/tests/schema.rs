@@ -56,15 +56,15 @@ fn missing_tag_fails() {
 fn tag_is_accepted_on_every_node_kind() {
     let document = serde_json::json!({
         "title": "t", "kicker": "k", "lede": "l", "canvas": "internal",
-        "legend": [ { "kind": "blue", "text": "b" } ],
+        "legend": [ { "line": "solid", "tint": 1, "text": "b" } ],
         "body": [
             { "tag": "Row", "children": [ { "tag": "Fact", "text": "f" } ] },
             { "tag": "Col", "children": [ { "tag": "Note", "kind": "h1", "text": "n" } ] },
-            { "tag": "Zone", "kind": "vpc", "label": "z", "children": [ { "tag": "Pcard", "fn": "f" } ] },
-            { "tag": "Pipe", "dir": "v", "kind": "blue", "label": "p" },
-            { "tag": "Tee", "kind": "blue", "hub": "h", "arms": [
-                { "tag": "Pipe", "dir": "h", "kind": "blue", "label": "a" },
-                { "tag": "Pipe", "dir": "h", "kind": "blue", "label": "b" }
+            { "tag": "Box", "kind": "vpc", "label": "z", "children": [ { "tag": "Item", "kind": "product", "title": "f" } ] },
+            { "tag": "Pipe", "dir": "v", "line": "solid", "tint": 1, "label": "p" },
+            { "tag": "Tee", "line": "solid", "tint": 1, "hub": "h", "arms": [
+                { "tag": "Pipe", "dir": "h", "line": "solid", "tint": 1, "label": "a" },
+                { "tag": "Pipe", "dir": "h", "line": "solid", "tint": 1, "label": "b" }
             ] }
         ]
     });
@@ -77,7 +77,7 @@ fn null_optional_fields_validate() {
     document["foot"] = serde_json::Value::Null;
     document["body"][0]["gap"] = serde_json::Value::Null;
     document["body"][0]["justify"] = serde_json::Value::Null;
-    document["body"][0]["children"][0]["children"][0]["children"][0]["pn"] =
+    document["body"][0]["children"][0]["children"][0]["children"][0]["subtitle"] =
         serde_json::Value::Null;
     document["body"][0]["children"][0]["children"][0]["children"][0]["icon"] =
         serde_json::Value::Null;
@@ -94,9 +94,9 @@ fn null_width_fails() {
 #[test]
 fn tee_arm_tagged_zone_fails() {
     let mut document = g7_value();
-    document["body"][0] = serde_json::json!({ "tag": "Tee", "kind": "blue", "hub": "h", "arms": [
-        { "tag": "Pipe", "dir": "h", "kind": "blue", "label": "a" },
-        { "tag": "Zone", "kind": "vpc", "label": "z", "children": [ { "tag": "Fact", "text": "f" } ] }
+    document["body"][0] = serde_json::json!({ "tag": "Tee", "line": "solid", "tint": 1, "hub": "h", "arms": [
+        { "tag": "Pipe", "dir": "h", "line": "solid", "tint": 1, "label": "a" },
+        { "tag": "Box", "kind": "vpc", "label": "z", "children": [ { "tag": "Fact", "text": "f" } ] }
     ] });
     assert!(!validator().is_valid(&document));
 }
@@ -104,15 +104,15 @@ fn tee_arm_tagged_zone_fails() {
 fn page_with_blocks() -> serde_json::Value {
     serde_json::json!({
         "title": "t", "kicker": "k", "lede": "l", "canvas": "internal", "theme": "dusk",
-        "legend": [ { "kind": "blue", "text": "b" } ],
+        "legend": [ { "line": "solid", "tint": 1, "text": "b" } ],
         "body": [
             { "tag": "Text", "id": "goals", "heading": "Goals", "body": ["a", "b"], "list": "numbered" },
             { "tag": "Callout", "id": "risk", "kind": "risk", "title": "Risk", "text": "c" },
             { "tag": "Frame", "label": "Screen", "height": 240 },
-            { "tag": "Pipe", "id": "hop", "dir": "h", "kind": "blue", "label": "p", "arrow": "end" }
+            { "tag": "Pipe", "id": "hop", "dir": "h", "line": "solid", "tint": 1, "label": "p", "arrow": "end" }
         ],
         "links": [ {
-            "from": "goals", "to": "risk", "kind": "blue", "label": "1", "sub": "s",
+            "from": "goals", "to": "risk", "line": "solid", "tint": 1, "label": "1", "sub": "s",
             "arrow": "both", "from_side": "bottom", "to_side": "top",
             "via": [ { "x": 10, "y": 20.5 } ]
         } ]

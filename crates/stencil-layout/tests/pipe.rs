@@ -6,12 +6,12 @@ use common::{assert_close, layout, node, page_with_body, part};
 use serde_json::{Value, json};
 use stencil_layout::{NodeGeometry, PartName};
 
-fn pipe(dir: &str, kind: &str, label: &str) -> Value {
-    json!({ "tag": "Pipe", "dir": dir, "kind": kind, "label": label })
+fn pipe(dir: &str, line: &str, label: &str) -> Value {
+    json!({ "tag": "Pipe", "dir": dir, "line": line, "label": label })
 }
 
 fn card(function_name: &str) -> Value {
-    json!({ "tag": "Pcard", "fn": function_name })
+    json!({ "tag": "Item", "kind": "product", "title": function_name })
 }
 
 fn wire_lengths(pipe_node: &NodeGeometry, horizontal: bool) -> (f32, f32) {
@@ -29,7 +29,7 @@ fn horizontal_pipe_in_a_col_spans_the_col_with_equal_wires() {
     let geometry = layout(&page_with_body(
         1280,
         json!([{ "tag": "Row", "children": [
-            { "tag": "Col", "children": [card("A wide card with a long function name"), pipe("h", "blue", "VLAN 1")] },
+            { "tag": "Col", "children": [card("A wide card with a long function name"), pipe("h", "solid", "VLAN 1")] },
             card("Right")
         ]}]),
     ));
@@ -81,8 +81,7 @@ fn vertical_pipe_in_a_col_is_centered_and_at_least_36_tall() {
 fn vertical_wire_minimum_is_16_for_deny_and_12_otherwise() {
     for (kind, minimum) in [
         ("gray", 12.0),
-        ("blue", 12.0),
-        ("pink", 12.0),
+        ("solid", 12.0),
         ("dash", 12.0),
         ("deny", 16.0),
     ] {
@@ -104,7 +103,7 @@ fn vertical_pipe_in_a_row_stretches_to_the_row_height() {
     let stack = json!({ "tag": "Col", "children": [card("One"), card("Two"), card("Three"), card("Four")] });
     let geometry = layout(&page_with_body(
         1280,
-        json!([{ "tag": "Row", "children": [stack, pipe("v", "blue", "down"), card("Right")] }]),
+        json!([{ "tag": "Row", "children": [stack, pipe("v", "solid", "down"), card("Right")] }]),
     ));
     let row = node(&geometry, "/body/0");
     let pipe_node = node(&geometry, "/body/0/children/1");
@@ -139,7 +138,7 @@ fn tag_in_a_narrow_gutter_wraps_and_wires_stay_at_14() {
         640,
         json!([{ "tag": "Row", "grow": [1, 1, 1], "children": [
             card("Left"),
-            { "tag": "Col", "children": [pipe("h", "blue", label)] },
+            { "tag": "Col", "children": [pipe("h", "solid", label)] },
             card("Right")
         ]}]),
     ));
@@ -173,7 +172,7 @@ fn sub_sits_2_px_under_the_label_and_the_tag_grows() {
     let geometry = layout(&page_with_body(
         1280,
         json!([{ "tag": "Col", "children": [
-            { "tag": "Pipe", "dir": "h", "kind": "deny", "label": "VLAN 1", "sub": "EAD 1 · BGP" }
+            { "tag": "Pipe", "dir": "h", "line": "deny", "label": "VLAN 1", "sub": "EAD 1 · BGP" }
         ]}]),
     ));
     let pipe_node = node(&geometry, "/body/0/children/0");
@@ -190,7 +189,7 @@ fn sub_sits_2_px_under_the_label_and_the_tag_grows() {
 }
 
 fn arrow_pipe(dir: &str, arrow: &str) -> Value {
-    json!({ "tag": "Pipe", "dir": dir, "kind": "blue", "label": "VLAN 1", "arrow": arrow })
+    json!({ "tag": "Pipe", "dir": dir, "line": "solid", "tint": 1, "label": "VLAN 1", "arrow": arrow })
 }
 
 #[test]
@@ -198,7 +197,7 @@ fn an_arrowhead_end_shortens_its_wire_to_the_arrowhead_base_and_keeps_the_dot() 
     let geometry = layout(&page_with_body(
         640,
         json!([{ "tag": "Col", "children": [
-            pipe("h", "blue", "VLAN 1"),
+            pipe("h", "solid", "VLAN 1"),
             arrow_pipe("h", "end"),
             arrow_pipe("h", "both")
         ]}]),
@@ -254,7 +253,7 @@ fn a_vertical_start_arrowhead_shortens_the_start_wire_from_the_top() {
         640,
         json!([{ "tag": "Col", "children": [
             card("Upper"),
-            pipe("v", "blue", "failover"),
+            pipe("v", "solid", "failover"),
             card("Lower"),
             arrow_pipe("v", "start")
         ]}]),

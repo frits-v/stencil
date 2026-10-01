@@ -1,12 +1,16 @@
 //! Every color the SVG writer paints, keyed by theme (section 11.1). The constants and
-//! free functions below `Palette` are the `center` tables of sections 2.4 to 2.9 and 5.2.
+//! free functions below `Palette` are the `center` tables of sections 2.4 to 2.9 and 5.2,
+//! keyed by a container's role, tone and tint and by a line and its tint (section 13.1),
+//! never by a grammar's kind names.
 //! Center text colors are defined once in `stencil_layout::styles`, which resolves them
 //! into each `TextRun`, and are re-exported here so the palette is complete in one place.
 //! Drawing code reads colors only through a `Palette`.
 
+use stencil_layout::ContainerLook;
 use stencil_layout::styles::{badge_fill, text_color};
+use stencil_model::grammar::{BorderPattern, Role, Tone};
 use stencil_model::text::TextStyleName;
-use stencil_model::{CalloutKind, Canvas, PipeKind, Projection, Theme, ZoneKind};
+use stencil_model::{CalloutKind, Canvas, Line, Projection, Theme, line_key, line_tint};
 
 pub use stencil_layout::styles::{
     BADGE_FILL_CUSTOMER, BADGE_FILL_INTERNAL, BADGE_TEXT_CUSTOMER, BADGE_TEXT_INTERNAL, TEXT_AMBER,
@@ -33,6 +37,21 @@ pub const PROJECT_FILL: &str = "#FFF8E1";
 pub const OPTIONAL_FILL: &str = "#F8FBFF";
 pub const K8S_FILL: &str = "#FCE4EC";
 pub const PERIMETER_FILL: &str = "#FFFBF5";
+/// Fill of an untinted Box of the warm tone: an onprem without tint (section 13.5).
+pub const WARM_FILL: &str = "#EFEBE9";
+/// Fill of an untinted Box of the neutral tone: gcp's apis and plain's group.
+pub const NEUTRAL_FILL: &str = "#EDF3F0";
+/// Tint slot fills 1 to 8; slots 1 and 2 are the blue and pink of section 2.4.
+pub const TINT_FILLS: [&str; 8] = [
+    TINT_A_FILL,
+    TINT_B_FILL,
+    "#E1FCFD",
+    "#FAF9CA",
+    "#EFEBFF",
+    "#E5F7E3",
+    "#FCDBCD",
+    "#BFDDE8",
+];
 
 pub const CARD_FILL: &str = "#FFFFFF";
 pub const CARD_BORDER: &str = "#DADCE0";
@@ -47,6 +66,10 @@ pub const WIRE_GRAY: &str = "#5F6368";
 pub const WIRE_BLUE: &str = "#1A73E8";
 pub const WIRE_PINK: &str = "#C2185B";
 pub const WIRE_DENY: &str = "#C5221F";
+/// Tint slot wires 1 to 8; slots 1 and 2 are the blue and pink of section 5.2.
+pub const TINT_WIRES: [&str; 8] = [
+    WIRE_BLUE, WIRE_PINK, "#007D78", "#A36E14", "#593894", "#497938", "#9D3E1B", "#005276",
+];
 
 pub const CALLOUT_NOTE_ACCENT: &str = "#1A73E8";
 pub const CALLOUT_NOTE_FILL: &str = "#E8F0FE";
@@ -78,12 +101,13 @@ pub enum LineStyle {
     Dotted,
 }
 
-/// A Zone's section 2.4 row, the gcp frame's border and frame fill included.
+/// A Box's paint: the section 2.4 row of its kind, the frame's border and frame fill
+/// included.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct ZoneStyle {
-    /// None for k8s, which has no border.
+    /// None for a borderless kind such as k8s.
     pub border: Option<Stroke>,
-    /// None for vpc, which is unfilled.
+    /// None for an unfilled kind such as vpc.
     pub fill: Option<&'static str>,
     pub radius_px: f32,
 }
@@ -95,92 +119,110 @@ pub struct Stroke {
     pub color: &'static str,
 }
 
-pub fn zone_style(kind: ZoneKind) -> ZoneStyle {
-    let solid = |width_px, color| Stroke {
-        width_px,
-        line: LineStyle::Solid,
-        color,
-    };
-    let dashed = |width_px, color| Stroke {
-        width_px,
-        line: LineStyle::Dashed,
-        color,
-    };
-    match kind {
-        ZoneKind::Gcp => ZoneStyle {
-            border: Some(solid(3.0, GCP_BORDER)),
-            fill: Some(GCP_FRAME_FILL),
-            radius_px: 10.0,
-        },
-        ZoneKind::Vpc => ZoneStyle {
-            border: Some(dashed(2.0, VPC_BORDER)),
-            fill: None,
-            radius_px: 8.0,
-        },
-        ZoneKind::RegionA => ZoneStyle {
-            border: Some(solid(1.5, REGION_BORDER)),
-            fill: Some(TINT_A_FILL),
-            radius_px: 8.0,
-        },
-        ZoneKind::RegionB => ZoneStyle {
-            border: Some(solid(1.5, REGION_BORDER)),
-            fill: Some(TINT_B_FILL),
-            radius_px: 8.0,
-        },
-        ZoneKind::Subnet => ZoneStyle {
-            border: Some(dashed(1.5, SUBNET_BORDER)),
-            fill: Some(SUBNET_FILL),
-            radius_px: 8.0,
-        },
-        ZoneKind::OnpremA => ZoneStyle {
-            border: Some(solid(1.5, ONPREM_BORDER)),
-            fill: Some(TINT_A_FILL),
-            radius_px: 8.0,
-        },
-        ZoneKind::OnpremB => ZoneStyle {
-            border: Some(solid(1.5, ONPREM_BORDER)),
-            fill: Some(TINT_B_FILL),
-            radius_px: 8.0,
-        },
-        ZoneKind::Project => ZoneStyle {
-            border: Some(solid(1.5, PROJECT_BORDER)),
-            fill: Some(PROJECT_FILL),
-            radius_px: 8.0,
-        },
-        ZoneKind::Optional => ZoneStyle {
-            border: Some(dashed(2.0, OPTIONAL_BORDER)),
-            fill: Some(OPTIONAL_FILL),
-            radius_px: 8.0,
-        },
-        ZoneKind::K8s => ZoneStyle {
-            border: None,
-            fill: Some(K8S_FILL),
-            radius_px: 8.0,
-        },
-        ZoneKind::Perimeter => ZoneStyle {
-            border: Some(dashed(2.5, PERIMETER_BORDER)),
-            fill: Some(PERIMETER_FILL),
-            radius_px: 10.0,
-        },
+/// A line as drawn: its pattern and its effective tint (section 13.1 rule 2), slot 1 for an
+/// untinted solid or dash line and None for gray and deny. Ordered as the arrow markers are
+/// written: gray, solid by slot, dash by slot, deny.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct LineUse {
+    pub line: Line,
+    pub tint: Option<u8>,
+}
+
+impl LineUse {
+    /// The line with its authored tint resolved to the effective one.
+    pub fn new(line: Line, tint: Option<u8>) -> Self {
+        LineUse {
+            line,
+            tint: line_tint(line, tint),
+        }
+    }
+
+    /// The output key of section 13.1 rule 6, for example "blue" or "dash-2".
+    pub fn key(self) -> &'static str {
+        line_key(self.line, self.tint)
     }
 }
 
-/// Wire, dot, spine and legend swatch color and line style (section 5.2).
-pub fn wire_style(kind: PipeKind) -> (&'static str, LineStyle) {
-    match kind {
-        PipeKind::Gray => (WIRE_GRAY, LineStyle::Solid),
-        PipeKind::Blue => (WIRE_BLUE, LineStyle::Solid),
-        PipeKind::Pink => (WIRE_PINK, LineStyle::Solid),
-        PipeKind::Dash => (WIRE_BLUE, LineStyle::Dashed),
-        PipeKind::Deny => (WIRE_DENY, LineStyle::Dashed),
+/// The entry of an eight-slot table for a tint, slot 1 for none or one outside 1 to 8.
+fn slot_entry(table: &[&'static str; 8], tint: Option<u8>) -> &'static str {
+    let index = match tint {
+        Some(slot @ 1..=8) => usize::from(slot - 1),
+        _ => 0,
+    };
+    table.get(index).copied().unwrap_or(table[0])
+}
+
+/// The stroke of a container border in the kind's pattern and width, None for `none`.
+fn border_stroke(look: ContainerLook, color: &'static str) -> Option<Stroke> {
+    let line = match look.pattern {
+        BorderPattern::Solid => LineStyle::Solid,
+        BorderPattern::Dashed => LineStyle::Dashed,
+        BorderPattern::Dotted => LineStyle::Dotted,
+        BorderPattern::None => return None,
+    };
+    Some(Stroke {
+        width_px: look.border_width,
+        line,
+        color,
+    })
+}
+
+/// The tint fill of a Box: only a group is filled with its tint (section 13.2).
+fn group_tint(look: ContainerLook, tint: Option<u8>) -> Option<u8> {
+    if look.role == Role::Group { tint } else { None }
+}
+
+/// Border color and fill of a Box in center, by role, tone and tint (section 2.4 through
+/// the tones of section 13.5).
+fn center_box_colors(
+    look: ContainerLook,
+    tint: Option<u8>,
+) -> (&'static str, Option<&'static str>) {
+    if look.role == Role::Frame {
+        return (GCP_BORDER, Some(GCP_FRAME_FILL));
+    }
+    let tinted = group_tint(look, tint).map(|slot| slot_entry(&TINT_FILLS, Some(slot)));
+    match look.tone {
+        Some(Tone::Strong) => (VPC_BORDER, None),
+        Some(Tone::Neutral) => (REGION_BORDER, Some(tinted.unwrap_or(NEUTRAL_FILL))),
+        Some(Tone::Warm) => (ONPREM_BORDER, Some(tinted.unwrap_or(WARM_FILL))),
+        Some(Tone::Cool) => (SUBNET_BORDER, Some(tinted.unwrap_or(SUBNET_FILL))),
+        Some(Tone::Highlight) => (PROJECT_BORDER, Some(tinted.unwrap_or(PROJECT_FILL))),
+        Some(Tone::Emphasis) => (OPTIONAL_BORDER, Some(tinted.unwrap_or(OPTIONAL_FILL))),
+        Some(Tone::Soft) => (REGION_BORDER, Some(tinted.unwrap_or(K8S_FILL))),
+        Some(Tone::Accent) => (PERIMETER_BORDER, Some(tinted.unwrap_or(PERIMETER_FILL))),
+        None => (REGION_BORDER, tinted),
+    }
+}
+
+/// The center paint of a Box whose container kind looks like `look`, with effective tint
+/// `tint`: the colors by role, tone and tint, the border in the kind's pattern and width,
+/// and the kind's radius.
+pub fn zone_style(look: ContainerLook, tint: Option<u8>) -> ZoneStyle {
+    let (border_color, fill) = center_box_colors(look, tint);
+    ZoneStyle {
+        border: border_stroke(look, border_color),
+        fill,
+        radius_px: look.radius,
+    }
+}
+
+/// Wire, dot, spine and legend swatch color and line style (section 5.2). A dash line takes
+/// its slot's wire, as center's dash took the blue wire (section 13.1 rule 3).
+pub fn wire_style(line_use: LineUse) -> (&'static str, LineStyle) {
+    match line_use.line {
+        Line::Gray => (WIRE_GRAY, LineStyle::Solid),
+        Line::Solid => (slot_entry(&TINT_WIRES, line_use.tint), LineStyle::Solid),
+        Line::Dash => (slot_entry(&TINT_WIRES, line_use.tint), LineStyle::Dashed),
+        Line::Deny => (WIRE_DENY, LineStyle::Dashed),
     }
 }
 
 /// Border of a Pipe tag or Tee hub (sections 2.7 and 2.8).
-pub fn tag_border(kind: PipeKind) -> &'static str {
-    match kind {
-        PipeKind::Deny => TAG_BORDER_DENY,
-        PipeKind::Gray | PipeKind::Blue | PipeKind::Pink | PipeKind::Dash => TAG_BORDER,
+pub fn tag_border(line: Line) -> &'static str {
+    match line {
+        Line::Deny => TAG_BORDER_DENY,
+        Line::Gray | Line::Solid | Line::Dash => TAG_BORDER,
     }
 }
 
@@ -275,11 +317,13 @@ impl Palette {
         }
     }
 
-    pub fn zone_style(self, kind: ZoneKind) -> ZoneStyle {
+    /// The paint of a Box whose container kind looks like `look`, with effective tint
+    /// `tint`.
+    pub fn zone_style(self, look: ContainerLook, tint: Option<u8>) -> ZoneStyle {
         match self.theme {
-            Theme::Center => zone_style(kind),
-            Theme::Dusk => dusk::zone_style(kind),
-            Theme::Wire => wire::zone_style(kind),
+            Theme::Center => zone_style(look, tint),
+            Theme::Dusk => dusk::zone_style(look, tint),
+            Theme::Wire => wire::zone_style(look, tint),
         }
     }
 
@@ -341,11 +385,11 @@ impl Palette {
         }
     }
 
-    /// A Pipe tag or Tee hub of this kind (sections 2.7 and 2.8).
-    pub fn tag(self, kind: PipeKind) -> BoxPaint {
+    /// A Pipe tag or Tee hub on this line (sections 2.7 and 2.8).
+    pub fn tag(self, line: Line) -> BoxPaint {
         let (fill, color, width_px) = match self.theme {
-            Theme::Center => (TAG_FILL, tag_border(kind), TAG_BORDER_PX),
-            Theme::Dusk => (dusk::CARD_FILL, dusk::tag_border(kind), TAG_BORDER_PX),
+            Theme::Center => (TAG_FILL, tag_border(line), TAG_BORDER_PX),
+            Theme::Dusk => (dusk::CARD_FILL, dusk::tag_border(line), TAG_BORDER_PX),
             Theme::Wire => (wire::WHITE, wire::INK, wire::BORDER_PX),
         };
         BoxPaint {
@@ -381,12 +425,12 @@ impl Palette {
     }
 
     /// Under iso every wire takes the width of `iso_wire_width` (section 12.6).
-    pub fn wire_style(self, kind: PipeKind) -> WireStyle {
-        let flat = self.flat_wire_style(kind);
+    pub fn wire_style(self, line_use: LineUse) -> WireStyle {
+        let flat = self.flat_wire_style(line_use);
         match self.projection {
             Projection::Iso => WireStyle {
                 stroke: Stroke {
-                    width_px: self.iso_wire_width(kind),
+                    width_px: self.iso_wire_width(line_use),
                     ..flat.stroke
                 },
                 ..flat
@@ -395,22 +439,23 @@ impl Palette {
         }
     }
 
-    /// The width of a wire, link or legend swatch of `kind` under iso (section 12.6): the
-    /// blue primary heaviest, the dashed failover two thirds of it, and a gray service call
-    /// a third of it in wire, where one ink leaves weight and pattern to tell them apart.
-    pub fn iso_wire_width(self, kind: PipeKind) -> f32 {
-        match (self.theme, kind) {
-            (_, PipeKind::Blue) => ISO_PRIMARY_WIRE_PX,
-            (Theme::Wire, PipeKind::Gray) => ISO_WIRE_THIN_WIRE_PX,
-            (Theme::Center | Theme::Dusk, PipeKind::Gray) => ISO_SERVICE_WIRE_PX,
-            (_, PipeKind::Dash | PipeKind::Pink | PipeKind::Deny) => ISO_SECONDARY_WIRE_PX,
+    /// The width of a wire, link or legend swatch under iso (section 12.6): solid slot 1,
+    /// the primary, heaviest, every other solid, dash and deny line two thirds of it, and a
+    /// gray service call a third of it in wire, where one ink leaves weight and pattern to
+    /// tell them apart.
+    pub fn iso_wire_width(self, line_use: LineUse) -> f32 {
+        match (self.theme, line_use.line, line_use.tint) {
+            (_, Line::Solid, Some(1)) => ISO_PRIMARY_WIRE_PX,
+            (Theme::Wire, Line::Gray, _) => ISO_WIRE_THIN_WIRE_PX,
+            (Theme::Center | Theme::Dusk, Line::Gray, _) => ISO_SERVICE_WIRE_PX,
+            (_, Line::Solid | Line::Dash | Line::Deny, _) => ISO_SECONDARY_WIRE_PX,
         }
     }
 
-    fn flat_wire_style(self, kind: PipeKind) -> WireStyle {
+    fn flat_wire_style(self, line_use: LineUse) -> WireStyle {
         match self.theme {
             Theme::Center => {
-                let (color, line) = wire_style(kind);
+                let (color, line) = wire_style(line_use);
                 WireStyle {
                     stroke: Stroke {
                         width_px: WIRE_WIDTH_PX,
@@ -421,7 +466,7 @@ impl Palette {
                 }
             }
             Theme::Dusk => {
-                let (color, line) = dusk::wire_style(kind);
+                let (color, line) = dusk::wire_style(line_use);
                 WireStyle {
                     stroke: Stroke {
                         width_px: WIRE_WIDTH_PX,
@@ -431,7 +476,7 @@ impl Palette {
                     dot: DotStyle::Filled,
                 }
             }
-            Theme::Wire => wire::wire_style(kind),
+            Theme::Wire => wire::wire_style(line_use),
         }
     }
 
@@ -523,17 +568,12 @@ impl Palette {
         }
     }
 
-    /// Text color of a style. `canvas` decides `badge`; `pipe_kind` is the kind of the Pipe
-    /// or Tee a `tag_label` run belongs to.
-    pub fn text_ink(
-        self,
-        name: TextStyleName,
-        canvas: Canvas,
-        pipe_kind: Option<PipeKind>,
-    ) -> &'static str {
+    /// Text color of a style. `canvas` decides `badge`; `line` is the line of the Pipe, Tee
+    /// or Link a `tag_label` run belongs to.
+    pub fn text_ink(self, name: TextStyleName, canvas: Canvas, line: Option<Line>) -> &'static str {
         match self.theme {
-            Theme::Center => text_color(name, canvas, pipe_kind),
-            Theme::Dusk => dusk::text_ink(name, canvas, pipe_kind),
+            Theme::Center => text_color(name, canvas, line),
+            Theme::Dusk => dusk::text_ink(name, canvas, line),
             Theme::Wire => wire::text_ink(name),
         }
     }
@@ -600,12 +640,12 @@ impl Palette {
         }
     }
 
-    /// The tab of a zone label under iso (section 12.4): filled for a zone with no zone
-    /// around it, brand blue for gcp and neutral for every other kind, and in wire the ink;
-    /// an outline in the zone's border color for a nested zone.
-    pub fn iso_zone_tab(self, kind: ZoneKind, nested: bool) -> ZoneTab {
+    /// The tab of a Box label under iso (section 12.4): filled for a Box with no Box around
+    /// it, brand blue for a frame and neutral for every other role, and in wire the ink; an
+    /// outline in the Box's border color for a nested Box.
+    pub fn iso_zone_tab(self, look: ContainerLook, tint: Option<u8>, nested: bool) -> ZoneTab {
         if nested {
-            let color = self.zone_style(kind).border.map_or(
+            let color = self.zone_style(look, tint).border.map_or(
                 self.text_ink(TextStyleName::CardFunction, Canvas::Customer, None),
                 |stroke| stroke.color,
             );
@@ -618,11 +658,12 @@ impl Palette {
                 ink: self.text_ink(TextStyleName::CardFunction, Canvas::Customer, None),
             };
         }
-        let (fill, ink) = match (self.theme, kind) {
-            (Theme::Center, ZoneKind::Gcp) => (GCP_BAR_FILL, TEXT_WHITE),
-            (Theme::Center, _) => (ISO_NEUTRAL_TAB_FILL, TEXT_WHITE),
-            (Theme::Dusk, ZoneKind::Gcp) => (dusk::GCP_BAR_FILL, dusk::GCP_BAR_INK),
-            (Theme::Dusk, _) => (dusk::ISO_NEUTRAL_TAB_FILL, dusk::TEXT_PRIMARY),
+        let is_frame = look.role == Role::Frame;
+        let (fill, ink) = match (self.theme, is_frame) {
+            (Theme::Center, true) => (GCP_BAR_FILL, TEXT_WHITE),
+            (Theme::Center, false) => (ISO_NEUTRAL_TAB_FILL, TEXT_WHITE),
+            (Theme::Dusk, true) => (dusk::GCP_BAR_FILL, dusk::GCP_BAR_INK),
+            (Theme::Dusk, false) => (dusk::ISO_NEUTRAL_TAB_FILL, dusk::TEXT_PRIMARY),
             (Theme::Wire, _) => (wire::INK, wire::WHITE),
         };
         ZoneTab::Filled { fill, ink }
@@ -687,9 +728,15 @@ impl Palette {
     /// toward its surface ink by level, so every surface is lighter than the one it stands
     /// on, and rims solid-bordered tops with a lighter edge. None when a color does not
     /// parse.
-    pub fn slab_faces(self, kind: ZoneKind, level: usize) -> Option<FacePaint> {
-        let style = self.zone_style(kind);
-        let base = if kind == ZoneKind::Gcp {
+    pub fn slab_faces(
+        self,
+        look: ContainerLook,
+        tint: Option<u8>,
+        level: usize,
+    ) -> Option<FacePaint> {
+        let style = self.zone_style(look, tint);
+        let is_frame = look.role == Role::Frame;
+        let base = if is_frame {
             Some(self.gcp_body_fill())
         } else {
             style.fill
@@ -698,12 +745,12 @@ impl Palette {
         let solid_border = border.filter(|stroke| stroke.line == LineStyle::Solid);
         match self.theme {
             Theme::Center => {
-                let (left, right) = self.brand_or_shaded_sides(kind, base)?;
+                let (left, right) = self.brand_or_shaded_sides(is_frame, base)?;
                 // A solid border is dropped: the shaded sides carry the slab edge, and an
                 // outline in the border hue shows as a seam between top and side.
-                let top_stroke = match (kind, solid_border) {
-                    (ZoneKind::Gcp, _) | (_, None) => self.slab_top_stroke(kind, border),
-                    (_, Some(_)) => None,
+                let top_stroke = match (is_frame, solid_border) {
+                    (true, _) | (_, None) => self.slab_top_stroke(is_frame, border),
+                    (false, Some(_)) => None,
                 };
                 Some(FacePaint {
                     top: base.map(str::to_string),
@@ -719,8 +766,8 @@ impl Palette {
                     Some(color) => Some(mix(color, dusk::ISO_SURFACE_TARGET, lift)?),
                     None => None,
                 };
-                let (left, right) = match (kind, base) {
-                    (ZoneKind::Gcp, _) => self.brand_or_shaded_sides(kind, base)?,
+                let (left, right) = match (is_frame, base) {
+                    (true, _) => self.brand_or_shaded_sides(is_frame, base)?,
                     (_, Some(color)) => (
                         Some(mix(
                             color,
@@ -735,8 +782,8 @@ impl Palette {
                     ),
                     (_, None) => (None, None),
                 };
-                let top_stroke = match (kind, solid_border) {
-                    (ZoneKind::Gcp, _) => self.slab_top_stroke(kind, border),
+                let top_stroke = match (is_frame, solid_border) {
+                    (true, _) => self.slab_top_stroke(is_frame, border),
                     (_, Some(_)) => Some(Stroke {
                         width_px: dusk::ISO_RIM_PX,
                         line: LineStyle::Solid,
@@ -759,7 +806,7 @@ impl Palette {
                         width_px: ISO_WIRE_SLAB_OUTLINE_PX,
                         ..stroke
                     },
-                    LineStyle::Dashed | LineStyle::Dotted if kind == ZoneKind::Vpc => Stroke {
+                    LineStyle::Dashed | LineStyle::Dotted if look.is_ring(tint) => Stroke {
                         width_px: ISO_WIRE_SLAB_OUTLINE_PX,
                         line: LineStyle::Dotted,
                         color: ISO_WIRE_RING_INK,
@@ -777,14 +824,14 @@ impl Palette {
         }
     }
 
-    /// The gcp side faces in brand blue, one step darker on the right, or the zone fill
+    /// The frame's side faces in brand blue, one step darker on the right, or the Box fill
     /// shaded by the face steps.
     fn brand_or_shaded_sides(
         self,
-        kind: ZoneKind,
+        is_frame: bool,
         base: Option<&'static str>,
     ) -> Option<(Option<String>, Option<String>)> {
-        if kind == ZoneKind::Gcp {
+        if is_frame {
             return Some((
                 Some(GCP_BORDER.to_string()),
                 Some(shade(GCP_BORDER, GCP_SIDE_STEP)?),
@@ -800,10 +847,10 @@ impl Palette {
     }
 
     /// The top-face outline of a slab: the flat border, thinned to ISO_GCP_OUTLINE_PX for
-    /// gcp in center and dusk.
-    fn slab_top_stroke(self, kind: ZoneKind, border: Option<Stroke>) -> Option<Stroke> {
-        match (kind, self.theme) {
-            (ZoneKind::Gcp, Theme::Center | Theme::Dusk) => border.map(|stroke| Stroke {
+    /// a frame in center and dusk.
+    fn slab_top_stroke(self, is_frame: bool, border: Option<Stroke>) -> Option<Stroke> {
+        match (is_frame, self.theme) {
+            (true, Theme::Center | Theme::Dusk) => border.map(|stroke| Stroke {
                 width_px: ISO_GCP_OUTLINE_PX,
                 ..stroke
             }),
@@ -890,17 +937,20 @@ impl Palette {
         }
     }
 
-    /// The legend label of a kind under iso when the flat label names a color the theme
-    /// does not draw: wire strokes every kind in black, so its labels name the line.
-    pub fn iso_legend_label(self, kind: PipeKind) -> Option<&'static str> {
+    /// The legend label of a line under iso when the flat label names a color the theme
+    /// does not draw: wire strokes every line in black, so its labels name the line, a
+    /// solid slot by its end dots.
+    pub fn iso_legend_label(self, line_use: LineUse) -> Option<&'static str> {
         match self.theme {
             Theme::Center | Theme::Dusk => None,
-            Theme::Wire => Some(match kind {
-                PipeKind::Gray => "Thin line",
-                PipeKind::Blue => "Solid line",
-                PipeKind::Pink => "Ringed line",
-                PipeKind::Dash => "Dashed line",
-                PipeKind::Deny => "Dotted line",
+            Theme::Wire => Some(match line_use.line {
+                Line::Gray => "Thin line",
+                Line::Solid => match wire::dot_style(line_use.tint) {
+                    DotStyle::Filled => "Solid line",
+                    DotStyle::Hollow => "Ringed line",
+                },
+                Line::Dash => "Dashed line",
+                Line::Deny => "Dotted line",
             }),
         }
     }
@@ -1016,9 +1066,11 @@ fn hsl_to_rgb(hue: f64, saturation: f64, lightness: f64) -> [f64; 3] {
 
 /// The dark theme of section 11.1.
 mod dusk {
-    use super::{LineStyle, Stroke, ZoneStyle};
+    use super::{LineStyle, LineUse, ZoneStyle, border_stroke, group_tint, slot_entry};
+    use stencil_layout::ContainerLook;
+    use stencil_model::grammar::{Role, Tone};
     use stencil_model::text::TextStyleName;
-    use stencil_model::{CalloutKind, Canvas, PipeKind, ZoneKind};
+    use stencil_model::{CalloutKind, Canvas, Line};
 
     pub const PAGE_BACKGROUND: &str = "#0B1220";
     pub const TEXT_PRIMARY: &str = "#E6EDF7";
@@ -1049,6 +1101,34 @@ mod dusk {
     pub const OPTIONAL_FILL: &str = "#10203A";
     pub const OPTIONAL_BORDER: &str = "#4284F3";
     pub const K8S_FILL: &str = "#2A1626";
+    /// Fills of an untinted warm and neutral Box, the widened dusk ladder of section 13.5.
+    pub const WARM_FILL: &str = "#222229";
+    pub const NEUTRAL_FILL: &str = "#1B232E";
+    /// Tint slots 1 to 8: fill, Box border and wire. Slots 3 to 8 lighten center's wires for
+    /// the dark page.
+    pub const TINT_FILLS: [&str; 8] = [
+        TINT_A_FILL,
+        TINT_B_FILL,
+        "#192D38",
+        "#2C2C2D",
+        "#23253C",
+        "#222D31",
+        "#2B262E",
+        "#192938",
+    ];
+    pub const TINT_BORDERS: [&str; 8] = [
+        REGION_A_BORDER,
+        REGION_B_BORDER,
+        "#2E565D",
+        "#5E5240",
+        "#484365",
+        "#44564A",
+        "#5C4442",
+        "#2E4A5C",
+    ];
+    pub const TINT_WIRES: [&str; 8] = [
+        WIRE_BLUE, WIRE_PINK, "#59AAA7", "#C3A166", "#937EB9", "#89A87E", "#BF826B", "#598FA6",
+    ];
     pub const PERIMETER_FILL: &str = "#17130B";
     pub const PERIMETER_BORDER: &str = "#E37400";
     pub const PERIMETER_INK: &str = "#F2A44B";
@@ -1086,47 +1166,50 @@ mod dusk {
     pub const ISO_RIM: &str = "#4A5B7E";
     pub const ISO_RIM_PX: f32 = 1.0;
 
-    /// Center's border widths, line styles and radii with the dusk colors.
-    pub fn zone_style(kind: ZoneKind) -> ZoneStyle {
-        let center = super::zone_style(kind);
-        let (border_color, fill) = match kind {
-            ZoneKind::Gcp => (Some(GCP_BORDER), Some(GCP_BODY_FILL)),
-            ZoneKind::Vpc => (Some(VPC_BORDER), None),
-            ZoneKind::RegionA => (Some(REGION_A_BORDER), Some(TINT_A_FILL)),
-            ZoneKind::RegionB => (Some(REGION_B_BORDER), Some(TINT_B_FILL)),
-            ZoneKind::Subnet => (Some(SUBNET_BORDER), Some(SUBNET_FILL)),
-            ZoneKind::OnpremA => (Some(ONPREM_BORDER), Some(TINT_A_FILL)),
-            ZoneKind::OnpremB => (Some(ONPREM_BORDER), Some(TINT_B_FILL)),
-            ZoneKind::Project => (Some(PROJECT_BORDER), Some(PROJECT_FILL)),
-            ZoneKind::Optional => (Some(OPTIONAL_BORDER), Some(OPTIONAL_FILL)),
-            ZoneKind::K8s => (None, Some(K8S_FILL)),
-            ZoneKind::Perimeter => (Some(PERIMETER_BORDER), Some(PERIMETER_FILL)),
+    /// Center's border widths, line styles and radii with the dusk colors. A tinted neutral
+    /// group takes its slot's border, as region-a and region-b did; a tinted warm group
+    /// keeps the warm border, as onprem-a and onprem-b did.
+    pub fn zone_style(look: ContainerLook, tint: Option<u8>) -> ZoneStyle {
+        let (border_color, fill) = if look.role == Role::Frame {
+            (GCP_BORDER, Some(GCP_BODY_FILL))
+        } else {
+            let tinted = group_tint(look, tint);
+            let tint_fill = tinted.map(|slot| slot_entry(&TINT_FILLS, Some(slot)));
+            match look.tone {
+                Some(Tone::Strong) => (VPC_BORDER, None),
+                Some(Tone::Neutral) => (
+                    slot_entry(&TINT_BORDERS, tinted),
+                    Some(tint_fill.unwrap_or(NEUTRAL_FILL)),
+                ),
+                Some(Tone::Warm) => (ONPREM_BORDER, Some(tint_fill.unwrap_or(WARM_FILL))),
+                Some(Tone::Cool) => (SUBNET_BORDER, Some(tint_fill.unwrap_or(SUBNET_FILL))),
+                Some(Tone::Highlight) => (PROJECT_BORDER, Some(tint_fill.unwrap_or(PROJECT_FILL))),
+                Some(Tone::Emphasis) => (OPTIONAL_BORDER, Some(tint_fill.unwrap_or(OPTIONAL_FILL))),
+                Some(Tone::Soft) => (REGION_A_BORDER, Some(tint_fill.unwrap_or(K8S_FILL))),
+                Some(Tone::Accent) => (PERIMETER_BORDER, Some(tint_fill.unwrap_or(PERIMETER_FILL))),
+                None => (REGION_A_BORDER, tint_fill),
+            }
         };
-        let border = center
-            .border
-            .zip(border_color)
-            .map(|(stroke, color)| Stroke { color, ..stroke });
         ZoneStyle {
-            border,
+            border: border_stroke(look, border_color),
             fill,
-            radius_px: center.radius_px,
+            radius_px: look.radius,
         }
     }
 
-    pub fn wire_style(kind: PipeKind) -> (&'static str, LineStyle) {
-        match kind {
-            PipeKind::Gray => (WIRE_GRAY, LineStyle::Solid),
-            PipeKind::Blue => (WIRE_BLUE, LineStyle::Solid),
-            PipeKind::Pink => (WIRE_PINK, LineStyle::Solid),
-            PipeKind::Dash => (WIRE_BLUE, LineStyle::Dashed),
-            PipeKind::Deny => (WIRE_DENY, LineStyle::Dashed),
+    pub fn wire_style(line_use: LineUse) -> (&'static str, LineStyle) {
+        match line_use.line {
+            Line::Gray => (WIRE_GRAY, LineStyle::Solid),
+            Line::Solid => (slot_entry(&TINT_WIRES, line_use.tint), LineStyle::Solid),
+            Line::Dash => (slot_entry(&TINT_WIRES, line_use.tint), LineStyle::Dashed),
+            Line::Deny => (WIRE_DENY, LineStyle::Dashed),
         }
     }
 
-    pub fn tag_border(kind: PipeKind) -> &'static str {
-        match kind {
-            PipeKind::Deny => DENY_TAG_BORDER,
-            PipeKind::Gray | PipeKind::Blue | PipeKind::Pink | PipeKind::Dash => CARD_BORDER,
+    pub fn tag_border(line: Line) -> &'static str {
+        match line {
+            Line::Deny => DENY_TAG_BORDER,
+            Line::Gray | Line::Solid | Line::Dash => CARD_BORDER,
         }
     }
 
@@ -1149,11 +1232,7 @@ mod dusk {
         (accent, fill)
     }
 
-    pub fn text_ink(
-        name: TextStyleName,
-        canvas: Canvas,
-        pipe_kind: Option<PipeKind>,
-    ) -> &'static str {
+    pub fn text_ink(name: TextStyleName, canvas: Canvas, line: Option<Line>) -> &'static str {
         match name {
             TextStyleName::Badge => match canvas {
                 Canvas::Customer => BADGE_INK_CUSTOMER,
@@ -1164,11 +1243,9 @@ mod dusk {
             | TextStyleName::CardFunction
             | TextStyleName::LegendLabel
             | TextStyleName::BlockBody => TEXT_PRIMARY,
-            TextStyleName::TagLabel => match pipe_kind {
-                Some(PipeKind::Deny) => DENY_TAG_INK,
-                Some(PipeKind::Gray | PipeKind::Blue | PipeKind::Pink | PipeKind::Dash) | None => {
-                    TEXT_PRIMARY
-                }
+            TextStyleName::TagLabel => match line {
+                Some(Line::Deny) => DENY_TAG_INK,
+                Some(Line::Gray | Line::Solid | Line::Dash) | None => TEXT_PRIMARY,
             },
             TextStyleName::GcpBar => GCP_BAR_INK,
             TextStyleName::PerimeterLabel => PERIMETER_INK,
@@ -1185,9 +1262,11 @@ mod dusk {
 
 /// The monochrome wireframe theme of section 11.1.
 mod wire {
-    use super::{DotStyle, LineStyle, Stroke, WIRE_WIDTH_PX, WireStyle, ZoneStyle};
+    use super::{DotStyle, LineStyle, LineUse, Stroke, WIRE_WIDTH_PX, WireStyle, ZoneStyle};
+    use stencil_layout::ContainerLook;
+    use stencil_model::Line;
+    use stencil_model::grammar::{BorderPattern, Role, Tone};
     use stencil_model::text::TextStyleName;
-    use stencil_model::{PipeKind, ZoneKind};
 
     pub const WHITE: &str = "#FFFFFF";
     pub const INK: &str = "#222222";
@@ -1197,21 +1276,16 @@ mod wire {
     pub const GCP_BAR_RULE_PX: f32 = 2.0;
     pub const THIN_WIRE_PX: f32 = 1.25;
 
-    /// Center's radii; one ink, white fills where center fills, and line style by kind.
-    pub fn zone_style(kind: ZoneKind) -> ZoneStyle {
-        let center = super::zone_style(kind);
-        let (width_px, line) = match kind {
-            ZoneKind::Gcp => (GCP_BORDER_PX, LineStyle::Solid),
-            ZoneKind::Vpc | ZoneKind::Optional | ZoneKind::Perimeter => {
-                (BORDER_PX, LineStyle::Dashed)
-            }
-            ZoneKind::Subnet => (BORDER_PX, LineStyle::Dotted),
-            ZoneKind::RegionA
-            | ZoneKind::RegionB
-            | ZoneKind::OnpremA
-            | ZoneKind::OnpremB
-            | ZoneKind::Project
-            | ZoneKind::K8s => (BORDER_PX, LineStyle::Solid),
+    /// Center's radii; one ink, white fills where center fills, and the line style of the
+    /// kind's pattern, except that the cool tone is dotted and a borderless kind is outlined.
+    pub fn zone_style(look: ContainerLook, tint: Option<u8>) -> ZoneStyle {
+        let center = super::zone_style(look, tint);
+        let (width_px, line) = match (look.role, look.tone, look.pattern) {
+            (Role::Frame, _, _) => (GCP_BORDER_PX, LineStyle::Solid),
+            (_, Some(Tone::Cool), _) => (BORDER_PX, LineStyle::Dotted),
+            (_, _, BorderPattern::Dashed) => (BORDER_PX, LineStyle::Dashed),
+            (_, _, BorderPattern::Dotted) => (BORDER_PX, LineStyle::Dotted),
+            (_, _, BorderPattern::Solid | BorderPattern::None) => (BORDER_PX, LineStyle::Solid),
         };
         ZoneStyle {
             border: Some(Stroke {
@@ -1224,14 +1298,22 @@ mod wire {
         }
     }
 
-    /// Kinds are told apart by line style alone.
-    pub fn wire_style(kind: PipeKind) -> WireStyle {
-        let (width_px, line, dot) = match kind {
-            PipeKind::Gray => (THIN_WIRE_PX, LineStyle::Solid, DotStyle::Filled),
-            PipeKind::Blue => (WIRE_WIDTH_PX, LineStyle::Solid, DotStyle::Filled),
-            PipeKind::Pink => (WIRE_WIDTH_PX, LineStyle::Solid, DotStyle::Hollow),
-            PipeKind::Dash => (WIRE_WIDTH_PX, LineStyle::Dashed, DotStyle::Filled),
-            PipeKind::Deny => (WIRE_WIDTH_PX, LineStyle::Dotted, DotStyle::Filled),
+    /// The end dots of a solid slot: filled for slot 1, hollow for slot 2, and so on
+    /// alternating, so slot 1 draws as the old blue and slot 2 as the old pink.
+    pub fn dot_style(tint: Option<u8>) -> DotStyle {
+        match tint {
+            Some(slot) if slot % 2 == 0 => DotStyle::Hollow,
+            _ => DotStyle::Filled,
+        }
+    }
+
+    /// Lines are told apart by line style and end dots alone.
+    pub fn wire_style(line_use: LineUse) -> WireStyle {
+        let (width_px, line, dot) = match line_use.line {
+            Line::Gray => (THIN_WIRE_PX, LineStyle::Solid, DotStyle::Filled),
+            Line::Solid => (WIRE_WIDTH_PX, LineStyle::Solid, dot_style(line_use.tint)),
+            Line::Dash => (WIRE_WIDTH_PX, LineStyle::Dashed, DotStyle::Filled),
+            Line::Deny => (WIRE_WIDTH_PX, LineStyle::Dotted, DotStyle::Filled),
         };
         WireStyle {
             stroke: Stroke {

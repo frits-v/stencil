@@ -184,14 +184,14 @@ fn a_card_for_each_icon_renders_to_png() {
         .iter()
         .map(|icon| {
             let stem = icon.file_name().trim_end_matches(".svg");
-            json!({ "tag": "Pcard", "icon": stem, "fn": format!("Card {stem}") })
+            json!({ "tag": "Item", "kind": "product", "icon": stem, "title": format!("Card {stem}") })
         })
         .collect();
     let body = json!([
         { "tag": "Col", "children": cards },
-        { "tag": "Pipe", "dir": "h", "kind": "blue", "label": "hop" }
+        { "tag": "Pipe", "dir": "h", "line": "solid", "tint": 1, "label": "hop" }
     ]);
-    let legend = json!([{ "kind": "blue", "text": "request path" }]);
+    let legend = json!([{ "line": "solid", "tint": 1, "text": "request path" }]);
     let rendered = common::render_document_with_fixed_metrics(common::page_document(body, legend));
 
     let document = common::parse_xml(&rendered.svg.svg);
