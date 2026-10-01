@@ -57,6 +57,8 @@ pub fn pipe_value(dir: PipeDir, line: Line, tint: Option<u8>, label: &str) -> Pi
         tint,
         label: label.to_string(),
         sub: None,
+        from: None,
+        to: None,
     }
 }
 

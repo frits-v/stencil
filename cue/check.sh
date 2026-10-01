@@ -252,10 +252,10 @@ cat >"$chrome_none" <<'JSON'
     {
       "tag": "Row",
       "children": [
-        { "tag": "Item", "kind": "product", "title": "Source", "subtitle": "Cloud Run" },
-        { "tag": "Pipe", "dir": "h", "line": "solid", "label": "request" },
+        { "tag": "Item", "id": "source", "kind": "product", "title": "Source", "subtitle": "Cloud Run" },
+        { "tag": "Pipe", "dir": "h", "line": "solid", "label": "request", "from": "source", "to": "sink" },
         { "tag": "Pipe", "dir": "h", "line": "solid", "tint": 1, "label": "retry" },
-        { "tag": "Item", "kind": "product", "title": "Sink", "subtitle": "Cloud SQL" },
+        { "tag": "Item", "id": "sink", "kind": "product", "title": "Sink", "subtitle": "Cloud SQL" },
         { "tag": "Item", "kind": "product", "title": "Queue", "facts": [{ "text": "ordering keys on" }] },
         { "tag": "Item", "kind": "product", "title": "Cache", "facts": [{ "text": "eviction policy?", "source": "ask" }] }
       ]
@@ -265,7 +265,7 @@ cat >"$chrome_none" <<'JSON'
 }
 JSON
 "$CUE" vet -c -d '#Page' ./grammars:gcp "$chrome_none"
-echo "ok   chrome-none-one-key: an empty legend with one key in use vets clean, as do items with only a doc or ask fact"
+echo "ok   chrome-none-one-key: an empty legend with one key in use vets clean, as do items with only a doc or ask fact and a pipe naming its targets"
 
 # Fillers for the length bounds: 401 characters for a text field, 255 facts
 # added beside the one in Region A for 257 children.
@@ -311,6 +311,9 @@ g7_cases=(
 	'legend-solid-tint-3-unused|s/{line: "dash", text: "region failover, not a fifth line"},/&\n\t\t{line: "solid", tint: 3, text: "unused slot"},/|_legendKeysUnusedInBody."solid-3"'
 	'tint-on-untintable-vpc|s/kind:  "vpc"/kind:  "vpc", tint: 1/|customer.body.0.children.2.children.0._tintWithoutEffect|has no effect on a vpc box'
 	"built-fact-without-subtitle|s/subtitle: \"private ASN · RFC 6996\"/facts: [{text: \"cr-region-a\", source: \"built\"}]/|_itemsWithoutSubtitleOrFact.\"Cloud Router A\""
+	'pipe-target-unknown|s/label: "VLAN 1", sub: "EAD 1 · BGP"/&, to: "nowhere"/|_pipeTargetsUnknown.nowhere'
+	'pipe-targets-equal|s/title: "On-prem router 1"/id: "r1", &/; s/label: "VLAN 1", sub: "EAD 1 · BGP"/&, from: "r1", to: "r1"/|_pipeTargetsEqual|the same node as pipe to'
+	'pipe-target-on-tee-arm|s/title: "On-prem router 1"/id: "r1", &/; s/{tag: "Fact", text: "BGP peering[^}]*},/&\n{tag: "Tee", line: "solid", tint: 1, hub: "hub", arms: [{tag: "Pipe", dir: "h", line: "solid", tint: 1, label: "arm 1", to: "r1"}, {tag: "Pipe", dir: "h", line: "solid", tint: 1, label: "arm 2"}]},/|_targetOnTeeArm."0"'
 	'chrome-none-three-keys-empty-legend|s/^\ttitle: /\tchrome: "none"\n&/; /^\tlegend: \[$/,/^\t\]$/d; s/^}$/\tlegend: []\n}/|_pipeKeysMissingFromLegend'
 )
 sequence_cases=(

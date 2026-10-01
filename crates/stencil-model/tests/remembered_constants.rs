@@ -63,6 +63,8 @@ fn page_with_field(field: &str, text: &str) -> (Page, &'static str) {
             tint: Some(1),
             label: pick("pipe label"),
             sub: Some(pick("sub")),
+            from: None,
+            to: None,
         }),
         Node::Tee(Tee {
             id: None,

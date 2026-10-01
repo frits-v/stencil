@@ -521,6 +521,8 @@ fn every_text_field_is_vetted() {
             tint: Some(1),
             label: untrimmed.to_string(),
             sub: Some(untrimmed.to_string()),
+            from: None,
+            to: None,
         }),
         Node::Tee(stencil_model::Tee {
             id: None,
@@ -542,6 +544,8 @@ fn every_text_field_is_vetted() {
                     tint: Some(1),
                     label: "a".to_string(),
                     sub: Some(untrimmed.to_string()),
+                    from: None,
+                    to: None,
                 }),
             ],
         }),
