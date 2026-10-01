@@ -1,0 +1,1745 @@
+{
+  "canvas": {
+    "height": 932.6,
+    "width": 1320
+  },
+  "nodes": [
+    {
+      "height": 932.6,
+      "id": "",
+      "parts": {},
+      "tag": "Page",
+      "width": 1320,
+      "x": 0,
+      "y": 0
+    },
+    {
+      "height": 16,
+      "id": "/kicker",
+      "parts": {
+        "badge": {
+          "height": 16,
+          "width": 70.61,
+          "x": 20,
+          "y": 20
+        },
+        "badge_text": {
+          "height": 12,
+          "line_count": 1,
+          "width": 56.61,
+          "x": 27,
+          "y": 22
+        },
+        "text": {
+          "height": 13.2,
+          "line_count": 1,
+          "width": 1203.39,
+          "x": 96.61,
+          "y": 21.4
+        }
+      },
+      "tag": "Kicker",
+      "width": 1280,
+      "x": 20,
+      "y": 20
+    },
+    {
+      "height": 24,
+      "id": "/title",
+      "parts": {
+        "text": {
+          "height": 24,
+          "line_count": 1,
+          "width": 1280,
+          "x": 20,
+          "y": 42
+        }
+      },
+      "tag": "Title",
+      "width": 1280,
+      "x": 20,
+      "y": 42
+    },
+    {
+      "height": 15.6,
+      "id": "/lede",
+      "parts": {
+        "text": {
+          "height": 15.6,
+          "line_count": 1,
+          "width": 1280,
+          "x": 20,
+          "y": 70
+        }
+      },
+      "tag": "Lede",
+      "width": 1280,
+      "x": 20,
+      "y": 70
+    },
+    {
+      "height": 786.6,
+      "id": "/body",
+      "parts": {},
+      "tag": "Body",
+      "width": 1280,
+      "x": 20,
+      "y": 101.6
+    },
+    {
+      "height": 786.6,
+      "id": "/body/0",
+      "kind": "gcp",
+      "parts": {
+        "bar": {
+          "height": 35.6,
+          "width": 1274,
+          "x": 23,
+          "y": 104.6
+        },
+        "body": {
+          "height": 745,
+          "width": 1274,
+          "x": 23,
+          "y": 140.2
+        },
+        "label": {
+          "height": 21.6,
+          "line_count": 1,
+          "width": 1242,
+          "x": 39,
+          "y": 111.6
+        }
+      },
+      "tag": "Zone",
+      "width": 1280,
+      "x": 20,
+      "y": 101.6
+    },
+    {
+      "height": 715,
+      "id": "/body/0/children/0",
+      "kind": "perimeter",
+      "parts": {
+        "label": {
+          "height": 15.6,
+          "line_count": 1,
+          "width": 1217,
+          "x": 51.5,
+          "y": 170.7
+        }
+      },
+      "tag": "Zone",
+      "width": 1246,
+      "x": 37,
+      "y": 156.2
+    },
+    {
+      "height": 662.4,
+      "id": "/body/0/children/0/children/0",
+      "parts": {},
+      "tag": "Col",
+      "width": 1217,
+      "x": 51.5,
+      "y": 194.3
+    },
+    {
+      "height": 90.4,
+      "id": "/body/0/children/0/children/0/children/0",
+      "parts": {},
+      "tag": "Row",
+      "width": 1217,
+      "x": 51.5,
+      "y": 194.3
+    },
+    {
+      "height": 90.4,
+      "id": "/body/0/children/0/children/0/children/0/children/0",
+      "parts": {
+        "fact": {
+          "height": 32.4,
+          "line_count": 2,
+          "width": 246.96,
+          "x": 109,
+          "y": 240.8
+        },
+        "fact_box": {
+          "height": 40.4,
+          "width": 262.96,
+          "x": 101,
+          "y": 236.8
+        },
+        "function_name": {
+          "height": 15.6,
+          "line_count": 1,
+          "width": 262.96,
+          "x": 101,
+          "y": 201.8
+        },
+        "icon": {
+          "height": 28,
+          "width": 28,
+          "x": 63,
+          "y": 225.5
+        },
+        "product_name": {
+          "height": 14.4,
+          "line_count": 1,
+          "width": 262.96,
+          "x": 101,
+          "y": 218.4
+        },
+        "text": {
+          "height": 75.4,
+          "width": 262.96,
+          "x": 101,
+          "y": 201.8
+        }
+      },
+      "tag": "Pcard",
+      "width": 323.96,
+      "x": 51.5,
+      "y": 194.3
+    },
+    {
+      "height": 30.6,
+      "id": "/body/0/children/0/children/0/children/0/children/1",
+      "kind": "blue",
+      "parts": {
+        "dot_end": {
+          "height": 8,
+          "width": 8,
+          "x": 480.29,
+          "y": 235.5
+        },
+        "dot_start": {
+          "height": 8,
+          "width": 8,
+          "x": 383.46,
+          "y": 235.5
+        },
+        "tag": {
+          "height": 30.6,
+          "width": 60.82,
+          "x": 405.46,
+          "y": 224.2
+        },
+        "tag_label": {
+          "height": 15.6,
+          "line_count": 1,
+          "width": 41.82,
+          "x": 414.96,
+          "y": 231.7
+        },
+        "wire_end": {
+          "height": 2,
+          "width": 14,
+          "x": 466.29,
+          "y": 238.5
+        },
+        "wire_start": {
+          "height": 2,
+          "width": 14,
+          "x": 391.46,
+          "y": 238.5
+        }
+      },
+      "tag": "Pipe",
+      "width": 104.82,
+      "x": 383.46,
+      "y": 224.2
+    },
+    {
+      "height": 90.4,
+      "id": "/body/0/children/0/children/0/children/0/children/2",
+      "parts": {
+        "fact": {
+          "height": 32.4,
+          "line_count": 2,
+          "width": 246.96,
+          "x": 553.79,
+          "y": 240.8
+        },
+        "fact_box": {
+          "height": 40.4,
+          "width": 262.96,
+          "x": 545.79,
+          "y": 236.8
+        },
+        "function_name": {
+          "height": 15.6,
+          "line_count": 1,
+          "width": 262.96,
+          "x": 545.79,
+          "y": 201.8
+        },
+        "icon": {
+          "height": 28,
+          "width": 28,
+          "x": 507.79,
+          "y": 225.5
+        },
+        "product_name": {
+          "height": 14.4,
+          "line_count": 1,
+          "width": 262.96,
+          "x": 545.79,
+          "y": 218.4
+        },
+        "text": {
+          "height": 75.4,
+          "width": 262.96,
+          "x": 545.79,
+          "y": 201.8
+        }
+      },
+      "tag": "Pcard",
+      "width": 323.96,
+      "x": 496.29,
+      "y": 194.3
+    },
+    {
+      "height": 30.6,
+      "id": "/body/0/children/0/children/0/children/0/children/3",
+      "kind": "gray",
+      "parts": {
+        "dot_end": {
+          "height": 8,
+          "width": 8,
+          "x": 928.54,
+          "y": 235.5
+        },
+        "dot_start": {
+          "height": 8,
+          "width": 8,
+          "x": 828.25,
+          "y": 235.5
+        },
+        "tag": {
+          "height": 30.6,
+          "width": 64.29,
+          "x": 850.25,
+          "y": 224.2
+        },
+        "tag_label": {
+          "height": 15.6,
+          "line_count": 1,
+          "width": 45.29,
+          "x": 859.75,
+          "y": 231.7
+        },
+        "wire_end": {
+          "height": 2,
+          "width": 14,
+          "x": 914.54,
+          "y": 238.5
+        },
+        "wire_start": {
+          "height": 2,
+          "width": 14,
+          "x": 836.25,
+          "y": 238.5
+        }
+      },
+      "tag": "Pipe",
+      "width": 108.29,
+      "x": 828.25,
+      "y": 224.2
+    },
+    {
+      "height": 90.4,
+      "id": "/body/0/children/0/children/0/children/0/children/4",
+      "parts": {
+        "fact": {
+          "height": 32.4,
+          "line_count": 2,
+          "width": 246.96,
+          "x": 1002.04,
+          "y": 240.8
+        },
+        "fact_box": {
+          "height": 40.4,
+          "width": 262.96,
+          "x": 994.04,
+          "y": 236.8
+        },
+        "function_name": {
+          "height": 15.6,
+          "line_count": 1,
+          "width": 262.96,
+          "x": 994.04,
+          "y": 201.8
+        },
+        "icon": {
+          "height": 28,
+          "width": 28,
+          "x": 956.04,
+          "y": 225.5
+        },
+        "product_name": {
+          "height": 14.4,
+          "line_count": 1,
+          "width": 262.96,
+          "x": 994.04,
+          "y": 218.4
+        },
+        "text": {
+          "height": 75.4,
+          "width": 262.96,
+          "x": 994.04,
+          "y": 201.8
+        }
+      },
+      "tag": "Pcard",
+      "width": 323.96,
+      "x": 944.54,
+      "y": 194.3
+    },
+    {
+      "height": 70.6,
+      "id": "/body/0/children/0/children/0/children/1",
+      "kind": "dash",
+      "parts": {
+        "dot_end": {
+          "height": 8,
+          "width": 8,
+          "x": 656,
+          "y": 355.3
+        },
+        "dot_start": {
+          "height": 8,
+          "width": 8,
+          "x": 656,
+          "y": 292.7
+        },
+        "tag": {
+          "height": 30.6,
+          "width": 63.17,
+          "x": 628.42,
+          "y": 312.7
+        },
+        "tag_label": {
+          "height": 15.6,
+          "line_count": 1,
+          "width": 44.17,
+          "x": 637.92,
+          "y": 320.2
+        },
+        "wire_end": {
+          "height": 12,
+          "width": 2,
+          "x": 659,
+          "y": 343.3
+        },
+        "wire_start": {
+          "height": 12,
+          "width": 2,
+          "x": 659,
+          "y": 300.7
+        }
+      },
+      "tag": "Pipe",
+      "width": 63.17,
+      "x": 628.42,
+      "y": 292.7
+    },
+    {
+      "height": 90.4,
+      "id": "/body/0/children/0/children/0/children/2",
+      "parts": {},
+      "tag": "Row",
+      "width": 1217,
+      "x": 51.5,
+      "y": 371.3
+    },
+    {
+      "height": 90.4,
+      "id": "/body/0/children/0/children/0/children/2/children/0",
+      "parts": {
+        "fact": {
+          "height": 32.4,
+          "line_count": 2,
+          "width": 245.37,
+          "x": 109,
+          "y": 417.8
+        },
+        "fact_box": {
+          "height": 40.4,
+          "width": 261.37,
+          "x": 101,
+          "y": 413.8
+        },
+        "function_name": {
+          "height": 15.6,
+          "line_count": 1,
+          "width": 261.37,
+          "x": 101,
+          "y": 378.8
+        },
+        "icon": {
+          "height": 28,
+          "width": 28,
+          "x": 63,
+          "y": 402.5
+        },
+        "product_name": {
+          "height": 14.4,
+          "line_count": 1,
+          "width": 261.37,
+          "x": 101,
+          "y": 395.4
+        },
+        "text": {
+          "height": 75.4,
+          "width": 261.37,
+          "x": 101,
+          "y": 378.8
+        }
+      },
+      "tag": "Pcard",
+      "width": 322.37,
+      "x": 51.5,
+      "y": 371.3
+    },
+    {
+      "height": 30.6,
+      "id": "/body/0/children/0/children/0/children/2/children/1",
+      "kind": "blue",
+      "parts": {
+        "dot_end": {
+          "height": 8,
+          "width": 8,
+          "x": 481.08,
+          "y": 412.5
+        },
+        "dot_start": {
+          "height": 8,
+          "width": 8,
+          "x": 381.87,
+          "y": 412.5
+        },
+        "tag": {
+          "height": 30.6,
+          "width": 63.21,
+          "x": 403.87,
+          "y": 401.2
+        },
+        "tag_label": {
+          "height": 15.6,
+          "line_count": 1,
+          "width": 44.21,
+          "x": 413.37,
+          "y": 408.7
+        },
+        "wire_end": {
+          "height": 2,
+          "width": 14,
+          "x": 467.08,
+          "y": 415.5
+        },
+        "wire_start": {
+          "height": 2,
+          "width": 14,
+          "x": 389.87,
+          "y": 415.5
+        }
+      },
+      "tag": "Pipe",
+      "width": 107.21,
+      "x": 381.87,
+      "y": 401.2
+    },
+    {
+      "height": 90.4,
+      "id": "/body/0/children/0/children/0/children/2/children/2",
+      "parts": {
+        "fact": {
+          "height": 32.4,
+          "line_count": 2,
+          "width": 245.37,
+          "x": 554.58,
+          "y": 417.8
+        },
+        "fact_box": {
+          "height": 40.4,
+          "width": 261.37,
+          "x": 546.58,
+          "y": 413.8
+        },
+        "function_name": {
+          "height": 15.6,
+          "line_count": 1,
+          "width": 261.37,
+          "x": 546.58,
+          "y": 378.8
+        },
+        "icon": {
+          "height": 28,
+          "width": 28,
+          "x": 508.58,
+          "y": 402.5
+        },
+        "product_name": {
+          "height": 14.4,
+          "line_count": 1,
+          "width": 261.37,
+          "x": 546.58,
+          "y": 395.4
+        },
+        "text": {
+          "height": 75.4,
+          "width": 261.37,
+          "x": 546.58,
+          "y": 378.8
+        }
+      },
+      "tag": "Pcard",
+      "width": 322.37,
+      "x": 497.08,
+      "y": 371.3
+    },
+    {
+      "height": 30.6,
+      "id": "/body/0/children/0/children/0/children/2/children/3",
+      "kind": "gray",
+      "parts": {
+        "dot_end": {
+          "height": 8,
+          "width": 8,
+          "x": 930.13,
+          "y": 412.5
+        },
+        "dot_start": {
+          "height": 8,
+          "width": 8,
+          "x": 827.45,
+          "y": 412.5
+        },
+        "tag": {
+          "height": 30.6,
+          "width": 66.68,
+          "x": 849.45,
+          "y": 401.2
+        },
+        "tag_label": {
+          "height": 15.6,
+          "line_count": 1,
+          "width": 47.68,
+          "x": 858.95,
+          "y": 408.7
+        },
+        "wire_end": {
+          "height": 2,
+          "width": 14,
+          "x": 916.13,
+          "y": 415.5
+        },
+        "wire_start": {
+          "height": 2,
+          "width": 14,
+          "x": 835.45,
+          "y": 415.5
+        }
+      },
+      "tag": "Pipe",
+      "width": 110.68,
+      "x": 827.45,
+      "y": 401.2
+    },
+    {
+      "height": 90.4,
+      "id": "/body/0/children/0/children/0/children/2/children/4",
+      "parts": {
+        "fact": {
+          "height": 32.4,
+          "line_count": 2,
+          "width": 245.37,
+          "x": 1003.63,
+          "y": 417.8
+        },
+        "fact_box": {
+          "height": 40.4,
+          "width": 261.37,
+          "x": 995.63,
+          "y": 413.8
+        },
+        "function_name": {
+          "height": 15.6,
+          "line_count": 1,
+          "width": 261.37,
+          "x": 995.63,
+          "y": 378.8
+        },
+        "icon": {
+          "height": 28,
+          "width": 28,
+          "x": 957.63,
+          "y": 402.5
+        },
+        "product_name": {
+          "height": 14.4,
+          "line_count": 1,
+          "width": 261.37,
+          "x": 995.63,
+          "y": 395.4
+        },
+        "text": {
+          "height": 75.4,
+          "width": 261.37,
+          "x": 995.63,
+          "y": 378.8
+        }
+      },
+      "tag": "Pcard",
+      "width": 322.37,
+      "x": 946.13,
+      "y": 371.3
+    },
+    {
+      "height": 90.4,
+      "id": "/body/0/children/0/children/0/children/3",
+      "parts": {},
+      "tag": "Row",
+      "width": 1217,
+      "x": 51.5,
+      "y": 469.7
+    },
+    {
+      "height": 90.4,
+      "id": "/body/0/children/0/children/0/children/3/children/0",
+      "parts": {
+        "fact": {
+          "height": 32.4,
+          "line_count": 2,
+          "width": 245.41,
+          "x": 109,
+          "y": 516.2
+        },
+        "fact_box": {
+          "height": 40.4,
+          "width": 261.41,
+          "x": 101,
+          "y": 512.2
+        },
+        "function_name": {
+          "height": 15.6,
+          "line_count": 1,
+          "width": 261.41,
+          "x": 101,
+          "y": 477.2
+        },
+        "icon": {
+          "height": 28,
+          "width": 28,
+          "x": 63,
+          "y": 500.9
+        },
+        "product_name": {
+          "height": 14.4,
+          "line_count": 1,
+          "width": 261.41,
+          "x": 101,
+          "y": 493.8
+        },
+        "text": {
+          "height": 75.4,
+          "width": 261.41,
+          "x": 101,
+          "y": 477.2
+        }
+      },
+      "tag": "Pcard",
+      "width": 322.41,
+      "x": 51.5,
+      "y": 469.7
+    },
+    {
+      "height": 30.6,
+      "id": "/body/0/children/0/children/0/children/3/children/1",
+      "kind": "blue",
+      "parts": {
+        "dot_end": {
+          "height": 8,
+          "width": 8,
+          "x": 481.06,
+          "y": 510.9
+        },
+        "dot_start": {
+          "height": 8,
+          "width": 8,
+          "x": 381.91,
+          "y": 510.9
+        },
+        "tag": {
+          "height": 30.6,
+          "width": 63.14,
+          "x": 403.91,
+          "y": 499.6
+        },
+        "tag_label": {
+          "height": 15.6,
+          "line_count": 1,
+          "width": 44.14,
+          "x": 413.41,
+          "y": 507.1
+        },
+        "wire_end": {
+          "height": 2,
+          "width": 14,
+          "x": 467.06,
+          "y": 513.9
+        },
+        "wire_start": {
+          "height": 2,
+          "width": 14,
+          "x": 389.91,
+          "y": 513.9
+        }
+      },
+      "tag": "Pipe",
+      "width": 107.14,
+      "x": 381.91,
+      "y": 499.6
+    },
+    {
+      "height": 90.4,
+      "id": "/body/0/children/0/children/0/children/3/children/2",
+      "parts": {
+        "fact": {
+          "height": 32.4,
+          "line_count": 2,
+          "width": 245.41,
+          "x": 554.56,
+          "y": 516.2
+        },
+        "fact_box": {
+          "height": 40.4,
+          "width": 261.41,
+          "x": 546.56,
+          "y": 512.2
+        },
+        "function_name": {
+          "height": 15.6,
+          "line_count": 1,
+          "width": 261.41,
+          "x": 546.56,
+          "y": 477.2
+        },
+        "icon": {
+          "height": 28,
+          "width": 28,
+          "x": 508.56,
+          "y": 500.9
+        },
+        "product_name": {
+          "height": 14.4,
+          "line_count": 1,
+          "width": 261.41,
+          "x": 546.56,
+          "y": 493.8
+        },
+        "text": {
+          "height": 75.4,
+          "width": 261.41,
+          "x": 546.56,
+          "y": 477.2
+        }
+      },
+      "tag": "Pcard",
+      "width": 322.41,
+      "x": 497.06,
+      "y": 469.7
+    },
+    {
+      "height": 30.6,
+      "id": "/body/0/children/0/children/0/children/3/children/3",
+      "kind": "gray",
+      "parts": {
+        "dot_end": {
+          "height": 8,
+          "width": 8,
+          "x": 930.09,
+          "y": 510.9
+        },
+        "dot_start": {
+          "height": 8,
+          "width": 8,
+          "x": 827.47,
+          "y": 510.9
+        },
+        "tag": {
+          "height": 30.6,
+          "width": 66.61,
+          "x": 849.47,
+          "y": 499.6
+        },
+        "tag_label": {
+          "height": 15.6,
+          "line_count": 1,
+          "width": 47.61,
+          "x": 858.97,
+          "y": 507.1
+        },
+        "wire_end": {
+          "height": 2,
+          "width": 14,
+          "x": 916.09,
+          "y": 513.9
+        },
+        "wire_start": {
+          "height": 2,
+          "width": 14,
+          "x": 835.47,
+          "y": 513.9
+        }
+      },
+      "tag": "Pipe",
+      "width": 110.61,
+      "x": 827.47,
+      "y": 499.6
+    },
+    {
+      "height": 90.4,
+      "id": "/body/0/children/0/children/0/children/3/children/4",
+      "parts": {
+        "fact": {
+          "height": 32.4,
+          "line_count": 2,
+          "width": 245.41,
+          "x": 1003.59,
+          "y": 516.2
+        },
+        "fact_box": {
+          "height": 40.4,
+          "width": 261.41,
+          "x": 995.59,
+          "y": 512.2
+        },
+        "function_name": {
+          "height": 15.6,
+          "line_count": 1,
+          "width": 261.41,
+          "x": 995.59,
+          "y": 477.2
+        },
+        "icon": {
+          "height": 28,
+          "width": 28,
+          "x": 957.59,
+          "y": 500.9
+        },
+        "product_name": {
+          "height": 14.4,
+          "line_count": 1,
+          "width": 261.41,
+          "x": 995.59,
+          "y": 493.8
+        },
+        "text": {
+          "height": 75.4,
+          "width": 261.41,
+          "x": 995.59,
+          "y": 477.2
+        }
+      },
+      "tag": "Pcard",
+      "width": 322.41,
+      "x": 946.09,
+      "y": 469.7
+    },
+    {
+      "height": 91.8,
+      "id": "/body/0/children/0/children/0/children/4",
+      "kind": "deny",
+      "parts": {
+        "hub": {
+          "height": 30.6,
+          "width": 58.91,
+          "x": 630.54,
+          "y": 598.7
+        },
+        "hub_text": {
+          "height": 15.6,
+          "line_count": 1,
+          "width": 39.91,
+          "x": 640.04,
+          "y": 606.2
+        },
+        "spine": {
+          "height": 55.8,
+          "width": 2,
+          "x": 57.5,
+          "y": 586.1
+        }
+      },
+      "tag": "Tee",
+      "width": 1217,
+      "x": 51.5,
+      "y": 568.1
+    },
+    {
+      "height": 30.6,
+      "id": "/body/0/children/0/children/0/children/4/arms/0",
+      "kind": "blue",
+      "parts": {
+        "dot_end": {
+          "height": 8,
+          "width": 8,
+          "x": 1260.5,
+          "y": 579.4
+        },
+        "dot_start": {
+          "height": 8,
+          "width": 8,
+          "x": 65.5,
+          "y": 579.4
+        },
+        "tag": {
+          "height": 30.6,
+          "width": 64.42,
+          "x": 634.79,
+          "y": 568.1
+        },
+        "tag_label": {
+          "height": 15.6,
+          "line_count": 1,
+          "width": 45.42,
+          "x": 644.29,
+          "y": 575.6
+        },
+        "wire_end": {
+          "height": 2,
+          "width": 561.29,
+          "x": 699.21,
+          "y": 582.4
+        },
+        "wire_start": {
+          "height": 2,
+          "width": 561.29,
+          "x": 73.5,
+          "y": 582.4
+        }
+      },
+      "tag": "Pipe",
+      "width": 1203,
+      "x": 65.5,
+      "y": 568.1
+    },
+    {
+      "height": 30.6,
+      "id": "/body/0/children/0/children/0/children/4/arms/1",
+      "kind": "pink",
+      "parts": {
+        "dot_end": {
+          "height": 8,
+          "width": 8,
+          "x": 1260.5,
+          "y": 640.6
+        },
+        "dot_start": {
+          "height": 8,
+          "width": 8,
+          "x": 65.5,
+          "y": 640.6
+        },
+        "tag": {
+          "height": 30.6,
+          "width": 48.91,
+          "x": 642.55,
+          "y": 629.3
+        },
+        "tag_label": {
+          "height": 15.6,
+          "line_count": 1,
+          "width": 29.91,
+          "x": 652.05,
+          "y": 636.8
+        },
+        "wire_end": {
+          "height": 2,
+          "width": 569.05,
+          "x": 691.45,
+          "y": 643.6
+        },
+        "wire_start": {
+          "height": 2,
+          "width": 569.05,
+          "x": 73.5,
+          "y": 643.6
+        }
+      },
+      "tag": "Pipe",
+      "width": 1203,
+      "x": 65.5,
+      "y": 629.3
+    },
+    {
+      "height": 90.4,
+      "id": "/body/0/children/0/children/0/children/5",
+      "parts": {},
+      "tag": "Row",
+      "width": 1217,
+      "x": 51.5,
+      "y": 667.9
+    },
+    {
+      "height": 90.4,
+      "id": "/body/0/children/0/children/0/children/5/children/0",
+      "parts": {
+        "fact": {
+          "height": 32.4,
+          "line_count": 2,
+          "width": 245.27,
+          "x": 109,
+          "y": 714.4
+        },
+        "fact_box": {
+          "height": 40.4,
+          "width": 261.27,
+          "x": 101,
+          "y": 710.4
+        },
+        "function_name": {
+          "height": 15.6,
+          "line_count": 1,
+          "width": 261.27,
+          "x": 101,
+          "y": 675.4
+        },
+        "icon": {
+          "height": 28,
+          "width": 28,
+          "x": 63,
+          "y": 699.1
+        },
+        "product_name": {
+          "height": 14.4,
+          "line_count": 1,
+          "width": 261.27,
+          "x": 101,
+          "y": 692
+        },
+        "text": {
+          "height": 75.4,
+          "width": 261.27,
+          "x": 101,
+          "y": 675.4
+        }
+      },
+      "tag": "Pcard",
+      "width": 322.27,
+      "x": 51.5,
+      "y": 667.9
+    },
+    {
+      "height": 30.6,
+      "id": "/body/0/children/0/children/0/children/5/children/1",
+      "kind": "blue",
+      "parts": {
+        "dot_end": {
+          "height": 8,
+          "width": 8,
+          "x": 481.13,
+          "y": 709.1
+        },
+        "dot_start": {
+          "height": 8,
+          "width": 8,
+          "x": 381.77,
+          "y": 709.1
+        },
+        "tag": {
+          "height": 30.6,
+          "width": 63.36,
+          "x": 403.77,
+          "y": 697.8
+        },
+        "tag_label": {
+          "height": 15.6,
+          "line_count": 1,
+          "width": 44.36,
+          "x": 413.27,
+          "y": 705.3
+        },
+        "wire_end": {
+          "height": 2,
+          "width": 14,
+          "x": 467.13,
+          "y": 712.1
+        },
+        "wire_start": {
+          "height": 2,
+          "width": 14,
+          "x": 389.77,
+          "y": 712.1
+        }
+      },
+      "tag": "Pipe",
+      "width": 107.36,
+      "x": 381.77,
+      "y": 697.8
+    },
+    {
+      "height": 90.4,
+      "id": "/body/0/children/0/children/0/children/5/children/2",
+      "parts": {
+        "fact": {
+          "height": 32.4,
+          "line_count": 2,
+          "width": 245.27,
+          "x": 554.63,
+          "y": 714.4
+        },
+        "fact_box": {
+          "height": 40.4,
+          "width": 261.27,
+          "x": 546.63,
+          "y": 710.4
+        },
+        "function_name": {
+          "height": 15.6,
+          "line_count": 1,
+          "width": 261.27,
+          "x": 546.63,
+          "y": 675.4
+        },
+        "icon": {
+          "height": 28,
+          "width": 28,
+          "x": 508.63,
+          "y": 699.1
+        },
+        "product_name": {
+          "height": 14.4,
+          "line_count": 1,
+          "width": 261.27,
+          "x": 546.63,
+          "y": 692
+        },
+        "text": {
+          "height": 75.4,
+          "width": 261.27,
+          "x": 546.63,
+          "y": 675.4
+        }
+      },
+      "tag": "Pcard",
+      "width": 322.27,
+      "x": 497.13,
+      "y": 667.9
+    },
+    {
+      "height": 30.6,
+      "id": "/body/0/children/0/children/0/children/5/children/3",
+      "kind": "gray",
+      "parts": {
+        "dot_end": {
+          "height": 8,
+          "width": 8,
+          "x": 930.23,
+          "y": 709.1
+        },
+        "dot_start": {
+          "height": 8,
+          "width": 8,
+          "x": 827.4,
+          "y": 709.1
+        },
+        "tag": {
+          "height": 30.6,
+          "width": 66.83,
+          "x": 849.4,
+          "y": 697.8
+        },
+        "tag_label": {
+          "height": 15.6,
+          "line_count": 1,
+          "width": 47.83,
+          "x": 858.9,
+          "y": 705.3
+        },
+        "wire_end": {
+          "height": 2,
+          "width": 14,
+          "x": 916.23,
+          "y": 712.1
+        },
+        "wire_start": {
+          "height": 2,
+          "width": 14,
+          "x": 835.4,
+          "y": 712.1
+        }
+      },
+      "tag": "Pipe",
+      "width": 110.83,
+      "x": 827.4,
+      "y": 697.8
+    },
+    {
+      "height": 90.4,
+      "id": "/body/0/children/0/children/0/children/5/children/4",
+      "parts": {
+        "fact": {
+          "height": 32.4,
+          "line_count": 2,
+          "width": 245.27,
+          "x": 1003.73,
+          "y": 714.4
+        },
+        "fact_box": {
+          "height": 40.4,
+          "width": 261.27,
+          "x": 995.73,
+          "y": 710.4
+        },
+        "function_name": {
+          "height": 15.6,
+          "line_count": 1,
+          "width": 261.27,
+          "x": 995.73,
+          "y": 675.4
+        },
+        "icon": {
+          "height": 28,
+          "width": 28,
+          "x": 957.73,
+          "y": 699.1
+        },
+        "product_name": {
+          "height": 14.4,
+          "line_count": 1,
+          "width": 261.27,
+          "x": 995.73,
+          "y": 692
+        },
+        "text": {
+          "height": 75.4,
+          "width": 261.27,
+          "x": 995.73,
+          "y": 675.4
+        }
+      },
+      "tag": "Pcard",
+      "width": 322.27,
+      "x": 946.23,
+      "y": 667.9
+    },
+    {
+      "height": 90.4,
+      "id": "/body/0/children/0/children/0/children/6",
+      "parts": {},
+      "tag": "Row",
+      "width": 1217,
+      "x": 51.5,
+      "y": 766.3
+    },
+    {
+      "height": 90.4,
+      "id": "/body/0/children/0/children/0/children/6/children/0",
+      "parts": {
+        "fact": {
+          "height": 32.4,
+          "line_count": 2,
+          "width": 245.62,
+          "x": 109,
+          "y": 812.8
+        },
+        "fact_box": {
+          "height": 40.4,
+          "width": 261.62,
+          "x": 101,
+          "y": 808.8
+        },
+        "function_name": {
+          "height": 15.6,
+          "line_count": 1,
+          "width": 261.62,
+          "x": 101,
+          "y": 773.8
+        },
+        "icon": {
+          "height": 28,
+          "width": 28,
+          "x": 63,
+          "y": 797.5
+        },
+        "product_name": {
+          "height": 14.4,
+          "line_count": 1,
+          "width": 261.62,
+          "x": 101,
+          "y": 790.4
+        },
+        "text": {
+          "height": 75.4,
+          "width": 261.62,
+          "x": 101,
+          "y": 773.8
+        }
+      },
+      "tag": "Pcard",
+      "width": 322.62,
+      "x": 51.5,
+      "y": 766.3
+    },
+    {
+      "height": 30.6,
+      "id": "/body/0/children/0/children/0/children/6/children/1",
+      "kind": "blue",
+      "parts": {
+        "dot_end": {
+          "height": 8,
+          "width": 8,
+          "x": 480.96,
+          "y": 807.5
+        },
+        "dot_start": {
+          "height": 8,
+          "width": 8,
+          "x": 382.12,
+          "y": 807.5
+        },
+        "tag": {
+          "height": 30.6,
+          "width": 62.84,
+          "x": 404.12,
+          "y": 796.2
+        },
+        "tag_label": {
+          "height": 15.6,
+          "line_count": 1,
+          "width": 43.84,
+          "x": 413.62,
+          "y": 803.7
+        },
+        "wire_end": {
+          "height": 2,
+          "width": 14,
+          "x": 466.96,
+          "y": 810.5
+        },
+        "wire_start": {
+          "height": 2,
+          "width": 14,
+          "x": 390.12,
+          "y": 810.5
+        }
+      },
+      "tag": "Pipe",
+      "width": 106.84,
+      "x": 382.12,
+      "y": 796.2
+    },
+    {
+      "height": 90.4,
+      "id": "/body/0/children/0/children/0/children/6/children/2",
+      "parts": {
+        "fact": {
+          "height": 32.4,
+          "line_count": 2,
+          "width": 245.62,
+          "x": 554.46,
+          "y": 812.8
+        },
+        "fact_box": {
+          "height": 40.4,
+          "width": 261.62,
+          "x": 546.46,
+          "y": 808.8
+        },
+        "function_name": {
+          "height": 15.6,
+          "line_count": 1,
+          "width": 261.62,
+          "x": 546.46,
+          "y": 773.8
+        },
+        "icon": {
+          "height": 28,
+          "width": 28,
+          "x": 508.46,
+          "y": 797.5
+        },
+        "product_name": {
+          "height": 14.4,
+          "line_count": 1,
+          "width": 261.62,
+          "x": 546.46,
+          "y": 790.4
+        },
+        "text": {
+          "height": 75.4,
+          "width": 261.62,
+          "x": 546.46,
+          "y": 773.8
+        }
+      },
+      "tag": "Pcard",
+      "width": 322.62,
+      "x": 496.96,
+      "y": 766.3
+    },
+    {
+      "height": 30.6,
+      "id": "/body/0/children/0/children/0/children/6/children/3",
+      "kind": "gray",
+      "parts": {
+        "dot_end": {
+          "height": 8,
+          "width": 8,
+          "x": 929.88,
+          "y": 807.5
+        },
+        "dot_start": {
+          "height": 8,
+          "width": 8,
+          "x": 827.57,
+          "y": 807.5
+        },
+        "tag": {
+          "height": 30.6,
+          "width": 66.31,
+          "x": 849.57,
+          "y": 796.2
+        },
+        "tag_label": {
+          "height": 15.6,
+          "line_count": 1,
+          "width": 47.31,
+          "x": 859.07,
+          "y": 803.7
+        },
+        "wire_end": {
+          "height": 2,
+          "width": 14,
+          "x": 915.88,
+          "y": 810.5
+        },
+        "wire_start": {
+          "height": 2,
+          "width": 14,
+          "x": 835.57,
+          "y": 810.5
+        }
+      },
+      "tag": "Pipe",
+      "width": 110.31,
+      "x": 827.57,
+      "y": 796.2
+    },
+    {
+      "height": 90.4,
+      "id": "/body/0/children/0/children/0/children/6/children/4",
+      "parts": {
+        "fact": {
+          "height": 32.4,
+          "line_count": 2,
+          "width": 245.62,
+          "x": 1003.38,
+          "y": 812.8
+        },
+        "fact_box": {
+          "height": 40.4,
+          "width": 261.62,
+          "x": 995.38,
+          "y": 808.8
+        },
+        "function_name": {
+          "height": 15.6,
+          "line_count": 1,
+          "width": 261.62,
+          "x": 995.38,
+          "y": 773.8
+        },
+        "icon": {
+          "height": 28,
+          "width": 28,
+          "x": 957.38,
+          "y": 797.5
+        },
+        "product_name": {
+          "height": 14.4,
+          "line_count": 1,
+          "width": 261.62,
+          "x": 995.38,
+          "y": 790.4
+        },
+        "text": {
+          "height": 75.4,
+          "width": 261.62,
+          "x": 995.38,
+          "y": 773.8
+        }
+      },
+      "tag": "Pcard",
+      "width": 322.62,
+      "x": 945.88,
+      "y": 766.3
+    },
+    {
+      "height": 14.4,
+      "id": "/legend",
+      "parts": {},
+      "tag": "Legend",
+      "width": 1280,
+      "x": 20,
+      "y": 898.2
+    },
+    {
+      "height": 14.4,
+      "id": "/legend/0",
+      "kind": "gray",
+      "parts": {
+        "legend_label": {
+          "height": 14.4,
+          "line_count": 1,
+          "width": 58.42,
+          "x": 52,
+          "y": 898.2
+        },
+        "legend_text": {
+          "height": 14.4,
+          "line_count": 1,
+          "width": 65.14,
+          "x": 116.42,
+          "y": 898.2
+        },
+        "swatch": {
+          "height": 2,
+          "width": 26,
+          "x": 20,
+          "y": 904.4
+        }
+      },
+      "tag": "LegendEntry",
+      "width": 161.56,
+      "x": 20,
+      "y": 898.2
+    },
+    {
+      "height": 14.4,
+      "id": "/legend/1",
+      "kind": "blue",
+      "parts": {
+        "legend_label": {
+          "height": 14.4,
+          "line_count": 1,
+          "width": 57.56,
+          "x": 229.56,
+          "y": 898.2
+        },
+        "legend_text": {
+          "height": 14.4,
+          "line_count": 1,
+          "width": 71.61,
+          "x": 293.12,
+          "y": 898.2
+        },
+        "swatch": {
+          "height": 2,
+          "width": 26,
+          "x": 197.56,
+          "y": 904.4
+        }
+      },
+      "tag": "LegendEntry",
+      "width": 167.18,
+      "x": 197.56,
+      "y": 898.2
+    },
+    {
+      "height": 14.4,
+      "id": "/legend/2",
+      "kind": "pink",
+      "parts": {
+        "legend_label": {
+          "height": 14.4,
+          "line_count": 1,
+          "width": 57.38,
+          "x": 412.73,
+          "y": 898.2
+        },
+        "legend_text": {
+          "height": 14.4,
+          "line_count": 1,
+          "width": 56.97,
+          "x": 476.11,
+          "y": 898.2
+        },
+        "swatch": {
+          "height": 2,
+          "width": 26,
+          "x": 380.73,
+          "y": 904.4
+        }
+      },
+      "tag": "LegendEntry",
+      "width": 152.35,
+      "x": 380.73,
+      "y": 898.2
+    },
+    {
+      "height": 14.4,
+      "id": "/legend/3",
+      "kind": "dash",
+      "parts": {
+        "legend_label": {
+          "height": 14.4,
+          "line_count": 1,
+          "width": 72.81,
+          "x": 581.08,
+          "y": 898.2
+        },
+        "legend_text": {
+          "height": 14.4,
+          "line_count": 1,
+          "width": 41.79,
+          "x": 659.89,
+          "y": 898.2
+        },
+        "swatch": {
+          "height": 2,
+          "width": 26,
+          "x": 549.08,
+          "y": 904.4
+        }
+      },
+      "tag": "LegendEntry",
+      "width": 152.6,
+      "x": 549.08,
+      "y": 898.2
+    },
+    {
+      "height": 14.4,
+      "id": "/legend/4",
+      "kind": "deny",
+      "parts": {
+        "legend_label": {
+          "height": 14.4,
+          "line_count": 1,
+          "width": 66.69,
+          "x": 749.68,
+          "y": 898.2
+        },
+        "legend_text": {
+          "height": 14.4,
+          "line_count": 1,
+          "width": 86.68,
+          "x": 822.37,
+          "y": 898.2
+        },
+        "swatch": {
+          "height": 2,
+          "width": 26,
+          "x": 717.68,
+          "y": 904.4
+        }
+      },
+      "tag": "LegendEntry",
+      "width": 191.36,
+      "x": 717.68,
+      "y": 898.2
+    }
+  ]
+}

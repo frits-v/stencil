@@ -1,0 +1,892 @@
+{
+  "canvas": {
+    "height": 627,
+    "width": 1320
+  },
+  "nodes": [
+    {
+      "height": 627,
+      "id": "",
+      "parts": {},
+      "tag": "Page",
+      "width": 1320,
+      "x": 0,
+      "y": 0
+    },
+    {
+      "height": 16,
+      "id": "/kicker",
+      "parts": {
+        "badge": {
+          "height": 16,
+          "width": 77.14,
+          "x": 20,
+          "y": 20
+        },
+        "badge_text": {
+          "height": 12,
+          "line_count": 1,
+          "width": 63.14,
+          "x": 27,
+          "y": 22
+        },
+        "text": {
+          "height": 13.2,
+          "line_count": 1,
+          "width": 1196.86,
+          "x": 103.14,
+          "y": 21.4
+        }
+      },
+      "tag": "Kicker",
+      "width": 1280,
+      "x": 20,
+      "y": 20
+    },
+    {
+      "height": 24,
+      "id": "/title",
+      "parts": {
+        "text": {
+          "height": 24,
+          "line_count": 1,
+          "width": 1280,
+          "x": 20,
+          "y": 42
+        }
+      },
+      "tag": "Title",
+      "width": 1280,
+      "x": 20,
+      "y": 42
+    },
+    {
+      "height": 15.6,
+      "id": "/lede",
+      "parts": {
+        "text": {
+          "height": 15.6,
+          "line_count": 1,
+          "width": 1280,
+          "x": 20,
+          "y": 70
+        }
+      },
+      "tag": "Lede",
+      "width": 1280,
+      "x": 20,
+      "y": 70
+    },
+    {
+      "height": 459.8,
+      "id": "/body",
+      "parts": {},
+      "tag": "Body",
+      "width": 1280,
+      "x": 20,
+      "y": 101.6
+    },
+    {
+      "height": 459.8,
+      "id": "/body/0",
+      "parts": {},
+      "tag": "Row",
+      "width": 1280,
+      "x": 20,
+      "y": 101.6
+    },
+    {
+      "height": 459.8,
+      "id": "/body/0/children/0",
+      "parts": {},
+      "tag": "Col",
+      "width": 198.63,
+      "x": 20,
+      "y": 101.6
+    },
+    {
+      "height": 225.9,
+      "id": "/body/0/children/0/children/0",
+      "kind": "onprem-a",
+      "parts": {
+        "label": {
+          "height": 14.4,
+          "line_count": 1,
+          "width": 171.63,
+          "x": 33.5,
+          "y": 115.1
+        }
+      },
+      "tag": "Zone",
+      "width": 198.63,
+      "x": 20,
+      "y": 101.6
+    },
+    {
+      "height": 46,
+      "id": "/body/0/children/0/children/0/children/0",
+      "parts": {
+        "function_name": {
+          "height": 15.6,
+          "line_count": 1,
+          "width": 110.63,
+          "x": 83,
+          "y": 145
+        },
+        "icon": {
+          "height": 28,
+          "width": 28,
+          "x": 45,
+          "y": 146.5
+        },
+        "product_name": {
+          "height": 14.4,
+          "line_count": 1,
+          "width": 110.63,
+          "x": 83,
+          "y": 161.6
+        },
+        "text": {
+          "height": 31,
+          "width": 110.63,
+          "x": 83,
+          "y": 145
+        }
+      },
+      "tag": "Pcard",
+      "width": 171.63,
+      "x": 33.5,
+      "y": 137.5
+    },
+    {
+      "height": 46,
+      "id": "/body/0/children/0/children/0/children/1",
+      "parts": {
+        "function_name": {
+          "height": 15.6,
+          "line_count": 1,
+          "width": 110.63,
+          "x": 83,
+          "y": 199
+        },
+        "icon": {
+          "height": 28,
+          "width": 28,
+          "x": 45,
+          "y": 200.5
+        },
+        "product_name": {
+          "height": 14.4,
+          "line_count": 1,
+          "width": 110.63,
+          "x": 83,
+          "y": 215.6
+        },
+        "text": {
+          "height": 31,
+          "width": 110.63,
+          "x": 83,
+          "y": 199
+        }
+      },
+      "tag": "Pcard",
+      "width": 171.63,
+      "x": 33.5,
+      "y": 191.5
+    },
+    {
+      "height": 225.9,
+      "id": "/body/0/children/0/children/1",
+      "kind": "onprem-b",
+      "parts": {
+        "label": {
+          "height": 14.4,
+          "line_count": 1,
+          "width": 171.63,
+          "x": 33.5,
+          "y": 349
+        }
+      },
+      "tag": "Zone",
+      "width": 198.63,
+      "x": 20,
+      "y": 335.5
+    },
+    {
+      "height": 46,
+      "id": "/body/0/children/0/children/1/children/0",
+      "parts": {
+        "function_name": {
+          "height": 15.6,
+          "line_count": 1,
+          "width": 110.63,
+          "x": 83,
+          "y": 378.9
+        },
+        "icon": {
+          "height": 28,
+          "width": 28,
+          "x": 45,
+          "y": 380.4
+        },
+        "product_name": {
+          "height": 14.4,
+          "line_count": 1,
+          "width": 110.63,
+          "x": 83,
+          "y": 395.5
+        },
+        "text": {
+          "height": 31,
+          "width": 110.63,
+          "x": 83,
+          "y": 378.9
+        }
+      },
+      "tag": "Pcard",
+      "width": 171.63,
+      "x": 33.5,
+      "y": 371.4
+    },
+    {
+      "height": 46,
+      "id": "/body/0/children/0/children/1/children/1",
+      "parts": {
+        "function_name": {
+          "height": 15.6,
+          "line_count": 1,
+          "width": 110.63,
+          "x": 83,
+          "y": 432.9
+        },
+        "icon": {
+          "height": 28,
+          "width": 28,
+          "x": 45,
+          "y": 434.4
+        },
+        "product_name": {
+          "height": 14.4,
+          "line_count": 1,
+          "width": 110.63,
+          "x": 83,
+          "y": 449.5
+        },
+        "text": {
+          "height": 31,
+          "width": 110.63,
+          "x": 83,
+          "y": 432.9
+        }
+      },
+      "tag": "Pcard",
+      "width": 171.63,
+      "x": 33.5,
+      "y": 425.4
+    },
+    {
+      "height": 459.8,
+      "id": "/body/0/children/1",
+      "parts": {},
+      "tag": "Col",
+      "width": 132.67,
+      "x": 226.63,
+      "y": 101.6
+    },
+    {
+      "height": 225.9,
+      "id": "/body/0/children/1/children/0",
+      "parts": {},
+      "tag": "Col",
+      "width": 132.67,
+      "x": 226.63,
+      "y": 101.6
+    },
+    {
+      "height": 48.2,
+      "id": "/body/0/children/1/children/0/children/0",
+      "kind": "blue",
+      "parts": {
+        "dot_end": {
+          "height": 8,
+          "width": 8,
+          "x": 351.31,
+          "y": 180.45
+        },
+        "dot_start": {
+          "height": 8,
+          "width": 8,
+          "x": 226.63,
+          "y": 180.45
+        },
+        "tag": {
+          "height": 48.2,
+          "width": 86.27,
+          "x": 249.83,
+          "y": 160.35
+        },
+        "tag_label": {
+          "height": 15.6,
+          "line_count": 1,
+          "width": 41.87,
+          "x": 272.04,
+          "y": 167.85
+        },
+        "tag_sub": {
+          "height": 15.6,
+          "line_count": 1,
+          "width": 67.27,
+          "x": 259.33,
+          "y": 185.45
+        },
+        "wire_end": {
+          "height": 2,
+          "width": 15.2,
+          "x": 336.11,
+          "y": 183.45
+        },
+        "wire_start": {
+          "height": 2,
+          "width": 15.2,
+          "x": 234.63,
+          "y": 183.45
+        }
+      },
+      "tag": "Pipe",
+      "width": 132.67,
+      "x": 226.63,
+      "y": 160.35
+    },
+    {
+      "height": 48.2,
+      "id": "/body/0/children/1/children/0/children/1",
+      "kind": "blue",
+      "parts": {
+        "dot_end": {
+          "height": 8,
+          "width": 8,
+          "x": 351.31,
+          "y": 240.65
+        },
+        "dot_start": {
+          "height": 8,
+          "width": 8,
+          "x": 226.63,
+          "y": 240.65
+        },
+        "tag": {
+          "height": 48.2,
+          "width": 88.67,
+          "x": 248.63,
+          "y": 220.55
+        },
+        "tag_label": {
+          "height": 15.6,
+          "line_count": 1,
+          "width": 44.25,
+          "x": 270.85,
+          "y": 228.05
+        },
+        "tag_sub": {
+          "height": 15.6,
+          "line_count": 1,
+          "width": 69.67,
+          "x": 258.13,
+          "y": 245.65
+        },
+        "wire_end": {
+          "height": 2,
+          "width": 14,
+          "x": 337.31,
+          "y": 243.65
+        },
+        "wire_start": {
+          "height": 2,
+          "width": 14,
+          "x": 234.63,
+          "y": 243.65
+        }
+      },
+      "tag": "Pipe",
+      "width": 132.67,
+      "x": 226.63,
+      "y": 220.55
+    },
+    {
+      "height": 225.9,
+      "id": "/body/0/children/1/children/1",
+      "parts": {},
+      "tag": "Col",
+      "width": 132.67,
+      "x": 226.63,
+      "y": 335.5
+    },
+    {
+      "height": 48.2,
+      "id": "/body/0/children/1/children/1/children/0",
+      "kind": "pink",
+      "parts": {
+        "dot_end": {
+          "height": 8,
+          "width": 8,
+          "x": 351.31,
+          "y": 414.35
+        },
+        "dot_start": {
+          "height": 8,
+          "width": 8,
+          "x": 226.63,
+          "y": 414.35
+        },
+        "tag": {
+          "height": 48.2,
+          "width": 86.27,
+          "x": 249.83,
+          "y": 394.25
+        },
+        "tag_label": {
+          "height": 15.6,
+          "line_count": 1,
+          "width": 44.44,
+          "x": 270.75,
+          "y": 401.75
+        },
+        "tag_sub": {
+          "height": 15.6,
+          "line_count": 1,
+          "width": 67.27,
+          "x": 259.33,
+          "y": 419.35
+        },
+        "wire_end": {
+          "height": 2,
+          "width": 15.2,
+          "x": 336.11,
+          "y": 417.35
+        },
+        "wire_start": {
+          "height": 2,
+          "width": 15.2,
+          "x": 234.63,
+          "y": 417.35
+        }
+      },
+      "tag": "Pipe",
+      "width": 132.67,
+      "x": 226.63,
+      "y": 394.25
+    },
+    {
+      "height": 48.2,
+      "id": "/body/0/children/1/children/1/children/1",
+      "kind": "pink",
+      "parts": {
+        "dot_end": {
+          "height": 8,
+          "width": 8,
+          "x": 351.31,
+          "y": 474.55
+        },
+        "dot_start": {
+          "height": 8,
+          "width": 8,
+          "x": 226.63,
+          "y": 474.55
+        },
+        "tag": {
+          "height": 48.2,
+          "width": 88.67,
+          "x": 248.63,
+          "y": 454.45
+        },
+        "tag_label": {
+          "height": 15.6,
+          "line_count": 1,
+          "width": 44.81,
+          "x": 270.57,
+          "y": 461.95
+        },
+        "tag_sub": {
+          "height": 15.6,
+          "line_count": 1,
+          "width": 69.67,
+          "x": 258.13,
+          "y": 479.55
+        },
+        "wire_end": {
+          "height": 2,
+          "width": 14,
+          "x": 337.31,
+          "y": 477.55
+        },
+        "wire_start": {
+          "height": 2,
+          "width": 14,
+          "x": 234.63,
+          "y": 477.55
+        }
+      },
+      "tag": "Pipe",
+      "width": 132.67,
+      "x": 226.63,
+      "y": 454.45
+    },
+    {
+      "height": 459.8,
+      "id": "/body/0/children/2",
+      "kind": "gcp",
+      "parts": {
+        "bar": {
+          "height": 35.6,
+          "width": 926.69,
+          "x": 370.31,
+          "y": 104.6
+        },
+        "body": {
+          "height": 418.2,
+          "width": 926.69,
+          "x": 370.31,
+          "y": 140.2
+        },
+        "label": {
+          "height": 21.6,
+          "line_count": 1,
+          "width": 894.69,
+          "x": 386.31,
+          "y": 111.6
+        }
+      },
+      "tag": "Zone",
+      "width": 932.69,
+      "x": 367.31,
+      "y": 101.6
+    },
+    {
+      "height": 388.2,
+      "id": "/body/0/children/2/children/0",
+      "kind": "vpc",
+      "parts": {
+        "label": {
+          "height": 14.4,
+          "line_count": 1,
+          "width": 874.69,
+          "x": 396.31,
+          "y": 168.2
+        }
+      },
+      "tag": "Zone",
+      "width": 898.69,
+      "x": 384.31,
+      "y": 156.2
+    },
+    {
+      "height": 127.6,
+      "id": "/body/0/children/2/children/0/children/0",
+      "kind": "region-a",
+      "parts": {
+        "label": {
+          "height": 14.4,
+          "line_count": 1,
+          "width": 847.69,
+          "x": 409.81,
+          "y": 204.1
+        }
+      },
+      "tag": "Zone",
+      "width": 874.69,
+      "x": 396.31,
+      "y": 190.6
+    },
+    {
+      "height": 46,
+      "id": "/body/0/children/2/children/0/children/0/children/0",
+      "parts": {
+        "function_name": {
+          "height": 15.6,
+          "line_count": 1,
+          "width": 786.69,
+          "x": 459.31,
+          "y": 234
+        },
+        "icon": {
+          "height": 28,
+          "width": 28,
+          "x": 421.31,
+          "y": 235.5
+        },
+        "product_name": {
+          "height": 14.4,
+          "line_count": 1,
+          "width": 786.69,
+          "x": 459.31,
+          "y": 250.6
+        },
+        "text": {
+          "height": 31,
+          "width": 786.69,
+          "x": 459.31,
+          "y": 234
+        }
+      },
+      "tag": "Pcard",
+      "width": 847.69,
+      "x": 409.81,
+      "y": 226.5
+    },
+    {
+      "height": 24.2,
+      "id": "/body/0/children/2/children/0/children/0/children/1",
+      "parts": {
+        "text": {
+          "height": 16.2,
+          "line_count": 1,
+          "width": 831.69,
+          "x": 417.81,
+          "y": 284.5
+        }
+      },
+      "tag": "Fact",
+      "width": 847.69,
+      "x": 409.81,
+      "y": 280.5
+    },
+    {
+      "height": 70.6,
+      "id": "/body/0/children/2/children/0/children/1",
+      "kind": "dash",
+      "parts": {
+        "dot_end": {
+          "height": 8,
+          "width": 8,
+          "x": 829.65,
+          "y": 388.8
+        },
+        "dot_start": {
+          "height": 8,
+          "width": 8,
+          "x": 829.65,
+          "y": 326.2
+        },
+        "tag": {
+          "height": 30.6,
+          "width": 198.31,
+          "x": 734.5,
+          "y": 346.2
+        },
+        "tag_label": {
+          "height": 15.6,
+          "line_count": 1,
+          "width": 179.31,
+          "x": 744,
+          "y": 353.7
+        },
+        "wire_end": {
+          "height": 12,
+          "width": 2,
+          "x": 832.65,
+          "y": 376.8
+        },
+        "wire_start": {
+          "height": 12,
+          "width": 2,
+          "x": 832.65,
+          "y": 334.2
+        }
+      },
+      "tag": "Pipe",
+      "width": 198.31,
+      "x": 734.5,
+      "y": 326.2
+    },
+    {
+      "height": 127.6,
+      "id": "/body/0/children/2/children/0/children/2",
+      "kind": "region-b",
+      "parts": {
+        "label": {
+          "height": 14.4,
+          "line_count": 1,
+          "width": 847.69,
+          "x": 409.81,
+          "y": 418.3
+        }
+      },
+      "tag": "Zone",
+      "width": 874.69,
+      "x": 396.31,
+      "y": 404.8
+    },
+    {
+      "height": 46,
+      "id": "/body/0/children/2/children/0/children/2/children/0",
+      "parts": {
+        "function_name": {
+          "height": 15.6,
+          "line_count": 1,
+          "width": 786.69,
+          "x": 459.31,
+          "y": 448.2
+        },
+        "icon": {
+          "height": 28,
+          "width": 28,
+          "x": 421.31,
+          "y": 449.7
+        },
+        "product_name": {
+          "height": 14.4,
+          "line_count": 1,
+          "width": 786.69,
+          "x": 459.31,
+          "y": 464.8
+        },
+        "text": {
+          "height": 31,
+          "width": 786.69,
+          "x": 459.31,
+          "y": 448.2
+        }
+      },
+      "tag": "Pcard",
+      "width": 847.69,
+      "x": 409.81,
+      "y": 440.7
+    },
+    {
+      "height": 24.2,
+      "id": "/body/0/children/2/children/0/children/2/children/1",
+      "parts": {
+        "text": {
+          "height": 16.2,
+          "line_count": 1,
+          "width": 831.69,
+          "x": 417.81,
+          "y": 498.7
+        }
+      },
+      "tag": "Fact",
+      "width": 847.69,
+      "x": 409.81,
+      "y": 494.7
+    },
+    {
+      "height": 14.4,
+      "id": "/legend",
+      "parts": {},
+      "tag": "Legend",
+      "width": 1280,
+      "x": 20,
+      "y": 571.4
+    },
+    {
+      "height": 14.4,
+      "id": "/legend/0",
+      "kind": "blue",
+      "parts": {
+        "legend_label": {
+          "height": 14.4,
+          "line_count": 1,
+          "width": 57.56,
+          "x": 52,
+          "y": 571.4
+        },
+        "legend_text": {
+          "height": 14.4,
+          "line_count": 1,
+          "width": 115.12,
+          "x": 115.56,
+          "y": 571.4
+        },
+        "swatch": {
+          "height": 2,
+          "width": 26,
+          "x": 20,
+          "y": 577.6
+        }
+      },
+      "tag": "LegendEntry",
+      "width": 210.68,
+      "x": 20,
+      "y": 571.4
+    },
+    {
+      "height": 14.4,
+      "id": "/legend/1",
+      "kind": "pink",
+      "parts": {
+        "legend_label": {
+          "height": 14.4,
+          "line_count": 1,
+          "width": 57.38,
+          "x": 278.68,
+          "y": 571.4
+        },
+        "legend_text": {
+          "height": 14.4,
+          "line_count": 1,
+          "width": 117.13,
+          "x": 342.06,
+          "y": 571.4
+        },
+        "swatch": {
+          "height": 2,
+          "width": 26,
+          "x": 246.68,
+          "y": 577.6
+        }
+      },
+      "tag": "LegendEntry",
+      "width": 212.5,
+      "x": 246.68,
+      "y": 571.4
+    },
+    {
+      "height": 14.4,
+      "id": "/legend/2",
+      "kind": "dash",
+      "parts": {
+        "legend_label": {
+          "height": 14.4,
+          "line_count": 1,
+          "width": 72.81,
+          "x": 507.19,
+          "y": 571.4
+        },
+        "legend_text": {
+          "height": 14.4,
+          "line_count": 1,
+          "width": 164.48,
+          "x": 586,
+          "y": 571.4
+        },
+        "swatch": {
+          "height": 2,
+          "width": 26,
+          "x": 475.19,
+          "y": 577.6
+        }
+      },
+      "tag": "LegendEntry",
+      "width": 275.3,
+      "x": 475.19,
+      "y": 571.4
+    },
+    {
+      "height": 13.2,
+      "id": "/foot",
+      "parts": {
+        "text": {
+          "height": 13.2,
+          "line_count": 1,
+          "width": 1280,
+          "x": 20,
+          "y": 593.8
+        }
+      },
+      "tag": "Foot",
+      "width": 1280,
+      "x": 20,
+      "y": 593.8
+    }
+  ]
+}
