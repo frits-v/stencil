@@ -250,7 +250,7 @@
                                 {
                                   "tag": "Item",
                                   "kind": "product",
-                                  "icon": "ai-ml",
+                                  "icon": "vertex-ai",
                                   "title": "Model registry",
                                   "subtitle": "Vertex AI Registry"
                                 },
@@ -423,7 +423,7 @@
                         {
                           "tag": "Item",
                           "kind": "product",
-                          "icon": "data-analytics",
+                          "icon": "bigquery",
                           "title": "Cost and usage",
                           "subtitle": "Billing export · BigQuery"
                         }
