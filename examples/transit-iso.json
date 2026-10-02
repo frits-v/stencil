@@ -1,8 +1,8 @@
 {
   "title": "A branch office reaches two regions over one Interconnect through the transit hub.",
   "kicker": "Landing zone · transit",
-  "lede": "One Dedicated Interconnect with two VLAN attachments reaches europe-west4; the transit hub beside it routes the branch on to europe-north1.",
-  "width": 1700,
+  "lede": "One Dedicated Interconnect with two VLAN attachments lands on the transit hub, which routes the branch on to europe-north1.",
+  "width": 1800,
   "canvas": "customer",
   "grammar": "gcp",
   "projection": "iso",
@@ -40,30 +40,21 @@
         },
         {
           "tag": "Col",
+          "justify": "center",
           "children": [
             {
-              "tag": "Tee",
-              "line": "solid",
-              "tint": 1,
-              "hub": "Dedicated Interconnect · Metro 1",
-              "arms": [
+              "tag": "Col",
+              "children": [
                 {
                   "tag": "Pipe",
                   "dir": "h",
                   "line": "solid",
                   "tint": 1,
-                  "label": "VLAN 1",
-                  "sub": "EAD 1 · BGP",
-                  "form": "band",
+                  "label": "Dedicated Interconnect",
+                  "sub": "VLAN 1 and VLAN 2 attachments",
+                  "from": "edge",
+                  "to": "ncc",
                   "arrow": "end"
-                },
-                {
-                  "tag": "Pipe",
-                  "dir": "h",
-                  "line": "solid",
-                  "tint": 1,
-                  "label": "VLAN 2",
-                  "sub": "EAD 2 · BGP"
                 }
               ]
             }
@@ -83,6 +74,20 @@
                 0
               ],
               "children": [
+                {
+                  "tag": "Col",
+                  "justify": "start",
+                  "children": [
+                    {
+                      "tag": "Item",
+                      "kind": "product",
+                      "id": "ncc",
+                      "icon": "networking",
+                      "title": "Transit hub",
+                      "subtitle": "Network Connectivity Center"
+                    }
+                  ]
+                },
                 {
                   "tag": "Box",
                   "kind": "region",
@@ -105,20 +110,6 @@
                   ]
                 },
                 {
-                  "tag": "Col",
-                  "justify": "center",
-                  "children": [
-                    {
-                      "tag": "Item",
-                      "kind": "product",
-                      "id": "ncc",
-                      "icon": "networking",
-                      "title": "Transit hub",
-                      "subtitle": "Network Connectivity Center"
-                    }
-                  ]
-                },
-                {
                   "tag": "Box",
                   "kind": "region",
                   "tint": 2,
@@ -130,18 +121,18 @@
                         {
                           "tag": "Item",
                           "kind": "product",
-                          "id": "dms",
-                          "icon": "databases",
-                          "title": "Migration",
-                          "subtitle": "Database Migration Service"
-                        },
-                        {
-                          "tag": "Item",
-                          "kind": "product",
                           "id": "cas",
                           "icon": "security-identity",
                           "title": "Certificates",
                           "subtitle": "Certificate Authority Service"
+                        },
+                        {
+                          "tag": "Item",
+                          "kind": "product",
+                          "id": "dms",
+                          "icon": "databases",
+                          "title": "Migration",
+                          "subtitle": "Database Migration Service"
                         }
                       ]
                     }

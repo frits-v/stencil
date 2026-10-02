@@ -702,6 +702,20 @@ pub fn pipes_land(page: &Page, geometry: &PageGeometry) -> CheckReport {
                         message,
                     });
                 }
+                // An end that names no target and lands on the edge of a zone holding
+                // devices reads as a line to nowhere: the author names the device.
+                if let Some(zone) = geometry.nodes.get(landing)
+                    && zone.tag == NodeTag::Zone
+                    && subtree_holds_item(geometry, &children_by_parent, landing)
+                {
+                    defects.push(Defect {
+                        pointer: pipe.pointer.clone(),
+                        message: format!(
+                            "{} end lands on the edge of zone {} and names no target; name the device it reaches",
+                            end.side, zone.pointer
+                        ),
+                    });
+                }
             }
         }
     }
@@ -868,6 +882,31 @@ pub(crate) fn landing_box(
         }
     }
     nearest.map(|(index, attach, _)| (index, attach))
+}
+
+/// Whether the subtree under `root` holds an item (a Pcard).
+fn subtree_holds_item(
+    geometry: &PageGeometry,
+    children_by_parent: &[Vec<usize>],
+    root: usize,
+) -> bool {
+    let mut pending = vec![root];
+    for _ in 0..geometry.nodes.len() {
+        let Some(index) = pending.pop() else {
+            return false;
+        };
+        if geometry
+            .nodes
+            .get(index)
+            .is_some_and(|node| node.tag == NodeTag::Pcard)
+        {
+            return true;
+        }
+        if let Some(children) = children_by_parent.get(index) {
+            pending.extend(children.iter().copied());
+        }
+    }
+    false
 }
 
 fn pipe_lands_on(tag: NodeTag) -> bool {
