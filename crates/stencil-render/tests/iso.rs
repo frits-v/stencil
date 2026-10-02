@@ -39,10 +39,9 @@ const HERO_ON_PREM: &str = "/body/0/children/0/children/0";
 const HERO_ROUTER: &str = "/body/0/children/0/children/0/children/0";
 const HERO_GCP: &str = "/body/0/children/1";
 const HERO_VPC: &str = "/body/0/children/1/children/0/children/0";
-const HERO_APIS: &str = "/body/0/children/1/children/0/children/1";
-const HERO_GATEWAY: &str =
-    "/body/0/children/1/children/0/children/0/children/0/children/0/children/0";
-const HERO_WAREHOUSE: &str = "/body/0/children/1/children/0/children/1/children/0";
+const HERO_APIS: &str = "/body/0/children/1/children/0/children/3";
+const HERO_GATEWAY: &str = "/body/0/children/1/children/0/children/1/children/0";
+const HERO_WAREHOUSE: &str = "/body/0/children/1/children/0/children/3/children/0";
 const HERO_ZONES: [&str; 4] = [HERO_ON_PREM, HERO_GCP, HERO_VPC, HERO_APIS];
 
 fn hero_page() -> Page {
@@ -285,7 +284,8 @@ fn every_hero_link_reaches_its_endpoints_over_the_cloud_floor() {
     let geometry = common::layout_with_cosmic_text(&hero);
     let scene = project_page(&geometry).unwrap();
     let floor = 6.0 * scene.zoom;
-    assert_eq!(scene.link_paths.len(), 4);
+    assert_eq!(scene.link_paths.len(), 6);
+    // Cloud Router to the endpoint, inside the ring on the cloud floor.
     let service_call = &scene.link_paths[2];
     assert!(
         service_call.iter().all(|point| point.z == floor),
@@ -293,7 +293,7 @@ fn every_hero_link_reaches_its_endpoints_over_the_cloud_floor() {
     );
     // The warehouse stands on the apis slab, one slab thickness above the cloud floor, so
     // the last service call lies at that slab's top throughout (section 12.3 rule 7).
-    let to_warehouse = &scene.link_paths[3];
+    let to_warehouse = &scene.link_paths[5];
     assert!(
         to_warehouse
             .iter()
@@ -436,7 +436,7 @@ fn the_iso_svg_has_the_section_12_5_structure() {
     );
     let root = document.root_element();
     let last = root.children().rfind(|node| node.is_element()).unwrap();
-    assert_eq!(last.attribute("data-id"), Some("/links/3"));
+    assert_eq!(last.attribute("data-id"), Some("/links/5"));
     let page_group = common::group(&document, "");
     assert_eq!(page_group.attribute("data-projection"), Some("iso"));
 
@@ -1265,11 +1265,11 @@ fn the_hero_labels_are_clear() {
     let scene =
         stencil_render::iso::project_page(&geometry, &common::solid_inputs(&page, &geometry))
             .unwrap();
-    // 4 Box names, the icon and the text of the two blocks, the tile and the cylinder, and
-    // 2 link tags.
-    assert_eq!(scene.labels.len(), 14);
+    // 4 Box names, the icon and the text of the two tiles, the two blocks and the
+    // cylinder, and 2 link tags.
+    assert_eq!(scene.labels.len(), 18);
     let report = iso_labels_clear(Some(&scene));
-    assert_eq!(report.examined, 242);
+    assert_eq!(report.examined, 406);
     assert!(report.defects.is_empty(), "{report:#?}");
     assert!(report.passed());
 }
@@ -1289,7 +1289,7 @@ fn the_hero_measured_json_is_theme_independent_and_keeps_the_flat_nodes() {
             serde_json::to_vec(&iso["nodes"]).unwrap(),
             serde_json::to_vec(&flat["nodes"]).unwrap()
         );
-        assert_eq!(iso["projection"]["labels"].as_array().unwrap().len(), 14);
+        assert_eq!(iso["projection"]["labels"].as_array().unwrap().len(), 18);
         assert_eq!(iso["projection"]["kind"], "iso");
         for label in iso["projection"]["labels"].as_array().unwrap() {
             let id = label["id"].as_str().unwrap();
@@ -1886,7 +1886,7 @@ fn the_hero_links_clear_every_zone_edge_and_end_on_long_legs() {
     let scene = project_page(&geometry).unwrap();
     let report = iso_links_clear(&geometry, Some(&scene));
     assert_eq!(report.check, CheckName::IsoLinksClear);
-    assert_eq!(report.examined, 9);
+    assert_eq!(report.examined, 13);
     assert!(report.passed(), "{report:?}");
     assert_eq!(
         iso_links_clear(&geometry, None).not_applicable,
@@ -2211,11 +2211,11 @@ fn the_platform_example_stands_one_item_of_each_form_with_its_labels_and_links_c
         assert_eq!(count, 1, "{form:?} in {forms:?}");
     }
     let labels = iso_labels_clear(Some(&scene));
-    assert_eq!(labels.examined, 237);
+    assert_eq!(labels.examined, 236);
     assert!(labels.defects.is_empty(), "{labels:#?}");
     assert!(labels.passed());
     let links = iso_links_clear(&geometry, Some(&scene));
-    assert_eq!(links.examined, 8);
+    assert_eq!(links.examined, 10);
     assert!(links.defects.is_empty(), "{links:#?}");
     assert!(links.passed());
 }
@@ -2389,7 +2389,7 @@ fn every_hero_link_end_lands_on_its_node_and_the_check_needs_a_scene_with_links(
     let scene = project_page(&geometry).unwrap();
     let report = iso_link_ends(&geometry, Some(&scene));
     assert_eq!(report.check, CheckName::IsoLinkEnds);
-    assert_eq!(report.examined, 8);
+    assert_eq!(report.examined, 12);
     assert!(report.passed(), "{:?}", defect_messages(&report));
     assert_eq!(
         iso_link_ends(&geometry, None).not_applicable,
@@ -2495,7 +2495,7 @@ fn a_link_from_a_figure_starts_on_the_figure_not_on_its_footprint_edge() {
     let (geometry, zoom) = zoomed_geometry(&flat).unwrap();
     let scene = project_zoomed(&geometry, zoom).unwrap();
     let report = iso_link_ends(&geometry, Some(&scene));
-    assert_eq!(report.examined, 6);
+    assert_eq!(report.examined, 8);
     assert!(report.passed(), "{:?}", defect_messages(&report));
     let operator = &geometry.links[0];
     let route_start = operator.points[0];

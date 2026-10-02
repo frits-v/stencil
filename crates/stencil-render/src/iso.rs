@@ -1017,11 +1017,20 @@ fn rule_8_route(
         geometry.nodes.get(route.from_node),
         geometry.nodes.get(route.to_node),
     );
+    // How much nearer its front corner a hidden-side end lands after the cut of rule 7:
+    // the block's height for a box form; a sprite's hull has no corner to keep clear of.
+    let hidden_setback = |node: usize| {
+        solids
+            .iter()
+            .find(|solid| solid.node == node && solid.shape == SolidShape::Block)
+            .filter(|solid| has_box_outline(solid.form))
+            .map_or(0.0, |solid| solid.height)
+    };
     let straight = match ends {
         (Some(from), Some(to)) => route::straightened(
             &route.points,
-            attach_bounds(from),
-            attach_bounds(to),
+            (attach_bounds(from), hidden_setback(route.from_node)),
+            (attach_bounds(to), hidden_setback(route.to_node)),
             &blocks,
         ),
         _ => None,

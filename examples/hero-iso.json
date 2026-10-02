@@ -1,8 +1,8 @@
 {
   "title": "On-prem data reaches three managed services over two private paths.",
   "kicker": "Hybrid platform · cover figure",
-  "lede": "One on-prem site, one Google Cloud region, two Interconnect attachments.",
-  "width": 1400,
+  "lede": "Two Interconnect attachments carry on-prem traffic into the Shared VPC, which reaches the API gateway, model serving and the warehouse as managed services beside it.",
+  "width": 1600,
   "canvas": "customer",
   "grammar": "gcp",
   "projection": "iso",
@@ -47,6 +47,8 @@
               "gap": 64,
               "grow": [
                 0,
+                0,
+                0,
                 0
               ],
               "children": [
@@ -57,39 +59,57 @@
                   "children": [
                     {
                       "tag": "Row",
-                      "gap": 64,
+                      "gap": 48,
                       "grow": [
                         0,
                         0
                       ],
                       "children": [
                         {
-                          "tag": "Col",
-                          "children": [
-                            {
-                              "tag": "Item",
-                              "id": "gateway",
-                              "kind": "product",
-                              "icon": "cloud-run",
-                              "title": "API gateway",
-                              "subtitle": "Cloud Run"
-                            }
-                          ]
+                          "tag": "Item",
+                          "id": "attachments",
+                          "kind": "product",
+                          "icon": "networking",
+                          "title": "Cloud Router",
+                          "subtitle": "VLAN attachments"
                         },
                         {
-                          "tag": "Col",
-                          "children": [
-                            {
-                              "tag": "Item",
-                              "id": "model",
-                              "kind": "product",
-                              "icon": "vertex-ai",
-                              "title": "Model serving",
-                              "subtitle": "Vertex AI"
-                            }
-                          ]
+                          "tag": "Item",
+                          "id": "psc",
+                          "kind": "product",
+                          "icon": "networking",
+                          "title": "Service endpoint",
+                          "subtitle": "Private Service Connect"
                         }
                       ]
+                    }
+                  ]
+                },
+                {
+                  "tag": "Col",
+                  "justify": "center",
+                  "children": [
+                    {
+                      "tag": "Item",
+                      "id": "gateway",
+                      "kind": "product",
+                      "icon": "cloud-run",
+                      "title": "API gateway",
+                      "subtitle": "Cloud Run"
+                    }
+                  ]
+                },
+                {
+                  "tag": "Col",
+                  "justify": "center",
+                  "children": [
+                    {
+                      "tag": "Item",
+                      "id": "model",
+                      "kind": "product",
+                      "icon": "vertex-ai",
+                      "title": "Model serving",
+                      "subtitle": "Vertex AI"
                     }
                   ]
                 },
@@ -133,7 +153,7 @@
   "links": [
     {
       "from": "router",
-      "to": "gateway",
+      "to": "attachments",
       "line": "solid",
       "tint": 1,
       "label": "VLAN 1",
@@ -141,7 +161,7 @@
     },
     {
       "from": "router",
-      "to": "gateway",
+      "to": "attachments",
       "line": "dash",
       "label": "VLAN 2",
       "via": [
@@ -150,6 +170,16 @@
           "y": 480
         }
       ]
+    },
+    {
+      "from": "attachments",
+      "to": "psc",
+      "line": "gray"
+    },
+    {
+      "from": "psc",
+      "to": "gateway",
+      "line": "gray"
     },
     {
       "from": "gateway",

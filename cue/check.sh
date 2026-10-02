@@ -312,6 +312,9 @@ g7_cases=(
 	"built-fact-without-subtitle|s/subtitle: \"private ASN · RFC 6996\"/facts: [{text: \"cr-region-a\", source: \"built\"}]/|_itemsWithoutSubtitleOrFact.\"Cloud Router A\""
 	'bigquery-product-inside-vpc|s/{tag: "Fact", text: "BGP peering[^}]*},/&\n{tag: "Item", kind: "product", icon: "bigquery", title: "Warehouse", subtitle: "BigQuery"},/|_productInsideVpc.Warehouse|sits inside a vpc; draw it in an apis box'
 	'cloud-storage-icon-inside-vpc|s/{tag: "Fact", text: "BGP peering[^}]*},/&\n{tag: "Item", kind: "product", icon: "cloud-storage", title: "Landing bucket", facts: [{text: "dual-region"}]},/|_productInsideVpc."Landing bucket"'
+	'cloud-run-product-inside-vpc|s/{tag: "Fact", text: "BGP peering[^}]*},/&\n{tag: "Item", kind: "product", icon: "cloud-run", title: "Gateway", subtitle: "Cloud Run"},/|_serverlessInsideVpc.Gateway|reached over Private Service Connect'
+	'vertex-ai-icon-inside-vpc|s/{tag: "Fact", text: "BGP peering[^}]*},/&\n{tag: "Item", kind: "product", icon: "vertex-ai", title: "Model", facts: [{text: "endpoint"}]},/|_serverlessInsideVpc.Model'
+	'ncc-hub-inside-region|s/{tag: "Fact", text: "BGP peering[^}]*},/&\n{tag: "Item", kind: "product", icon: "networking", title: "Hub", subtitle: "Network Connectivity Center"},/|_globalInsideRegion.Hub|sits outside every region'
 	"apis-box-outside-gcp|s/^\tbody: \[{\$/\tbody: [$stray_apis {/|_apisOutsideGcp.\"Stray APIs\"|sits outside the gcp frame"
 	'pipe-target-unknown|s/label: "VLAN 1", sub: "EAD 1 · BGP"/&, to: "nowhere"/|_pipeTargetsUnknown.nowhere'
 	'pipe-targets-equal|s/title: "On-prem router 1"/id: "r1", &/; s/label: "VLAN 1", sub: "EAD 1 · BGP"/&, from: "r1", to: "r1"/|_pipeTargetsEqual|the same node as pipe to'

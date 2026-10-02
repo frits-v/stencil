@@ -1,7 +1,7 @@
 {
   "title": "Staff and customers reach the API from their own devices.",
   "kicker": "Front door · cover figure",
-  "lede": "One operator on a laptop inside the shop, one customer on a phone outside it, one API between them.",
+  "lede": "The operator runs the API from the shop; customers reach it from their phones.",
   "width": 1200,
   "canvas": "customer",
   "grammar": "plain",
@@ -61,8 +61,7 @@
               "label": "Customers",
               "children": [
                 {
-                  "tag": "Col",
-                  "justify": "center",
+                  "tag": "Row",
                   "children": [
                     {
                       "tag": "Item",
@@ -71,8 +70,16 @@
                       "title": "Shop app",
                       "subtitle": "phone",
                       "shape": "phone"
+                    },
+                    {
+                      "tag": "Item",
+                      "kind": "person",
+                      "id": "customer",
+                      "title": "Customer",
+                      "subtitle": "shopping"
                     }
-                  ]
+                  ],
+                  "gap": 32
                 }
               ]
             }
@@ -98,6 +105,11 @@
       "tint": 1
     },
     {
+      "from": "customer",
+      "to": "phone",
+      "line": "gray"
+    },
+    {
       "from": "phone",
       "to": "api",
       "line": "solid",
@@ -112,7 +124,7 @@
     },
     {
       "line": "gray",
-      "text": "operates"
+      "text": "uses"
     }
   ]
 }

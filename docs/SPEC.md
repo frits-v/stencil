@@ -2274,7 +2274,7 @@ The page-level nodes draw no solid. Nested filled zones stack: a top-level zone 
 6. Tee. The spine is a tube down the projected spine center line, from the spine box's top to its bottom, built and painted as a Pipe's tube with a cap at each end. Under iso the spine moves to stand on the right edge of the Tee's left neighbour, and its arms' start dots with it. The hub lies on the plane at the tube's top, with `ISO_TAG_CLEARANCE_PX` of margin above and below it under iso so the arms' tags stay clear of it (section 12.4).
 8. Shapes. An Item stands as the `Shape` of section 13.1: its own `shape`, else the `shape` of its icon's row in the kind's product table, else the kind's `shape`, else card (`products::item_shape`). The gcp `product` kind and plain's `service`, `store` and `external` name `block`, so under iso an item stands as a block of a fixed footprint with its text on the floor unless its icon's row or the author says otherwise; `"shape": "card"` keeps the raised card with its content on top. The gcp table makes databases and analytics cylinders, storage stacks, compute and containers towers, networking and hybrid tiles; the `person` kind of gcp and plain stands as a figure and the `device` kind as a laptop, with `"shape": "phone"` on the item for a phone. A card is laid out and drawn as before. Every other shape is laid out under iso as a column: a square `Footprint` part (`shape_footprint_px`: 64 tile and block, 44 tower, 56 cylinder and stack, 44 figure, 56 laptop, 36 phone; `shape_height_px`: 6 tile, 18 block, 44 tower, 36 cylinder, 30 stack, 56 figure, 40 laptop, 44 phone) holding the Icon when the item has one, then the text column centered under it after a gap, with `ISO_FLOOR_TEXT_RESERVE_PX` = 64 kept clear below the text for the strip a raised solid in the next row covers. Its solid rises from the footprint (`Solid.footprint`), with `Solid.form` the shape, `Solid.silhouette` the six vertices of the footprint box and `Solid.outline` the convex outline the checks and the link cut-back read: the six vertices for a box form, for a round form the hull of the base and top ellipses, each the circle inscribed in the footprint mapped by rule 6 of section 12.2 (`ellipse_radii`). A tile, a block and a tower draw the three faces of rule 1 at their heights. A cylinder draws its visible side as two `<path>` halves, left and right of the front line, in the left and right face paints, then its top `<ellipse>` in the top paint; a stack draws three such cylinders of (height - 2 gaps) / 3 with `STACK_GAP_PX` = 2 between them, bottom to top. A round solid's shadow is its base ellipse, lowered and blurred like a block's. The sprites (`iso::sprites`) are composed of these primitives inside the footprint. A figure is a torso cylinder of 0.62 of the footprint side, centered, up to 0.56 of the height, then a 2 px neck and a head sphere filling the rest, drawn as a `<circle>`; a figure is painted as a dark silhouette in the theme's secondary ink (`Palette::figure_paint`: the top 14 points lighter, the right side 12 points darker), not in the card's fill; its outline is the hull of the torso ellipses and the head, and its shadow the torso's base ellipse. A laptop is a 3 px base plate over the footprint and a 4 px deep screen slab standing on the plate's back edge up to the height, with a screen panel on the slab's front face inset 3 px and 28 points darker than the right face; its outline is the hull of both silhouettes and its shadow the plate's. A phone is a 6 px deep slab of 0.6 of the footprint's width standing across its middle, facing +y, with the same panel; its outline and shadow are the slab's. Links attach to the footprint, not the item's box, and never to its bottom side unless the author says so, because the text lies there; the item's Text part is an obstacle for its own links.
 7. Links. A link runs over the terrain: the footprints of the slabs with height. Its routed polyline of section 11.2 is lifted whole to the top of the highest slab it runs over (`drape::route_z`: every segment is sampled at the midpoint of each span between its footprint-edge crossings, and the route's first point), so it lies on the highest terrain it crosses and floats over lower floor by at most that difference; there are no risers and no pass-unders. Collinear points are merged. Each end is then cut back to where the path enters the silhouette of its endpoint block on screen: an end on a block's bottom or right side lies on the silhouette already and stays; an end on a top or left side reaches a face the viewer cannot see, and without the cut its last stretch would be drawn across the block's top face. A zone endpoint is not cut. An end that still lies outside the silhouette after the cut, as on a figure, laptop or phone whose hull is narrower than the footprint the route ends on, is extended along its last stretch until it meets the silhouette, by at most `LAND_REACH_PX` = 64 zoomed px (`drape::land_end_at`); an end that would not meet it within reach stays, and `iso-link-ends` reports it. `IsoScene.link_paths` holds the result. The writer draws a solid link under a theme that shades faces as a tube per leg of radius `link_tube_radius(kind)` at the zoom (4.5 for solid slot 1, 3 for dash, 2.5 for every other line, the same in every theme), built and painted as a Pipe's tube of rule 5 with a shadow under each leg, a round joint at each corner (a `<circle>` of the radius on the tube's axis, in the wire color), and a cone of `iso_link_arrowhead_length(kind)` (18 for blue, 15 for dash, 14 for gray, pink and deny) and base radius 1.9 times the tube's at each arrowed end; the path is shortened by the cone's length along the last horizontal stretch first. A dashed or deny link, and every link under a theme whose face steps are all zero, is one `<path>` stroked with its kind's stroke and pattern along the path lifted by the tube radius, since a hollow tube would double a patterned line, ending in the same cone. An iso SVG writes no `<marker>`, because a marker draws its triangle unprojected. A link is drawn after every node, as in flat, so it paints over faces; its tag lies on the tube's top, the path height plus twice the radius at the zoom, under the midpoint of its longest leg (section 12.4).
-8. Link adjustments. Before the path is laid over the terrain, the routed polyline changes in two ways, both iso only (the flat route and `PageGeometry` are unchanged). First, when its ends sit on two facing sides of the attach boxes (an item's footprint when it stands on one, else its bounds; right and left, or bottom and top, with the second box beyond the first) that share at least `ISO_STRAIGHT_SHARED_MIN_PX` = 16 across the gap, and the leg through the middle of the shared span enters no block, the route becomes that one leg: side midpoints of two blocks that nearly line up would otherwise leave a short jog that the projection turns into a kink. Second, each inner leg (neither the first nor the last) that runs parallel to a zone edge closer than `ISO_LINK_CLEARANCE_PX` = 24, over an overlapping extent, moves to the nearest line at 24 from each parallel edge beside it, provided the two legs around it keep their direction, no moved leg enters a block, and the leg stays over the same zones; otherwise it stays, and `iso-links-clear` reports it. Third, ends that share a side of one node spread along that side (`end_offsets`): the ends on each (node, side) pair, the side read from the leg that leaves or reaches the end, sit in link order `bundle_spacing` apart, their tube radii at the zoom plus `ISO_LINK_GAP_PX` = 4 and never less than `LINK_CONE_RADIUS_SCALE` times the two radii, so two cones on one node do not overlap. On a visible side the group is centered on the mean of its attach points; on a block's top or left side the cut of rule 7 lands an arrival the block's height nearer the front corner than its attach point, so there the group is centered half the block's height behind that mean. The spacing between neighbours is also never less than either link's tag half-height plus the other's tube radius and the air, so a tag lying on one tube does not cover the other (`bundle_spacing`, `link_width`). A route of three or more corners moves only the leg at each shifted end, with the corner after it (`route::shift_end_leg`), so the leg beside the corner only changes length. A route of one leg, and every member of a bundle, is shifted whole (`route::offset_polyline`), by the offset of an end on a hidden side if it has one, else of the end that shares a side; a bundle is the set of links whose adjusted routes coincide corner for corner (`shared_route_places`, read from the routes adjusted at the base clearance), and its members are laid out from one shared route whose inner legs keep the bundle's widest offset added to the zone clearance; a lane too narrow for the wider clearance takes the base one. A shift that would leave an end off its attach box or send a leg through a block is dropped, and `iso-links-apart` reports the pair. The tags of a bundle sit at `(position + 0.5) / size` of the longest leg instead of its middle (`longest_segment_point`), so the pills do not stack.
+8. Link adjustments. Before the path is laid over the terrain, the routed polyline changes in two ways, both iso only (the flat route and `PageGeometry` are unchanged). First, when its ends sit on two facing sides of the attach boxes (an item's footprint when it stands on one, else its bounds; right and left, or bottom and top, with the second box beyond the first) that share at least `ISO_STRAIGHT_SHARED_MIN_PX` = 16 across the gap, the route becomes one leg through the target's center, held inside the shared span by a margin at each end of `ISO_LINK_CORNER_CLEARANCE_PX`, plus the block's height where the end sits on a box form's hidden top or left side, since the cut of rule 7 lands such an end that much nearer the front corner; a span with no room between its margins, or a leg that enters a block, is left as routed. Side midpoints of two blocks that nearly line up would otherwise leave a short jog that the projection turns into a kink. Second, each inner leg (neither the first nor the last) that runs parallel to a zone edge closer than `ISO_LINK_CLEARANCE_PX` = 24, over an overlapping extent, moves to the nearest line at 24 from each parallel edge beside it, provided the two legs around it keep their direction, no moved leg enters a block, and the leg stays over the same zones; otherwise it stays, and `iso-links-clear` reports it. Third, ends that share a side of one node spread along that side (`end_offsets`): the ends on each (node, side) pair, the side read from the leg that leaves or reaches the end, sit in link order `bundle_spacing` apart, their tube radii at the zoom plus `ISO_LINK_GAP_PX` = 4 and never less than `LINK_CONE_RADIUS_SCALE` times the two radii, so two cones on one node do not overlap. On a visible side the group is centered on the mean of its attach points; on a block's top or left side the cut of rule 7 lands an arrival the block's height nearer the front corner than its attach point, so there the group is centered half the block's height behind that mean. The spacing between neighbours is also never less than either link's tag half-height plus the other's tube radius and the air, so a tag lying on one tube does not cover the other (`bundle_spacing`, `link_width`). A route of three or more corners moves only the leg at each shifted end, with the corner after it (`route::shift_end_leg`), so the leg beside the corner only changes length. A route of one leg, and every member of a bundle, is shifted whole (`route::offset_polyline`), by the offset of an end on a hidden side if it has one, else of the end that shares a side; a bundle is the set of links whose adjusted routes coincide corner for corner (`shared_route_places`, read from the routes adjusted at the base clearance), and its members are laid out from one shared route whose inner legs keep the bundle's widest offset added to the zone clearance; a lane too narrow for the wider clearance takes the base one. A shift that would leave an end off its attach box or send a leg through a block is dropped, and `iso-links-apart` reports the pair. The tags of a bundle sit at `(position + 0.5) / size` of the longest leg instead of its middle (`longest_segment_point`), so the pills do not stack.
 
 ### 12.4 Labels on their planes
 
@@ -2536,14 +2536,14 @@ The numbers in this example are illustrative.
 
 ### 12.10 Example and tests
 
-`examples/hero-iso.json` is a cover-slide figure of 14 body nodes and four links: an on-prem Box with the Edge router inside a Col with `justify: center`, and a gcp Box holding a Row of a vpc ring labeled `Shared VPC · europe-west4` and an apis Box labeled `Google APIs`. The ring holds a Row of two Cols, the API gateway in the first and Model serving in the second; the apis Box holds Warehouse, a BigQuery product, which never sits inside a VPC (section 13.3, rule 4). Every Row has `grow: [0, 0]`, so every Box and item takes its content width, and the Col keeps the on-prem Box to the router and its margin instead of the Row's height and centers it. Every item carries a subtitle naming what it is, as the gcp hop-fact rule asks. VLAN 1 (solid tint 1) runs from the router's right side to the gateway's left side, VLAN 2 (dash) from the router's bottom to the gateway's bottom, routed with no via point, and two gray links chain the gateway to Model serving and Model serving to Warehouse, across the ring's edge into the apis Box; every link carries the default end arrowhead. The page is 1280 wide: the apis Box beside the ring widens the body, and at 1040 the zoom of section 12.2 rule 7 left the subtitled item labels crossing slab edges.
+`examples/hero-iso.json` is a cover-slide figure of 18 body nodes and six links at width 1600: an on-prem Box with the Edge router inside a Col with `justify: center`, and a gcp Box holding a Row of a vpc ring labeled `Shared VPC · europe-west4`, two centered Cols with the API gateway (Cloud Run) and Model serving (Vertex AI), and an apis Box labeled `Google APIs`. The ring holds a Row of two networking tiles, the Cloud Router the attachments land on and a Private Service Connect endpoint; the serverless products stand beside the ring, since they are not addresses in a VPC, and the apis Box holds Warehouse, a BigQuery product (section 13.3, rule 4). Every Row has `grow: [0, …]`, so every Box and item takes its content width, and the Col keeps the on-prem Box to the router and its margin instead of the Row's height and centers it. Every item carries a subtitle naming what it is, as the gcp hop-fact rule asks. VLAN 1 (solid tint 1) runs from the router's right side to the Cloud Router's left side, VLAN 2 (dash) through a via point in the gap between the sites; gray service calls run from the Cloud Router to the endpoint, the endpoint to the gateway, the gateway to the model and the model to the warehouse.
 
 ```json
 {
   "title": "On-prem data reaches three managed services over two private paths.",
   "kicker": "Hybrid platform · cover figure",
-  "lede": "One on-prem site, one Google Cloud region, two Interconnect attachments.",
-  "width": 1280,
+  "lede": "Two Interconnect attachments carry on-prem traffic into the Shared VPC, which reaches the API gateway, model serving and the warehouse as managed services beside it.",
+  "width": 1600,
   "canvas": "customer",
   "grammar": "gcp",
   "projection": "iso",
@@ -2551,7 +2551,10 @@ The numbers in this example are illustrative.
     {
       "tag": "Row",
       "gap": 64,
-      "grow": [0, 0],
+      "grow": [
+        0,
+        0
+      ],
       "children": [
         {
           "tag": "Col",
@@ -2563,7 +2566,14 @@ The numbers in this example are illustrative.
               "tint": 1,
               "label": "On-prem",
               "children": [
-                { "tag": "Item", "id": "router", "kind": "product", "icon": "hybrid", "title": "Edge router", "subtitle": "on-prem · BGP" }
+                {
+                  "tag": "Item",
+                  "id": "router",
+                  "kind": "product",
+                  "icon": "hybrid",
+                  "title": "Edge router",
+                  "subtitle": "on-prem · BGP"
+                }
               ]
             }
           ]
@@ -2576,7 +2586,12 @@ The numbers in this example are illustrative.
             {
               "tag": "Row",
               "gap": 64,
-              "grow": [0, 0],
+              "grow": [
+                0,
+                0,
+                0,
+                0
+              ],
               "children": [
                 {
                   "tag": "Box",
@@ -2585,22 +2600,57 @@ The numbers in this example are illustrative.
                   "children": [
                     {
                       "tag": "Row",
-                      "gap": 64,
-                      "grow": [0, 0],
+                      "gap": 48,
+                      "grow": [
+                        0,
+                        0
+                      ],
                       "children": [
                         {
-                          "tag": "Col",
-                          "children": [
-                            { "tag": "Item", "id": "gateway", "kind": "product", "icon": "cloud-run", "title": "API gateway", "subtitle": "Cloud Run" }
-                          ]
+                          "tag": "Item",
+                          "id": "attachments",
+                          "kind": "product",
+                          "icon": "networking",
+                          "title": "Cloud Router",
+                          "subtitle": "VLAN attachments"
                         },
                         {
-                          "tag": "Col",
-                          "children": [
-                            { "tag": "Item", "id": "model", "kind": "product", "icon": "vertex-ai", "title": "Model serving", "subtitle": "Vertex AI" }
-                          ]
+                          "tag": "Item",
+                          "id": "psc",
+                          "kind": "product",
+                          "icon": "networking",
+                          "title": "Service endpoint",
+                          "subtitle": "Private Service Connect"
                         }
                       ]
+                    }
+                  ]
+                },
+                {
+                  "tag": "Col",
+                  "justify": "center",
+                  "children": [
+                    {
+                      "tag": "Item",
+                      "id": "gateway",
+                      "kind": "product",
+                      "icon": "cloud-run",
+                      "title": "API gateway",
+                      "subtitle": "Cloud Run"
+                    }
+                  ]
+                },
+                {
+                  "tag": "Col",
+                  "justify": "center",
+                  "children": [
+                    {
+                      "tag": "Item",
+                      "id": "model",
+                      "kind": "product",
+                      "icon": "vertex-ai",
+                      "title": "Model serving",
+                      "subtitle": "Vertex AI"
                     }
                   ]
                 },
@@ -2609,7 +2659,14 @@ The numbers in this example are illustrative.
                   "kind": "apis",
                   "label": "Google APIs",
                   "children": [
-                    { "tag": "Item", "id": "warehouse", "kind": "product", "icon": "bigquery", "title": "Warehouse", "subtitle": "BigQuery" }
+                    {
+                      "tag": "Item",
+                      "id": "warehouse",
+                      "kind": "product",
+                      "icon": "bigquery",
+                      "title": "Warehouse",
+                      "subtitle": "BigQuery"
+                    }
                   ]
                 }
               ]
@@ -2620,26 +2677,72 @@ The numbers in this example are illustrative.
     }
   ],
   "legend": [
-    { "line": "solid", "tint": 1, "text": "primary attachment" },
-    { "line": "dash", "text": "failover attachment" },
-    { "line": "gray", "text": "service call" }
+    {
+      "line": "solid",
+      "tint": 1,
+      "text": "primary attachment"
+    },
+    {
+      "line": "dash",
+      "text": "failover attachment"
+    },
+    {
+      "line": "gray",
+      "text": "service call"
+    }
   ],
   "links": [
-    { "from": "router", "to": "gateway", "line": "solid", "tint": 1, "label": "VLAN 1", "from_side": "right", "to_side": "left" },
-    { "from": "router", "to": "gateway", "line": "dash", "label": "VLAN 2", "from_side": "bottom", "to_side": "bottom" },
-    { "from": "gateway", "to": "model", "line": "gray" },
-    { "from": "model", "to": "warehouse", "line": "gray" }
+    {
+      "from": "router",
+      "to": "attachments",
+      "line": "solid",
+      "tint": 1,
+      "label": "VLAN 1",
+      "to_side": "left"
+    },
+    {
+      "from": "router",
+      "to": "attachments",
+      "line": "dash",
+      "label": "VLAN 2",
+      "via": [
+        {
+          "x": 300,
+          "y": 480
+        }
+      ]
+    },
+    {
+      "from": "attachments",
+      "to": "psc",
+      "line": "gray"
+    },
+    {
+      "from": "psc",
+      "to": "gateway",
+      "line": "gray"
+    },
+    {
+      "from": "gateway",
+      "to": "model",
+      "line": "gray"
+    },
+    {
+      "from": "model",
+      "to": "warehouse",
+      "line": "gray"
+    }
   ]
 }
 ```
 
-Its `iso-labels-clear` count is 242: 14 labels (4 Box names, the icon and the text of the two blocks, of the tile and of the cylinder, 2 link tags) give 91 label pairs, the (label, later opaque solid) pairs of section 12.7 rule 3, the non-opaque labels against 4 slabs and 4 link tubes, the 2 tags against the 3 links they do not own and for lying nearest their own path, and the contained item labels; the page has no pipes, so no surface pairs. Its `iso-links-clear` count is 9 legs, the approach stubs included. The page has no pipes, so `pipes-land` is not applicable. Without `projection` the document passes the flat checks with `iso-labels-clear` and `iso-links-clear` not applicable.
+Its `iso-labels-clear` count is 406: 18 labels (4 Box names, the icon and the text of six items, 2 link tags) give 153 label pairs, the (label, later opaque solid) pairs of section 12.7 rule 3, the non-opaque labels against 4 slabs and 6 link tubes, the 2 tags against the 5 links they do not own and for lying nearest their own path, and the contained item labels; the page has no pipes, so no surface pairs. Its `iso-links-clear` count is 13 legs, the approach stubs included; `iso-link-ends` examines 12 ends and `iso-links-apart` 15 pairs. The page has no pipes, so `pipes-land` is not applicable. Without `projection` the document passes the flat checks with `iso-labels-clear` and `iso-links-clear` not applicable.
 
 `examples/onprem-iso.json` is `examples/onprem-network.json` under the plain grammar at width 1700 with `"projection": "iso"`: two firewall zones, four VLAN zones of blocks with the core switch between the inside VLANs, five pipes into and out of the Edge firewall each in its own gutter slot named by `from` and `to`, a card stretched to the gutter's height so its side spans the trunks on each side, the transit VLAN a band, a deny pipe in the DMZ gutter from the firewall to the DMZ box whose arrow at the firewall ends in a stop plate, and no links. It is the pipe fixture: every tube, flange and cone of rule 5 is in its center SVG, and `check` passes every check that applies to it. Its gallery PNG stands in the README.
 
-`examples/people-iso.json` is the sprite fixture under the plain grammar at width 1200: a Row weighted 3 to 1 of a system Box holding a group Box with a Row of a `person` (Operator), a `device` (Admin console, a laptop) and a `service` (API, a block), and a centered group Box of customers holding a `device` with `"shape": "phone"` (Shop app); the operator links to the laptop, the laptop and the phone to the API. Every sprite of rule 8 is in its center SVG, `check` passes every check that applies to it, and its gallery PNG stands in the README.
+`examples/people-iso.json` is the sprite figure under the plain grammar at width 1200: a Row weighted 3 to 1 of a system Box holding a group Box with a Row of a `person` (Operator), a `device` (Admin console, a laptop) and a `service` (API, a block), and a centered group Box of customers holding a Row, gap 32, of a `device` with `"shape": "phone"` (Shop app) and a `person` (Customer); the operator links to the laptop, the customer to the phone, the laptop and the phone to the API. Every sprite of rule 8 is in its center SVG, `check` passes every check that applies to it, and its gallery PNG stands in the README.
 
-`examples/transit-iso.json` is the narrow-zone, long-name figure under gcp at width 1500: an onprem Box (a networking tile and a person) beside a Col holding one Tee whose first arm is a band with an end arrow, then a gcp Box with two narrow tinted regions of two items each, named after long products (Google Cloud VMware Engine, Network Connectivity Center, Database Migration Service, Certificate Authority Service), and one gray link between the regions. It covers the Tee spine tube, the band head, the zone label reserve under a tower and floor text wrapped to three lines; `check` passes every check that applies to it, and its gallery PNG stands in the README.
+`examples/transit-iso.json` is the narrow-zone, long-name figure under gcp at width 1700, the top Row growing its gcp Box: an onprem Box (a networking tile and a person) beside a Col holding one Tee whose first arm is a band with an end arrow, then a gcp Box with a narrow tinted region (Google Cloud VMware Engine), a centered Col holding the Network Connectivity Center hub, which is global and so sits outside every region (section 13.3 rule 4), and a second narrow region of two items (Database Migration Service, Certificate Authority Service), with one gray link from the hub into the second region. It exercises the Tee spine tube, the band head, the zone label reserve under a tower and floor text wrapped to three lines; `check` passes every check that applies to it, and its gallery PNG stands in the README.
 
 Tests:
 
@@ -3325,7 +3428,7 @@ gcp has three item kinds. `product`: icons `gcp`, shape block, parents every con
 1. Remembered constants: the four literals stay in `#NoRememberedConstant` in `core.cue`, because the core `#Text` applies it inside every node and a grammar package cannot reach into it. CUE therefore rejects them under every grammar, while the Rust check reads the grammar's `remembered` list and is not applicable under plain; a grammar with its own literals adds a CUE rule over its text fields.
 2. The hop-fact rule: every `product` item carries a `subtitle` or a fact whose source is `doc` or `ask` (`_itemsWithoutSubtitleOrFact`, which replaces `_pcardsWithoutPnFactOrAsk`). A `built` fact does not satisfy it: as-built names need no live doc, and they say nothing about what the product is.
 3. Tint pairing, moved from color names to slot numbers: a `solid` pipe beside or inside a tinted Box (a `region`, or an `onprem` with a tint) of another slot is the defect it was for blue and pink (`_pipeBesideZoneOfOtherTint`, `_otherTintInsideZone`). `dash`, `gray` and `deny` stay outside the rule, as `dash` was before: the g7 failover pipe sits between Region A and Region B.
-4. Products outside a VPC: a `product` item whose `subtitle` names Cloud Storage, BigQuery, Pub/Sub, Artifact Registry or Cloud Logging at word boundaries, or whose `icon` is `cloud-storage` or `bigquery`, is a defect when a `vpc` Box is among its ancestors: `_productInsideVpc.<title>: "product" & "sits inside a vpc; draw it in an apis box"`. These are Google APIs reached over Private Google Access, never addresses in a VPC.
+4. Products outside a VPC: a `product` item whose `subtitle` names Cloud Storage, BigQuery, Pub/Sub, Artifact Registry or Cloud Logging at word boundaries, or whose `icon` is `cloud-storage` or `bigquery`, is a defect when a `vpc` Box is among its ancestors: `_productInsideVpc.<title>: "product" & "sits inside a vpc; draw it in an apis box"`. These are Google APIs reached over Private Google Access, never addresses in a VPC. A serverless product, whose `subtitle` names Cloud Run, Cloud Run functions, Cloud Functions, App Engine or Vertex AI or whose `icon` is `cloud-run`, `vertex-ai` or `serverless`, runs outside the customer's VPC and is reached over Private Service Connect, an internal load balancer or Direct VPC egress: inside a `vpc` it is `_serverlessInsideVpc.<title>`, "sits inside a vpc; a serverless product is reached over Private Service Connect; draw it beside the vpc". A global resource, whose `subtitle` names Network Connectivity Center, Cloud CDN, Cloud DNS or Cloud Armor, has no region: inside a `region` Box it is `_globalInsideRegion.<title>`, "sits inside a region; a global resource sits outside every region".
 5. The `apis` kind holds them: a Box for Google APIs reached over Private Google Access, drawn inside the gcp frame and outside every vpc. Its parents keep it out of a vpc in Rust vet already (`kind-parent-not-allowed`); the CUE rule `_apisOutsideGcp` adds that it has a `gcp` Box among its ancestors, which a parents list cannot say when a project or perimeter sits between.
 
 Step (d) of section 13.15 corrects two examples that broke rule 4: `hero-iso.json` drew Warehouse (icon `bigquery`) inside the Shared VPC ring, and `hybrid-ai.json` drew the feature store (`BigQuery · vectors`), the checkpoint bucket (`Cloud Storage · dual-region`), the audit logs (`Cloud Logging · org sink`) and cost and usage (`Billing export · BigQuery`) inside its vpc. Each moves into an `apis` Box outside the vpc inside the gcp frame: in hybrid-ai the feature store and the checkpoint bucket sit in one beside the vpc within the service perimeter, and the audit logs and cost and usage in one inside the evidence project, which sits beside the perimeter. `cue/check.sh` vets every example against the gcp `#Page`, so the rules examine them.
