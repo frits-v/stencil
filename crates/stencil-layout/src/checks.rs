@@ -393,11 +393,11 @@ pub fn links_avoid_boxes(geometry: &PageGeometry) -> CheckReport {
 }
 
 /// One pipe end facing a neighbor: the pipe, the side, and the Row or Col child on that side.
-struct PipeEnd {
-    pipe: usize,
-    dir: PipeDir,
-    side: &'static str,
-    neighbor: usize,
+pub(crate) struct PipeEnd {
+    pub(crate) pipe: usize,
+    pub(crate) dir: PipeDir,
+    pub(crate) side: &'static str,
+    pub(crate) neighbor: usize,
 }
 
 /// One examined pipe end: a neighbor end of section 6, or an end aimed at a named target.
@@ -623,7 +623,7 @@ pub fn pipes_land(page: &Page, geometry: &PageGeometry) -> CheckReport {
 }
 
 /// Indices of each node's children, in geometry order.
-fn children_by_parent(geometry: &PageGeometry) -> Vec<Vec<usize>> {
+pub(crate) fn children_by_parent(geometry: &PageGeometry) -> Vec<Vec<usize>> {
     let mut children: Vec<Vec<usize>> = vec![Vec::new(); geometry.nodes.len()];
     for (index, node) in geometry.nodes.iter().enumerate() {
         if let Some(siblings) = node.parent.and_then(|parent| children.get_mut(parent)) {
@@ -636,7 +636,7 @@ fn children_by_parent(geometry: &PageGeometry) -> Vec<Vec<usize>> {
 /// The neighbors of the pipe's nearest ancestor-or-self whose parent is a Row (for h) or a
 /// Col (for v), with the side each one is on. Empty when there is no such ancestor or it has
 /// no siblings.
-fn pipe_ends(
+pub(crate) fn pipe_ends(
     geometry: &PageGeometry,
     children_by_parent: &[Vec<usize>],
     pipe: usize,

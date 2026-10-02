@@ -117,7 +117,7 @@ fn searched_route(
 
 /// The box a link attaches to: an item's Footprint part under iso when its shape is not a
 /// card, where its solid stands (section 12.3), else the node's border box.
-fn attach_box(node: &NodeGeometry) -> BoxRect {
+pub(crate) fn attach_box(node: &NodeGeometry) -> BoxRect {
     node.part(PartName::Footprint)
         .map_or(node.bounds, |part| part.bounds)
 }

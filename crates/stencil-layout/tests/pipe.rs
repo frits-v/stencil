@@ -274,3 +274,112 @@ fn a_vertical_start_arrowhead_shortens_the_start_wire_from_the_top() {
         "end wire untouched",
     );
 }
+
+fn iso_gutter_page(from_to: Option<(&str, &str)>) -> stencil_model::Page {
+    let mut pipe = pipe("h", "solid", "VLAN 1");
+    if let (Some((from, to)), Some(fields)) = (from_to, pipe.as_object_mut()) {
+        fields.insert("from".to_string(), json!(from));
+        fields.insert("to".to_string(), json!(to));
+    }
+    let document = json!({
+        "title": "Title", "kicker": "Kicker", "lede": "Lede", "width": 1100,
+        "canvas": "customer", "projection": "iso", "legend": [],
+        "body": [{ "tag": "Row", "gap": 32, "children": [
+            { "tag": "Box", "kind": "onprem", "label": "Site", "children": [
+                { "tag": "Item", "kind": "product", "id": "edge", "title": "Edge" } ] },
+            { "tag": "Col", "children": [pipe] },
+            { "tag": "Box", "kind": "gcp", "label": "Google Cloud", "children": [
+                { "tag": "Item", "kind": "product", "id": "hub", "title": "Hub" } ] } ] }]
+    });
+    common::page_from(document)
+}
+
+fn dot_center_x(pipe_node: &NodeGeometry, name: PartName) -> f32 {
+    let dot = part(pipe_node, name);
+    dot.bounds.x + dot.bounds.width / 2.0
+}
+
+/// Section 12.3 rule 5: under iso a pipe end reaches the box it lands on.
+#[test]
+fn an_iso_pipe_end_reaches_the_neighbour_box_it_lands_on() {
+    let geometry = layout(&iso_gutter_page(None));
+    let pipe_node = node(&geometry, "/body/0/children/1/children/0");
+    let site = node(&geometry, "/body/0/children/0");
+    let cloud = node(&geometry, "/body/0/children/2");
+    assert_close(
+        dot_center_x(pipe_node, PartName::DotStart),
+        site.bounds.right(),
+        "start on the site edge",
+    );
+    assert_close(
+        dot_center_x(pipe_node, PartName::DotEnd),
+        cloud.bounds.x,
+        "end on the cloud edge",
+    );
+    assert!(
+        site.bounds.right() < pipe_node.bounds.x,
+        "the site lies a gap left of the pipe"
+    );
+}
+
+/// Section 12.3 rule 5: a pipe that names its targets reaches their solids.
+#[test]
+fn an_iso_pipe_end_reaches_a_named_target() {
+    let geometry = layout(&iso_gutter_page(Some(("edge", "hub"))));
+    let pipe_node = node(&geometry, "/body/0/children/1/children/0");
+    let edge = node(&geometry, "/body/0/children/0/children/0");
+    let hub = node(&geometry, "/body/0/children/2/children/0");
+    assert_close(
+        dot_center_x(pipe_node, PartName::DotStart),
+        edge.bounds.right(),
+        "start on the edge router",
+    );
+    assert_close(
+        dot_center_x(pipe_node, PartName::DotEnd),
+        hub.bounds.x,
+        "end on the hub",
+    );
+}
+
+/// Flat keeps its dots inside the pipe's own box.
+#[test]
+fn a_flat_pipe_end_stays_in_its_box() {
+    let mut page = iso_gutter_page(None);
+    page.projection = stencil_model::Projection::Flat;
+    let geometry = layout(&page);
+    let pipe_node = node(&geometry, "/body/0/children/1/children/0");
+    assert!(dot_center_x(pipe_node, PartName::DotStart) >= pipe_node.bounds.x);
+    assert!(dot_center_x(pipe_node, PartName::DotEnd) <= pipe_node.bounds.right());
+}
+
+/// Section 12.3 rule 6: under iso a Tee's spine stands on its left neighbour's edge and its
+/// arms start there.
+#[test]
+fn an_iso_tee_spine_stands_on_the_left_neighbour_edge() {
+    let geometry = layout(&common::page_from(json!({
+        "title": "Title", "kicker": "Kicker", "lede": "Lede", "width": 1100,
+        "canvas": "customer", "projection": "iso", "legend": [],
+        "body": [{ "tag": "Row", "gap": 32, "children": [
+            { "tag": "Box", "kind": "onprem", "label": "Site", "children": [card("Edge")] },
+            { "tag": "Col", "children": [
+                { "tag": "Tee", "line": "solid", "hub": "Interconnect", "arms": [
+                    pipe("h", "solid", "VLAN 1"), pipe("h", "solid", "VLAN 2") ] } ] },
+            { "tag": "Box", "kind": "gcp", "label": "Google Cloud", "children": [card("Hub")] } ] }]
+    })));
+    let site = node(&geometry, "/body/0/children/0");
+    let tee = node(&geometry, "/body/0/children/1/children/0");
+    let spine = part(tee, PartName::Spine);
+    assert_close(
+        spine.bounds.x + spine.bounds.width / 2.0,
+        site.bounds.right(),
+        "spine on the site edge",
+    );
+    for arm in ["arms/0", "arms/1"] {
+        let arm_node = node(&geometry, &format!("/body/0/children/1/children/0/{arm}"));
+        assert_close(
+            dot_center_x(arm_node, PartName::DotStart),
+            site.bounds.right(),
+            "arm starts on the spine",
+        );
+    }
+}
