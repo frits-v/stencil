@@ -5,9 +5,10 @@ use std::collections::HashMap;
 
 use stencil_model::checks::{CheckName, CheckReport, Defect};
 use stencil_model::pointer::NodePointer;
-use stencil_model::{Node, NodeRef, Page, PipeDir, body_nodes};
+use stencil_model::{Node, NodeRef, Page, PipeDir, Projection, body_nodes};
 
 use crate::compute::{PipeTarget, move_extent, targeted_pipes};
+use crate::route::attach_box;
 use crate::route::{link_obstacles, segment_enters};
 use crate::{BoxRect, GEOMETRY_EPSILON_PX, NodeTag, PageGeometry, Part, PartName, RouteStatus};
 
@@ -419,6 +420,16 @@ enum TargetEnd {
 }
 
 impl TargetEnd {
+    /// The side of the pipe this end lies on, as pipes-land names sides.
+    fn side_name(self, dir: PipeDir) -> &'static str {
+        match (dir, self) {
+            (PipeDir::Horizontal, TargetEnd::From) => "left",
+            (PipeDir::Horizontal, TargetEnd::To) => "right",
+            (PipeDir::Vertical, TargetEnd::From) => "above",
+            (PipeDir::Vertical, TargetEnd::To) => "below",
+        }
+    }
+
     fn as_str(self) -> &'static str {
         match self {
             TargetEnd::From => "from",
@@ -475,6 +486,47 @@ fn target_end_defect(
         "{} target {} lies {wrong_side} the pipe",
         end.as_str(),
         target.pointer
+    ))
+}
+
+/// The defect of an end whose dot does not lie on the near edge of the box it lands on
+/// along the run, under iso; None when it does. `side` is the end's side of the pipe.
+fn run_axis_defect(
+    pipe: &crate::NodeGeometry,
+    dir: PipeDir,
+    side: &str,
+    (landing, attach): (usize, BoxRect),
+    geometry: &PageGeometry,
+) -> Option<String> {
+    let before = side == "left" || side == "above";
+    let part = if before {
+        PartName::DotStart
+    } else {
+        PartName::DotEnd
+    };
+    let Some(dot) = pipe.part(part) else {
+        return Some(format!("{side} end has no dot part"));
+    };
+    let (dot_center, edge, axis) = match (dir, before) {
+        (PipeDir::Horizontal, true) => (dot.bounds.x + dot.bounds.width / 2.0, attach.right(), "x"),
+        (PipeDir::Horizontal, false) => (dot.bounds.x + dot.bounds.width / 2.0, attach.x, "x"),
+        (PipeDir::Vertical, true) => (dot.bounds.y + dot.bounds.height / 2.0, attach.bottom(), "y"),
+        (PipeDir::Vertical, false) => (dot.bounds.y + dot.bounds.height / 2.0, attach.y, "y"),
+    };
+    let short = if before {
+        dot_center - edge
+    } else {
+        edge - dot_center
+    };
+    if short.abs() <= GEOMETRY_EPSILON_PX {
+        return None;
+    }
+    let landing_pointer = geometry
+        .nodes
+        .get(landing)
+        .map_or_else(String::new, |node| node.pointer.to_string());
+    Some(format!(
+        "{side} end stops {short:.2} px short of {landing_pointer} (attach box edge at {axis} {edge:.2})"
     ))
 }
 
@@ -576,7 +628,23 @@ pub fn pipes_land(page: &Page, geometry: &PageGeometry) -> CheckReport {
                 };
                 examined += 1;
                 let message = match target.node.and_then(|index| geometry.nodes.get(index)) {
-                    Some(target_node) => target_end_defect(pipe, *dir, *end, target_node),
+                    Some(target_node) => {
+                        target_end_defect(pipe, *dir, *end, target_node).or_else(|| {
+                            // Under iso the end reaches the target's attach box along the run.
+                            let index = target.node?;
+                            (page.projection == Projection::Iso)
+                                .then(|| {
+                                    run_axis_defect(
+                                        pipe,
+                                        *dir,
+                                        end.side_name(*dir),
+                                        (index, attach_box(target_node)),
+                                        geometry,
+                                    )
+                                })
+                                .flatten()
+                        })
+                    }
                     None => Some(format!(
                         "{} target \"{}\" is not a geometry node",
                         end.as_str(),
@@ -609,6 +677,29 @@ pub fn pipes_land(page: &Page, geometry: &PageGeometry) -> CheckReport {
                             "{} neighbor {} has no box across the pipe's center {axis} {center:.2}",
                             end.side, neighbor.pointer
                         ),
+                    });
+                    continue;
+                }
+                // Under iso the end also reaches what it lands on along the run (section
+                // 12.3 rule 5): its dot center lies on the near edge of the landing box.
+                if page.projection != Projection::Iso {
+                    continue;
+                }
+                let pipe_before = end.side == "right" || end.side == "below";
+                let Some((landing, attach)) = landing_box(
+                    geometry,
+                    &children_by_parent,
+                    end.neighbor,
+                    (end.dir, center, pipe_before),
+                ) else {
+                    continue;
+                };
+                if let Some(message) =
+                    run_axis_defect(pipe, end.dir, end.side, (landing, attach), geometry)
+                {
+                    defects.push(Defect {
+                        pointer: pipe.pointer.clone(),
+                        message,
                     });
                 }
             }
@@ -709,9 +800,12 @@ fn subtree_spans(
         let Some(node) = geometry.nodes.get(index) else {
             continue;
         };
+        // Spanning is read on the attach box: an item on a footprint spans with the
+        // footprint, not with its floor text.
+        let attach = attach_box(node);
         let (start, end) = match dir {
-            PipeDir::Horizontal => (node.bounds.y, node.bounds.bottom()),
-            PipeDir::Vertical => (node.bounds.x, node.bounds.right()),
+            PipeDir::Horizontal => (attach.y, attach.bottom()),
+            PipeDir::Vertical => (attach.x, attach.right()),
         };
         if pipe_lands_on(node.tag)
             && center >= start - GEOMETRY_EPSILON_PX
@@ -728,6 +822,54 @@ fn subtree_spans(
 
 /// A pipe points at a box it can land on. A Row, Col or Lanes only arranges its children,
 /// so it never counts; the page-level tags never occur inside a body subtree.
+/// The node an untargeted pipe end lands on under iso, and its attach box: of the nodes in
+/// the subtree at `root`, `root` included, that may carry a pipe and span `center` on the
+/// pipe's cross axis, the one whose near edge lies closest to the pipe along the run. The
+/// pipe lies before the subtree when `pipe_before` is true. None when nothing spans.
+pub(crate) fn landing_box(
+    geometry: &PageGeometry,
+    children_by_parent: &[Vec<usize>],
+    root: usize,
+    (dir, center, pipe_before): (PipeDir, f32, bool),
+) -> Option<(usize, BoxRect)> {
+    let mut pending = vec![root];
+    let mut nearest: Option<(usize, BoxRect, f32)> = None;
+    for _ in 0..geometry.nodes.len() {
+        let Some(index) = pending.pop() else {
+            break;
+        };
+        let Some(node) = geometry.nodes.get(index) else {
+            continue;
+        };
+        // An item standing on a footprint spans with that footprint, not with its floor
+        // text, so a pipe never lands on a name.
+        let attach = attach_box(node);
+        let (start, end) = match dir {
+            PipeDir::Horizontal => (attach.y, attach.bottom()),
+            PipeDir::Vertical => (attach.x, attach.right()),
+        };
+        if pipe_lands_on(node.tag)
+            && center >= start - GEOMETRY_EPSILON_PX
+            && center <= end + GEOMETRY_EPSILON_PX
+        {
+            // The edge the pipe reaches: a signed distance along the run, smaller is nearer.
+            let edge = match (dir, pipe_before) {
+                (PipeDir::Horizontal, true) => attach.x,
+                (PipeDir::Horizontal, false) => -attach.right(),
+                (PipeDir::Vertical, true) => attach.y,
+                (PipeDir::Vertical, false) => -attach.bottom(),
+            };
+            if nearest.is_none_or(|(_, _, known)| edge < known) {
+                nearest = Some((index, attach, edge));
+            }
+        }
+        if let Some(children) = children_by_parent.get(index) {
+            pending.extend(children.iter().copied());
+        }
+    }
+    nearest.map(|(index, attach, _)| (index, attach))
+}
+
 fn pipe_lands_on(tag: NodeTag) -> bool {
     match tag {
         NodeTag::Zone
