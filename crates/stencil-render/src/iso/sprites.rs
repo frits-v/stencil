@@ -161,10 +161,10 @@ mod tests {
 
     #[test]
     fn a_figure_stands_its_torso_centered_with_its_head_inside_the_height() {
-        let figure = figure(footprint(36.0), 6.0, 50.0);
-        assert!((figure.torso.width - 36.0 * TORSO_SHARE).abs() < 1e-3);
-        assert!((figure.torso.x + figure.torso.width / 2.0 - 118.0).abs() < 1e-3);
-        assert!((figure.torso.y + figure.torso.height / 2.0 - 218.0).abs() < 1e-3);
+        let figure = figure(footprint(44.0), 6.0, 50.0);
+        assert!((figure.torso.width - 44.0 * TORSO_SHARE).abs() < 1e-3);
+        assert!((figure.torso.x + figure.torso.width / 2.0 - 122.0).abs() < 1e-3);
+        assert!((figure.torso.y + figure.torso.height / 2.0 - 222.0).abs() < 1e-3);
         assert!(figure.torso_top_z > 6.0 && figure.torso_top_z < 50.0);
         assert!((figure.head_z + figure.head_radius - 50.0).abs() < 1e-3);
     }
