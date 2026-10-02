@@ -16,8 +16,8 @@ use stencil_cli::pipeline::{all_checks, load_document, read_input, render_page};
 use stencil_cli::prime::{BASE_BYTES_MAX, TOPIC_BYTES_MAX, Topic, base_text, field_notes};
 use stencil_cli::{ExitCode, run};
 use stencil_model::{
-    Arrow, CalloutKind, Chrome, FactSource, IconName, Justify, Line, ListKind, Side,
-    builtin_grammar, page_schema,
+    Arrow, CalloutKind, Chrome, FactSource, IconName, Justify, Line, ListKind, PipeForm, Shape,
+    Side, builtin_grammar, page_schema,
 };
 use stencil_render::DeviceScale;
 
@@ -104,13 +104,11 @@ fn enum_line_values(text: &str, name: &str) -> (usize, Vec<String>) {
     let prefix = format!("{name} (");
     let line = text
         .lines()
-        .find(|line| line.starts_with(&prefix))
+        .find(|line| line.starts_with(&prefix) || line.contains(&format!(" {prefix}")))
         .unwrap_or_else(|| panic!("no enum line for {name}"));
-    let (count, values) = line
-        .strip_prefix(&prefix)
-        .unwrap()
-        .split_once("): ")
-        .unwrap();
+    let start = line.find(&prefix).unwrap() + prefix.len();
+    let (count, values) = line[start..].split_once("): ").unwrap();
+    let values = values.split('.').next().unwrap();
     (
         count.parse().unwrap(),
         values.split_whitespace().map(str::to_string).collect(),
@@ -141,6 +139,44 @@ fn sides() -> Vec<Side> {
     for side in all {
         match side {
             Side::Top | Side::Right | Side::Bottom | Side::Left => {}
+        }
+    }
+    all.to_vec()
+}
+
+fn shapes() -> Vec<Shape> {
+    let all = [
+        Shape::Card,
+        Shape::Tile,
+        Shape::Tower,
+        Shape::Cylinder,
+        Shape::Stack,
+        Shape::Block,
+        Shape::Figure,
+        Shape::Laptop,
+        Shape::Phone,
+    ];
+    for shape in all {
+        match shape {
+            Shape::Card
+            | Shape::Tile
+            | Shape::Tower
+            | Shape::Cylinder
+            | Shape::Stack
+            | Shape::Block
+            | Shape::Figure
+            | Shape::Laptop
+            | Shape::Phone => {}
+        }
+    }
+    all.to_vec()
+}
+
+fn pipe_forms() -> Vec<PipeForm> {
+    let all = [PipeForm::Tube, PipeForm::Band];
+    for form in all {
+        match form {
+            PipeForm::Tube | PipeForm::Band => {}
         }
     }
     all.to_vec()
@@ -462,7 +498,57 @@ fn the_base_briefing_lists_every_enum_value_from_the_model() {
     assert_enum_listed(&text, "Justify", names(&justifies()));
     assert_enum_listed(&text, "ListKind", names(&list_kinds()));
     assert_enum_listed(&text, "CalloutKind", names(&callout_kinds()));
+    assert_enum_listed(&text, "Shape", names(&shapes()));
+    assert_enum_listed(&text, "PipeForm", names(&pipe_forms()));
     assert!(text.contains(&format!("IconName ({}):", IconName::ALL.len())));
+}
+
+#[test]
+fn the_iso_topic_names_every_shape_and_pipe_form() {
+    let text = Topic::Iso.text();
+    assert_enum_listed(text, "Shape", names(&shapes()));
+    assert_enum_listed(text, "PipeForm", names(&pipe_forms()));
+    for shape in names(&shapes()) {
+        let mentions = text
+            .split(|character: char| !character.is_ascii_alphanumeric())
+            .filter(|word| *word == shape)
+            .count();
+        assert!(
+            mentions >= 2,
+            "the iso topic says nothing about the {shape} shape"
+        );
+    }
+}
+
+#[test]
+fn the_links_field_table_names_only_link_fields() {
+    let schema = page_schema();
+    let schema = schema.as_value();
+    let link = schema["$defs"]["Link"]["properties"].as_object().unwrap();
+    let rows: Vec<&str> = Topic::Links
+        .text()
+        .lines()
+        .skip_while(|line| *line != "| Field | Meaning |")
+        .skip(2)
+        .take_while(|line| line.starts_with("| "))
+        .collect();
+    assert_eq!(rows.len(), 8, "{rows:?}");
+    let mut named = BTreeSet::new();
+    for row in rows {
+        let cell = row.trim_start_matches("| ").split(" |").next().unwrap();
+        for field in cell.split(", ") {
+            assert!(
+                link.contains_key(field),
+                "the links table lists {field}, which Link has no field for"
+            );
+            named.insert(field.to_string());
+        }
+    }
+    let fields: BTreeSet<String> = link.keys().cloned().collect();
+    assert_eq!(
+        named, fields,
+        "the links table and the Link schema list different fields"
+    );
 }
 
 #[test]
@@ -485,14 +571,30 @@ fn the_base_briefing_covers_every_check_the_pipeline_runs() {
             report.check.as_str()
         );
     }
-    let topic = Topic::Checks.text();
     for report in &reports {
+        let name = report.check.as_str();
+        let topic = if name.starts_with("iso-") {
+            Topic::Iso
+        } else {
+            Topic::Checks
+        };
         assert!(
-            topic.contains(&format!("| {} |", report.check.as_str())),
-            "the checks topic has no row for {}",
-            report.check.as_str()
+            topic.text().contains(&format!("| {name} |")),
+            "the {} topic has no row for {name}",
+            topic.name()
+        );
+        let other = if topic == Topic::Iso {
+            Topic::Checks
+        } else {
+            Topic::Iso
+        };
+        assert!(
+            !other.text().contains(&format!("| {name} |")),
+            "the {} topic also has a row for {name}",
+            other.name()
         );
     }
+    let topic = Topic::Checks.text();
     assert!(
         topic.contains("runs remembered-constants, legend-consistency and icon-matches-product"),
         "{topic}"
