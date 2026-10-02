@@ -257,7 +257,10 @@ fn a_link_between_two_zones_steps_down_to_the_ground_and_back_up() {
         .filter(|pair| pair[0].x == pair[1].x && pair[0].y == pair[1].y && pair[0].z != pair[1].z)
         .map(|pair| (pair[0].z, pair[1].z))
         .collect();
-    assert!(risers.len() >= 2 && risers.len().is_multiple_of(2), "{path:?}");
+    assert!(
+        risers.len() >= 2 && risers.len().is_multiple_of(2),
+        "{path:?}"
+    );
     assert!(
         risers.first().is_some_and(|(from, to)| from > to),
         "{path:?}"
