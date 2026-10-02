@@ -427,7 +427,7 @@ pub fn all_checks(
         links_avoid_boxes(geometry),
         pipes_land(page, geometry),
         iso_labels_clear(scene),
-        iso_links_clear(scene),
+        iso_links_clear(geometry, scene),
         iso_link_ends(geometry, scene),
         iso_links_apart(geometry, scene),
         print_fit_report(geometry, scene, print_width),

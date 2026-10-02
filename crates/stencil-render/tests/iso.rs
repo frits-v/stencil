@@ -1860,12 +1860,12 @@ fn the_hero_links_clear_every_zone_edge_and_end_on_long_legs() {
     let hero = hero_page();
     let geometry = common::layout_with_cosmic_text(&hero);
     let scene = project_page(&geometry).unwrap();
-    let report = iso_links_clear(Some(&scene));
+    let report = iso_links_clear(&geometry, Some(&scene));
     assert_eq!(report.check, CheckName::IsoLinksClear);
     assert_eq!(report.examined, 9);
     assert!(report.passed(), "{report:?}");
     assert_eq!(
-        iso_links_clear(None).not_applicable,
+        iso_links_clear(&geometry, None).not_applicable,
         Some("projection is flat")
     );
 }
@@ -1895,6 +1895,7 @@ fn flat_point(x: f32, y: f32) -> IsoPoint {
 
 #[test]
 fn a_leg_beside_a_zone_edge_a_leg_that_turns_back_and_a_short_last_leg_are_defects() {
+    let geometry = common::layout_with_fixed_metrics(&two_zone_link_page("bottom"));
     let zone = BoxRect {
         x: 100.0,
         y: 0.0,
@@ -1910,7 +1911,7 @@ fn a_leg_beside_a_zone_edge_a_leg_that_turns_back_and_a_short_last_leg_are_defec
         ],
         zone,
     );
-    let report = iso_links_clear(Some(&beside));
+    let report = iso_links_clear(&geometry, Some(&beside));
     assert_eq!(report.examined, 3);
     assert_eq!(report.defects.len(), 1, "{report:?}");
     assert_eq!(report.defects[0].pointer.as_str(), "/links/0");
@@ -1927,7 +1928,7 @@ fn a_leg_beside_a_zone_edge_a_leg_that_turns_back_and_a_short_last_leg_are_defec
         ],
         zone,
     );
-    let report = iso_links_clear(Some(&hairpin));
+    let report = iso_links_clear(&geometry, Some(&hairpin));
     let messages: Vec<&str> = report
         .defects
         .iter()
@@ -1936,7 +1937,7 @@ fn a_leg_beside_a_zone_edge_a_leg_that_turns_back_and_a_short_last_leg_are_defec
     assert_eq!(messages, ["leg 1 turns back on the leg before it"]);
 
     let short = link_scene(vec![flat_point(0.0, 250.0), flat_point(30.0, 250.0)], zone);
-    let report = iso_links_clear(Some(&short));
+    let report = iso_links_clear(&geometry, Some(&short));
     assert_eq!(
         report.defects[0].message,
         "last leg is 30.00 px, shorter than two arrowheads (36.00 px)"
@@ -2189,7 +2190,7 @@ fn the_platform_example_stands_one_item_of_each_form_with_its_labels_and_links_c
     assert_eq!(labels.examined, 233);
     assert!(labels.defects.is_empty(), "{labels:#?}");
     assert!(labels.passed());
-    let links = iso_links_clear(Some(&scene));
+    let links = iso_links_clear(&geometry, Some(&scene));
     assert_eq!(links.examined, 8);
     assert!(links.defects.is_empty(), "{links:#?}");
     assert!(links.passed());
@@ -2698,4 +2699,108 @@ fn a_tube_comes_out_of_its_far_flange_and_ends_under_its_near_one() {
         }
     }
     assert!(filled > 0 && hollow > 0, "{filled} filled, {hollow} hollow");
+}
+
+/// Section 12.7 rule 8: a path much longer than the span between its ends is a detour, an
+/// inner leg shorter than two tube diameters is a jog, and a leg whose tube covers a block
+/// it does not join is reported with that block.
+#[test]
+fn a_detour_a_jog_and_a_leg_over_a_foreign_block_are_defects() {
+    let page = two_zone_link_page("bottom");
+    let (geometry, zoom) = zoomed_geometry(&common::layout_with_fixed_metrics(&page)).unwrap();
+    let scene = project_zoomed(&geometry, zoom).unwrap();
+    let zone = BoxRect {
+        x: 100.0,
+        y: 0.0,
+        width: 200.0,
+        height: 200.0,
+    };
+    // Ends 100 px apart joined by a V of 500 px down and back up.
+    let detour = link_scene(
+        vec![
+            flat_point(0.0, 250.0),
+            flat_point(0.0, 500.0),
+            flat_point(100.0, 500.0),
+            flat_point(100.0, 250.0),
+        ],
+        zone,
+    );
+    let report = iso_links_clear(&geometry, Some(&detour));
+    let messages = defect_messages(&report);
+    assert!(
+        messages.iter().any(|message| message
+            == "/links/0 link runs 600.00 px between ends 100.00 px apart, more than 1.5 times their span plus two stubs (270.00 px)"),
+        "{messages:?}"
+    );
+
+    let jog = link_scene(
+        vec![
+            flat_point(0.0, 250.0),
+            flat_point(200.0, 250.0),
+            flat_point(200.0, 256.0),
+            flat_point(400.0, 256.0),
+        ],
+        zone,
+    );
+    let report = iso_links_clear(&geometry, Some(&jog));
+    let messages = defect_messages(&report);
+    assert_eq!(
+        messages,
+        ["/links/0 leg 1 is 6.00 px between two turns, shorter than 18.00"]
+    );
+
+    // The right block of the laid-out page, with a hand-built link run over it at floor
+    // level, far from both endpoints of the scene's own link.
+    let foreign = scene.solids.iter().find(|solid| {
+        solid.shape == SolidShape::Block
+            && solid.node != geometry.links[0].from_node
+            && solid.node != geometry.links[0].to_node
+    });
+    assert!(
+        foreign.is_none(),
+        "the page has only the two endpoint blocks"
+    );
+    let right = scene
+        .solids
+        .iter()
+        .find(|solid| solid.node == geometry.links[0].to_node)
+        .unwrap()
+        .clone();
+    let mut over = scene.clone();
+    let middle_y = right.footprint.y + right.footprint.height / 2.0;
+    over.link_paths = vec![vec![
+        IsoPoint {
+            x: right.footprint.x - 100.0,
+            y: middle_y,
+            z: right.base_z,
+        },
+        IsoPoint {
+            x: right.footprint.right() + 100.0,
+            y: middle_y,
+            z: right.base_z,
+        },
+    ]];
+    over.link_kinds = vec![(Line::Gray, None)];
+    // A geometry whose only link joins neither block: the hand-built path is foreign to it.
+    let mut other = geometry.clone();
+    other.links[0].from_node = usize::MAX;
+    other.links[0].to_node = usize::MAX;
+    let report = iso_links_clear(&other, Some(&over));
+    let messages = defect_messages(&report);
+    assert!(
+        messages.contains(&format!(
+            "/links/0 leg 0 crosses block {} on screen",
+            right.pointer
+        )),
+        "{messages:?}"
+    );
+    // The same path joined to that block is not reported.
+    let report = iso_links_clear(&geometry, Some(&over));
+    assert!(
+        !defect_messages(&report)
+            .iter()
+            .any(|message| message.contains("crosses block")),
+        "{:?}",
+        defect_messages(&report)
+    );
 }
