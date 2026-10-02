@@ -1,0 +1,13 @@
+check child-inside-container: examined 26 relations, 0 defects
+check siblings-do-not-overlap: examined 19 pairs, 0 defects
+check text-fits-box: examined 29 text runs, 0 defects
+check remembered-constants: examined 26 text fields, 0 defects
+check legend-consistency: examined 6 relations, 0 defects
+check links-routed: examined 1 link, 0 defects
+check links-avoid-boxes: examined 45 pairs, 0 defects
+check pipes-land: examined 4 pipe ends, 0 defects
+check iso-labels-clear: examined 293 pairs, 0 defects
+check iso-links-clear: examined 3 link legs, 0 defects
+check print-fit: examined 0 text runs, not applicable: no print width
+check icon-matches-product: examined 5 items, 0 defects
+stencil check: 12 checks, 11 passed, 0 failed, 1 not applicable

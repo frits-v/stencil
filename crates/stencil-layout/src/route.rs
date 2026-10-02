@@ -171,14 +171,17 @@ fn route_between(
     let (from_box, to_box) = (attach_box(from), attach_box(to));
     let start = side_midpoint(&from_box, from_side);
     let end = side_midpoint(&to_box, to_side);
+    let mut obstacles = link_obstacles(geometry, from_node, to_node);
     // Under iso a block end is reached through a straight stub outward from its side
     // (section 12.4): the search runs between the stub ends.
     // A stub into a hidden side (top or left) is cut back by the block's height on
-    // screen, so it grows by that much.
+    // screen, so it grows by that much. A stub never reaches past the nearest obstacle
+    // ahead of it, so the search starts outside every box.
     let outward = |point: PagePoint, side: Side, node: &NodeGeometry| {
         let (dx, dy) = Direction::outward(side).unit();
         let hidden = matches!(side, Side::Top | Side::Left);
-        let length = ISO_APPROACH_PX + if hidden { block_height(node) } else { 0.0 };
+        let nominal = ISO_APPROACH_PX + if hidden { block_height(node) } else { 0.0 };
+        let length = nominal.min(free_run(point, (dx, dy), &obstacles));
         PagePoint {
             x: point.x + dx * length,
             y: point.y + dy * length,
@@ -194,7 +197,6 @@ fn route_between(
     } else {
         end
     };
-    let mut obstacles = link_obstacles(geometry, from_node, to_node);
     // The search runs between the stub ends, outside the blocks, so a stubbed block is an
     // obstacle like any other: the route may not cut through it to reach its stub.
     for (stub, node, bounds) in [(from_stub, from_node, from_box), (to_stub, to_node, to_box)] {
@@ -232,6 +234,40 @@ fn route_between(
             RouteStatus::Fallback,
         ),
     }
+}
+
+/// The distance from `point` along the unit axis direction `direction` to the near edge of
+/// the first obstacle whose span across that direction holds the point; unbounded when
+/// none lies ahead.
+fn free_run(point: PagePoint, direction: (f32, f32), obstacles: &[Obstacle]) -> f32 {
+    obstacles
+        .iter()
+        .filter_map(|obstacle| {
+            let bounds = obstacle.bounds;
+            let (ahead, spans) = if direction.0 != 0.0 {
+                let edge = if direction.0 > 0.0 {
+                    bounds.x
+                } else {
+                    bounds.right()
+                };
+                (
+                    (edge - point.x) * direction.0,
+                    point.y >= bounds.y && point.y <= bounds.bottom(),
+                )
+            } else {
+                let edge = if direction.1 > 0.0 {
+                    bounds.y
+                } else {
+                    bounds.bottom()
+                };
+                (
+                    (edge - point.y) * direction.1,
+                    point.x >= bounds.x && point.x <= bounds.right(),
+                )
+            };
+            (spans && ahead >= 0.0).then_some(ahead)
+        })
+        .fold(f32::INFINITY, f32::min)
 }
 
 /// Section 13.11 rule 3: the route of the link at `index` in `geometry.links`, searched again

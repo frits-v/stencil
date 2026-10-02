@@ -1,0 +1,163 @@
+{
+  "title": "Two narrow regions share one Interconnect through the transit hub.",
+  "kicker": "Landing zone · transit",
+  "lede": "Long product names in narrow regions, one Tee with a band arm, under the isometric projection.",
+  "width": 1500,
+  "canvas": "customer",
+  "grammar": "gcp",
+  "projection": "iso",
+  "body": [
+    {
+      "tag": "Row",
+      "gap": 24,
+      "children": [
+        {
+          "tag": "Box",
+          "kind": "onprem",
+          "label": "Branch office",
+          "children": [
+            {
+              "tag": "Col",
+              "children": [
+                {
+                  "tag": "Item",
+                  "kind": "product",
+                  "id": "edge",
+                  "icon": "networking",
+                  "title": "Edge router",
+                  "subtitle": "Cloud Router peer"
+                },
+                {
+                  "tag": "Item",
+                  "kind": "person",
+                  "id": "users",
+                  "title": "Branch users",
+                  "subtitle": "SD-WAN, no direct cloud path"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "tag": "Col",
+          "children": [
+            {
+              "tag": "Tee",
+              "line": "solid",
+              "tint": 1,
+              "hub": "Dedicated Interconnect · Metro 1",
+              "arms": [
+                {
+                  "tag": "Pipe",
+                  "dir": "h",
+                  "line": "solid",
+                  "tint": 1,
+                  "label": "VLAN 1",
+                  "sub": "EAD 1 · BGP",
+                  "form": "band",
+                  "arrow": "end"
+                },
+                {
+                  "tag": "Pipe",
+                  "dir": "h",
+                  "line": "solid",
+                  "tint": 1,
+                  "label": "VLAN 2",
+                  "sub": "EAD 2 · BGP"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "tag": "Box",
+          "kind": "gcp",
+          "label": "Google Cloud",
+          "children": [
+            {
+              "tag": "Row",
+              "children": [
+                {
+                  "tag": "Box",
+                  "kind": "region",
+                  "tint": 1,
+                  "label": "europe-west4",
+                  "children": [
+                    {
+                      "tag": "Col",
+                      "children": [
+                        {
+                          "tag": "Item",
+                          "kind": "product",
+                          "id": "vmware",
+                          "icon": "compute",
+                          "title": "VMware cluster",
+                          "subtitle": "Google Cloud VMware Engine"
+                        },
+                        {
+                          "tag": "Item",
+                          "kind": "product",
+                          "id": "ncc",
+                          "icon": "networking",
+                          "title": "Transit hub",
+                          "subtitle": "Network Connectivity Center"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "tag": "Box",
+                  "kind": "region",
+                  "tint": 2,
+                  "label": "europe-north1",
+                  "children": [
+                    {
+                      "tag": "Col",
+                      "children": [
+                        {
+                          "tag": "Item",
+                          "kind": "product",
+                          "id": "dms",
+                          "icon": "databases",
+                          "title": "Migration",
+                          "subtitle": "Database Migration Service"
+                        },
+                        {
+                          "tag": "Item",
+                          "kind": "product",
+                          "id": "cas",
+                          "icon": "security-identity",
+                          "title": "Certificates",
+                          "subtitle": "Certificate Authority Service"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "links": [
+    {
+      "from": "ncc",
+      "to": "dms",
+      "line": "gray"
+    }
+  ],
+  "legend": [
+    {
+      "line": "solid",
+      "tint": 1,
+      "text": "Interconnect attachment"
+    },
+    {
+      "line": "gray",
+      "text": "east-west"
+    }
+  ]
+}
