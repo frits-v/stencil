@@ -254,9 +254,15 @@ fn examine_text_parts(
         };
         *examined += 1;
         let metrics = &run.metrics;
-        if metrics.width_px > part.bounds.width + GEOMETRY_EPSILON_PX
-            || metrics.height_px > part.bounds.height + GEOMETRY_EPSILON_PX
-        {
+        // A run that reads along y under iso is laid out as a strip with its width and
+        // height swapped (section 12.4), so it fits when it fits the box turned.
+        let fits = |width: f32, height: f32| {
+            metrics.width_px <= width + GEOMETRY_EPSILON_PX
+                && metrics.height_px <= height + GEOMETRY_EPSILON_PX
+        };
+        let turned_strip =
+            part.bounds.height > part.bounds.width && fits(part.bounds.height, part.bounds.width);
+        if !fits(part.bounds.width, part.bounds.height) && !turned_strip {
             defects.push(Defect {
                 pointer: owner.clone(),
                 message: format!(

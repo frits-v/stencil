@@ -1674,20 +1674,32 @@ fn a_card_icon_and_name_lie_on_its_block_top_face_with_the_name_beside_the_icon(
 }
 
 #[test]
-fn the_hero_primary_is_one_straight_leg_with_its_tag_on_the_ground_along_x() {
+fn the_hero_primary_leaves_the_router_through_a_stub_with_its_tag_along_x() {
     let hero = hero_page();
     let geometry = common::layout_with_cosmic_text(&hero);
     assert!(geometry.links[0].points.len() > 2);
     let scene = project_page(&geometry).unwrap();
     let primary = &scene.link_paths[0];
-    let first = primary.first().unwrap();
+    // The first leg is the approach stub out of the router's right side, along x from the
+    // on-prem slab top down onto the ground, at least ISO_APPROACH_PX long at the zoom.
+    let first = primary[0];
+    let stub_end = primary
+        .iter()
+        .take_while(|point| (point.y - first.y).abs() < 1e-3)
+        .last()
+        .unwrap();
     assert!(
-        primary.iter().all(|point| (point.y - first.y).abs() < 1e-3),
+        stub_end.x - first.x >= stencil_layout::ISO_APPROACH_PX * scene.zoom - 1e-3,
         "{primary:?}"
     );
+    assert!(first.z > 0.0 && stub_end.z == 0.0, "{primary:?}");
     let tag = label_of(&scene, "/links/0");
     assert_eq!(tag.axis, Axis::X);
-    assert_eq!(tag.z, 0.0);
+    assert!(
+        primary.iter().any(|point| point.z == tag.z),
+        "tag z {} off the path {primary:?}",
+        tag.z
+    );
     assert!(tag.opaque);
 }
 
@@ -1724,7 +1736,7 @@ fn the_hero_links_clear_every_zone_edge_and_end_on_long_legs() {
     let scene = project_page(&geometry).unwrap();
     let report = iso_links_clear(Some(&scene));
     assert_eq!(report.check, CheckName::IsoLinksClear);
-    assert_eq!(report.examined, 6);
+    assert_eq!(report.examined, 8);
     assert!(report.passed(), "{report:?}");
     assert_eq!(
         iso_links_clear(None).not_applicable,

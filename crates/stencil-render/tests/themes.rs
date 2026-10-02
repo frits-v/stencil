@@ -1022,7 +1022,12 @@ fn research_themes_follow_the_derivation_rules() {
             labels,
             "{name}"
         );
-        assert_eq!(theme.iso.chip.fill.as_str(), "#FFFFFF");
+        let chip_fill = if dark {
+            theme.ink.primary.as_str()
+        } else {
+            "#FFFFFF"
+        };
+        assert_eq!(theme.iso.chip.fill.as_str(), chip_fill, "{name}");
         assert_eq!(theme.iso.chip.ring.is_some(), !dark, "{name}");
         assert_eq!(theme.iso.chip.shadow.is_some(), !dark, "{name}");
         if dark {

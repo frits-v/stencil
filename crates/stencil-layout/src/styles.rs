@@ -4,7 +4,7 @@
 use stencil_model::text::{TextStyle, TextStyleName};
 use stencil_model::{Canvas, Line};
 
-use crate::{ISO_TYPE_SCALE, ISO_ZONE_LABEL_SCALE};
+use crate::{ISO_FRAME_LABEL_SCALE, ISO_TYPE_SCALE, ISO_ZONE_LABEL_SCALE};
 
 pub const TEXT_DARK: &str = "#202124";
 pub const TEXT_MUTED: &str = "#5F6368";
@@ -57,7 +57,7 @@ pub fn badge_fill(canvas: Canvas) -> &'static str {
 
 /// The style a run is measured and drawn in: the named style flat; under iso the body
 /// styles grown by `ISO_TYPE_SCALE`, a zone label by `ISO_ZONE_LABEL_SCALE`, and the frame
-/// bar label to the title's size, so a figure's floor name never outranks its headline.
+/// bar label by `ISO_FRAME_LABEL_SCALE`, a tier above the zone names.
 /// Chrome and the legend keep their flat size.
 pub(crate) fn text_style_for(name: TextStyleName, iso: bool) -> TextStyle {
     let flat = name.text_style().style;
@@ -74,7 +74,7 @@ pub(crate) fn text_style_for(name: TextStyleName, iso: bool) -> TextStyle {
         | TextStyleName::LegendText
         | TextStyleName::Foot => return flat,
         TextStyleName::ZoneLabel | TextStyleName::PerimeterLabel => ISO_ZONE_LABEL_SCALE,
-        TextStyleName::GcpBar => TextStyleName::Title.text_style().style.size_px / flat.size_px,
+        TextStyleName::GcpBar => ISO_FRAME_LABEL_SCALE,
         TextStyleName::CardFunction
         | TextStyleName::CardProduct
         | TextStyleName::Fact

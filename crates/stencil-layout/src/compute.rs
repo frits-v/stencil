@@ -179,7 +179,13 @@ fn measure_in_layout(
         (Some(width), _) | (None, AvailableSpace::Definite(width)) => {
             Some(width.max(0.0) + WRAP_EPSILON_PX)
         }
-        (None, AvailableSpace::MinContent) => Some(0.0),
+        // Min-content is the widest word flat; under iso it is the run wrapped at its
+        // shortest line, or the whole run for one that never wraps (section 12.4).
+        (None, AvailableSpace::MinContent) => match leaf.min_line_px {
+            None => Some(0.0),
+            Some(min_line) if min_line.is_infinite() => None,
+            Some(min_line) => Some(min_line + WRAP_EPSILON_PX),
+        },
         (None, AvailableSpace::MaxContent) => None,
     };
     match measurer.measure(&leaf.text, &leaf.style, max_width_px) {

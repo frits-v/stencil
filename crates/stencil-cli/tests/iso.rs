@@ -73,7 +73,7 @@ fn check_hero_passes_every_applicable_check_in_every_theme() {
             outcome.stdout
         );
         assert!(
-            lines.contains(&"check iso-links-clear: examined 6 link legs, 0 defects"),
+            lines.contains(&"check iso-links-clear: examined 8 link legs, 0 defects"),
             "{theme}: {}",
             outcome.stdout
         );

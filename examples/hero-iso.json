@@ -2,7 +2,7 @@
   "title": "On-prem data reaches three managed services over two private paths.",
   "kicker": "Hybrid platform · cover figure",
   "lede": "One on-prem site, one Google Cloud region, two Interconnect attachments.",
-  "width": 1280,
+  "width": 1400,
   "canvas": "customer",
   "grammar": "gcp",
   "projection": "iso",

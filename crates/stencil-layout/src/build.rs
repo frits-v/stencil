@@ -19,8 +19,9 @@ use taffy::prelude::{
 use crate::lanes::LanesPlan;
 use crate::styles::{text_color, text_style_for};
 use crate::{
-    Axis, ContainerLook, ISO_BLOCK_HEIGHT_PX, ISO_LABEL_CLEARANCE_PX, ISO_SPACE_SCALE,
-    ISO_TAG_CLEARANCE_PX, ISO_WIRE_SCALE, LayoutError, NodeTag, PartName, TextAlign,
+    Axis, ContainerLook, ISO_APPROACH_PX, ISO_BLOCK_HEIGHT_PX, ISO_LABEL_CLEARANCE_PX,
+    ISO_LINE_MIN_PX, ISO_SPACE_SCALE, ISO_TAG_CLEARANCE_PX, ISO_WIRE_SCALE, LayoutError, NodeTag,
+    PartName, TextAlign,
 };
 
 /// Taffy's node context is an index into `BuiltPage::text_leaves`.
@@ -34,6 +35,9 @@ pub(crate) struct TextLeaf {
     pub align: TextAlign,
     /// A y run is measured with its width and height swapped (section 12.4).
     pub axis: Axis,
+    /// Under iso, the shortest line the run wraps to when the layout asks for its
+    /// min-content width: infinite for a run that never wraps, None flat (section 12.4).
+    pub min_line_px: Option<f32>,
     /// The field the string comes from; a measure error is reported at this pointer.
     pub source: NodePointer,
 }
@@ -133,6 +137,20 @@ struct Builder<'page> {
 /// `ISO_BLOCK_HEIGHT_PX` covers on screen, plus the clearance (section 12.4).
 fn iso_label_reserve() -> f32 {
     ISO_BLOCK_HEIGHT_PX + ISO_LABEL_CLEARANCE_PX
+}
+
+/// The shortest line a run wraps to under iso: a name, a zone or frame label and a tag
+/// label never wrap; a subtitle, fact, body line or tag sub keeps lines of at least
+/// `ISO_LINE_MIN_PX`.
+fn iso_min_line(style: TextStyleName) -> f32 {
+    match style {
+        TextStyleName::CardFunction
+        | TextStyleName::ZoneLabel
+        | TextStyleName::GcpBar
+        | TextStyleName::PerimeterLabel
+        | TextStyleName::TagLabel => f32::INFINITY,
+        _ => ISO_LINE_MIN_PX,
+    }
 }
 
 /// Every taffy node starts from this: content that does not fit overflows (section 2.1).
@@ -391,6 +409,17 @@ impl Builder<'_> {
         } else {
             spec.text.to_string()
         };
+        // On a plane a name never breaks around its middle dot (section 12.4 rule 4).
+        let text = if self.iso {
+            text.replace(" \u{b7} ", "\u{a0}\u{b7}\u{a0}")
+        } else {
+            text
+        };
+        let min_line_px = if self.iso {
+            Some(iso_min_line(spec.style_name))
+        } else {
+            None
+        };
         let index = self.text_leaves.len();
         let node = self
             .tree
@@ -405,6 +434,7 @@ impl Builder<'_> {
             color: text_color(spec.style_name, self.canvas, spec.line),
             align: spec.align,
             axis,
+            min_line_px,
             source: spec.source,
         });
         Ok((node, index))
@@ -607,11 +637,15 @@ impl Builder<'_> {
         root_index: usize,
     ) -> Result<(), LayoutError> {
         let pointer = NodePointer::root().child("body");
+        // Under iso a link may dip an approach stub below the lowest block and carry its
+        // tag there (section 12.4), so the body keeps room above the legend.
+        let stub_room = if self.iso { 2.0 * ISO_APPROACH_PX } else { 0.0 };
         let style = Style {
             gap: taffy::Size {
                 width: length(0.0),
                 height: length(8.0),
             },
+            margin: margins(0.0, 0.0, stub_room, 0.0),
             ..flex_column(AlignItems::STRETCH)
         };
         let body = self.container(style, root, &pointer)?;
@@ -1010,9 +1044,12 @@ impl Builder<'_> {
         let border = kind.border.width;
         let padding = self.space(kind.padding);
         let gap = if is_frame { 0.0 } else { self.space(8.0) };
+        // A raised child covers the strip of floor its height spans behind and left of it
+        // on screen, so under iso the back and left padding grow by the block height.
+        let raise = if self.iso { ISO_BLOCK_HEIGHT_PX } else { 0.0 };
         let mut style = Style {
             border: sides(border, border, border, border),
-            padding: sides(padding, padding, padding, padding),
+            padding: sides(padding + raise, padding, padding, padding + raise),
             gap: taffy::Size {
                 width: length(0.0),
                 height: length(gap),
@@ -1074,10 +1111,10 @@ impl Builder<'_> {
             let body_style = Style {
                 flex_grow: 1.0,
                 padding: sides(
-                    self.space(16.0),
+                    self.space(16.0) + raise,
                     self.space(14.0),
                     self.space(14.0),
-                    self.space(14.0),
+                    self.space(14.0) + raise,
                 ),
                 gap: taffy::Size {
                     width: length(0.0),
