@@ -4,7 +4,7 @@ stencil turns structural JSON (boxes, items, facts, pipes, links; no coordinates
 
 # Loop
 
-Write fig.json, `stencil vet fig.json`, `stencil check fig.json`, `stencil render fig.json --out-dir out --scale 2`, Read out/fig.png, fix, repeat until check shows 0 failed and the PNG reads right. Exit 0 clean; 1 defect in the document (fix the JSON at the named pointer); 2 could not run (arguments, paths, fonts). `stencil schema` prints the JSON Schema.
+Write fig.json, `stencil vet fig.json`, `stencil check fig.json`, `stencil render fig.json --out-dir out --scale 2`, Read out/fig.png, fix, repeat until check shows 0 failed and the PNG reads right. Exit 0 clean; 1 defect in the document (fix the JSON at the pointer); 2 could not run (arguments, paths, fonts).
 
 # Grammars
 
@@ -28,7 +28,7 @@ Every node object carries "tag"; the Page does not. * required, =default. A fiel
 
 # Checks
 
-`check` prints one line per check with its examined count, then `defect <check> <pointer>: <message>` lines. Examined 0 fails. Checks with no surface (links, pipe neighbors, iso, --print-width, icons) are not applicable.
+`check` prints one line per check with its examined count, then `defect <check> <pointer>: <message>` lines. Examined 0 fails. Checks with no surface are not applicable.
 
 | Check | Examines | Defect | Fix |
 |---|---|---|---|
@@ -43,6 +43,7 @@ Every node object carries "tag"; the Page does not. * required, =default. A fiel
 | iso-labels-clear | iso only: labels, solids, boxes | overlap or Box edge in text | open floor |
 | iso-links-clear | iso only: link legs | leg by a Box edge, reversed or short | wider gap |
 | iso-link-ends | iso only: link ends | end off its node or on a corner | move the end |
+| iso-links-apart | iso only: link pairs | two links share a stretch or an end | opposite sides |
 | print-fit | each text run, only with --print-width | prints below 8 pt at that width | widen the print or shorten the figure |
 | icon-matches-product | each item with an icon or subtitle whose kind has an icon table | the subtitle names a product whose own icon is another, or a product icon on a product without one | use the product's icon or a category icon |
 

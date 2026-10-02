@@ -9,6 +9,7 @@ check pipes-land: examined 0 pipe ends, not applicable: page has no pipes
 check iso-labels-clear: examined 0 pairs, not applicable: projection is flat
 check iso-links-clear: examined 0 link legs, not applicable: projection is flat
 check iso-link-ends: examined 0 link ends, not applicable: projection is flat
+check iso-links-apart: examined 0 link pairs, not applicable: projection is flat
 check print-fit: examined 0 text runs, not applicable: no print width
 check icon-matches-product: examined 7 items, 0 defects
-stencil check: 13 checks, 8 passed, 0 failed, 5 not applicable
+stencil check: 14 checks, 8 passed, 0 failed, 6 not applicable

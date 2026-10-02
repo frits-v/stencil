@@ -16,12 +16,13 @@ use super::{
 };
 use crate::iso::sprites;
 use crate::iso::tube::{
-    self, BAND_HEAD_LENGTH_PX, CONE_LENGTH_PX, CONE_RADIUS_PX, ISO_TUBE_RADIUS_PX, Tube,
+    self, BAND_HEAD_LENGTH_PX, CONE_LENGTH_PX, CONE_RADIUS_PX, FLANGE_LENGTH_PX,
+    ISO_TUBE_RADIUS_PX, Tube,
 };
 use crate::iso::{
-    IsoPoint, Label, ScreenPoint, Solid, SolidInputs, SolidShape, ellipse_radii, end_direction,
-    iso_link_arrowhead_length, label_axis, link_tube_radius, local_part, plane_member,
-    project_point, project_zoomed, start_direction, zoomed_geometry,
+    IsoPoint, LINK_CONE_RADIUS_SCALE, Label, ScreenPoint, Solid, SolidInputs, SolidShape,
+    ellipse_radii, end_direction, iso_link_arrowhead_length, label_axis, link_tube_radius,
+    local_part, plane_member, project_point, project_zoomed, start_direction, zoomed_geometry,
 };
 use crate::palette::{DotStyle, FacePaint, LineStyle, LineUse, Palette, Stroke, shade};
 
@@ -32,7 +33,6 @@ const TUBE_CAP_STEP: i8 = -16;
 /// Outline width of a hollow tube.
 const HOLLOW_TUBE_OUTLINE_PX: f32 = 1.5;
 /// A link cone's base radius over its tube's radius.
-const LINK_CONE_RADIUS_SCALE: f32 = 1.9;
 /// Lightness step of a device's screen panel under the face it lies on.
 const SCREEN_PANEL_STEP: i8 = -28;
 
@@ -806,10 +806,21 @@ impl<'a> SvgWriter<'a> {
             end_center.1 + run.1 * DOT_RADIUS_PX,
         );
         let cone_length = CONE_LENGTH_PX * self.iso_zoom;
+        // The far end is the one the run comes from as seen by the viewer. A flange there
+        // is painted under the body, which starts at the ring's near face and draws no far
+        // cap, so the tube is seen coming out of the ring. A flange at the near end is
+        // painted over the body's end.
+        let start_is_far = tube::faces_viewer(run);
+        let half_flange = FLANGE_LENGTH_PX * self.iso_zoom / 2.0;
         let body_start = if arrows.start {
             (
                 start_tip.0 + run.0 * cone_length,
                 start_tip.1 + run.1 * cone_length,
+            )
+        } else if start_is_far {
+            (
+                start_center.0 + run.0 * half_flange,
+                start_center.1 + run.1 * half_flange,
             )
         } else {
             start_center
@@ -818,6 +829,11 @@ impl<'a> SvgWriter<'a> {
             (
                 end_tip.0 - run.0 * cone_length,
                 end_tip.1 - run.1 * cone_length,
+            )
+        } else if !start_is_far {
+            (
+                end_center.0 - run.0 * half_flange,
+                end_center.1 - run.1 * half_flange,
             )
         } else {
             end_center
@@ -829,11 +845,26 @@ impl<'a> SvgWriter<'a> {
             floor_z: z,
             radius: ISO_TUBE_RADIUS_PX * self.iso_zoom,
         };
-        self.write_tube(depth, &body, kind, style, offset);
-        for (arrow_here, center, tip, outward) in [
-            (arrows.start, start_center, start_tip, (-run.0, -run.1)),
-            (arrows.end, end_center, end_tip, run),
-        ] {
+        let ends = [
+            (
+                arrows.start,
+                start_center,
+                start_tip,
+                (-run.0, -run.1),
+                start_is_far,
+            ),
+            (arrows.end, end_center, end_tip, run, !start_is_far),
+        ];
+        let far_flange = ends
+            .iter()
+            .any(|(arrow_here, _, _, _, far)| *far && !arrow_here);
+        for (arrow_here, center, _, _, far) in ends {
+            if far && !arrow_here {
+                self.write_flange(depth, (center, run), z, kind, offset);
+            }
+        }
+        self.write_tube_with_caps(depth, &body, kind, style, offset, !far_flange);
+        for (arrow_here, center, tip, outward, far) in ends {
             if arrow_here {
                 let zoom = self.iso_zoom;
                 self.write_cone(
@@ -844,7 +875,7 @@ impl<'a> SvgWriter<'a> {
                     kind,
                     offset,
                 );
-            } else {
+            } else if !far {
                 self.write_flange(depth, (center, run), z, kind, offset);
             }
         }
@@ -953,6 +984,20 @@ impl<'a> SvgWriter<'a> {
         style: TubeStyle,
         offset: ScreenPoint,
     ) {
+        self.write_tube_with_caps(depth, tube, kind, style, offset, true);
+    }
+
+    /// `write_tube`, drawing the far cap only when `far_cap`: a tube coming out of a ring
+    /// has no rounded far end to show.
+    fn write_tube_with_caps(
+        &mut self,
+        depth: usize,
+        tube: &Tube,
+        kind: LineUse,
+        style: TubeStyle,
+        offset: ScreenPoint,
+        far_cap: bool,
+    ) {
         let (Some(run), Some(body)) = (tube.run(), tube::body(tube, offset)) else {
             return;
         };
@@ -973,14 +1018,18 @@ impl<'a> SvgWriter<'a> {
                     line,
                     color,
                 };
-                self.write_closed_path(depth, &cap(far), fill, Some(outline));
+                if far_cap {
+                    self.write_closed_path(depth, &cap(far), fill, Some(outline));
+                }
                 self.write_closed_path(depth, &body.outline, fill, Some(outline));
                 self.write_closed_path(depth, &cap(near), fill, Some(outline));
             }
             TubeStyle::Filled => {
                 let lit = shade(color, TUBE_LIT_STEP).unwrap_or_else(|| color.to_string());
                 let dark = shade(color, TUBE_CAP_STEP).unwrap_or_else(|| color.to_string());
-                self.write_closed_path(depth, &cap(far), color, None);
+                if far_cap {
+                    self.write_closed_path(depth, &cap(far), color, None);
+                }
                 self.write_closed_path(depth, &body.lit, &lit, None);
                 self.write_closed_path(depth, &body.shaded, color, None);
                 self.write_closed_path(depth, &cap(near), &dark, None);

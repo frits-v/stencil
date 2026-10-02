@@ -23,8 +23,8 @@ use stencil_model::pointer::NodePointer;
 use stencil_model::{Line, Page, Projection, Shape, Theme};
 use stencil_render::iso::{
     Axis, ISO_MARGIN_PX, ISO_TUBE_RADIUS_PX, ISO_ZOOM_MAX, IsoPoint, IsoScene, Label, LabelParts,
-    PlaneMap, ScreenPoint, Solid, SolidShape, iso_labels_clear, iso_link_ends, iso_links_clear,
-    link_tube_radius, project_point, zoomed_geometry,
+    PlaneMap, ScreenPoint, Solid, SolidShape, iso_labels_clear, iso_link_ends, iso_links_apart,
+    iso_links_clear, link_tube_radius, project_point, zoomed_geometry,
 };
 use stencil_render::palette::{Face, LineUse, Palette, shade};
 use stencil_render::{DeviceScale, format_number, measured_json, render_png};
@@ -2496,4 +2496,206 @@ fn a_link_from_a_figure_starts_on_the_figure_not_on_its_footprint_edge() {
             (on_screen.x - (a.x + t * dx)).hypot(on_screen.y - (a.y + t * dy)) < 0.05
         });
     assert!(on_hull, "{on_screen:?} is not on the figure's outline");
+}
+
+/// Two links between the same two blocks, in the same direction, with the sides given.
+fn two_link_page(sides: &[(Option<&str>, Option<&str>)]) -> Page {
+    let mut document = common::page_document(
+        json!([
+            {
+                "tag": "Row", "gap": 48,
+                "children": [
+                    { "tag": "Box", "kind": "region", "tint": 1, "label": "A", "children": [
+                        { "tag": "Item", "kind": "product", "id": "left", "title": "Left" } ] },
+                    { "tag": "Box", "kind": "region", "tint": 2, "label": "B", "children": [
+                        { "tag": "Item", "kind": "product", "id": "right", "title": "Right" } ] }
+                ]
+            }
+        ]),
+        json!([
+            { "line": "solid", "tint": 1, "text": "request path" },
+            { "line": "dash", "text": "failover" }
+        ]),
+    );
+    let links: Vec<Value> = sides
+        .iter()
+        .enumerate()
+        .map(|(index, (from_side, to_side))| {
+            let mut link = json!({ "from": "left", "to": "right", "label": format!("L{index}") });
+            if index == 0 {
+                link["line"] = json!("solid");
+                link["tint"] = json!(1);
+            } else {
+                link["line"] = json!("dash");
+            }
+            if let Some(side) = from_side {
+                link["from_side"] = json!(side);
+            }
+            if let Some(side) = to_side {
+                link["to_side"] = json!(side);
+            }
+            link
+        })
+        .collect();
+    document["links"] = json!(links);
+    document["projection"] = json!("iso");
+    serde_json::from_value(document).unwrap()
+}
+
+#[test]
+fn two_links_on_one_route_are_drawn_side_by_side_with_their_tags_staggered() {
+    let page = two_link_page(&[(None, None), (None, None)]);
+    let (geometry, zoom) = zoomed_geometry(&common::layout_with_fixed_metrics(&page)).unwrap();
+    let scene = project_zoomed(&geometry, zoom).unwrap();
+    let (first, second) = (&scene.link_paths[0], &scene.link_paths[1]);
+    // The layout routes both links along one line; the projection moves them apart by
+    // their tube radii plus the gap, at least two cone bases, along the sides they share.
+    assert_eq!(geometry.links[0].points, geometry.links[1].points);
+    let spacing = (second[0].y - first[0].y).abs();
+    let least =
+        (link_tube_radius(Line::Solid, Some(1)) + link_tube_radius(Line::Dash, None)) * zoom;
+    assert!(spacing >= 1.9 * least - 0.01, "{spacing} < {}", 1.9 * least);
+    assert!((second.last().unwrap().y - first.last().unwrap().y).abs() - spacing < 0.01);
+    let apart = iso_links_apart(&geometry, Some(&scene));
+    assert_eq!(apart.examined, 1);
+    assert!(apart.passed(), "{:?}", defect_messages(&apart));
+    let ends = iso_link_ends(&geometry, Some(&scene));
+    assert!(ends.passed(), "{:?}", defect_messages(&ends));
+    // The right card's left side is hidden, so the pair hangs toward the back from the
+    // attach point: the second (front) link keeps the layout's end, the first moves back.
+    let end = geometry.links[0].points.last().unwrap();
+    assert!(first.last().unwrap().y < end.y - 1.0, "{first:?} {end:?}");
+    // Tags sit at a quarter and three quarters of the leg, not both at its middle.
+    let (first_tag, second_tag) = (label_of(&scene, "/links/0"), label_of(&scene, "/links/1"));
+    let mapped = |tag: &Label| {
+        let (x, y) = center_of(tag.flat);
+        tag.map.apply(x, y)
+    };
+    let (first_center, second_center) = (mapped(first_tag), mapped(second_tag));
+    assert!(
+        second_center.x - first_center.x > 40.0,
+        "{first_center:?} {second_center:?}"
+    );
+    let labels = iso_labels_clear(Some(&scene));
+    assert!(labels.passed(), "{:?}", defect_messages(&labels));
+}
+
+#[test]
+fn two_links_that_share_a_side_but_not_a_route_move_their_end_legs_apart() {
+    let page = two_link_page(&[(None, Some("left")), (None, Some("top"))]);
+    let (geometry, zoom) = zoomed_geometry(&common::layout_with_fixed_metrics(&page)).unwrap();
+    let scene = project_zoomed(&geometry, zoom).unwrap();
+    let (first, second) = (&scene.link_paths[0], &scene.link_paths[1]);
+    // Both leave the left card's right side at the same point in the layout.
+    assert_eq!(geometry.links[0].points[0], geometry.links[1].points[0]);
+    let spacing = (second[0].y - first[0].y).abs();
+    assert!(spacing > 10.0 * zoom, "{spacing}");
+    assert!(iso_links_apart(&geometry, Some(&scene)).passed());
+}
+
+#[test]
+fn a_shared_stretch_a_crowded_pair_and_two_ends_on_one_point_are_defects() {
+    let page = two_link_page(&[(None, None), (None, None)]);
+    let (geometry, zoom) = zoomed_geometry(&common::layout_with_fixed_metrics(&page)).unwrap();
+    let scene = project_zoomed(&geometry, zoom).unwrap();
+    // Undo the projection's separation: the second link back on the first's path.
+    let mut stacked = scene.clone();
+    stacked.link_paths[1] = scene.link_paths[0].clone();
+    let report = iso_links_apart(&geometry, Some(&stacked));
+    assert_eq!(report.examined, 1);
+    let messages = defect_messages(&report);
+    assert_eq!(messages.len(), 3, "{messages:?}");
+    assert!(messages[0].starts_with("/links/1 shares "), "{messages:?}");
+    assert!(messages[0].ends_with(" px with /links/0"), "{messages:?}");
+    assert!(
+        messages[1].starts_with("/links/1 ends 0.00 px from the end of /links/0 on /body/0/children/0/children/0, closer than"),
+        "{messages:?}"
+    );
+    assert!(
+        messages[2].starts_with("/links/1 ends 0.00 px from the end of /links/0 on /body/0/children/1/children/0, closer than"),
+        "{messages:?}"
+    );
+    // Shifted by 3 px: no shared stretch, but a parallel run closer than the tubes allow.
+    let mut crowded = scene.clone();
+    crowded.link_paths[1] = scene.link_paths[0]
+        .iter()
+        .map(|point| IsoPoint {
+            x: point.x,
+            y: point.y + 3.0,
+            z: point.z,
+        })
+        .collect();
+    let report = iso_links_apart(&geometry, Some(&crowded));
+    let messages = defect_messages(&report);
+    let least =
+        (link_tube_radius(Line::Solid, Some(1)) + link_tube_radius(Line::Dash, None)) * zoom + 4.0;
+    assert_eq!(
+        messages[0],
+        format!("/links/1 runs 3.00 px beside /links/0, closer than {least:.2}")
+    );
+    assert_eq!(
+        iso_links_apart(&geometry, None).not_applicable,
+        Some("projection is flat")
+    );
+    let mut lone = scene.clone();
+    lone.link_paths.truncate(1);
+    assert_eq!(
+        iso_links_apart(&geometry, Some(&lone)).not_applicable,
+        Some("page has fewer than two links")
+    );
+}
+
+/// A ring at the far dot end is painted under the body, which comes out of it without a
+/// rounded far end; a ring at the near end is painted over the body. Before this, the far
+/// ring's dark face covered the tube where it should pass through the ring.
+#[test]
+fn a_tube_comes_out_of_its_far_flange_and_ends_under_its_near_one() {
+    let mut page: Page = serde_json::from_str(common::G7_JSON).unwrap();
+    page.projection = stencil_model::Projection::Iso;
+    let geometry = common::layout_with_cosmic_text(&page);
+    let iso = render_svg(&page, &geometry).unwrap();
+    let document = common::parse_xml(&iso.svg);
+    let (mut filled, mut hollow) = (0, 0);
+    for node in geometry
+        .nodes
+        .iter()
+        .filter(|node| node.tag == NodeTag::Pipe)
+    {
+        let group = common::group(&document, &node.pointer.to_string());
+        // Shadows are the polygons with an opacity; the rest are caps and body halves.
+        let fills: Vec<&str> = group
+            .descendants()
+            .filter(|element| {
+                element.has_tag_name("polygon") && element.attribute("fill-opacity").is_none()
+            })
+            .filter_map(|element| element.attribute("fill"))
+            .collect();
+        // Every g7 pipe runs +x with no arrow. A hollow pipe (a patterned line) is the far
+        // ring (far cap, outline, near cap), the body (outline, near cap) with no far cap,
+        // and the near ring, all in the page background. A filled one is the far ring (far
+        // cap, lit, shaded, dark near cap), the body (lit, shaded, dark near cap) with no
+        // far cap, and the near ring.
+        if fills.iter().all(|fill| *fill == fills[0]) {
+            assert_eq!(fills.len(), 8, "{}: {fills:?}", node.pointer);
+            hollow += 1;
+        } else {
+            assert_eq!(fills.len(), 11, "{}: {fills:?}", node.pointer);
+            let (wire, lit, dark) = (fills[0], fills[1], fills[3]);
+            assert_eq!(fills[2], wire, "{}: {fills:?}", node.pointer);
+            assert_eq!(
+                &fills[4..7],
+                &[lit, wire, dark],
+                "{}: {fills:?}",
+                node.pointer
+            );
+            assert_eq!(
+                &fills[7..11],
+                &[wire, lit, wire, dark],
+                "{}: {fills:?}",
+                node.pointer
+            );
+            filled += 1;
+        }
+    }
+    assert!(filled > 0 && hollow > 0, "{filled} filled, {hollow} hollow");
 }

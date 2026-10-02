@@ -9,6 +9,7 @@ check pipes-land: examined 0 pipe ends, not applicable: page has no pipes
 check iso-labels-clear: examined 84 pairs, 0 defects
 check iso-links-clear: examined 5 link legs, 0 defects
 check iso-link-ends: examined 6 link ends, 0 defects
+check iso-links-apart: examined 3 link pairs, 0 defects
 check print-fit: examined 0 text runs, not applicable: no print width
 check icon-matches-product: examined 0 items, not applicable: grammar has no icon table
-stencil check: 13 checks, 9 passed, 0 failed, 4 not applicable
+stencil check: 14 checks, 10 passed, 0 failed, 4 not applicable

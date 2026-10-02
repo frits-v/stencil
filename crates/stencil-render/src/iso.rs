@@ -15,7 +15,7 @@ use stencil_layout::{
 };
 use stencil_model::checks::{CheckName, CheckReport, Defect};
 use stencil_model::pointer::NodePointer;
-use stencil_model::{LINKS_MAX, Line, Link, NODES_MAX, PagePoint, PipeForm};
+use stencil_model::{LINKS_MAX, Line, Link, NODES_MAX, PagePoint, PipeForm, Side};
 
 use crate::RenderError;
 
@@ -730,10 +730,11 @@ fn link_label(
     zoom: f32,
     origin: (f32, f32),
     plane: &dyn Fn(f32) -> PlaneMap,
+    fraction: f32,
 ) -> Option<Label> {
     let tag = route.tag?;
     let (layout_x, layout_y) = center(tag);
-    let (scene_center, _) = stencil_layout::longest_segment_midpoint(drawn);
+    let (scene_center, _) = stencil_layout::longest_segment_point(drawn, fraction);
     let shift = (
         origin.0 + (scene_center.x - origin.0) / zoom - layout_x,
         origin.1 + (scene_center.y - origin.1) / zoom - layout_y,
@@ -924,8 +925,9 @@ fn adjusted_route(
     geometry: &PageGeometry,
     solids: &[Solid],
     inputs: &SolidInputs,
+    clearance: f32,
 ) -> Vec<PagePoint> {
-    let adjusted = rule_8_route(route, geometry, solids);
+    let adjusted = rule_8_route(route, geometry, solids, clearance);
     let may_exit = inputs.slab_exits.get(route.index).copied().unwrap_or(false);
     let exit = may_exit
         .then(|| exit::slab_exit_route(route, geometry, solids, &adjusted))
@@ -933,7 +935,12 @@ fn adjusted_route(
     exit.unwrap_or(adjusted)
 }
 
-fn rule_8_route(route: &LinkRoute, geometry: &PageGeometry, solids: &[Solid]) -> Vec<PagePoint> {
+fn rule_8_route(
+    route: &LinkRoute,
+    geometry: &PageGeometry,
+    solids: &[Solid],
+    clearance: f32,
+) -> Vec<PagePoint> {
     let blocks: Vec<BoxRect> = solids
         .iter()
         .filter(|solid| solid.shape == SolidShape::Block)
@@ -958,13 +965,192 @@ fn rule_8_route(route: &LinkRoute, geometry: &PageGeometry, solids: &[Solid]) ->
         _ => None,
     };
     let points = straight.unwrap_or_else(|| route.points.clone());
-    route::kept_clear(&points, &zones, &blocks)
+    route::kept_clear(&points, &zones, &blocks, clearance)
 }
 
 /// The box a link attaches to: an item's footprint when it stands on one, else its bounds.
 fn attach_bounds(node: &NodeGeometry) -> BoxRect {
     node.part(PartName::Footprint)
         .map_or(node.bounds, |part| part.bounds)
+}
+
+/// How far apart two neighbouring links of a bundle run, center to center: their tubes
+/// plus ISO_LINK_GAP_PX of air, and never less than their two cone bases, which is what
+/// `iso-links-apart` asks of two ends on one node.
+fn bundle_spacing(radius_a: f32, radius_b: f32) -> f32 {
+    (radius_a + radius_b + ISO_LINK_GAP_PX).max(LINK_CONE_RADIUS_SCALE * (radius_a + radius_b))
+}
+
+/// A link's place among the links whose adjusted routes coincide with its own, corner for
+/// corner: its position and the bundle's size, in link order. None for a route no other
+/// link follows. Such a bundle is moved whole, and its tags are staggered along the leg.
+fn shared_route_places(routes: &[Vec<PagePoint>]) -> Vec<Option<(usize, usize)>> {
+    let kept: Vec<Vec<PagePoint>> = routes.iter().map(|points| route::corners(points)).collect();
+    let same = |a: &[PagePoint], b: &[PagePoint]| {
+        a.len() == b.len()
+            && a.iter().zip(b).all(|(p, q)| {
+                (p.x - q.x).abs() <= GEOMETRY_EPSILON && (p.y - q.y).abs() <= GEOMETRY_EPSILON
+            })
+    };
+    kept.iter()
+        .enumerate()
+        .map(|(index, points)| {
+            let size = kept.iter().filter(|other| same(other, points)).count();
+            (size >= 2).then(|| {
+                let position = kept
+                    .iter()
+                    .take(index)
+                    .filter(|other| same(other, points))
+                    .count();
+                (position, size)
+            })
+        })
+        .collect()
+}
+
+/// A link's place in the bundle of links that share both its endpoint nodes: its position
+/// and the bundle's size, in link order. None for a link that shares its endpoints with no
+/// other.
+fn bundle_places(geometry: &PageGeometry) -> Vec<Option<(usize, usize)>> {
+    let key = |route: &LinkRoute| {
+        (
+            route.from_node.min(route.to_node),
+            route.from_node.max(route.to_node),
+        )
+    };
+    let routes: Vec<&LinkRoute> = geometry.links.iter().take(LINKS_MAX).collect();
+    routes
+        .iter()
+        .enumerate()
+        .map(|(index, route)| {
+            let same = |other: &&&LinkRoute| key(other) == key(route);
+            let size = routes.iter().filter(same).count();
+            (size >= 2).then(|| {
+                let position = routes.iter().take(index).filter(same).count();
+                (position, size)
+            })
+        })
+        .collect()
+}
+
+/// The side of its node a drawn end sits on, read from the leg that leaves or reaches it:
+/// a start leg toward +x leaves the right side, an end leg toward +x reaches the left side.
+fn end_side(points: &[PagePoint], at_start: bool) -> Option<Side> {
+    let kept = route::corners(points);
+    let (a, b) = if at_start {
+        (kept.first()?, kept.get(1)?)
+    } else {
+        (kept.get(kept.len().checked_sub(2)?)?, kept.last()?)
+    };
+    let (dx, dy) = (b.x - a.x, b.y - a.y);
+    if dx.abs() <= GEOMETRY_EPSILON && dy.abs() <= GEOMETRY_EPSILON {
+        return None;
+    }
+    let toward = if dx.abs() >= dy.abs() {
+        if dx > 0.0 { Side::Right } else { Side::Left }
+    } else if dy > 0.0 {
+        Side::Bottom
+    } else {
+        Side::Top
+    };
+    Some(if at_start {
+        toward
+    } else {
+        match toward {
+            Side::Right => Side::Left,
+            Side::Left => Side::Right,
+            Side::Bottom => Side::Top,
+            Side::Top => Side::Bottom,
+        }
+    })
+}
+
+/// How far each end of each link moves along the side it shares with other ends on the
+/// same node (section 12.3 rule 8): neighbours in link order sit `bundle_spacing` apart,
+/// measured along +x for a top or bottom side and +y for a left or right side. On a visible
+/// side the group is centered on the attach point. On a block's top or left side the cut of
+/// rule 7 lands an arrival the block's height nearer the front corner than its attach
+/// point, so the group runs from the attach point toward the back, and its frontmost
+/// member keeps the attach point.
+fn end_offsets(
+    routes: &[&LinkRoute],
+    adjusted: &[Vec<PagePoint>],
+    zoom: f32,
+    block_nodes: &[usize],
+) -> Vec<[(f32, bool); 2]> {
+    let radius = |route: &LinkRoute| link_tube_radius(route.line, route.tint) * zoom;
+    let group_of = |node: usize, side: Side| -> Vec<(usize, bool)> {
+        routes
+            .iter()
+            .zip(adjusted)
+            .enumerate()
+            .flat_map(|(index, (route, points))| {
+                [(route.from_node, true), (route.to_node, false)]
+                    .into_iter()
+                    .filter(move |(other_node, at_start)| {
+                        *other_node == node && end_side(points, *at_start) == Some(side)
+                    })
+                    .map(move |(_, at_start)| (index, at_start))
+            })
+            .collect()
+    };
+    routes
+        .iter()
+        .zip(adjusted)
+        .enumerate()
+        .map(|(index, (route, points))| {
+            let offset = |node: usize, at_start: bool| -> (f32, bool) {
+                let Some(side) = end_side(points, at_start) else {
+                    return (0.0, false);
+                };
+                let group = group_of(node, side);
+                if group.len() < 2 {
+                    return (0.0, false);
+                }
+                let radii: Vec<f32> = group
+                    .iter()
+                    .filter_map(|(member, _)| routes.get(*member).map(|route| radius(route)))
+                    .collect();
+                let mut positions = Vec::with_capacity(radii.len());
+                let mut at = 0.0;
+                for pair in radii.windows(2) {
+                    positions.push(at);
+                    if let (Some(a), Some(b)) = (pair.first(), pair.get(1)) {
+                        at += bundle_spacing(*a, *b);
+                    }
+                }
+                positions.push(at);
+                let position = group
+                    .iter()
+                    .position(|(member, start)| *member == index && *start == at_start)
+                    .unwrap_or(0);
+                let hidden = block_nodes.contains(&node) && matches!(side, Side::Top | Side::Left);
+                let anchor = if hidden { at } else { at / 2.0 };
+                (
+                    positions.get(position).copied().unwrap_or(0.0) - anchor,
+                    hidden,
+                )
+            };
+            [offset(route.from_node, true), offset(route.to_node, false)]
+        })
+        .collect()
+}
+
+/// The unit vector along the side an end sits on: +x for a top or bottom side, +y for a
+/// left or right side.
+fn side_axis(side: Side) -> (f32, f32) {
+    match side {
+        Side::Top | Side::Bottom => (1.0, 0.0),
+        Side::Left | Side::Right => (0.0, 1.0),
+    }
+}
+
+/// A link as drawn: its adjusted flat route, its path laid over the filled slabs and cut
+/// back at its endpoint blocks, and its place in a bundle of coinciding routes.
+struct DrawnLink {
+    points: Vec<PagePoint>,
+    path: Vec<IsoPoint>,
+    place: Option<(usize, usize)>,
 }
 
 /// Every link: its adjusted flat route, and its path laid over the filled slabs and cut back
@@ -974,19 +1160,140 @@ fn link_paths(
     terrain: &[Terrain],
     solids: &[Solid],
     inputs: &SolidInputs,
-) -> Vec<(Vec<PagePoint>, Vec<IsoPoint>)> {
+    zoom: f32,
+) -> Vec<DrawnLink> {
     let block_silhouette = |node: usize| {
         solids
             .iter()
             .find(|solid| solid.node == node && solid.shape == SolidShape::Block)
             .map(|solid| solid.outline.clone())
     };
-    geometry
-        .links
+    let blocks: Vec<BoxRect> = solids
         .iter()
-        .take(LINKS_MAX)
-        .map(|route| {
-            let points = adjusted_route(route, geometry, solids, inputs);
+        .filter(|solid| solid.shape == SolidShape::Block)
+        .map(|solid| solid.footprint)
+        .collect();
+    let routes: Vec<&LinkRoute> = geometry.links.iter().take(LINKS_MAX).collect();
+    let places = bundle_places(geometry);
+    let block_nodes: Vec<usize> = solids
+        .iter()
+        .filter(|solid| solid.shape == SolidShape::Block)
+        .map(|solid| solid.node)
+        .collect();
+    let raw: Vec<Vec<PagePoint>> = routes.iter().map(|route| route.points.clone()).collect();
+    let offsets = end_offsets(&routes, &raw, zoom, &block_nodes);
+    let key = |route: &LinkRoute| {
+        (
+            route.from_node.min(route.to_node),
+            route.from_node.max(route.to_node),
+        )
+    };
+    let adjusted: Vec<Vec<PagePoint>> = routes
+        .iter()
+        .zip(&places)
+        .map(|(route, place)| {
+            // A bundle is moved whole, so every member's inner legs are laid out with the
+            // bundle's widest offset added to the zone clearance, from one shared route.
+            let widest = place.map_or(0.0, |_| {
+                routes
+                    .iter()
+                    .zip(&offsets)
+                    .filter(|(member, _)| key(member) == key(route))
+                    .map(|(_, [start, end])| start.0.abs().max(end.0.abs()))
+                    .fold(0.0, f32::max)
+            });
+            adjusted_route(
+                route,
+                geometry,
+                solids,
+                inputs,
+                ISO_LINK_CLEARANCE_PX + widest,
+            )
+        })
+        .collect();
+    let on_side = |point: PagePoint, node: usize| {
+        geometry.nodes.get(node).is_none_or(|node| {
+            let bounds = attach_bounds(node);
+            point.x >= bounds.x - GEOMETRY_EPSILON
+                && point.x <= bounds.right() + GEOMETRY_EPSILON
+                && point.y >= bounds.y - GEOMETRY_EPSILON
+                && point.y <= bounds.bottom() + GEOMETRY_EPSILON
+        })
+    };
+    let shared = shared_route_places(&adjusted);
+    routes
+        .iter()
+        .zip(adjusted)
+        .zip(&offsets)
+        .zip(&shared)
+        .map(|(((route, adjusted), [start_offset, end_offset]), place)| {
+            let whole = place.is_some() || route::corners(&adjusted).len() < 3;
+            let moved = if whole {
+                // One sideways shift for the whole route: from an end on a hidden side,
+                // whose group is anchored, else from the end that shares a side.
+                let (offset, at_start) = match (start_offset, end_offset) {
+                    (_, (offset, true)) => (*offset, false),
+                    ((offset, true), _) => (*offset, true),
+                    (_, (offset, false)) if offset.abs() > GEOMETRY_EPSILON => (*offset, false),
+                    ((offset, false), _) => (*offset, true),
+                };
+                match (
+                    offset.abs() > GEOMETRY_EPSILON,
+                    end_side(&adjusted, at_start),
+                ) {
+                    (true, Some(side)) => {
+                        let axis = side_axis(side);
+                        let kept = route::corners(&adjusted);
+                        let leg = if at_start {
+                            (kept.first(), kept.get(1))
+                        } else {
+                            (kept.get(kept.len().wrapping_sub(2)), kept.last())
+                        };
+                        // The left normal of the leg, which `offset_polyline` shifts along.
+                        let left = match leg {
+                            (Some(a), Some(b)) => {
+                                let length = (b.x - a.x).hypot(b.y - a.y).max(GEOMETRY_EPSILON);
+                                ((b.y - a.y) / length, -(b.x - a.x) / length)
+                            }
+                            _ => (0.0, 0.0),
+                        };
+                        let sign = left.0 * axis.0 + left.1 * axis.1;
+                        Some(route::offset_polyline(&adjusted, offset * sign))
+                    }
+                    _ => None,
+                }
+            } else {
+                let mut points = adjusted.clone();
+                for (offset, at_start) in [(start_offset.0, true), (end_offset.0, false)] {
+                    if offset.abs() <= GEOMETRY_EPSILON {
+                        continue;
+                    }
+                    if let Some(side) = end_side(&points, at_start) {
+                        let axis = side_axis(side);
+                        points = route::shift_end_leg(
+                            &points,
+                            (axis.0 * offset, axis.1 * offset),
+                            at_start,
+                        );
+                    }
+                }
+                Some(points)
+            };
+            let points = match moved {
+                Some(moved)
+                    if moved
+                        .first()
+                        .is_some_and(|first| on_side(*first, route.from_node))
+                        && moved
+                            .last()
+                            .is_some_and(|last| on_side(*last, route.to_node))
+                        && !route::enters_any(&moved, &blocks) =>
+                {
+                    moved
+                }
+                _ => adjusted,
+            };
+            let place = *place;
             let mut path = drape::drape(&points, terrain);
             if let Some(outline) = block_silhouette(route.from_node) {
                 drape::trim_start_at(&mut path, &outline);
@@ -996,7 +1303,11 @@ fn link_paths(
                 drape::trim_end_at(&mut path, &outline);
                 drape::land_end_at(&mut path, &outline);
             }
-            (points, path)
+            DrawnLink {
+                points,
+                path,
+                place,
+            }
         })
         .collect()
 }
@@ -1140,8 +1451,9 @@ pub fn project_zoomed(
             top: solid.base_z + solid.height,
         })
         .collect();
-    let routes = link_paths(geometry, &terrain, &solids, inputs);
-    for (route, (points, path)) in geometry.links.iter().zip(&routes) {
+    let routes = link_paths(geometry, &terrain, &solids, inputs, zoom);
+    for (route, drawn) in geometry.links.iter().zip(&routes) {
+        let (points, path, place) = (&drawn.points, &drawn.path, &drawn.place);
         for point in path {
             extent.add(project_point(point.x, point.y, point.z, ZERO_OFFSET));
         }
@@ -1158,7 +1470,10 @@ pub fn project_zoomed(
         // The tag pill lies on the tube's top, as a pipe's does.
         let tag_z = path.first().map_or(0.0, |point| point.z)
             + 2.0 * link_tube_radius(route.line, route.tint) * zoom;
-        if let Some(label) = link_label(route, points, tag_z, zoom, origin, &unshifted) {
+        let fraction = place.map_or(0.5, |(position, size)| {
+            (position as f32 + 0.5) / size as f32
+        });
+        if let Some(label) = link_label(route, points, tag_z, zoom, origin, &unshifted, fraction) {
             for corner in label.corners {
                 extent.add(corner);
             }
@@ -1215,7 +1530,7 @@ pub fn project_zoomed(
         footer_shift,
         solids,
         labels,
-        link_paths: routes.into_iter().map(|(_, path)| path).collect(),
+        link_paths: routes.into_iter().map(|drawn| drawn.path).collect(),
         link_kinds: geometry
             .links
             .iter()
@@ -1399,6 +1714,170 @@ pub fn iso_labels_clear(scene: Option<&IsoScene>) -> CheckReport {
 
 /// How close to a box corner a link end may land (section 12.7).
 pub const ISO_LINK_CORNER_CLEARANCE_PX: f32 = 8.0;
+
+/// A link's cone base radius as a multiple of its tube radius (section 12.3 rule 7).
+pub const LINK_CONE_RADIUS_SCALE: f32 = 1.9;
+
+/// The air two parallel link tubes keep between their surfaces (section 12.7).
+pub const ISO_LINK_GAP_PX: f32 = 4.0;
+
+/// For two parallel axis-aligned legs with an overlapping extent, the gap between their
+/// lines and the length of the overlap.
+fn parallel_overlap(a: route::FlatSegment, b: route::FlatSegment) -> Option<(f32, f32)> {
+    let extent = |a0: f32, a1: f32, b0: f32, b1: f32| {
+        a0.max(a1).min(b0.max(b1)) - a0.min(a1).max(b0.min(b1))
+    };
+    let horizontal = |leg: route::FlatSegment| {
+        (leg.start.y - leg.end.y).abs() <= GEOMETRY_EPSILON
+            && (leg.start.x - leg.end.x).abs() > GEOMETRY_EPSILON
+    };
+    let vertical = |leg: route::FlatSegment| {
+        (leg.start.x - leg.end.x).abs() <= GEOMETRY_EPSILON
+            && (leg.start.y - leg.end.y).abs() > GEOMETRY_EPSILON
+    };
+    let (gap, shared) = if horizontal(a) && horizontal(b) {
+        (
+            (a.start.y - b.start.y).abs(),
+            extent(a.start.x, a.end.x, b.start.x, b.end.x),
+        )
+    } else if vertical(a) && vertical(b) {
+        (
+            (a.start.x - b.start.x).abs(),
+            extent(a.start.y, a.end.y, b.start.y, b.end.y),
+        )
+    } else {
+        return None;
+    };
+    (shared > GEOMETRY_EPSILON).then_some((gap, shared))
+}
+
+/// NotApplicable with reason "projection is flat" for None and "page has fewer than two
+/// links" otherwise short of a pair; section 12.7 otherwise. Each unordered pair of drawn
+/// link paths is one examined unit: no two legs share a collinear stretch, no two parallel
+/// legs run closer than their tube radii plus ISO_LINK_GAP_PX over an overlapping extent,
+/// and two ends on one node keep two cone bases apart. A defect points at the later link.
+pub fn iso_links_apart(geometry: &PageGeometry, scene: Option<&IsoScene>) -> CheckReport {
+    let Some(scene) = scene else {
+        return CheckReport::not_applicable(CheckName::IsoLinksApart, "projection is flat");
+    };
+    if scene.link_paths.len() < 2 {
+        return CheckReport::not_applicable(
+            CheckName::IsoLinksApart,
+            "page has fewer than two links",
+        );
+    }
+    debug_assert!(
+        scene.link_paths.len() <= LINKS_MAX,
+        "iso-links-apart would drop links past {LINKS_MAX}"
+    );
+    struct Drawn<'a> {
+        pointer: NodePointer,
+        legs: Vec<route::FlatSegment>,
+        radius: f32,
+        ends: [(usize, ScreenPoint); 2],
+        route: &'a LinkRoute,
+    }
+    let drawn: Vec<Drawn> = scene
+        .link_paths
+        .iter()
+        .zip(&scene.link_kinds)
+        .zip(&geometry.links)
+        .take(LINKS_MAX)
+        .enumerate()
+        .filter_map(|(index, ((path, kind), route))| {
+            let flat: Vec<PagePoint> = path
+                .iter()
+                .map(|point| PagePoint {
+                    x: point.x,
+                    y: point.y,
+                })
+                .collect();
+            let (first, last) = (path.first()?, path.last()?);
+            Some(Drawn {
+                pointer: NodePointer::root().child("links").index(index),
+                legs: route::legs(&route::corners(&flat)),
+                radius: link_tube_radius(kind.0, kind.1) * scene.zoom,
+                ends: [
+                    (
+                        route.from_node,
+                        project_point(first.x, first.y, first.z, scene.offset),
+                    ),
+                    (
+                        route.to_node,
+                        project_point(last.x, last.y, last.z, scene.offset),
+                    ),
+                ],
+                route,
+            })
+        })
+        .collect();
+    let mut examined: u64 = 0;
+    let mut defects = Vec::new();
+    for (later_index, later) in drawn.iter().enumerate() {
+        for earlier in drawn.iter().take(later_index) {
+            examined += 1;
+            let least_gap = later.radius + earlier.radius + ISO_LINK_GAP_PX;
+            let mut shared_total: f32 = 0.0;
+            let mut closest: Option<f32> = None;
+            for leg in &later.legs {
+                for other in &earlier.legs {
+                    let Some((gap, shared)) = parallel_overlap(*leg, *other) else {
+                        continue;
+                    };
+                    if gap <= GEOMETRY_EPSILON {
+                        shared_total += shared;
+                    } else if gap < least_gap - GEOMETRY_EPSILON {
+                        closest = Some(closest.map_or(gap, |known: f32| known.min(gap)));
+                    }
+                }
+            }
+            if shared_total > GEOMETRY_EPSILON {
+                defects.push(Defect {
+                    pointer: later.pointer.clone(),
+                    message: format!("shares {shared_total:.2} px with {}", earlier.pointer),
+                });
+            }
+            if let Some(gap) = closest {
+                defects.push(Defect {
+                    pointer: later.pointer.clone(),
+                    message: format!(
+                        "runs {gap:.2} px beside {}, closer than {least_gap:.2}",
+                        earlier.pointer
+                    ),
+                });
+            }
+            let least_apart = LINK_CONE_RADIUS_SCALE * (later.radius + earlier.radius);
+            for (node, end) in later.ends {
+                for (other_node, other_end) in earlier.ends {
+                    if node != other_node {
+                        continue;
+                    }
+                    let apart = (end.x - other_end.x).hypot(end.y - other_end.y);
+                    if apart < least_apart - GEOMETRY_EPSILON {
+                        let owner = geometry.nodes.get(node).map_or_else(
+                            || NodePointer::root().child("<absent>"),
+                            |node| node.pointer.clone(),
+                        );
+                        defects.push(Defect {
+                            pointer: later.pointer.clone(),
+                            message: format!(
+                                "ends {apart:.2} px from the end of {} on {owner}, closer than {least_apart:.2}",
+                                earlier.pointer
+                            ),
+                        });
+                    }
+                }
+            }
+            let _ = (later.route, earlier.route);
+        }
+    }
+    CheckReport {
+        check: CheckName::IsoLinksApart,
+        examined,
+        defects,
+        not_applicable: None,
+    }
+}
 
 /// Which end of a link a defect names.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

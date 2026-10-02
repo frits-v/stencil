@@ -133,6 +133,7 @@ fn golden_g7() {
             (CheckName::IsoLabelsClear, 0),
             (CheckName::IsoLinksClear, 0),
             (CheckName::IsoLinkEnds, 0),
+            (CheckName::IsoLinksApart, 0),
             (CheckName::PrintFit, 0),
             (CheckName::IconMatchesProduct, 6),
         ]
@@ -144,6 +145,7 @@ fn golden_g7() {
             | CheckName::IsoLabelsClear
             | CheckName::IsoLinksClear
             | CheckName::IsoLinkEnds
+            | CheckName::IsoLinksApart
             | CheckName::PrintFit => CheckOutcome::NotApplicable,
             CheckName::ChildInsideContainer
             | CheckName::SiblingsDoNotOverlap
