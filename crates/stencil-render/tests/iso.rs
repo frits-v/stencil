@@ -2942,13 +2942,40 @@ fn a_pipe_through_floor_text_a_tag_nearer_another_pipe_and_a_label_without_a_blo
             ScreenPoint { x: -5.0, y: 5.0 },
         ],
     };
-    let mut scene = scene_with(vec![text]);
+    let mut scene = scene_with(vec![text.clone()]);
     scene.solids = vec![pipe.clone()];
     let report = iso_labels_clear(Some(&scene));
     assert_eq!(report.examined, 1);
     assert_eq!(
         defect_messages(&report),
         ["/body/0/text label /body/0/text at 0.00,0.00 along x is crossed by pipe /body/3"]
+    );
+
+    // The same pipe landing on the text's owner, a block whose silhouette it touches: its
+    // end lies under the block's faces, so the pair is not examined.
+    let mut owned = text;
+    owned.node = Some(0);
+    let owner = Solid {
+        node: 0,
+        pointer: NodePointer::root().child("body").index(0),
+        shape: SolidShape::Block,
+        opaque: true,
+        outline: vec![
+            ScreenPoint { x: 4.0, y: -20.0 },
+            ScreenPoint { x: 40.0, y: -20.0 },
+            ScreenPoint { x: 40.0, y: 20.0 },
+            ScreenPoint { x: 4.0, y: 20.0 },
+        ],
+        ..pipe.clone()
+    };
+    let mut landed = scene_with(vec![owned]);
+    landed.solids = vec![owner, pipe.clone()];
+    let report = iso_labels_clear(Some(&landed));
+    assert!(
+        !defect_messages(&report)
+            .iter()
+            .any(|message| message.contains("crossed by pipe")),
+        "{report:?}"
     );
 
     // A tag owned by node 4, whose own surface lies 100 px away while node 3's is under it.
@@ -3000,16 +3027,15 @@ fn a_pipe_through_floor_text_a_tag_nearer_another_pipe_and_a_label_without_a_blo
 /// color, where every tube entry draws a wire, so the legend tells the two looks apart.
 #[test]
 fn a_band_legend_entry_draws_a_bar_swatch_and_a_tube_entry_a_wire() {
-    let page: Page = serde_json::from_str(ONPREM_JSON).unwrap();
-    let geometry = common::layout_with_cosmic_text(&page);
-    let iso = render_svg(&page, &geometry).unwrap();
-    let document = common::parse_xml(&iso.svg);
-    let band_index = page
+    let rendered = common::render_document_with_fixed_metrics(band_page("solid"));
+    let document = common::parse_xml(&rendered.svg.svg);
+    let band_index = rendered
+        .page
         .legend
         .iter()
         .position(|entry| entry.form == PipeForm::Band)
-        .expect("the VLAN 99 band entry");
-    for (index, entry) in page.legend.iter().enumerate() {
+        .expect("the band entry");
+    for (index, entry) in rendered.page.legend.iter().enumerate() {
         let group = common::group(&document, &format!("/legend/{index}"));
         let wires = common::children_named(group, "line").len();
         let bars = common::children_named(group, "rect");
@@ -3022,6 +3048,25 @@ fn a_band_legend_entry_draws_a_bar_swatch_and_a_tube_entry_a_wire() {
             assert_eq!((wires, bars.len()), (1, 0), "{}", entry.text);
         }
     }
+}
+
+/// A page with a band pipe of `line` between two items beside a tube pipe, and a legend
+/// entry for each.
+fn band_page(line: &str) -> Value {
+    common::page_document(
+        json!([{ "tag": "Row", "children": [
+            { "tag": "Item", "kind": "product", "id": "a", "title": "Source" },
+            { "tag": "Col", "children": [
+                { "tag": "Pipe", "dir": "h", "line": line, "tint": 1, "form": "band", "label": "bulk", "from": "a", "to": "b" },
+                { "tag": "Pipe", "dir": "h", "line": "gray", "label": "control", "from": "a", "to": "b" }
+            ] },
+            { "tag": "Item", "kind": "product", "id": "b", "title": "Sink" }
+        ] }]),
+        json!([
+            { "line": line, "tint": 1, "form": "band", "text": "bulk flow" },
+            { "line": "gray", "text": "control" }
+        ]),
+    )
 }
 
 /// Section 12.7: tube radii follow the zoom, so the tag plane of a link lies a tube
@@ -3074,8 +3119,8 @@ fn every_link_path_of_every_iso_example_lies_at_one_height() {
             examined += 1;
         }
     }
-    // Hero 6, platform 4, people 4, transit 1; the on-prem deny is a pipe.
-    assert_eq!(examined, 15);
+    // Hero 6, platform 4, people 4, on-prem 1, transit 1.
+    assert_eq!(examined, 16);
 }
 
 /// Section 12.7 rule 8: a Z the router left with its step at the end of the target's stub
@@ -3191,32 +3236,15 @@ fn the_measured_canvas_of_every_iso_example_is_the_svg_viewbox() {
 /// background inside, the line's dasharray on the outline.
 #[test]
 fn a_dashed_band_legend_entry_draws_a_hollow_bar_in_its_pattern() {
-    fn dash_every_tint_4_line(value: &mut Value) {
-        match value {
-            Value::Object(object) => {
-                if object.get("tint") == Some(&json!(4)) && object.contains_key("line") {
-                    object.insert("line".to_string(), json!("dash"));
-                }
-                for member in object.values_mut() {
-                    dash_every_tint_4_line(member);
-                }
-            }
-            Value::Array(members) => members.iter_mut().for_each(dash_every_tint_4_line),
-            _ => {}
-        }
-    }
-    let mut document: Value = serde_json::from_str(ONPREM_JSON).unwrap();
-    dash_every_tint_4_line(&mut document);
-    let page: Page = serde_json::from_value(document).unwrap();
-    let band_index = page
+    let rendered = common::render_document_with_fixed_metrics(band_page("dash"));
+    let band_index = rendered
+        .page
         .legend
         .iter()
         .position(|entry| entry.form == PipeForm::Band)
-        .expect("the VLAN 99 band entry");
-    assert_eq!(page.legend[band_index].line, Line::Dash);
-    let geometry = common::layout_with_cosmic_text(&page);
-    let iso = render_svg(&page, &geometry).unwrap();
-    let document = common::parse_xml(&iso.svg);
+        .expect("the band entry");
+    assert_eq!(rendered.page.legend[band_index].line, Line::Dash);
+    let document = common::parse_xml(&rendered.svg.svg);
     let group = common::group(&document, &format!("/legend/{band_index}"));
     let bars = common::children_named(group, "rect");
     assert_eq!(bars.len(), 1);

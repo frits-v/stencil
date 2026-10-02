@@ -1,7 +1,7 @@
 {
   "title": "Two firewall zones and four VLANs at the head office",
   "kicker": "On-prem network · head office site",
-  "lede": "The core switch trunks the staff and server VLANs to the edge firewall, which routes them to the DMZ and the transit VLAN. Traffic that starts in the DMZ never reaches the inside zone.",
+  "lede": "The core switch trunks VLAN 10 and VLAN 20 to the edge firewall, which carries them on to the DMZ and the transit VLAN. Traffic from the DMZ never reaches the inside zone.",
   "canvas": "internal",
   "grammar": "plain",
   "projection": "iso",
@@ -17,7 +17,7 @@
           "grow": [
             6,
             0,
-            3,
+            0,
             0,
             6
           ],
@@ -73,7 +73,8 @@
                       "text": "sw-core-01",
                       "source": "built"
                     }
-                  ]
+                  ],
+                  "id": "core"
                 },
                 {
                   "tag": "Box",
@@ -115,11 +116,10 @@
             },
             {
               "tag": "Col",
-              "justify": "center",
-              "gap": 12,
               "children": [
                 {
                   "tag": "Col",
+                  "gap": 12,
                   "children": [
                     {
                       "tag": "Pipe",
@@ -127,23 +127,16 @@
                       "line": "solid",
                       "tint": 1,
                       "label": "VLAN 10",
-                      "sub": "staff trunk",
-                      "from": "vlan10",
+                      "from": "core",
                       "to": "fw"
-                    }
-                  ]
-                },
-                {
-                  "tag": "Col",
-                  "children": [
+                    },
                     {
                       "tag": "Pipe",
                       "dir": "h",
                       "line": "solid",
                       "tint": 2,
                       "label": "VLAN 20",
-                      "sub": "server trunk",
-                      "from": "vlan20",
+                      "from": "core",
                       "to": "fw"
                     }
                   ]
@@ -162,23 +155,32 @@
                     {
                       "text": "fw-edge-01",
                       "source": "built"
+                    },
+                    {
+                      "text": "permits inside to DMZ",
+                      "source": "built"
+                    },
+                    {
+                      "text": "permits inside to transit",
+                      "source": "built"
+                    },
+                    {
+                      "text": "denies DMZ to inside",
+                      "source": "built"
                     }
                   ],
                   "id": "fw",
                   "shape": "card"
                 }
               ],
-              "grow": [
-                1
-              ]
+              "justify": "center"
             },
             {
               "tag": "Col",
-              "justify": "center",
-              "gap": 12,
               "children": [
                 {
                   "tag": "Col",
+                  "gap": 12,
                   "children": [
                     {
                       "tag": "Pipe",
@@ -186,39 +188,17 @@
                       "line": "solid",
                       "tint": 3,
                       "label": "VLAN 30",
-                      "sub": "DMZ",
                       "from": "fw",
                       "to": "vlan30"
-                    }
-                  ]
-                },
-                {
-                  "tag": "Col",
-                  "children": [
-                    {
-                      "tag": "Pipe",
-                      "dir": "h",
-                      "line": "solid",
-                      "tint": 4,
-                      "label": "VLAN 99",
-                      "sub": "transit",
-                      "form": "band",
-                      "from": "fw",
-                      "to": "vlan99"
-                    }
-                  ]
-                },
-                {
-                  "tag": "Col",
-                  "children": [
+                    },
                     {
                       "tag": "Pipe",
                       "dir": "h",
                       "line": "deny",
                       "label": "DMZ to inside",
-                      "arrow": "start",
                       "from": "fw",
-                      "to": "dmz"
+                      "to": "vlan30",
+                      "arrow": "start"
                     }
                   ]
                 }
@@ -229,6 +209,28 @@
               "kind": "boundary",
               "label": "DMZ",
               "children": [
+                {
+                  "tag": "Box",
+                  "kind": "group",
+                  "tint": 4,
+                  "label": "VLAN 99 · transit",
+                  "children": [
+                    {
+                      "tag": "Item",
+                      "kind": "service",
+                      "title": "Edge router",
+                      "subtitle": "ISP uplink",
+                      "facts": [
+                        {
+                          "text": "rt-edge-01",
+                          "source": "built"
+                        }
+                      ],
+                      "id": "rt"
+                    }
+                  ],
+                  "id": "vlan99"
+                },
                 {
                   "tag": "Box",
                   "kind": "group",
@@ -247,7 +249,8 @@
                               "text": "web-01",
                               "source": "built"
                             }
-                          ]
+                          ],
+                          "id": "web"
                         },
                         {
                           "tag": "Item",
@@ -264,27 +267,6 @@
                     }
                   ],
                   "id": "vlan30"
-                },
-                {
-                  "tag": "Box",
-                  "kind": "group",
-                  "tint": 4,
-                  "label": "VLAN 99 · transit",
-                  "children": [
-                    {
-                      "tag": "Item",
-                      "kind": "service",
-                      "title": "Edge router",
-                      "subtitle": "ISP uplink",
-                      "facts": [
-                        {
-                          "text": "rt-edge-01",
-                          "source": "built"
-                        }
-                      ]
-                    }
-                  ],
-                  "id": "vlan99"
                 }
               ],
               "id": "dmz"
@@ -313,12 +295,22 @@
     {
       "line": "solid",
       "tint": 4,
-      "form": "band",
       "text": "VLAN 99, transit"
     },
     {
       "line": "deny",
       "text": "blocked by the firewall"
+    }
+  ],
+  "links": [
+    {
+      "from": "fw",
+      "to": "rt",
+      "line": "solid",
+      "tint": 4,
+      "from_side": "top",
+      "label": "VLAN 99",
+      "sub": "transit"
     }
   ]
 }

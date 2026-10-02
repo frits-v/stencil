@@ -4,7 +4,7 @@ check text-fits-box: examined 22 text runs, 0 defects
 check remembered-constants: examined 19 text fields, 0 defects
 check legend-consistency: examined 6 relations, 0 defects
 check links-routed: examined 4 links, 0 defects
-check links-avoid-boxes: examined 147 pairs, 0 defects
+check links-avoid-boxes: examined 143 pairs, 0 defects
 check pipes-land: examined 0 pipe ends, not applicable: page has no pipes
 check iso-labels-clear: examined 236 pairs, 0 defects
 check iso-links-clear: examined 10 link legs, 0 defects

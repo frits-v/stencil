@@ -215,6 +215,47 @@ fn link_checks_count_links_and_segment_obstacle_pairs() {
     assert_eq!(links_avoid_boxes(&geometry).examined, (segments * 5) as u64);
 }
 
+/// A gutter column draws nothing, so a tag inside it lies on open floor; only the column's
+/// children can meet it.
+#[test]
+fn a_tag_inside_a_gutter_column_is_not_a_defect() {
+    let tall = |id: &str| {
+        json!({ "tag": "Item", "kind": "product", "id": id, "title": id, "facts": [
+            { "text": "one", "source": "built" }, { "text": "two", "source": "built" },
+            { "text": "three", "source": "built" }, { "text": "four", "source": "built" }
+        ] })
+    };
+    let body = json!([{ "tag": "Row", "grow": [0, 1, 0], "children": [
+        tall("a"),
+        { "tag": "Col", "children": [{ "tag": "Col", "children": [
+            { "tag": "Pipe", "dir": "h", "line": "solid", "tint": 1, "label": "trunk" }
+        ] }] },
+        tall("b")
+    ] }]);
+    let plain = page_from(linked_page(body.clone(), json!([])));
+    let geometry = layout(&plain);
+    let column = node(&geometry, "/body/0/children/1");
+    let via_x = column.bounds.x + column.bounds.width / 2.0;
+    let via_y = column.bounds.y + 12.0;
+    let page = page_from(linked_page(
+        body,
+        json!([{ "from": "a", "to": "b", "line": "solid", "tint": 1, "label": "HTTPS",
+                 "via": [{ "x": via_x, "y": via_y }] }]),
+    ));
+    let geometry = layout(&page);
+    let tag = route_of(&geometry, 0)
+        .tag
+        .expect("a labelled link has a tag");
+    let column = node(&geometry, "/body/0/children/1");
+    assert!(
+        tag.x < column.bounds.right() && tag.right() > column.bounds.x,
+        "the tag {tag:?} lies across the column {:?}",
+        column.bounds
+    );
+    let report = links_avoid_boxes(&geometry);
+    assert!(report.passed(), "{report:?}");
+}
+
 #[test]
 fn a_tag_is_sized_like_a_pipe_tag_and_centered_on_the_longest_segment() {
     let geometry = layout(&page_from(row_with_obstacle(json!([
