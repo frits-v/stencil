@@ -207,6 +207,10 @@
     "LegendEntry": {
       "type": "object",
       "properties": {
+        "form": {
+          "description": "The form of the pipes this entry names: a tube (the default) or a band. A band and\na tube of one line and tint are two legend entries, and the swatch draws the form.",
+          "$ref": "#/$defs/PipeForm"
+        },
         "line": {
           "$ref": "#/$defs/Line"
         },

@@ -285,7 +285,7 @@
         <text x="514.6" y="1636.91" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">VLAN 30, DMZ</text>
       </g>
       <g data-id="/legend/3" data-tag="LegendEntry" data-kind="solid-4">
-        <line x1="614.92" y1="1632.54" x2="640.92" y2="1632.54" stroke="#A36E14" stroke-width="2.5"/>
+        <rect x="614.92" y="1628.54" width="26" height="8" fill="#A36E14"/>
         <text x="646.92" y="1636.91" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">Solid amber</text>
         <text x="722.56" y="1636.91" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">VLAN 99, transit</text>
       </g>

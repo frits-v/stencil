@@ -24,7 +24,7 @@ Examined counts: each check reports how many units it looked at, and a check tha
 | siblings-do-not-overlap | pair of siblings | the later sibling | box WxH at (X, Y) overlaps OTHER box WxH at (X, Y) by WxH |
 | text-fits-box | text run | the node owning the run | PART "TEXT" measured WxH in box WxH; or PART box WxH at (X, Y) extends outside the node box WxH at (X, Y) |
 | remembered-constants | text field | the field | contains LITERAL: REASON |
-| legend-consistency | relation: each line use (Pipe, Tee arm, Tee spine, Link) and each legend entry, keyed on line and tint | the use, or /legend/i | USER line L tint T has no legend entry; legend line L tint T is never used; legend line L tint T is already listed at /legend/j |
+| legend-consistency | relation: each line use (Pipe, Tee arm, Tee spine, Link) and each legend entry, keyed on line, tint and form | the use, or /legend/i | USER line L tint T has no legend entry; legend line L tint T is never used; legend line L tint T is already listed at /legend/j |
 | links-routed | link | /links/i | no route from A to B avoids every obstacle; drawn as a fallback L |
 | links-avoid-boxes | pair: segment and obstacle, tag and node | /links/i | segment N from (X, Y) to (X, Y) enters NODE box WxH at (X, Y); tag WxH at (X, Y) overlaps NODE box WxH at (X, Y) |
 | pipes-land | each pipe end with a neighbor or a from or to target | /body/... (the pipe) | SIDE neighbor NODE has no box across the pipe's center Y; or from (to) target NODE has none, or lies on the other side; iso: SIDE end stops D px short of NODE; or lands on the edge of zone NODE and names no target |

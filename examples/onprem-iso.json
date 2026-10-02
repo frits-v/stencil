@@ -313,6 +313,7 @@
     {
       "line": "solid",
       "tint": 4,
+      "form": "band",
       "text": "VLAN 99, transit"
     },
     {

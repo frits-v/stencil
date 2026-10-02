@@ -30,6 +30,9 @@ const BADGE_RADIUS_PX: f32 = 4.0;
 const CARD_RADIUS_PX: f32 = 8.0;
 const FACT_RADIUS_PX: f32 = 4.0;
 const TAG_RADIUS_PX: f32 = 6.0;
+/// The height of a legend swatch for a band form: a flat bar rather than a wire.
+const BAND_SWATCH_HEIGHT_PX: f32 = 8.0;
+const BAND_SWATCH_OUTLINE_PX: f32 = 1.5;
 pub(crate) const ICON_CHIP_SIZE_PX: f32 = 36.0;
 const ICON_CHIP_RADIUS_PX: f32 = 6.0;
 /// Arrowhead triangle along the run axis and across it (section 11.2).
@@ -539,6 +542,7 @@ impl<'a> SvgWriter<'a> {
             | DocumentNode::Foot => PartContext::default(),
             DocumentNode::LegendEntry(entry) => PartContext {
                 line: Some(LineUse::new(entry.line, entry.tint)),
+                pipe_form: Some(entry.form),
                 ..PartContext::default()
             },
             DocumentNode::Content(NodeRef::TeeArm(pipe)) => PartContext {
@@ -740,6 +744,10 @@ impl<'a> SvgWriter<'a> {
                 let kind = context.line.ok_or_else(|| part_mismatch(node, part))?;
                 let dir = context.pipe_dir.ok_or_else(|| part_mismatch(node, part))?;
                 self.write_wire(depth, bounds, dir, kind);
+            }
+            PartName::Swatch if context.pipe_form == Some(PipeForm::Band) => {
+                let kind = context.line.ok_or_else(|| part_mismatch(node, part))?;
+                self.write_band_swatch(depth, bounds, kind);
             }
             PartName::Swatch => {
                 let kind = context.line.ok_or_else(|| part_mismatch(node, part))?;
@@ -1003,6 +1011,34 @@ impl<'a> SvgWriter<'a> {
             }
         };
         self.line(depth, &circle);
+    }
+
+    /// A flat bar centered on the swatch's center line, filled in the wire color; a
+    /// patterned line draws it hollow with its pattern, as the band on the floor is.
+    fn write_band_swatch(&mut self, depth: usize, bounds: BoxRect, kind: LineUse) {
+        let stroke = self.palette.wire_style(kind).stroke;
+        let bar = BoxRect {
+            x: bounds.x,
+            y: bounds.y + bounds.height / 2.0 - BAND_SWATCH_HEIGHT_PX / 2.0,
+            width: bounds.width,
+            height: BAND_SWATCH_HEIGHT_PX,
+        };
+        if stroke.line == LineStyle::Solid {
+            self.write_rect(depth, bar, 0.0, Some(stroke.color), None);
+        } else {
+            let outline = Stroke {
+                width_px: BAND_SWATCH_OUTLINE_PX,
+                line: stroke.line,
+                color: stroke.color,
+            };
+            self.write_rect(
+                depth,
+                bar,
+                0.0,
+                Some(self.palette.page_background()),
+                Some(outline),
+            );
+        }
     }
 
     /// A `<line>` along the box's center line in the run direction.

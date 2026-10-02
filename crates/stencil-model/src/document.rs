@@ -192,6 +192,10 @@ pub struct LegendEntry {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[schemars(range(min = 1, max = 8))]
     pub tint: Option<u8>,
+    /// The form of the pipes this entry names: a tube (the default) or a band. A band and
+    /// a tube of one line and tint are two legend entries, and the swatch draws the form.
+    #[serde(default, skip_serializing_if = "PipeForm::is_tube")]
+    pub form: PipeForm,
     #[schemars(length(min = 1, max = 400))]
     pub text: String,
 }
