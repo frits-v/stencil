@@ -364,6 +364,19 @@ pub fn links_avoid_boxes(geometry: &PageGeometry) -> CheckReport {
             if ancestors.get(index).copied().unwrap_or(true) {
                 continue;
             }
+            // A container draws no box of its own: a tag inside a gutter column lies on
+            // open floor unless it meets one of the column's children.
+            if matches!(
+                node.tag,
+                NodeTag::Page
+                    | NodeTag::Body
+                    | NodeTag::Legend
+                    | NodeTag::Row
+                    | NodeTag::Col
+                    | NodeTag::Lanes
+            ) {
+                continue;
+            }
             examined += 1;
             // An item standing on a footprint under iso is its footprint and its floor
             // text; the room between them is open floor (section 12.3).

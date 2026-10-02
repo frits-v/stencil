@@ -1952,10 +1952,22 @@ pub fn iso_labels_clear(scene: Option<&IsoScene>) -> CheckReport {
         .filter(|solid| solid.shape == SolidShape::Surface)
         .copied()
         .collect();
+    // A pipe that lands on the label's owner ends under the owner's faces, which are
+    // painted after it, so its end may lie under the content on the owner's top.
+    let lands_on_owner = |surface: &Solid, label: &Label| {
+        label
+            .node
+            .and_then(|node| {
+                solids
+                    .iter()
+                    .find(|solid| solid.node == node && solid.shape == SolidShape::Block)
+            })
+            .is_some_and(|block| polygons_overlap(&surface.outline, &block.outline))
+    };
     for label in labels.iter().filter(|label| !label.opaque) {
         for surface in surfaces
             .iter()
-            .filter(|surface| Some(surface.node) != label.node)
+            .filter(|surface| Some(surface.node) != label.node && !lands_on_owner(surface, label))
         {
             examined += 1;
             let crossed = label

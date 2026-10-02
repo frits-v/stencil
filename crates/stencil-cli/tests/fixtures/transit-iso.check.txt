@@ -6,7 +6,7 @@ check legend-consistency: examined 4 relations, 0 defects
 check links-routed: examined 1 link, 0 defects
 check links-avoid-boxes: examined 42 pairs, 0 defects
 check pipes-land: examined 2 pipe ends, 0 defects
-check iso-labels-clear: examined 286 pairs, 0 defects
+check iso-labels-clear: examined 282 pairs, 0 defects
 check iso-links-clear: examined 3 link legs, 0 defects
 check iso-link-ends: examined 2 link ends, 0 defects
 check iso-links-apart: examined 0 link pairs, not applicable: page has fewer than two links
