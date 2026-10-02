@@ -28,7 +28,7 @@ use drape::Terrain;
 use shapes::{convex_hull, ellipse_points, polygons_overlap, segment_crosses_convex};
 
 pub use stencil_layout::ISO_BLOCK_HEIGHT_PX;
-use stencil_layout::{shape_height_px, unturned_box};
+use stencil_layout::{ISO_LABEL_CLEARANCE_PX, shape_height_px, unturned_box};
 use stencil_model::Shape;
 /// cos 30 degrees, written out so every build uses the same f32.
 pub const ISO_COS_30: f32 = 0.866_025_4;
@@ -680,6 +680,68 @@ fn solid_outline(
 /// Points sampled around each ellipse of a round solid's outline.
 const ROUND_OUTLINE_POINTS: usize = 16;
 
+/// The convex outline a pipe or tee covers on screen: a tube from dot center to dot
+/// center with a ring's radius at each end, a band's flat body, or a tee's spine tube.
+/// None for a pipe without its dot parts, which keeps its box outline.
+fn surface_outline(node: &NodeGeometry, base_z: f32, zoom: f32) -> Option<Vec<ScreenPoint>> {
+    let tube_hull = |start: (f32, f32), end: (f32, f32)| {
+        let tube = tube::Tube {
+            start,
+            end,
+            floor_z: base_z,
+            radius: ISO_TUBE_RADIUS_PX * zoom,
+        };
+        let run = tube.run()?;
+        let body = tube::body(&tube, ZERO_OFFSET)?;
+        let ring_axis_z = base_z + ISO_TUBE_RADIUS_PX * zoom;
+        let mut points = body.outline.to_vec();
+        for at in [start, end] {
+            points.extend(tube::cross_section(
+                at,
+                run,
+                ring_axis_z,
+                tube::FLANGE_RADIUS_PX * zoom,
+                ZERO_OFFSET,
+            ));
+        }
+        Some(convex_hull(&points))
+    };
+    match node.tag {
+        NodeTag::Pipe => {
+            let start = box_center(node.part(PartName::DotStart)?.bounds);
+            let end = box_center(node.part(PartName::DotEnd)?.bounds);
+            if node.pipe_form == Some(PipeForm::Band) {
+                let (dx, dy) = (end.0 - start.0, end.1 - start.1);
+                let length = dx.hypot(dy);
+                if length <= GEOMETRY_EPSILON {
+                    return None;
+                }
+                let run = (dx / length, dy / length);
+                return Some(convex_hull(&tube::band_body(
+                    (start, end),
+                    run,
+                    base_z,
+                    ZERO_OFFSET,
+                )));
+            }
+            tube_hull(start, end)
+        }
+        NodeTag::Tee => {
+            let spine = node.part(PartName::Spine)?.bounds;
+            let center_x = spine.x + spine.width / 2.0;
+            tube_hull((center_x, spine.y), (center_x, spine.bottom()))
+        }
+        _ => None,
+    }
+}
+
+fn box_center(bounds: BoxRect) -> (f32, f32) {
+    (
+        bounds.x + bounds.width / 2.0,
+        bounds.y + bounds.height / 2.0,
+    )
+}
+
 /// The screen semi-axes of a flat circle of radius r (section 12.2 rule 6).
 pub fn ellipse_radii(radius: f32) -> (f32, f32) {
     (radius * 1.5_f32.sqrt(), radius * 0.5_f32.sqrt())
@@ -975,32 +1037,42 @@ fn attach_bounds(node: &NodeGeometry) -> BoxRect {
 }
 
 /// How far apart two neighbouring links of a bundle run, center to center: their tubes
-/// plus ISO_LINK_GAP_PX of air, and never less than their two cone bases, which is what
-/// `iso-links-apart` asks of two ends on one node.
-fn bundle_spacing(radius_a: f32, radius_b: f32) -> f32 {
-    (radius_a + radius_b + ISO_LINK_GAP_PX).max(LINK_CONE_RADIUS_SCALE * (radius_a + radius_b))
+/// plus ISO_LINK_GAP_PX of air, never less than their two cone bases, which is what
+/// `iso-links-apart` asks of two ends on one node, and never less than either link's tag
+/// half-height plus the other's tube and the air, so a tag lying on one tube does not
+/// cover the other.
+fn bundle_spacing((radius_a, tag_a): (f32, f32), (radius_b, tag_b): (f32, f32)) -> f32 {
+    (radius_a + radius_b + ISO_LINK_GAP_PX)
+        .max(LINK_CONE_RADIUS_SCALE * (radius_a + radius_b))
+        .max(tag_a / 2.0 + radius_b + ISO_LINK_GAP_PX)
+        .max(tag_b / 2.0 + radius_a + ISO_LINK_GAP_PX)
+}
+
+/// A link's tube radius at the zoom and its tag's height across the run (0 without a tag),
+/// what `bundle_spacing` reads.
+fn link_width(route: &LinkRoute, zoom: f32) -> (f32, f32) {
+    let radius = link_tube_radius(route.line, route.tint) * zoom;
+    let tag = route.tag.map_or(0.0, |tag| tag.width.min(tag.height));
+    (radius, tag)
 }
 
 /// A link's place among the links whose adjusted routes coincide with its own, corner for
 /// corner: its position and the bundle's size, in link order. None for a route no other
 /// link follows. Such a bundle is moved whole, and its tags are staggered along the leg.
 fn shared_route_places(routes: &[Vec<PagePoint>]) -> Vec<Option<(usize, usize)>> {
-    let kept: Vec<Vec<PagePoint>> = routes.iter().map(|points| route::corners(points)).collect();
-    let same = |a: &[PagePoint], b: &[PagePoint]| {
-        a.len() == b.len()
-            && a.iter().zip(b).all(|(p, q)| {
-                (p.x - q.x).abs() <= GEOMETRY_EPSILON && (p.y - q.y).abs() <= GEOMETRY_EPSILON
-            })
-    };
-    kept.iter()
+    routes
+        .iter()
         .enumerate()
         .map(|(index, points)| {
-            let size = kept.iter().filter(|other| same(other, points)).count();
+            let size = routes
+                .iter()
+                .filter(|other| same_route(other, points))
+                .count();
             (size >= 2).then(|| {
-                let position = kept
+                let position = routes
                     .iter()
                     .take(index)
-                    .filter(|other| same(other, points))
+                    .filter(|other| same_route(other, points))
                     .count();
                 (position, size)
             })
@@ -1008,29 +1080,13 @@ fn shared_route_places(routes: &[Vec<PagePoint>]) -> Vec<Option<(usize, usize)>>
         .collect()
 }
 
-/// A link's place in the bundle of links that share both its endpoint nodes: its position
-/// and the bundle's size, in link order. None for a link that shares its endpoints with no
-/// other.
-fn bundle_places(geometry: &PageGeometry) -> Vec<Option<(usize, usize)>> {
-    let key = |route: &LinkRoute| {
-        (
-            route.from_node.min(route.to_node),
-            route.from_node.max(route.to_node),
-        )
-    };
-    let routes: Vec<&LinkRoute> = geometry.links.iter().take(LINKS_MAX).collect();
-    routes
-        .iter()
-        .enumerate()
-        .map(|(index, route)| {
-            let same = |other: &&&LinkRoute| key(other) == key(route);
-            let size = routes.iter().filter(same).count();
-            (size >= 2).then(|| {
-                let position = routes.iter().take(index).filter(same).count();
-                (position, size)
-            })
+/// Whether two routes coincide corner for corner.
+fn same_route(a: &[PagePoint], b: &[PagePoint]) -> bool {
+    let (a, b) = (route::corners(a), route::corners(b));
+    a.len() == b.len()
+        && a.iter().zip(&b).all(|(p, q)| {
+            (p.x - q.x).abs() <= GEOMETRY_EPSILON && (p.y - q.y).abs() <= GEOMETRY_EPSILON
         })
-        .collect()
 }
 
 /// The side of its node a drawn end sits on, read from the leg that leaves or reaches it:
@@ -1066,20 +1122,33 @@ fn end_side(points: &[PagePoint], at_start: bool) -> Option<Side> {
 }
 
 /// How far each end of each link moves along the side it shares with other ends on the
-/// same node (section 12.3 rule 8): neighbours in link order sit `bundle_spacing` apart,
-/// measured along +x for a top or bottom side and +y for a left or right side. On a visible
-/// side the group is centered on the attach point. On a block's top or left side the cut of
-/// rule 7 lands an arrival the block's height nearer the front corner than its attach
-/// point, so the group runs from the attach point toward the back, and its frontmost
-/// member keeps the attach point.
+/// same node (section 12.3 rule 8). The ends on each (node, side) pair, the side read from
+/// the leg that leaves or reaches the end, are laid out in link order `bundle_spacing`
+/// apart along +x for a top or bottom side and +y for a left or right side, from where the
+/// layout put them. On a visible side the group is centered on the mean of its attach
+/// points. On a block's top or left side the cut of rule 7 lands an arrival the block's
+/// height nearer the front corner than its attach point, so there the group is centered
+/// half the block's height behind that mean. Each offset is the move from the end's own
+/// attach point to its place, with whether the side is hidden.
 fn end_offsets(
     routes: &[&LinkRoute],
     adjusted: &[Vec<PagePoint>],
     zoom: f32,
-    block_nodes: &[usize],
+    blocks: &[(usize, f32)],
 ) -> Vec<[(f32, bool); 2]> {
-    let radius = |route: &LinkRoute| link_tube_radius(route.line, route.tint) * zoom;
-    let group_of = |node: usize, side: Side| -> Vec<(usize, bool)> {
+    // Where an end sits along its side.
+    let along = |points: &[PagePoint], at_start: bool, side: Side| -> Option<f32> {
+        let point = if at_start {
+            points.first()?
+        } else {
+            points.last()?
+        };
+        Some(match side {
+            Side::Top | Side::Bottom => point.x,
+            Side::Left | Side::Right => point.y,
+        })
+    };
+    let group_of = |node: usize, side: Side| -> Vec<(usize, bool, f32)> {
         routes
             .iter()
             .zip(adjusted)
@@ -1090,7 +1159,9 @@ fn end_offsets(
                     .filter(move |(other_node, at_start)| {
                         *other_node == node && end_side(points, *at_start) == Some(side)
                     })
-                    .map(move |(_, at_start)| (index, at_start))
+                    .filter_map(move |(_, at_start)| {
+                        along(points, at_start, side).map(|at| (index, at_start, at))
+                    })
             })
             .collect()
     };
@@ -1107,29 +1178,42 @@ fn end_offsets(
                 if group.len() < 2 {
                     return (0.0, false);
                 }
-                let radii: Vec<f32> = group
+                let widths: Vec<(f32, f32)> = group
                     .iter()
-                    .filter_map(|(member, _)| routes.get(*member).map(|route| radius(route)))
+                    .filter_map(|(member, _, _)| {
+                        routes.get(*member).map(|route| link_width(route, zoom))
+                    })
                     .collect();
-                let mut positions = Vec::with_capacity(radii.len());
+                let mut positions = Vec::with_capacity(widths.len());
                 let mut at = 0.0;
-                for pair in radii.windows(2) {
+                for pair in widths.windows(2) {
                     positions.push(at);
                     if let (Some(a), Some(b)) = (pair.first(), pair.get(1)) {
                         at += bundle_spacing(*a, *b);
                     }
                 }
                 positions.push(at);
-                let position = group
+                let Some(position) = group
                     .iter()
-                    .position(|(member, start)| *member == index && *start == at_start)
-                    .unwrap_or(0);
-                let hidden = block_nodes.contains(&node) && matches!(side, Side::Top | Side::Left);
-                let anchor = if hidden { at } else { at / 2.0 };
-                (
-                    positions.get(position).copied().unwrap_or(0.0) - anchor,
-                    hidden,
-                )
+                    .position(|(member, start, _)| *member == index && *start == at_start)
+                else {
+                    return (0.0, false);
+                };
+                let own = group.get(position).map_or(0.0, |(_, _, at)| *at);
+                let block_height = blocks
+                    .iter()
+                    .find(|(block, _)| *block == node)
+                    .map(|(_, height)| *height);
+                let hidden = block_height.is_some() && matches!(side, Side::Top | Side::Left);
+                let setback = if hidden {
+                    block_height.unwrap_or(0.0) / 2.0
+                } else {
+                    0.0
+                };
+                let mean = group.iter().map(|(_, _, at)| *at).sum::<f32>() / group.len() as f32;
+                let target =
+                    mean - setback + positions.get(position).copied().unwrap_or(0.0) - at / 2.0;
+                (target - own, hidden)
             };
             [offset(route.from_node, true), offset(route.to_node, false)]
         })
@@ -1174,34 +1258,34 @@ fn link_paths(
         .map(|solid| solid.footprint)
         .collect();
     let routes: Vec<&LinkRoute> = geometry.links.iter().take(LINKS_MAX).collect();
-    let places = bundle_places(geometry);
-    let block_nodes: Vec<usize> = solids
+    let block_heights: Vec<(usize, f32)> = solids
         .iter()
         .filter(|solid| solid.shape == SolidShape::Block)
-        .map(|solid| solid.node)
+        .map(|solid| (solid.node, solid.height))
         .collect();
-    let raw: Vec<Vec<PagePoint>> = routes.iter().map(|route| route.points.clone()).collect();
-    let offsets = end_offsets(&routes, &raw, zoom, &block_nodes);
-    let key = |route: &LinkRoute| {
-        (
-            route.from_node.min(route.to_node),
-            route.from_node.max(route.to_node),
-        )
-    };
+    // Routes adjusted at the base clearance give each end's side and attach point; a bundle
+    // of coinciding routes is then laid out again with its widest offset added to the zone
+    // clearance, so every member's inner legs stay clear once the bundle is moved whole.
+    let base: Vec<Vec<PagePoint>> = routes
+        .iter()
+        .map(|route| adjusted_route(route, geometry, solids, inputs, ISO_LINK_CLEARANCE_PX))
+        .collect();
+    let offsets = end_offsets(&routes, &base, zoom, &block_heights);
+    let shared = shared_route_places(&base);
     let adjusted: Vec<Vec<PagePoint>> = routes
         .iter()
-        .zip(&places)
-        .map(|(route, place)| {
-            // A bundle is moved whole, so every member's inner legs are laid out with the
-            // bundle's widest offset added to the zone clearance, from one shared route.
-            let widest = place.map_or(0.0, |_| {
-                routes
-                    .iter()
-                    .zip(&offsets)
-                    .filter(|(member, _)| key(member) == key(route))
-                    .map(|(_, [start, end])| start.0.abs().max(end.0.abs()))
-                    .fold(0.0, f32::max)
-            });
+        .zip(&base)
+        .zip(&shared)
+        .map(|((route, points), place)| {
+            if place.is_none() {
+                return points.clone();
+            }
+            let widest = base
+                .iter()
+                .zip(&offsets)
+                .filter(|(other, _)| same_route(other, points))
+                .map(|(_, [start, end])| start.0.abs().max(end.0.abs()))
+                .fold(0.0, f32::max);
             adjusted_route(
                 route,
                 geometry,
@@ -1220,7 +1304,6 @@ fn link_paths(
                 && point.y <= bounds.bottom() + GEOMETRY_EPSILON
         })
     };
-    let shared = shared_route_places(&adjusted);
     routes
         .iter()
         .zip(adjusted)
@@ -1407,7 +1490,14 @@ pub fn project_zoomed(
             .part(PartName::Footprint)
             .map_or(node.bounds, |part| part.bounds);
         let vertices = silhouette(footprint, base_z, base_z + height, ZERO_OFFSET);
-        let outline = solid_outline(form, footprint, base_z, base_z + height, &vertices);
+        let outline = match shape {
+            SolidShape::Surface => surface_outline(node, base_z, zoom).unwrap_or_else(|| {
+                solid_outline(form, footprint, base_z, base_z + height, &vertices)
+            }),
+            SolidShape::Slab | SolidShape::Block => {
+                solid_outline(form, footprint, base_z, base_z + height, &vertices)
+            }
+        };
         match shape {
             SolidShape::Slab | SolidShape::Block => {
                 for point in &outline {
@@ -1576,6 +1666,41 @@ fn describe(label: &Label) -> String {
 }
 
 /// NotApplicable with reason "projection is flat" for None; section 12.7 otherwise.
+/// The air two labels keep between them on screen (section 12.7).
+pub const ISO_LABEL_GAP_PX: f32 = 4.0;
+
+/// The distance between two convex polygons on screen: 0 when they overlap, else the
+/// shortest vertex-to-edge distance either way.
+fn polygon_distance(first: &[ScreenPoint], second: &[ScreenPoint]) -> f32 {
+    if polygons_overlap(first, second) {
+        return 0.0;
+    }
+    let one_way = |from: &[ScreenPoint], to: &[ScreenPoint]| {
+        from.iter()
+            .map(|point| polygon_edge_distance(*point, to))
+            .fold(f32::INFINITY, f32::min)
+    };
+    one_way(first, second).min(one_way(second, first))
+}
+
+/// The distance from a point to the nearest stroke of a drawn link path on screen.
+fn path_distance(point: ScreenPoint, path: &[IsoPoint], offset: ScreenPoint) -> f32 {
+    path_strokes(path)
+        .iter()
+        .map(|(start, end)| {
+            let shift = |at: &ScreenPoint| ScreenPoint {
+                x: at.x + offset.x,
+                y: at.y + offset.y,
+            };
+            point_segment_distance(point, shift(start), shift(end))
+        })
+        .fold(f32::INFINITY, f32::min)
+}
+
+fn link_index(owner: &NodePointer) -> Option<usize> {
+    owner.as_str().strip_prefix("/links/")?.parse().ok()
+}
+
 pub fn iso_labels_clear(scene: Option<&IsoScene>) -> CheckReport {
     let Some(scene) = scene else {
         return CheckReport::not_applicable(CheckName::IsoLabelsClear, "projection is flat");
@@ -1593,21 +1718,31 @@ pub fn iso_labels_clear(scene: Option<&IsoScene>) -> CheckReport {
     let solids: Vec<&Solid> = scene.solids.iter().take(NODES_MAX).collect();
     let mut examined: u64 = 0;
     let mut defects = Vec::new();
-    // 1. Two labels overlap.
+    // 1. Two labels overlap, or lie closer than the gap.
     for (later_index, later) in labels.iter().enumerate() {
         for earlier in labels.iter().take(later_index) {
             examined += 1;
+            let apart = polygon_distance(&earlier.corners, &later.corners);
             if polygons_overlap(&earlier.corners, &later.corners) {
                 defects.push(Defect {
                     pointer: later.owner.clone(),
                     message: format!("{} overlaps label {}", describe(later), earlier.owner),
                 });
+            } else if apart < ISO_LABEL_GAP_PX - GEOMETRY_EPSILON {
+                defects.push(Defect {
+                    pointer: later.owner.clone(),
+                    message: format!(
+                        "{} lies {apart:.2} px from label {}, closer than {ISO_LABEL_GAP_PX}",
+                        describe(later),
+                        earlier.owner
+                    ),
+                });
             }
         }
     }
-    // 2. An opaque solid painted after the label covers one of its marks. Link tags are
-    // painted after every solid, so for them every block counts, the way a tag must not lie
-    // where a block stands.
+    // 2. An opaque solid painted after the label covers one of its marks, or stands closer
+    // to a mark than the label clearance. Link tags are painted after every solid, so for
+    // them every block counts, the way a tag must not lie where a block stands.
     for label in &labels {
         for solid in solids.iter().filter(|solid| solid.opaque) {
             let painted_later = match label.node {
@@ -1618,14 +1753,24 @@ pub fn iso_labels_clear(scene: Option<&IsoScene>) -> CheckReport {
                 continue;
             }
             examined += 1;
-            let covered = label
+            let nearest = label
                 .marks
                 .iter()
-                .any(|mark| polygons_overlap(mark, &solid.outline));
-            if covered {
+                .map(|mark| polygon_distance(mark, &solid.outline))
+                .fold(f32::INFINITY, f32::min);
+            if nearest <= GEOMETRY_EPSILON {
                 defects.push(Defect {
                     pointer: label.owner.clone(),
                     message: format!("{} is covered by {}", describe(label), solid.pointer),
+                });
+            } else if nearest < ISO_LABEL_CLEARANCE_PX - GEOMETRY_EPSILON {
+                defects.push(Defect {
+                    pointer: label.owner.clone(),
+                    message: format!(
+                        "{} lies {nearest:.2} px from {}, closer than {ISO_LABEL_CLEARANCE_PX}",
+                        describe(label),
+                        solid.pointer
+                    ),
                 });
             }
         }
@@ -1657,24 +1802,38 @@ pub fn iso_labels_clear(scene: Option<&IsoScene>) -> CheckReport {
             }
         }
     }
-    // 4. A link path crosses a mark that has no box of its own.
+    // 4. A link's tube, at its radius on the drawn path, crosses a mark that has no box of
+    // its own.
+    let tube_outlines: Vec<Vec<[ScreenPoint; 4]>> = scene
+        .link_paths
+        .iter()
+        .zip(&scene.link_kinds)
+        .take(LINKS_MAX)
+        .map(|(path, (line, tint))| {
+            let radius = link_tube_radius(*line, *tint) * scene.zoom;
+            let floor_z = path.first().map_or(0.0, |point| point.z);
+            path.windows(2)
+                .filter_map(|pair| {
+                    let (Some(start), Some(end)) = (pair.first(), pair.get(1)) else {
+                        return None;
+                    };
+                    let tube = tube::Tube {
+                        start: (start.x, start.y),
+                        end: (end.x, end.y),
+                        floor_z,
+                        radius,
+                    };
+                    tube::body(&tube, scene.offset).map(|body| body.outline)
+                })
+                .collect()
+        })
+        .collect();
     for label in labels.iter().filter(|label| !label.opaque) {
-        for (index, path) in scene.link_paths.iter().enumerate().take(LINKS_MAX) {
+        for (index, legs) in tube_outlines.iter().enumerate() {
             examined += 1;
-            let crossed = path_strokes(path).iter().any(|(start, end)| {
-                let start = ScreenPoint {
-                    x: start.x + scene.offset.x,
-                    y: start.y + scene.offset.y,
-                };
-                let end = ScreenPoint {
-                    x: end.x + scene.offset.x,
-                    y: end.y + scene.offset.y,
-                };
-                label
-                    .marks
-                    .iter()
-                    .any(|mark| segment_crosses_convex(start, end, mark))
-            });
+            let crossed = legs
+                .iter()
+                .any(|leg| label.marks.iter().any(|mark| polygons_overlap(mark, leg)));
             if crossed {
                 defects.push(Defect {
                     pointer: label.owner.clone(),
@@ -1683,15 +1842,134 @@ pub fn iso_labels_clear(scene: Option<&IsoScene>) -> CheckReport {
             }
         }
     }
+    // 6. A pipe's tube or band, or a tee's spine, crosses a mark of another owner that has
+    // no box of its own.
+    let surfaces: Vec<&Solid> = solids
+        .iter()
+        .filter(|solid| solid.shape == SolidShape::Surface)
+        .copied()
+        .collect();
+    for label in labels.iter().filter(|label| !label.opaque) {
+        for surface in surfaces
+            .iter()
+            .filter(|surface| Some(surface.node) != label.node)
+        {
+            examined += 1;
+            let crossed = label
+                .marks
+                .iter()
+                .any(|mark| polygons_overlap(mark, &surface.outline));
+            if crossed {
+                defects.push(Defect {
+                    pointer: label.owner.clone(),
+                    message: format!("{} is crossed by pipe {}", describe(label), surface.pointer),
+                });
+            }
+        }
+    }
+    // 7. A link or a pipe passes under the opaque tag of another owner.
+    for label in labels.iter().filter(|label| label.opaque) {
+        let own_link = link_index(&label.owner);
+        for (index, legs) in tube_outlines.iter().enumerate() {
+            if own_link == Some(index) {
+                continue;
+            }
+            examined += 1;
+            if legs.iter().any(|leg| polygons_overlap(&label.corners, leg)) {
+                defects.push(Defect {
+                    pointer: label.owner.clone(),
+                    message: format!("{} is passed under by /links/{index}", describe(label)),
+                });
+            }
+        }
+        for surface in surfaces
+            .iter()
+            .filter(|surface| Some(surface.node) != label.node)
+        {
+            examined += 1;
+            if polygons_overlap(&label.corners, &surface.outline) {
+                defects.push(Defect {
+                    pointer: label.owner.clone(),
+                    message: format!(
+                        "{} is passed under by pipe {}",
+                        describe(label),
+                        surface.pointer
+                    ),
+                });
+            }
+        }
+    }
+    // 8. A tag lies nearer its own connector than any other. A tee's arms are its own.
+    let owns = |label: &Label, surface: &Solid| {
+        Some(surface.node) == label.node
+            || surface
+                .pointer
+                .as_str()
+                .strip_prefix(label.owner.as_str())
+                .is_some_and(|rest| rest.starts_with('/'))
+    };
+    for label in labels.iter().filter(|label| label.opaque) {
+        let own_link = link_index(&label.owner);
+        let own_surface = surfaces
+            .iter()
+            .find(|surface| Some(surface.node) == label.node);
+        if own_link.is_none() && own_surface.is_none() {
+            continue;
+        }
+        examined += 1;
+        let count = label.corners.len() as f32;
+        let center = ScreenPoint {
+            x: label.corners.iter().map(|corner| corner.x).sum::<f32>() / count,
+            y: label.corners.iter().map(|corner| corner.y).sum::<f32>() / count,
+        };
+        let own = match (own_link, own_surface) {
+            (Some(index), _) => scene.link_paths.get(index).map_or(f32::INFINITY, |path| {
+                path_distance(center, path, scene.offset)
+            }),
+            (None, Some(surface)) => polygon_distance(&[center], &surface.outline),
+            (None, None) => f32::INFINITY,
+        };
+        let mut nearer: Option<String> = None;
+        for (index, path) in scene.link_paths.iter().enumerate().take(LINKS_MAX) {
+            if own_link == Some(index) {
+                continue;
+            }
+            if path_distance(center, path, scene.offset) < own - GEOMETRY_EPSILON {
+                nearer = Some(format!("/links/{index}"));
+                break;
+            }
+        }
+        if nearer.is_none() {
+            for surface in surfaces.iter().filter(|surface| !owns(label, surface)) {
+                if polygon_distance(&[center], &surface.outline) < own - GEOMETRY_EPSILON {
+                    nearer = Some(format!("pipe {}", surface.pointer));
+                    break;
+                }
+            }
+        }
+        if let Some(other) = nearer {
+            defects.push(Defect {
+                pointer: label.owner.clone(),
+                message: format!(
+                    "tag of {} lies nearer {other} than its own path",
+                    label.owner
+                ),
+            });
+        }
+    }
     // 5. The parts laid out to fit a block stay on its top face.
     for label in labels.iter().filter(|label| label.contained) {
+        examined += 1;
         let Some(block) = solids
             .iter()
             .find(|solid| Some(solid.node) == label.node && solid.shape == SolidShape::Block)
         else {
+            defects.push(Defect {
+                pointer: label.owner.clone(),
+                message: format!("{} has no block", describe(label)),
+            });
             continue;
         };
-        examined += 1;
         let leaves = label.marks.iter().any(|mark| {
             !mark
                 .iter()

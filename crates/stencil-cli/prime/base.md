@@ -39,7 +39,7 @@ Every node object carries "tag"; the Page does not. * required, =default. A fiel
 | links-routed | each link | no clear route; drawn as a fallback L | set from_side and to_side, add via, or move an endpoint |
 | links-avoid-boxes | each segment-obstacle and tag-node pair | the line crosses a box or its tag covers one | as links-routed; raise gap where links run |
 | pipes-land | each pipe end facing a Row or Col sibling or a from or to target | the pipe's center misses every box there | name its Boxes in from and to, or match the gutter's grow list |
-| iso-labels-clear | iso only: labels, solids, boxes | overlap or edge in text | open floor |
+| iso-labels-clear | iso only: labels, solids, wires | overlap, crowding, a wire in text | open floor |
 | iso-links-clear | iso only: link legs | leg by a Box edge, reversed, short, a detour, a jog, over a block | wider gap, via |
 | iso-link-ends | iso only: link ends | end off its node or on a corner | move the end |
 | iso-links-apart | iso only: link pairs | two links share a stretch or an end | opposite sides |

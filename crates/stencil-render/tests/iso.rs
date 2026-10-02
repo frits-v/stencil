@@ -1070,7 +1070,7 @@ fn a_flat_render_is_not_applicable() {
 }
 
 #[test]
-fn labels_overlapping_by_two_hundredths_are_a_defect_and_touching_ones_are_not() {
+fn labels_overlapping_by_two_hundredths_or_touching_are_defects_and_four_px_apart_pass() {
     let overlapping = scene_with(vec![label_at("a", 0.0), label_at("b", 9.98)]);
     let report = iso_labels_clear(Some(&overlapping));
     assert_eq!(report.examined, 1);
@@ -1081,10 +1081,18 @@ fn labels_overlapping_by_two_hundredths_are_a_defect_and_touching_ones_are_not()
         "label /body/0/b at 9.98,0.00 along x overlaps label /body/0/a"
     );
 
+    // Touching pills keep no air between them; four px of it is enough.
     let touching = scene_with(vec![label_at("a", 0.0), label_at("b", 10.0)]);
     let report = iso_labels_clear(Some(&touching));
     assert_eq!(report.examined, 1);
-    assert!(report.passed());
+    assert_eq!(
+        report.defects[0].message,
+        "label /body/0/b at 10.00,0.00 along x lies 0.00 px from label /body/0/a, closer than 4"
+    );
+    let apart = scene_with(vec![label_at("a", 0.0), label_at("b", 14.0)]);
+    let report = iso_labels_clear(Some(&apart));
+    assert_eq!(report.examined, 1);
+    assert!(report.passed(), "{report:?}");
 }
 
 #[test]
@@ -1168,7 +1176,7 @@ fn an_edge_hidden_behind_a_later_block_does_not_cross_a_label() {
 }
 
 #[test]
-fn a_link_through_a_label_is_a_defect_and_one_under_an_opaque_label_is_not() {
+fn a_link_through_a_label_or_under_another_owners_tag_is_a_defect_and_under_its_own_is_not() {
     let label = label_at("label", 20.0);
     let mut tag = label_at("tag", 0.0);
     tag.opaque = true;
@@ -1188,11 +1196,26 @@ fn a_link_through_a_label_is_a_defect_and_one_under_an_opaque_label_is_not() {
     ]];
     scene.link_kinds = vec![(stencil_model::Line::Solid, Some(1))];
     let report = iso_labels_clear(Some(&scene));
-    assert_eq!(report.examined, 2);
-    assert_eq!(report.defects.len(), 1, "{report:?}");
+    // The pair of labels, the label against the link, the tag against the link.
+    assert_eq!(report.examined, 3);
+    let messages = defect_messages(&report);
     assert_eq!(
-        report.defects[0].message,
-        "label /body/0/label at 20.00,0.00 along x is crossed by link /links/0"
+        messages,
+        [
+            "/body/0/label label /body/0/label at 20.00,0.00 along x is crossed by link /links/0",
+            "/body/0/tag label /body/0/tag at 0.00,0.00 along x is passed under by /links/0",
+        ],
+        "{messages:?}"
+    );
+    // The same tag owned by the link lies on its own tube: not a defect, and the tag is
+    // examined for lying nearest its own path.
+    let mut own = scene.clone();
+    own.labels[1].owner = NodePointer::root().child("links").index(0);
+    let report = iso_labels_clear(Some(&own));
+    assert_eq!(report.examined, 3);
+    assert_eq!(
+        defect_messages(&report),
+        ["/body/0/label label /body/0/label at 20.00,0.00 along x is crossed by link /links/0"]
     );
 }
 
@@ -1245,7 +1268,7 @@ fn the_hero_labels_are_clear() {
     // 2 link tags.
     assert_eq!(scene.labels.len(), 14);
     let report = iso_labels_clear(Some(&scene));
-    assert_eq!(report.examined, 234);
+    assert_eq!(report.examined, 242);
     assert!(report.defects.is_empty(), "{report:#?}");
     assert!(report.passed());
 }
@@ -2187,7 +2210,7 @@ fn the_platform_example_stands_one_item_of_each_form_with_its_labels_and_links_c
         assert_eq!(count, 1, "{form:?} in {forms:?}");
     }
     let labels = iso_labels_clear(Some(&scene));
-    assert_eq!(labels.examined, 233);
+    assert_eq!(labels.examined, 237);
     assert!(labels.defects.is_empty(), "{labels:#?}");
     assert!(labels.passed());
     let links = iso_links_clear(&geometry, Some(&scene));
@@ -2562,10 +2585,21 @@ fn two_links_on_one_route_are_drawn_side_by_side_with_their_tags_staggered() {
     assert!(apart.passed(), "{:?}", defect_messages(&apart));
     let ends = iso_link_ends(&geometry, Some(&scene));
     assert!(ends.passed(), "{:?}", defect_messages(&ends));
-    // The right card's left side is hidden, so the pair hangs toward the back from the
-    // attach point: the second (front) link keeps the layout's end, the first moves back.
+    // The right block's left side is hidden, where the cut-back lands an arrival the
+    // block's height nearer the front corner, so the pair is centered half that height
+    // behind the attach point.
     let end = geometry.links[0].points.last().unwrap();
-    assert!(first.last().unwrap().y < end.y - 1.0, "{first:?} {end:?}");
+    let right = scene
+        .solids
+        .iter()
+        .find(|solid| solid.node == geometry.links[0].to_node)
+        .unwrap();
+    let middle = (first.last().unwrap().y + second.last().unwrap().y) / 2.0;
+    assert!(
+        (middle - (end.y - right.height / 2.0)).abs() < 0.01,
+        "{middle} {end:?} {}",
+        right.height
+    );
     // Tags sit at a quarter and three quarters of the leg, not both at its middle.
     let (first_tag, second_tag) = (label_of(&scene, "/links/0"), label_of(&scene, "/links/1"));
     let mapped = |tag: &Label| {
@@ -2802,5 +2836,86 @@ fn a_detour_a_jog_and_a_leg_over_a_foreign_block_are_defects() {
             .any(|message| message.contains("crosses block")),
         "{:?}",
         defect_messages(&report)
+    );
+}
+
+/// Rules 6 and 8 of section 12.7: a pipe's tube crossing floor text of another owner, a
+/// tag nearer another connector than its own, and a contained label with no block.
+#[test]
+fn a_pipe_through_floor_text_a_tag_nearer_another_pipe_and_a_label_without_a_block_are_defects() {
+    let text = label_at("text", 0.0);
+    let pipe = Solid {
+        node: 3,
+        pointer: NodePointer::root().child("body").index(3),
+        shape: SolidShape::Surface,
+        base_z: 0.0,
+        height: 10.0,
+        silhouette: [ZERO; 6],
+        opaque: false,
+        footprint: BoxRect {
+            x: 0.0,
+            y: 0.0,
+            width: 10.0,
+            height: 10.0,
+        },
+        form: Shape::Card,
+        outline: vec![
+            ScreenPoint { x: -5.0, y: -5.0 },
+            ScreenPoint { x: 5.0, y: -5.0 },
+            ScreenPoint { x: 5.0, y: 5.0 },
+            ScreenPoint { x: -5.0, y: 5.0 },
+        ],
+    };
+    let mut scene = scene_with(vec![text]);
+    scene.solids = vec![pipe.clone()];
+    let report = iso_labels_clear(Some(&scene));
+    assert_eq!(report.examined, 1);
+    assert_eq!(
+        defect_messages(&report),
+        ["/body/0/text label /body/0/text at 0.00,0.00 along x is crossed by pipe /body/3"]
+    );
+
+    // A tag owned by node 4, whose own surface lies 100 px away while node 3's is under it.
+    let mut tag = label_at("tag", 0.0);
+    tag.opaque = true;
+    tag.node = Some(4);
+    let mut far = pipe.clone();
+    far.node = 4;
+    far.pointer = NodePointer::root().child("body").index(4);
+    far.outline = far
+        .outline
+        .iter()
+        .map(|point| ScreenPoint {
+            x: point.x + 100.0,
+            y: point.y,
+        })
+        .collect();
+    let mut scene = scene_with(vec![tag]);
+    scene.solids = vec![pipe.clone(), far];
+    let report = iso_labels_clear(Some(&scene));
+    let messages = defect_messages(&report);
+    assert!(
+        messages.contains(
+            &"/body/0/tag label /body/0/tag at 0.00,0.00 along x is passed under by pipe /body/3"
+                .to_string()
+        ),
+        "{messages:?}"
+    );
+    assert!(
+        messages.contains(
+            &"/body/0/tag tag of /body/0/tag lies nearer pipe /body/3 than its own path"
+                .to_string()
+        ),
+        "{messages:?}"
+    );
+
+    let mut orphan = label_at("orphan", 0.0);
+    orphan.contained = true;
+    orphan.node = Some(9);
+    let report = iso_labels_clear(Some(&scene_with(vec![orphan])));
+    assert_eq!(report.examined, 1);
+    assert_eq!(
+        defect_messages(&report),
+        ["/body/0/orphan label /body/0/orphan at 0.00,0.00 along x has no block"]
     );
 }
