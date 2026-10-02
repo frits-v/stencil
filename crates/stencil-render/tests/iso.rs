@@ -2793,6 +2793,72 @@ fn a_detour_a_jog_and_a_leg_over_a_foreign_block_are_defects() {
         ["/links/0 leg 1 is 6.00 px between two turns, shorter than 18.00"]
     );
 
+    // A step of 60 px sitting 38 px before the end of a 400 px run, within the stub,
+    // and the same step 60 px from the end, outside it.
+    let stub = stencil_layout::ISO_APPROACH_PX * scene.zoom;
+    let at_the_end = link_scene(
+        vec![
+            flat_point(0.0, 250.0),
+            flat_point(362.0, 250.0),
+            flat_point(362.0, 310.0),
+            flat_point(400.0, 310.0),
+        ],
+        zone,
+    );
+    let report = iso_links_clear(&geometry, Some(&at_the_end));
+    assert_eq!(
+        defect_messages(&report),
+        [format!(
+            "/links/0 leg 1 steps 38.00 px from the end, within a stub ({stub:.2} px)"
+        )]
+    );
+    let clear_of_the_end = link_scene(
+        vec![
+            flat_point(0.0, 250.0),
+            flat_point(340.0, 250.0),
+            flat_point(340.0, 310.0),
+            flat_point(400.0, 310.0),
+        ],
+        zone,
+    );
+    let report = iso_links_clear(&geometry, Some(&clear_of_the_end));
+    assert_eq!(defect_messages(&report), Vec::<String>::new());
+    // Ends closer than two stubs have no room for the step anywhere else.
+    let no_room = link_scene(
+        vec![
+            flat_point(0.0, 250.0),
+            flat_point(30.0, 250.0),
+            flat_point(30.0, 310.0),
+            flat_point(60.0, 310.0),
+        ],
+        zone,
+    );
+    let report = iso_links_clear(&geometry, Some(&no_room));
+    assert!(
+        !defect_messages(&report)
+            .iter()
+            .any(|message| message.contains("steps")),
+        "{report:?}"
+    );
+
+    // A hook: past the target by 20 px and back.
+    let hook = link_scene(
+        vec![
+            flat_point(0.0, 250.0),
+            flat_point(400.0, 250.0),
+            flat_point(400.0, 270.0),
+            flat_point(300.0, 270.0),
+        ],
+        zone,
+    );
+    let report = iso_links_clear(&geometry, Some(&hook));
+    assert_eq!(
+        defect_messages(&report),
+        [format!(
+            "/links/0 leg 2 runs back against leg 0 across a leg of 20.00 px, shorter than a stub ({stub:.2} px)"
+        )]
+    );
+
     // The right block of the laid-out page, with a hand-built link run over it at floor
     // level, far from both endpoints of the scene's own link.
     let foreign = scene.solids.iter().find(|solid| {
@@ -3010,6 +3076,48 @@ fn every_link_path_of_every_iso_example_lies_at_one_height() {
     }
     // Hero 6, platform 4, people 4, transit 1; the on-prem deny is a pipe.
     assert_eq!(examined, 15);
+}
+
+/// Section 12.7 rule 8: a Z the router left with its step at the end of the target's stub
+/// has the step moved to the middle of the run between its ends, where a tower as the
+/// target leaves no room to straighten.
+#[test]
+fn a_step_at_the_end_of_a_stub_moves_to_the_middle_of_the_run() {
+    let mut document = common::page_document(
+        json!([{ "tag": "Box", "kind": "gcp", "label": "Google Cloud", "children": [
+            { "tag": "Row", "justify": "space-between", "children": [
+                with_shape(json!({ "tag": "Item", "kind": "product", "icon": "cloud-run", "id": "a", "title": "Router" }), "tile"),
+                { "tag": "Col", "children": [
+                    { "tag": "Fact", "text": "a fact above the tower lowers it" },
+                    with_shape(json!({ "tag": "Item", "kind": "product", "icon": "cloud-run", "id": "b", "title": "Compute" }), "tower")
+                ] }
+            ] }
+        ] }]),
+        json!([{ "line": "solid", "tint": 1, "text": "request path" }]),
+    );
+    document["projection"] = json!("iso");
+    document["links"] =
+        json!([{ "from": "a", "to": "b", "line": "solid", "tint": 1, "label": "HTTPS" }]);
+    let page: Page = serde_json::from_value(document).unwrap();
+    let geometry = common::layout_with_fixed_metrics(&page);
+    let flat = &geometry.links[0].points;
+    let (first, last) = (flat[0], flat[flat.len() - 1]);
+    assert!(
+        (first.y - last.y).abs() > 1.0,
+        "the attach points differ: {flat:?}"
+    );
+    let scene = project_page(&geometry).unwrap();
+    let path = &scene.link_paths[0];
+    let corners: Vec<(f32, f32)> = path.iter().map(|point| (point.x, point.y)).collect();
+    assert_eq!(corners.len(), 4, "{path:?}");
+    assert_close(
+        corners[1].0,
+        (first.x + last.x) / 2.0,
+        "step at the middle of the run",
+    );
+    assert_close(corners[2].0, corners[1].0, "the step is one leg");
+    let report = iso_links_clear(&geometry, Some(&scene));
+    assert!(report.passed(), "{report:?}");
 }
 
 /// Section 12.7 rule 8: two footprint items in a Row whose footprints share a span across
