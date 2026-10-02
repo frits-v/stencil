@@ -17,7 +17,9 @@ use stencil_model::text::{MeasureError, TextMeasurer, TextMetrics, TextStyle};
 use stencil_model::{Grammar, Line, Page, PagePoint, PipeForm, Violation, line_key, validate_page};
 
 pub use build::{container_label_style, fact_presentation};
-pub use route::{longest_segment_midpoint, longest_segment_point, reroute_link};
+pub use route::{
+    OBSTACLE_CLEARANCE_PX, longest_segment_midpoint, longest_segment_point, reroute_link,
+};
 pub use stencil_model::text::WRAP_EPSILON_PX;
 pub use theme_labels::theme_legend_labels;
 
