@@ -314,6 +314,7 @@ g7_cases=(
 	'bigquery-product-inside-vpc|s/{tag: "Fact", text: "BGP peering[^}]*},/&\n{tag: "Item", kind: "product", icon: "bigquery", title: "Warehouse", subtitle: "BigQuery"},/|_productInsideVpc.Warehouse|sits inside a vpc; draw it in an apis box'
 	'cloud-storage-icon-inside-vpc|s/{tag: "Fact", text: "BGP peering[^}]*},/&\n{tag: "Item", kind: "product", icon: "cloud-storage", title: "Landing bucket", facts: [{text: "dual-region"}]},/|_productInsideVpc."Landing bucket"'
 	'cloud-run-product-inside-vpc|s/{tag: "Fact", text: "BGP peering[^}]*},/&\n{tag: "Item", kind: "product", icon: "cloud-run", title: "Gateway", subtitle: "Cloud Run"},/|_serverlessInsideVpc.Gateway|reached over Private Service Connect'
+	'cloud-sql-product-inside-vpc|s/{tag: "Fact", text: "BGP peering[^}]*},/&\n{tag: "Item", kind: "product", icon: "cloud-sql", title: "Database", subtitle: "Cloud SQL"},/|_managedDataInsideVpc.Database|name the attachment'
 	'vertex-ai-icon-inside-vpc|s/{tag: "Fact", text: "BGP peering[^}]*},/&\n{tag: "Item", kind: "product", icon: "vertex-ai", title: "Model", facts: [{text: "endpoint"}]},/|_serverlessInsideVpc.Model'
 	'ncc-hub-inside-region|s/{tag: "Fact", text: "BGP peering[^}]*},/&\n{tag: "Item", kind: "product", icon: "networking", title: "Hub", subtitle: "Network Connectivity Center"},/|_globalInsideRegion.Hub|sits outside every region'
 	"apis-box-outside-gcp|s/^\tbody: \[{\$/\tbody: [$stray_apis {/|_apisOutsideGcp.\"Stray APIs\"|sits outside the gcp frame"

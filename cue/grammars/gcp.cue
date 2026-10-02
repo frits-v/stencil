@@ -227,6 +227,14 @@ _nesting: stencil.#GrammarNesting & {#grammar: grammar}
 #ServerlessProductName: "\\b(Cloud Run|Cloud Run functions|Cloud Functions|App Engine|Vertex AI)\\b"
 #ServerlessProductIcons: ["cloud-run", "vertex-ai", "serverless"]
 
+// Managed data products with a private IP live in a Google-managed producer
+// network, reached from the customer's VPC over private services access
+// peering or a Private Service Connect endpoint; they are not addresses in
+// the VPC. Spanner, Firestore and Bigtable are Google APIs and belong with
+// those.
+#ManagedDataProductName:  "\\b(Cloud SQL|AlloyDB|Memorystore)\\b"
+#ManagedDataProductIcons: ["cloud-sql"]
+
 // Global resources have no region; a hub drawn inside a region reads as
 // regional. Only products whose resource model has no location belong here:
 // Cloud Armor and Cloud DNS also have regional policies and zones.
@@ -238,8 +246,10 @@ _nesting: stencil.#GrammarNesting & {#grammar: grammar}
 //   _nameless     the titles of product items with no subtitle and no doc or
 //                 ask fact
 //   _apiProducts  the titles of product items that are Google APIs
-//   _serverlessProducts, _globalProducts  the same for serverless products and
-//                 global resources (#ServerlessProductName, #ServerlessProductIcons,
+//   _serverlessProducts, _managedDataProducts, _globalProducts  the same for
+//                 serverless products, managed data products and global
+//                 resources (#ServerlessProductName, #ServerlessProductIcons,
+//                 #ManagedDataProductName, #ManagedDataProductIcons,
 //                 #GlobalProductName)
 //                 (#ApiProductName, #ApiProductIcons)
 //   _apisLabels   the labels of apis Boxes below it with no gcp Box between
@@ -254,6 +264,7 @@ _nesting: stencil.#GrammarNesting & {#grammar: grammar}
 		_nameless: {for c in children {c._nameless}}
 		_apiProducts: {for c in children {c._apiProducts}}
 		_serverlessProducts: {for c in children {c._serverlessProducts}}
+		_managedDataProducts: {for c in children {c._managedDataProducts}}
 		_globalProducts: {for c in children {c._globalProducts}}
 		_apisLabels: {for c in children {c._apisLabels}}
 		#SiblingTint
@@ -273,6 +284,7 @@ _nesting: stencil.#GrammarNesting & {#grammar: grammar}
 		_nameless: {for c in children {c._nameless}}
 		_apiProducts: {for c in children {c._apiProducts}}
 		_serverlessProducts: {for c in children {c._serverlessProducts}}
+		_managedDataProducts: {for c in children {c._managedDataProducts}}
 		_globalProducts: {for c in children {c._globalProducts}}
 		_apisLabels: {
 			if kind != "gcp" for c in children {c._apisLabels}
@@ -291,6 +303,12 @@ _nesting: stencil.#GrammarNesting & {#grammar: grammar}
 			// egress. Draw it beside the vpc.
 			_serverlessInsideVpc: {
 				for k, _ in _serverlessProducts {(k): "product" & "sits inside a vpc; a serverless product is reached over Private Service Connect; draw it beside the vpc"}
+			}
+			// A managed data product with a private IP lives in a producer
+			// network peered to the VPC or reached through a Private Service
+			// Connect endpoint. Draw it beside the vpc and name the attachment.
+			_managedDataInsideVpc: {
+				for k, _ in _managedDataProducts {(k): "product" & "sits inside a vpc; a managed data product lives in a producer network reached over private services access or Private Service Connect; draw it beside the vpc and name the attachment"}
 			}
 		}
 		// A global resource has no region; draw it outside every region Box.
@@ -331,6 +349,11 @@ _nesting: stencil.#GrammarNesting & {#grammar: grammar}
 			if icon != _|_ if list.Contains(#ServerlessProductIcons, icon) {true},
 		]
 		_serverlessProducts: {if kind == "product" && len(_isServerless) > 0 {(title): true}}
+		_isManagedData: [
+			if subtitle != _|_ if subtitle =~ #ManagedDataProductName {true},
+			if icon != _|_ if list.Contains(#ManagedDataProductIcons, icon) {true},
+		]
+		_managedDataProducts: {if kind == "product" && len(_isManagedData) > 0 {(title): true}}
 		_isGlobal: [
 			if subtitle != _|_ if subtitle =~ #GlobalProductName {true},
 		]
@@ -345,6 +368,7 @@ _nesting: stencil.#GrammarNesting & {#grammar: grammar}
 		_nameless: {}
 		_apiProducts: {}
 		_serverlessProducts: {}
+		_managedDataProducts: {}
 		_globalProducts: {}
 		_apisLabels: {}
 	}
@@ -361,6 +385,7 @@ _nesting: stencil.#GrammarNesting & {#grammar: grammar}
 		_nameless: {}
 		_apiProducts: {}
 		_serverlessProducts: {}
+		_managedDataProducts: {}
 		_globalProducts: {}
 		_apisLabels: {}
 	}
@@ -369,6 +394,7 @@ _nesting: stencil.#GrammarNesting & {#grammar: grammar}
 		_nameless: {}
 		_apiProducts: {}
 		_serverlessProducts: {}
+		_managedDataProducts: {}
 		_globalProducts: {}
 		_apisLabels: {}
 	}
