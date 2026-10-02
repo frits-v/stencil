@@ -172,6 +172,46 @@ pub(crate) fn cone(
     })
 }
 
+/// Half the width of a deny line's stop plate across its run, in flat px before the zoom.
+pub const STOP_PLATE_HALF_WIDTH_PX: f32 = 10.0;
+/// How thick a stop plate is along the run, in flat px before the zoom.
+pub const STOP_PLATE_THICKNESS_PX: f32 = 3.0;
+/// How far above its tube's axis a stop plate rises, in flat px before the zoom.
+pub const STOP_PLATE_RISE_PX: f32 = 4.0;
+
+/// A deny line's stop plate: a thin wall standing on the plane across the run at `tip`,
+/// from the floor to `STOP_PLATE_RISE_PX` above the tube's axis. Its face toward the cone
+/// and its top, as screen quads.
+pub(crate) fn stop_plate(
+    tip: (f32, f32),
+    outward: (f32, f32),
+    (floor_z, axis_z): (f32, f32),
+    zoom: f32,
+    offset: ScreenPoint,
+) -> ([ScreenPoint; 4], [ScreenPoint; 4]) {
+    let half = STOP_PLATE_HALF_WIDTH_PX * zoom;
+    let thick = STOP_PLATE_THICKNESS_PX * zoom;
+    let top_z = axis_z + STOP_PLATE_RISE_PX * zoom;
+    let across = (-outward.1 * half, outward.0 * half);
+    let left = (tip.0 - across.0, tip.1 - across.1);
+    let right = (tip.0 + across.0, tip.1 + across.1);
+    let beyond = |point: (f32, f32)| (point.0 + outward.0 * thick, point.1 + outward.1 * thick);
+    let face = [
+        project_point(left.0, left.1, floor_z, offset),
+        project_point(right.0, right.1, floor_z, offset),
+        project_point(right.0, right.1, top_z, offset),
+        project_point(left.0, left.1, top_z, offset),
+    ];
+    let (left_beyond, right_beyond) = (beyond(left), beyond(right));
+    let top = [
+        project_point(left.0, left.1, top_z, offset),
+        project_point(right.0, right.1, top_z, offset),
+        project_point(right_beyond.0, right_beyond.1, top_z, offset),
+        project_point(left_beyond.0, left_beyond.1, top_z, offset),
+    ];
+    (face, top)
+}
+
 /// The ring at a dot end, centered on the flat point `center` along `run`, its sizes at
 /// `zoom`.
 pub(crate) fn flange(center: (f32, f32), run: (f32, f32), floor_z: f32, zoom: f32) -> Tube {
