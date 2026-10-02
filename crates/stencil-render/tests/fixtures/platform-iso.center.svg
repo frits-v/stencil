@@ -11,7 +11,7 @@
       <text x="20" y="61.28" xml:space="preserve" font-family="Inter" font-size="20" font-weight="700" letter-spacing="-0.4" fill="#202124">One web path from the load balancer to the data layer.</text>
     </g>
     <g data-id="/lede" data-tag="Lede">
-      <text x="20" y="82.53" xml:space="preserve" font-family="Inter" font-size="13" font-weight="400" fill="#5F6368">Four services in one Shared VPC and an object store beside it, one of each shape.</text>
+      <text x="20" y="82.53" xml:space="preserve" font-family="Inter" font-size="13" font-weight="400" fill="#5F6368">Four services in one Shared VPC and an object store beside it.</text>
     </g>
     <g data-id="/body" data-tag="Body">
       <g data-id="/body/0" data-tag="Zone" data-kind="gcp">
