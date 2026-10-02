@@ -23,7 +23,7 @@
         </g>
         <g data-id="/body/0/children/0" data-tag="Row">
           <g data-id="/body/0/children/0/children/0" data-tag="Zone" data-kind="vpc">
-            <polygon points="514.5,220.22 1141.04,581.95 725.34,821.95 98.81,460.22" fill="none" stroke="#5F6368" stroke-width="2" stroke-dasharray="6 5" stroke-linejoin="round"/>
+            <polygon points="514.5,220.22 1068.72,540.2 653.03,780.2 98.81,460.22" fill="none" stroke="#5F6368" stroke-width="2" stroke-dasharray="6 5" stroke-linejoin="round"/>
             <g data-plane="6" data-axis="x" transform="matrix(0.87 0.5 -0.87 0.5 680.64 40.8)">
               <text x="121" y="327.3" xml:space="preserve" font-family="Inter" font-size="15" font-weight="700" fill="#5F6368">Shared VPC · europe-west4</text>
             </g>
@@ -59,16 +59,18 @@
                 </g>
               </g>
               <g data-id="/body/0/children/0/children/0/children/0/children/2" data-tag="Pcard">
-                <polygon points="880.65,556.11 1018.93,635.95 874.73,719.2 736.45,639.36" fill="#202124" fill-opacity="0.2" filter="url(#stencil-shadow)"/>
-                <polygon points="736.45,636.36 874.73,716.2 874.73,698.2 736.45,618.36" fill="#EBEBEB" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
-                <polygon points="1018.93,632.95 874.73,716.2 874.73,698.2 1018.93,614.95" fill="#D6D6D6" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
-                <polygon points="880.65,535.11 1018.93,614.95 874.73,698.2 736.45,618.36" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
+                <polygon points="885.92,559.16 941.34,591.16 885.92,623.16 830.49,591.16" fill="#202124" fill-opacity="0.2" filter="url(#stencil-shadow)"/>
+                <polygon points="830.49,588.16 885.92,620.16 885.92,602.16 830.49,570.16" fill="#EBEBEB" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
+                <polygon points="941.34,588.16 885.92,620.16 885.92,602.16 941.34,570.16" fill="#D6D6D6" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
+                <polygon points="885.92,538.16 941.34,570.16 885.92,602.16 830.49,570.16" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
                 <g data-plane="24" data-axis="x" transform="matrix(0.87 0.5 -0.87 0.5 680.64 22.8)">
-                  <rect x="642.79" y="463.59" width="36" height="36" rx="6" fill="#202124" fill-opacity="0.18"/>
-                  <rect x="643.29" y="462.59" width="35" height="35" rx="5.5" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1"/>
-                  <image x="646.79" y="466.09" width="28" height="28" href="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyBpZD0ic3RhbmRhcmRfcHJvZHVjdF9pY29uIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZlcnNpb249IjEuMSIgdmlld0JveD0iMCAwIDUxMiA1MTIiPgogIDwhLS0gR2VuZXJhdG9yOiBBZG9iZSBJbGx1c3RyYXRvciAyOS4xLjAsIFNWRyBFeHBvcnQgUGx1Zy1JbiAuIFNWRyBWZXJzaW9uOiAyLjEuMCBCdWlsZCAxNDIpICAtLT4KICA8ZGVmcz4KICAgIDxzdHlsZT4KICAgICAgLnN0MCB7CiAgICAgICAgZmlsbDogbm9uZTsKICAgICAgfQoKICAgICAgLnN0MSB7CiAgICAgICAgZmlsbDogIzQyODVmNDsKICAgICAgfQoKICAgICAgLnN0MiB7CiAgICAgICAgZmlsbDogIzM0YTg1MzsKICAgICAgfQoKICAgICAgLnN0MyB7CiAgICAgICAgZmlsbDogI2ZiYmMwNDsKICAgICAgfQoKICAgICAgLnN0NCB7CiAgICAgICAgZmlsbDogI2VhNDMzNTsKICAgICAgfQogICAgPC9zdHlsZT4KICA8L2RlZnM+CiAgPGcgaWQ9ImJvdW5kaW5nX2JveCI+CiAgICA8cmVjdCBjbGFzcz0ic3QwIiB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIvPgogIDwvZz4KICA8ZyBpZD0iYXJ0Ij4KICAgIDxwYXRoIGNsYXNzPSJzdDMiIGQ9Ik0xNDQuNCwyNzJjLTYuNCwwLTEyLjQtMy44LTE0LjktMTAuMUw1NS40LDc1LjljLTMuMy04LjIuNy0xNy41LDguOS0yMC44LDguMi0zLjMsMTcuNS43LDIwLjgsOC45bDc0LjIsMTg2YzMuMyw4LjItLjcsMTcuNS04LjksMjAuOC0xLjkuOC0zLjksMS4xLTUuOSwxLjFoLS4xWiIvPgogICAgPGcgaWQ9ImIiPgogICAgICA8cGF0aCBjbGFzcz0ic3Q0IiBkPSJNMjU2LDI3MmMtNi40LDAtMTIuNC0zLjgtMTQuOS0xMC4xbC03NC4xLTE4NmMtMi42LTYuNi0uNi0xNC4xLDUtMTguNXMxMy40LTQuNSwxOS4yLS40bDI2MC4xLDE4NmM3LjIsNS4xLDguOSwxNS4xLDMuNywyMi4zcy0xNS4xLDguOS0yMi4zLDMuN0wyMTYuOSwxMTQuN2w1NCwxMzUuM2MzLjMsOC4yLS43LDE3LjUtOC45LDIwLjgtMS45LjgtNCwxLjEtNS45LDEuMWgtLjFaIi8+CiAgICA8L2c+CiAgICA8cGF0aCBjbGFzcz0ic3QyIiBkPSJNMTI3LjIsMjU2bC03MiwxODBjLTMuMyw4LjIuNywxNy41LDguOSwyMC44LDMuMSwxLjIsNCwxLjEsNS45LDEuMSw2LjMsMCwxMi40LTMuOCwxNC45LTEwLjFsNzQuNC0xODZjLjgtMiwxLjEtNCwxLjEtNS45aC0zMy4yWiIvPgogICAgPHBhdGggY2xhc3M9InN0MSIgZD0iTTQxNC41LDI1NmwtMTk3LjcsMTQxLjIsNTQuMS0xMzUuM2MuOC0yLDEuMS00LDEuMS01LjloLTMzLjJsLTcyLDE4MGMtMi42LDYuNi0uNiwxNC4xLDUsMTguNSwyLjksMi4zLDYuNCwzLjQsOS45LDMuNHM2LjUtMSw5LjMtM2wyNjAuNC0xODZjNC40LTMuMSw2LjctOCw2LjctMTNoLTQzLjZaIi8+CiAgPC9nPgo8L3N2Zz4="/>
-                  <text x="692.29" y="476.38" xml:space="preserve" font-family="Inter" font-size="16.9" font-weight="700" fill="#202124">API</text>
-                  <text x="692.29" y="496.4" xml:space="preserve" font-family="Inter" font-size="15.6" font-weight="400" fill="#5F6368">Cloud Run</text>
+                  <rect x="647.87" y="412.34" width="36" height="36" rx="6" fill="#202124" fill-opacity="0.18"/>
+                  <rect x="648.37" y="411.34" width="35" height="35" rx="5.5" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1"/>
+                  <image x="651.87" y="414.84" width="28" height="28" href="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyBpZD0ic3RhbmRhcmRfcHJvZHVjdF9pY29uIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZlcnNpb249IjEuMSIgdmlld0JveD0iMCAwIDUxMiA1MTIiPgogIDwhLS0gR2VuZXJhdG9yOiBBZG9iZSBJbGx1c3RyYXRvciAyOS4xLjAsIFNWRyBFeHBvcnQgUGx1Zy1JbiAuIFNWRyBWZXJzaW9uOiAyLjEuMCBCdWlsZCAxNDIpICAtLT4KICA8ZGVmcz4KICAgIDxzdHlsZT4KICAgICAgLnN0MCB7CiAgICAgICAgZmlsbDogbm9uZTsKICAgICAgfQoKICAgICAgLnN0MSB7CiAgICAgICAgZmlsbDogIzQyODVmNDsKICAgICAgfQoKICAgICAgLnN0MiB7CiAgICAgICAgZmlsbDogIzM0YTg1MzsKICAgICAgfQoKICAgICAgLnN0MyB7CiAgICAgICAgZmlsbDogI2ZiYmMwNDsKICAgICAgfQoKICAgICAgLnN0NCB7CiAgICAgICAgZmlsbDogI2VhNDMzNTsKICAgICAgfQogICAgPC9zdHlsZT4KICA8L2RlZnM+CiAgPGcgaWQ9ImJvdW5kaW5nX2JveCI+CiAgICA8cmVjdCBjbGFzcz0ic3QwIiB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIvPgogIDwvZz4KICA8ZyBpZD0iYXJ0Ij4KICAgIDxwYXRoIGNsYXNzPSJzdDMiIGQ9Ik0xNDQuNCwyNzJjLTYuNCwwLTEyLjQtMy44LTE0LjktMTAuMUw1NS40LDc1LjljLTMuMy04LjIuNy0xNy41LDguOS0yMC44LDguMi0zLjMsMTcuNS43LDIwLjgsOC45bDc0LjIsMTg2YzMuMyw4LjItLjcsMTcuNS04LjksMjAuOC0xLjkuOC0zLjksMS4xLTUuOSwxLjFoLS4xWiIvPgogICAgPGcgaWQ9ImIiPgogICAgICA8cGF0aCBjbGFzcz0ic3Q0IiBkPSJNMjU2LDI3MmMtNi40LDAtMTIuNC0zLjgtMTQuOS0xMC4xbC03NC4xLTE4NmMtMi42LTYuNi0uNi0xNC4xLDUtMTguNXMxMy40LTQuNSwxOS4yLS40bDI2MC4xLDE4NmM3LjIsNS4xLDguOSwxNS4xLDMuNywyMi4zcy0xNS4xLDguOS0yMi4zLDMuN0wyMTYuOSwxMTQuN2w1NCwxMzUuM2MzLjMsOC4yLS43LDE3LjUtOC45LDIwLjgtMS45LjgtNCwxLjEtNS45LDEuMWgtLjFaIi8+CiAgICA8L2c+CiAgICA8cGF0aCBjbGFzcz0ic3QyIiBkPSJNMTI3LjIsMjU2bC03MiwxODBjLTMuMyw4LjIuNywxNy41LDguOSwyMC44LDMuMSwxLjIsNCwxLjEsNS45LDEuMSw2LjMsMCwxMi40LTMuOCwxNC45LTEwLjFsNzQuNC0xODZjLjgtMiwxLjEtNCwxLjEtNS45aC0zMy4yWiIvPgogICAgPHBhdGggY2xhc3M9InN0MSIgZD0iTTQxNC41LDI1NmwtMTk3LjcsMTQxLjIsNTQuMS0xMzUuM2MuOC0yLDEuMS00LDEuMS01LjloLTMzLjJsLTcyLDE4MGMtMi42LDYuNi0uNiwxNC4xLDUsMTguNSwyLjksMi4zLDYuNCwzLjQsOS45LDMuNHM2LjUtMSw5LjMtM2wyNjAuNC0xODZjNC40LTMuMSw2LjctOCw2LjctMTNoLTQzLjZaIi8+CiAgPC9nPgo8L3N2Zz4="/>
+                </g>
+                <g data-plane="6" data-axis="x" transform="matrix(0.87 0.5 -0.87 0.5 680.64 40.8)">
+                  <text x="651.72" y="487.63" xml:space="preserve" font-family="Inter" font-size="16.9" font-weight="700" fill="#202124">API</text>
+                  <text x="627.79" y="507.65" xml:space="preserve" font-family="Inter" font-size="15.6" font-weight="400" fill="#5F6368">Cloud Run</text>
                 </g>
               </g>
             </g>
@@ -92,31 +94,31 @@
           </g>
           <g data-id="/body/0/children/0/children/1" data-tag="Col">
             <g data-id="/body/0/children/0/children/1/children/0" data-tag="Zone" data-kind="apis">
-              <polygon points="903.96,830.82 1049.71,914.97 1049.71,908.97 903.96,824.82" fill="#D5E3DC"/>
-              <polygon points="1302.16,769.22 1049.71,914.97 1049.71,908.97 1302.16,763.22" fill="#BCD2C7"/>
-              <polygon points="1156.41,679.07 1302.16,763.22 1049.71,908.97 903.96,824.82" fill="#EDF3F0"/>
+              <polygon points="831.65,789.07 977.4,873.22 977.4,867.22 831.65,783.07" fill="#D5E3DC"/>
+              <polygon points="1229.85,727.47 977.4,873.22 977.4,867.22 1229.85,721.47" fill="#BCD2C7"/>
+              <polygon points="1084.09,637.32 1229.85,721.47 977.4,867.22 831.65,783.07" fill="#EDF3F0"/>
               <g data-plane="12" data-axis="x" transform="matrix(0.87 0.5 -0.87 0.5 680.64 34.8)">
-                <text x="959.46" y="424.55" xml:space="preserve" font-family="Inter" font-size="15" font-weight="700" fill="#5F6368">Google APIs</text>
+                <text x="875.96" y="424.55" xml:space="preserve" font-family="Inter" font-size="15" font-weight="700" fill="#5F6368">Google APIs</text>
               </g>
               <g data-id="/body/0/children/0/children/1/children/0/children/0" data-tag="Pcard">
-                <ellipse cx="1117.13" cy="797.9" rx="34.29" ry="19.8" fill="#202124" fill-opacity="0.2" filter="url(#stencil-shadow)"/>
-                <path d="M 1082.84 794.9 A 34.29 19.8 0 0 0 1117.13 814.7 L 1117.13 806.03 A 34.29 19.8 0 0 1 1082.84 786.23 Z" fill="#EBEBEB" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
-                <path d="M 1117.13 814.7 A 34.29 19.8 0 0 0 1151.43 794.9 L 1151.43 786.23 A 34.29 19.8 0 0 1 1117.13 806.03 Z" fill="#D6D6D6" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
-                <ellipse cx="1117.13" cy="786.23" rx="34.29" ry="19.8" fill="#FFFFFF"  stroke="#DADCE0" stroke-width="1.5"/>
-                <path d="M 1082.84 784.23 A 34.29 19.8 0 0 0 1117.13 804.03 L 1117.13 795.37 A 34.29 19.8 0 0 1 1082.84 775.57 Z" fill="#EBEBEB" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
-                <path d="M 1117.13 804.03 A 34.29 19.8 0 0 0 1151.43 784.23 L 1151.43 775.57 A 34.29 19.8 0 0 1 1117.13 795.37 Z" fill="#D6D6D6" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
-                <ellipse cx="1117.13" cy="775.57" rx="34.29" ry="19.8" fill="#FFFFFF"  stroke="#DADCE0" stroke-width="1.5"/>
-                <path d="M 1082.84 773.57 A 34.29 19.8 0 0 0 1117.13 793.37 L 1117.13 784.7 A 34.29 19.8 0 0 1 1082.84 764.9 Z" fill="#EBEBEB" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
-                <path d="M 1117.13 793.37 A 34.29 19.8 0 0 0 1151.43 773.57 L 1151.43 764.9 A 34.29 19.8 0 0 1 1117.13 784.7 Z" fill="#D6D6D6" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
-                <ellipse cx="1117.13" cy="764.9" rx="34.29" ry="19.8" fill="#FFFFFF"  stroke="#DADCE0" stroke-width="1.5"/>
+                <ellipse cx="1044.82" cy="756.15" rx="34.29" ry="19.8" fill="#202124" fill-opacity="0.2" filter="url(#stencil-shadow)"/>
+                <path d="M 1010.53 753.15 A 34.29 19.8 0 0 0 1044.82 772.95 L 1044.82 764.28 A 34.29 19.8 0 0 1 1010.53 744.48 Z" fill="#EBEBEB" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
+                <path d="M 1044.82 772.95 A 34.29 19.8 0 0 0 1079.11 753.15 L 1079.11 744.48 A 34.29 19.8 0 0 1 1044.82 764.28 Z" fill="#D6D6D6" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
+                <ellipse cx="1044.82" cy="744.48" rx="34.29" ry="19.8" fill="#FFFFFF"  stroke="#DADCE0" stroke-width="1.5"/>
+                <path d="M 1010.53 742.48 A 34.29 19.8 0 0 0 1044.82 762.28 L 1044.82 753.62 A 34.29 19.8 0 0 1 1010.53 733.82 Z" fill="#EBEBEB" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
+                <path d="M 1044.82 762.28 A 34.29 19.8 0 0 0 1079.11 742.48 L 1079.11 733.82 A 34.29 19.8 0 0 1 1044.82 753.62 Z" fill="#D6D6D6" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
+                <ellipse cx="1044.82" cy="733.82" rx="34.29" ry="19.8" fill="#FFFFFF"  stroke="#DADCE0" stroke-width="1.5"/>
+                <path d="M 1010.53 731.82 A 34.29 19.8 0 0 0 1044.82 751.62 L 1044.82 742.95 A 34.29 19.8 0 0 1 1010.53 723.15 Z" fill="#EBEBEB" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
+                <path d="M 1044.82 751.62 A 34.29 19.8 0 0 0 1079.11 731.82 L 1079.11 723.15 A 34.29 19.8 0 0 1 1044.82 742.95 Z" fill="#D6D6D6" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
+                <ellipse cx="1044.82" cy="723.15" rx="34.29" ry="19.8" fill="#FFFFFF"  stroke="#DADCE0" stroke-width="1.5"/>
                 <g data-plane="42" data-axis="x" transform="matrix(0.87 0.5 -0.87 0.5 680.64 4.8)">
-                  <rect x="994.11" y="491.59" width="36" height="36" rx="6" fill="#202124" fill-opacity="0.18"/>
-                  <rect x="994.61" y="490.59" width="35" height="35" rx="5.5" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1"/>
-                  <image x="998.11" y="494.09" width="28" height="28" href="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyBpZD0ic3RhbmRhcmRfcHJvZHVjdF9pY29uIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZlcnNpb249IjEuMSIgdmlld0JveD0iMCAwIDUxMiA1MTIiPgogIDwhLS0gR2VuZXJhdG9yOiBBZG9iZSBJbGx1c3RyYXRvciAyOS4xLjAsIFNWRyBFeHBvcnQgUGx1Zy1JbiAuIFNWRyBWZXJzaW9uOiAyLjEuMCBCdWlsZCAxNDIpICAtLT4KICA8ZGVmcz4KICAgIDxzdHlsZT4KICAgICAgLnN0MCB7CiAgICAgICAgZmlsbDogbm9uZTsKICAgICAgfQoKICAgICAgLnN0MSB7CiAgICAgICAgZmlsbDogIzQyODVmNDsKICAgICAgfQoKICAgICAgLnN0MiB7CiAgICAgICAgZmlsbDogIzM0YTg1MzsKICAgICAgfQoKICAgICAgLnN0MyB7CiAgICAgICAgZmlsbDogI2ZiYmMwNDsKICAgICAgfQoKICAgICAgLnN0NCB7CiAgICAgICAgZmlsbDogI2VhNDMzNTsKICAgICAgfQogICAgPC9zdHlsZT4KICA8L2RlZnM+CiAgPGcgaWQ9ImJvdW5kaW5nX2JveCI+CiAgICA8cmVjdCBjbGFzcz0ic3QwIiB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIvPgogIDwvZz4KICA8ZyBpZD0iYXJ0Ij4KICAgIDxwYXRoIGNsYXNzPSJzdDIiIGQ9Ik00NDIsMjc3LjlINzBjLTguOCwwLTE2LDcuMi0xNiwxNnYxNDguMWMwLDguOCw3LjIsMTYsMTYsMTZoMTA3LjJjMS41LjUsMy4xLjcsNC44LjdzMy4zLS4zLDQuOC0uN2gyNTUuMmM4LjgsMCwxNi03LjIsMTYtMTZ2LTE0OC4xYzAtOC44LTcuMi0xNi0xNi0xNlpNODYsMzA5LjloODB2MTE2LjFoLTgwdi0xMTYuMVpNNDI2LDQyNS45aC0yMjh2LTExNi4xaDIyOHYxMTYuMVoiLz4KICAgIDxwYXRoIGNsYXNzPSJzdDMiIGQ9Ik00NDIsNTRINzBjLTguOCwwLTE2LDcuMi0xNiwxNnYxNDguOGMwLDguOCw3LjIsMTYsMTYsMTZoMzcyYzguOCwwLDE2LTcuMiwxNi0xNlY3MGMwLTguOC03LjItMTYtMTYtMTZaTTg2LDg2aDgwdjExNi44aC04MHYtMTE2LjhaTTQyNiwyMDIuOGgtMjI4di0xMTYuOGgyMjh2MTE2LjhaIi8+CiAgICA8cGF0aCBjbGFzcz0ic3Q0IiBkPSJNNDQyLDIzNC44aC0xNlY4Nkg1NHYtMTZjMC04LjgsNy4yLTE2LDE2LTE2aDM3MmM4LjgsMCwxNiw3LjIsMTYsMTZ2MTQ4LjhjMCw4LjgtNy4yLDE2LTE2LDE2WiIvPgogICAgPHBhdGggY2xhc3M9InN0MSIgZD0iTTQ0Miw0NTcuOWgtMTZ2LTE0OC4xSDU0di0xNmMwLTguOCw3LjItMTYsMTYtMTZoMzcyYzguOCwwLDE2LDcuMiwxNiwxNnYxNDguMWMwLDguOC03LjIsMTYtMTYsMTZaIi8+CiAgICA8Y2lyY2xlIGNsYXNzPSJzdDQiIGN4PSIzNDkiIGN5PSIxNDQuNCIgcj0iMzciLz4KICAgIDxjaXJjbGUgY2xhc3M9InN0MSIgY3g9IjM0OSIgY3k9IjM2Ny45IiByPSIzNyIvPgogIDwvZz4KPC9zdmc+"/>
+                  <rect x="910.61" y="491.59" width="36" height="36" rx="6" fill="#202124" fill-opacity="0.18"/>
+                  <rect x="911.11" y="490.59" width="35" height="35" rx="5.5" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1"/>
+                  <image x="914.61" y="494.09" width="28" height="28" href="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyBpZD0ic3RhbmRhcmRfcHJvZHVjdF9pY29uIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZlcnNpb249IjEuMSIgdmlld0JveD0iMCAwIDUxMiA1MTIiPgogIDwhLS0gR2VuZXJhdG9yOiBBZG9iZSBJbGx1c3RyYXRvciAyOS4xLjAsIFNWRyBFeHBvcnQgUGx1Zy1JbiAuIFNWRyBWZXJzaW9uOiAyLjEuMCBCdWlsZCAxNDIpICAtLT4KICA8ZGVmcz4KICAgIDxzdHlsZT4KICAgICAgLnN0MCB7CiAgICAgICAgZmlsbDogbm9uZTsKICAgICAgfQoKICAgICAgLnN0MSB7CiAgICAgICAgZmlsbDogIzQyODVmNDsKICAgICAgfQoKICAgICAgLnN0MiB7CiAgICAgICAgZmlsbDogIzM0YTg1MzsKICAgICAgfQoKICAgICAgLnN0MyB7CiAgICAgICAgZmlsbDogI2ZiYmMwNDsKICAgICAgfQoKICAgICAgLnN0NCB7CiAgICAgICAgZmlsbDogI2VhNDMzNTsKICAgICAgfQogICAgPC9zdHlsZT4KICA8L2RlZnM+CiAgPGcgaWQ9ImJvdW5kaW5nX2JveCI+CiAgICA8cmVjdCBjbGFzcz0ic3QwIiB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIvPgogIDwvZz4KICA8ZyBpZD0iYXJ0Ij4KICAgIDxwYXRoIGNsYXNzPSJzdDIiIGQ9Ik00NDIsMjc3LjlINzBjLTguOCwwLTE2LDcuMi0xNiwxNnYxNDguMWMwLDguOCw3LjIsMTYsMTYsMTZoMTA3LjJjMS41LjUsMy4xLjcsNC44LjdzMy4zLS4zLDQuOC0uN2gyNTUuMmM4LjgsMCwxNi03LjIsMTYtMTZ2LTE0OC4xYzAtOC44LTcuMi0xNi0xNi0xNlpNODYsMzA5LjloODB2MTE2LjFoLTgwdi0xMTYuMVpNNDI2LDQyNS45aC0yMjh2LTExNi4xaDIyOHYxMTYuMVoiLz4KICAgIDxwYXRoIGNsYXNzPSJzdDMiIGQ9Ik00NDIsNTRINzBjLTguOCwwLTE2LDcuMi0xNiwxNnYxNDguOGMwLDguOCw3LjIsMTYsMTYsMTZoMzcyYzguOCwwLDE2LTcuMiwxNi0xNlY3MGMwLTguOC03LjItMTYtMTYtMTZaTTg2LDg2aDgwdjExNi44aC04MHYtMTE2LjhaTTQyNiwyMDIuOGgtMjI4di0xMTYuOGgyMjh2MTE2LjhaIi8+CiAgICA8cGF0aCBjbGFzcz0ic3Q0IiBkPSJNNDQyLDIzNC44aC0xNlY4Nkg1NHYtMTZjMC04LjgsNy4yLTE2LDE2LTE2aDM3MmM4LjgsMCwxNiw3LjIsMTYsMTZ2MTQ4LjhjMCw4LjgtNy4yLDE2LTE2LDE2WiIvPgogICAgPHBhdGggY2xhc3M9InN0MSIgZD0iTTQ0Miw0NTcuOWgtMTZ2LTE0OC4xSDU0di0xNmMwLTguOCw3LjItMTYsMTYtMTZoMzcyYzguOCwwLDE2LDcuMiwxNiwxNnYxNDguMWMwLDguOC03LjIsMTYtMTYsMTZaIi8+CiAgICA8Y2lyY2xlIGNsYXNzPSJzdDQiIGN4PSIzNDkiIGN5PSIxNDQuNCIgcj0iMzciLz4KICAgIDxjaXJjbGUgY2xhc3M9InN0MSIgY3g9IjM0OSIgY3k9IjM2Ny45IiByPSIzNyIvPgogIDwvZz4KPC9zdmc+"/>
                 </g>
                 <g data-plane="12" data-axis="x" transform="matrix(0.87 0.5 -0.87 0.5 680.64 34.8)">
-                  <text x="961.69" y="562.88" xml:space="preserve" font-family="Inter" font-size="16.9" font-weight="700" fill="#202124">Object store</text>
-                  <text x="959.46" y="582.9" xml:space="preserve" font-family="Inter" font-size="15.6" font-weight="400" fill="#5F6368">Cloud Storage</text>
+                  <text x="878.19" y="562.88" xml:space="preserve" font-family="Inter" font-size="16.9" font-weight="700" fill="#202124">Object store</text>
+                  <text x="875.96" y="582.9" xml:space="preserve" font-family="Inter" font-size="15.6" font-weight="400" fill="#5F6368">Cloud Storage</text>
                 </g>
               </g>
             </g>
@@ -138,23 +140,23 @@
     </g>
   </g>
   <g data-id="/links/0" data-tag="Link" data-kind="blue">
-    <path d="M 511.43 371.95 L 611.37 429.65 L 620.03 424.65 L 658.13 446.65" fill="none" stroke="#1A73E8" stroke-width="3.75" stroke-linejoin="round"/>
+    <path d="M 520.09 366.95 L 658.13 446.65" fill="none" stroke="#1A73E8" stroke-width="3.75" stroke-linejoin="round"/>
     <polygon points="673.72,455.65 651.9,450.25 664.37,443.05" fill="#1A73E8"/>
-    <g data-plane="6" data-axis="x" transform="matrix(0.87 0.5 -0.87 0.5 680.64 40.8)">
+    <g data-plane="6" data-axis="x" transform="matrix(0.87 0.5 -0.87 0.5 725.67 56.8)">
       <rect x="256" y="411.95" width="70.3" height="33.78" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
       <text x="264.75" y="434.51" xml:space="preserve" font-family="Inter" font-size="15.6" font-weight="700" fill="#202124">HTTPS</text>
     </g>
   </g>
   <g data-id="/links/1" data-tag="Link" data-kind="blue">
-    <path d="M 730.88 488.65 L 811.36 535.11 L 758.32 565.74 L 777.37 576.74" fill="none" stroke="#1A73E8" stroke-width="3.75" stroke-linejoin="round"/>
-    <polygon points="792.96,585.74 771.14,580.34 783.61,573.14" fill="#1A73E8"/>
+    <path d="M 730.88 488.65 L 835.69 549.16" fill="none" stroke="#1A73E8" stroke-width="3.75" stroke-linejoin="round"/>
+    <polygon points="851.28,558.16 829.45,552.76 841.92,545.56" fill="#1A73E8"/>
   </g>
   <g data-id="/links/2" data-tag="Link" data-kind="gray">
-    <path d="M 792.96 585.74 L 718.48 542.74 L 610.01 605.36 L 331.53 444.58" fill="none" stroke="#5F6368" stroke-width="2" stroke-linejoin="round"/>
+    <path d="M 842.61 563.16 L 762.87 517.11 L 610.01 605.36 L 331.53 444.58" fill="none" stroke="#5F6368" stroke-width="2" stroke-linejoin="round"/>
     <polygon points="319.41,437.58 336.38,441.78 326.68,447.38" fill="#5F6368"/>
   </g>
   <g data-id="/links/3" data-tag="Link" data-kind="gray">
-    <path d="M 946.83 674.57 L 1039.93 728.32 L 1015.68 742.32 L 1031.27 751.32 M 1036.46 748.32 L 1070.72 768.1" fill="none" stroke="#5F6368" stroke-width="2" stroke-linejoin="round"/>
-    <polygon points="1082.84,775.1 1065.87,770.9 1075.57,765.3" fill="#5F6368"/>
+    <path d="M 913.63 604.16 L 1012 660.95 L 943.36 700.57 L 958.95 709.57 M 964.15 706.57 L 998.4 726.35" fill="none" stroke="#5F6368" stroke-width="2" stroke-linejoin="round"/>
+    <polygon points="1010.53,733.35 993.55,729.15 1003.25,723.55" fill="#5F6368"/>
   </g>
 </svg>

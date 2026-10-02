@@ -1,5 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1518.08" height="1085.37" viewBox="0 0 1518.08 1085.37">
-  <rect x="0" y="0" width="1518.08" height="1085.37" fill="#FFFFFF"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="1420.55" height="1029.06" viewBox="0 0 1420.55 1029.06">
+  <rect x="0" y="0" width="1420.55" height="1029.06" fill="#FFFFFF"/>
   <defs><filter id="stencil-shadow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2.5"/></filter></defs>
   <g data-id="" data-tag="Page" data-projection="iso">
     <g data-id="/kicker" data-tag="Kicker">
@@ -11,68 +11,82 @@
       <text x="20" y="61.28" xml:space="preserve" font-family="Inter" font-size="20" font-weight="700" letter-spacing="-0.4" fill="#202124">Staff and customers reach the API from their own devices.</text>
     </g>
     <g data-id="/lede" data-tag="Lede">
-      <text x="20" y="82.53" xml:space="preserve" font-family="Inter" font-size="13" font-weight="400" fill="#5F6368">One operator on a laptop, one customer on a phone, one API between them.</text>
+      <text x="20" y="82.53" xml:space="preserve" font-family="Inter" font-size="13" font-weight="400" fill="#5F6368">One operator on a laptop inside the shop, one customer on a phone outside it, one API between them.</text>
     </g>
     <g data-id="/body" data-tag="Body">
-      <g data-id="/body/0" data-tag="Zone" data-kind="system">
-        <polygon points="20,360.97 1059.23,960.97 1059.23,954.97 20,354.97" fill="#1A73E8"/>
-        <polygon points="1498.08,707.6 1059.23,960.97 1059.23,954.97 1498.08,701.6" fill="#1257B3"/>
-        <polygon points="458.85,101.6 1498.08,701.6 1059.23,954.97 20,354.97" fill="#FAFBFC" stroke="#1A73E8" stroke-width="1.5" stroke-linejoin="round"/>
-        <g data-plane="6" data-axis="x" transform="matrix(0.87 0.5 -0.87 0.5 529.52 40.8)">
-          <text x="69" y="159.14" xml:space="preserve" font-family="Inter" font-size="25.2" font-weight="700" letter-spacing="0.25" fill="#1257B3">Shop</text>
-        </g>
-        <g data-id="/body/0/children/0" data-tag="Zone" data-kind="group">
-          <polygon points="98.81,372.97 1059.23,927.47 1059.23,921.47 98.81,366.97" fill="#D5E3DC"/>
-          <polygon points="1323.8,774.72 1059.23,927.47 1059.23,921.47 1323.8,768.72" fill="#BCD2C7"/>
-          <polygon points="363.38,214.22 1323.8,768.72 1059.23,921.47 98.81,366.97" fill="#EDF3F0"/>
-          <g data-plane="12" data-axis="x" transform="matrix(0.87 0.5 -0.87 0.5 529.52 34.8)">
-            <text x="124" y="330.3" xml:space="preserve" font-family="Inter" font-size="15" font-weight="700" fill="#5F6368">Front door</text>
+      <g data-id="/body/0" data-tag="Row">
+        <g data-id="/body/0/children/0" data-tag="Zone" data-kind="system">
+          <polygon points="20,364.97 768.25,796.97 768.25,790.97 20,358.97" fill="#1A73E8"/>
+          <polygon points="1214.02,539.6 768.25,796.97 768.25,790.97 1214.02,533.6" fill="#1257B3"/>
+          <polygon points="465.78,101.6 1214.02,533.6 768.25,790.97 20,358.97" fill="#FAFBFC" stroke="#1A73E8" stroke-width="1.5" stroke-linejoin="round"/>
+          <g data-plane="6" data-axis="x" transform="matrix(0.87 0.5 -0.87 0.5 536.45 40.8)">
+            <text x="69" y="159.14" xml:space="preserve" font-family="Inter" font-size="25.2" font-weight="700" letter-spacing="0.25" fill="#1257B3">Shop</text>
           </g>
-          <g data-id="/body/0/children/0/children/0" data-tag="Row">
-            <g data-id="/body/0/children/0/children/0/children/0" data-tag="Pcard">
-              <ellipse cx="379.62" cy="369.09" rx="13.67" ry="7.89" fill="#202124" fill-opacity="0.2" filter="url(#stencil-shadow)"/>
-              <path d="M 365.95 366.09 A 13.67 7.89 0 0 0 379.62 373.99 L 379.62 349.35 A 13.67 7.89 0 0 1 365.95 341.45 Z" fill="#EBEBEB" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
-              <path d="M 379.62 373.99 A 13.67 7.89 0 0 0 393.29 366.09 L 393.29 341.45 A 13.67 7.89 0 0 1 379.62 349.35 Z" fill="#D6D6D6" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
-              <ellipse cx="379.62" cy="341.45" rx="13.67" ry="7.89" fill="#FFFFFF"  stroke="#DADCE0" stroke-width="1.5"/>
-              <circle cx="379.62" cy="330.77" r="8.68" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
-              <g data-plane="12" data-axis="x" transform="matrix(0.87 0.5 -0.87 0.5 529.52 34.8)">
-                <text x="208.01" y="462.63" xml:space="preserve" font-family="Inter" font-size="16.9" font-weight="700" fill="#202124">Operator</text>
-                <text x="220.58" y="482.65" xml:space="preserve" font-family="Inter" font-size="15.6" font-weight="400" fill="#5F6368">on call</text>
+          <g data-id="/body/0/children/0/children/0" data-tag="Zone" data-kind="group">
+            <polygon points="98.81,376.97 768.25,763.47 768.25,757.47 98.81,370.97" fill="#D5E3DC"/>
+            <polygon points="1039.74,606.72 768.25,763.47 768.25,757.47 1039.74,600.72" fill="#BCD2C7"/>
+            <polygon points="370.31,214.22 1039.74,600.72 768.25,757.47 98.81,370.97" fill="#EDF3F0"/>
+            <g data-plane="12" data-axis="x" transform="matrix(0.87 0.5 -0.87 0.5 536.45 34.8)">
+              <text x="124" y="330.3" xml:space="preserve" font-family="Inter" font-size="15" font-weight="700" fill="#5F6368">Front door</text>
+            </g>
+            <g data-id="/body/0/children/0/children/0/children/0" data-tag="Row">
+              <g data-id="/body/0/children/0/children/0/children/0/children/0" data-tag="Pcard">
+                <ellipse cx="380.41" cy="365.55" rx="13.67" ry="7.89" fill="#202124" fill-opacity="0.2" filter="url(#stencil-shadow)"/>
+                <path d="M 366.74 362.55 A 13.67 7.89 0 0 0 380.41 370.44 L 380.41 345.8 A 13.67 7.89 0 0 1 366.74 337.91 Z" fill="#EBEBEB" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
+                <path d="M 380.41 370.44 A 13.67 7.89 0 0 0 394.08 362.55 L 394.08 337.91 A 13.67 7.89 0 0 1 380.41 345.8 Z" fill="#D6D6D6" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
+                <ellipse cx="380.41" cy="337.91" rx="13.67" ry="7.89" fill="#FFFFFF"  stroke="#DADCE0" stroke-width="1.5"/>
+                <circle cx="380.41" cy="327.23" r="8.68" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
+                <g data-plane="12" data-axis="x" transform="matrix(0.87 0.5 -0.87 0.5 536.45 34.8)">
+                  <text x="200.93" y="462.63" xml:space="preserve" font-family="Inter" font-size="16.9" font-weight="700" fill="#202124">Operator</text>
+                  <text x="213.5" y="482.65" xml:space="preserve" font-family="Inter" font-size="15.6" font-weight="400" fill="#5F6368">on call</text>
+                </g>
+              </g>
+              <g data-id="/body/0/children/0/children/0/children/0/children/1" data-tag="Pcard">
+                <polygon points="580.75,463.22 629.25,491.22 580.75,519.22 532.25,491.22" fill="#202124" fill-opacity="0.2" filter="url(#stencil-shadow)"/>
+                <polygon points="532.25,488.22 580.75,516.22 580.75,513.22 532.25,485.22" fill="#EBEBEB" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
+                <polygon points="629.25,488.22 580.75,516.22 580.75,513.22 629.25,485.22" fill="#D6D6D6" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
+                <polygon points="580.75,457.22 629.25,485.22 580.75,513.22 532.25,485.22" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
+                <polygon points="577.29,459.22 625.78,487.22 625.78,450.22 577.29,422.22" fill="#EBEBEB" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
+                <polygon points="629.25,485.22 625.78,487.22 625.78,450.22 629.25,448.22" fill="#D6D6D6" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
+                <polygon points="580.75,420.22 629.25,448.22 625.78,450.22 577.29,422.22" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
+                <polygon points="579.89,426.72 623.19,451.72 623.19,482.72 579.89,457.72" fill="#8F8F8F"/>
+                <g data-plane="12" data-axis="x" transform="matrix(0.87 0.5 -0.87 0.5 536.45 34.8)">
+                  <text x="417.64" y="482.63" xml:space="preserve" font-family="Inter" font-size="16.9" font-weight="700" fill="#202124">Admin console</text>
+                  <text x="456.03" y="502.65" xml:space="preserve" font-family="Inter" font-size="15.6" font-weight="400" fill="#5F6368">laptop</text>
+                </g>
+              </g>
+              <g data-id="/body/0/children/0/children/0/children/0/children/2" data-tag="Pcard">
+                <polygon points="786.29,581.89 841.71,613.89 786.29,645.89 730.86,613.89" fill="#202124" fill-opacity="0.2" filter="url(#stencil-shadow)"/>
+                <polygon points="730.86,610.89 786.29,642.89 786.29,624.89 730.86,592.89" fill="#EBEBEB" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
+                <polygon points="841.71,610.89 786.29,642.89 786.29,624.89 841.71,592.89" fill="#D6D6D6" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
+                <polygon points="786.29,560.89 841.71,592.89 786.29,624.89 730.86,592.89" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
+                <g data-plane="12" data-axis="x" transform="matrix(0.87 0.5 -0.87 0.5 536.45 34.8)">
+                  <text x="706.18" y="490.63" xml:space="preserve" font-family="Inter" font-size="16.9" font-weight="700" fill="#202124">API</text>
+                  <text x="689.26" y="510.65" xml:space="preserve" font-family="Inter" font-size="15.6" font-weight="400" fill="#5F6368">gateway</text>
+                </g>
               </g>
             </g>
-            <g data-id="/body/0/children/0/children/0/children/1" data-tag="Pcard">
-              <polygon points="592.23,473.84 640.72,501.84 592.23,529.84 543.73,501.84" fill="#202124" fill-opacity="0.2" filter="url(#stencil-shadow)"/>
-              <polygon points="543.73,498.84 592.23,526.84 592.23,523.84 543.73,495.84" fill="#EBEBEB" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
-              <polygon points="640.72,498.84 592.23,526.84 592.23,523.84 640.72,495.84" fill="#D6D6D6" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
-              <polygon points="592.23,467.84 640.72,495.84 592.23,523.84 543.73,495.84" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
-              <polygon points="588.76,469.84 637.26,497.84 637.26,460.84 588.76,432.84" fill="#EBEBEB" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
-              <polygon points="640.72,495.84 637.26,497.84 637.26,460.84 640.72,458.84" fill="#D6D6D6" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
-              <polygon points="592.23,430.84 640.72,458.84 637.26,460.84 588.76,432.84" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
-              <polygon points="591.36,437.34 634.66,462.34 634.66,493.34 591.36,468.34" fill="#8F8F8F"/>
-              <g data-plane="12" data-axis="x" transform="matrix(0.87 0.5 -0.87 0.5 529.52 34.8)">
-                <text x="438.89" y="482.63" xml:space="preserve" font-family="Inter" font-size="16.9" font-weight="700" fill="#202124">Admin console</text>
-                <text x="477.28" y="502.65" xml:space="preserve" font-family="Inter" font-size="15.6" font-weight="400" fill="#5F6368">laptop</text>
-              </g>
+          </g>
+        </g>
+        <g data-id="/body/0/children/1" data-tag="Col">
+          <g data-id="/body/0/children/1/children/0" data-tag="Zone" data-kind="group">
+            <polygon points="921.2,764.66 1163.69,904.66 1163.69,898.66 921.2,758.66" fill="#D5E3DC"/>
+            <polygon points="1400.55,767.91 1163.69,904.66 1163.69,898.66 1400.55,761.91" fill="#BCD2C7"/>
+            <polygon points="1158.06,621.91 1400.55,761.91 1163.69,898.66 921.2,758.66" fill="#EDF3F0"/>
+            <g data-plane="6" data-axis="x" transform="matrix(0.87 0.5 -0.87 0.5 536.45 40.8)">
+              <text x="980.5" y="277.18" xml:space="preserve" font-family="Inter" font-size="15" font-weight="700" fill="#5F6368">Customers</text>
             </g>
-            <g data-id="/body/0/children/0/children/0/children/2" data-tag="Pcard">
-              <polygon points="733.17,555.22 975.23,694.97 837.96,774.22 595.91,634.47" fill="#202124" fill-opacity="0.2" filter="url(#stencil-shadow)"/>
-              <polygon points="595.91,631.47 837.96,771.22 837.96,753.22 595.91,613.47" fill="#EBEBEB" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
-              <polygon points="975.23,691.97 837.96,771.22 837.96,753.22 975.23,673.97" fill="#D6D6D6" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
-              <polygon points="733.17,534.22 975.23,673.97 837.96,753.22 595.91,613.47" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
-              <g data-plane="30" data-axis="x" transform="matrix(0.87 0.5 -0.87 0.5 529.52 16.8)">
-                <text x="654" y="475.38" xml:space="preserve" font-family="Inter" font-size="16.9" font-weight="700" fill="#202124">API</text>
-                <text x="654" y="495.4" xml:space="preserve" font-family="Inter" font-size="15.6" font-weight="400" fill="#5F6368">gateway</text>
-              </g>
-            </g>
-            <g data-id="/body/0/children/0/children/0/children/3" data-tag="Pcard">
-              <polygon points="1075.47,764.84 1087.59,771.84 1084.13,773.84 1072,766.84" fill="#202124" fill-opacity="0.2" filter="url(#stencil-shadow)"/>
-              <polygon points="1072,763.84 1084.13,770.84 1084.13,730.84 1072,723.84" fill="#EBEBEB" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
-              <polygon points="1087.59,768.84 1084.13,770.84 1084.13,730.84 1087.59,728.84" fill="#D6D6D6" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
-              <polygon points="1075.47,721.84 1087.59,728.84 1084.13,730.84 1072,723.84" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
-              <polygon points="1074.6,728.34 1081.53,732.34 1081.53,766.34 1074.6,762.34" fill="#8F8F8F"/>
-              <g data-plane="12" data-axis="x" transform="matrix(0.87 0.5 -0.87 0.5 529.52 34.8)">
-                <text x="1010.39" y="454.63" xml:space="preserve" font-family="Inter" font-size="16.9" font-weight="700" fill="#202124">Shop app</text>
-                <text x="1026.03" y="474.65" xml:space="preserve" font-family="Inter" font-size="15.6" font-weight="400" fill="#5F6368">phone</text>
+            <g data-id="/body/0/children/1/children/0/children/0" data-tag="Col">
+              <g data-id="/body/0/children/1/children/0/children/0/children/0" data-tag="Pcard">
+                <polygon points="1166.29,762.16 1178.41,769.16 1174.95,771.16 1162.82,764.16" fill="#202124" fill-opacity="0.2" filter="url(#stencil-shadow)"/>
+                <polygon points="1162.82,761.16 1174.95,768.16 1174.95,728.16 1162.82,721.16" fill="#EBEBEB" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
+                <polygon points="1178.41,766.16 1174.95,768.16 1174.95,728.16 1178.41,726.16" fill="#D6D6D6" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
+                <polygon points="1166.29,719.16 1178.41,726.16 1174.95,728.16 1162.82,721.16" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
+                <polygon points="1165.42,725.66 1172.35,729.66 1172.35,763.66 1165.42,759.66" fill="#8F8F8F"/>
+                <g data-plane="6" data-axis="x" transform="matrix(0.87 0.5 -0.87 0.5 536.45 40.8)">
+                  <text x="1050.14" y="397.51" xml:space="preserve" font-family="Inter" font-size="16.9" font-weight="700" fill="#202124">Shop app</text>
+                  <text x="1065.78" y="417.53" xml:space="preserve" font-family="Inter" font-size="15.6" font-weight="400" fill="#5F6368">phone</text>
+                </g>
               </g>
             </g>
           </g>
@@ -81,27 +95,27 @@
     </g>
     <g data-id="/legend" data-tag="Legend">
       <g data-id="/legend/0" data-tag="LegendEntry" data-kind="blue">
-        <line x1="20" y1="1058.17" x2="46" y2="1058.17" stroke="#1A73E8" stroke-width="3.75"/>
-        <text x="52" y="1062.54" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">Solid blue</text>
-        <text x="115.56" y="1062.54" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">request path</text>
+        <line x1="20" y1="1001.86" x2="46" y2="1001.86" stroke="#1A73E8" stroke-width="3.75"/>
+        <text x="52" y="1006.23" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">Solid blue</text>
+        <text x="115.56" y="1006.23" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">request path</text>
       </g>
       <g data-id="/legend/1" data-tag="LegendEntry" data-kind="gray">
-        <line x1="203.18" y1="1058.17" x2="229.18" y2="1058.17" stroke="#5F6368" stroke-width="2"/>
-        <text x="235.18" y="1062.54" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">Solid gray</text>
-        <text x="299.59" y="1062.54" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">operates</text>
+        <line x1="203.18" y1="1001.86" x2="229.18" y2="1001.86" stroke="#5F6368" stroke-width="2"/>
+        <text x="235.18" y="1006.23" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">Solid gray</text>
+        <text x="299.59" y="1006.23" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">operates</text>
       </g>
     </g>
   </g>
   <g data-id="/links/0" data-tag="Link" data-kind="gray">
-    <path d="M 395.21 375.09 L 507.36 439.84 L 498.7 444.84 L 544.25 471.15" fill="none" stroke="#5F6368" stroke-width="2" stroke-linejoin="round"/>
-    <polygon points="556.38,478.15 539.4,473.95 549.1,468.35" fill="#5F6368"/>
+    <path d="M 396 371.55 L 537.84 453.44" fill="none" stroke="#5F6368" stroke-width="2" stroke-linejoin="round"/>
+    <polygon points="549.96,460.44 532.99,456.24 542.69,450.64" fill="#5F6368"/>
   </g>
   <g data-id="/links/1" data-tag="Link" data-kind="blue">
-    <path d="M 616.47 512.84 L 658.69 537.22 L 614.31 562.84 L 633.36 573.84" fill="none" stroke="#1A73E8" stroke-width="3.75" stroke-linejoin="round"/>
-    <polygon points="648.95,582.84 627.13,577.45 639.6,570.24" fill="#1A73E8"/>
+    <path d="M 605 502.22 L 730.86 574.89" fill="none" stroke="#1A73E8" stroke-width="3.75" stroke-linejoin="round"/>
+    <polygon points="746.45,583.89 724.63,578.49 737.1,571.29" fill="#1A73E8"/>
   </g>
   <g data-id="/links/2" data-tag="Link" data-kind="blue">
-    <path d="M 1067.67 759.34 L 997.74 718.97 L 941.23 751.59 L 922.18 740.59" fill="none" stroke="#1A73E8" stroke-width="3.75" stroke-linejoin="round"/>
-    <polygon points="906.59,731.59 928.42,736.99 915.95,744.2" fill="#1A73E8"/>
+    <path d="M 1158.49 756.66 L 1041.58 689.16 M 1036.38 692.16 L 993.08 667.16 L 993.08 661.16 L 969.27 647.41 L 969.27 641.41 L 913.7 609.33 L 848.64 646.89 L 829.59 635.89" fill="none" stroke="#1A73E8" stroke-width="3.75" stroke-linejoin="round"/>
+    <polygon points="814,626.89 835.82,632.29 823.35,639.49" fill="#1A73E8"/>
   </g>
 </svg>

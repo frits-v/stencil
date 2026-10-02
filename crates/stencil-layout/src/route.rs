@@ -176,24 +176,31 @@ fn route_between(
     // (section 12.4): the search runs between the stub ends.
     // A stub into a hidden side (top or left) is cut back by the block's height on
     // screen, so it grows by that much. A stub never reaches past the nearest obstacle
-    // ahead of it, so the search starts outside every box.
-    let outward = |point: PagePoint, side: Side, node: &NodeGeometry| {
+    // ahead of it, so the search starts outside every box, and never past half the free
+    // run to the other end's box, so two facing stubs never overrun each other.
+    let outward = |point: PagePoint, side: Side, (node, other): (&NodeGeometry, BoxRect)| {
         let (dx, dy) = Direction::outward(side).unit();
         let hidden = matches!(side, Side::Top | Side::Left);
         let nominal = ISO_APPROACH_PX + if hidden { block_height(node) } else { 0.0 };
-        let length = nominal.min(free_run(point, (dx, dy), &obstacles));
+        let facing = [Obstacle {
+            node: usize::MAX,
+            bounds: other,
+        }];
+        let length = nominal
+            .min(free_run(point, (dx, dy), &obstacles))
+            .min(free_run(point, (dx, dy), &facing) / 2.0);
         PagePoint {
             x: point.x + dx * length,
             y: point.y + dy * length,
         }
     };
     let search_start = if from_stub {
-        outward(start, from_side, from)
+        outward(start, from_side, (from, to_box))
     } else {
         start
     };
     let search_end = if to_stub {
-        outward(end, to_side, to)
+        outward(end, to_side, (to, from_box))
     } else {
         end
     };

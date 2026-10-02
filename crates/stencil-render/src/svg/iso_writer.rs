@@ -329,7 +329,7 @@ impl<'a> SvgWriter<'a> {
                     );
                 }
             }
-            Shape::Card | Shape::Tile | Shape::Tower => {
+            Shape::Card | Shape::Tile | Shape::Tower | Shape::Block => {
                 if solid.shape == SolidShape::Block && solid.opaque {
                     self.write_block_shadow(depth, solid.footprint, solid.base_z, offset);
                 }

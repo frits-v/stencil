@@ -985,7 +985,7 @@
       ]
     },
     "Shape": {
-      "description": "The solid an item stands as under iso (section 12.3): a card is the flat card raised,\nwith its content on top; every other shape carries the icon on its top and its text\non the floor beside it. Tile: a thin plate, for network and edge pieces. Tower: a tall\nnarrow box, for compute, clusters and nodes. Cylinder: databases and warehouses.\nStack: three stacked discs, for storage and buckets. Figure: a standing person, for\nusers and operators. Laptop and phone: client devices.",
+      "description": "The solid an item stands as under iso (section 12.3): a card is the flat card raised,\nwith its content on top; every other shape carries the icon on its top and its text\non the floor beside it. Tile: a thin plate, for network and edge pieces. Tower: a tall\nnarrow box, for compute, clusters and nodes. Cylinder: databases and warehouses.\nStack: three stacked discs, for storage and buckets. Block: a card-height box of a\nfixed footprint with its text on the floor, the default of an icon-bearing kind. Figure:\na standing person, for users and operators. Laptop and phone: client devices.",
       "type": "string",
       "enum": [
         "card",
@@ -993,6 +993,7 @@
         "tower",
         "cylinder",
         "stack",
+        "block",
         "figure",
         "laptop",
         "phone"

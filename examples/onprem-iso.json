@@ -148,9 +148,6 @@
             },
             {
               "tag": "Col",
-              "grow": [
-                1
-              ],
               "children": [
                 {
                   "tag": "Item",
@@ -165,7 +162,8 @@
                   ],
                   "id": "fw"
                 }
-              ]
+              ],
+              "justify": "center"
             },
             {
               "tag": "Col",
@@ -179,8 +177,7 @@
                   "tint": 3,
                   "label": "VLAN 30",
                   "sub": "DMZ",
-                  "from": "fw",
-                  "to": "vlan30"
+                  "from": "fw"
                 },
                 {
                   "tag": "Pipe",
@@ -190,8 +187,7 @@
                   "label": "VLAN 99",
                   "sub": "transit",
                   "form": "band",
-                  "from": "fw",
-                  "to": "vlan99"
+                  "from": "fw"
                 }
               ]
             },

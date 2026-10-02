@@ -86,7 +86,8 @@
                 "group",
                 "tile",
                 "page"
-            ]
+            ],
+            "shape": "block"
         },
         {
             "name": "store",
@@ -98,7 +99,8 @@
                 "group",
                 "tile",
                 "page"
-            ]
+            ],
+            "shape": "block"
         },
         {
             "name": "external",
@@ -110,7 +112,8 @@
                 "group",
                 "tile",
                 "page"
-            ]
+            ],
+            "shape": "block"
         },
         {
             "name": "person",

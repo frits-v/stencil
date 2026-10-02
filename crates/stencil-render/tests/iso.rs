@@ -40,8 +40,6 @@ const HERO_VPC: &str = "/body/0/children/1/children/0/children/0";
 const HERO_APIS: &str = "/body/0/children/1/children/0/children/1";
 const HERO_GATEWAY: &str =
     "/body/0/children/1/children/0/children/0/children/0/children/0/children/0";
-const HERO_MODEL: &str =
-    "/body/0/children/1/children/0/children/0/children/0/children/1/children/0";
 const HERO_WAREHOUSE: &str = "/body/0/children/1/children/0/children/1/children/0";
 const HERO_ZONES: [&str; 4] = [HERO_ON_PREM, HERO_GCP, HERO_VPC, HERO_APIS];
 
@@ -227,9 +225,9 @@ fn two_zone_link_page(to_side: &str) -> Page {
                 "tag": "Row", "gap": 32,
                 "children": [
                     { "tag": "Box", "kind": "region", "tint": 1, "label": "A", "children": [
-                        { "tag": "Item", "kind": "product", "id": "left", "title": "Left" } ] },
+                        { "tag": "Item", "kind": "product", "id": "left", "title": "Left", "shape": "card" } ] },
                     { "tag": "Box", "kind": "region", "tint": 2, "label": "B", "children": [
-                        { "tag": "Item", "kind": "product", "id": "right", "title": "Right" } ] }
+                        { "tag": "Item", "kind": "product", "id": "right", "title": "Right", "shape": "card" } ] }
                 ]
             }
         ]),
@@ -955,7 +953,7 @@ fn cards_side_by_side_leave_their_labels_clear() {
     let page = two_card_zone(json!({
         "tag": "Row", "gap": 32,
         "children": [
-            card("Gateway", "cloud-run"),
+            with_shape(card("Gateway", "cloud-run"), "card"),
             with_shape(card("Warehouse", "bigquery"), "card")
         ]
     }));
@@ -1270,9 +1268,11 @@ fn the_hero_labels_are_clear() {
     let scene =
         stencil_render::iso::project_page(&geometry, &common::solid_inputs(&page, &geometry))
             .unwrap();
-    assert_eq!(scene.labels.len(), 12);
+    // 4 Box names, the icon and the text of the two blocks, the tile and the cylinder, and
+    // 2 link tags.
+    assert_eq!(scene.labels.len(), 14);
     let report = iso_labels_clear(Some(&scene));
-    assert_eq!(report.examined, 66 + (30 + 8) + 40 + 40 + 4);
+    assert_eq!(report.examined, 234);
     assert!(report.defects.is_empty(), "{report:#?}");
     assert!(report.passed());
 }
@@ -1292,7 +1292,7 @@ fn the_hero_measured_json_is_theme_independent_and_keeps_the_flat_nodes() {
             serde_json::to_vec(&iso["nodes"]).unwrap(),
             serde_json::to_vec(&flat["nodes"]).unwrap()
         );
-        assert_eq!(iso["projection"]["labels"].as_array().unwrap().len(), 12);
+        assert_eq!(iso["projection"]["labels"].as_array().unwrap().len(), 14);
         assert_eq!(iso["projection"]["kind"], "iso");
         for label in iso["projection"]["labels"].as_array().unwrap() {
             let id = label["id"].as_str().unwrap();
@@ -1656,7 +1656,7 @@ fn a_narrow_body_is_zoomed_to_the_cap_with_heights_and_text_sizes_kept_in_propor
     let page = iso_page(json!([
         { "tag": "Row", "grow": [0], "children": [
             { "tag": "Box", "kind": "region", "tint": 1, "label": "Region", "children": [
-                card("Gateway", "cloud-run") ] } ] }
+                with_shape(card("Gateway", "cloud-run"), "card") ] } ] }
     ]));
     let geometry = common::layout_with_cosmic_text(&page);
     let scene = project_page(&geometry).unwrap();
@@ -1708,7 +1708,10 @@ fn a_narrow_body_is_zoomed_to_the_cap_with_heights_and_text_sizes_kept_in_propor
 fn a_label_at_zoom_two_lies_twice_as_far_from_the_body_origin_as_at_zoom_one() {
     let page = two_card_zone(json!({
         "tag": "Row", "gap": 32,
-        "children": [card("Gateway", "cloud-run"), card("Warehouse", "bigquery")]
+        "children": [
+            with_shape(card("Gateway", "cloud-run"), "card"),
+            card("Warehouse", "bigquery")
+        ]
     }));
     let geometry = common::layout_with_fixed_metrics(&page);
     let one = project_zoomed(&geometry, 1.0).unwrap();
@@ -1751,15 +1754,24 @@ fn a_wide_body_is_not_zoomed() {
     assert!((1.0..=ISO_ZOOM_MAX).contains(&zoom));
 }
 
-/// Under iso a card lays its icon left of its name; both lie on the block's top face. The
-/// hero's cards are the gateway and the model; the router and the warehouse stand as shapes.
+/// Under iso a card lays its icon left of its name; both lie on the block's top face. A
+/// product stands as a block unless the item asks for the card.
 #[test]
 fn a_card_icon_and_name_lie_on_its_block_top_face_with_the_name_beside_the_icon() {
-    let hero = hero_page();
-    let geometry = common::layout_with_cosmic_text(&hero);
+    let page = two_card_zone(json!({
+        "tag": "Row", "gap": 32,
+        "children": [
+            with_shape(card("Gateway", "cloud-run"), "card"),
+            with_shape(card("Model", "vertex-ai"), "card")
+        ]
+    }));
+    let geometry = common::layout_with_cosmic_text(&page);
     let (zoomed, zoom) = zoomed_geometry(&geometry).unwrap();
     let scene = project_zoomed(&zoomed, zoom).unwrap();
-    for owner in [HERO_GATEWAY, HERO_MODEL] {
+    for owner in [
+        "/body/0/children/0/children/0",
+        "/body/0/children/0/children/1",
+    ] {
         assert_eq!(solid_of(&scene, owner).form, Shape::Card, "{owner}");
         let node = &zoomed.nodes[index_of(&zoomed, owner)];
         let block = solid_of(&scene, owner);
@@ -1867,7 +1879,7 @@ fn the_hero_links_clear_every_zone_edge_and_end_on_long_legs() {
     let scene = project_page(&geometry).unwrap();
     let report = iso_links_clear(Some(&scene));
     assert_eq!(report.check, CheckName::IsoLinksClear);
-    assert_eq!(report.examined, 11);
+    assert_eq!(report.examined, 9);
     assert!(report.passed(), "{report:?}");
     assert_eq!(
         iso_links_clear(None).not_applicable,
@@ -2131,7 +2143,8 @@ fn a_bigquery_item_is_a_cylinder_whose_round_outline_cuts_back_the_link_into_it(
 }
 
 /// An item's own `shape` outranks the shape of its icon's product row, and that row
-/// outranks card; an icon with no shape row and an item with no icon stand as cards.
+/// outranks the kind's shape; an icon with no shape row and an item with no icon stand as
+/// the product kind's block.
 #[test]
 fn an_item_takes_its_own_shape_before_its_icon_row_shape_and_that_before_card() {
     let page = iso_page(json!([
@@ -2149,8 +2162,8 @@ fn an_item_takes_its_own_shape_before_its_icon_row_shape_and_that_before_card() 
         (0, Shape::Tower, Some(44.0)),
         (1, Shape::Cylinder, Some(56.0)),
         (2, Shape::Card, None),
-        (3, Shape::Card, None),
-        (4, Shape::Card, None),
+        (3, Shape::Block, Some(64.0)),
+        (4, Shape::Block, Some(64.0)),
     ] {
         let pointer = format!("/body/0/children/0/children/{index}");
         let solid = solid_of(&scene, &pointer);
@@ -2184,7 +2197,7 @@ fn the_platform_example_stands_one_item_of_each_form_with_its_labels_and_links_c
         .collect();
     assert_eq!(forms.len(), 5, "{forms:?}");
     for form in [
-        Shape::Card,
+        Shape::Block,
         Shape::Tile,
         Shape::Tower,
         Shape::Cylinder,
@@ -2194,11 +2207,11 @@ fn the_platform_example_stands_one_item_of_each_form_with_its_labels_and_links_c
         assert_eq!(count, 1, "{form:?} in {forms:?}");
     }
     let labels = iso_labels_clear(Some(&scene));
-    assert_eq!(labels.examined, 210);
+    assert_eq!(labels.examined, 233);
     assert!(labels.defects.is_empty(), "{labels:#?}");
     assert!(labels.passed());
     let links = iso_links_clear(Some(&scene));
-    assert_eq!(links.examined, 12);
+    assert_eq!(links.examined, 8);
     assert!(links.defects.is_empty(), "{links:#?}");
     assert!(links.passed());
 }

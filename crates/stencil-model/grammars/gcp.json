@@ -468,7 +468,8 @@
                 "perimeter",
                 "apis",
                 "page"
-            ]
+            ],
+            "shape": "block"
         },
         {
             "name": "person",
