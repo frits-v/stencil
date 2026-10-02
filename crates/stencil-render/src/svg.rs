@@ -14,7 +14,8 @@ use stencil_model::text::TextStyleName;
 use stencil_model::text::TextMeasurer;
 use stencil_model::{
     Arrow, Canvas, Chrome, FactSource, IconName, LEGEND_ENTRIES_MAX, LINKS_MAX, LegendEntry, Link,
-    Node, NodeRef, NoteKind, Page, PagePoint, Pipe, PipeDir, Projection, Theme, body_nodes,
+    Node, NodeRef, NoteKind, Page, PagePoint, Pipe, PipeDir, PipeForm, Projection, Theme,
+    body_nodes,
 };
 use stencil_text::CosmicTextMeasurer;
 
@@ -393,6 +394,7 @@ fn relabel_legend_entry(
 struct PartContext<'a> {
     line: Option<LineUse>,
     pipe_dir: Option<PipeDir>,
+    pipe_form: Option<PipeForm>,
     arrows: ArrowEnds,
     icon: Option<IconName>,
     /// Accent bar color of a Callout.
@@ -539,6 +541,7 @@ impl<'a> SvgWriter<'a> {
             DocumentNode::Content(NodeRef::TeeArm(pipe)) => PartContext {
                 line: Some(LineUse::new(pipe.line, pipe.tint)),
                 pipe_dir: Some(pipe.dir),
+                pipe_form: Some(pipe.form),
                 arrows: ArrowEnds::of(pipe),
                 ..PartContext::default()
             },
@@ -562,6 +565,7 @@ impl<'a> SvgWriter<'a> {
                 Node::Pipe(pipe) => PartContext {
                     line: Some(LineUse::new(pipe.line, pipe.tint)),
                     pipe_dir: Some(pipe.dir),
+                    pipe_form: Some(pipe.form),
                     arrows: ArrowEnds::of(pipe),
                     ..PartContext::default()
                 },

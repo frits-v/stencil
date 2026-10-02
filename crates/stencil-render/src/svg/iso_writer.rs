@@ -4,7 +4,9 @@
 
 use stencil_layout::{BoxRect, LinkRoute, NodeGeometry, NodeTag, PageGeometry, Part, PartName};
 use stencil_model::pointer::NodePointer;
-use stencil_model::{LINKS_MAX, Link, Node, NodeRef, Page, PipeDir, Projection, Shape, Theme};
+use stencil_model::{
+    LINKS_MAX, Link, Node, NodeRef, Page, PipeDir, PipeForm, Projection, Shape, Theme,
+};
 
 use super::DOT_RADIUS_PX;
 use super::{
@@ -13,7 +15,9 @@ use super::{
     link_mismatch, part_mismatch, pipe_text_style_name, stroke_attributes, text_style_name,
 };
 use crate::iso::sprites;
-use crate::iso::tube::{self, CONE_LENGTH_PX, CONE_RADIUS_PX, ISO_TUBE_RADIUS_PX, Tube};
+use crate::iso::tube::{
+    self, BAND_HEAD_LENGTH_PX, CONE_LENGTH_PX, CONE_RADIUS_PX, ISO_TUBE_RADIUS_PX, Tube,
+};
 use crate::iso::{
     IsoPoint, Label, ScreenPoint, Solid, SolidInputs, SolidShape, arrowhead_vertices,
     ellipse_radii, end_direction, iso_link_arrowhead_length, label_axis, local_part, plane_member,
@@ -777,6 +781,16 @@ impl<'a> SvgWriter<'a> {
         };
         let start_center = box_center(dot_start.bounds);
         let end_center = box_center(dot_end.bounds);
+        if context.pipe_form == Some(PipeForm::Band) {
+            self.write_band(
+                depth,
+                (start_center, end_center),
+                (run, arrows),
+                (z, kind),
+                offset,
+            );
+            return Ok(());
+        }
         // A cone's tip is on the dot box's outer edge and its base CONE_LENGTH_PX inward.
         let start_tip = (
             start_center.0 - run.0 * DOT_RADIUS_PX,
@@ -821,6 +835,66 @@ impl<'a> SvgWriter<'a> {
             }
         }
         Ok(())
+    }
+
+    /// A band: a flat wide arrow on the plane from dot center to dot center, its body
+    /// stopping at each arrowhead's base; a dot end is square. Painted like a tube: filled
+    /// in the wire color, or hollow with the line's pattern.
+    fn write_band(
+        &mut self,
+        depth: usize,
+        (start_center, end_center): ((f32, f32), (f32, f32)),
+        (run, arrows): ((f32, f32), ArrowEnds),
+        (z, kind): (f32, LineUse),
+        offset: ScreenPoint,
+    ) {
+        let start_tip = (
+            start_center.0 - run.0 * DOT_RADIUS_PX,
+            start_center.1 - run.1 * DOT_RADIUS_PX,
+        );
+        let end_tip = (
+            end_center.0 + run.0 * DOT_RADIUS_PX,
+            end_center.1 + run.1 * DOT_RADIUS_PX,
+        );
+        let body_start = if arrows.start {
+            (
+                start_tip.0 + run.0 * BAND_HEAD_LENGTH_PX,
+                start_tip.1 + run.1 * BAND_HEAD_LENGTH_PX,
+            )
+        } else {
+            start_center
+        };
+        let body_end = if arrows.end {
+            (
+                end_tip.0 - run.0 * BAND_HEAD_LENGTH_PX,
+                end_tip.1 - run.1 * BAND_HEAD_LENGTH_PX,
+            )
+        } else {
+            end_center
+        };
+        let color = self.palette.wire_style(kind).stroke.color;
+        let (fill, outline) = match self.tube_style(kind) {
+            TubeStyle::Filled => (color.to_string(), None),
+            TubeStyle::Hollow(line) => (
+                self.palette.page_background().to_string(),
+                Some(Stroke {
+                    width_px: HOLLOW_TUBE_OUTLINE_PX,
+                    line,
+                    color,
+                }),
+            ),
+        };
+        let body = tube::band_body((body_start, body_end), run, z, offset);
+        self.write_closed_path(depth, &body, &fill, outline);
+        for (arrow_here, tip, outward) in [
+            (arrows.start, start_tip, (-run.0, -run.1)),
+            (arrows.end, end_tip, run),
+        ] {
+            if arrow_here {
+                let head = tube::band_head(tip, outward, z, offset);
+                self.write_closed_path(depth, &head, &fill, outline);
+            }
+        }
     }
 
     /// How a tube is painted: a theme that shades no faces draws every tube as an outline,

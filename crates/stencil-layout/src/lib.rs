@@ -13,7 +13,7 @@ mod theme_labels;
 use stencil_model::grammar::{BorderPattern, LabelStyle, Role, Tone};
 use stencil_model::pointer::NodePointer;
 use stencil_model::text::{MeasureError, TextMeasurer, TextMetrics, TextStyle};
-use stencil_model::{Grammar, Line, Page, PagePoint, Violation, line_key, validate_page};
+use stencil_model::{Grammar, Line, Page, PagePoint, PipeForm, Violation, line_key, validate_page};
 
 pub use build::{container_label_style, fact_presentation};
 pub use route::{longest_segment_midpoint, reroute_link};
@@ -212,6 +212,8 @@ pub struct NodeGeometry {
     pub container: Option<ContainerLook>,
     /// The solid an Item stands as under iso (section 12.3); None for every other tag.
     pub shape: Option<Shape>,
+    /// How a Pipe is drawn under iso (section 12.3 rule 5); None for every other tag.
+    pub pipe_form: Option<PipeForm>,
     pub parent: Option<usize>,
     /// Border box.
     pub bounds: BoxRect,

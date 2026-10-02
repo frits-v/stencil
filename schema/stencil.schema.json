@@ -705,6 +705,10 @@
             "dir": {
               "$ref": "#/$defs/PipeDir"
             },
+            "form": {
+              "description": "Under iso, a round tube on the pipe's plane (the default) or a band, a flat wide\narrow lying on it (section 12.3 rule 5).",
+              "$ref": "#/$defs/PipeForm"
+            },
             "from": {
               "description": "The id of the node on the pipe's left (h) or upper (v) end. Layout centers the pipe's\nslot on its targets (section 13.8); a Tee arm cannot carry one.",
               "type": [
@@ -965,6 +969,14 @@
         "v"
       ]
     },
+    "PipeForm": {
+      "description": "How a Pipe is drawn under iso: a round tube on its plane, or a band, a flat wide arrow\nlying on it. Flat draws both as the wire of section 2.7.",
+      "type": "string",
+      "enum": [
+        "tube",
+        "band"
+      ]
+    },
     "Projection": {
       "type": "string",
       "enum": [
@@ -1017,6 +1029,10 @@
             },
             "dir": {
               "$ref": "#/$defs/PipeDir"
+            },
+            "form": {
+              "description": "Under iso, a round tube on the pipe's plane (the default) or a band, a flat wide\narrow lying on it (section 12.3 rule 5).",
+              "$ref": "#/$defs/PipeForm"
             },
             "from": {
               "description": "The id of the node on the pipe's left (h) or upper (v) end. Layout centers the pipe's\nslot on its targets (section 13.8); a Tee arm cannot carry one.",

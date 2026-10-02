@@ -180,7 +180,8 @@
                   "line": "solid",
                   "tint": 4,
                   "label": "VLAN 99",
-                  "sub": "transit"
+                  "sub": "transit",
+                  "form": "band"
                 }
               ]
             },

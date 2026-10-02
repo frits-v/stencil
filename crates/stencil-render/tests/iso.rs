@@ -744,6 +744,42 @@ fn iso_layout_grows_a_card_title_by_the_type_scale_and_keeps_the_page_title_flat
     assert_eq!(title_style(&iso_geometry), title_style(&flat_geometry));
 }
 
+/// Section 12.3 rule 5: a band is a flat wide arrow on its plane, one body polygon and one
+/// head per arrowed end, with its tag on the plane itself.
+#[test]
+fn a_band_pipe_lies_flat_with_its_tag_on_the_floor() {
+    let page = iso_page(json!([
+        { "tag": "Row", "children": [
+            card("Edge", "cloud-run"),
+            { "tag": "Pipe", "dir": "h", "line": "solid", "tint": 1, "label": "requests",
+              "arrow": "both", "form": "band" },
+            card("Core", "cloud-run") ] }
+    ]));
+    let geometry = common::layout_with_fixed_metrics(&page);
+    let scene = project_page(&geometry).unwrap();
+    let pipe = geometry
+        .nodes
+        .iter()
+        .position(|node| node.tag == NodeTag::Pipe)
+        .unwrap();
+    let solid = scene
+        .solids
+        .iter()
+        .find(|solid| solid.node == pipe)
+        .unwrap();
+    assert_eq!((solid.shape, solid.height), (SolidShape::Surface, 0.0));
+    let tag = label_of(&scene, &geometry.nodes[pipe].pointer.to_string());
+    assert_eq!(tag.z, solid.base_z);
+    let svg = render_svg(&page, &geometry).unwrap();
+    let document = common::parse_xml(&svg.svg);
+    let group = common::group(&document, &geometry.nodes[pipe].pointer.to_string());
+    let polygons = group
+        .descendants()
+        .filter(|element| element.has_tag_name("polygon"))
+        .count();
+    assert_eq!(polygons, 3, "body and two heads");
+}
+
 /// Section 12.3 rule 5: a pipe is a tube of polygons, with no flat dot ellipse, and its tag
 /// pill lies on the tube's top.
 #[test]
