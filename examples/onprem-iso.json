@@ -72,7 +72,8 @@
                         }
                       ]
                     }
-                  ]
+                  ],
+                  "id": "vlan10"
                 },
                 {
                   "tag": "Box",
@@ -107,7 +108,8 @@
                         }
                       ]
                     }
-                  ]
+                  ],
+                  "id": "vlan20"
                 }
               ]
             },
@@ -122,7 +124,9 @@
                   "line": "solid",
                   "tint": 1,
                   "label": "VLAN 10",
-                  "sub": "staff trunk"
+                  "sub": "staff trunk",
+                  "from": "vlan10",
+                  "to": "fw"
                 },
                 {
                   "tag": "Pipe",
@@ -130,7 +134,8 @@
                   "line": "solid",
                   "tint": 2,
                   "label": "VLAN 20",
-                  "sub": "server trunk"
+                  "sub": "server trunk",
+                  "to": "fw"
                 },
                 {
                   "tag": "Pipe",
@@ -157,7 +162,8 @@
                       "text": "fw-edge-01",
                       "source": "built"
                     }
-                  ]
+                  ],
+                  "id": "fw"
                 }
               ]
             },
@@ -172,7 +178,9 @@
                   "line": "solid",
                   "tint": 3,
                   "label": "VLAN 30",
-                  "sub": "DMZ"
+                  "sub": "DMZ",
+                  "from": "fw",
+                  "to": "vlan30"
                 },
                 {
                   "tag": "Pipe",
@@ -181,7 +189,9 @@
                   "tint": 4,
                   "label": "VLAN 99",
                   "sub": "transit",
-                  "form": "band"
+                  "form": "band",
+                  "from": "fw",
+                  "to": "vlan99"
                 }
               ]
             },
@@ -223,7 +233,8 @@
                         }
                       ]
                     }
-                  ]
+                  ],
+                  "id": "vlan30"
                 },
                 {
                   "tag": "Box",
@@ -243,7 +254,8 @@
                         }
                       ]
                     }
-                  ]
+                  ],
+                  "id": "vlan99"
                 }
               ]
             }

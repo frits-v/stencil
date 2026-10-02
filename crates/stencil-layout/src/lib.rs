@@ -7,6 +7,7 @@ pub mod styles;
 mod build;
 mod compute;
 mod lanes;
+mod pipe_ends;
 mod route;
 mod theme_labels;
 
@@ -131,6 +132,7 @@ pub fn layout_page(
     let built = build::build_page(page, grammar, &lanes_plan)?;
     let mut geometry = compute::compute_geometry(built, page.width, measurer)?;
     compute::translate_pipe_slots(page, &mut geometry);
+    pipe_ends::extend_pipe_ends(page, &mut geometry);
     lanes::add_lifelines(&mut geometry);
     geometry.links = route::route_links(page, &geometry, &lanes_plan, measurer)?;
     Ok(geometry)
