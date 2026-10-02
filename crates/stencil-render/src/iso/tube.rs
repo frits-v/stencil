@@ -334,6 +334,57 @@ mod tests {
         );
     }
 
+    /// Section 12.3 rule 5: the far cap is the tube's rounded end. Its disc stays between
+    /// the body's flanks and never reaches past the near end, so the body covers all of it
+    /// but the sliver beyond the far end, for a run in each of the four flat directions.
+    #[test]
+    fn the_far_cap_stays_between_the_flanks_and_behind_the_near_end_in_all_four_directions() {
+        for run in [(1.0, 0.0), (0.0, 1.0), (-1.0, 0.0), (0.0, -1.0)] {
+            let tube = Tube {
+                start: (50.0, 50.0),
+                end: (50.0 + 100.0 * run.0, 50.0 + 100.0 * run.1),
+                floor_z: 0.0,
+                radius: 5.0,
+            };
+            let outline = body(&tube, ZERO_OFFSET).unwrap().outline;
+            let far = if faces_viewer(run) {
+                tube.start
+            } else {
+                tube.end
+            };
+            let cap = cross_section(far, run, tube.axis_z(), tube.radius, ZERO_OFFSET);
+            // Outline edges: 0 the lit flank, 1 the end, 2 the shaded flank, 3 the start.
+            let (far_edge, near_edge) = if far == tube.start { (3, 1) } else { (1, 3) };
+            let center = ScreenPoint {
+                x: outline.iter().map(|point| point.x).sum::<f32>() / 4.0,
+                y: outline.iter().map(|point| point.y).sum::<f32>() / 4.0,
+            };
+            let side = |edge: usize, point: ScreenPoint| {
+                let (a, b) = (outline[edge], outline[(edge + 1) % 4]);
+                let cross = (b.x - a.x) * (point.y - a.y) - (b.y - a.y) * (point.x - a.x);
+                cross / (b.x - a.x).hypot(b.y - a.y)
+            };
+            let mut beyond_far_end = 0;
+            for point in &cap {
+                for edge in [0, 2, near_edge] {
+                    let inside = side(edge, center).signum();
+                    assert!(
+                        side(edge, *point) * inside >= -1e-3,
+                        "run {run:?}: cap point {point:?} lies outside edge {edge}"
+                    );
+                }
+                if side(far_edge, *point) * side(far_edge, center).signum() < -1e-3 {
+                    beyond_far_end += 1;
+                }
+            }
+            assert!(
+                beyond_far_end > 0 && beyond_far_end < cap.len(),
+                "run {run:?}: {beyond_far_end} of {} cap points show past the far end",
+                cap.len()
+            );
+        }
+    }
+
     #[test]
     fn the_far_end_of_a_run_toward_x_or_y_faces_the_viewer() {
         assert!(faces_viewer((1.0, 0.0)));

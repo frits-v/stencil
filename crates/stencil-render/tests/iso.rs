@@ -33,6 +33,15 @@ const HERO_JSON: &str = include_str!("../../../examples/hero-iso.json");
 const PLATFORM_JSON: &str = include_str!("../../../examples/platform-iso.json");
 const PEOPLE_JSON: &str = include_str!("../../../examples/people-iso.json");
 const ONPREM_JSON: &str = include_str!("../../../examples/onprem-iso.json");
+const TRANSIT_JSON: &str = include_str!("../../../examples/transit-iso.json");
+/// Every example drawn under iso, by stem.
+const ISO_EXAMPLES: [(&str, &str); 5] = [
+    ("hero-iso", HERO_JSON),
+    ("platform-iso", PLATFORM_JSON),
+    ("people-iso", PEOPLE_JSON),
+    ("onprem-iso", ONPREM_JSON),
+    ("transit-iso", TRANSIT_JSON),
+];
 const ZERO: ScreenPoint = ScreenPoint { x: 0.0, y: 0.0 };
 
 const HERO_ON_PREM: &str = "/body/0/children/0/children/0";
@@ -2946,6 +2955,127 @@ fn a_band_legend_entry_draws_a_bar_swatch_and_a_tube_entry_a_wire() {
         } else {
             assert_eq!((wires, bars.len()), (1, 0), "{}", entry.text);
         }
+    }
+}
+
+/// Section 12.7: tube radii follow the zoom, so the tag plane of a link lies a tube
+/// diameter at the zoom above its path, and that gap doubles from zoom 1 to zoom 2.
+#[test]
+fn a_link_tag_sits_a_tube_diameter_at_the_zoom_above_its_path() {
+    let mut document = common::page_document(
+        json!([{ "tag": "Box", "kind": "gcp", "label": "Google Cloud", "children": [
+            { "tag": "Row", "gap": 32, "children": [
+                { "tag": "Item", "kind": "product", "icon": "cloud-run", "id": "a", "title": "Gateway" },
+                { "tag": "Item", "kind": "product", "icon": "cloud-run", "id": "b", "title": "Model" }
+            ] }
+        ] }]),
+        json!([{ "line": "solid", "tint": 1, "text": "request path" }]),
+    );
+    document["projection"] = json!("iso");
+    document["links"] =
+        json!([{ "from": "a", "to": "b", "line": "solid", "tint": 1, "label": "HTTPS" }]);
+    let page: Page = serde_json::from_value(document).unwrap();
+    let geometry = common::layout_with_fixed_metrics(&page);
+    let one = project_zoomed(&geometry, 1.0).unwrap();
+    let two = project_zoomed(&geometry, 2.0).unwrap();
+    let gap_at = |scene: &IsoScene| {
+        let path = &scene.link_paths[0];
+        let height = path[0].z;
+        assert!(path.iter().all(|point| point.z == height), "{path:?}");
+        label_of(scene, "/links/0").z - height
+    };
+    let radius = link_tube_radius(Line::Solid, Some(1));
+    assert_close(gap_at(&one), 2.0 * radius, "tag above the tube at zoom 1");
+    assert_close(gap_at(&two), 4.0 * radius, "tag above the tube at zoom 2");
+    assert_close(gap_at(&two), 2.0 * gap_at(&one), "the gap follows the zoom");
+}
+
+/// Section 12.3 rule 7: a link lies at one height, the highest terrain it crosses, with no
+/// riser along its path, in every example drawn under iso.
+#[test]
+fn every_link_path_of_every_iso_example_lies_at_one_height() {
+    let mut examined = 0;
+    for (stem, json) in ISO_EXAMPLES {
+        let page: Page = serde_json::from_str(json).unwrap();
+        let geometry = common::layout_with_cosmic_text(&page);
+        let scene = project_page(&geometry).unwrap();
+        for (index, path) in scene.link_paths.iter().enumerate() {
+            let height = path[0].z;
+            assert!(
+                path.iter().all(|point| (point.z - height).abs() < 1e-3),
+                "{stem} /links/{index}: {path:?}"
+            );
+            examined += 1;
+        }
+    }
+    // Hero 6, platform 4, people 4, transit 1; the on-prem deny is a pipe.
+    assert_eq!(examined, 15);
+}
+
+/// Section 12.7 rule 8: two footprint items in a Row whose footprints share a span across
+/// the gap are joined by one leg through the target's center, though the flat route between
+/// their side midpoints jogs by the difference of their footprints. The tower comes first:
+/// an end on a box form's hidden left side is set back by the block's height, and a tower
+/// as the target would leave no room in the shared span.
+#[test]
+fn a_link_between_two_footprint_items_that_share_a_span_is_one_leg() {
+    let mut document = common::page_document(
+        json!([{ "tag": "Box", "kind": "gcp", "label": "Google Cloud", "children": [
+            { "tag": "Row", "gap": 32, "children": [
+                with_shape(json!({ "tag": "Item", "kind": "product", "icon": "cloud-run", "id": "a", "title": "Compute" }), "tower"),
+                with_shape(json!({ "tag": "Item", "kind": "product", "icon": "cloud-run", "id": "b", "title": "Router" }), "tile")
+            ] }
+        ] }]),
+        json!([{ "line": "solid", "tint": 1, "text": "request path" }]),
+    );
+    document["projection"] = json!("iso");
+    document["links"] = json!([{ "from": "a", "to": "b", "line": "solid", "tint": 1 }]);
+    let page: Page = serde_json::from_value(document).unwrap();
+    let geometry = common::layout_with_fixed_metrics(&page);
+    let flat = &geometry.links[0].points;
+    let flat_ys: Vec<f32> = flat.iter().map(|point| point.y).collect();
+    assert!(
+        flat_ys.iter().any(|y| (y - flat_ys[0]).abs() > 1.0),
+        "the flat route between the side midpoints jogs: {flat:?}"
+    );
+    let scene = project_page(&geometry).unwrap();
+    let path = &scene.link_paths[0];
+    assert!(path.len() >= 2, "{path:?}");
+    assert!(
+        path.iter()
+            .all(|point| (point.y - path[0].y).abs() < 1e-3 && point.z == path[0].z),
+        "one leg along x: {path:?}"
+    );
+    assert!(path.last().unwrap().x > path[0].x, "{path:?}");
+}
+
+/// Section 12.8: the measured `projection.canvas` is the drawn canvas, the SVG root's width,
+/// height and viewBox, for every example drawn under iso.
+#[test]
+fn the_measured_canvas_of_every_iso_example_is_the_svg_viewbox() {
+    for (stem, json) in ISO_EXAMPLES {
+        let page: Page = serde_json::from_str(json).unwrap();
+        let document: Value = serde_json::from_str(json).unwrap();
+        let geometry = common::layout_with_cosmic_text(&page);
+        let scene = project_page(&geometry).unwrap();
+        let measured = measured_json(&document, &geometry, Some(&scene));
+        let canvas = &measured["projection"]["canvas"];
+        let width = format_number(canvas["width"].as_f64().unwrap() as f32).to_string();
+        let height = format_number(canvas["height"].as_f64().unwrap() as f32).to_string();
+        let svg = render_svg(&page, &geometry).unwrap().svg;
+        let parsed = common::parse_xml(&svg);
+        let root = parsed.root_element();
+        assert_eq!(root.attribute("width"), Some(width.as_str()), "{stem}");
+        assert_eq!(root.attribute("height"), Some(height.as_str()), "{stem}");
+        assert_eq!(
+            root.attribute("viewBox"),
+            Some(format!("0 0 {width} {height}").as_str()),
+            "{stem}"
+        );
+        assert_ne!(
+            canvas, &measured["canvas"],
+            "{stem}: the layout canvas differs"
+        );
     }
 }
 
