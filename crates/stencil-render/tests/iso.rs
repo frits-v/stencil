@@ -1322,8 +1322,42 @@ fn the_measured_projection_lists_each_label_with_its_id_axis_corners_and_z() {
     let measured = measured_json(&hero_document(), &geometry, Some(&scene));
     let projection = measured["projection"].as_object().unwrap();
     let keys: Vec<&String> = projection.keys().collect();
-    assert_eq!(keys, ["canvas", "footer_shift", "kind", "labels", "offset"]);
+    assert_eq!(
+        keys,
+        [
+            "canvas",
+            "footer_shift",
+            "kind",
+            "labels",
+            "links",
+            "offset"
+        ]
+    );
     assert!(projection.get("billboards").is_none());
+    // Every link's drawn path, in link order, as the SVG draws it: the top-level `links`
+    // keep the layout route, which two readers took for the drawn one.
+    let links = projection["links"].as_array().unwrap();
+    assert_eq!(links.len(), scene.link_paths.len());
+    assert_eq!(links.len(), measured["links"].as_array().unwrap().len());
+    for (index, (written, path)) in links.iter().zip(&scene.link_paths).enumerate() {
+        let keys: Vec<&String> = written.as_object().unwrap().keys().collect();
+        assert_eq!(keys, ["id", "path"]);
+        assert_eq!(written["id"], format!("/links/{index}"));
+        let points = written["path"].as_array().unwrap();
+        assert_eq!(points.len(), path.len());
+        for (point, expected) in points.iter().zip(path) {
+            assert_eq!(point["x"], format_number(expected.x).to_json());
+            assert_eq!(point["y"], format_number(expected.y).to_json());
+            assert_eq!(point["z"], format_number(expected.z).to_json());
+        }
+    }
+    let flat_start = &measured["links"][1]["points"][0];
+    let drawn_start = &links[1]["path"][0];
+    assert_ne!(
+        (flat_start["x"].clone(), flat_start["y"].clone()),
+        (drawn_start["x"].clone(), drawn_start["y"].clone()),
+        "the failover's drawn start is spread from the primary's; its layout start is not"
+    );
     let labels = projection["labels"].as_array().unwrap();
     assert_eq!(labels.len(), scene.labels.len());
     for (written, label) in labels.iter().zip(&scene.labels) {

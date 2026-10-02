@@ -2510,6 +2510,9 @@ pub fn measured_json(
     { "axis": "x", "corners": [{ "x": 369.56, "y": 148.36 }, { "x": 429.06, "y": 182.71 }, { "x": 412.75, "y": 192.13 }, { "x": 353.25, "y": 157.78 }], "id": "/body/0/children/0", "z": 6.92 },
     { "axis": "y", "corners": [ … ], "id": "/links/0", "z": 0 }
   ],
+  "links": [
+    { "id": "/links/0", "path": [{ "x": 146.88, "y": 320.62, "z": 6 }, { "x": 391.3, "y": 320.62, "z": 6 }, { "x": 391.3, "y": 378.84, "z": 6 }, { "x": 435.5, "y": 378.84, "z": 6 }] }
+  ],
   "offset": { "x": 90.7, "y": 60.8 }
 }
 ```
@@ -2517,6 +2520,7 @@ pub fn measured_json(
 The numbers in this example are illustrative.
 
 - `labels` lists every label in painter order with its owner pointer, its axis, its plane height and the four screen corners of its parts' union, top-left first then clockwise in layout terms. Each `id` resolves in `document`, except `/links/<i>`, which resolves to the link.
+- `links` lists every link's drawn path in link order, omitted when the page has no links: `id` is the link's pointer and `path` the polyline of section 12.3 rules 7 and 8 and section 12.7 rule 8, in zoomed flat px with the height `z` of each point, which is what the SVG draws. Two readers took the top-level `links` points, the layout route before the end offsets, the cut-back and the via adjustments, for the drawn one.
 - The top-level `canvas`, `document`, `nodes` and `links` are the layout ones (layout px, before the zoom). `projection.canvas` is the drawn canvas.
 - Keys are in ascending byte order at every level (section 5.4), and every number goes through `format_number`.
 - The projection is theme-independent, so the section 11.1 rule holds under iso: the measured JSON is byte-identical across themes for the same document and projection.
