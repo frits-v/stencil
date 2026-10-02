@@ -21,16 +21,16 @@ Every node object carries "tag"; the Page does not. * required, =default. A fiel
 # Layout
 
 - A Row splits its width by grow weight, like CSS fr. With no grow every child gets 1 except Pipe and Tee (0); a Col's children keep their content height. Weight 0 is max-content width; when one child must be narrow, weight every child: [4,3,13].
-- A Box is a column: its label, then its children at full width; its kind sets border, padding and label style.
-- A pipe tag sizes to its one-line label and widens its gutter; keep labels to 1-3 words, detail in sub.
+- A Box is a column: label, then children at full width; its kind sets border, padding and label style.
+- A pipe tag sizes to its one-line label and widens its gutter: 1-3 words, detail in sub.
 - Gutter: Row [producer Col, gutter Col, target Box]. The gutter Col holds one slot per producer Box: a Col, gap 12, of that Box's h Pipes. Name the Boxes in each Pipe's from and to so its slot centers on them.
 - An Item is never narrower than its widest word.
-- The legend lists each line and tint in use once, and nothing else; its label (Solid blue) is fixed, so write the text as meaning.
+- The legend lists each line and tint in use once, and nothing else; its label (Solid blue) is fixed; write the text as meaning.
 - Lanes: equal head columns; a link with order between two heads is a message row below.
 
 # Checks
 
-`check` prints one line per check with its examined count, then `defect <check> <pointer>: <message>` lines. Examined 0 fails. Checks whose surface is absent (links, pipe neighbors, iso, --print-width, an icon table) are not applicable.
+`check` prints one line per check with its examined count, then `defect <check> <pointer>: <message>` lines. Examined 0 fails. Checks with no surface (links, pipe neighbors, iso, --print-width, an icon table) are not applicable.
 
 | Check | Examines | Defect | Fix |
 |---|---|---|---|

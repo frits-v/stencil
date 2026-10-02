@@ -8,8 +8,8 @@ use stencil_model::text::{TextStyle, TextStyleName};
 use stencil_model::{
     Arrow, BoxNode, Callout, Canvas, Chrome, DEPTH_MAX, Fact, FactSource, Frame, GAP_DEFAULT_PX,
     Grammar, Item, Justify, LANE_GAP_DEFAULT_PX, Lanes, LegendEntry, ListKind, Node, Note,
-    NoteKind, Page, Pipe, PipeDir, Projection, Shape, Tee, TeeArm, Text, VetRule, Violation,
-    box_key, box_tint, legend_label, line_key, line_tint,
+    NoteKind, Page, Pipe, PipeDir, PipeForm, Projection, Shape, Tee, TeeArm, Text, VetRule,
+    Violation, box_key, box_tint, legend_label, line_key, line_tint,
 };
 use taffy::prelude::{
     AlignItems, AlignSelf, Dimension, Display, FlexDirection, FlexWrap, JustifyContent,
@@ -57,6 +57,8 @@ pub(crate) struct NodeRecord {
     pub container: Option<ContainerLook>,
     /// The solid an Item stands as under iso; None for every other tag.
     pub shape: Option<Shape>,
+    /// How a Pipe is drawn under iso; None for every other tag.
+    pub pipe_form: Option<PipeForm>,
     pub parent: Option<usize>,
     pub taffy_node: NodeId,
     /// The taffy node whose content box children must stay inside.
@@ -462,6 +464,7 @@ impl Builder<'_> {
             tint: None,
             container: None,
             shape: None,
+            pipe_form: None,
             parent,
             taffy_node,
             content_node: taffy_node,
@@ -1649,6 +1652,7 @@ impl Builder<'_> {
         record.tint = line_tint(pipe.line, pipe.tint);
         record.parts = parts;
         record.arrow_ends = arrow_ends(pipe.arrow, horizontal);
+        record.pipe_form = Some(pipe.form);
         self.push_record(record);
         Ok(())
     }

@@ -468,6 +468,10 @@ pub struct Pipe {
     /// Under iso, the axis the tag reads along; absent follows dir.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub axis: Option<Axis>,
+    /// Under iso, a round tube on the pipe's plane (the default) or a band, a flat wide
+    /// arrow lying on it (section 12.3 rule 5).
+    #[serde(default, skip_serializing_if = "PipeForm::is_tube")]
+    pub form: PipeForm,
     /// The id of the node on the pipe's left (h) or upper (v) end. Layout centers the pipe's
     /// slot on its targets (section 13.8); a Tee arm cannot carry one.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -477,6 +481,23 @@ pub struct Pipe {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[schemars(regex(pattern = ID_PATTERN))]
     pub to: Option<String>,
+}
+
+/// How a Pipe is drawn under iso: a round tube on its plane, or a band, a flat wide arrow
+/// lying on it. Flat draws both as the wire of section 2.7.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema, Default)]
+#[serde(rename_all = "lowercase")]
+pub enum PipeForm {
+    #[default]
+    Tube,
+    Band,
+}
+
+impl PipeForm {
+    #[allow(clippy::trivially_copy_pass_by_ref)]
+    fn is_tube(form: &PipeForm) -> bool {
+        *form == PipeForm::Tube
+    }
 }
 
 /// A Tee arm is written with `"tag": "Pipe"`, the same object shape as a Pipe node.

@@ -15,7 +15,7 @@ use stencil_layout::{
 };
 use stencil_model::checks::{CheckName, CheckReport, Defect};
 use stencil_model::pointer::NodePointer;
-use stencil_model::{LINKS_MAX, Line, Link, NODES_MAX, PagePoint};
+use stencil_model::{LINKS_MAX, Line, Link, NODES_MAX, PagePoint, PipeForm};
 
 use crate::RenderError;
 
@@ -511,6 +511,10 @@ fn solid_shape(
         NodeTag::Fact | NodeTag::Note | NodeTag::Text | NodeTag::Callout | NodeTag::Frame => {
             Some((SolidShape::Block, slab_top, ISO_BLOCK_HEIGHT_PX))
         }
+        // A band lies flat on its plane, so its tag does too.
+        NodeTag::Pipe if node.pipe_form == Some(PipeForm::Band) => {
+            Some((SolidShape::Surface, slab_top, 0.0))
+        }
         NodeTag::Pipe | NodeTag::Tee => Some((
             SolidShape::Surface,
             slab_top,
@@ -877,7 +881,9 @@ fn add_surface_extent(extent: &mut Extent, node: &NodeGeometry, z: f32) {
     let Some(run) = unit_direction(flat_ends.0, flat_ends.1) else {
         return;
     };
-    let ring = tube::FLANGE_RADIUS_PX.max(tube::CONE_RADIUS_PX);
+    let ring = tube::FLANGE_RADIUS_PX
+        .max(tube::CONE_RADIUS_PX)
+        .max(tube::BAND_HEAD_HALF_WIDTH_PX);
     let axis_z = z + tube::ISO_TUBE_RADIUS_PX;
     for at in [flat_ends.0, flat_ends.1] {
         for point in tube::cross_section(at, run, axis_z, ring, ZERO_OFFSET) {

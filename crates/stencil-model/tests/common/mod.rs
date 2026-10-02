@@ -54,6 +54,7 @@ pub fn pipe_value(dir: PipeDir, line: Line, tint: Option<u8>, label: &str) -> Pi
         id: None,
         arrow: stencil_model::Arrow::None,
         axis: None,
+        form: stencil_model::PipeForm::Tube,
         dir,
         line,
         tint,

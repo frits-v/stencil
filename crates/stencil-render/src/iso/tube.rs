@@ -18,6 +18,12 @@ pub const CONE_RADIUS_PX: f32 = 8.5;
 /// Length of a cone from base to tip.
 pub const CONE_LENGTH_PX: f32 = 12.0;
 const CROSS_SECTION_POINTS: usize = 24;
+/// Half the width of a band, a flat wide arrow on the plane.
+pub const BAND_HALF_WIDTH_PX: f32 = 10.0;
+/// Length of a band's arrowhead from base to tip.
+pub const BAND_HEAD_LENGTH_PX: f32 = 24.0;
+/// Half the width of a band's arrowhead base.
+pub const BAND_HEAD_HALF_WIDTH_PX: f32 = 18.0;
 
 /// A straight tube between two flat points, lying on the plane at `floor_z`.
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -178,6 +184,46 @@ pub(crate) fn flange(center: (f32, f32), run: (f32, f32), floor_z: f32) -> Tube 
     }
 }
 
+/// The body of a band on the plane at `z`: the flat rectangle between its ends, as four
+/// screen points wound start to end and back.
+pub(crate) fn band_body(
+    (start, end): ((f32, f32), (f32, f32)),
+    run: (f32, f32),
+    z: f32,
+    offset: ScreenPoint,
+) -> [ScreenPoint; 4] {
+    let across = (-run.1 * BAND_HALF_WIDTH_PX, run.0 * BAND_HALF_WIDTH_PX);
+    [
+        project_point(start.0 - across.0, start.1 - across.1, z, offset),
+        project_point(end.0 - across.0, end.1 - across.1, z, offset),
+        project_point(end.0 + across.0, end.1 + across.1, z, offset),
+        project_point(start.0 + across.0, start.1 + across.1, z, offset),
+    ]
+}
+
+/// A band's arrowhead on the plane at `z`: the flat triangle with its tip at `tip`
+/// pointing along `outward`.
+pub(crate) fn band_head(
+    tip: (f32, f32),
+    outward: (f32, f32),
+    z: f32,
+    offset: ScreenPoint,
+) -> [ScreenPoint; 3] {
+    let base = (
+        tip.0 - outward.0 * BAND_HEAD_LENGTH_PX,
+        tip.1 - outward.1 * BAND_HEAD_LENGTH_PX,
+    );
+    let across = (
+        -outward.1 * BAND_HEAD_HALF_WIDTH_PX,
+        outward.0 * BAND_HEAD_HALF_WIDTH_PX,
+    );
+    [
+        project_point(tip.0, tip.1, z, offset),
+        project_point(base.0 - across.0, base.1 - across.1, z, offset),
+        project_point(base.0 + across.0, base.1 + across.1, z, offset),
+    ]
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -251,6 +297,17 @@ mod tests {
         assert_eq!(toward.base.len(), CROSS_SECTION_POINTS);
         let away = cone((50.0, 0.0), (-1.0, 0.0), (12.0, 8.5), 5.0, ZERO_OFFSET).unwrap();
         assert!(away.base_in_front);
+    }
+
+    #[test]
+    fn a_band_lies_flat_on_its_plane_with_a_wide_head() {
+        let body = band_body(((0.0, 0.0), (100.0, 0.0)), (1.0, 0.0), 6.0, ZERO_OFFSET);
+        assert_eq!(body[0], project_point(0.0, -10.0, 6.0, ZERO_OFFSET));
+        assert_eq!(body[2], project_point(100.0, 10.0, 6.0, ZERO_OFFSET));
+        let head = band_head((130.0, 0.0), (1.0, 0.0), 6.0, ZERO_OFFSET);
+        assert_eq!(head[0], project_point(130.0, 0.0, 6.0, ZERO_OFFSET));
+        assert_eq!(head[1], project_point(106.0, -18.0, 6.0, ZERO_OFFSET));
+        assert_eq!(head[2], project_point(106.0, 18.0, 6.0, ZERO_OFFSET));
     }
 
     #[test]

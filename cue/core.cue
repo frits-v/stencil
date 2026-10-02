@@ -46,6 +46,7 @@ import (
 
 // The solid an item stands as under iso (section 12.3).
 #Shape:       "card" | "tile" | "tower" | "cylinder" | "stack" | "figure" | "laptop" | "phone"
+#PipeForm:    "tube" | "band"
 #ListKind:    "plain" | "numbered" | "bulleted"
 #CalloutKind: "note" | "risk" | "decision" | "open"
 
@@ -333,6 +334,9 @@ import (
 	arrow?: #Arrow
 	// Under iso, the axis the tag reads along; absent follows dir.
 	axis?: #Axis
+	// Under iso, a round tube (the default) or a band, a flat wide arrow on
+	// the floor.
+	form?: #PipeForm
 	// The nodes the pipe joins: from on its left (h) or upper (v) end, to on
 	// the other. Layout centers the pipe's slot on them.
 	from?: #Id

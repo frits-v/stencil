@@ -60,6 +60,7 @@ fn page_with_field(field: &str, text: &str) -> (Page, &'static str) {
             id: None,
             arrow: stencil_model::Arrow::None,
             axis: None,
+            form: stencil_model::PipeForm::Tube,
             dir: PipeDir::Horizontal,
             line: Line::Solid,
             tint: Some(1),
