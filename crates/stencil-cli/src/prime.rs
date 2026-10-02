@@ -38,17 +38,19 @@ pub enum Topic {
     Links,
     Blocks,
     Layout,
+    Iso,
     Checks,
     Cue,
     Example,
 }
 
 impl Topic {
-    pub const ALL: [Topic; 7] = [
+    pub const ALL: [Topic; 8] = [
         Topic::Themes,
         Topic::Links,
         Topic::Blocks,
         Topic::Layout,
+        Topic::Iso,
         Topic::Checks,
         Topic::Cue,
         Topic::Example,
@@ -60,6 +62,7 @@ impl Topic {
             Topic::Links => "links",
             Topic::Blocks => "blocks",
             Topic::Layout => "layout",
+            Topic::Iso => "iso",
             Topic::Checks => "checks",
             Topic::Cue => "cue",
             Topic::Example => "example",
@@ -77,6 +80,7 @@ impl Topic {
             Topic::Links => include_str!("../prime/links.md"),
             Topic::Blocks => include_str!("../prime/blocks.md"),
             Topic::Layout => include_str!("../prime/layout.md"),
+            Topic::Iso => include_str!("../prime/iso.md"),
             Topic::Checks => include_str!("../prime/checks.md"),
             Topic::Cue => include_str!("../prime/cue.md"),
             Topic::Example => include_str!("../../../examples/g7.json"),
@@ -90,6 +94,7 @@ impl Topic {
             | Topic::Links
             | Topic::Blocks
             | Topic::Layout
+            | Topic::Iso
             | Topic::Checks
             | Topic::Cue => true,
             Topic::Example => false,
