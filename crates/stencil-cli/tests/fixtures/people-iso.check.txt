@@ -1,15 +1,15 @@
-check child-inside-container: examined 18 relations, 0 defects
-check siblings-do-not-overlap: examined 15 pairs, 0 defects
-check text-fits-box: examined 19 text runs, 0 defects
+check child-inside-container: examined 19 relations, 0 defects
+check siblings-do-not-overlap: examined 16 pairs, 0 defects
+check text-fits-box: examined 21 text runs, 0 defects
 check remembered-constants: examined 0 text fields, not applicable: grammar has no remembered constants
-check legend-consistency: examined 5 relations, 0 defects
-check links-routed: examined 3 links, 0 defects
-check links-avoid-boxes: examined 87 pairs, 0 defects
+check legend-consistency: examined 6 relations, 0 defects
+check links-routed: examined 4 links, 0 defects
+check links-avoid-boxes: examined 132 pairs, 0 defects
 check pipes-land: examined 0 pipe ends, not applicable: page has no pipes
-check iso-labels-clear: examined 84 pairs, 0 defects
-check iso-links-clear: examined 5 link legs, 0 defects
-check iso-link-ends: examined 6 link ends, 0 defects
-check iso-links-apart: examined 3 link pairs, 0 defects
+check iso-labels-clear: examined 112 pairs, 0 defects
+check iso-links-clear: examined 6 link legs, 0 defects
+check iso-link-ends: examined 8 link ends, 0 defects
+check iso-links-apart: examined 6 link pairs, 0 defects
 check print-fit: examined 0 text runs, not applicable: no print width
 check icon-matches-product: examined 0 items, not applicable: grammar has no icon table
 stencil check: 14 checks, 10 passed, 0 failed, 4 not applicable

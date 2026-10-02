@@ -1,7 +1,7 @@
 {
   "title": "One web path from the load balancer to the data layer.",
   "kicker": "Data platform · cover figure",
-  "lede": "Four services in one Shared VPC and an object store beside it.",
+  "lede": "Requests enter at the load balancer, run through the web tier to the API, and land in the database and the object store.",
   "width": 1100,
   "canvas": "customer",
   "grammar": "gcp",
@@ -17,9 +17,25 @@
           "gap": 64,
           "grow": [
             0,
+            0,
+            0,
             0
           ],
           "children": [
+            {
+              "tag": "Col",
+              "justify": "center",
+              "children": [
+                {
+                  "tag": "Item",
+                  "id": "lb",
+                  "kind": "product",
+                  "icon": "networking",
+                  "title": "Edge",
+                  "subtitle": "Cloud Load Balancing"
+                }
+              ]
+            },
             {
               "tag": "Box",
               "kind": "vpc",
@@ -29,19 +45,9 @@
                   "tag": "Row",
                   "gap": 64,
                   "grow": [
-                    0,
-                    0,
                     0
                   ],
                   "children": [
-                    {
-                      "tag": "Item",
-                      "id": "lb",
-                      "kind": "product",
-                      "icon": "networking",
-                      "title": "Edge",
-                      "subtitle": "Cloud Load Balancing"
-                    },
                     {
                       "tag": "Item",
                       "id": "web",
@@ -49,14 +55,6 @@
                       "icon": "compute-engine",
                       "title": "Web tier",
                       "subtitle": "Compute Engine"
-                    },
-                    {
-                      "tag": "Item",
-                      "id": "api",
-                      "kind": "product",
-                      "icon": "cloud-run",
-                      "title": "API",
-                      "subtitle": "Cloud Run"
                     }
                   ]
                 },
@@ -76,6 +74,20 @@
                       "subtitle": "Cloud SQL"
                     }
                   ]
+                }
+              ]
+            },
+            {
+              "tag": "Col",
+              "justify": "center",
+              "children": [
+                {
+                  "tag": "Item",
+                  "id": "api",
+                  "kind": "product",
+                  "icon": "cloud-run",
+                  "title": "API",
+                  "subtitle": "Cloud Run"
                 }
               ]
             },

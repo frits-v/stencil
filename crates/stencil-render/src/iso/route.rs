@@ -168,14 +168,18 @@ fn enters(start: PagePoint, end: PagePoint, bounds: BoxRect) -> bool {
     low_x < inner.right() && high_x > inner.x && low_y < inner.bottom() && high_y > inner.y
 }
 
-/// The route as one leg when its ends sit on two facing sides that share at least
-/// ISO_STRAIGHT_SHARED_MIN_PX across the gap and the leg through the middle of that span
-/// enters no block in `blocks`; None otherwise. A layout route joins side midpoints, so two
-/// blocks that nearly line up get a short jog that the projection turns into a kink.
+/// The route as one leg when its ends sit on two facing sides whose spans overlap by at
+/// least ISO_STRAIGHT_SHARED_MIN_PX across the gap, and the leg enters no block in
+/// `blocks`; None otherwise. A layout route joins side midpoints, so two blocks that nearly
+/// line up get a short jog that the projection turns into a kink. The leg runs through the
+/// target's center, held inside the shared span by a corner margin at each end: the corner
+/// clearance of `iso-link-ends`, plus the block's height where the end sits on a hidden
+/// side, since the cut of section 12.3 rule 7 lands such an end that much nearer the front
+/// corner. A span with no room between its margins is left to the router.
 pub(crate) fn straightened(
     points: &[PagePoint],
-    from: BoxRect,
-    to: BoxRect,
+    (from, from_height): (BoxRect, f32),
+    (to, to_height): (BoxRect, f32),
     blocks: &[BoxRect],
 ) -> Option<Vec<PagePoint>> {
     let (Some(&first), Some(&last)) = (points.first(), points.last()) else {
@@ -184,24 +188,48 @@ pub(crate) fn straightened(
     if corners(points).len() <= 2 {
         return None;
     }
-    let shared = |low_a: f32, high_a: f32, low_b: f32, high_b: f32| {
-        let low = low_a.max(low_b);
-        let high = high_a.min(high_b);
-        (high - low >= ISO_STRAIGHT_SHARED_MIN_PX).then_some((low + high) / 2.0)
+    let clearance = super::ISO_LINK_CORNER_CLEARANCE_PX;
+    // The span shared by two sides, each shrunk by its margins, and the target's center.
+    let shared = |(low_a, high_a, front_a): (f32, f32, f32),
+                  (low_b, high_b, front_b): (f32, f32, f32),
+                  center_b: f32| {
+        if high_a.min(high_b) - low_a.max(low_b) < ISO_STRAIGHT_SHARED_MIN_PX {
+            return None;
+        }
+        let low = (low_a + clearance).max(low_b + clearance);
+        let high = (high_a - clearance - front_a).min(high_b - clearance - front_b);
+        (high >= low).then(|| center_b.clamp(low, high))
     };
-    let across_y = || shared(from.y, from.bottom(), to.y, to.bottom());
-    let across_x = || shared(from.x, from.right(), to.x, to.right());
+    let (from_hidden, to_hidden) = match (side_of(first, from), side_of(last, to)) {
+        (Some(Side::Right), Some(Side::Left)) if to.x >= from.right() => (0.0, to_height),
+        (Some(Side::Left), Some(Side::Right)) if from.x >= to.right() => (from_height, 0.0),
+        (Some(Side::Bottom), Some(Side::Top)) if to.y >= from.bottom() => (0.0, to_height),
+        (Some(Side::Top), Some(Side::Bottom)) if from.y >= to.bottom() => (from_height, 0.0),
+        _ => return None,
+    };
     let leg = match (side_of(first, from), side_of(last, to)) {
-        (Some(Side::Right), Some(Side::Left)) if to.x >= from.right() => {
-            let y = across_y()?;
+        (Some(Side::Right), Some(Side::Left)) => {
+            let y = shared(
+                (from.y, from.bottom(), from_hidden),
+                (to.y, to.bottom(), to_hidden),
+                to.y + to.height / 2.0,
+            )?;
             (PagePoint { x: from.right(), y }, PagePoint { x: to.x, y })
         }
-        (Some(Side::Left), Some(Side::Right)) if from.x >= to.right() => {
-            let y = across_y()?;
+        (Some(Side::Left), Some(Side::Right)) => {
+            let y = shared(
+                (from.y, from.bottom(), from_hidden),
+                (to.y, to.bottom(), to_hidden),
+                to.y + to.height / 2.0,
+            )?;
             (PagePoint { x: from.x, y }, PagePoint { x: to.right(), y })
         }
-        (Some(Side::Bottom), Some(Side::Top)) if to.y >= from.bottom() => {
-            let x = across_x()?;
+        (Some(Side::Bottom), Some(Side::Top)) => {
+            let x = shared(
+                (from.x, from.right(), from_hidden),
+                (to.x, to.right(), to_hidden),
+                to.x + to.width / 2.0,
+            )?;
             (
                 PagePoint {
                     x,
@@ -210,8 +238,12 @@ pub(crate) fn straightened(
                 PagePoint { x, y: to.y },
             )
         }
-        (Some(Side::Top), Some(Side::Bottom)) if from.y >= to.bottom() => {
-            let x = across_x()?;
+        (Some(Side::Top), Some(Side::Bottom)) => {
+            let x = shared(
+                (from.x, from.right(), from_hidden),
+                (to.x, to.right(), to_hidden),
+                to.x + to.width / 2.0,
+            )?;
             (PagePoint { x, y: from.y }, PagePoint { x, y: to.bottom() })
         }
         _ => return None,
@@ -475,12 +507,16 @@ mod tests {
             point(150.0, 22.0),
             point(200.0, 22.0),
         ];
-        let straight = straightened(&route, from, to, &[]).unwrap();
-        assert_eq!(straight, vec![point(100.0, 32.0), point(200.0, 32.0)]);
+        // The leg aims at the target's center (22) but keeps the corner clearance from
+        // both spans: 20 + 8 from the from box's back corner.
+        let straight = straightened(&route, (from, 0.0), (to, 0.0), &[]).unwrap();
+        assert_eq!(straight, vec![point(100.0, 28.0), point(200.0, 28.0)]);
         let blocker = rectangle(140.0, 0.0, 20.0, 100.0);
-        assert!(straightened(&route, from, to, &[blocker]).is_none());
+        assert!(straightened(&route, (from, 0.0), (to, 0.0), &[blocker]).is_none());
         let apart = rectangle(200.0, -40.0, 100.0, 44.0);
-        assert!(straightened(&route, from, apart, &[]).is_none());
+        assert!(straightened(&route, (from, 0.0), (apart, 0.0), &[]).is_none());
+        // A hidden-side setback of 18 on the target leaves no room in the span.
+        assert!(straightened(&route, (from, 0.0), (to, 18.0), &[]).is_none());
     }
 
     #[test]

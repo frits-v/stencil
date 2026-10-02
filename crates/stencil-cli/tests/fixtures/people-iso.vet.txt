@@ -1,4 +1,4 @@
 check remembered-constants: examined 0 text fields, not applicable: grammar has no remembered constants
-check legend-consistency: examined 5 relations, 0 defects
+check legend-consistency: examined 6 relations, 0 defects
 check icon-matches-product: examined 0 items, not applicable: grammar has no icon table
 stencil vet: 0 violations, 3 checks, 1 passed, 0 failed, 2 not applicable

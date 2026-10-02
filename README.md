@@ -36,7 +36,7 @@ People and client devices as drawn sprites, a figure, a laptop and a phone:
 
 Narrow regions with long product names, a Tee with a band arm and a figure on the branch slab:
 
-![Two narrow regions share one Interconnect through the transit hub](docs/gallery/transit-iso.png)
+![A branch office reaches two regions over one Interconnect through the transit hub](docs/gallery/transit-iso.png)
 
 `examples/onepager.json`: a design one-pager with text blocks, callouts and numbered links tracing one request.
 

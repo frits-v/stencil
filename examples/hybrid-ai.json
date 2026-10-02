@@ -202,51 +202,10 @@
                       "children": [
                         {
                           "tag": "Row",
-                          "gap": 8,
-                          "grow": [
-                            1,
-                            0,
-                            1,
-                            0,
-                            1
-                          ],
                           "children": [
                             {
                               "tag": "Col",
-                              "gap": 8,
                               "children": [
-                                {
-                                  "tag": "Item",
-                                  "kind": "product",
-                                  "icon": "vertex-ai",
-                                  "title": "Tuning",
-                                  "subtitle": "Vertex AI · tuning",
-                                  "facts": [
-                                    {
-                                      "text": "CMEK · private endpoint"
-                                    }
-                                  ]
-                                }
-                              ]
-                            },
-                            {
-                              "tag": "Pipe",
-                              "dir": "h",
-                              "line": "gray",
-                              "label": "register",
-                              "sub": "tuned adapters"
-                            },
-                            {
-                              "tag": "Col",
-                              "gap": 8,
-                              "children": [
-                                {
-                                  "tag": "Item",
-                                  "kind": "product",
-                                  "icon": "vertex-ai",
-                                  "title": "Model registry",
-                                  "subtitle": "Vertex AI Registry"
-                                },
                                 {
                                   "tag": "Item",
                                   "kind": "product",
@@ -270,15 +229,7 @@
                             },
                             {
                               "tag": "Col",
-                              "gap": 8,
                               "children": [
-                                {
-                                  "tag": "Item",
-                                  "kind": "product",
-                                  "icon": "agents",
-                                  "title": "Agent runtime",
-                                  "subtitle": "Vertex AI Agent Engine"
-                                },
                                 {
                                   "tag": "Item",
                                   "kind": "product",
@@ -316,12 +267,6 @@
                       "children": [
                         {
                           "tag": "Row",
-                          "gap": 8,
-                          "grow": [
-                            1,
-                            0,
-                            1
-                          ],
                           "children": [
                             {
                               "tag": "Item",
@@ -329,13 +274,35 @@
                               "icon": "gke",
                               "title": "Serving replica",
                               "subtitle": "GKE · GPU pool · warm"
-                            },
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "tag": "Box",
+                  "kind": "project",
+                  "label": "Vertex AI · managed, reached over Private Service Connect",
+                  "children": [
+                    {
+                      "tag": "Row",
+                      "children": [
+                        {
+                          "tag": "Col",
+                          "children": [
                             {
-                              "tag": "Pipe",
-                              "dir": "h",
-                              "line": "gray",
-                              "label": "batch",
-                              "sub": "nightly scoring"
+                              "tag": "Item",
+                              "kind": "product",
+                              "icon": "vertex-ai",
+                              "title": "Tuning",
+                              "subtitle": "Vertex AI · tuning",
+                              "facts": [
+                                {
+                                  "text": "CMEK · private endpoint"
+                                }
+                              ]
                             },
                             {
                               "tag": "Item",
@@ -343,6 +310,32 @@
                               "icon": "cloud-run",
                               "title": "Batch inference",
                               "subtitle": "Cloud Run jobs"
+                            }
+                          ]
+                        },
+                        {
+                          "tag": "Pipe",
+                          "dir": "h",
+                          "line": "gray",
+                          "label": "register",
+                          "sub": "tuned adapters"
+                        },
+                        {
+                          "tag": "Col",
+                          "children": [
+                            {
+                              "tag": "Item",
+                              "kind": "product",
+                              "icon": "vertex-ai",
+                              "title": "Model registry",
+                              "subtitle": "Vertex AI Registry"
+                            },
+                            {
+                              "tag": "Item",
+                              "kind": "product",
+                              "icon": "agents",
+                              "title": "Agent runtime",
+                              "subtitle": "Vertex AI Agent Engine"
                             }
                           ]
                         }

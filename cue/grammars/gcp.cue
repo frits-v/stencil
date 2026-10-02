@@ -221,12 +221,25 @@ _nesting: stencil.#GrammarNesting & {#grammar: grammar}
 #ApiProductName: "\\b(Cloud Storage|BigQuery|Pub/Sub|Artifact Registry|Cloud Logging)\\b"
 #ApiProductIcons: ["cloud-storage", "bigquery"]
 
+// Serverless products run outside the customer's VPC and are reached over
+// Private Service Connect, an internal load balancer or Direct VPC egress;
+// they are never addresses in a VPC.
+#ServerlessProductName: "\\b(Cloud Run|Cloud Run functions|Cloud Functions|App Engine|Vertex AI)\\b"
+#ServerlessProductIcons: ["cloud-run", "vertex-ai", "serverless"]
+
+// Global resources have no region; a hub drawn inside a region reads as
+// regional.
+#GlobalProductName: "\\b(Network Connectivity Center|Cloud CDN|Cloud DNS|Cloud Armor)\\b"
+
 // The gcp walk over the body. Each node carries:
 //   _tinted       the tinted lines and Boxes in its subtree, keyed "solid-2" or
 //                 "region-1", each mapped to its tint slot
 //   _nameless     the titles of product items with no subtitle and no doc or
 //                 ask fact
 //   _apiProducts  the titles of product items that are Google APIs
+//   _serverlessProducts, _globalProducts  the same for serverless products and
+//                 global resources (#ServerlessProductName, #ServerlessProductIcons,
+//                 #GlobalProductName)
 //                 (#ApiProductName, #ApiProductIcons)
 //   _apisLabels   the labels of apis Boxes below it with no gcp Box between
 // A Box also carries _tint, its effective tint as a list of zero or one slot,
@@ -239,6 +252,8 @@ _nesting: stencil.#GrammarNesting & {#grammar: grammar}
 		_tinted: {for c in children {c._tinted}}
 		_nameless: {for c in children {c._nameless}}
 		_apiProducts: {for c in children {c._apiProducts}}
+		_serverlessProducts: {for c in children {c._serverlessProducts}}
+		_globalProducts: {for c in children {c._globalProducts}}
 		_apisLabels: {for c in children {c._apisLabels}}
 		#SiblingTint
 	}
@@ -256,6 +271,8 @@ _nesting: stencil.#GrammarNesting & {#grammar: grammar}
 		_tinted: {_below, for t in _tint {"\(kind)-\(t)": t}}
 		_nameless: {for c in children {c._nameless}}
 		_apiProducts: {for c in children {c._apiProducts}}
+		_serverlessProducts: {for c in children {c._serverlessProducts}}
+		_globalProducts: {for c in children {c._globalProducts}}
 		_apisLabels: {
 			if kind != "gcp" for c in children {c._apisLabels}
 			if kind == "apis" {(label): true}
@@ -267,6 +284,18 @@ _nesting: stencil.#GrammarNesting & {#grammar: grammar}
 		if kind == "vpc" {
 			_productInsideVpc: {
 				for k, _ in _apiProducts {(k): "product" & "sits inside a vpc; draw it in an apis box"}
+			}
+			// A serverless product is not an address in a VPC: it is reached over
+			// Private Service Connect, an internal load balancer or Direct VPC
+			// egress. Draw it beside the vpc.
+			_serverlessInsideVpc: {
+				for k, _ in _serverlessProducts {(k): "product" & "sits inside a vpc; a serverless product is reached over Private Service Connect; draw it beside the vpc"}
+			}
+		}
+		// A global resource has no region; draw it outside every region Box.
+		if kind == "region" {
+			_globalInsideRegion: {
+				for k, _ in _globalProducts {(k): "product" & "sits inside a region; a global resource sits outside every region"}
 			}
 		}
 
@@ -296,6 +325,15 @@ _nesting: stencil.#GrammarNesting & {#grammar: grammar}
 			if icon != _|_ if list.Contains(#ApiProductIcons, icon) {true},
 		]
 		_apiProducts: {if kind == "product" && len(_isApi) > 0 {(title): true}}
+		_isServerless: [
+			if subtitle != _|_ if subtitle =~ #ServerlessProductName {true},
+			if icon != _|_ if list.Contains(#ServerlessProductIcons, icon) {true},
+		]
+		_serverlessProducts: {if kind == "product" && len(_isServerless) > 0 {(title): true}}
+		_isGlobal: [
+			if subtitle != _|_ if subtitle =~ #GlobalProductName {true},
+		]
+		_globalProducts: {if kind == "product" && len(_isGlobal) > 0 {(title): true}}
 		_apisLabels: {}
 	}
 	if tag == "Pipe" {
@@ -305,6 +343,8 @@ _nesting: stencil.#GrammarNesting & {#grammar: grammar}
 		_tinted: {for t in _solidTint {"solid-\(t)": t}}
 		_nameless: {}
 		_apiProducts: {}
+		_serverlessProducts: {}
+		_globalProducts: {}
 		_apisLabels: {}
 	}
 	if tag == "Tee" {
@@ -319,12 +359,16 @@ _nesting: stencil.#GrammarNesting & {#grammar: grammar}
 		}
 		_nameless: {}
 		_apiProducts: {}
+		_serverlessProducts: {}
+		_globalProducts: {}
 		_apisLabels: {}
 	}
 	if !list.Contains(["Row", "Col", "Lanes", "Box", "Item", "Pipe", "Tee"], tag) {
 		_tinted: {}
 		_nameless: {}
 		_apiProducts: {}
+		_serverlessProducts: {}
+		_globalProducts: {}
 		_apisLabels: {}
 	}
 	...

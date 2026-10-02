@@ -1,8 +1,8 @@
 {
-  "title": "Two narrow regions share one Interconnect through the transit hub.",
+  "title": "A branch office reaches two regions over one Interconnect through the transit hub.",
   "kicker": "Landing zone · transit",
-  "lede": "One Dedicated Interconnect with two VLAN attachments reaches two regions through the transit hub.",
-  "width": 1500,
+  "lede": "One Dedicated Interconnect with two VLAN attachments reaches europe-west4; the transit hub beside it routes the branch on to europe-north1.",
+  "width": 1700,
   "canvas": "customer",
   "grammar": "gcp",
   "projection": "iso",
@@ -32,7 +32,7 @@
                   "kind": "person",
                   "id": "users",
                   "title": "Branch users",
-                  "subtitle": "SD-WAN, no direct cloud path"
+                  "subtitle": "SD-WAN users"
                 }
               ]
             }
@@ -76,6 +76,12 @@
           "children": [
             {
               "tag": "Row",
+              "gap": 56,
+              "grow": [
+                0,
+                0,
+                0
+              ],
               "children": [
                 {
                   "tag": "Box",
@@ -93,16 +99,22 @@
                           "icon": "compute",
                           "title": "VMware cluster",
                           "subtitle": "Google Cloud VMware Engine"
-                        },
-                        {
-                          "tag": "Item",
-                          "kind": "product",
-                          "id": "ncc",
-                          "icon": "networking",
-                          "title": "Transit hub",
-                          "subtitle": "Network Connectivity Center"
                         }
                       ]
+                    }
+                  ]
+                },
+                {
+                  "tag": "Col",
+                  "justify": "center",
+                  "children": [
+                    {
+                      "tag": "Item",
+                      "kind": "product",
+                      "id": "ncc",
+                      "icon": "networking",
+                      "title": "Transit hub",
+                      "subtitle": "Network Connectivity Center"
                     }
                   ]
                 },
@@ -135,11 +147,15 @@
                     }
                   ]
                 }
-              ],
-              "gap": 56
+              ]
             }
           ]
         }
+      ],
+      "grow": [
+        0,
+        0,
+        1
       ]
     }
   ],
