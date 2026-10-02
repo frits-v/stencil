@@ -1259,6 +1259,17 @@ fn tag_run(
 /// The midpoint of the longest segment (the first on a tie) and whether that segment runs
 /// along flat y.
 pub fn longest_segment_midpoint(points: &[PagePoint]) -> (PagePoint, bool) {
+    longest_segment_point(points, 0.5)
+}
+
+/// The point `fraction` of the way along the longest segment (the first on a tie), from
+/// its start, and whether that segment runs along flat y. Links in one bundle take their
+/// tags at different fractions so the pills do not stack (section 12.3 rule 8).
+pub fn longest_segment_point(points: &[PagePoint], fraction: f32) -> (PagePoint, bool) {
+    debug_assert!(
+        (0.0..=1.0).contains(&fraction),
+        "fraction {fraction} is not in 0 to 1"
+    );
     let mut best: Option<(f32, PagePoint, bool)> = None;
     for segment in points.windows(2) {
         let (Some(a), Some(b)) = (segment.first(), segment.get(1)) else {
@@ -1266,8 +1277,8 @@ pub fn longest_segment_midpoint(points: &[PagePoint]) -> (PagePoint, bool) {
         };
         let length = (b.x - a.x).abs() + (b.y - a.y).abs();
         let midpoint = PagePoint {
-            x: (a.x + b.x) / 2.0,
-            y: (a.y + b.y) / 2.0,
+            x: a.x + (b.x - a.x) * fraction,
+            y: a.y + (b.y - a.y) * fraction,
         };
         let along_y = (b.y - a.y).abs() > (b.x - a.x).abs();
         if best.is_none_or(|(best_length, _, _)| length > best_length) {

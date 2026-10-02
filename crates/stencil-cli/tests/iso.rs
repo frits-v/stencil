@@ -91,7 +91,7 @@ fn check_hero_passes_every_applicable_check_in_every_theme() {
         );
         assert_eq!(
             lines.last().copied(),
-            Some("stencil check: 13 checks, 11 passed, 0 failed, 2 not applicable"),
+            Some("stencil check: 14 checks, 12 passed, 0 failed, 2 not applicable"),
             "{theme}"
         );
         assert_eq!(outcome.stderr, "");
@@ -119,26 +119,30 @@ fn check_hero_with_projection_flat_skips_the_iso_checks() {
     assert!(lines.contains(
         &"check iso-link-ends: examined 0 link ends, not applicable: projection is flat"
     ));
+    assert!(lines.contains(
+        &"check iso-links-apart: examined 0 link pairs, not applicable: projection is flat"
+    ));
     assert_eq!(
         lines.last().copied(),
-        Some("stencil check: 13 checks, 8 passed, 0 failed, 5 not applicable")
+        Some("stencil check: 14 checks, 8 passed, 0 failed, 6 not applicable")
     );
 }
 
 #[test]
-fn check_prints_the_three_iso_checks_before_print_fit_and_icon_matches_product() {
+fn check_prints_the_four_iso_checks_before_print_fit_and_icon_matches_product() {
     let outcome = run_stencil(&["check", &example_path("hero-iso.json")]);
     let check_lines: Vec<&str> = outcome
         .stdout_lines()
         .into_iter()
         .filter(|line| line.starts_with("check "))
         .collect();
-    assert_eq!(check_lines.len(), 13);
+    assert_eq!(check_lines.len(), 14);
     assert!(check_lines[8].starts_with("check iso-labels-clear: "));
     assert!(check_lines[9].starts_with("check iso-links-clear: "));
     assert!(check_lines[10].starts_with("check iso-link-ends: "));
-    assert!(check_lines[11].starts_with("check print-fit: "));
-    assert!(check_lines[12].starts_with("check icon-matches-product: "));
+    assert!(check_lines[11].starts_with("check iso-links-apart: "));
+    assert!(check_lines[12].starts_with("check print-fit: "));
+    assert!(check_lines[13].starts_with("check icon-matches-product: "));
 }
 
 #[test]

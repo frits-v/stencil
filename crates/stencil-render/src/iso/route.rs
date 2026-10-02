@@ -222,6 +222,96 @@ pub(crate) fn straightened(
     Some(vec![leg.0, leg.1])
 }
 
+/// True when any leg of the polyline passes through the inside of a block.
+pub(crate) fn enters_any(points: &[PagePoint], blocks: &[BoxRect]) -> bool {
+    points
+        .windows(2)
+        .any(|pair| match (pair.first(), pair.get(1)) {
+            (Some(&start), Some(&end)) => blocks.iter().any(|block| enters(start, end, *block)),
+            _ => false,
+        })
+}
+
+/// The polyline shifted sideways by `offset` to the left of its travel: every leg moves
+/// along its left normal and each corner is where the two moved legs meet. The ends move
+/// along the sides they attach to, since a route leaves its side at a right angle.
+pub(crate) fn offset_polyline(points: &[PagePoint], offset: f32) -> Vec<PagePoint> {
+    let kept = corners(points);
+    let legs = legs(&kept);
+    let moved: Vec<(PagePoint, (f32, f32))> = legs
+        .iter()
+        .map(|leg| {
+            let length = leg.length().max(GEOMETRY_EPSILON_PX);
+            let direction = (
+                (leg.end.x - leg.start.x) / length,
+                (leg.end.y - leg.start.y) / length,
+            );
+            let normal = (direction.1, -direction.0);
+            (
+                PagePoint {
+                    x: leg.start.x + normal.0 * offset,
+                    y: leg.start.y + normal.1 * offset,
+                },
+                direction,
+            )
+        })
+        .collect();
+    let (Some(&(first_point, _)), Some(&(last_point, last_direction)), Some(last_leg)) =
+        (moved.first(), moved.last(), legs.last())
+    else {
+        return kept;
+    };
+    let mut shifted = vec![first_point];
+    for pair in moved.windows(2) {
+        let (Some(&(a, da)), Some(&(b, db))) = (pair.first(), pair.get(1)) else {
+            continue;
+        };
+        let cross = da.0 * db.1 - da.1 * db.0;
+        if cross.abs() <= 1e-6 {
+            shifted.push(b);
+            continue;
+        }
+        let t = ((b.x - a.x) * db.1 - (b.y - a.y) * db.0) / cross;
+        shifted.push(PagePoint {
+            x: a.x + da.0 * t,
+            y: a.y + da.1 * t,
+        });
+    }
+    shifted.push(PagePoint {
+        x: last_point.x + last_direction.0 * last_leg.length(),
+        y: last_point.y + last_direction.1 * last_leg.length(),
+    });
+    shifted
+}
+
+/// The polyline with its first (or last) leg moved sideways by `along`, a vector along the
+/// side the end attaches to: the end and the corner after it move together, so the leg
+/// beside the corner, which runs the other way, only changes length. A two-point route has
+/// no such corner and is left alone.
+pub(crate) fn shift_end_leg(
+    points: &[PagePoint],
+    along: (f32, f32),
+    at_start: bool,
+) -> Vec<PagePoint> {
+    let mut kept = corners(points);
+    if kept.len() < 3 {
+        return kept;
+    }
+    let count = kept.len();
+    let (end, corner) = if at_start {
+        (0, 1)
+    } else {
+        (count - 1, count - 2)
+    };
+    for index in [end, corner] {
+        if let Some(point) = kept.get_mut(index) {
+            point.x += along.0;
+            point.y += along.1;
+        }
+    }
+    kept
+}
+
 fn inside(bounds: BoxRect, point: PagePoint) -> bool {
     point.x > bounds.x
         && point.x < bounds.right()
@@ -238,6 +328,7 @@ pub(crate) fn kept_clear(
     points: &[PagePoint],
     zones: &[BoxRect],
     blocks: &[BoxRect],
+    clearance: f32,
 ) -> Vec<PagePoint> {
     let edges: Vec<FlatSegment> = zones
         .iter()
@@ -268,7 +359,7 @@ pub(crate) fn kept_clear(
             .collect();
         if beside
             .iter()
-            .all(|(_, gap)| *gap >= ISO_LINK_CLEARANCE_PX - GEOMETRY_EPSILON_PX)
+            .all(|(_, gap)| *gap >= clearance - GEOMETRY_EPSILON_PX)
         {
             continue;
         }
@@ -286,7 +377,7 @@ pub(crate) fn kept_clear(
                 } else {
                     edge.start.x
                 };
-                [line - ISO_LINK_CLEARANCE_PX, line + ISO_LINK_CLEARANCE_PX]
+                [line - clearance, line + clearance]
             })
             .collect();
         candidates
@@ -384,7 +475,7 @@ mod tests {
             point(90.0, 150.0),
             point(150.0, 150.0),
         ];
-        let moved = kept_clear(&route, &[zone], &[]);
+        let moved = kept_clear(&route, &[zone], &[], ISO_LINK_CLEARANCE_PX);
         assert_eq!(moved[1].x, 76.0);
         assert_eq!(moved[2].x, 76.0);
         let legs = legs(&moved);
@@ -403,7 +494,10 @@ mod tests {
             point(116.0, 150.0),
             point(140.0, 150.0),
         ];
-        assert_eq!(kept_clear(&route, &[left, right], &[]), route.to_vec());
+        assert_eq!(
+            kept_clear(&route, &[left, right], &[], ISO_LINK_CLEARANCE_PX),
+            route.to_vec()
+        );
     }
 
     #[test]
