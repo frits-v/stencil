@@ -2041,10 +2041,19 @@ pub fn iso_link_ends(geometry: &PageGeometry, scene: Option<&IsoScene>) -> Check
     }
 }
 
+/// How much longer than the span between its ends, plus an approach stub at each end, a
+/// drawn link may run before it is a detour (section 12.7).
+pub const ISO_LINK_DETOUR_RATIO: f32 = 1.5;
+
+/// The shortest inner leg a drawn link may have, as a multiple of the widest link tube's
+/// diameter; a shorter one between two turns reads as a jog (section 12.7).
+pub const ISO_LINK_JOG_DIAMETERS: f32 = 2.0;
+
 /// NotApplicable with reason "projection is flat" for None and "page has no links" for a
 /// scene without links; section 12.7 otherwise. Each leg of each drawn link path, taken in
-/// flat px with its risers dropped, is one examined unit.
-pub fn iso_links_clear(scene: Option<&IsoScene>) -> CheckReport {
+/// flat px with its risers dropped, is one examined unit. The geometry names each link's
+/// endpoint nodes, whose blocks a leg may cross on screen.
+pub fn iso_links_clear(geometry: &PageGeometry, scene: Option<&IsoScene>) -> CheckReport {
     let Some(scene) = scene else {
         return CheckReport::not_applicable(CheckName::IsoLinksClear, "projection is flat");
     };
@@ -2062,6 +2071,20 @@ pub fn iso_links_clear(scene: Option<&IsoScene>) -> CheckReport {
         .filter(|solid| solid.shape == SolidShape::Slab)
         .map(|solid| (solid, route::footprint_edges(solid.footprint)))
         .collect();
+    let blocks: Vec<&Solid> = scene
+        .solids
+        .iter()
+        .take(NODES_MAX)
+        .filter(|solid| solid.shape == SolidShape::Block && solid.opaque)
+        .collect();
+    let widest_radius = scene
+        .link_kinds
+        .iter()
+        .map(|(line, tint)| link_tube_radius(*line, *tint))
+        .fold(0.0, f32::max)
+        * scene.zoom;
+    let least_inner = ISO_LINK_JOG_DIAMETERS * 2.0 * widest_radius;
+    let stub = stencil_layout::ISO_APPROACH_PX * scene.zoom;
     let mut examined: u64 = 0;
     let mut defects = Vec::new();
     for (index, (path, kind)) in scene
@@ -2072,6 +2095,11 @@ pub fn iso_links_clear(scene: Option<&IsoScene>) -> CheckReport {
         .enumerate()
     {
         let pointer = NodePointer::root().child("links").index(index);
+        let endpoints = geometry
+            .links
+            .get(index)
+            .map(|route| [route.from_node, route.to_node]);
+        let radius = link_tube_radius(kind.0, kind.1) * scene.zoom;
         let flat: Vec<PagePoint> = path
             .iter()
             .map(|point| PagePoint {
@@ -2081,8 +2109,54 @@ pub fn iso_links_clear(scene: Option<&IsoScene>) -> CheckReport {
             .collect();
         let legs = route::legs(&route::corners(&flat));
         let least_last = 2.0 * iso_link_arrowhead_length(kind.0, kind.1);
+        let length: f32 = legs.iter().map(|leg| leg.length()).sum();
+        if let (Some(first), Some(last)) = (flat.first(), flat.last()) {
+            let span = (last.x - first.x).abs() + (last.y - first.y).abs();
+            let allowed = ISO_LINK_DETOUR_RATIO * (span + 2.0 * stub);
+            if length > allowed + GEOMETRY_EPSILON {
+                defects.push(Defect {
+                    pointer: pointer.clone(),
+                    message: format!(
+                        "link runs {length:.2} px between ends {span:.2} px apart, more than {ISO_LINK_DETOUR_RATIO} times their span plus two stubs ({allowed:.2} px)"
+                    ),
+                });
+            }
+        }
+        let path_z = path.first().map_or(0.0, |point| point.z);
         for (leg_index, leg) in legs.iter().enumerate() {
             examined += 1;
+            let inner = leg_index > 0 && leg_index + 1 < legs.len();
+            if inner && leg.length() < least_inner - GEOMETRY_EPSILON {
+                defects.push(Defect {
+                    pointer: pointer.clone(),
+                    message: format!(
+                        "leg {leg_index} is {:.2} px between two turns, shorter than {least_inner:.2}",
+                        leg.length()
+                    ),
+                });
+            }
+            let tube = tube::Tube {
+                start: (leg.start.x, leg.start.y),
+                end: (leg.end.x, leg.end.y),
+                floor_z: path_z,
+                radius,
+            };
+            if let Some(body) = tube::body(&tube, scene.offset) {
+                for block in &blocks {
+                    if endpoints.is_some_and(|ends| ends.contains(&block.node)) {
+                        continue;
+                    }
+                    if polygons_overlap(&body.outline, &block.outline) {
+                        defects.push(Defect {
+                            pointer: pointer.clone(),
+                            message: format!(
+                                "leg {leg_index} crosses block {} on screen",
+                                block.pointer
+                            ),
+                        });
+                    }
+                }
+            }
             for (zone, edges) in &zones {
                 let closest = edges
                     .iter()
