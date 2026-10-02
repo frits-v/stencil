@@ -1,7 +1,7 @@
 {
   "title": "One web path from the load balancer to the data layer.",
   "kicker": "Data platform · cover figure",
-  "lede": "Four services in one Shared VPC and an object store beside it, one of each shape.",
+  "lede": "Four services in one Shared VPC and an object store beside it.",
   "width": 1100,
   "canvas": "customer",
   "grammar": "gcp",
@@ -15,7 +15,10 @@
         {
           "tag": "Row",
           "gap": 64,
-          "grow": [0, 0],
+          "grow": [
+            0,
+            0
+          ],
           "children": [
             {
               "tag": "Box",
@@ -25,19 +28,53 @@
                 {
                   "tag": "Row",
                   "gap": 64,
-                  "grow": [0, 0, 0],
+                  "grow": [
+                    0,
+                    0,
+                    0
+                  ],
                   "children": [
-                    { "tag": "Item", "id": "lb", "kind": "product", "icon": "networking", "title": "Edge", "subtitle": "Cloud Load Balancing" },
-                    { "tag": "Item", "id": "web", "kind": "product", "icon": "compute-engine", "title": "Web tier", "subtitle": "Compute Engine" },
-                    { "tag": "Item", "id": "api", "kind": "product", "icon": "cloud-run", "title": "API", "subtitle": "Cloud Run" }
+                    {
+                      "tag": "Item",
+                      "id": "lb",
+                      "kind": "product",
+                      "icon": "networking",
+                      "title": "Edge",
+                      "subtitle": "Cloud Load Balancing"
+                    },
+                    {
+                      "tag": "Item",
+                      "id": "web",
+                      "kind": "product",
+                      "icon": "compute-engine",
+                      "title": "Web tier",
+                      "subtitle": "Compute Engine"
+                    },
+                    {
+                      "tag": "Item",
+                      "id": "api",
+                      "kind": "product",
+                      "icon": "cloud-run",
+                      "title": "API",
+                      "subtitle": "Cloud Run"
+                    }
                   ]
                 },
                 {
                   "tag": "Row",
                   "gap": 64,
-                  "grow": [0],
+                  "grow": [
+                    0
+                  ],
                   "children": [
-                    { "tag": "Item", "id": "db", "kind": "product", "icon": "cloud-sql", "title": "Database", "subtitle": "Cloud SQL" }
+                    {
+                      "tag": "Item",
+                      "id": "db",
+                      "kind": "product",
+                      "icon": "cloud-sql",
+                      "title": "Database",
+                      "subtitle": "Cloud SQL"
+                    }
                   ]
                 }
               ]
@@ -51,7 +88,14 @@
                   "kind": "apis",
                   "label": "Google APIs",
                   "children": [
-                    { "tag": "Item", "id": "store", "kind": "product", "icon": "cloud-storage", "title": "Object store", "subtitle": "Cloud Storage" }
+                    {
+                      "tag": "Item",
+                      "id": "store",
+                      "kind": "product",
+                      "icon": "cloud-storage",
+                      "title": "Object store",
+                      "subtitle": "Cloud Storage"
+                    }
                   ]
                 }
               ]
@@ -62,13 +106,39 @@
     }
   ],
   "legend": [
-    { "line": "solid", "tint": 1, "text": "request path" },
-    { "line": "gray", "text": "service call" }
+    {
+      "line": "solid",
+      "tint": 1,
+      "text": "request path"
+    },
+    {
+      "line": "gray",
+      "text": "service call"
+    }
   ],
   "links": [
-    { "from": "lb", "to": "web", "line": "solid", "tint": 1, "label": "HTTPS" },
-    { "from": "web", "to": "api", "line": "solid", "tint": 1 },
-    { "from": "api", "to": "db", "line": "gray" },
-    { "from": "api", "to": "store", "line": "gray" }
+    {
+      "from": "lb",
+      "to": "web",
+      "line": "solid",
+      "tint": 1,
+      "label": "HTTPS"
+    },
+    {
+      "from": "web",
+      "to": "api",
+      "line": "solid",
+      "tint": 1
+    },
+    {
+      "from": "api",
+      "to": "db",
+      "line": "gray"
+    },
+    {
+      "from": "api",
+      "to": "store",
+      "line": "gray"
+    }
   ]
 }

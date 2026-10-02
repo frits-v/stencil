@@ -1,7 +1,7 @@
 {
   "title": "Two narrow regions share one Interconnect through the transit hub.",
   "kicker": "Landing zone · transit",
-  "lede": "Long product names in narrow regions, one Tee with a band arm, under the isometric projection.",
+  "lede": "One Dedicated Interconnect with two VLAN attachments reaches two regions through the transit hub.",
   "width": 1500,
   "canvas": "customer",
   "grammar": "gcp",
