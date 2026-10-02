@@ -6,11 +6,16 @@
 use stencil_layout::{BoxRect, GEOMETRY_EPSILON_PX};
 use stencil_model::PagePoint;
 
-use super::shapes::segment_inside_interval;
+use super::shapes::{point_in_convex, segment_inside_interval};
 use super::{IsoPoint, ScreenPoint, ZERO_OFFSET, project_point};
 
 /// A cut closer than this to a segment end is dropped.
 const CUT_EPSILON: f32 = 1e-4;
+
+/// How far a link end that stops short of its block's outline reaches along its last
+/// stretch to meet it, in zoomed flat px: more than the gap between a sprite's hull and the
+/// footprint edge where its route ends.
+const LAND_REACH_PX: f32 = 64.0;
 
 /// A slab footprint and the z of its top face. Zones drawn as a ring (height 0) are not
 /// terrain.
@@ -172,6 +177,42 @@ pub(crate) fn trim_end_at(path: &mut Vec<IsoPoint>, silhouette: &[ScreenPoint]) 
     }
 }
 
+/// Extends the end of a path that stops outside `silhouette` along its last stretch until it
+/// meets the silhouette, by at most LAND_REACH_PX. A route ends on its node's footprint
+/// edge, and a sprite's outline is narrower than its footprint; left alone, the link would
+/// stop in the air beside the figure. A path that would not meet the silhouette within
+/// reach is left for `iso_link_ends` to report.
+pub(crate) fn land_end_at(path: &mut [IsoPoint], silhouette: &[ScreenPoint]) {
+    let Some((tip, direction)) = end_direction(path) else {
+        return;
+    };
+    if point_in_convex(screen(tip), silhouette) {
+        return;
+    }
+    let far = IsoPoint {
+        x: tip.x + direction.0 * LAND_REACH_PX,
+        y: tip.y + direction.1 * LAND_REACH_PX,
+        z: tip.z,
+    };
+    let Some((entry, _)) = segment_inside_interval(screen(tip), screen(far), silhouette) else {
+        return;
+    };
+    if let Some(slot) = path.last_mut() {
+        *slot = IsoPoint {
+            x: tip.x + entry * (far.x - tip.x),
+            y: tip.y + entry * (far.y - tip.y),
+            z: tip.z,
+        };
+    }
+}
+
+/// `land_end_at` for the first point of the path.
+pub(crate) fn land_start_at(path: &mut [IsoPoint], silhouette: &[ScreenPoint]) {
+    path.reverse();
+    land_end_at(path, silhouette);
+    path.reverse();
+}
+
 /// `trim_end_at` for the first point of the path.
 pub(crate) fn trim_start_at(path: &mut Vec<IsoPoint>, silhouette: &[ScreenPoint]) {
     path.reverse();
@@ -216,6 +257,65 @@ mod tests {
 
     fn page_point(x: f32, y: f32) -> PagePoint {
         PagePoint { x, y }
+    }
+
+    #[test]
+    fn a_path_that_stops_short_of_a_silhouette_reaches_it_along_its_last_stretch() {
+        // A square on screen, 100 wide, with its left edge at screen x 100.
+        let square = [
+            ScreenPoint { x: 100.0, y: 0.0 },
+            ScreenPoint { x: 200.0, y: 0.0 },
+            ScreenPoint { x: 200.0, y: 100.0 },
+            ScreenPoint { x: 100.0, y: 100.0 },
+        ];
+        // Along flat x the screen x grows by cos 30 per px; the end at flat x 100 projects
+        // to screen (86.6, 50) and must reach the edge at x 100.
+        let mut path = vec![
+            IsoPoint {
+                x: 0.0,
+                y: 0.0,
+                z: 0.0,
+            },
+            IsoPoint {
+                x: 100.0,
+                y: 0.0,
+                z: 0.0,
+            },
+        ];
+        land_end_at(&mut path, &square);
+        let end = screen(path[1]);
+        assert!((end.x - 100.0).abs() < 1e-3, "{end:?}");
+        assert_eq!(path[1].y, 0.0);
+
+        // A path pointing away from the silhouette, or already inside it, is unchanged.
+        let mut away = vec![
+            IsoPoint {
+                x: 100.0,
+                y: 0.0,
+                z: 0.0,
+            },
+            IsoPoint {
+                x: 0.0,
+                y: 0.0,
+                z: 0.0,
+            },
+        ];
+        land_end_at(&mut away, &square);
+        assert_eq!(away[1].x, 0.0);
+        let mut inside = vec![
+            IsoPoint {
+                x: 0.0,
+                y: 0.0,
+                z: 0.0,
+            },
+            IsoPoint {
+                x: 150.0,
+                y: 0.0,
+                z: 0.0,
+            },
+        ];
+        land_end_at(&mut inside, &square);
+        assert_eq!(inside[1].x, 150.0);
     }
 
     #[test]

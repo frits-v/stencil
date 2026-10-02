@@ -22,7 +22,9 @@ use stencil_model::{
     apply_overrides, builtin_grammar, grammar_reference, is_grammar_reference, parse_grammar,
     parse_page, parse_theme, theme_reference, validate_page, vet_page,
 };
-use stencil_render::iso::{IsoScene, SolidInputs, iso_labels_clear, iso_links_clear, project_page};
+use stencil_render::iso::{
+    IsoScene, SolidInputs, iso_labels_clear, iso_link_ends, iso_links_clear, project_page,
+};
 use stencil_render::{
     DeviceScale, RenderError, SvgDocument, builtin_theme, measured_json, render_png, render_svg,
 };
@@ -404,16 +406,15 @@ pub fn print_fit_report(
     print_fit(geometry, canvas_width, print_width)
 }
 
-/// All twelve checks, in `CheckName` order. `iso-labels-clear` and `iso-links-clear` read
-/// the scene and are not applicable without one; print-fit is not applicable without a
-/// print width.
+/// All thirteen checks, in `CheckName` order. The three iso checks read the scene and are
+/// not applicable without one; print-fit is not applicable without a print width.
 pub fn all_checks(
     page: &Page,
     grammar: &Grammar,
     geometry: &PageGeometry,
     scene: Option<&IsoScene>,
     print_width: Option<PrintWidth>,
-) -> [CheckReport; 12] {
+) -> [CheckReport; 13] {
     let [remembered, legend, icons] = model_checks(page, grammar);
     [
         child_inside_container(geometry),
@@ -426,6 +427,7 @@ pub fn all_checks(
         pipes_land(page, geometry),
         iso_labels_clear(scene),
         iso_links_clear(scene),
+        iso_link_ends(geometry, scene),
         print_fit_report(geometry, scene, print_width),
         icons,
     ]

@@ -23,14 +23,15 @@ use stencil_model::pointer::NodePointer;
 use stencil_model::{Line, Page, Projection, Shape, Theme};
 use stencil_render::iso::{
     Axis, ISO_MARGIN_PX, ISO_TUBE_RADIUS_PX, ISO_ZOOM_MAX, IsoPoint, IsoScene, Label, LabelParts,
-    PlaneMap, ScreenPoint, Solid, SolidShape, iso_labels_clear, iso_links_clear, link_tube_radius,
-    project_point, zoomed_geometry,
+    PlaneMap, ScreenPoint, Solid, SolidShape, iso_labels_clear, iso_link_ends, iso_links_clear,
+    link_tube_radius, project_point, zoomed_geometry,
 };
 use stencil_render::palette::{Face, LineUse, Palette, shade};
 use stencil_render::{DeviceScale, format_number, measured_json, render_png};
 
 const HERO_JSON: &str = include_str!("../../../examples/hero-iso.json");
 const PLATFORM_JSON: &str = include_str!("../../../examples/platform-iso.json");
+const PEOPLE_JSON: &str = include_str!("../../../examples/people-iso.json");
 const ZERO: ScreenPoint = ScreenPoint { x: 0.0, y: 0.0 };
 
 const HERO_ON_PREM: &str = "/body/0/children/0/children/0";
@@ -2346,4 +2347,153 @@ fn convex_margin(point: ScreenPoint, polygon: &[ScreenPoint]) -> f32 {
 
 fn screen_distance(first: ScreenPoint, second: ScreenPoint) -> f32 {
     (first.x - second.x).hypot(first.y - second.y)
+}
+
+fn defect_messages(report: &stencil_model::checks::CheckReport) -> Vec<String> {
+    report
+        .defects
+        .iter()
+        .map(|defect| format!("{} {}", defect.pointer, defect.message))
+        .collect()
+}
+
+#[test]
+fn every_hero_link_end_lands_on_its_node_and_the_check_needs_a_scene_with_links() {
+    let hero = hero_page();
+    let geometry = common::layout_with_cosmic_text(&hero);
+    let scene = project_page(&geometry).unwrap();
+    let report = iso_link_ends(&geometry, Some(&scene));
+    assert_eq!(report.check, CheckName::IsoLinkEnds);
+    assert_eq!(report.examined, 8);
+    assert!(report.passed(), "{:?}", defect_messages(&report));
+    assert_eq!(
+        iso_link_ends(&geometry, None).not_applicable,
+        Some("projection is flat")
+    );
+    let mut no_links = scene.clone();
+    no_links.link_paths.clear();
+    assert_eq!(
+        iso_link_ends(&geometry, Some(&no_links)).not_applicable,
+        Some("page has no links")
+    );
+}
+
+#[test]
+fn a_link_end_off_its_block_on_a_corner_or_without_a_solid_is_a_defect() {
+    let page = two_zone_link_page("bottom");
+    let (geometry, zoom) = zoomed_geometry(&common::layout_with_fixed_metrics(&page)).unwrap();
+    let scene = project_zoomed(&geometry, zoom).unwrap();
+    let report = iso_link_ends(&geometry, Some(&scene));
+    assert_eq!(report.examined, 2);
+    assert!(report.passed(), "{:?}", defect_messages(&report));
+    let to_node = geometry.links[0].to_node;
+    let right = scene
+        .solids
+        .iter()
+        .find(|solid| solid.node == to_node)
+        .unwrap()
+        .clone();
+    assert_eq!(right.pointer.as_str(), "/body/0/children/1/children/0");
+
+    // The end lifted 5 px off the floor leaves the block's outline by 5 cos 30.
+    let mut lifted = scene.clone();
+    lifted.link_paths[0].last_mut().unwrap().z += 5.0;
+    let report = iso_link_ends(&geometry, Some(&lifted));
+    assert_eq!(
+        defect_messages(&report),
+        ["/links/0 end lies 4.33 px off the outline of /body/0/children/1/children/0"]
+    );
+
+    // The end on the footprint's front corner lies on the outline, at a vertex.
+    let mut cornered = scene.clone();
+    *cornered.link_paths[0].last_mut().unwrap() = IsoPoint {
+        x: right.footprint.x + right.footprint.width,
+        y: right.footprint.y + right.footprint.height,
+        z: right.base_z,
+    };
+    let report = iso_link_ends(&geometry, Some(&cornered));
+    assert_eq!(
+        defect_messages(&report),
+        ["/links/0 end lies 0.00 px from a corner of /body/0/children/1/children/0, under 8"]
+    );
+
+    let mut unsolid = scene.clone();
+    unsolid.solids.retain(|solid| solid.node != to_node);
+    let report = iso_link_ends(&geometry, Some(&unsolid));
+    assert_eq!(report.examined, 2);
+    assert_eq!(
+        defect_messages(&report),
+        ["/links/0 end node /body/0/children/1/children/0 has no solid"]
+    );
+}
+
+#[test]
+fn a_link_end_on_a_zone_lies_inside_its_footprint() {
+    let mut document = common::page_document(
+        json!([
+            {
+                "tag": "Row", "gap": 32,
+                "children": [
+                    { "tag": "Box", "kind": "region", "tint": 1, "label": "A", "children": [
+                        { "tag": "Item", "kind": "product", "id": "left", "title": "Left", "shape": "card" } ] },
+                    { "tag": "Box", "kind": "region", "tint": 2, "label": "B", "id": "b", "children": [
+                        { "tag": "Item", "kind": "product", "title": "Right", "shape": "card" } ] }
+                ]
+            }
+        ]),
+        json!([{ "line": "solid", "tint": 1, "text": "request path" }]),
+    );
+    document["links"] = json!([{ "from": "left", "to": "b", "line": "solid", "tint": 1 }]);
+    document["projection"] = json!("iso");
+    let page: Page = serde_json::from_value(document).unwrap();
+    let (geometry, zoom) = zoomed_geometry(&common::layout_with_fixed_metrics(&page)).unwrap();
+    let scene = project_zoomed(&geometry, zoom).unwrap();
+    let report = iso_link_ends(&geometry, Some(&scene));
+    assert_eq!(report.examined, 2);
+    assert!(report.passed(), "{:?}", defect_messages(&report));
+
+    let mut outside = scene.clone();
+    outside.link_paths[0].last_mut().unwrap().x -= 20.0;
+    let report = iso_link_ends(&geometry, Some(&outside));
+    assert_eq!(
+        defect_messages(&report),
+        ["/links/0 end lies 20.00 px outside zone /body/0/children/1"]
+    );
+}
+
+/// A route ends on its node's footprint edge; a figure's hull is narrower than its
+/// footprint, so the drawn start reaches in to meet the hull instead of stopping in the air.
+#[test]
+fn a_link_from_a_figure_starts_on_the_figure_not_on_its_footprint_edge() {
+    let people: Page = serde_json::from_str(PEOPLE_JSON).unwrap();
+    let flat = common::layout_with_cosmic_text(&people);
+    let (geometry, zoom) = zoomed_geometry(&flat).unwrap();
+    let scene = project_zoomed(&geometry, zoom).unwrap();
+    let report = iso_link_ends(&geometry, Some(&scene));
+    assert_eq!(report.examined, 6);
+    assert!(report.passed(), "{:?}", defect_messages(&report));
+    let operator = &geometry.links[0];
+    let route_start = operator.points[0];
+    let drawn_start = scene.link_paths[0][0];
+    assert!(
+        drawn_start.x < route_start.x - 1.0,
+        "{drawn_start:?} should reach into the footprint from {route_start:?}"
+    );
+    let figure = scene
+        .solids
+        .iter()
+        .find(|solid| solid.node == operator.from_node)
+        .unwrap();
+    let on_screen = project_point(drawn_start.x, drawn_start.y, drawn_start.z, scene.offset);
+    let on_hull = figure
+        .outline
+        .iter()
+        .zip(figure.outline.iter().cycle().skip(1))
+        .any(|(a, b)| {
+            let (dx, dy) = (b.x - a.x, b.y - a.y);
+            let t = (((on_screen.x - a.x) * dx + (on_screen.y - a.y) * dy) / (dx * dx + dy * dy))
+                .clamp(0.0, 1.0);
+            (on_screen.x - (a.x + t * dx)).hypot(on_screen.y - (a.y + t * dy)) < 0.05
+        });
+    assert!(on_hull, "{on_screen:?} is not on the figure's outline");
 }

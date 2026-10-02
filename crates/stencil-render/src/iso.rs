@@ -990,9 +990,11 @@ fn link_paths(
             let mut path = drape::drape(&points, terrain);
             if let Some(outline) = block_silhouette(route.from_node) {
                 drape::trim_start_at(&mut path, &outline);
+                drape::land_start_at(&mut path, &outline);
             }
             if let Some(outline) = block_silhouette(route.to_node) {
                 drape::trim_end_at(&mut path, &outline);
+                drape::land_end_at(&mut path, &outline);
             }
             (points, path)
         })
@@ -1389,6 +1391,171 @@ pub fn iso_labels_clear(scene: Option<&IsoScene>) -> CheckReport {
     }
     CheckReport {
         check: CheckName::IsoLabelsClear,
+        examined,
+        defects,
+        not_applicable: None,
+    }
+}
+
+/// How close to a box corner a link end may land (section 12.7).
+pub const ISO_LINK_CORNER_CLEARANCE_PX: f32 = 8.0;
+
+/// Which end of a link a defect names.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum LinkEnd {
+    Start,
+    End,
+}
+
+impl LinkEnd {
+    fn name(self) -> &'static str {
+        match self {
+            LinkEnd::Start => "start",
+            LinkEnd::End => "end",
+        }
+    }
+}
+
+/// Whether the solid's outline is the six-vertex silhouette of a box, whose corners a link
+/// end must keep clear of. Round forms and sprites have hull outlines with many vertices.
+fn has_box_outline(form: Shape) -> bool {
+    match form {
+        Shape::Card | Shape::Tile | Shape::Tower | Shape::Block => true,
+        Shape::Cylinder | Shape::Stack | Shape::Figure | Shape::Laptop | Shape::Phone => false,
+    }
+}
+
+fn point_segment_distance(point: ScreenPoint, a: ScreenPoint, b: ScreenPoint) -> f32 {
+    let (dx, dy) = (b.x - a.x, b.y - a.y);
+    let length_squared = dx * dx + dy * dy;
+    let t = if length_squared <= 0.0 {
+        0.0
+    } else {
+        (((point.x - a.x) * dx + (point.y - a.y) * dy) / length_squared).clamp(0.0, 1.0)
+    };
+    (point.x - (a.x + t * dx)).hypot(point.y - (a.y + t * dy))
+}
+
+/// The distance from a point to the boundary of a polygon, over its edges.
+fn polygon_edge_distance(point: ScreenPoint, polygon: &[ScreenPoint]) -> f32 {
+    polygon
+        .iter()
+        .zip(polygon.iter().cycle().skip(1))
+        .map(|(a, b)| point_segment_distance(point, *a, *b))
+        .fold(f32::INFINITY, f32::min)
+}
+
+fn polygon_vertex_distance(point: ScreenPoint, polygon: &[ScreenPoint]) -> f32 {
+    polygon
+        .iter()
+        .map(|vertex| (point.x - vertex.x).hypot(point.y - vertex.y))
+        .fold(f32::INFINITY, f32::min)
+}
+
+/// How far a flat point lies outside a box; 0 inside or on its edge.
+fn outside_distance(point: PagePoint, bounds: BoxRect) -> f32 {
+    let dx = (bounds.x - point.x)
+        .max(point.x - (bounds.x + bounds.width))
+        .max(0.0);
+    let dy = (bounds.y - point.y)
+        .max(point.y - (bounds.y + bounds.height))
+        .max(0.0);
+    dx.hypot(dy)
+}
+
+/// NotApplicable with reason "projection is flat" for None and "page has no links" for a
+/// scene without links; section 12.7 otherwise. Each end of each drawn link path is one
+/// examined unit: on a block it lies on the block's outline and clear of a box corner; on a
+/// zone or a surface it lies inside the footprint. An end whose node has no solid is a
+/// defect.
+pub fn iso_link_ends(geometry: &PageGeometry, scene: Option<&IsoScene>) -> CheckReport {
+    let Some(scene) = scene else {
+        return CheckReport::not_applicable(CheckName::IsoLinkEnds, "projection is flat");
+    };
+    if scene.link_paths.is_empty() {
+        return CheckReport::not_applicable(CheckName::IsoLinkEnds, "page has no links");
+    }
+    debug_assert!(
+        scene.link_paths.len() <= LINKS_MAX,
+        "iso-link-ends would drop links past {LINKS_MAX}"
+    );
+    let mut examined: u64 = 0;
+    let mut defects = Vec::new();
+    for (index, (path, route)) in scene
+        .link_paths
+        .iter()
+        .zip(&geometry.links)
+        .take(LINKS_MAX)
+        .enumerate()
+    {
+        let pointer = NodePointer::root().child("links").index(index);
+        let ends = [
+            (LinkEnd::Start, route.from_node, path.first().copied()),
+            (LinkEnd::End, route.to_node, path.last().copied()),
+        ];
+        for (end, node, point) in ends {
+            examined += 1;
+            let mut defect = |message: String| {
+                defects.push(Defect {
+                    pointer: pointer.clone(),
+                    message,
+                });
+            };
+            let Some(point) = point else {
+                defect(format!("{} has no drawn point", end.name()));
+                continue;
+            };
+            let node_pointer = geometry.nodes.get(node).map_or_else(
+                || NodePointer::root().child("<absent>"),
+                |node| node.pointer.clone(),
+            );
+            let Some(solid) = scene
+                .solids
+                .iter()
+                .take(NODES_MAX)
+                .find(|solid| solid.node == node)
+            else {
+                defect(format!("{} node {node_pointer} has no solid", end.name()));
+                continue;
+            };
+            match solid.shape {
+                SolidShape::Slab | SolidShape::Surface => {
+                    let flat = PagePoint {
+                        x: point.x,
+                        y: point.y,
+                    };
+                    let outside = outside_distance(flat, solid.footprint);
+                    if outside > GEOMETRY_EPSILON {
+                        defect(format!(
+                            "{} lies {outside:.2} px outside zone {node_pointer}",
+                            end.name()
+                        ));
+                    }
+                }
+                SolidShape::Block => {
+                    let screen = project_point(point.x, point.y, point.z, scene.offset);
+                    let off = polygon_edge_distance(screen, &solid.outline);
+                    if off > GEOMETRY_EPSILON {
+                        defect(format!(
+                            "{} lies {off:.2} px off the outline of {node_pointer}",
+                            end.name()
+                        ));
+                    }
+                    if has_box_outline(solid.form) {
+                        let corner = polygon_vertex_distance(screen, &solid.outline);
+                        if corner < ISO_LINK_CORNER_CLEARANCE_PX - GEOMETRY_EPSILON {
+                            defect(format!(
+                                "{} lies {corner:.2} px from a corner of {node_pointer}, under {ISO_LINK_CORNER_CLEARANCE_PX}",
+                                end.name()
+                            ));
+                        }
+                    }
+                }
+            }
+        }
+    }
+    CheckReport {
+        check: CheckName::IsoLinkEnds,
         examined,
         defects,
         not_applicable: None,

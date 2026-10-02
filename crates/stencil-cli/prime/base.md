@@ -6,8 +6,6 @@ stencil turns structural JSON (boxes, items, facts, pipes, links; no coordinates
 
 Write fig.json, `stencil vet fig.json`, `stencil check fig.json`, `stencil render fig.json --out-dir out --scale 2`, Read out/fig.png, fix, repeat until check shows 0 failed and the PNG reads right. Exit 0 clean; 1 defect in the document (fix the JSON at the named pointer); 2 could not run (arguments, paths, fonts). `stencil schema` prints the JSON Schema.
 
-`stencil gallery out` renders the examples in the designed themes; a failed check exits 1.
-
 # Grammars
 
 A grammar gives a domain its Box and Item kinds, where each may sit, and its rules; Page.grammar names it. {{grammars}}
@@ -44,6 +42,7 @@ Every node object carries "tag"; the Page does not. * required, =default. A fiel
 | pipes-land | each pipe end facing a Row or Col sibling or a from or to target | the pipe's center misses every box there | name its Boxes in from and to, or match the gutter's grow list |
 | iso-labels-clear | iso only: labels, solids, boxes | overlap or Box edge in text | open floor |
 | iso-links-clear | iso only: link legs | leg by a Box edge, reversed or short | wider gap |
+| iso-link-ends | iso only: link ends | end off its node or on a corner | move the end |
 | print-fit | each text run, only with --print-width | prints below 8 pt at that width | widen the print or shorten the figure |
 | icon-matches-product | each item with an icon or subtitle whose kind has an icon table | the subtitle names a product whose own icon is another, or a product icon on a product without one | use the product's icon or a category icon |
 
@@ -54,6 +53,6 @@ Every node object carries "tag"; the Page does not. * required, =default. A fiel
 
 # Themes
 
-center (default), paper, dusk, clear, clear-dark, wire; `stencil prime themes` says which to pick. Set theme on the page or pass --theme, a name or a theme .json path; layout is identical under every theme.
+center (default), paper, dusk, clear, clear-dark, wire; `stencil prime themes` says which to pick. Set theme on the page or pass --theme, a name or a theme .json path; layout is the same under every theme.
 
 {{topics}}

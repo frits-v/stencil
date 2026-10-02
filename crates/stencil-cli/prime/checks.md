@@ -16,7 +16,7 @@ Line formats, stable for scripts:
 
 A pointer is an RFC 6901 JSON pointer into your document, such as /body/0/children/2 or /links/3; the page root prints as "". Violations stop vet, check and render before any check runs; fix them first.
 
-Examined counts: each check reports how many units it looked at, and a check that examined 0 fails, because a pass over nothing proves nothing. A page with no Pipe, Tee or Link fails legend-consistency this way: every figure has at least one hop. The link checks on a page without links are not applicable and neither pass nor fail. Exit 0 needs at least one pass and no failure. Under iso, check adds iso-labels-clear and iso-links-clear: stencil prime iso.
+Examined counts: each check reports how many units it looked at, and a check that examined 0 fails, because a pass over nothing proves nothing. A page with no Pipe, Tee or Link fails legend-consistency this way: every figure has at least one hop. The link checks on a page without links are not applicable and neither pass nor fail. Exit 0 needs at least one pass and no failure. Under iso, check adds iso-labels-clear, iso-links-clear and iso-link-ends: stencil prime iso.
 
 | Check | Unit | Defect at | Message |
 |---|---|---|---|
