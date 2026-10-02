@@ -2,8 +2,8 @@
 cue = "0.17.1"
 
 [tasks.land]
-description = "Merge a pull request only after CI passes: mise run land -- <number>"
-run = "gh pr checks {{arg(name=\"pr\")}} --watch --fail-fast && gh pr merge {{arg(name=\"pr\")}} --squash"
+description = "Merge a pull request only after its CI workflow run passes: mise run land -- <number>"
+run = "scripts/land.sh {{arg(name=\"pr\")}}"
 
 [tasks.gallery-docs]
 description = "Regenerate the README PNGs in docs/gallery from the examples"
