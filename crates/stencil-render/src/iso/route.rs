@@ -382,6 +382,24 @@ pub(crate) fn kept_clear(
             .collect();
         candidates
             .sort_by(|first, second| (first - current).abs().total_cmp(&(second - current).abs()));
+        // A lane too narrow for the wider clearance still takes the base one.
+        if clearance > ISO_LINK_CLEARANCE_PX + GEOMETRY_EPSILON_PX {
+            let mut fallback: Vec<f32> = beside
+                .iter()
+                .flat_map(|(edge, _)| {
+                    let line = if horizontal {
+                        edge.start.y
+                    } else {
+                        edge.start.x
+                    };
+                    [line - ISO_LINK_CLEARANCE_PX, line + ISO_LINK_CLEARANCE_PX]
+                })
+                .collect();
+            fallback.sort_by(|first, second| {
+                (first - current).abs().total_cmp(&(second - current).abs())
+            });
+            candidates.extend(fallback);
+        }
         let moved = |line: f32| {
             let place = |point: PagePoint| {
                 if horizontal {
