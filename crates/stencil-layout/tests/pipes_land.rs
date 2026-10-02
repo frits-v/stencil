@@ -192,11 +192,11 @@ fn an_iso_pipe_end_reaches_the_solid_inside_a_col_and_a_short_end_is_a_defect() 
         "canvas": "customer", "projection": "iso", "legend": [],
         "body": [{ "tag": "Row", "gap": 32, "children": [
             { "tag": "Box", "kind": "onprem", "label": "Site", "children": [
-                { "tag": "Item", "kind": "product", "title": "Edge" } ] },
-            { "tag": "Col", "children": [
-                { "tag": "Pipe", "dir": "h", "line": "solid", "label": "VLAN 1" } ] },
-            { "tag": "Col", "children": [
-                { "tag": "Item", "kind": "product", "title": "Edge firewall",
+                { "tag": "Item", "kind": "product", "id": "edge", "title": "Edge" } ] },
+            { "tag": "Col", "justify": "center", "children": [ { "tag": "Col", "children": [
+                { "tag": "Pipe", "dir": "h", "line": "solid", "label": "VLAN 1", "from": "edge", "to": "fw" } ] } ] },
+            { "tag": "Col", "justify": "center", "children": [
+                { "tag": "Item", "kind": "product", "id": "fw", "title": "Edge firewall",
                   "subtitle": "stateful, zone policy across both sites" } ] } ] }]
     }));
     let mut geometry = layout(&page);
@@ -215,7 +215,7 @@ fn an_iso_pipe_end_reaches_the_solid_inside_a_col_and_a_short_end_is_a_defect() 
     let pipe = geometry
         .nodes
         .iter_mut()
-        .find(|node| node.pointer.as_str() == "/body/0/children/1/children/0")
+        .find(|node| node.pointer.as_str() == "/body/0/children/1/children/0/children/0")
         .unwrap();
     let dot = pipe
         .parts
@@ -233,4 +233,40 @@ fn an_iso_pipe_end_reaches_the_solid_inside_a_col_and_a_short_end_is_a_defect() 
         "{:?}",
         short.defects
     );
+}
+
+/// Section 12.3 rule 5: under iso an end that names no target and lands on a zone holding
+/// devices reads as a line to nowhere; naming the zone is the author's choice and passes.
+#[test]
+fn an_iso_pipe_end_that_lands_on_a_zone_of_devices_without_a_target_is_a_defect() {
+    let document = |to: Option<&str>| {
+        let mut pipe =
+            json!({ "tag": "Pipe", "dir": "h", "line": "solid", "label": "VLAN 1", "from": "e" });
+        if let Some(to) = to {
+            pipe["to"] = json!(to);
+        }
+        json!({
+            "title": "Title", "kicker": "Kicker", "lede": "Lede", "width": 1100,
+            "canvas": "customer", "projection": "iso", "legend": [],
+            "body": [{ "tag": "Row", "gap": 32, "children": [
+                { "tag": "Box", "kind": "onprem", "label": "Site", "children": [
+                    { "tag": "Item", "kind": "product", "id": "e", "title": "Edge" } ] },
+                { "tag": "Col", "justify": "center", "children": [ { "tag": "Col", "children": [pipe] } ] },
+                { "tag": "Box", "kind": "region", "id": "r", "label": "Region", "children": [
+                    { "tag": "Item", "kind": "product", "title": "Hub" } ] } ] }]
+        })
+    };
+    let page = page_from(document(None));
+    let geometry = layout(&page);
+    let report = pipes_land(&page, &geometry);
+    assert_eq!(report.examined, 2);
+    assert_eq!(report.outcome(), CheckOutcome::Failed, "{report:?}");
+    assert_eq!(
+        report.defects[0].message,
+        "right end lands on the edge of zone /body/0/children/2 and names no target; name the device it reaches"
+    );
+    let named = page_from(document(Some("r")));
+    let geometry = layout(&named);
+    let report = pipes_land(&named, &geometry);
+    assert_eq!(report.outcome(), CheckOutcome::Passed, "{report:?}");
 }

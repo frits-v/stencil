@@ -406,13 +406,15 @@ fn pipe_slot(geometry: &PageGeometry, pipe: usize) -> usize {
 
 /// The aim span of one pipe (section 13.8 rule 2): the intersection of its targets' extents
 /// on the move axis, the `to` extent when the two do not overlap, or the one target's extent.
+/// A target standing on a footprint spans with that footprint, not with its floor text, so
+/// a pipe aims at the solid it lands on.
 fn aim_span(geometry: &PageGeometry, pipe: &TargetedPipe) -> Option<(f32, f32)> {
     let extent = |target: &Option<PipeTarget>| {
         target
             .as_ref()
             .and_then(|target| target.node)
             .and_then(|index| geometry.nodes.get(index))
-            .map(|node| move_extent(&node.bounds, pipe.dir))
+            .map(|node| move_extent(&crate::route::attach_box(node), pipe.dir))
     };
     match (extent(&pipe.from), extent(&pipe.to)) {
         (Some(from), Some(to)) => {

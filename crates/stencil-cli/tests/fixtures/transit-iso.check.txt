@@ -1,12 +1,12 @@
-check child-inside-container: examined 27 relations, 0 defects
-check siblings-do-not-overlap: examined 20 pairs, 0 defects
-check text-fits-box: examined 29 text runs, 0 defects
-check remembered-constants: examined 26 text fields, 0 defects
-check legend-consistency: examined 6 relations, 0 defects
+check child-inside-container: examined 26 relations, 0 defects
+check siblings-do-not-overlap: examined 19 pairs, 0 defects
+check text-fits-box: examined 26 text runs, 0 defects
+check remembered-constants: examined 23 text fields, 0 defects
+check legend-consistency: examined 4 relations, 0 defects
 check links-routed: examined 1 link, 0 defects
-check links-avoid-boxes: examined 48 pairs, 0 defects
-check pipes-land: examined 4 pipe ends, 0 defects
-check iso-labels-clear: examined 372 pairs, 0 defects
+check links-avoid-boxes: examined 42 pairs, 0 defects
+check pipes-land: examined 2 pipe ends, 0 defects
+check iso-labels-clear: examined 286 pairs, 0 defects
 check iso-links-clear: examined 3 link legs, 0 defects
 check iso-link-ends: examined 2 link ends, 0 defects
 check iso-links-apart: examined 0 link pairs, not applicable: page has fewer than two links

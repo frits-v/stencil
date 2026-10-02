@@ -27,7 +27,7 @@ Examined counts: each check reports how many units it looked at, and a check tha
 | legend-consistency | relation: each line use (Pipe, Tee arm, Tee spine, Link) and each legend entry, keyed on line and tint | the use, or /legend/i | USER line L tint T has no legend entry; legend line L tint T is never used; legend line L tint T is already listed at /legend/j |
 | links-routed | link | /links/i | no route from A to B avoids every obstacle; drawn as a fallback L |
 | links-avoid-boxes | pair: segment and obstacle, tag and node | /links/i | segment N from (X, Y) to (X, Y) enters NODE box WxH at (X, Y); tag WxH at (X, Y) overlaps NODE box WxH at (X, Y) |
-| pipes-land | each pipe end with a neighbor or a from or to target | /body/... (the pipe) | SIDE neighbor NODE has no box across the pipe's center Y; or from (to) target NODE has none, or lies on the other side |
+| pipes-land | each pipe end with a neighbor or a from or to target | /body/... (the pipe) | SIDE neighbor NODE has no box across the pipe's center Y; or from (to) target NODE has none, or lies on the other side; iso: SIDE end stops D px short of NODE; or lands on the edge of zone NODE and names no target |
 | print-fit | text run (with --print-width) | the run's node, or /links/i | PART "TEXT" prints at P pt, below 8 pt (S px on a C px canvas at W in) |
 | icon-matches-product | item with an icon or subtitle, kind with an icon table | the item | subtitle names P, whose icon is I; the item carries O; or subtitle names P, which has no product icon; the item carries the product icon I |
 
