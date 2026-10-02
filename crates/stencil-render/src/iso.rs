@@ -5,6 +5,7 @@ mod drape;
 mod exit;
 mod route;
 mod shapes;
+pub(crate) mod sprites;
 pub(crate) mod tube;
 pub use tube::ISO_TUBE_RADIUS_PX;
 mod zoom;
@@ -666,6 +667,9 @@ fn solid_outline(
             convex_hull(&points)
         }
         Shape::Card | Shape::Tile | Shape::Tower => vertices.to_vec(),
+        Shape::Figure => sprites::figure_outline(footprint, base_z, top_z),
+        Shape::Laptop => sprites::laptop_outline(footprint, base_z, top_z),
+        Shape::Phone => sprites::phone_outline(footprint, base_z, top_z),
     }
 }
 

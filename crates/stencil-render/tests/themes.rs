@@ -24,7 +24,7 @@ use stencil_render::iso::{SolidInputs, project_page};
 use stencil_render::palette::Palette;
 use stencil_render::{DeviceScale, builtin_theme_json, measured_json, render_png, render_svg};
 
-const EXAMPLES: [(&str, &str); 8] = [
+const EXAMPLES: [(&str, &str); 9] = [
     ("g7", include_str!("../../../examples/g7.json")),
     ("hero-iso", include_str!("../../../examples/hero-iso.json")),
     (
@@ -39,6 +39,10 @@ const EXAMPLES: [(&str, &str); 8] = [
     (
         "onprem-iso",
         include_str!("../../../examples/onprem-iso.json"),
+    ),
+    (
+        "people-iso",
+        include_str!("../../../examples/people-iso.json"),
     ),
     (
         "platform-iso",

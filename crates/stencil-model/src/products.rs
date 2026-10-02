@@ -4,7 +4,7 @@
 use crate::checks::{CheckName, CheckReport, Defect, is_word_character};
 use crate::document::{IconName, Node, Page};
 use crate::grammar::{
-    GRAMMAR_PRODUCT_NAMES_MAX, GRAMMAR_PRODUCTS_MAX, Grammar, IconClass, IconProducts,
+    GRAMMAR_PRODUCT_NAMES_MAX, GRAMMAR_PRODUCTS_MAX, Grammar, IconClass, IconProducts, ItemKind,
 };
 use crate::walk::{NodeRef, body_nodes};
 use crate::{Item, Shape};
@@ -34,18 +34,20 @@ fn find_at_word_boundary(text: &str, name: &str) -> Option<usize> {
 
 /// The solid an item stands as under iso (section 12.3): the item's own `shape`, else the
 /// shape of its icon's row in the kind's table, else card.
-pub fn item_shape(table: &[IconProducts], item: &Item) -> Shape {
+pub fn item_shape(kind: Option<&ItemKind>, item: &Item) -> Shape {
     if let Some(shape) = item.shape {
         return shape;
     }
-    let Some(icon) = item.icon else {
-        return Shape::Card;
-    };
-    table
-        .iter()
-        .take(GRAMMAR_PRODUCTS_MAX)
-        .find(|row| row.icon == icon)
-        .and_then(|row| row.shape)
+    let row_shape = item.icon.and_then(|icon| {
+        kind?
+            .products
+            .iter()
+            .take(GRAMMAR_PRODUCTS_MAX)
+            .find(|row| row.icon == icon)
+            .and_then(|row| row.shape)
+    });
+    row_shape
+        .or_else(|| kind.and_then(|kind| kind.shape))
         .unwrap_or_default()
 }
 

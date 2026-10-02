@@ -224,6 +224,17 @@
           "items": {
             "$ref": "#/$defs/IconProducts"
           }
+        },
+        "shape": {
+          "description": "Under iso, the solid an item of this kind stands as when neither the item nor its\nicon's row names one; absent is card.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Shape"
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       },
       "additionalProperties": false,
@@ -317,14 +328,17 @@
       ]
     },
     "Shape": {
-      "description": "The solid an item stands as under iso (section 12.3): a card is the flat card raised,\nwith its content on top; every other shape carries the icon on its top and its text\non the floor beside it. Tile: a thin plate, for network and edge pieces. Tower: a tall\nnarrow box, for compute, clusters and nodes. Cylinder: databases and warehouses.\nStack: three stacked discs, for storage and buckets.",
+      "description": "The solid an item stands as under iso (section 12.3): a card is the flat card raised,\nwith its content on top; every other shape carries the icon on its top and its text\non the floor beside it. Tile: a thin plate, for network and edge pieces. Tower: a tall\nnarrow box, for compute, clusters and nodes. Cylinder: databases and warehouses.\nStack: three stacked discs, for storage and buckets. Figure: a standing person, for\nusers and operators. Laptop and phone: client devices.",
       "type": "string",
       "enum": [
         "card",
         "tile",
         "tower",
         "cylinder",
-        "stack"
+        "stack",
+        "figure",
+        "laptop",
+        "phone"
       ]
     },
     "Tone": {

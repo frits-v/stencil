@@ -45,7 +45,7 @@ import (
 #Axis: "x" | "y"
 
 // The solid an item stands as under iso (section 12.3).
-#Shape:       "card" | "tile" | "tower" | "cylinder" | "stack"
+#Shape:       "card" | "tile" | "tower" | "cylinder" | "stack" | "figure" | "laptop" | "phone"
 #ListKind:    "plain" | "numbered" | "bulleted"
 #CalloutKind: "note" | "risk" | "decision" | "open"
 

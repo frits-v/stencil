@@ -451,7 +451,7 @@ fn lanes_too_many_and_lanes_in_iso() {
 }
 
 /// Plain-grammar examples, each with Lanes or links, vetted under the grammar they name.
-const PLAIN_EXAMPLES: [(&str, &str); 4] = [
+const PLAIN_EXAMPLES: [(&str, &str); 5] = [
     ("sequence", include_str!("../../../examples/sequence.json")),
     ("org", include_str!("../../../examples/org.json")),
     (
@@ -461,6 +461,10 @@ const PLAIN_EXAMPLES: [(&str, &str); 4] = [
     (
         "onprem-iso",
         include_str!("../../../examples/onprem-iso.json"),
+    ),
+    (
+        "people-iso",
+        include_str!("../../../examples/people-iso.json"),
     ),
 ];
 

@@ -1,0 +1,30 @@
+{
+  "title": "Staff and customers reach the API from their own devices.",
+  "kicker": "Front door · cover figure",
+  "lede": "One operator on a laptop, one customer on a phone, one API between them.",
+  "width": 1200,
+  "canvas": "customer",
+  "grammar": "plain",
+  "projection": "iso",
+  "body": [
+    { "tag": "Box", "kind": "system", "label": "Shop", "children": [
+      { "tag": "Box", "kind": "group", "label": "Front door", "children": [
+        { "tag": "Row", "children": [
+          { "tag": "Item", "kind": "person", "id": "ops", "title": "Operator", "subtitle": "on call" },
+          { "tag": "Item", "kind": "device", "id": "laptop", "title": "Admin console", "subtitle": "laptop" },
+          { "tag": "Item", "kind": "service", "id": "api", "title": "API", "subtitle": "gateway" },
+          { "tag": "Item", "kind": "device", "id": "phone", "title": "Shop app", "subtitle": "phone", "shape": "phone" }
+        ] }
+      ] }
+    ] }
+  ],
+  "links": [
+    { "from": "ops", "to": "laptop", "line": "gray" },
+    { "from": "laptop", "to": "api", "line": "solid", "tint": 1 },
+    { "from": "phone", "to": "api", "line": "solid", "tint": 1 }
+  ],
+  "legend": [
+    { "line": "solid", "tint": 1, "text": "request path" },
+    { "line": "gray", "text": "operates" }
+  ]
+}

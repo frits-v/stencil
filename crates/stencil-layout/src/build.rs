@@ -1191,12 +1191,7 @@ impl Builder<'_> {
         parent_container: NodeId,
         placement: Placement,
     ) -> Result<(), LayoutError> {
-        let table = self
-            .grammar
-            .item(&item.kind)
-            .map(|kind| kind.products.as_slice())
-            .unwrap_or(&[]);
-        let shape = item_shape(table, item);
+        let shape = item_shape(self.grammar.item(&item.kind), item);
         // Under iso an item whose shape is not a card is a solid rising from a footprint
         // with its text on the floor in front of it (section 12.3): no card padding or
         // border, the footprint box above, the text column centered under it after a gap,

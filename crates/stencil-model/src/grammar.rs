@@ -152,6 +152,10 @@ pub struct ItemKind {
     pub products: Vec<IconProducts>,
     #[schemars(length(min = 1))]
     pub parents: Vec<String>,
+    /// Under iso, the solid an item of this kind stands as when neither the item nor its
+    /// icon's row names one; absent is card.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub shape: Option<Shape>,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]

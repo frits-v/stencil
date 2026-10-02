@@ -469,6 +469,44 @@
                 "apis",
                 "page"
             ]
+        },
+        {
+            "name": "person",
+            "icons": "none",
+            "products": [],
+            "parents": [
+                "gcp",
+                "vpc",
+                "region",
+                "subnet",
+                "onprem",
+                "project",
+                "optional",
+                "k8s",
+                "perimeter",
+                "apis",
+                "page"
+            ],
+            "shape": "figure"
+        },
+        {
+            "name": "device",
+            "icons": "none",
+            "products": [],
+            "parents": [
+                "gcp",
+                "vpc",
+                "region",
+                "subnet",
+                "onprem",
+                "project",
+                "optional",
+                "k8s",
+                "perimeter",
+                "apis",
+                "page"
+            ],
+            "shape": "laptop"
         }
     ],
     "remembered": [
