@@ -11,6 +11,7 @@
 mod common;
 
 use serde_json::{Value, json};
+use stencil_layout::PartName;
 use stencil_layout::{BoxRect, PageGeometry};
 use stencil_model::{Page, Projection, Side};
 use stencil_render::iso::{IsoPoint, IsoScene, SolidInputs, SolidShape, project_page};
@@ -161,15 +162,15 @@ fn an_authored_via_or_from_side_is_never_rerouted() {
     }
 }
 
-/// The hero's VLAN 2 is authored with `from_side: bottom`, so it keeps the route its author
-/// drew: it leaves the on-prem slab through the bottom edge, down and away
-/// from the gateway, and reaches the gcp floor over the ground.
+/// The hero's VLAN 2 is authored with `from_side: left`, so it keeps the route its author
+/// drew: it leaves the router's footprint through its left side and the on-prem slab
+/// through the left edge, and reaches the gcp floor over the ground.
 #[test]
 fn the_hero_vlan_2_keeps_its_authored_route() {
     let page: Page = serde_json::from_str(HERO_JSON).unwrap();
     let vlan_2 = &page.links[1];
     assert_eq!(vlan_2.label.as_deref(), Some("VLAN 2"));
-    assert_eq!(vlan_2.from_side, Some(Side::Bottom));
+    assert_eq!(vlan_2.from_side, Some(Side::Left));
 
     let geometry = common::layout_with_cosmic_text(&page);
     let with_exit = scene_of(&page, &geometry);
@@ -178,17 +179,18 @@ fn the_hero_vlan_2_keeps_its_authored_route() {
 
     let on_prem = slab_footprint(&with_exit, SLAB);
     let path = &with_exit.link_paths[1];
-    assert_eq!(sides_crossed(path, on_prem), [Side::Bottom], "{path:?}");
+    assert_eq!(
+        sides_crossed(path, on_prem).first(),
+        Some(&Side::Left),
+        "{path:?}"
+    );
     let route = &geometry.links[1];
     let start = route.points[0];
-    let router = geometry.nodes[route.from_node].bounds;
-    assert_eq!(start.y, router.bottom());
+    let router = &geometry.nodes[route.from_node];
+    // The router stands on a footprint (a tile), which is where its links attach.
+    let footprint = router.part(PartName::Footprint).unwrap().bounds;
+    assert_eq!(start.x, footprint.x);
     let flat_on_prem = geometry.nodes[route.from_node - 1].bounds;
     assert_eq!(geometry.nodes[route.from_node - 1].pointer.as_str(), SLAB);
-    assert!(
-        route
-            .points
-            .iter()
-            .any(|point| point.y > flat_on_prem.bottom())
-    );
+    assert!(route.points.iter().any(|point| point.x < flat_on_prem.x));
 }

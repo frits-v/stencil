@@ -20,9 +20,9 @@ use taffy::prelude::{
 use crate::lanes::LanesPlan;
 use crate::styles::{text_color, text_style_for};
 use crate::{
-    Axis, ContainerLook, ISO_APPROACH_PX, ISO_BLOCK_HEIGHT_PX, ISO_LABEL_CLEARANCE_PX,
-    ISO_LINE_MIN_PX, ISO_SPACE_SCALE, ISO_TAG_CLEARANCE_PX, ISO_WIRE_SCALE, LayoutError, NodeTag,
-    PartName, TextAlign,
+    Axis, ContainerLook, ISO_APPROACH_PX, ISO_BLOCK_HEIGHT_PX, ISO_FLOOR_TEXT_RESERVE_PX,
+    ISO_LABEL_CLEARANCE_PX, ISO_LINE_MIN_PX, ISO_SPACE_SCALE, ISO_TAG_CLEARANCE_PX, ISO_WIRE_SCALE,
+    LayoutError, NodeTag, PartName, TextAlign, shape_footprint_px,
 };
 
 /// Taffy's node context is an index into `BuiltPage::text_leaves`.
@@ -1197,35 +1197,65 @@ impl Builder<'_> {
             .map(|kind| kind.products.as_slice())
             .unwrap_or(&[]);
         let shape = item_shape(table, item);
-        let mut style = Style {
-            gap: taffy::Size {
-                width: length(self.space(10.0)),
-                height: length(0.0),
+        // Under iso an item whose shape is not a card is a solid rising from a footprint
+        // with its text on the floor in front of it (section 12.3): no card padding or
+        // border, the footprint box above, the text column centered under it after a gap,
+        // so a link between neighbours in a Row passes between the solids.
+        let footprint = (self.iso && shape != Shape::Card).then(|| shape_footprint_px(shape));
+        let mut style = match footprint {
+            Some(_) => Style {
+                gap: taffy::Size {
+                    width: length(0.0),
+                    height: length(self.space(6.0)),
+                },
+                ..flex_column(AlignItems::CENTER)
             },
-            padding: sides(
-                self.space(6.0),
-                self.space(10.0),
-                self.space(6.0),
-                self.space(10.0),
-            ),
-            border: sides(1.5, 1.5, 1.5, 1.5),
-            min_size: taffy::Size {
-                width: auto(),
-                height: length(44.0),
+            None => Style {
+                gap: taffy::Size {
+                    width: length(self.space(10.0)),
+                    height: length(0.0),
+                },
+                padding: sides(
+                    self.space(6.0),
+                    self.space(10.0),
+                    self.space(6.0),
+                    self.space(10.0),
+                ),
+                border: sides(1.5, 1.5, 1.5, 1.5),
+                min_size: taffy::Size {
+                    width: auto(),
+                    height: length(44.0),
+                },
+                ..flex_row(AlignItems::CENTER)
             },
-            ..flex_row(AlignItems::CENTER)
         };
         apply_flex_placement(&mut style, placement);
         let card = self.container(style, parent_container, &pointer)?;
         let mut parts = Vec::new();
-
+        let icon_parent = match footprint {
+            Some(side) => {
+                let footprint_style = Style {
+                    size: fixed_size(side, side),
+                    justify_content: Some(JustifyContent::CENTER),
+                    ..flex_column(AlignItems::CENTER)
+                };
+                let footprint_node = self.container(footprint_style, card, &pointer)?;
+                parts.push(PartRecord {
+                    name: PartName::Footprint,
+                    taffy_node: footprint_node,
+                    text_leaf: None,
+                });
+                footprint_node
+            }
+            None => card,
+        };
         if item.icon.is_some() {
             let icon = self.plain_leaf(
                 Style {
                     size: fixed_size(28.0, 28.0),
                     ..base_style()
                 },
-                card,
+                icon_parent,
                 &pointer,
             )?;
             parts.push(PartRecord {
@@ -1235,10 +1265,18 @@ impl Builder<'_> {
             });
         }
 
-        let column_style = Style {
-            flex_grow: 1.0,
-            flex_basis: length(0.0),
-            ..flex_column(AlignItems::STRETCH)
+        let column_style = match footprint {
+            // The floor text keeps the strip a raised solid behind it in the next row would
+            // cover (section 12.3).
+            Some(_) => Style {
+                margin: margins(0.0, 0.0, ISO_FLOOR_TEXT_RESERVE_PX, 0.0),
+                ..flex_column(AlignItems::CENTER)
+            },
+            None => Style {
+                flex_grow: 1.0,
+                flex_basis: length(0.0),
+                ..flex_column(AlignItems::STRETCH)
+            },
         };
         let column = self.container(column_style, card, &pointer)?;
         parts.push(PartRecord {

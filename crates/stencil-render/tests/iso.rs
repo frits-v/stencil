@@ -20,15 +20,17 @@ use stencil_layout::{
 use stencil_model::checks::{CheckName, CheckOutcome};
 use stencil_model::grammar::Role;
 use stencil_model::pointer::NodePointer;
-use stencil_model::{Page, Projection, Theme};
+use stencil_model::{Page, Projection, Shape, Theme};
 use stencil_render::iso::{
-    Axis, ISO_MARGIN_PX, ISO_ZOOM_MAX, IsoPoint, IsoScene, Label, PlaneMap, ScreenPoint, Solid,
-    SolidShape, iso_labels_clear, iso_links_clear, project_point, zoomed_geometry,
+    Axis, ISO_MARGIN_PX, ISO_ZOOM_MAX, IsoPoint, IsoScene, Label, LabelParts, PlaneMap,
+    ScreenPoint, Solid, SolidShape, iso_labels_clear, iso_links_clear, project_point,
+    zoomed_geometry,
 };
 use stencil_render::palette::{Face, LineUse, Palette, shade};
 use stencil_render::{DeviceScale, format_number, measured_json, render_png};
 
 const HERO_JSON: &str = include_str!("../../../examples/hero-iso.json");
+const PLATFORM_JSON: &str = include_str!("../../../examples/platform-iso.json");
 const ZERO: ScreenPoint = ScreenPoint { x: 0.0, y: 0.0 };
 
 const HERO_ON_PREM: &str = "/body/0/children/0/children/0";
@@ -36,6 +38,11 @@ const HERO_ROUTER: &str = "/body/0/children/0/children/0/children/0";
 const HERO_GCP: &str = "/body/0/children/1";
 const HERO_VPC: &str = "/body/0/children/1/children/0/children/0";
 const HERO_APIS: &str = "/body/0/children/1/children/0/children/1";
+const HERO_GATEWAY: &str =
+    "/body/0/children/1/children/0/children/0/children/0/children/0/children/0";
+const HERO_MODEL: &str =
+    "/body/0/children/1/children/0/children/0/children/0/children/1/children/0";
+const HERO_WAREHOUSE: &str = "/body/0/children/1/children/0/children/1/children/0";
 const HERO_ZONES: [&str; 4] = [HERO_ON_PREM, HERO_GCP, HERO_VPC, HERO_APIS];
 
 fn hero_page() -> Page {
@@ -63,6 +70,12 @@ fn assert_close(actual: f32, expected: f32, what: &str) {
 
 fn card(fn_text: &str, icon: &str) -> Value {
     json!({ "tag": "Item", "kind": "product", "icon": icon, "title": fn_text })
+}
+
+/// `item` with its own `shape`, which outranks the shape of its icon's product row.
+fn with_shape(mut item: Value, shape: &str) -> Value {
+    item["shape"] = json!(shape);
+    item
 }
 
 fn iso_page(body: Value) -> Page {
@@ -162,10 +175,11 @@ fn solids_stack_by_zone_depth_and_rows_draw_none() {
         (inner.shape, inner.base_z, inner.height),
         (SolidShape::Slab, 6.0, 6.0)
     );
-    let card = solid_of("/body/0/children/0/children/0/children/0").unwrap();
+    // The networking row stands its item as a tile.
+    let tile = solid_of("/body/0/children/0/children/0/children/0").unwrap();
     assert_eq!(
-        (card.shape, card.base_z, card.height),
-        (SolidShape::Block, 12.0, 18.0)
+        (tile.shape, tile.base_z, tile.height),
+        (SolidShape::Block, 12.0, 6.0)
     );
     let pipe = solid_of("/body/0/children/1/children/0").unwrap();
     assert_eq!(
@@ -199,8 +213,9 @@ fn a_vpc_zone_is_a_ring_on_its_parent_top_and_adds_no_height() {
         (SolidShape::Slab, 6.0, 0.0)
     );
     assert!(!ring.opaque);
-    let card = solid_of("/body/0/children/0/children/0");
-    assert_eq!((card.base_z, card.height), (6.0, 18.0));
+    // The bigquery row stands its item as a cylinder, 36 high.
+    let cylinder = solid_of("/body/0/children/0/children/0");
+    assert_eq!((cylinder.base_z, cylinder.height), (6.0, 36.0));
     assert_eq!(ring.slab_edges().len(), 4);
 }
 
@@ -235,11 +250,22 @@ fn a_link_between_two_zones_steps_down_to_the_ground_and_back_up() {
     assert_eq!(heights.first(), Some(&(6.0 * zoom)));
     assert_eq!(heights.last(), Some(&(6.0 * zoom)));
     assert!(heights.contains(&0.0), "{heights:?}");
-    let risers = path
+    // Every descent is matched by a climb: the link steps down to the ground between the
+    // zones and, where its approach stub leaves the far slab, once more on the way in.
+    let risers: Vec<(f32, f32)> = path
         .windows(2)
         .filter(|pair| pair[0].x == pair[1].x && pair[0].y == pair[1].y && pair[0].z != pair[1].z)
-        .count();
-    assert_eq!(risers, 2, "{path:?}");
+        .map(|pair| (pair[0].z, pair[1].z))
+        .collect();
+    assert!(risers.len() >= 2 && risers.len().is_multiple_of(2), "{path:?}");
+    assert!(
+        risers.first().is_some_and(|(from, to)| from > to),
+        "{path:?}"
+    );
+    assert!(
+        risers.last().is_some_and(|(from, to)| from < to),
+        "{path:?}"
+    );
     let route = &geometry.links[0];
     let end = route.points.last().unwrap();
     let drawn_end = path.last().unwrap();
@@ -475,8 +501,9 @@ fn the_plane_group_of_each_hero_zone_carries_its_label_map_as_its_matrix() {
     }
 }
 
-/// Each node group holds its faces, then its plane group, then the groups of its children,
-/// so every later solid is painted over the label.
+/// Each node group holds its faces, then its plane groups (two for an item standing as a
+/// shape: its icon on top and its text on the floor), then the groups of its children, so
+/// every later solid is painted over the labels.
 #[test]
 fn a_plane_group_follows_its_node_faces_and_precedes_every_later_node_group() {
     for document in [HERO_JSON, common::G7_JSON] {
@@ -491,22 +518,25 @@ fn a_plane_group_follows_its_node_faces_and_precedes_every_later_node_group() {
             .descendants()
             .filter(|node| node.has_tag_name("g") && node.attribute("data-id").is_some())
         {
-            let Some(plane) = plane_group(group) else {
+            let owned = plane_groups(group);
+            let (Some(first), Some(last)) = (owned.first(), owned.last()) else {
                 continue;
             };
-            planes += 1;
+            planes += owned.len();
             let owner = group.attribute("data-id").unwrap();
             let children: Vec<_> = group.children().filter(|node| node.is_element()).collect();
-            let at = children.iter().position(|child| *child == plane).unwrap();
-            assert!(at > 0, "{owner}: the plane group comes after the solid");
+            let start = children.iter().position(|child| child == first).unwrap();
+            let end = children.iter().position(|child| child == last).unwrap();
+            assert!(start > 0, "{owner}: the plane groups come after the solid");
+            assert_eq!(end - start + 1, owned.len(), "{owner}: plane groups apart");
             for (index, child) in children.iter().enumerate() {
                 let is_group = child.has_tag_name("g");
-                if index < at {
-                    assert!(!is_group, "{owner}: a group before the plane group");
-                } else if index > at {
+                if index < start {
+                    assert!(!is_group, "{owner}: a group before the plane groups");
+                } else if index > end {
                     assert!(
                         is_group && child.attribute("data-id").is_some(),
-                        "{owner}: {child:?} after the plane group"
+                        "{owner}: {child:?} after the plane groups"
                     );
                 }
             }
@@ -529,7 +559,7 @@ fn a_zone_label_lies_on_its_slab_top_and_a_card_content_on_its_block_top() {
         (HERO_GCP, SolidShape::Slab, floor),
         (HERO_VPC, SolidShape::Slab, floor),
         (HERO_APIS, SolidShape::Slab, 2.0 * floor),
-        (HERO_ROUTER, SolidShape::Block, floor + 18.0 * scene.zoom),
+        (HERO_GATEWAY, SolidShape::Block, floor + 18.0 * scene.zoom),
     ] {
         let solid = solid_of(&scene, owner);
         let label = label_of(&scene, owner);
@@ -838,7 +868,10 @@ fn two_card_zone(container: Value) -> Page {
 fn cards_side_by_side_leave_their_labels_clear() {
     let page = two_card_zone(json!({
         "tag": "Row", "gap": 32,
-        "children": [card("Gateway", "cloud-run"), card("Warehouse", "bigquery")]
+        "children": [
+            card("Gateway", "cloud-run"),
+            with_shape(card("Warehouse", "bigquery"), "card")
+        ]
     }));
     let geometry = common::layout_with_cosmic_text(&page);
     let scene = project_page(&geometry).unwrap();
@@ -879,6 +912,7 @@ fn label_at(owner: &str, x: f32) -> Label {
         marks: vec![corners],
         opaque: false,
         contained: false,
+        parts: LabelParts::All,
     }
 }
 
@@ -910,28 +944,31 @@ const FLAT_SLAB: [ScreenPoint; 6] = [
 /// A block whose silhouette is the screen rectangle from (left, top) to (right, bottom).
 fn block(node: usize, left: f32, top: f32, right: f32, bottom: f32) -> Solid {
     let middle = (top + bottom) / 2.0;
+    let silhouette = [
+        ScreenPoint { x: left, y: top },
+        ScreenPoint { x: right, y: top },
+        ScreenPoint {
+            x: right,
+            y: middle,
+        },
+        ScreenPoint {
+            x: right,
+            y: bottom,
+        },
+        ScreenPoint { x: left, y: bottom },
+        ScreenPoint { x: left, y: middle },
+    ];
     Solid {
         node,
         pointer: NodePointer::root().child("body").index(node),
         shape: SolidShape::Block,
         base_z: 0.0,
         height: 18.0,
-        silhouette: [
-            ScreenPoint { x: left, y: top },
-            ScreenPoint { x: right, y: top },
-            ScreenPoint {
-                x: right,
-                y: middle,
-            },
-            ScreenPoint {
-                x: right,
-                y: bottom,
-            },
-            ScreenPoint { x: left, y: bottom },
-            ScreenPoint { x: left, y: middle },
-        ],
+        silhouette,
         opaque: true,
         footprint: NO_FOOTPRINT,
+        form: Shape::Card,
+        outline: silhouette.to_vec(),
     }
 }
 
@@ -945,6 +982,8 @@ fn flat_slab(node: usize) -> Solid {
         silhouette: FLAT_SLAB,
         opaque: false,
         footprint: NO_FOOTPRINT,
+        form: Shape::Card,
+        outline: FLAT_SLAB.to_vec(),
     }
 }
 
@@ -1133,10 +1172,11 @@ fn text_that_leaves_its_block_is_a_defect() {
     }
 }
 
-/// Ten labels give 45 pairs. Painted-later opaque solids: 6, 5, 4, 4, 3, 2, 1 and 0 for the
-/// zone and card labels in geometry order, 4 blocks for each of the two link tags. The
-/// eight non-opaque labels each meet the four slabs and the four link paths, and the four
-/// cards' content must stay on its block.
+/// Twelve labels give 66 pairs: four zones, two cards, two link tags, and an icon and a floor
+/// text each for the tile router and the cylinder warehouse. Painted-later opaque solids:
+/// 6, 5, 5, 4, 4, 3, 2, 1, 0 and 0 for the node labels in geometry order, 4 blocks for each
+/// of the two link tags. The ten non-opaque labels each meet the four slabs and the four
+/// link paths, and the two cards' content and the two icons must stay on their blocks.
 #[test]
 fn the_hero_labels_are_clear() {
     let page = hero_page();
@@ -1144,9 +1184,9 @@ fn the_hero_labels_are_clear() {
     let scene =
         stencil_render::iso::project_page(&geometry, &common::solid_inputs(&page, &geometry))
             .unwrap();
-    assert_eq!(scene.labels.len(), 10);
+    assert_eq!(scene.labels.len(), 12);
     let report = iso_labels_clear(Some(&scene));
-    assert_eq!(report.examined, 45 + (25 + 8) + 32 + 32 + 4);
+    assert_eq!(report.examined, 66 + (30 + 8) + 40 + 40 + 4);
     assert!(report.defects.is_empty(), "{report:#?}");
     assert!(report.passed());
 }
@@ -1166,7 +1206,7 @@ fn the_hero_measured_json_is_theme_independent_and_keeps_the_flat_nodes() {
             serde_json::to_vec(&iso["nodes"]).unwrap(),
             serde_json::to_vec(&flat["nodes"]).unwrap()
         );
-        assert_eq!(iso["projection"]["labels"].as_array().unwrap().len(), 10);
+        assert_eq!(iso["projection"]["labels"].as_array().unwrap().len(), 12);
         assert_eq!(iso["projection"]["kind"], "iso");
         for label in iso["projection"]["labels"].as_array().unwrap() {
             let id = label["id"].as_str().unwrap();
@@ -1587,7 +1627,8 @@ fn a_label_at_zoom_two_lies_twice_as_far_from_the_body_origin_as_at_zoom_one() {
     let geometry = common::layout_with_fixed_metrics(&page);
     let one = project_zoomed(&geometry, 1.0).unwrap();
     let two = project_zoomed(&geometry, 2.0).unwrap();
-    assert_eq!(one.labels.len(), 3);
+    // The zone, the card, and the cylinder warehouse's icon and floor text.
+    assert_eq!(one.labels.len(), 4);
     for (first, second) in one.labels.iter().zip(&two.labels) {
         assert_eq!(first.owner, second.owner);
         assert_eq!(first.flat, second.flat);
@@ -1624,19 +1665,16 @@ fn a_wide_body_is_not_zoomed() {
     assert!((1.0..=ISO_ZOOM_MAX).contains(&zoom));
 }
 
-/// Under iso a card lays its icon left of its name; both lie on the block's top face.
+/// Under iso a card lays its icon left of its name; both lie on the block's top face. The
+/// hero's cards are the gateway and the model; the router and the warehouse stand as shapes.
 #[test]
 fn a_card_icon_and_name_lie_on_its_block_top_face_with_the_name_beside_the_icon() {
     let hero = hero_page();
     let geometry = common::layout_with_cosmic_text(&hero);
     let (zoomed, zoom) = zoomed_geometry(&geometry).unwrap();
     let scene = project_zoomed(&zoomed, zoom).unwrap();
-    for owner in [
-        HERO_ROUTER,
-        "/body/0/children/1/children/0/children/0/children/0/children/0/children/0",
-        "/body/0/children/1/children/0/children/0/children/0/children/1/children/0",
-        "/body/0/children/1/children/0/children/1/children/0",
-    ] {
+    for owner in [HERO_GATEWAY, HERO_MODEL] {
+        assert_eq!(solid_of(&scene, owner).form, Shape::Card, "{owner}");
         let node = &zoomed.nodes[index_of(&zoomed, owner)];
         let block = solid_of(&scene, owner);
         let label = label_of(&scene, owner);
@@ -1680,19 +1718,26 @@ fn the_hero_primary_leaves_the_router_through_a_stub_with_its_tag_along_x() {
     assert!(geometry.links[0].points.len() > 2);
     let scene = project_page(&geometry).unwrap();
     let primary = &scene.link_paths[0];
-    // The first leg is the approach stub out of the router's right side, along x from the
-    // on-prem slab top down onto the ground, at least ISO_APPROACH_PX long at the zoom.
+    // The first leg is the approach stub out of the router tile's right side, along x on the
+    // on-prem slab top the tile stands on, at least ISO_APPROACH_PX long at the zoom; then
+    // the path steps down onto the ground.
     let first = primary[0];
-    let stub_end = primary
+    assert_eq!(first.z, 6.0 * scene.zoom, "{primary:?}");
+    let stub = primary
         .iter()
-        .take_while(|point| (point.y - first.y).abs() < 1e-3)
-        .last()
-        .unwrap();
+        .take_while(|point| (point.y - first.y).abs() < 1e-3 && point.z == first.z)
+        .count();
+    let stub_end = primary[stub - 1];
     assert!(
         stub_end.x - first.x >= stencil_layout::ISO_APPROACH_PX * scene.zoom - 1e-3,
         "{primary:?}"
     );
-    assert!(first.z > 0.0 && stub_end.z == 0.0, "{primary:?}");
+    let step_down = primary[stub];
+    assert_eq!(
+        (step_down.x, step_down.y, step_down.z),
+        (stub_end.x, stub_end.y, 0.0),
+        "{primary:?}"
+    );
     let tag = label_of(&scene, "/links/0");
     assert_eq!(tag.axis, Axis::X);
     assert!(
@@ -1736,7 +1781,7 @@ fn the_hero_links_clear_every_zone_edge_and_end_on_long_legs() {
     let scene = project_page(&geometry).unwrap();
     let report = iso_links_clear(Some(&scene));
     assert_eq!(report.check, CheckName::IsoLinksClear);
-    assert_eq!(report.examined, 8);
+    assert_eq!(report.examined, 11);
     assert!(report.passed(), "{report:?}");
     assert_eq!(
         iso_links_clear(None).not_applicable,
@@ -1755,6 +1800,8 @@ fn link_scene(path: Vec<IsoPoint>, zone: BoxRect) -> IsoScene {
         silhouette: [ZERO; 6],
         opaque: true,
         footprint: zone,
+        form: Shape::Card,
+        outline: [ZERO; 6].to_vec(),
     }];
     scene.link_paths = vec![path];
     scene.link_kinds = vec![(stencil_model::Line::Solid, Some(1))];
@@ -1917,6 +1964,231 @@ fn the_vpc_is_a_ring_under_every_theme() {
     }
 }
 
+#[test]
+fn the_hero_hybrid_item_is_a_tile_six_high_on_a_64_px_footprint_with_its_icon_on_top_and_its_text_on_the_floor()
+ {
+    let hero = hero_page();
+    let geometry = common::layout_with_cosmic_text(&hero);
+    let (zoomed, zoom) = zoomed_geometry(&geometry).unwrap();
+    let scene = project_zoomed(&zoomed, zoom).unwrap();
+    let tile = solid_of(&scene, HERO_ROUTER);
+    assert_eq!((tile.shape, tile.form), (SolidShape::Block, Shape::Tile));
+    assert_close(
+        tile.base_z,
+        6.0 * zoom,
+        "the tile stands on the on-prem slab",
+    );
+    assert_close(tile.height, 6.0 * zoom, "tile height");
+    let footprint = zoomed.nodes[index_of(&zoomed, HERO_ROUTER)]
+        .part(PartName::Footprint)
+        .unwrap()
+        .bounds;
+    assert_eq!(tile.footprint, footprint);
+    assert_close(footprint.width, 64.0 * zoom, "footprint width");
+    assert_close(footprint.height, 64.0 * zoom, "footprint height");
+    assert_eq!(
+        tile.outline,
+        tile.silhouette.to_vec(),
+        "a box form's outline"
+    );
+
+    let labels: Vec<&Label> = scene
+        .labels
+        .iter()
+        .filter(|label| label.owner.as_str() == HERO_ROUTER)
+        .collect();
+    let parts: Vec<LabelParts> = labels.iter().map(|label| label.parts).collect();
+    assert_eq!(parts, [LabelParts::Icon, LabelParts::Text]);
+    let (icon, text) = (labels[0], labels[1]);
+    assert_close(icon.z, tile.base_z + tile.height, "icon label z");
+    assert!(icon.contained);
+    assert_close(text.z, tile.base_z, "text label z");
+    assert!(!text.contained);
+}
+
+#[test]
+fn a_bigquery_item_is_a_cylinder_whose_round_outline_cuts_back_the_link_into_it() {
+    let hero = hero_page();
+    let geometry = common::layout_with_cosmic_text(&hero);
+    let scene =
+        stencil_render::iso::project_page(&geometry, &common::solid_inputs(&hero, &geometry))
+            .unwrap();
+    let cylinder = solid_of(&scene, HERO_WAREHOUSE);
+    assert_eq!(cylinder.form, Shape::Cylinder);
+    assert_close(cylinder.height, 36.0 * scene.zoom, "cylinder height");
+    assert!(cylinder.outline.len() > 6, "{:?}", cylinder.outline);
+
+    let warehouse = index_of(&geometry, HERO_WAREHOUSE);
+    let into = geometry
+        .links
+        .iter()
+        .position(|route| route.to_node == warehouse)
+        .unwrap();
+    let end = *scene.link_paths[into].last().unwrap();
+    let drawn_end = project_point(end.x, end.y, end.z, scene.offset);
+    // The end lies on the round outline, not inside it, and well inside the six-vertex box,
+    // where a cut-back at the box would have stopped.
+    let outline_margin = convex_margin(drawn_end, &cylinder.outline);
+    assert!(
+        outline_margin.abs() <= 0.05,
+        "{drawn_end:?} lies {outline_margin} px inside the outline {:?}",
+        cylinder.outline
+    );
+    let box_margin = convex_margin(drawn_end, &cylinder.silhouette);
+    assert!(
+        box_margin > 1.0,
+        "{drawn_end:?} lies {box_margin} px inside the box {:?}",
+        cylinder.silhouette
+    );
+}
+
+/// An item's own `shape` outranks the shape of its icon's product row, and that row
+/// outranks card; an icon with no shape row and an item with no icon stand as cards.
+#[test]
+fn an_item_takes_its_own_shape_before_its_icon_row_shape_and_that_before_card() {
+    let page = iso_page(json!([
+        { "tag": "Box", "kind": "region", "tint": 1, "label": "Region", "children": [
+            { "tag": "Row", "gap": 64, "children": [
+                with_shape(card("Own tower", "bigquery"), "tower"),
+                card("Row cylinder", "bigquery"),
+                with_shape(card("Own card", "bigquery"), "card"),
+                card("No row", "cloud-run"),
+                { "tag": "Item", "kind": "product", "title": "No icon" } ] } ] }
+    ]));
+    let (geometry, zoom) = zoomed_geometry(&common::layout_with_fixed_metrics(&page)).unwrap();
+    let scene = project_zoomed(&geometry, zoom).unwrap();
+    for (index, form, footprint) in [
+        (0, Shape::Tower, Some(44.0)),
+        (1, Shape::Cylinder, Some(56.0)),
+        (2, Shape::Card, None),
+        (3, Shape::Card, None),
+        (4, Shape::Card, None),
+    ] {
+        let pointer = format!("/body/0/children/0/children/{index}");
+        let solid = solid_of(&scene, &pointer);
+        assert_eq!(solid.form, form, "{pointer}");
+        assert_close(
+            solid.height,
+            stencil_layout::shape_height_px(form) * zoom,
+            &pointer,
+        );
+        let node = &geometry.nodes[index_of(&geometry, &pointer)];
+        let side = node.part(PartName::Footprint).map(|part| part.bounds.width);
+        assert_eq!(side, footprint.map(|side: f32| side * zoom), "{pointer}");
+        if footprint.is_none() {
+            assert_eq!(solid.footprint, node.bounds, "{pointer}");
+        }
+    }
+}
+
+#[test]
+fn the_platform_example_stands_one_item_of_each_form_with_its_labels_and_links_clear() {
+    let page: Page = serde_json::from_str(PLATFORM_JSON).unwrap();
+    let geometry = common::layout_with_cosmic_text(&page);
+    let scene =
+        stencil_render::iso::project_page(&geometry, &common::solid_inputs(&page, &geometry))
+            .unwrap();
+    let forms: Vec<Shape> = scene
+        .solids
+        .iter()
+        .filter(|solid| geometry.nodes[solid.node].tag == NodeTag::Pcard)
+        .map(|solid| solid.form)
+        .collect();
+    assert_eq!(forms.len(), 5, "{forms:?}");
+    for form in [
+        Shape::Card,
+        Shape::Tile,
+        Shape::Tower,
+        Shape::Cylinder,
+        Shape::Stack,
+    ] {
+        let count = forms.iter().filter(|each| **each == form).count();
+        assert_eq!(count, 1, "{form:?} in {forms:?}");
+    }
+    let labels = iso_labels_clear(Some(&scene));
+    assert_eq!(labels.examined, 210);
+    assert!(labels.defects.is_empty(), "{labels:#?}");
+    assert!(labels.passed());
+    let links = iso_links_clear(Some(&scene));
+    assert_eq!(links.examined, 12);
+    assert!(links.defects.is_empty(), "{links:#?}");
+    assert!(links.passed());
+}
+
+/// The platform example's scene and its SVG under center, after asserting an item stands
+/// as `form`.
+fn platform_round_solid(form: Shape) -> (IsoScene, String) {
+    let page: Page = serde_json::from_str(PLATFORM_JSON).unwrap();
+    let geometry = common::layout_with_cosmic_text(&page);
+    let scene =
+        stencil_render::iso::project_page(&geometry, &common::solid_inputs(&page, &geometry))
+            .unwrap();
+    let svg = render_svg(&page, &geometry).unwrap().svg;
+    assert!(scene.solids.iter().any(|solid| solid.form == form));
+    (scene, svg)
+}
+
+/// A cylinder's node group draws its visible side as two half paths and its top as one
+/// ellipse; a stack draws three such discs, bottom to top.
+#[test]
+fn a_cylinder_group_holds_two_side_paths_and_a_top_ellipse_and_a_stack_three_of_those_discs() {
+    for (form, discs) in [(Shape::Cylinder, 1), (Shape::Stack, 3)] {
+        let (scene, svg) = platform_round_solid(form);
+        let solid = scene
+            .solids
+            .iter()
+            .find(|solid| solid.form == form)
+            .unwrap();
+        let parsed = common::parse_xml(&svg);
+        let group = common::group(&parsed, solid.pointer.as_str());
+        let sides = common::children_named(group, "path");
+        let tops: Vec<_> = common::children_named(group, "ellipse")
+            .into_iter()
+            .filter(|ellipse| ellipse.attribute("filter").is_none())
+            .collect();
+        assert_eq!(sides.len(), 2 * discs, "{form:?}");
+        assert_eq!(tops.len(), discs, "{form:?}");
+        let (radius_x, radius_y) = stencil_render::iso::ellipse_radii(
+            solid.footprint.width.min(solid.footprint.height) / 2.0,
+        );
+        for top in tops {
+            assert_eq!(
+                top.attribute("rx"),
+                Some(format_number(radius_x).to_string().as_str())
+            );
+            assert_eq!(
+                top.attribute("ry"),
+                Some(format_number(radius_y).to_string().as_str())
+            );
+        }
+    }
+}
+
+#[test]
+fn a_round_solid_casts_an_ellipse_shadow() {
+    for form in [Shape::Cylinder, Shape::Stack] {
+        let (scene, svg) = platform_round_solid(form);
+        let solid = scene
+            .solids
+            .iter()
+            .find(|solid| solid.form == form)
+            .unwrap();
+        let parsed = common::parse_xml(&svg);
+        let group = common::group(&parsed, solid.pointer.as_str());
+        let first = group.children().find(|node| node.is_element()).unwrap();
+        assert!(first.has_tag_name("ellipse"), "{form:?}: {first:?}");
+        assert_eq!(
+            first.attribute("filter"),
+            Some("url(#stencil-shadow)"),
+            "{form:?}"
+        );
+        assert!(
+            common::children_named(group, "polygon").is_empty(),
+            "{form:?}: a round solid draws no box face"
+        );
+    }
+}
+
 /// The label `owner` draws in `scene`.
 fn label_of<'a>(scene: &'a IsoScene, owner: &str) -> &'a Label {
     scene
@@ -1942,13 +2214,21 @@ fn center_of(bounds: BoxRect) -> (f32, f32) {
     )
 }
 
-/// The direct `<g data-plane>` child of a node or link group.
+/// The first direct `<g data-plane>` child of a node or link group.
 fn plane_group<'a, 'input>(
     group: roxmltree::Node<'a, 'input>,
 ) -> Option<roxmltree::Node<'a, 'input>> {
+    plane_groups(group).into_iter().next()
+}
+
+/// Every direct `<g data-plane>` child of a node or link group, in document order.
+fn plane_groups<'a, 'input>(
+    group: roxmltree::Node<'a, 'input>,
+) -> Vec<roxmltree::Node<'a, 'input>> {
     group
         .children()
-        .find(|child| child.has_tag_name("g") && child.attribute("data-plane").is_some())
+        .filter(|child| child.has_tag_name("g") && child.attribute("data-plane").is_some())
+        .collect()
 }
 
 /// The six numbers of a `transform="matrix(a b c d e f)"`.
@@ -1968,13 +2248,21 @@ fn matrix_of(group: roxmltree::Node<'_, '_>) -> [f32; 6] {
 /// True when `point` lies inside the convex `polygon`, whose vertices run clockwise on
 /// screen, or within 0.01 px of its boundary.
 fn inside_convex(point: ScreenPoint, polygon: &[ScreenPoint]) -> bool {
-    (0..polygon.len()).all(|index| {
-        let start = polygon[index];
-        let end = polygon[(index + 1) % polygon.len()];
-        let cross =
-            (end.x - start.x) * (point.y - start.y) - (end.y - start.y) * (point.x - start.x);
-        cross / (end.x - start.x).hypot(end.y - start.y) >= -0.01
-    })
+    convex_margin(point, polygon) >= -0.01
+}
+
+/// The distance from `point` to the nearest edge line of the convex `polygon`, whose
+/// vertices run clockwise on screen: positive inside, negative outside, 0 on the boundary.
+fn convex_margin(point: ScreenPoint, polygon: &[ScreenPoint]) -> f32 {
+    (0..polygon.len())
+        .map(|index| {
+            let start = polygon[index];
+            let end = polygon[(index + 1) % polygon.len()];
+            let cross =
+                (end.x - start.x) * (point.y - start.y) - (end.y - start.y) * (point.x - start.x);
+            cross / (end.x - start.x).hypot(end.y - start.y)
+        })
+        .fold(f32::INFINITY, f32::min)
 }
 
 fn screen_distance(first: ScreenPoint, second: ScreenPoint) -> f32 {

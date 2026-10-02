@@ -9,7 +9,7 @@ use stencil_model::{Node, NodeRef, Page, PipeDir, body_nodes};
 
 use crate::compute::{PipeTarget, move_extent, targeted_pipes};
 use crate::route::{link_obstacles, segment_enters};
-use crate::{BoxRect, GEOMETRY_EPSILON_PX, NodeTag, PageGeometry, Part, RouteStatus};
+use crate::{BoxRect, GEOMETRY_EPSILON_PX, NodeTag, PageGeometry, Part, PartName, RouteStatus};
 
 /// Why print-fit does not apply when no `--print-width` was given.
 const NO_PRINT_WIDTH: &str = "no print width";
@@ -364,14 +364,21 @@ pub fn links_avoid_boxes(geometry: &PageGeometry) -> CheckReport {
                 continue;
             }
             examined += 1;
-            if overlap_both_axes(&tag, &node.bounds) {
+            // An item standing on a footprint under iso is its footprint and its floor
+            // text; the room between them is open floor (section 12.3).
+            let boxes: Vec<BoxRect> =
+                match (node.part(PartName::Footprint), node.part(PartName::Text)) {
+                    (Some(footprint), Some(text)) => vec![footprint.bounds, text.bounds],
+                    _ => vec![node.bounds],
+                };
+            if let Some(hit) = boxes.iter().find(|bounds| overlap_both_axes(&tag, bounds)) {
                 defects.push(Defect {
                     pointer: pointer.clone(),
                     message: format!(
                         "tag {} overlaps {} box {}",
                         describe(&tag),
                         node.pointer,
-                        describe(&node.bounds)
+                        describe(hit)
                     ),
                 });
             }

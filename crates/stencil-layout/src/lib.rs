@@ -40,6 +40,32 @@ pub const ISO_ZONE_LABEL_SCALE: f32 = 1.25;
 /// Under iso the frame bar label is this much larger than flat: the platform name, a tier
 /// above the zone names.
 pub const ISO_FRAME_LABEL_SCALE: f32 = 1.4;
+/// The square footprint, in flat px, of an item's solid under iso when its shape is not a
+/// card (section 12.3).
+pub fn shape_footprint_px(shape: Shape) -> f32 {
+    match shape {
+        Shape::Card => 0.0,
+        Shape::Tile => 64.0,
+        Shape::Tower => 44.0,
+        Shape::Cylinder | Shape::Stack => 56.0,
+    }
+}
+
+/// Floor kept clear under an item's floor text under iso: the strip the tallest shape in
+/// the next row covers on screen, plus the clearance (section 12.3).
+pub const ISO_FLOOR_TEXT_RESERVE_PX: f32 = 44.0 + ISO_LABEL_CLEARANCE_PX;
+
+/// The height of an item's solid under iso, by shape (section 12.3).
+pub fn shape_height_px(shape: Shape) -> f32 {
+    match shape {
+        Shape::Card => ISO_BLOCK_HEIGHT_PX,
+        Shape::Tile => 6.0,
+        Shape::Tower => 44.0,
+        Shape::Cylinder => 36.0,
+        Shape::Stack => 30.0,
+    }
+}
+
 /// Under iso a link meets a block through a straight stub of this length, perpendicular
 /// to the visible side it attaches to, so the arrowhead stands clear of the block's base
 /// and the last leg is longer than two arrowheads.
@@ -340,6 +366,9 @@ pub enum PartName {
     Heads,
     Band,
     Lifeline,
+    /// The box an item's solid rises from under iso when its shape is not a card
+    /// (section 12.3); the icon sits in it and the text lies beside it.
+    Footprint,
 }
 
 impl PartName {
@@ -353,6 +382,7 @@ impl PartName {
             PartName::Bar => "bar",
             PartName::Body => "body",
             PartName::Icon => "icon",
+            PartName::Footprint => "footprint",
             PartName::FunctionName => "function_name",
             PartName::ProductName => "product_name",
             PartName::FactBox => "fact_box",

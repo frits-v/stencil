@@ -4,7 +4,7 @@
 
 use stencil_layout::{BoxRect, LinkRoute, NodeGeometry, NodeTag, PageGeometry, Part, PartName};
 use stencil_model::pointer::NodePointer;
-use stencil_model::{LINKS_MAX, Link, Node, NodeRef, Page, PipeDir, Projection, Theme};
+use stencil_model::{LINKS_MAX, Link, Node, NodeRef, Page, PipeDir, Projection, Shape, Theme};
 
 use super::DOT_RADIUS_PX;
 use super::{
@@ -14,14 +14,17 @@ use super::{
 };
 use crate::iso::{
     ISO_DOT_RADIUS_X_PX, ISO_DOT_RADIUS_Y_PX, IsoPoint, Label, ScreenPoint, Solid, SolidInputs,
-    SolidShape, arrowhead_vertices, end_direction, iso_link_arrowhead_length, label_axis,
-    local_part, plane_member, project_point, project_zoomed, start_direction, zoomed_geometry,
+    SolidShape, arrowhead_vertices, ellipse_radii, end_direction, iso_link_arrowhead_length,
+    label_axis, local_part, plane_member, project_point, project_zoomed, start_direction,
+    zoomed_geometry,
 };
 use crate::palette::{DotStyle, FacePaint, LineStyle, LineUse, Palette, Stroke};
 use crate::{RenderError, SvgDocument, format_number};
 
 /// The id of the blur filter every block shadow references (section 13.11).
 const SHADOW_FILTER_ID: &str = "stencil-shadow";
+/// The gap between the discs of a stack (section 12.3).
+const STACK_GAP_PX: f32 = 2.0;
 
 pub(super) fn render_iso(
     page: &Page,
@@ -67,10 +70,10 @@ pub(super) fn render_iso(
             *slot = Some(solid);
         }
     }
-    let mut node_labels: Vec<Option<&Label>> = vec![None; geometry.nodes.len()];
+    let mut node_labels: Vec<Vec<&Label>> = vec![Vec::new(); geometry.nodes.len()];
     for label in &scene.labels {
         if let Some(slot) = label.node.and_then(|index| node_labels.get_mut(index)) {
-            *slot = Some(label);
+            slot.push(label);
         }
     }
     let mut relabeler = Relabeler::default();
@@ -108,7 +111,7 @@ pub(super) fn render_iso(
             }
             (_, Some(solid), _) => {
                 writer.write_solid(depth + 1, node, *document_node, solid, scene.offset)?;
-                if let Some(label) = node_labels.get(index).copied().flatten() {
+                for label in node_labels.get(index).into_iter().flatten() {
                     writer.write_node_label(depth + 1, node, *document_node, label)?;
                 }
             }
@@ -274,12 +277,176 @@ impl<'a> SvgWriter<'a> {
             return Ok(None);
         };
         let top_z = solid.base_z + solid.height;
-        if solid.shape == SolidShape::Block && solid.opaque {
-            self.write_block_shadow(depth, node.bounds, solid.base_z, offset);
+        match solid.form {
+            Shape::Cylinder => {
+                if solid.opaque {
+                    self.write_round_shadow(depth, solid.footprint, solid.base_z, offset);
+                }
+                self.write_cylinder(
+                    depth,
+                    solid.footprint,
+                    (solid.base_z, top_z),
+                    &paint,
+                    offset,
+                );
+            }
+            Shape::Stack => {
+                if solid.opaque {
+                    self.write_round_shadow(depth, solid.footprint, solid.base_z, offset);
+                }
+                // Three discs with a gap between them, drawn bottom to top.
+                let gap = STACK_GAP_PX;
+                let disc = (solid.height - 2.0 * gap) / 3.0;
+                for index in 0..3 {
+                    let base = solid.base_z + index as f32 * (disc + gap);
+                    self.write_cylinder(
+                        depth,
+                        solid.footprint,
+                        (base, base + disc),
+                        &paint,
+                        offset,
+                    );
+                }
+            }
+            Shape::Card | Shape::Tile | Shape::Tower => {
+                if solid.shape == SolidShape::Block && solid.opaque {
+                    self.write_block_shadow(depth, solid.footprint, solid.base_z, offset);
+                }
+                self.write_faces(depth, solid.footprint, solid.base_z, top_z, &paint, offset);
+                self.write_top_face_drawing(depth, node, document_node, top_z, offset);
+            }
         }
-        self.write_faces(depth, node.bounds, solid.base_z, top_z, &paint, offset);
-        self.write_top_face_drawing(depth, node, document_node, top_z, offset);
         Ok(paint.top)
+    }
+
+    /// The shadow of a round solid: its base ellipse, lowered and blurred like a block's.
+    fn write_round_shadow(
+        &mut self,
+        depth: usize,
+        footprint: BoxRect,
+        base_z: f32,
+        offset: ScreenPoint,
+    ) {
+        let Some(shadow) = self.palette.iso_block_shadow() else {
+            return;
+        };
+        let (center_x, center_y) = box_center(footprint);
+        let radius = footprint.width.min(footprint.height) / 2.0;
+        let (radius_x, radius_y) = ellipse_radii(radius);
+        let center = project_point(
+            center_x,
+            center_y,
+            base_z,
+            ScreenPoint {
+                x: offset.x,
+                y: offset.y + shadow.dy,
+            },
+        );
+        self.line(
+            depth,
+            &format!(
+                r#"<ellipse cx="{}" cy="{}" rx="{}" ry="{}" fill="{}" fill-opacity="{}" filter="url(#{SHADOW_FILTER_ID})"/>"#,
+                format_number(center.x),
+                format_number(center.y),
+                format_number(radius_x),
+                format_number(radius_y),
+                shadow.color,
+                format_number(shadow.opacity)
+            ),
+        );
+    }
+
+    /// A cylinder inscribed in `footprint` from `base_z` to `top_z` (section 12.3): the
+    /// visible side as two halves, left and right of the front line, in the left and right
+    /// face paints, then the top ellipse.
+    fn write_cylinder(
+        &mut self,
+        depth: usize,
+        footprint: BoxRect,
+        (base_z, top_z): (f32, f32),
+        paint: &FacePaint<'_>,
+        offset: ScreenPoint,
+    ) {
+        let (center_x, center_y) = box_center(footprint);
+        let radius = footprint.width.min(footprint.height) / 2.0;
+        let (rx, ry) = ellipse_radii(radius);
+        let base = project_point(center_x, center_y, base_z, offset);
+        let top = project_point(center_x, center_y, top_z, offset);
+        let side_stroke = paint
+            .side_stroke
+            .map(|stroke| format!(r#"{} stroke-linejoin="round""#, stroke_attributes(stroke)))
+            .unwrap_or_default();
+        let halves = [
+            (
+                paint.left.as_deref(),
+                // Left half: from the leftmost base point down around to the front, up to the
+                // front of the top, back around to the leftmost top point.
+                format!(
+                    "M {} {} A {} {} 0 0 0 {} {} L {} {} A {} {} 0 0 1 {} {} Z",
+                    format_number(base.x - rx),
+                    format_number(base.y),
+                    format_number(rx),
+                    format_number(ry),
+                    format_number(base.x),
+                    format_number(base.y + ry),
+                    format_number(top.x),
+                    format_number(top.y + ry),
+                    format_number(rx),
+                    format_number(ry),
+                    format_number(top.x - rx),
+                    format_number(top.y)
+                ),
+            ),
+            (
+                paint.right.as_deref(),
+                format!(
+                    "M {} {} A {} {} 0 0 0 {} {} L {} {} A {} {} 0 0 1 {} {} Z",
+                    format_number(base.x),
+                    format_number(base.y + ry),
+                    format_number(rx),
+                    format_number(ry),
+                    format_number(base.x + rx),
+                    format_number(base.y),
+                    format_number(top.x + rx),
+                    format_number(top.y),
+                    format_number(rx),
+                    format_number(ry),
+                    format_number(top.x),
+                    format_number(top.y + ry)
+                ),
+            ),
+        ];
+        if top_z > base_z {
+            for (fill, data) in halves {
+                if fill.is_none() && paint.side_stroke.is_none() {
+                    continue;
+                }
+                self.line(
+                    depth,
+                    &format!(
+                        r#"<path d="{data}" fill="{}"{side_stroke}/>"#,
+                        fill.unwrap_or("none")
+                    ),
+                );
+            }
+        }
+        if paint.top.is_some() || paint.top_stroke.is_some() {
+            let top_stroke = paint
+                .top_stroke
+                .map(|stroke| format!(" {}", stroke_attributes(stroke)))
+                .unwrap_or_default();
+            self.line(
+                depth,
+                &format!(
+                    r#"<ellipse cx="{}" cy="{}" rx="{}" ry="{}" fill="{}"{top_stroke}/>"#,
+                    format_number(top.x),
+                    format_number(top.y),
+                    format_number(rx),
+                    format_number(ry),
+                    paint.top.as_deref().unwrap_or("none")
+                ),
+            );
+        }
     }
 
     /// The block's footprint at its base, moved `dy` down on screen and blurred, so the
@@ -767,7 +934,7 @@ impl<'a> SvgWriter<'a> {
         let members: Vec<&Part> = node
             .parts
             .iter()
-            .filter(|part| plane_member(node.tag, part.name))
+            .filter(|part| plane_member(node.tag, part.name) && label.parts.holds(part.name))
             .collect();
         let (axis, pivot) = label_axis(&members);
         let members: Vec<Part> = members

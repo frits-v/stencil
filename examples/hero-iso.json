@@ -84,8 +84,8 @@
     { "line": "gray", "text": "service call" }
   ],
   "links": [
-    { "from": "router", "to": "gateway", "line": "solid", "tint": 1, "label": "VLAN 1", "from_side": "right", "to_side": "left" },
-    { "from": "router", "to": "gateway", "line": "dash", "label": "VLAN 2", "from_side": "bottom", "to_side": "bottom" },
+    { "from": "router", "to": "gateway", "line": "solid", "tint": 1, "label": "VLAN 1", "to_side": "left" },
+    { "from": "router", "to": "gateway", "line": "dash", "label": "VLAN 2", "from_side": "left", "to_side": "bottom" },
     { "from": "gateway", "to": "model", "line": "gray" },
     { "from": "model", "to": "warehouse", "line": "gray" }
   ]
