@@ -50,15 +50,15 @@ pub fn shape_footprint_px(shape: Shape) -> f32 {
         Shape::Tower => 44.0,
         Shape::Cylinder | Shape::Stack => 56.0,
         Shape::Block => 64.0,
-        Shape::Figure => 36.0,
+        Shape::Figure => 44.0,
         Shape::Laptop => 56.0,
-        Shape::Phone => 28.0,
+        Shape::Phone => 36.0,
     }
 }
 
 /// Floor kept clear under an item's floor text under iso: the strip the tallest shape in
 /// the next row covers on screen, plus the clearance (section 12.3).
-pub const ISO_FLOOR_TEXT_RESERVE_PX: f32 = 44.0 + ISO_LABEL_CLEARANCE_PX;
+pub const ISO_FLOOR_TEXT_RESERVE_PX: f32 = 56.0 + ISO_LABEL_CLEARANCE_PX;
 
 /// The height of an item's solid under iso, by shape (section 12.3).
 pub fn shape_height_px(shape: Shape) -> f32 {
@@ -69,8 +69,9 @@ pub fn shape_height_px(shape: Shape) -> f32 {
         Shape::Cylinder => 36.0,
         Shape::Stack => 30.0,
         Shape::Block => ISO_BLOCK_HEIGHT_PX,
-        Shape::Figure => 44.0,
-        Shape::Laptop | Shape::Phone => 40.0,
+        Shape::Figure => 56.0,
+        Shape::Laptop => 40.0,
+        Shape::Phone => 44.0,
     }
 }
 

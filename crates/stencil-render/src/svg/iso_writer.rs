@@ -344,14 +344,16 @@ impl<'a> SvgWriter<'a> {
                 if solid.opaque {
                     self.write_round_shadow(depth, figure.torso, solid.base_z, offset);
                 }
+                // A figure is a dark silhouette, not a pale block.
+                let ink = self.palette.figure_paint();
                 self.write_cylinder(
                     depth,
                     figure.torso,
                     (solid.base_z, figure.torso_top_z),
-                    &paint,
+                    &ink,
                     offset,
                 );
-                self.write_head(depth, &figure, &paint, offset);
+                self.write_head(depth, &figure, &ink, offset);
             }
             Shape::Laptop => {
                 let (base, screen) = sprites::laptop(solid.footprint);

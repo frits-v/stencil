@@ -15,10 +15,12 @@ const TORSO_HEIGHT_SHARE: f32 = 0.56;
 const NECK_PX: f32 = 2.0;
 /// A laptop's base plate height.
 pub const LAPTOP_BASE_PX: f32 = 3.0;
-/// Depth of a laptop screen and of a phone, along y.
+/// Depth of a laptop screen, along y.
 const SLAB_DEPTH_PX: f32 = 4.0;
+/// Depth of a phone, along y.
+const PHONE_DEPTH_PX: f32 = 6.0;
 /// A phone's width as a share of its footprint side.
-const PHONE_WIDTH_SHARE: f32 = 0.5;
+const PHONE_WIDTH_SHARE: f32 = 0.6;
 /// Inset of a screen panel from the edges of the face it lies on.
 pub const SCREEN_INSET_PX: f32 = 3.0;
 /// Points sampled around each ellipse and circle of an outline.
@@ -69,9 +71,9 @@ pub(crate) fn phone(footprint: BoxRect) -> BoxRect {
     let width = footprint.width * PHONE_WIDTH_SHARE;
     BoxRect {
         x: footprint.x + (footprint.width - width) / 2.0,
-        y: footprint.y + (footprint.height - SLAB_DEPTH_PX) / 2.0,
+        y: footprint.y + (footprint.height - PHONE_DEPTH_PX) / 2.0,
         width,
-        height: SLAB_DEPTH_PX,
+        height: PHONE_DEPTH_PX,
     }
 }
 
@@ -180,20 +182,21 @@ mod tests {
             (screen.x, screen.y, screen.width, screen.height),
             (100.0, 200.0, 56.0, SLAB_DEPTH_PX)
         );
-        let slab = phone(footprint(28.0));
-        assert!((slab.width - 14.0).abs() < 1e-3);
-        assert!((slab.x + slab.width / 2.0 - 114.0).abs() < 1e-3);
-        assert!((slab.y + slab.height / 2.0 - 214.0).abs() < 1e-3);
+        let slab = phone(footprint(36.0));
+        assert!((slab.width - 21.6).abs() < 1e-3);
+        assert!((slab.height - PHONE_DEPTH_PX).abs() < 1e-3);
+        assert!((slab.x + slab.width / 2.0 - 118.0).abs() < 1e-3);
+        assert!((slab.y + slab.height / 2.0 - 218.0).abs() < 1e-3);
     }
 
     #[test]
     fn a_front_panel_lies_on_the_front_face_inset_from_its_edges() {
-        let slab = phone(footprint(28.0));
-        let panel = front_panel(slab, (0.0, 40.0), ZERO_OFFSET);
+        let slab = phone(footprint(36.0));
+        let panel = front_panel(slab, (0.0, 44.0), ZERO_OFFSET);
         let expected = project_point(
             slab.x + SCREEN_INSET_PX,
             slab.bottom(),
-            40.0 - SCREEN_INSET_PX,
+            44.0 - SCREEN_INSET_PX,
             ZERO_OFFSET,
         );
         assert_eq!(panel[0], expected);
@@ -203,9 +206,9 @@ mod tests {
     #[test]
     fn every_outline_is_convex_and_holds_its_parts() {
         for outline in [
-            figure_outline(footprint(36.0), 0.0, 44.0),
+            figure_outline(footprint(44.0), 0.0, 56.0),
             laptop_outline(footprint(56.0), 0.0, 40.0),
-            phone_outline(footprint(28.0), 0.0, 40.0),
+            phone_outline(footprint(36.0), 0.0, 44.0),
         ] {
             assert!(outline.len() >= 4, "{outline:?}");
             let hull = convex_hull(&outline);
