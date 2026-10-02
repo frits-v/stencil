@@ -2949,6 +2949,47 @@ fn a_band_legend_entry_draws_a_bar_swatch_and_a_tube_entry_a_wire() {
     }
 }
 
+/// A patterned band is drawn hollow in its pattern, and so is its legend bar: page
+/// background inside, the line's dasharray on the outline.
+#[test]
+fn a_dashed_band_legend_entry_draws_a_hollow_bar_in_its_pattern() {
+    fn dash_every_tint_4_line(value: &mut Value) {
+        match value {
+            Value::Object(object) => {
+                if object.get("tint") == Some(&json!(4)) && object.contains_key("line") {
+                    object.insert("line".to_string(), json!("dash"));
+                }
+                for member in object.values_mut() {
+                    dash_every_tint_4_line(member);
+                }
+            }
+            Value::Array(members) => members.iter_mut().for_each(dash_every_tint_4_line),
+            _ => {}
+        }
+    }
+    let mut document: Value = serde_json::from_str(ONPREM_JSON).unwrap();
+    dash_every_tint_4_line(&mut document);
+    let page: Page = serde_json::from_value(document).unwrap();
+    let band_index = page
+        .legend
+        .iter()
+        .position(|entry| entry.form == PipeForm::Band)
+        .expect("the VLAN 99 band entry");
+    assert_eq!(page.legend[band_index].line, Line::Dash);
+    let geometry = common::layout_with_cosmic_text(&page);
+    let iso = render_svg(&page, &geometry).unwrap();
+    let document = common::parse_xml(&iso.svg);
+    let group = common::group(&document, &format!("/legend/{band_index}"));
+    let bars = common::children_named(group, "rect");
+    assert_eq!(bars.len(), 1);
+    assert_eq!(bars[0].attribute("fill"), Some("#FFFFFF"));
+    assert_eq!(bars[0].attribute("stroke-width"), Some("1.5"));
+    assert!(
+        bars[0].attribute("stroke-dasharray").is_some(),
+        "the bar's outline carries the dash pattern"
+    );
+}
+
 /// Section 12.3 rule 5: a deny line ends in a stop plate at its arrowed end, a wall across
 /// the run, and carries no ring at its other end; a deny link gets the same plate.
 #[test]
