@@ -16,13 +16,16 @@ fi
 echo "land: watching ci run $run for $head at ${sha:0:7}"
 gh run watch "$run" --exit-status
 
-# Code scanning and required checks settle after CI; wait up to 20 minutes for the rules.
+# Code scanning and required checks settle after CI; retry the merge for up to 20 minutes.
 for attempt in $(seq 1 60); do
-  state=$(gh pr view "$pr" --json mergeStateStatus --jq .mergeStateStatus)
-  case "$state" in
-    CLEAN|UNSTABLE|HAS_HOOKS) break ;;
-    DIRTY) echo "land: $pr conflicts with its base; rebase it" >&2; exit 1 ;;
-    *) echo "land: merge state $state, attempt $attempt of 60"; sleep 20 ;;
+  if output=$(gh pr merge "$pr" --squash 2>&1); then
+    echo "$output"
+    exit 0
+  fi
+  case "$output" in
+    *"not mergeable"*) echo "land: not mergeable yet, attempt $attempt of 60"; sleep 20 ;;
+    *) echo "$output" >&2; exit 1 ;;
   esac
 done
-gh pr merge "$pr" --squash
+echo "land: gave up on $pr after 60 attempts" >&2
+exit 1
