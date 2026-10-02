@@ -1,7 +1,7 @@
 {
   "title": "One web path from the load balancer to the data layer.",
   "kicker": "Data platform · cover figure",
-  "lede": "Requests enter at the load balancer, run through the web tier to the API, and land in the database and the object store.",
+  "lede": "Requests enter at the load balancer, run through the web tier to the API, and land in the database, reached over private services access, and the object store.",
   "width": 1100,
   "canvas": "customer",
   "grammar": "gcp",
@@ -37,33 +37,36 @@
               ]
             },
             {
-              "tag": "Box",
-              "kind": "vpc",
-              "label": "Shared VPC · europe-west4",
+              "tag": "Col",
+              "gap": 32,
               "children": [
                 {
-                  "tag": "Row",
-                  "gap": 64,
-                  "grow": [
-                    0
-                  ],
+                  "tag": "Box",
+                  "kind": "vpc",
+                  "label": "Shared VPC · europe-west4",
                   "children": [
                     {
-                      "tag": "Item",
-                      "id": "web",
-                      "kind": "product",
-                      "icon": "compute-engine",
-                      "title": "Web tier",
-                      "subtitle": "Compute Engine"
+                      "tag": "Row",
+                      "gap": 64,
+                      "grow": [
+                        0
+                      ],
+                      "children": [
+                        {
+                          "tag": "Item",
+                          "id": "web",
+                          "kind": "product",
+                          "icon": "compute-engine",
+                          "title": "Web tier",
+                          "subtitle": "Compute Engine"
+                        }
+                      ]
                     }
                   ]
                 },
                 {
-                  "tag": "Row",
-                  "gap": 64,
-                  "grow": [
-                    0
-                  ],
+                  "tag": "Col",
+                  "justify": "center",
                   "children": [
                     {
                       "tag": "Item",
@@ -71,7 +74,13 @@
                       "kind": "product",
                       "icon": "cloud-sql",
                       "title": "Database",
-                      "subtitle": "Cloud SQL"
+                      "subtitle": "Cloud SQL",
+                      "facts": [
+                        {
+                          "text": "private services access",
+                          "source": "built"
+                        }
+                      ]
                     }
                   ]
                 }
