@@ -34,6 +34,10 @@ People and client devices as drawn sprites, a figure, a laptop and a phone:
 
 ![Staff and customers reach the API from their own devices](docs/gallery/people-iso.png)
 
+Narrow regions with long product names, a Tee with a band arm and a figure on the branch slab:
+
+![Two narrow regions share one Interconnect through the transit hub](docs/gallery/transit-iso.png)
+
 `examples/onepager.json`: a design one-pager with text blocks, callouts and numbered links tracing one request.
 
 The next three figures use the `plain` grammar.

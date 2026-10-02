@@ -22,7 +22,7 @@ use crate::styles::{text_color, text_style_for};
 use crate::{
     Axis, ContainerLook, ISO_APPROACH_PX, ISO_BLOCK_HEIGHT_PX, ISO_FLOOR_TEXT_RESERVE_PX,
     ISO_LABEL_CLEARANCE_PX, ISO_LINE_MIN_PX, ISO_SPACE_SCALE, ISO_TAG_CLEARANCE_PX, ISO_WIRE_SCALE,
-    LayoutError, NodeTag, PartName, TextAlign, shape_footprint_px,
+    LayoutError, NodeTag, PartName, TextAlign, shape_footprint_px, shape_height_px,
 };
 
 /// Taffy's node context is an index into `BuiltPage::text_leaves`.
@@ -140,8 +140,11 @@ struct Builder<'page> {
 
 /// Extra floor under a zone label under iso: the strip a child block of
 /// `ISO_BLOCK_HEIGHT_PX` covers on screen, plus the clearance (section 12.4).
-fn iso_label_reserve() -> f32 {
-    ISO_BLOCK_HEIGHT_PX + ISO_LABEL_CLEARANCE_PX
+/// The floor a zone label keeps clear below it under iso: the tallest solid among the
+/// zone's items, a card at least, plus the clearance, since a solid in the first row stands
+/// in front of the label on screen (section 12.4).
+fn iso_label_reserve(tallest_px: f32) -> f32 {
+    tallest_px.max(ISO_BLOCK_HEIGHT_PX) + ISO_LABEL_CLEARANCE_PX
 }
 
 /// The shortest line a run wraps to under iso: a name, a zone or frame label and a tag
@@ -1027,6 +1030,23 @@ impl Builder<'_> {
     /// A Box laid out from its container kind (section 13.1): a frame kind as section 2.4's
     /// gcp zone with bar and body, every other role as the non-gcp zone, with the kind's
     /// border width, padding and label style.
+    /// The height of the tallest solid any item below `nodes` stands as under iso; 0 with
+    /// no item.
+    fn tallest_shape_px(&self, nodes: &[Node]) -> f32 {
+        nodes
+            .iter()
+            .map(|node| match node {
+                Node::Item(item) => {
+                    shape_height_px(item_shape(self.grammar.item(&item.kind), item))
+                }
+                Node::Row(row) => self.tallest_shape_px(&row.children),
+                Node::Col(col) => self.tallest_shape_px(&col.children),
+                Node::Box(inner) => self.tallest_shape_px(&inner.children),
+                _ => 0.0,
+            })
+            .fold(0.0, f32::max)
+    }
+
     fn add_box(
         &mut self,
         box_node: &BoxNode,
@@ -1085,8 +1105,9 @@ impl Builder<'_> {
         });
         let label_style = container_label_style(kind.label);
         let label_leaf_style = if self.iso {
+            let tallest = self.tallest_shape_px(&box_node.children);
             Style {
-                margin: margins(0.0, 0.0, iso_label_reserve(), 0.0),
+                margin: margins(0.0, 0.0, iso_label_reserve(tallest), 0.0),
                 ..base_style()
             }
         } else {
@@ -1696,6 +1717,9 @@ impl Builder<'_> {
             ..base_style()
         };
         let spine = self.plain_leaf(spine_style, tee_node, &pointer)?;
+        // Under iso the arms are tubes or bands with raised tags, so the hub pill keeps the
+        // tag clearance from both arms.
+        let hub_gap = if self.iso { ISO_TAG_CLEARANCE_PX } else { 0.0 };
         let hub_style = Style {
             grid_row: line(2),
             grid_column: Line {
@@ -1703,6 +1727,7 @@ impl Builder<'_> {
                 end: line(3),
             },
             justify_self: Some(AlignSelf::CENTER),
+            margin: margins(hub_gap, 0.0, hub_gap, 0.0),
             padding: sides(6.0, 8.0, 6.0, 8.0),
             border: sides(1.5, 1.5, 1.5, 1.5),
             ..flex_column(AlignItems::CENTER)

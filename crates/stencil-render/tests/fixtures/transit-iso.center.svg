@@ -1,0 +1,207 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1972.45" height="1347.7" viewBox="0 0 1972.45 1347.7">
+  <rect x="0" y="0" width="1972.45" height="1347.7" fill="#FFFFFF"/>
+  <defs><filter id="stencil-shadow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2.5"/></filter></defs>
+  <g data-id="" data-tag="Page" data-projection="iso">
+    <g data-id="/kicker" data-tag="Kicker">
+      <rect x="20" y="20" width="77.14" height="16" rx="4" fill="#E8F0FE"/>
+      <text x="27" y="31.64" xml:space="preserve" font-family="Inter" font-size="10" font-weight="800" letter-spacing="0.7" fill="#174EA6">CUSTOMER</text>
+      <text x="103.14" y="32" xml:space="preserve" font-family="Inter" font-size="11" font-weight="700" letter-spacing="0.88" fill="#1A73E8">LANDING ZONE · TRANSIT</text>
+    </g>
+    <g data-id="/title" data-tag="Title">
+      <text x="20" y="61.28" xml:space="preserve" font-family="Inter" font-size="20" font-weight="700" letter-spacing="-0.4" fill="#202124">Two narrow regions share one Interconnect through the transit hub.</text>
+    </g>
+    <g data-id="/lede" data-tag="Lede">
+      <text x="20" y="82.53" xml:space="preserve" font-family="Inter" font-size="13" font-weight="400" fill="#5F6368">Long product names in narrow regions, one Tee with a band arm, under the isometric projection.</text>
+    </g>
+    <g data-id="/body" data-tag="Body">
+      <g data-id="/body/0" data-tag="Row">
+        <g data-id="/body/0/children/0" data-tag="Zone" data-kind="onprem">
+          <polygon points="20,473.3 425.52,707.43 425.52,701.43 20,467.3" fill="#DED6D1"/>
+          <polygon points="1058.93,341.73 425.52,707.43 425.52,701.43 1058.93,335.73" fill="#CDC0BA"/>
+          <polygon points="653.41,101.6 1058.93,335.73 425.52,701.43 20,467.3" fill="#EFEBE9"/>
+          <g data-plane="6" data-axis="x" transform="matrix(0.87 0.5 -0.87 0.5 724.08 40.8)">
+            <text x="60.5" y="156.56" xml:space="preserve" font-family="Inter" font-size="15" font-weight="700" fill="#5F6368">Branch office</text>
+          </g>
+          <g data-id="/body/0/children/0/children/0" data-tag="Col">
+            <g data-id="/body/0/children/0/children/0/children/0" data-tag="Pcard">
+              <polygon points="728.43,272.41 783.86,304.41 728.43,336.41 673.01,304.41" fill="#202124" fill-opacity="0.2" filter="url(#stencil-shadow)"/>
+              <polygon points="673.01,301.41 728.43,333.41 728.43,327.41 673.01,295.41" fill="#EBEBEB" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
+              <polygon points="783.86,301.41 728.43,333.41 728.43,327.41 783.86,295.41" fill="#D6D6D6" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
+              <polygon points="728.43,263.41 783.86,295.41 728.43,327.41 673.01,295.41" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
+              <g data-plane="12" data-axis="x" transform="matrix(0.87 0.5 -0.87 0.5 724.08 34.8)">
+                <rect x="245.13" y="241.6" width="36" height="36" rx="6" fill="#202124" fill-opacity="0.18"/>
+                <rect x="245.63" y="240.6" width="35" height="35" rx="5.5" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1"/>
+                <image x="249.13" y="244.1" width="28" height="28" href="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyBpZD0ic3RhbmRhcmRfcHJvZHVjdF9pY29uIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZlcnNpb249IjEuMSIgdmlld0JveD0iMCAwIDUxMiA1MTIiPgogIDwhLS0gR2VuZXJhdG9yOiBBZG9iZSBJbGx1c3RyYXRvciAyOS4yLjEsIFNWRyBFeHBvcnQgUGx1Zy1JbiAuIFNWRyBWZXJzaW9uOiAyLjEuMCBCdWlsZCAxMTYpICAtLT4KICA8ZyBpZD0iYm91bmRpbmdfYm94Ij4KICAgIDxyZWN0IHdpZHRoPSI1MTIiIGhlaWdodD0iNTEyIiBmaWxsPSJub25lIi8+CiAgPC9nPgogIDxnIGlkPSJhcnQiPgogICAgPHBhdGggZD0iTTMzMS42NiwzMzEuNjZsLTIyLjYyNy0yMi42MjdjMjkuMjQyLTI5LjI0MywyOS4yNDItNzYuODIzLDAtMTA2LjA2NmwyMi42MjctMjIuNjI3YzQxLjcyLDQxLjcxOSw0MS43MiwxMDkuNjAyLDAsMTUxLjMyaDBaIiBmaWxsPSIjOWFhMGE2Ii8+CiAgICA8cGF0aCBkPSJNMTgwLjM0LDMzMS42NmMtNDEuNzItNDEuNzE5LTQxLjcyLTEwOS42MDIsMC0xNTEuMzJsMjIuNjI3LDIyLjYyN2MtMjkuMjQyLDI5LjI0My0yOS4yNDIsNzYuODIzLDAsMTA2LjA2NmwtMjIuNjI3LDIyLjYyN1oiIGZpbGw9IiM5YWEwYTYiLz4KICAgIDxwYXRoIGQ9Ik0zMDkuMDMzLDIwMi45NjdjLTI5LjI0Mi0yOS4yNDItNzYuODI0LTI5LjI0Mi0xMDYuMDY2LDBsLTIyLjYyNy0yMi42MjdjMjAuMjEtMjAuMjEsNDcuMDgtMzEuMzQsNzUuNjYtMzEuMzRzNTUuNDUsMTEuMTMsNzUuNjYsMzEuMzRsLTIyLjYyNywyMi42MjdoMFoiIGZpbGw9IiM0Mjg1ZjQiLz4KICAgIDxwYXRoIGQ9Ik0yNTYsMzYzYy0yOC41OCwwLTU1LjQ1LTExLjEzLTc1LjY2LTMxLjM0bDIyLjYyNy0yMi42MjdjMjkuMjQyLDI5LjI0Miw3Ni44MjQsMjkuMjQyLDEwNi4wNjYsMGwyMi42MjcsMjIuNjI3Yy0yMC4yMSwyMC4yMS00Ny4wOCwzMS4zNC03NS42NiwzMS4zNFoiIGZpbGw9IiM0Mjg1ZjQiLz4KICAgIDxwYXRoIGQ9Ik0xNzAuMjI5LDE0Ny42MDNjNS40MDYtOS4yNTYsOC41MjEtMjAuMDA3LDguNTIxLTMxLjQ3OCwwLTM0LjUzMS0yOC4wOTQtNjIuNjI1LTYyLjYyNS02Mi42MjVzLTYyLjYyNSwyOC4wOTQtNjIuNjI1LDYyLjYyNSwyOC4wOTQsNjIuNjI1LDYyLjYyNSw2Mi42MjVjMTEuNDcxLDAsMjIuMjIyLTMuMTE0LDMxLjQ3OC04LjUybDQ1LjI4MSw0NS4yODFjNS44MzEtOS4wNywxMy41NTctMTYuNzk2LDIyLjYyNy0yMi42MjdsLTQ1LjI4MS00NS4yODFoLS4wMDFaTTExNi4xMjUsMTQ2Ljc1Yy0xNi44ODcsMC0zMC42MjUtMTMuNzM4LTMwLjYyNS0zMC42MjVzMTMuNzM4LTMwLjYyNSwzMC42MjUtMzAuNjI1LDMwLjYyNSwxMy43MzgsMzAuNjI1LDMwLjYyNS0xMy43MzgsMzAuNjI1LTMwLjYyNSwzMC42MjVaIiBmaWxsPSIjNDI4NWY0Ii8+CiAgICA8cGF0aCBkPSJNMjE1LjUxLDMxOS4xMTdjLTkuMDctNS44MzEtMTYuNzk2LTEzLjU1Ny0yMi42MjctMjIuNjI3bC00NS4yODEsNDUuMjgxYy05LjI1Ni01LjQwNi0yMC4wMDctOC41Mi0zMS40NzgtOC41Mi0zNC41MzEsMC02Mi42MjUsMjguMDk0LTYyLjYyNSw2Mi42MjVzMjguMDk0LDYyLjYyNSw2Mi42MjUsNjIuNjI1LDYyLjYyNS0yOC4wOTQsNjIuNjI1LTYyLjYyNWMwLTExLjQ3MS0zLjExNC0yMi4yMjItOC41MjEtMzEuNDc4bDQ1LjI4MS00NS4yODFoMFpNMTE2LjEyNSw0MjYuNWMtMTYuODg3LDAtMzAuNjI1LTEzLjczOC0zMC42MjUtMzAuNjI1czEzLjczOC0zMC42MjUsMzAuNjI1LTMwLjYyNSwzMC42MjUsMTMuNzM4LDMwLjYyNSwzMC42MjUtMTMuNzM4LDMwLjYyNS0zMC42MjUsMzAuNjI1WiIgZmlsbD0iIzlhYTBhNiIvPgogICAgPHBhdGggZD0iTTM5NS44NzUsMzMzLjI1Yy0xMS40NzEsMC0yMi4yMjIsMy4xMTQtMzEuNDc4LDguNTJsLTQ1LjI4MS00NS4yODFjLTUuODMxLDkuMDctMTMuNTU3LDE2Ljc5Ni0yMi42MjcsMjIuNjI3bDQ1LjI4MSw0NS4yODFjLTUuNDA2LDkuMjU2LTguNTIxLDIwLjAwNy04LjUyMSwzMS40NzgsMCwzNC41MzEsMjguMDk0LDYyLjYyNSw2Mi42MjUsNjIuNjI1czYyLjYyNS0yOC4wOTQsNjIuNjI1LTYyLjYyNS0yOC4wOTQtNjIuNjI1LTYyLjYyNS02Mi42MjVoLjAwMVpNMzk1Ljg3NSw0MjYuNWMtMTYuODg3LDAtMzAuNjI1LTEzLjczOC0zMC42MjUtMzAuNjI1czEzLjczOC0zMC42MjUsMzAuNjI1LTMwLjYyNSwzMC42MjUsMTMuNzM4LDMwLjYyNSwzMC42MjUtMTMuNzM4LDMwLjYyNS0zMC42MjUsMzAuNjI1WiIgZmlsbD0iIzQyODVmNCIvPgogICAgPHBhdGggZD0iTTM5NS44NzUsNTMuNWMtMzQuNTMxLDAtNjIuNjI1LDI4LjA5NC02Mi42MjUsNjIuNjI1LDAsMTEuNjQ1LDMuMjA1LDIyLjU1MSw4Ljc2NCwzMS45MDJsLTQ1LjExOCw0NS4xMThjOS4wMyw1Ljg4NywxNi43MDcsMTMuNjYzLDIyLjQ4MSwyMi43NzNsNDUuNDQ0LTQ1LjQ0NGM5LjE2LDUuMjU1LDE5Ljc1OCw4LjI3NiwzMS4wNTQsOC4yNzYsMzQuNTMxLDAsNjIuNjI1LTI4LjA5NCw2Mi42MjUtNjIuNjI1cy0yOC4wOTQtNjIuNjI1LTYyLjYyNS02Mi42MjVaTTM5NS44NzUsMTQ2Ljc1Yy0xNi44ODcsMC0zMC42MjUtMTMuNzM4LTMwLjYyNS0zMC42MjVzMTMuNzM4LTMwLjYyNSwzMC42MjUtMzAuNjI1LDMwLjYyNSwxMy43MzgsMzAuNjI1LDMwLjYyNS0xMy43MzgsMzAuNjI1LTMwLjYyNSwzMC42MjVaIiBmaWxsPSIjOWFhMGE2Ii8+CiAgPC9nPgo8L3N2Zz4="/>
+              </g>
+              <g data-plane="6" data-axis="x" transform="matrix(0.87 0.5 -0.87 0.5 724.08 40.8)">
+                <text x="215.13" y="316.89" xml:space="preserve" font-family="Inter" font-size="16.9" font-weight="700" fill="#202124">Edge router</text>
+                <text x="196.13" y="336.91" xml:space="preserve" font-family="Inter" font-size="15.6" font-weight="400" fill="#5F6368">Cloud Router peer</text>
+              </g>
+            </g>
+            <g data-id="/body/0/children/0/children/0/children/1" data-tag="Pcard">
+              <ellipse cx="584.24" cy="387.66" rx="13.67" ry="7.89" fill="#202124" fill-opacity="0.2" filter="url(#stencil-shadow)"/>
+              <path d="M 570.57 384.66 A 13.67 7.89 0 0 0 584.24 392.55 L 584.24 367.91 A 13.67 7.89 0 0 1 570.57 360.02 Z" fill="#EBEBEB" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
+              <path d="M 584.24 392.55 A 13.67 7.89 0 0 0 597.91 384.66 L 597.91 360.02 A 13.67 7.89 0 0 1 584.24 367.91 Z" fill="#D6D6D6" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
+              <ellipse cx="584.24" cy="360.02" rx="13.67" ry="7.89" fill="#FFFFFF"  stroke="#DADCE0" stroke-width="1.5"/>
+              <circle cx="584.24" cy="349.34" r="8.68" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
+              <g data-plane="6" data-axis="x" transform="matrix(0.87 0.5 -0.87 0.5 724.08 40.8)">
+                <text x="208.61" y="469.39" xml:space="preserve" font-family="Inter" font-size="16.9" font-weight="700" fill="#202124">Branch users</text>
+                <text x="152.26" y="489.41" xml:space="preserve" font-family="Inter" font-size="15.6" font-weight="400" fill="#5F6368">SD-WAN, no direct cloud path</text>
+              </g>
+            </g>
+          </g>
+        </g>
+        <g data-id="/body/0/children/1" data-tag="Col">
+          <g data-id="/body/0/children/1/children/0" data-tag="Tee" data-kind="blue">
+            <polygon points="1081.45,367.73 1081.59,366.52 1082.03,365.56 1082.72,364.92 1083.61,364.65 1084.66,364.75 1085.78,365.23 1086.9,366.04 1087.94,367.15 1088.84,368.46 1089.53,369.89 1089.96,371.35 1090.11,372.73 1089.96,373.94 1089.53,374.89 1088.84,375.53 1087.94,375.81 1086.9,375.7 1085.78,375.23 1084.66,374.41 1083.61,373.31 1082.72,371.99 1082.03,370.56 1081.59,369.11" fill="#1A73E8"/>
+            <polygon points="1082.72,364.92 955.93,438.12 958.99,443.43 1085.78,370.23" fill="#5295EE"/>
+            <polygon points="1085.78,370.23 958.99,443.43 962.05,448.73 1088.84,375.53" fill="#1A73E8"/>
+            <polygon points="954.66,440.93 954.81,439.72 955.24,438.76 955.93,438.12 956.83,437.85 957.87,437.95 958.99,438.43 960.11,439.24 961.16,440.35 962.05,441.66 962.74,443.09 963.17,444.55 963.32,445.93 963.17,447.14 962.74,448.09 962.05,448.73 961.16,449.01 960.11,448.9 958.99,448.43 957.87,447.61 956.83,446.51 955.93,445.19 955.24,443.76 954.81,442.31" fill="#104EA0"/>
+            <g data-plane="10" data-axis="x" transform="matrix(0.87 0.5 -0.87 0.5 724.08 36.8)">
+              <rect x="600.75" y="175.91" width="264.26" height="33.78" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
+              <text x="609.5" y="198.47" xml:space="preserve" font-family="Inter" font-size="15.6" font-weight="700" fill="#202124">Dedicated Interconnect · Metro 1</text>
+            </g>
+            <g data-id="/body/0/children/1/children/0/arms/0" data-tag="Pipe" data-kind="blue">
+              <polygon points="1094.63,381.12 1409.21,562.74 1391.89,572.74 1077.31,391.12" fill="#1A73E8"/>
+              <polygon points="1421.34,579.74 1416.14,558.74 1384.97,576.74" fill="#1A73E8"/>
+              <g data-plane="0" data-axis="x" transform="matrix(0.87 0.5 -0.87 0.5 724.08 46.8)">
+                <rect x="687.4" y="102.35" width="104.95" height="56.06" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
+                <text x="712.67" y="124.91" xml:space="preserve" font-family="Inter" font-size="15.6" font-weight="700" fill="#202124">VLAN 1</text>
+                <text x="696.15" y="147.19" xml:space="preserve" font-family="Inter" font-size="15.6" font-weight="600" fill="#5F6368">EAD 1 · BGP</text>
+              </g>
+            </g>
+            <g data-id="/body/0/children/1/children/0/arms/1" data-tag="Pipe" data-kind="blue">
+              <polygon points="973.52,446.04 973.67,444.66 974.1,443.2 974.79,441.77 975.69,440.46 976.73,439.35 977.85,438.54 978.97,438.06 980.02,437.96 980.91,438.23 981.6,438.87 982.04,439.83 982.18,441.04 982.04,442.42 981.6,443.87 980.91,445.3 980.02,446.62 978.97,447.72 977.85,448.54 976.73,449.01 975.69,449.12 974.79,448.84 974.1,448.2 973.67,447.25" fill="#1A73E8"/>
+              <polygon points="980.91,438.23 1312.82,629.86 1309.76,635.16 977.85,443.54" fill="#5295EE"/>
+              <polygon points="977.85,443.54 1309.76,635.16 1306.7,640.47 974.79,448.84" fill="#1A73E8"/>
+              <polygon points="1305.43,637.66 1305.58,636.28 1306.01,634.83 1306.7,633.4 1307.6,632.08 1308.64,630.98 1309.76,630.16 1310.88,629.69 1311.93,629.58 1312.82,629.86 1313.51,630.5 1313.94,631.45 1314.09,632.66 1313.94,634.04 1313.51,635.5 1312.82,636.93 1311.93,638.24 1310.88,639.35 1309.76,640.16 1308.64,640.64 1307.6,640.74 1306.7,640.47 1306.01,639.83 1305.58,638.87" fill="#104EA0"/>
+              <polygon points="970.06,446.04 970.27,444.11 970.87,442.07 971.83,440.06 973.09,438.22 974.55,436.68 976.12,435.54 977.69,434.87 979.15,434.72 980.41,435.11 981.37,436.01 981.98,437.34 982.18,439.04 981.98,440.97 981.37,443.01 980.41,445.01 979.15,446.85 977.69,448.39 976.12,449.54 974.55,450.2 973.09,450.35 971.83,449.96 970.87,449.07 970.27,447.73" fill="#1A73E8"/>
+              <polygon points="980.41,435.11 983.87,437.11 979.59,444.54 976.12,442.54" fill="#5295EE"/>
+              <polygon points="976.12,442.54 979.59,444.54 975.3,451.96 971.83,449.96" fill="#1A73E8"/>
+              <polygon points="973.52,448.04 973.73,446.11 974.34,444.07 975.3,442.06 976.55,440.22 978.02,438.68 979.59,437.54 981.15,436.87 982.62,436.72 983.87,437.11 984.84,438.01 985.44,439.34 985.65,441.04 985.44,442.97 984.84,445.01 983.87,447.01 982.62,448.85 981.15,450.39 979.59,451.54 978.02,452.2 976.55,452.35 975.3,451.96 974.34,451.07 973.73,449.73" fill="#104EA0"/>
+              <polygon points="1301.97,637.66 1302.17,635.73 1302.78,633.69 1303.74,631.69 1305,629.85 1306.46,628.31 1308.03,627.16 1309.6,626.5 1311.06,626.35 1312.31,626.74 1313.28,627.63 1313.88,628.97 1314.09,630.66 1313.88,632.59 1313.28,634.63 1312.31,636.64 1311.06,638.48 1309.6,640.02 1308.03,641.16 1306.46,641.83 1305,641.98 1303.74,641.59 1302.78,640.69 1302.17,639.36" fill="#1A73E8"/>
+              <polygon points="1312.31,626.74 1315.78,628.74 1311.49,636.16 1308.03,634.16" fill="#5295EE"/>
+              <polygon points="1308.03,634.16 1311.49,636.16 1307.21,643.59 1303.74,641.59" fill="#1A73E8"/>
+              <polygon points="1305.43,639.66 1305.64,637.73 1306.24,635.69 1307.21,633.69 1308.46,631.85 1309.92,630.31 1311.49,629.16 1313.06,628.5 1314.52,628.35 1315.78,628.74 1316.74,629.63 1317.35,630.97 1317.55,632.66 1317.35,634.59 1316.74,636.63 1315.78,638.64 1314.52,640.48 1313.06,642.02 1311.49,643.16 1309.92,643.83 1308.46,643.98 1307.21,643.59 1306.24,642.69 1305.64,641.36" fill="#104EA0"/>
+              <g data-plane="10" data-axis="x" transform="matrix(0.87 0.5 -0.87 0.5 724.08 36.8)">
+                <rect x="685.84" y="227.19" width="108.08" height="56.06" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
+                <text x="711.12" y="249.75" xml:space="preserve" font-family="Inter" font-size="15.6" font-weight="700" fill="#202124">VLAN 2</text>
+                <text x="694.59" y="272.03" xml:space="preserve" font-family="Inter" font-size="15.6" font-weight="600" fill="#5F6368">EAD 2 · BGP</text>
+              </g>
+            </g>
+          </g>
+        </g>
+        <g data-id="/body/0/children/2" data-tag="Zone" data-kind="gcp">
+          <polygon points="849.23,952.05 1319.04,1223.3 1319.04,1217.3 849.23,946.05" fill="#1A73E8"/>
+          <polygon points="1952.45,857.6 1319.04,1223.3 1319.04,1217.3 1952.45,851.6" fill="#1257B3"/>
+          <polygon points="1482.64,580.35 1952.45,851.6 1319.04,1217.3 849.23,946.05" fill="#FAFBFC" stroke="#1A73E8" stroke-width="1.5" stroke-linejoin="round"/>
+          <g data-plane="6" data-axis="x" transform="matrix(0.87 0.5 -0.87 0.5 724.08 40.8)">
+            <text x="1026.51" y="159.14" xml:space="preserve" font-family="Inter" font-size="25.2" font-weight="700" letter-spacing="0.25" fill="#1257B3">Google Cloud</text>
+          </g>
+          <g data-id="/body/0/children/2/children/0" data-tag="Row">
+            <g data-id="/body/0/children/2/children/0/children/0" data-tag="Zone" data-kind="region-a">
+              <polygon points="928.03,964.05 1095.63,1060.81 1095.63,1054.81 928.03,958.05" fill="#ACCBF9"/>
+              <polygon points="1554.76,795.73 1095.63,1060.81 1095.63,1054.81 1554.76,789.73" fill="#85B3F7"/>
+              <polygon points="1387.17,692.97 1554.76,789.73 1095.63,1054.81 928.03,958.05" fill="#D2E3FC"/>
+              <g data-plane="12" data-axis="x" transform="matrix(0.87 0.5 -0.87 0.5 724.08 34.8)">
+                <text x="1081.51" y="330.3" xml:space="preserve" font-family="Inter" font-size="15" font-weight="700" fill="#5F6368">europe-west4</text>
+              </g>
+              <g data-id="/body/0/children/2/children/0/children/0/children/0" data-tag="Col">
+                <g data-id="/body/0/children/2/children/0/children/0/children/0/children/0" data-tag="Pcard">
+                  <polygon points="1351.88,800.1 1389.99,822.1 1351.88,844.1 1313.78,822.1" fill="#202124" fill-opacity="0.2" filter="url(#stencil-shadow)"/>
+                  <polygon points="1313.78,819.1 1351.88,841.1 1351.88,797.1 1313.78,775.1" fill="#EBEBEB" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
+                  <polygon points="1389.99,819.1 1351.88,841.1 1351.88,797.1 1389.99,775.1" fill="#D6D6D6" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
+                  <polygon points="1351.88,753.1 1389.99,775.1 1351.88,797.1 1313.78,775.1" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
+                  <g data-plane="56" data-axis="x" transform="matrix(0.87 0.5 -0.87 0.5 724.08 -9.2)">
+                    <rect x="1128.77" y="405.34" width="36" height="36" rx="6" fill="#202124" fill-opacity="0.18"/>
+                    <rect x="1129.27" y="404.34" width="35" height="35" rx="5.5" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1"/>
+                    <image x="1132.77" y="407.84" width="28" height="28" href="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyBpZD0ic3RhbmRhcmRfcHJvZHVjdF9pY29uIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZlcnNpb249IjEuMSIgdmlld0JveD0iMCAwIDUxMiA1MTIiPgogIDwhLS0gR2VuZXJhdG9yOiBBZG9iZSBJbGx1c3RyYXRvciAyOS4xLjAsIFNWRyBFeHBvcnQgUGx1Zy1JbiAuIFNWRyBWZXJzaW9uOiAyLjEuMCBCdWlsZCAxNDIpICAtLT4KICA8cmVjdCBpZD0iYm91bmRpbmdfYm94IiB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgZmlsbD0ibm9uZSIvPgogIDxnIGlkPSJhcnQiPgogICAgPHBhdGggZD0iTTIzOS44NSw0OTBjLTEuNTQsMC0zLjExLS4yMi00LjY0LS42OS02LjczLTIuMDQtMTEuMzMtOC4yNS0xMS4zMy0xNS4yOHYtMTY1Ljc5aC0xMjEuOWMtNS45LDAtMTEuMzEtMy4yNS0xNC4wOS04LjQ1LTIuNzgtNS4yLTIuNDYtMTEuNTEuODItMTYuNDFMMjU4Ljk2LDI5LjA5YzMuOTEtNS44NCwxMS4xOS04LjQ0LDE3LjkyLTYuNHMxMS4zMyw4LjI1LDExLjMzLDE1LjI4djE2NS43OGgxMjEuODJjNS45LDAsMTEuMzEsMy4yNSwxNC4wOSw4LjQ1czIuNDYsMTEuNTEtLjgxLDE2LjQxbC0xNzAuMTgsMjU0LjNjLTMuMDIsNC41MS04LjA1LDcuMDktMTMuMjgsNy4wOVpNMTMxLjg5LDI3Ni4yOWgxMDcuOTZjOC44MiwwLDE1Ljk3LDcuMTUsMTUuOTcsMTUuOTd2MTI5LjE3bDEyNC4zLTE4NS43NGgtMTA3Ljg5Yy04LjgyLDAtMTUuOTctNy4xNS0xNS45Ny0xNS45N1Y5MC41NGwtMTI0LjM3LDE4NS43NWgwWiIgZmlsbD0iIzlhYTBhNiIvPgogICAgPHBhdGggZD0iTTQxOC41NiwyMzUuN2gtMTQ2LjMzYy04LjgyLDAtMTUuOTctNy4xNS0xNS45Ny0xNS45N1YzMy4xMmMxLjQtMi4wOSwzLjAxLTUuMTIsNS42OS03LjM3LDIuNTItMi4xMSw2LjEzLTMuNzQsMTAuMjgtMy43NCw4LjgyLDAsMTUuOTcsNy4xNSwxNS45NywxNS45N3YxNjUuNzhoMTIxLjgyYzguODIsMCwxNS45Nyw3LjE1LDE1Ljk3LDE1Ljk3LDAsNS4zMy0yLjQsOC40Ni00LjEyLDEwLjk4LTEuNDYsMi4xNC0yLjM0LDMuNTItMy4zMyw0Ljk5aC4wMloiIGZpbGw9IiMyYjgwZjgiLz4KICAgIDxwYXRoIGQ9Ik0yMzkuODUsNDkwYy04LjgyLDAtMTUuOTctNy4xNS0xNS45Ny0xNS45N3YtMTk3LjczaDE1Ljk3YzguODIsMCwxNS45Nyw3LjE1LDE1Ljk3LDE1Ljk3djE4Ni42MWMtMS43NSwyLjctMy4yOCw1LjMzLTUuNDksNy4yLTIuNzMsMi4zMS02LjIxLDMuOTItMTAuNDksMy45MmguMDFaIiBmaWxsPSIjMmI4MGY4Ii8+CiAgPC9nPgo8L3N2Zz4="/>
+                  </g>
+                  <g data-plane="12" data-axis="x" transform="matrix(0.87 0.5 -0.87 0.5 724.08 34.8)">
+                    <text x="1081.51" y="470.63" xml:space="preserve" font-family="Inter" font-size="16.9" font-weight="700" fill="#202124">VMware cluster</text>
+                    <text x="1088.9" y="490.65" xml:space="preserve" font-family="Inter" font-size="15.6" font-weight="400" fill="#5F6368">Google Cloud</text>
+                    <text x="1088.9" y="509.37" xml:space="preserve" font-family="Inter" font-size="15.6" font-weight="400" fill="#5F6368">VMware Engine</text>
+                  </g>
+                </g>
+                <g data-id="/body/0/children/2/children/0/children/0/children/0/children/1" data-tag="Pcard">
+                  <polygon points="1188.01,884.71 1243.44,916.71 1188.01,948.71 1132.59,916.71" fill="#202124" fill-opacity="0.2" filter="url(#stencil-shadow)"/>
+                  <polygon points="1132.59,913.71 1188.01,945.71 1188.01,939.71 1132.59,907.71" fill="#EBEBEB" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
+                  <polygon points="1243.44,913.71 1188.01,945.71 1188.01,939.71 1243.44,907.71" fill="#D6D6D6" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
+                  <polygon points="1188.01,875.71 1243.44,907.71 1188.01,939.71 1132.59,907.71" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
+                  <g data-plane="18" data-axis="x" transform="matrix(0.87 0.5 -0.87 0.5 724.08 28.8)">
+                    <rect x="1128.77" y="594.56" width="36" height="36" rx="6" fill="#202124" fill-opacity="0.18"/>
+                    <rect x="1129.27" y="593.56" width="35" height="35" rx="5.5" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1"/>
+                    <image x="1132.77" y="597.06" width="28" height="28" href="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyBpZD0ic3RhbmRhcmRfcHJvZHVjdF9pY29uIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZlcnNpb249IjEuMSIgdmlld0JveD0iMCAwIDUxMiA1MTIiPgogIDwhLS0gR2VuZXJhdG9yOiBBZG9iZSBJbGx1c3RyYXRvciAyOS4yLjEsIFNWRyBFeHBvcnQgUGx1Zy1JbiAuIFNWRyBWZXJzaW9uOiAyLjEuMCBCdWlsZCAxMTYpICAtLT4KICA8ZyBpZD0iYm91bmRpbmdfYm94Ij4KICAgIDxyZWN0IHdpZHRoPSI1MTIiIGhlaWdodD0iNTEyIiBmaWxsPSJub25lIi8+CiAgPC9nPgogIDxnIGlkPSJhcnQiPgogICAgPHBhdGggZD0iTTMzMS42NiwzMzEuNjZsLTIyLjYyNy0yMi42MjdjMjkuMjQyLTI5LjI0MywyOS4yNDItNzYuODIzLDAtMTA2LjA2NmwyMi42MjctMjIuNjI3YzQxLjcyLDQxLjcxOSw0MS43MiwxMDkuNjAyLDAsMTUxLjMyaDBaIiBmaWxsPSIjOWFhMGE2Ii8+CiAgICA8cGF0aCBkPSJNMTgwLjM0LDMzMS42NmMtNDEuNzItNDEuNzE5LTQxLjcyLTEwOS42MDIsMC0xNTEuMzJsMjIuNjI3LDIyLjYyN2MtMjkuMjQyLDI5LjI0My0yOS4yNDIsNzYuODIzLDAsMTA2LjA2NmwtMjIuNjI3LDIyLjYyN1oiIGZpbGw9IiM5YWEwYTYiLz4KICAgIDxwYXRoIGQ9Ik0zMDkuMDMzLDIwMi45NjdjLTI5LjI0Mi0yOS4yNDItNzYuODI0LTI5LjI0Mi0xMDYuMDY2LDBsLTIyLjYyNy0yMi42MjdjMjAuMjEtMjAuMjEsNDcuMDgtMzEuMzQsNzUuNjYtMzEuMzRzNTUuNDUsMTEuMTMsNzUuNjYsMzEuMzRsLTIyLjYyNywyMi42MjdoMFoiIGZpbGw9IiM0Mjg1ZjQiLz4KICAgIDxwYXRoIGQ9Ik0yNTYsMzYzYy0yOC41OCwwLTU1LjQ1LTExLjEzLTc1LjY2LTMxLjM0bDIyLjYyNy0yMi42MjdjMjkuMjQyLDI5LjI0Miw3Ni44MjQsMjkuMjQyLDEwNi4wNjYsMGwyMi42MjcsMjIuNjI3Yy0yMC4yMSwyMC4yMS00Ny4wOCwzMS4zNC03NS42NiwzMS4zNFoiIGZpbGw9IiM0Mjg1ZjQiLz4KICAgIDxwYXRoIGQ9Ik0xNzAuMjI5LDE0Ny42MDNjNS40MDYtOS4yNTYsOC41MjEtMjAuMDA3LDguNTIxLTMxLjQ3OCwwLTM0LjUzMS0yOC4wOTQtNjIuNjI1LTYyLjYyNS02Mi42MjVzLTYyLjYyNSwyOC4wOTQtNjIuNjI1LDYyLjYyNSwyOC4wOTQsNjIuNjI1LDYyLjYyNSw2Mi42MjVjMTEuNDcxLDAsMjIuMjIyLTMuMTE0LDMxLjQ3OC04LjUybDQ1LjI4MSw0NS4yODFjNS44MzEtOS4wNywxMy41NTctMTYuNzk2LDIyLjYyNy0yMi42MjdsLTQ1LjI4MS00NS4yODFoLS4wMDFaTTExNi4xMjUsMTQ2Ljc1Yy0xNi44ODcsMC0zMC42MjUtMTMuNzM4LTMwLjYyNS0zMC42MjVzMTMuNzM4LTMwLjYyNSwzMC42MjUtMzAuNjI1LDMwLjYyNSwxMy43MzgsMzAuNjI1LDMwLjYyNS0xMy43MzgsMzAuNjI1LTMwLjYyNSwzMC42MjVaIiBmaWxsPSIjNDI4NWY0Ii8+CiAgICA8cGF0aCBkPSJNMjE1LjUxLDMxOS4xMTdjLTkuMDctNS44MzEtMTYuNzk2LTEzLjU1Ny0yMi42MjctMjIuNjI3bC00NS4yODEsNDUuMjgxYy05LjI1Ni01LjQwNi0yMC4wMDctOC41Mi0zMS40NzgtOC41Mi0zNC41MzEsMC02Mi42MjUsMjguMDk0LTYyLjYyNSw2Mi42MjVzMjguMDk0LDYyLjYyNSw2Mi42MjUsNjIuNjI1LDYyLjYyNS0yOC4wOTQsNjIuNjI1LTYyLjYyNWMwLTExLjQ3MS0zLjExNC0yMi4yMjItOC41MjEtMzEuNDc4bDQ1LjI4MS00NS4yODFoMFpNMTE2LjEyNSw0MjYuNWMtMTYuODg3LDAtMzAuNjI1LTEzLjczOC0zMC42MjUtMzAuNjI1czEzLjczOC0zMC42MjUsMzAuNjI1LTMwLjYyNSwzMC42MjUsMTMuNzM4LDMwLjYyNSwzMC42MjUtMTMuNzM4LDMwLjYyNS0zMC42MjUsMzAuNjI1WiIgZmlsbD0iIzlhYTBhNiIvPgogICAgPHBhdGggZD0iTTM5NS44NzUsMzMzLjI1Yy0xMS40NzEsMC0yMi4yMjIsMy4xMTQtMzEuNDc4LDguNTJsLTQ1LjI4MS00NS4yODFjLTUuODMxLDkuMDctMTMuNTU3LDE2Ljc5Ni0yMi42MjcsMjIuNjI3bDQ1LjI4MSw0NS4yODFjLTUuNDA2LDkuMjU2LTguNTIxLDIwLjAwNy04LjUyMSwzMS40NzgsMCwzNC41MzEsMjguMDk0LDYyLjYyNSw2Mi42MjUsNjIuNjI1czYyLjYyNS0yOC4wOTQsNjIuNjI1LTYyLjYyNS0yOC4wOTQtNjIuNjI1LTYyLjYyNS02Mi42MjVoLjAwMVpNMzk1Ljg3NSw0MjYuNWMtMTYuODg3LDAtMzAuNjI1LTEzLjczOC0zMC42MjUtMzAuNjI1czEzLjczOC0zMC42MjUsMzAuNjI1LTMwLjYyNSwzMC42MjUsMTMuNzM4LDMwLjYyNSwzMC42MjUtMTMuNzM4LDMwLjYyNS0zMC42MjUsMzAuNjI1WiIgZmlsbD0iIzQyODVmNCIvPgogICAgPHBhdGggZD0iTTM5NS44NzUsNTMuNWMtMzQuNTMxLDAtNjIuNjI1LDI4LjA5NC02Mi42MjUsNjIuNjI1LDAsMTEuNjQ1LDMuMjA1LDIyLjU1MSw4Ljc2NCwzMS45MDJsLTQ1LjExOCw0NS4xMThjOS4wMyw1Ljg4NywxNi43MDcsMTMuNjYzLDIyLjQ4MSwyMi43NzNsNDUuNDQ0LTQ1LjQ0NGM5LjE2LDUuMjU1LDE5Ljc1OCw4LjI3NiwzMS4wNTQsOC4yNzYsMzQuNTMxLDAsNjIuNjI1LTI4LjA5NCw2Mi42MjUtNjIuNjI1cy0yOC4wOTQtNjIuNjI1LTYyLjYyNS02Mi42MjVaTTM5NS44NzUsMTQ2Ljc1Yy0xNi44ODcsMC0zMC42MjUtMTMuNzM4LTMwLjYyNS0zMC42MjVzMTMuNzM4LTMwLjYyNSwzMC42MjUtMzAuNjI1LDMwLjYyNSwxMy43MzgsMzAuNjI1LDMwLjYyNS0xMy43MzgsMzAuNjI1LTMwLjYyNSwzMC42MjVaIiBmaWxsPSIjOWFhMGE2Ii8+CiAgPC9nPgo8L3N2Zz4="/>
+                  </g>
+                  <g data-plane="12" data-axis="x" transform="matrix(0.87 0.5 -0.87 0.5 724.08 34.8)">
+                    <text x="1100.15" y="669.85" xml:space="preserve" font-family="Inter" font-size="16.9" font-weight="700" fill="#202124">Transit hub</text>
+                    <text x="1100.37" y="689.87" xml:space="preserve" font-family="Inter" font-size="15.6" font-weight="400" fill="#5F6368">Network</text>
+                    <text x="1100.37" y="708.59" xml:space="preserve" font-family="Inter" font-size="15.6" font-weight="400" fill="#5F6368">Connectivity</text>
+                    <text x="1100.37" y="727.31" xml:space="preserve" font-family="Inter" font-size="15.6" font-weight="400" fill="#5F6368">Center</text>
+                  </g>
+                </g>
+              </g>
+            </g>
+            <g data-id="/body/0/children/2/children/0/children/1" data-tag="Zone" data-kind="region-b">
+              <polygon points="1107.75,1067.81 1319.04,1189.8 1319.04,1183.8 1107.75,1061.81" fill="#F8BFD2"/>
+              <polygon points="1778.17,924.72 1319.04,1189.8 1319.04,1183.8 1778.17,918.72" fill="#F49BB8"/>
+              <polygon points="1566.88,796.73 1778.17,918.72 1319.04,1183.8 1107.75,1061.81" fill="#FCE4EC"/>
+              <g data-plane="12" data-axis="x" transform="matrix(0.87 0.5 -0.87 0.5 724.08 34.8)">
+                <text x="1289.03" y="330.3" xml:space="preserve" font-family="Inter" font-size="15" font-weight="700" fill="#5F6368">europe-north1</text>
+              </g>
+              <g data-id="/body/0/children/2/children/0/children/1/children/0" data-tag="Col">
+                <g data-id="/body/0/children/2/children/0/children/1/children/0/children/0" data-tag="Pcard">
+                  <ellipse cx="1555.18" cy="937.48" rx="34.29" ry="19.8" fill="#202124" fill-opacity="0.2" filter="url(#stencil-shadow)"/>
+                  <path d="M 1520.89 934.48 A 34.29 19.8 0 0 0 1555.18 954.28 L 1555.18 918.28 A 34.29 19.8 0 0 1 1520.89 898.48 Z" fill="#EBEBEB" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
+                  <path d="M 1555.18 954.28 A 34.29 19.8 0 0 0 1589.47 934.48 L 1589.47 898.48 A 34.29 19.8 0 0 1 1555.18 918.28 Z" fill="#D6D6D6" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
+                  <ellipse cx="1555.18" cy="898.48" rx="34.29" ry="19.8" fill="#FFFFFF"  stroke="#DADCE0" stroke-width="1.5"/>
+                  <g data-plane="48" data-axis="x" transform="matrix(0.87 0.5 -0.87 0.5 724.08 -1.2)">
+                    <rect x="1361.51" y="403.34" width="36" height="36" rx="6" fill="#202124" fill-opacity="0.18"/>
+                    <rect x="1362.01" y="402.34" width="35" height="35" rx="5.5" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1"/>
+                    <image x="1365.51" y="405.84" width="28" height="28" href="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyBpZD0ic3RhbmRhcmRfcHJvZHVjdF9pY29uIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZlcnNpb249IjEuMSIgdmlld0JveD0iMCAwIDUxMiA1MTIiPgogIDwhLS0gR2VuZXJhdG9yOiBBZG9iZSBJbGx1c3RyYXRvciAyOS4wLjEsIFNWRyBFeHBvcnQgUGx1Zy1JbiAuIFNWRyBWZXJzaW9uOiAyLjEuMCBCdWlsZCAxOTIpICAtLT4KICA8ZGVmcz4KICAgIDxzdHlsZT4KICAgICAgLnN0MCB7CiAgICAgICAgZmlsbDogbm9uZTsKICAgICAgfQoKICAgICAgLnN0MSB7CiAgICAgICAgZmlsbDogIzQyODVmNDsKICAgICAgfQoKICAgICAgLnN0MiB7CiAgICAgICAgZmlsbDogIzlhYTBhNjsKICAgICAgfQogICAgPC9zdHlsZT4KICA8L2RlZnM+CiAgPGcgaWQ9ImJvdW5kaW5nX2JveCI+CiAgICA8cmVjdCBjbGFzcz0ic3QwIiB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIvPgogIDwvZz4KICA8ZyBpZD0iYXJ0Ij4KICAgIDxwYXRoIGNsYXNzPSJzdDEiIGQ9Ik0yNTYsNDkwYy00NC4yLDAtODUuOS0xMS4zLTExNy42LTMxLjgtMzMuOC0yMS45LTUyLjQtNTEuNy01Mi40LTg0di0xMTguMmgzMnYxMTguMmMwLDIxLDEzLjQsNDEuMywzNy44LDU3LjEsMjYuNSwxNy4yLDYyLjEsMjYuNywxMDAuMiwyNi43czczLjctOS41LDEwMC4yLTI2LjdjMjQuNC0xNS44LDM3LjgtMzYuMSwzNy44LTU3LjFoMzJjMCwzMi4zLTE4LjYsNjIuMS01Mi40LDg0LTMxLjYsMjAuNS03My40LDMxLjgtMTE3LjYsMzEuOFoiLz4KICAgIDxwYXRoIGNsYXNzPSJzdDIiIGQ9Ik0yNTYsMzgxYy00NC4yLDAtODUuOS0xMS4zLTExNy42LTMxLjgtMzMuOC0yMS45LTUyLjQtNTEuNy01Mi40LTg0di0xMjcuM2gzMnYxMjcuM2MwLDIxLDEzLjQsNDEuMywzNy44LDU3LjEsMjYuNSwxNy4yLDYyLjEsMjYuNywxMDAuMiwyNi43czczLjctOS41LDEwMC4yLTI2LjdjMjQuNC0xNS44LDM3LjgtMzYuMSwzNy44LTU3LjFoMzJjMCwzMi4zLTE4LjYsNjIuMS01Mi40LDg0LTMxLjYsMjAuNS03My40LDMxLjgtMTE3LjYsMzEuOFoiLz4KICAgIDxwYXRoIGNsYXNzPSJzdDIiIGQ9Ik0yNTYsNDkwdi0zMmMzOC4xLDAsNzMuNy05LjUsMTAwLjItMjYuNywyNC40LTE1LjgsMzcuOC0zNi4xLDM3LjgtNTcuMnYtMTE4LjFoMzJ2MTE4LjFjMCwzMi4zLTE4LjYsNjIuMS01Mi40LDg0LjEtMzEuNiwyMC41LTczLjQsMzEuOC0xMTcuNiwzMS44aDBaIi8+CiAgICA8cGF0aCBjbGFzcz0ic3QxIiBkPSJNMjU2LDM4MXYtMzJjMzguMSwwLDczLjctOS41LDEwMC4yLTI2LjcsMjQuNC0xNS44LDM3LjgtMzYuMSwzNy44LTU3LjJ2LTEyNy4yaDMydjEyNy4yYzAsMzIuMy0xOC42LDYyLjEtNTIuNCw4NC4xLTMxLjYsMjAuNS03My40LDMxLjgtMTE3LjYsMzEuOGgwWiIvPgogICAgPHBhdGggY2xhc3M9InN0MSIgZD0iTTI1NiwyNTMuNmMtNDQuMiwwLTg1LjktMTEuMy0xMTcuNi0zMS44LTMzLjgtMjEuOS01Mi40LTUxLjctNTIuNC04NHMxOC42LTYyLjEsNTIuNC04NGMzMS42LTIwLjUsNzMuNC0zMS44LDExNy42LTMxLjhzODYsMTEuMywxMTcuNiwzMS44YzMzLjgsMjEuOSw1Mi40LDUxLjcsNTIuNCw4NHMtMTguNiw2Mi4xLTUyLjQsODRjLTMxLjYsMjAuNS03My40LDMxLjgtMTE3LjYsMzEuOFpNMjU2LDU0Yy0zOC4xLDAtNzMuNyw5LjUtMTAwLjIsMjYuNy0yNC40LDE1LjgtMzcuOCwzNi4xLTM3LjgsNTcuMXMxMy40LDQxLjMsMzcuOCw1Ny4xYzI2LjUsMTcuMiw2Mi4xLDI2LjcsMTAwLjIsMjYuN3M3My43LTkuNSwxMDAuMi0yNi43YzI0LjQtMTUuOCwzNy44LTM2LjEsMzcuOC01Ny4xcy0xMy40LTQxLjMtMzcuOC01Ny4xYy0yNi41LTE3LjItNjIuMS0yNi43LTEwMC4yLTI2LjdaIi8+CiAgICA8cGF0aCBjbGFzcz0ic3QyIiBkPSJNMjU2LDI1My44di0zMmMzOC4xLDAsNzMuNy05LjUsMTAwLjItMjYuNywyNC40LTE1LjgsMzcuOC0zNi4yLDM3LjgtNTcuMnMtMTMuNC00MS40LTM3LjgtNTcuMmMtMjYuNS0xNy4yLTYyLjEtMjYuNy0xMDAuMi0yNi43di0zMmM0NC4yLDAsODYsMTEuMywxMTcuNiwzMS44LDMzLjgsMjEuOSw1Mi40LDUxLjgsNTIuNCw4NC4xcy0xOC42LDYyLjEtNTIuNCw4NC4xYy0zMS42LDIwLjUtNzMuNCwzMS44LTExNy42LDMxLjhoMFoiLz4KICA8L2c+Cjwvc3ZnPg=="/>
+                  </g>
+                  <g data-plane="12" data-axis="x" transform="matrix(0.87 0.5 -0.87 0.5 724.08 34.8)">
+                    <text x="1339.95" y="474.63" xml:space="preserve" font-family="Inter" font-size="16.9" font-weight="700" fill="#202124">Migration</text>
+                    <text x="1307.68" y="494.65" xml:space="preserve" font-family="Inter" font-size="15.6" font-weight="400" fill="#5F6368">Database Migration</text>
+                    <text x="1307.68" y="513.37" xml:space="preserve" font-family="Inter" font-size="15.6" font-weight="400" fill="#5F6368">Service</text>
+                  </g>
+                </g>
+                <g data-id="/body/0/children/2/children/0/children/1/children/0/children/1" data-tag="Pcard">
+                  <polygon points="1335.46,973.84 1492.19,1064.33 1404.34,1115.05 1247.62,1024.56" fill="#202124" fill-opacity="0.2" filter="url(#stencil-shadow)"/>
+                  <polygon points="1247.62,1021.56 1404.34,1112.05 1404.34,1094.05 1247.62,1003.56" fill="#EBEBEB" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
+                  <polygon points="1492.19,1061.33 1404.34,1112.05 1404.34,1094.05 1492.19,1043.33" fill="#D6D6D6" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
+                  <polygon points="1335.46,952.84 1492.19,1043.33 1404.34,1094.05 1247.62,1003.56" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
+                  <g data-plane="30" data-axis="x" transform="matrix(0.87 0.5 -0.87 0.5 724.08 16.8)">
+                    <rect x="1304.03" y="617.28" width="36" height="36" rx="6" fill="#202124" fill-opacity="0.18"/>
+                    <rect x="1304.53" y="616.28" width="35" height="35" rx="5.5" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1"/>
+                    <image x="1308.03" y="619.78" width="28" height="28" href="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyBpZD0ic3RhbmRhcmRfcHJvZHVjdF9pY29uIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZlcnNpb249IjEuMSIgdmlld0JveD0iMCAwIDUxMiA1MTIiPgogIDwhLS0gR2VuZXJhdG9yOiBBZG9iZSBJbGx1c3RyYXRvciAyOS4yLjEsIFNWRyBFeHBvcnQgUGx1Zy1JbiAuIFNWRyBWZXJzaW9uOiAyLjEuMCBCdWlsZCAxMTYpICAtLT4KICA8ZyBpZD0iYm91bmRpbmdfYm94Ij4KICAgIDxyZWN0IHdpZHRoPSI1MTIiIGhlaWdodD0iNTEyIiBmaWxsPSJub25lIi8+CiAgPC9nPgogIDxnIGlkPSJhcnQiPgogICAgPHBhdGggZD0iTTI1Ni4wMDQsMjg3LjU0MmMtNDMuMDgsMC03OC4xMjgtMzUuMDY1LTc4LjEyOC03OC4xNjdzMzUuMDQ4LTc4LjE2Nyw3OC4xMjgtNzguMTY3LDc4LjEyOSwzNS4wNjUsNzguMTI5LDc4LjE2Ny0zNS4wNDksNzguMTY3LTc4LjEyOSw3OC4xNjdaTTI1Ni4wMDQsMTYzLjIwOGMtMjUuNDM1LDAtNDYuMTI4LDIwLjcxLTQ2LjEyOCw0Ni4xNjdzMjAuNjkzLDQ2LjE2Nyw0Ni4xMjgsNDYuMTY3LDQ2LjEyOS0yMC43MSw0Ni4xMjktNDYuMTY3LTIwLjY5My00Ni4xNjctNDYuMTI5LTQ2LjE2N2gwWiIgZmlsbD0iIzQyODVmNCIvPgogICAgPHBhdGggZD0iTTE1My41MDUsMzc2LjQxNmMtLjc1MiwwLTEuNTExLS4wNTMtMi4yNzYtLjE2Mi04Ljc0OC0xLjI0NS0xNC44My05LjM0Ny0xMy41ODQtMTguMDk2LDQuMDIxLTI4LjI0NCwxOC4xMS01NC4xOTEsMzkuNjcyLTczLjA2MiwyMS43NzYtMTkuMDU5LDQ5LjcyLTI5LjU1NSw3OC42ODItMjkuNTU1LDguODM3LDAsMTYsNy4xNjMsMTYsMTZzLTcuMTYzLDE2LTE2LDE2Yy0yMS4yMDcsMC00MS42NjYsNy42ODQtNTcuNjA3LDIxLjYzNi0xNS44MDEsMTMuODI4LTI2LjEyMywzMi44MjUtMjkuMDY2LDUzLjQ5Mi0xLjEzNyw3Ljk4Mi03Ljk4MywxMy43NDYtMTUuODE5LDEzLjc0NmgtLjAwMloiIGZpbGw9IiM5YWEwYTYiLz4KICAgIDxwYXRoIGQ9Ik0zNTguNDkzLDM3Ni40MjdjLTcuODM4LDAtMTQuNjg1LTUuNzY0LTE1LjgyLTEzLjc0OC0yLjk0LTIwLjY2OS0xMy4yNjItMzkuNjY4LTI5LjA2My01My40OTktMTUuOTQxLTEzLjk1My0zNi40MDEtMjEuNjM4LTU3LjYxLTIxLjYzOC04LjgzNywwLTE2LTcuMTYzLTE2LTE2czcuMTYzLTE2LDE2LTE2YzI4Ljk2NCwwLDU2LjkwOSwxMC40OTcsNzguNjg3LDI5LjU1OSwyMS41NjIsMTguODczLDM1LjY1LDQ0LjgyMywzOS42NjksNzMuMDcsMS4yNDQsOC43NDktNC44MzksMTYuODUtMTMuNTg3LDE4LjA5NS0uNzY1LjEwOC0xLjUyMy4xNjEtMi4yNzQuMTYxaC0uMDAyWiIgZmlsbD0iIzQyODVmNCIvPgogICAgPHBhdGggZD0iTTI1Ni4wMDQsMjg3LjU0MmMtNDMuMDgsMC03OC4xMjgtMzUuMDY1LTc4LjEyOC03OC4xNjdzMzUuMDQ4LTc4LjE2Nyw3OC4xMjgtNzguMTY3djMyYy0yNS40MzUsMC00Ni4xMjgsMjAuNzEtNDYuMTI4LDQ2LjE2N3MyMC42OTMsNDYuMTY3LDQ2LjEyOCw0Ni4xNjd2MzJaIiBmaWxsPSIjOWFhMGE2Ii8+CiAgICA8cGF0aCBkPSJNNDM3Ljk1LDE1MS4wOWMtLjAxLS4xMy0uMDMtLjI2LS4wNC0uMzktLjAyLS4xOC0uMDQtLjM3LS4wNy0uNTUtLjA1LS4zNy0uMTItLjc0LS4xOS0xLjEtLjA4LS4zNi0uMTctLjcyLS4yNy0xLjA3LS4xNS0uNTMtLjMzLTEuMDUtLjU0LTEuNTYtLjA2LS4xNS0uMTItLjMtLjE4LS40NC0uMjMtLjU1LS41LTEuMDgtLjgtMS41OS0uMDgtLjE0LS4xNi0uMjgtLjI1LS40Mi0uMTktLjMxLS40LS42MS0uNjEtLjkxLS4yMS0uMjktLjQyLS41Ny0uNjUtLjg1bC0uMDItLjAyYy0uMjMtLjI4LS40Ny0uNTUtLjcyLS44MS0uMDEtLjAxLS4wMi0uMDItLjAyLS4wMi0uMTktLjIxLS4zOS0uNDEtLjYtLjYtLjI3LS4yNi0uNTUtLjUtLjgzLS43My0uMTMtLjExLS4yNi0uMjEtLjM5LS4zMS0uMTQtLjExLS4yOC0uMjItLjQyLS4zMS0uMTMtLjEtLjI1LS4xOS0uMzgtLjI4LS4zMy0uMjItLjY3LS40My0xLjAyLS42Mi0uMjEtLjEzLS40MS0uMjQtLjYzLS4zNS0uMTMtLjA3LS4yNS0uMTMtLjM4LS4xOWwtMTM3LjEzLTY4LjQ3LS4wNy0uMDMtMjguNTktMTQuMjhjLTQuMTctMi4wOS05LjAzLTIuMjQtMTMuMy0uNDYtLjMzLjE0LS42Ni4yOS0xLC40NmwtMTY2LDgyLjg4Yy01LjQyLDIuNzEtOC44NSw4LjI2LTguODUsMTQuMzJ2MTAzLjEzYzAsNDQuMjQsMjEuMTYsODYuNSw1Ni41OSwxMTMuMDRsOTguNzIsNzMuOTR2LjAxbDE3LjEsMTIuOGMxLjQzLDEuMDcsMi45OSwxLjg3LDQuNiwyLjM5LjYxLjIxLDEuMjMuMzcsMS44NS40OS43OC4xNiwxLjU3LjI1LDIuMzUuMjkuMjguMDEuNTUuMDIuOC4wMi4zLDAsLjU5LS4wMS44OS0uMDMuMjEtLjAxLjQxLS4wMi42Mi0uMDQuNDItLjA0Ljg1LS4xLDEuMjctLjE4LjI1LS4wNC41LS4wOS43NC0uMTUuMDctLjAxLjE1LS4wMy4yMi0uMDQuMDEsMCwuMDItLjAxLjAyLS4wMS4yNC0uMDYuNDgtLjEyLjcxLS4xOS4yNi0uMDcuNTItLjE1Ljc4LS4yNS4zLS4xMS42MS0uMjIuOTEtLjM1aC4wMWMuMjgtLjExLjU1LS4yNC44Mi0uMzcuNTktLjI4LDEuMTctLjYxLDEuNzMtLjk5LjE4LS4xMS4zNy0uMjMuNTQtLjM2LjExLS4wNy4yMS0uMTUuMzItLjIzbDExNS44Mi04Ni43NWMzNS40My0yNi41NCw1Ni41OS02OC44LDU2LjU5LTExMy4wNHYtMTAzLjEzYzAtLjQ0LS4wMi0uODctLjA1LTEuM2gwWk00MDYsMjU1LjUyYzAsMzQuMjEtMTYuMzcsNjYuOS00My43OCw4Ny40M2wtMTA2LjIyLDc5LjU2LTEwNi4yMi03OS41NmMtMjcuNDEtMjAuNTMtNDMuNzgtNTMuMjItNDMuNzgtODcuNDN2LTkzLjI0bDE1MC03NC45LDE1MCw3NC45djkzLjI0aDBaIiBmaWxsPSIjOWFhMGE2Ii8+CiAgICA8cGF0aCBkPSJNMjY4LjgxLDQ1Mi4wOWMtLjk0LDEuMjUtMi4wMywyLjMzLTMuMjIsMy4yMi0uMTEuMDgtLjIxLjE2LS4zMi4yMy0uMTcuMTMtLjM2LjI1LS41NC4zNi0uNTYuMzgtMS4xNC43MS0xLjczLjk5LS4yNy4xMy0uNTQuMjYtLjgyLjM3aC0uMDFjLS4zLjEzLS42MS4yNC0uOTEuMzUtLjI2LjA5LS41Mi4xNy0uNzguMjUtLjIzLjA3LS40Ny4xMy0uNzEuMTksMCwwLS4wMS4wMS0uMDIuMDEtLjA3LjAxLS4xNS4wMy0uMjIuMDQtLjI0LjA2LS40OS4xMS0uNzQuMTUtLjQyLjA4LS44NS4xNC0xLjI3LjE4LS4yMS4wMi0uNDEuMDMtLjYyLjA0LS4zLjAyLS41OS4wMy0uODkuMDMtLjI1LDAtLjUyLS4wMS0uOC0uMDItLjc4LS4wNC0xLjU3LS4xMy0yLjM1LS4yOS0uNjItLjEyLTEuMjQtLjI4LTEuODUtLjQ5LTEuNjEtLjUyLTMuMTctMS4zMi00LjYtMi4zOWwtMTcuMS0xMi44di0uMDFsLTk4LjcyLTczLjk0Yy0zNS40My0yNi41NC01Ni41OS02OC44LTU2LjU5LTExMy4wNHYtMTAzLjEzYzAtNi4wNiwzLjQzLTExLjYxLDguODUtMTQuMzJMMjQ4Ljg1LDU1LjE5Yy4zNC0uMTcuNjctLjMyLDEtLjQ2LDQuMjctMS43OCw5LjEzLTEuNjMsMTMuMy40NmwyOC41OSwxNC4yOC4wNy4wMy0zNS44MSwxNy44OC0xNTAsNzQuOXY5My4yNGMwLDM0LjIxLDE2LjM3LDY2LjksNDMuNzgsODcuNDNsMTA2LjIyLDc5LjU2LDkuNTksNy4xOGM3LjA3LDUuMyw4LjUxLDE1LjMzLDMuMjIsMjIuNGgwWiIgZmlsbD0iIzQyODVmNCIvPgogICAgPHBhdGggZD0iTTQzOCwxNTIuMzl2MTAzLjEzYzAsNDQuMjQtMjEuMTYsODYuNS01Ni41OSwxMTMuMDRsLTExNS44Miw4Ni43NWMtLjExLjA4LS4yMS4xNi0uMzIuMjMtLjE3LjEzLS4zNi4yNS0uNTQuMzYtLjU2LjM4LTEuMTQuNzEtMS43My45OS0uMjcuMTMtLjU0LjI2LS44Mi4zN2gtLjAxYy0uMy4xMy0uNjEuMjQtLjkxLjM1LS4yNi4xLS41Mi4xOC0uNzguMjUtLjIzLjA3LS40Ny4xMy0uNzEuMTksMCwwLS4wMS4wMS0uMDIuMDEtLjMyLjA3LS42NC4xNC0uOTYuMTktLjQyLjA4LS44NS4xNC0xLjI3LjE4LS4yMS4wMi0uNDEuMDMtLjYyLjA0LS4zLjAyLS41OS4wMy0uODkuMDMtLjI1LDAtLjUyLS4wMS0uOC0uMDItLjc4LS4wNC0xLjU3LS4xMy0yLjM1LS4yOS0uNjItLjEyLTEuMjQtLjI4LTEuODUtLjQ5LTEuNjEtLjUyLTMuMTctMS4zMi00LjYtMi4zOWwtMTcuMS0xMi44di0uMDFsMjYuNjktMTkuOTksMTA2LjIyLTc5LjU2YzI3LjQxLTIwLjUzLDQzLjc4LTUzLjIyLDQzLjc4LTg3LjQzdi0xMDMuMTNjMC04Ljg0LDcuMTYtMTYsMTYtMTYsMi40OSwwLDQuODQuNTcsNi45NCwxLjU4LjEzLjA2LjI1LjEyLjM4LjE5LjIyLjExLjQyLjIyLjYzLjM1LjM1LjE5LjY5LjQsMS4wMi42Mi4xMy4wOS4yNS4xOC4zOC4yOC4xNC4wOS4yOC4yLjQyLjMxLjEzLjEuMjYuMi4zOS4zMS4yOC4yMy41Ni40Ny44My43My4yMS4xOS40MS4zOS42LjYsMCwwLC4wMS4wMS4wMi4wMi4yNS4yNi40OS41My43Mi44MWwuMDIuMDJjLjIzLjI4LjQ0LjU2LjY1Ljg1LjIxLjMuNDIuNi42MS45MS4wOS4xNC4xNy4yOC4yNS40Mi4zLjUxLjU3LDEuMDQuOCwxLjU5LjA2LjE0LjEyLjI5LjE4LjQ0LjIxLjUxLjM5LDEuMDMuNTQsMS41Ni4xLjM1LjE5LjcxLjI3LDEuMDcuMDcuMzYuMTQuNzMuMTksMS4xLjAzLjE4LjA1LjM3LjA3LjU1LjAxLjEzLjAzLjI2LjA0LjM5LjAzLjQzLjA1Ljg2LjA1LDEuM2gwWiIgZmlsbD0iIzlhYTBhNiIvPgogIDwvZz4KPC9zdmc+"/>
+                    <text x="1353.53" y="611.35" xml:space="preserve" font-family="Inter" font-size="16.9" font-weight="700" fill="#202124">Certificates</text>
+                    <text x="1353.53" y="631.37" xml:space="preserve" font-family="Inter" font-size="15.6" font-weight="400" fill="#5F6368">Certificate</text>
+                    <text x="1353.53" y="650.09" xml:space="preserve" font-family="Inter" font-size="15.6" font-weight="400" fill="#5F6368">Authority</text>
+                    <text x="1353.53" y="668.81" xml:space="preserve" font-family="Inter" font-size="15.6" font-weight="400" fill="#5F6368">Service</text>
+                  </g>
+                </g>
+              </g>
+            </g>
+          </g>
+        </g>
+      </g>
+    </g>
+    <g data-id="/legend" data-tag="Legend">
+      <g data-id="/legend/0" data-tag="LegendEntry" data-kind="blue">
+        <line x1="20" y1="1320.5" x2="46" y2="1320.5" stroke="#1A73E8" stroke-width="3.75"/>
+        <text x="52" y="1324.87" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">Solid blue</text>
+        <text x="115.56" y="1324.87" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">Interconnect attachment</text>
+      </g>
+      <g data-id="/legend/1" data-tag="LegendEntry" data-kind="gray">
+        <line x1="270.24" y1="1320.5" x2="296.24" y2="1320.5" stroke="#5F6368" stroke-width="2"/>
+        <text x="302.24" y="1324.87" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">Solid gray</text>
+        <text x="366.66" y="1324.87" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">east-west</text>
+      </g>
+    </g>
+  </g>
+  <g data-id="/links/0" data-tag="Link" data-kind="gray">
+    <path d="M 1215.73 929.71 L 1264.02 957.59 L 1264.02 963.59 L 1270.95 967.59 M 1276.14 964.59 L 1299.51 978.09 L 1465.11 882.48 L 1508.76 907.68" fill="none" stroke="#5F6368" stroke-width="2" stroke-linejoin="round"/>
+    <polygon points="1520.89,914.68 1503.91,910.48 1513.61,904.88" fill="#5F6368"/>
+  </g>
+</svg>

@@ -9,7 +9,7 @@ use std::path::{Path, PathBuf};
 
 use stencil_cli::{ExitCode, run};
 
-const STEMS: [&str; 9] = [
+const STEMS: [&str; 10] = [
     "g7",
     "hero-iso",
     "hybrid-ai",
@@ -19,6 +19,7 @@ const STEMS: [&str; 9] = [
     "people-iso",
     "platform-iso",
     "stress-dense",
+    "transit-iso",
 ];
 
 fn repository_path(relative: &str) -> PathBuf {

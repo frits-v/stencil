@@ -355,3 +355,30 @@ fn reroute_link_routes_through_a_new_via_point() {
         "the geometry is not changed"
     );
 }
+
+/// Section 12.4: a stub out of a block end never reaches past the nearest obstacle ahead
+/// of it, so a link that skips over its neighbours in a Row still finds a route.
+#[test]
+fn an_iso_link_over_two_row_neighbours_routes_around_them() {
+    // A figure, a laptop, a card and a phone: the row of the people example, linked end
+    // to end.
+    let mut document = linked_page(
+        json!([{ "tag": "Box", "kind": "region", "label": "Front door", "children": [
+            { "tag": "Row", "children": [
+                { "tag": "Item", "kind": "person", "id": "a", "title": "Operator", "subtitle": "on call" },
+                { "tag": "Item", "kind": "device", "id": "b", "title": "Laptop", "subtitle": "staff" },
+                { "tag": "Item", "kind": "product", "id": "c", "title": "API", "subtitle": "gateway" },
+                { "tag": "Item", "kind": "device", "id": "d", "title": "Phone", "subtitle": "customer",
+                  "shape": "phone" } ] } ] }]),
+        json!([{ "from": "a", "to": "c", "line": "solid", "tint": 1 }]),
+    );
+    document["projection"] = json!("iso");
+    document["width"] = json!(1100);
+    let page = page_from(document);
+    let geometry = layout(&page);
+    let route = route_of(&geometry, 0);
+    assert_eq!(route.status, RouteStatus::Routed, "{:?}", route.points);
+    let avoided = links_avoid_boxes(&geometry);
+    assert!(avoided.passed(), "{avoided:?}");
+    assert!(avoided.examined > 0);
+}

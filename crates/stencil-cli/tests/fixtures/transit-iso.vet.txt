@@ -1,0 +1,4 @@
+check remembered-constants: examined 26 text fields, 0 defects
+check legend-consistency: examined 6 relations, 0 defects
+check icon-matches-product: examined 5 items, 0 defects
+stencil vet: 0 violations, 3 checks, 3 passed, 0 failed
