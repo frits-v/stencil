@@ -250,23 +250,35 @@ fn a_link_between_two_zones_steps_down_to_the_ground_and_back_up() {
     assert_eq!(heights.first(), Some(&(6.0 * zoom)));
     assert_eq!(heights.last(), Some(&(6.0 * zoom)));
     assert!(heights.contains(&0.0), "{heights:?}");
-    // Every descent is matched by a climb: the link steps down to the ground between the
-    // zones and, where its approach stub leaves the far slab, once more on the way in.
-    let risers: Vec<(f32, f32)> = path
+    // The link steps down the near zone's visible right face as a vertical riser, then
+    // enters the far zone through its hidden left edge: the ground piece stops one step
+    // of height before the edge, where it passes under the slab top on screen. It leaves
+    // and re-enters the far zone through its visible bottom edge on vertical risers.
+    let steps: Vec<(IsoPoint, IsoPoint)> = path
         .windows(2)
-        .filter(|pair| pair[0].x == pair[1].x && pair[0].y == pair[1].y && pair[0].z != pair[1].z)
-        .map(|pair| (pair[0].z, pair[1].z))
+        .filter(|pair| pair[0].z != pair[1].z)
+        .map(|pair| (pair[0], pair[1]))
         .collect();
+    assert_eq!(steps.len(), 4, "{path:?}");
+    let vertical = |(from, to): (IsoPoint, IsoPoint)| (from.x, from.y) == (to.x, to.y);
     assert!(
-        risers.len() >= 2 && risers.len().is_multiple_of(2),
+        steps[0].0.z > steps[0].1.z && vertical(steps[0]),
+        "{path:?}"
+    );
+    let (under_from, under_to) = steps[1];
+    assert!(under_from.z < under_to.z, "{path:?}");
+    assert_close(
+        under_to.x - under_from.x,
+        under_to.z - under_from.z,
+        "pass-under length",
+    );
+    assert_close(under_to.y, under_from.y, "pass-under along x");
+    assert!(
+        steps[2].0.z > steps[2].1.z && vertical(steps[2]),
         "{path:?}"
     );
     assert!(
-        risers.first().is_some_and(|(from, to)| from > to),
-        "{path:?}"
-    );
-    assert!(
-        risers.last().is_some_and(|(from, to)| from < to),
+        steps[3].0.z < steps[3].1.z && vertical(steps[3]),
         "{path:?}"
     );
     let route = &geometry.links[0];
@@ -1879,7 +1891,9 @@ fn a_dashed_link_skips_its_risers_and_a_solid_one_draws_them() {
             .to_string()
     };
     assert!(data(1).matches(" M ").count() >= 2, "{}", data(1));
-    assert_eq!(data(0).matches(" M ").count(), 0, "{}", data(0));
+    // The primary steps down the on-prem slab's visible face as a drawn riser and passes
+    // under the Google Cloud slab's back edge with the pen lifted once.
+    assert_eq!(data(0).matches(" M ").count(), 1, "{}", data(0));
     let heads = |index: usize| {
         let link = common::group(&parsed, &format!("/links/{index}"));
         common::children_named(link, "polygon").len()

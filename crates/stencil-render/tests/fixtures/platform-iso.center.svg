@@ -154,7 +154,7 @@
     <polygon points="319.41,411.58 336.38,415.78 326.68,421.38" fill="#5F6368"/>
   </g>
   <g data-id="/links/3" data-tag="Link" data-kind="gray">
-    <path d="M 946.83 648.57 L 1039.93 702.32 L 1009.62 719.82 L 1030.4 731.82 L 1030.4 725.82 L 1064.65 745.6" fill="none" stroke="#5F6368" stroke-width="2" stroke-linejoin="round"/>
+    <path d="M 946.83 648.57 L 1039.93 702.32 L 1009.62 719.82 L 1025.2 728.82 M 1030.4 725.82 L 1064.65 745.6" fill="none" stroke="#5F6368" stroke-width="2" stroke-linejoin="round"/>
     <polygon points="1076.78,752.6 1059.8,748.4 1069.5,742.8" fill="#5F6368"/>
   </g>
 </svg>

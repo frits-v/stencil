@@ -848,16 +848,19 @@ impl<'a> SvgWriter<'a> {
         }
         let stroke = self.palette.wire_style(line_use).stroke;
         // A dashed link skips each riser, so the dash pattern never lands on a slab edge as
-        // a solid tick; the gap reads as one more space between dashes.
+        // a solid tick; the gap reads as one more space between dashes. Every link skips a
+        // climb behind a hidden slab face, where the path passes under the slab's top edge.
         let skips_risers = stroke.line != LineStyle::Solid;
         let mut data = String::new();
         let mut previous: Option<IsoPoint> = None;
         for point in &points {
+            let epsilon = stencil_layout::GEOMETRY_EPSILON_PX;
+            let climbs = previous.is_some_and(|last| (last.z - point.z).abs() > epsilon);
             let riser = previous.is_some_and(|last| {
-                (last.x - point.x).abs() <= stencil_layout::GEOMETRY_EPSILON_PX
-                    && (last.y - point.y).abs() <= stencil_layout::GEOMETRY_EPSILON_PX
+                (last.x - point.x).abs() <= epsilon && (last.y - point.y).abs() <= epsilon
             });
-            let command = match (previous, skips_risers && riser) {
+            let skip = climbs && (skips_risers || !riser);
+            let command = match (previous, skip) {
                 (None, _) => "M",
                 (Some(_), true) => " M",
                 (Some(_), false) => " L",

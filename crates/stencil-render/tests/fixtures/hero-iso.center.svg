@@ -132,7 +132,7 @@
     </g>
   </g>
   <g data-id="/links/0" data-tag="Link" data-kind="blue">
-    <path d="M 285.4 230.29 L 324.27 252.73 L 324.27 258.73 L 421.26 314.73 L 421.26 308.73 L 455.47 328.48 L 402.54 359.04 L 424.62 371.79" fill="none" stroke="#1A73E8" stroke-width="3.75" stroke-linejoin="round"/>
+    <path d="M 285.4 230.29 L 324.27 252.73 L 324.27 258.73 L 416.06 311.73 M 421.26 308.73 L 455.47 328.48 L 402.54 359.04 L 424.62 371.79" fill="none" stroke="#1A73E8" stroke-width="3.75" stroke-linejoin="round"/>
     <polygon points="440.21,380.79 418.39,375.39 430.86,368.19" fill="#1A73E8"/>
     <g data-plane="0" data-axis="x" transform="matrix(0.87 0.5 -0.87 0.5 430.11 4.11)">
       <rect x="210.85" y="298.83" width="71.92" height="33.78" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
@@ -140,7 +140,7 @@
     </g>
   </g>
   <g data-id="/links/1" data-tag="Link" data-kind="dash">
-    <path d="M 224.78 195.29 L 175.53 166.85 M 175.53 172.85 L 154.74 160.85 L 39.56 227.35 L 60.34 239.35 M 60.34 233.35 L 209.08 319.23 M 209.08 325.23 L 306.08 381.23 M 306.08 375.23 L 474.17 472.27 L 495.72 459.83" fill="none" stroke="#1A73E8" stroke-width="2.5" stroke-dasharray="6 5" stroke-linejoin="round"/>
+    <path d="M 224.78 195.29 L 175.53 166.85 M 170.33 169.85 L 154.74 160.85 L 39.56 227.35 L 55.15 236.35 M 60.34 233.35 L 209.08 319.23 M 209.08 325.23 L 300.88 378.23 M 306.08 375.23 L 474.17 472.27 L 495.72 459.83" fill="none" stroke="#1A73E8" stroke-width="2.5" stroke-dasharray="6 5" stroke-linejoin="round"/>
     <polygon points="508.71,452.33 500.91,462.83 490.52,456.83" fill="#1A73E8"/>
     <g data-plane="0" data-axis="x" transform="matrix(0.87 0.5 -0.87 0.5 424.8 0.93)">
       <rect x="217.41" y="431.95" width="75.02" height="33.78" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
@@ -152,7 +152,7 @@
     <polygon points="698.45,529.88 681.47,525.68 691.17,520.08" fill="#5F6368"/>
   </g>
   <g data-id="/links/3" data-tag="Link" data-kind="gray">
-    <path d="M 888.54 639.63 L 981.64 693.38 L 982.51 692.88 L 1003.29 704.88 L 1003.29 698.88 L 1032.59 715.79" fill="none" stroke="#5F6368" stroke-width="2" stroke-linejoin="round"/>
+    <path d="M 888.54 639.63 L 981.64 693.38 L 982.51 692.88 L 998.09 701.88 M 1003.29 698.88 L 1032.59 715.79" fill="none" stroke="#5F6368" stroke-width="2" stroke-linejoin="round"/>
     <polygon points="1044.71,722.79 1027.74,718.59 1037.44,712.99" fill="#5F6368"/>
   </g>
 </svg>
