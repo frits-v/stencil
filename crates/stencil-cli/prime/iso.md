@@ -12,7 +12,7 @@ Text. Text reads along x (down-right); a vertical pipe's tag and a tag on a vert
 
 Size. A body narrower than the canvas is zoomed, up to 1.6 times, until it spans 80 percent of it. The drawn canvas runs up to about 1.5 times the page width, and text shrinks with it on a slide. Keep an iso page at 1400 or less and check with --print-width 10 for a slide. Render at --scale 2.
 
-Checks. check adds four checks under iso; under flat they are not applicable.
+Checks. check adds four checks under iso, not applicable under flat.
 
 | Check | Unit | Defect at | Message |
 |---|---|---|---|
@@ -23,4 +23,4 @@ Checks. check adds four checks under iso; under flat they are not applicable.
 
 Leave open floor: Row grow 0, items 64 apart, a 48 px gap between Boxes for a link leg, and overlapping spans for solids joined straight across.
 
-Outputs. Measured JSON canvas and links are the layout ones; projection.canvas (the SVG viewBox) and projection.links are the drawn canvas and paths. via points use the layout canvas.
+Outputs. Measured JSON canvas and links are the layout ones; projection.canvas (the SVG viewBox) and projection.links are the drawn canvas and paths. via points use layout px.
