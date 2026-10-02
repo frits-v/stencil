@@ -471,6 +471,10 @@ pub enum Face {
 
 /// Fills and strokes of the three faces of an isometric solid (section 12.6). A None fill
 /// draws the face unfilled; a None stroke draws it unstroked.
+/// Lightness steps of a figure's lit top and shaded side over the secondary ink.
+const FIGURE_LIT_STEP: i8 = 14;
+const FIGURE_SHADE_STEP: i8 = -12;
+
 #[derive(Debug, Clone, PartialEq)]
 pub struct FacePaint<'a> {
     pub top: Option<String>,
@@ -511,6 +515,19 @@ impl<'a> Palette<'a> {
     /// The ink of a Box name lying on its slab (section 12.6 rule 8): the frame's name in
     /// `iso.labels.frame`; a tinted Box in its tint's ink; any other Box in
     /// `iso.labels.zone`.
+    /// The paint of a figure sprite: a dark silhouette in the secondary ink, its top lit
+    /// and its right side shaded like a block's faces.
+    pub fn figure_paint(self) -> FacePaint<'a> {
+        let ink = self.theme.ink.secondary.as_str();
+        FacePaint {
+            top: shade(ink, FIGURE_LIT_STEP).or_else(|| Some(ink.to_string())),
+            left: Some(ink.to_string()),
+            right: shade(ink, FIGURE_SHADE_STEP).or_else(|| Some(ink.to_string())),
+            top_stroke: None,
+            side_stroke: None,
+        }
+    }
+
     pub fn iso_label_ink(self, look: ContainerLook, tint: Option<u8>) -> &'a str {
         if look.role == Role::Frame {
             return self.theme.iso.labels.frame.as_str();
