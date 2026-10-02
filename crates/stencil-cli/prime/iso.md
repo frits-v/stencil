@@ -8,7 +8,7 @@ Pipes. A Pipe is a tube with its tag on the tube top. PipeForm (2): tube band. "
 
 Links. A solid link is a tube per leg with joints and a cone at the arrowed end; a dashed or deny link is one stroked line. A link lies at the height of the tallest slab it crosses. It meets a solid through a 40 px stub on the side it attaches to; an arrow into the top or left side stops at the top face's edge; set to_side bottom or right for a face. A step between solids whose spans do not overlap sits mid-run, clear of edges and other links. Links that share a side of one node spread along it, and two links on one route draw side by side with staggered tags; when the lane is too narrow, iso-links-apart or iso-links-clear says so: give them opposite sides, a via point, or one link whose label names both.
 
-Text. Text reads along x (down-right); a vertical pipe's tag and a tag on a vertical link leg read along y (up-right), or set axis. Body text is 1.3 times its flat size, a Box name 1.25, the frame name 1.4; paddings and gaps 1.75. Names never wrap; other floor text keeps lines of at least 120 px, so a long subtitle in a narrow Box wraps to a staircase: keep subtitles short, or widen the Box. Each Box keeps open floor behind and left of what stands on it, by the height of its tallest item, so a page may need more width.
+Text. Text reads along x (down-right); a vertical pipe's tag and a tag on a vertical link leg read along y (up-right), or set axis. Body text is 1.3 times its flat size, a Box name 1.25, the frame name 1.4; paddings and gaps 1.75. Names never wrap; other floor text keeps lines of at least 120 px: keep subtitles short, or widen the Box. Each Box keeps open floor behind and left of what stands on it, by the height of its tallest item, so a page may need more width.
 
 Size. A body narrower than the canvas is zoomed, up to 1.6 times, until it spans 80 percent of it. The drawn canvas runs up to about 1.5 times the page width, and text shrinks with it on a slide. Keep an iso page at 1400 or less, and check with --print-width 10 for a slide. Render at --scale 2.
 
@@ -16,11 +16,11 @@ Checks. check adds four checks under iso; under flat they are not applicable.
 
 | Check | Unit | Defect at | Message |
 |---|---|---|---|
-| iso-labels-clear | pair: labels, label and solid, label and edge, label and wire, tag and foreign wire, tag and its own, text and block (iso only) | later label's owner | label OWNER at X,Y along A overlaps label OWNER, or lies D px from it, under 4; is covered by NODE, or lies D px from it, under 8; is crossed by an edge of slab NODE, by /links/i or by pipe NODE; is passed under by /links/i; tag of OWNER lies nearer /links/j than its own path; leaves its block; has no block |
+| iso-labels-clear | pair: labels, label and solid, label and edge, label and wire, tag and foreign wire, tag and its own, text and block, block and slab (iso only) | later label's owner | label OWNER at X,Y along A overlaps label OWNER, or lies D px from it, under 4; is covered by NODE, or lies D px from it, under 8; is crossed by an edge of slab NODE, by /links/i or by pipe NODE; is passed under by /links/i; tag of OWNER lies nearer /links/j than its own path; leaves its block; has no block; block NODE overlaps the lip of slab ZONE |
 | iso-links-clear | link leg (iso only) | /links/i | leg N runs D px beside an edge of zone NODE, closer than 24; turns back; steps D px from the start or end, within a stub; runs back against leg M across a leg under a stub; last leg under 2 arrowheads; link runs L px between ends S px apart; leg N is L px between two turns; crosses block NODE |
 | iso-link-ends | link end (iso only) | /links/i | start or end lies D px off the outline of NODE; or D px from a corner of NODE, under 8; or D px outside zone NODE; or node NODE has no solid |
 | iso-links-apart | link pair (iso only) | the later link | shares L px with /links/j; or runs D px beside /links/j, closer than T; or ends D px from /links/j on NODE |
 
 Leave open floor: Row grow 0, items 64 apart, a 48 px gap between Boxes for a link leg, and overlapping spans for solids joined straight across.
 
-Outputs. The measured JSON canvas is the layout canvas; projection.canvas is the drawn one, the SVG viewBox. via points use the layout canvas.
+Outputs. The measured JSON canvas is the layout canvas: projection.canvas is the drawn one (the SVG viewBox). via points use the layout canvas.

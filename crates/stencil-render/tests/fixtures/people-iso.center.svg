@@ -43,13 +43,13 @@
               </g>
               <g data-id="/body/0/children/0/children/0/children/0/children/1" data-tag="Pcard">
                 <polygon points="591.14,475.22 639.64,503.22 591.14,531.22 542.65,503.22" fill="#202124" fill-opacity="0.2" filter="url(#stencil-shadow)"/>
-                <polygon points="542.65,500.22 591.14,528.22 591.14,525.22 542.65,497.22" fill="#EBEBEB" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
-                <polygon points="639.64,500.22 591.14,528.22 591.14,525.22 639.64,497.22" fill="#D6D6D6" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
-                <polygon points="591.14,469.22 639.64,497.22 591.14,525.22 542.65,497.22" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
-                <polygon points="587.68,471.22 636.18,499.22 636.18,462.22 587.68,434.22" fill="#EBEBEB" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
-                <polygon points="639.64,497.22 636.18,499.22 636.18,462.22 639.64,460.22" fill="#D6D6D6" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
+                <polygon points="542.65,500.22 591.14,528.22 591.14,522.22 542.65,494.22" fill="#EBEBEB" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
+                <polygon points="639.64,500.22 591.14,528.22 591.14,522.22 639.64,494.22" fill="#D6D6D6" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
+                <polygon points="591.14,466.22 639.64,494.22 591.14,522.22 542.65,494.22" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
+                <polygon points="587.68,468.22 636.18,496.22 636.18,462.22 587.68,434.22" fill="#EBEBEB" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
+                <polygon points="639.64,494.22 636.18,496.22 636.18,462.22 639.64,460.22" fill="#D6D6D6" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
                 <polygon points="591.14,432.22 639.64,460.22 636.18,462.22 587.68,434.22" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
-                <polygon points="590.28,438.72 633.58,463.72 633.58,494.72 590.28,469.72" fill="#8F8F8F"/>
+                <polygon points="590.28,438.72 633.58,463.72 633.58,491.72 590.28,466.72" fill="#8F8F8F"/>
                 <g data-plane="12" data-axis="x" transform="matrix(0.87 0.5 -0.87 0.5 567.62 34.8)">
                   <text x="417.64" y="506.63" xml:space="preserve" font-family="Inter" font-size="16.9" font-weight="700" fill="#202124">Admin console</text>
                   <text x="456.03" y="526.65" xml:space="preserve" font-family="Inter" font-size="15.6" font-weight="400" fill="#5F6368">laptop</text>
@@ -118,13 +118,13 @@
     </g>
   </g>
   <g data-id="/links/0" data-tag="Link" data-kind="gray">
-    <polygon points="394.77,387.34 545.34,474.27 541.01,476.77 390.44,389.84" fill="#202124" fill-opacity="0.2" filter="url(#stencil-shadow)"/>
+    <polygon points="394.77,387.34 551.74,477.97 547.41,480.47 390.44,389.84" fill="#202124" fill-opacity="0.2" filter="url(#stencil-shadow)"/>
     <polygon points="390.44,384.34 390.51,383.65 390.73,382.93 391.07,382.21 391.52,381.55 392.04,381 392.6,380.59 393.17,380.36 393.69,380.3 394.14,380.44 394.48,380.76 394.7,381.24 394.77,381.84 394.7,382.53 394.48,383.26 394.14,383.98 393.69,384.63 393.17,385.18 392.6,385.59 392.04,385.83 391.52,385.88 391.07,385.75 390.73,385.43 390.51,384.95" fill="#5F6368"/>
-    <polygon points="394.14,380.44 544.7,467.37 543.17,470.02 392.6,383.09" fill="#7C8188"/>
-    <polygon points="392.6,383.09 543.17,470.02 541.64,472.68 391.07,385.75" fill="#5F6368"/>
-    <polygon points="541.01,471.27 541.08,470.58 541.3,469.86 541.64,469.14 542.09,468.48 542.61,467.93 543.17,467.52 543.73,467.29 544.25,467.23 544.7,467.37 545.05,467.69 545.26,468.17 545.34,468.77 545.26,469.46 545.05,470.19 544.7,470.91 544.25,471.56 543.73,472.11 543.17,472.52 542.61,472.76 542.09,472.81 541.64,472.67 541.3,472.36 541.08,471.88" fill="#383A3D"/>
-    <polygon points="555.3,477.02 546.08,464.99 543.17,470.02" fill="#7C8188"/>
-    <polygon points="555.3,477.02 543.17,470.02 540.26,475.06" fill="#5F6368"/>
+    <polygon points="394.14,380.44 551.11,471.07 549.57,473.72 392.6,383.09" fill="#7C8188"/>
+    <polygon points="392.6,383.09 549.57,473.72 548.04,476.37 391.07,385.75" fill="#5F6368"/>
+    <polygon points="547.41,474.97 547.48,474.28 547.7,473.55 548.04,472.84 548.49,472.18 549.01,471.63 549.57,471.22 550.13,470.98 550.66,470.93 551.11,471.07 551.45,471.39 551.67,471.87 551.74,472.47 551.67,473.16 551.45,473.89 551.11,474.6 550.66,475.26 550.13,475.81 549.57,476.22 549.01,476.46 548.49,476.51 548.04,476.37 547.7,476.05 547.48,475.57" fill="#383A3D"/>
+    <polygon points="561.7,480.72 552.48,468.68 549.57,473.72" fill="#7C8188"/>
+    <polygon points="561.7,480.72 549.57,473.72 546.67,478.76" fill="#5F6368"/>
   </g>
   <g data-id="/links/1" data-tag="Link" data-kind="blue">
     <polygon points="615.83,516.97 741.69,589.64 733.89,594.14 608.03,521.47" fill="#202124" fill-opacity="0.2" filter="url(#stencil-shadow)"/>

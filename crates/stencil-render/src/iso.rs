@@ -1100,6 +1100,14 @@ fn step_clear(
     !beside_an_edge && !beside_a_link
 }
 
+/// True when `inner` lies within `outer`, the epsilon included.
+fn box_inside(inner: BoxRect, outer: BoxRect) -> bool {
+    inner.x >= outer.x - GEOMETRY_EPSILON
+        && inner.y >= outer.y - GEOMETRY_EPSILON
+        && inner.right() <= outer.right() + GEOMETRY_EPSILON
+        && inner.bottom() <= outer.bottom() + GEOMETRY_EPSILON
+}
+
 /// The box a link attaches to: an item's footprint when it stands on one, else its bounds.
 fn attach_bounds(node: &NodeGeometry) -> BoxRect {
     node.part(PartName::Footprint)
@@ -2070,6 +2078,32 @@ pub fn iso_labels_clear(scene: Option<&IsoScene>) -> CheckReport {
                     label.owner
                 ),
             });
+        }
+    }
+    // 9. A block standing off a filled slab overlaps the slab's lip on screen: closer in
+    // front of its edge than the block's height, or under the strip behind it the slab's
+    // top covers, so it reads as half on the slab.
+    for block in solids
+        .iter()
+        .filter(|solid| solid.shape == SolidShape::Block && solid.opaque)
+    {
+        for slab in solids
+            .iter()
+            .filter(|solid| solid.shape == SolidShape::Slab && solid.height > 0.0)
+        {
+            if box_inside(block.footprint, slab.footprint) {
+                continue;
+            }
+            examined += 1;
+            if polygons_overlap(&block.outline, &slab.outline) {
+                defects.push(Defect {
+                    pointer: block.pointer.clone(),
+                    message: format!(
+                        "block {} overlaps the lip of slab {} on screen",
+                        block.pointer, slab.pointer
+                    ),
+                });
+            }
         }
     }
     // 5. The parts laid out to fit a block stay on its top face.
