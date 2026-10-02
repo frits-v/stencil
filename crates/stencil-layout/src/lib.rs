@@ -57,7 +57,7 @@ pub const ISO_WIRE_SCALE: f32 = 3.0;
 /// pill never reaches the slab edges its dots touch.
 pub const ISO_TAG_CLEARANCE_PX: f32 = 16.0;
 
-pub use stencil_model::Axis;
+pub use stencil_model::{Axis, Shape};
 
 /// `bounds` after a quarter turn about `pivot` that takes layout right to flat -y: the
 /// strip a y run covers.
@@ -179,6 +179,8 @@ pub struct NodeGeometry {
     pub tint: Option<u8>,
     /// How a Box's container kind is drawn, read from the grammar; None for every other tag.
     pub container: Option<ContainerLook>,
+    /// The solid an Item stands as under iso (section 12.3); None for every other tag.
+    pub shape: Option<Shape>,
     pub parent: Option<usize>,
     /// Border box.
     pub bounds: BoxRect,

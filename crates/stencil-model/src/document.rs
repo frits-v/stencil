@@ -310,6 +310,10 @@ pub struct Item {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[schemars(length(max = 8))]
     pub facts: Vec<FactEntry>,
+    /// Under iso, the solid the item stands as; absent takes the shape of its icon's row
+    /// in the kind's product table, or card.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub shape: Option<Shape>,
 }
 
 /// Where a fact comes from (section 13.7): `doc` is read from the live documentation when
@@ -366,6 +370,34 @@ pub struct Note {
     pub kind: NoteKind,
     #[schemars(length(min = 1, max = 400))]
     pub text: String,
+}
+
+/// The solid an item stands as under iso (section 12.3): a card is the flat card raised,
+/// with its content on top; every other shape carries the icon on its top and its text
+/// on the floor beside it. Tile: a thin plate, for network and edge pieces. Tower: a tall
+/// narrow box, for compute, clusters and nodes. Cylinder: databases and warehouses.
+/// Stack: three stacked discs, for storage and buckets.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema, Default)]
+#[serde(rename_all = "lowercase")]
+pub enum Shape {
+    #[default]
+    Card,
+    Tile,
+    Tower,
+    Cylinder,
+    Stack,
+}
+
+impl Shape {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Shape::Card => "card",
+            Shape::Tile => "tile",
+            Shape::Tower => "tower",
+            Shape::Cylinder => "cylinder",
+            Shape::Stack => "stack",
+        }
+    }
 }
 
 /// The reading axis of a tag under iso (section 12.4): along flat x, reading down-right on

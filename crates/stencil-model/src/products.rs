@@ -7,6 +7,7 @@ use crate::grammar::{
     GRAMMAR_PRODUCT_NAMES_MAX, GRAMMAR_PRODUCTS_MAX, Grammar, IconClass, IconProducts,
 };
 use crate::walk::{NodeRef, body_nodes};
+use crate::{Item, Shape};
 
 /// Why icon-matches-product does not apply to a page whose items have no icon table.
 const NO_ICON_TABLE: &str = "grammar has no icon table";
@@ -29,6 +30,23 @@ fn find_at_word_boundary(text: &str, name: &str) -> Option<usize> {
             !before.is_some_and(is_word_character) && !after.is_some_and(is_word_character);
         bounded.then_some(start)
     })
+}
+
+/// The solid an item stands as under iso (section 12.3): the item's own `shape`, else the
+/// shape of its icon's row in the kind's table, else card.
+pub fn item_shape(table: &[IconProducts], item: &Item) -> Shape {
+    if let Some(shape) = item.shape {
+        return shape;
+    }
+    let Some(icon) = item.icon else {
+        return Shape::Card;
+    };
+    table
+        .iter()
+        .take(GRAMMAR_PRODUCTS_MAX)
+        .find(|row| row.icon == icon)
+        .and_then(|row| row.shape)
+        .unwrap_or_default()
 }
 
 /// The product a subtitle names: every name of the table found in `subtitle`, ASCII

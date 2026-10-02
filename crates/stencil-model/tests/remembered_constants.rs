@@ -48,6 +48,7 @@ fn page_with_field(field: &str, text: &str) -> (Page, &'static str) {
                         source: FactSource::Ask,
                     },
                 ],
+                shape: None,
             })],
         }),
         Node::Note(Note {

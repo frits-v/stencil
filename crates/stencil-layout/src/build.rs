@@ -3,12 +3,13 @@
 
 use stencil_model::grammar::{LabelStyle, Role};
 use stencil_model::pointer::NodePointer;
+use stencil_model::products::item_shape;
 use stencil_model::text::{TextStyle, TextStyleName};
 use stencil_model::{
     Arrow, BoxNode, Callout, Canvas, Chrome, DEPTH_MAX, Fact, FactSource, Frame, GAP_DEFAULT_PX,
     Grammar, Item, Justify, LANE_GAP_DEFAULT_PX, Lanes, LegendEntry, ListKind, Node, Note,
-    NoteKind, Page, Pipe, PipeDir, Projection, Tee, TeeArm, Text, VetRule, Violation, box_key,
-    box_tint, legend_label, line_key, line_tint,
+    NoteKind, Page, Pipe, PipeDir, Projection, Shape, Tee, TeeArm, Text, VetRule, Violation,
+    box_key, box_tint, legend_label, line_key, line_tint,
 };
 use taffy::prelude::{
     AlignItems, AlignSelf, Dimension, Display, FlexDirection, FlexWrap, JustifyContent,
@@ -54,6 +55,8 @@ pub(crate) struct NodeRecord {
     pub kind: Option<String>,
     pub tint: Option<u8>,
     pub container: Option<ContainerLook>,
+    /// The solid an Item stands as under iso; None for every other tag.
+    pub shape: Option<Shape>,
     pub parent: Option<usize>,
     pub taffy_node: NodeId,
     /// The taffy node whose content box children must stay inside.
@@ -458,6 +461,7 @@ impl Builder<'_> {
             kind,
             tint: None,
             container: None,
+            shape: None,
             parent,
             taffy_node,
             content_node: taffy_node,
@@ -1187,6 +1191,12 @@ impl Builder<'_> {
         parent_container: NodeId,
         placement: Placement,
     ) -> Result<(), LayoutError> {
+        let table = self
+            .grammar
+            .item(&item.kind)
+            .map(|kind| kind.products.as_slice())
+            .unwrap_or(&[]);
+        let shape = item_shape(table, item);
         let mut style = Style {
             gap: taffy::Size {
                 width: length(self.space(10.0)),
@@ -1291,6 +1301,7 @@ impl Builder<'_> {
         }
 
         let mut record = Self::record(pointer, NodeTag::Pcard, None, Some(parent_index), card);
+        record.shape = Some(shape);
         record.parts = parts;
         self.push_record(record);
         Ok(())

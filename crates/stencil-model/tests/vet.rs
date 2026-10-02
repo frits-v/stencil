@@ -506,6 +506,7 @@ fn every_text_field_is_vetted() {
                         source: FactSource::Ask,
                     },
                 ],
+                shape: None,
             })],
         ),
         Node::Note(stencil_model::Note {

@@ -103,6 +103,7 @@ pub(crate) fn compute_geometry(
             kind: record.kind.clone(),
             tint: record.tint,
             container: record.container,
+            shape: record.shape,
             parent: record.parent,
             bounds,
             content,

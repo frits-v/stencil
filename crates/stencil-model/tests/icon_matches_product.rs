@@ -112,11 +112,13 @@ fn named_product_takes_the_first_of_two_names_of_equal_length() {
             icon: IconName::Gke,
             class: IconClass::Product,
             names: vec!["Alpha".to_string()],
+            shape: None,
         },
         IconProducts {
             icon: IconName::Compute,
             class: IconClass::Category,
             names: vec!["Gamma".to_string()],
+            shape: None,
         },
     ];
     assert_eq!(named_product(&table, "Gamma then Alpha"), Some("Gamma"));
