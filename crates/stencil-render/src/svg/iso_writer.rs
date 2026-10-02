@@ -19,8 +19,8 @@ use crate::iso::tube::{
     self, BAND_HEAD_LENGTH_PX, CONE_LENGTH_PX, CONE_RADIUS_PX, ISO_TUBE_RADIUS_PX, Tube,
 };
 use crate::iso::{
-    IsoPoint, Label, ScreenPoint, Solid, SolidInputs, SolidShape, arrowhead_vertices,
-    ellipse_radii, end_direction, iso_link_arrowhead_length, label_axis, local_part, plane_member,
+    IsoPoint, Label, ScreenPoint, Solid, SolidInputs, SolidShape, ellipse_radii, end_direction,
+    iso_link_arrowhead_length, label_axis, link_tube_radius, local_part, plane_member,
     project_point, project_zoomed, start_direction, zoomed_geometry,
 };
 use crate::palette::{DotStyle, FacePaint, LineStyle, LineUse, Palette, Stroke, shade};
@@ -31,6 +31,8 @@ const TUBE_LIT_STEP: i8 = 12;
 const TUBE_CAP_STEP: i8 = -16;
 /// Outline width of a hollow tube.
 const HOLLOW_TUBE_OUTLINE_PX: f32 = 1.5;
+/// A link cone's base radius over its tube's radius.
+const LINK_CONE_RADIUS_SCALE: f32 = 1.9;
 /// Lightness step of a device's screen panel under the face it lies on.
 const SCREEN_PANEL_STEP: i8 = -28;
 
@@ -59,6 +61,7 @@ pub(super) fn render_iso(
     let geometry = &zoomed;
     let palette = Palette::new(theme, Projection::Iso);
     let mut writer = SvgWriter::new(page.canvas, palette);
+    writer.iso_zoom = zoom;
     let width = format_number(scene.canvas.width);
     let height = format_number(scene.canvas.height);
     writer.line(
@@ -800,18 +803,19 @@ impl<'a> SvgWriter<'a> {
             end_center.0 + run.0 * DOT_RADIUS_PX,
             end_center.1 + run.1 * DOT_RADIUS_PX,
         );
+        let cone_length = CONE_LENGTH_PX * self.iso_zoom;
         let body_start = if arrows.start {
             (
-                start_tip.0 + run.0 * CONE_LENGTH_PX,
-                start_tip.1 + run.1 * CONE_LENGTH_PX,
+                start_tip.0 + run.0 * cone_length,
+                start_tip.1 + run.1 * cone_length,
             )
         } else {
             start_center
         };
         let body_end = if arrows.end {
             (
-                end_tip.0 - run.0 * CONE_LENGTH_PX,
-                end_tip.1 - run.1 * CONE_LENGTH_PX,
+                end_tip.0 - run.0 * cone_length,
+                end_tip.1 - run.1 * cone_length,
             )
         } else {
             end_center
@@ -821,7 +825,7 @@ impl<'a> SvgWriter<'a> {
             start: body_start,
             end: body_end,
             floor_z: z,
-            radius: ISO_TUBE_RADIUS_PX,
+            radius: ISO_TUBE_RADIUS_PX * self.iso_zoom,
         };
         self.write_tube(depth, &body, kind, style, offset);
         for (arrow_here, center, tip, outward) in [
@@ -829,7 +833,15 @@ impl<'a> SvgWriter<'a> {
             (arrows.end, end_center, end_tip, run),
         ] {
             if arrow_here {
-                self.write_cone(depth, (tip, outward), z, kind, offset);
+                let zoom = self.iso_zoom;
+                self.write_cone(
+                    depth,
+                    (tip, outward),
+                    (z, ISO_TUBE_RADIUS_PX * zoom),
+                    (CONE_LENGTH_PX * zoom, CONE_RADIUS_PX * zoom),
+                    kind,
+                    offset,
+                );
             } else {
                 self.write_flange(depth, (center, run), z, kind, offset);
             }
@@ -942,6 +954,7 @@ impl<'a> SvgWriter<'a> {
         let (Some(run), Some(body)) = (tube.run(), tube::body(tube, offset)) else {
             return;
         };
+        self.write_tube_shadow(depth, tube, offset);
         let color = self.palette.wire_style(kind).stroke.color;
         let axis_z = tube.axis_z();
         let cap = |at: (f32, f32)| tube::cross_section(at, run, axis_z, tube.radius, offset);
@@ -974,23 +987,19 @@ impl<'a> SvgWriter<'a> {
     }
 
     /// A cone at an arrowed end: `head` is the flat tip and the unit direction it points
-    /// along. Its base shows only when it faces the viewer.
+    /// along; `tube` is the floor and radius of the tube it caps, `cone` its own length and
+    /// base radius. Its base shows only when it faces the viewer.
     fn write_cone(
         &mut self,
         depth: usize,
         (tip, outward): ((f32, f32), (f32, f32)),
-        z: f32,
+        (floor_z, tube_radius): (f32, f32),
+        cone: (f32, f32),
         kind: LineUse,
         offset: ScreenPoint,
     ) {
-        let axis_z = z + ISO_TUBE_RADIUS_PX;
-        let Some(cone) = tube::cone(
-            tip,
-            outward,
-            (CONE_LENGTH_PX, CONE_RADIUS_PX),
-            axis_z,
-            offset,
-        ) else {
+        let axis_z = floor_z + tube_radius;
+        let Some(cone) = tube::cone(tip, outward, cone, axis_z, offset) else {
             return;
         };
         let color = self.palette.wire_style(kind).stroke.color;
@@ -1011,6 +1020,64 @@ impl<'a> SvgWriter<'a> {
         }
     }
 
+    /// The soft shadow a tube casts on its plane: its floor print, lowered and blurred like
+    /// a block's.
+    fn write_tube_shadow(&mut self, depth: usize, tube: &Tube, offset: ScreenPoint) {
+        let Some(shadow) = self.palette.iso_block_shadow() else {
+            return;
+        };
+        let lowered = ScreenPoint {
+            x: offset.x,
+            y: offset.y + shadow.dy,
+        };
+        let Some(print) = tube::floor_print(tube, lowered) else {
+            return;
+        };
+        self.line(
+            depth,
+            &format!(
+                r#"<polygon points="{}" fill="{}" fill-opacity="{}" filter="url(#{SHADOW_FILTER_ID})"/>"#,
+                points_attribute(&print),
+                shadow.color,
+                format_number(shadow.opacity)
+            ),
+        );
+    }
+
+    /// A round joint where two legs of a link meet: the sphere of the tube's radius on its
+    /// axis, a circle on screen.
+    fn write_joint(
+        &mut self,
+        depth: usize,
+        at: IsoPoint,
+        radius: f32,
+        kind: LineUse,
+        offset: ScreenPoint,
+    ) {
+        let center = project_point(at.x, at.y, at.z + radius, offset);
+        let color = self.palette.wire_style(kind).stroke.color;
+        let (fill, rim) = match self.tube_style(kind) {
+            TubeStyle::Hollow(_) => (
+                self.palette.page_background().to_string(),
+                stroke_attributes(Stroke {
+                    width_px: HOLLOW_TUBE_OUTLINE_PX,
+                    line: LineStyle::Solid,
+                    color,
+                }),
+            ),
+            TubeStyle::Filled => (color.to_string(), String::new()),
+        };
+        self.line(
+            depth,
+            &format!(
+                r#"<circle cx="{}" cy="{}" r="{}" fill="{fill}"{rim}/>"#,
+                format_number(center.x),
+                format_number(center.y),
+                format_number(radius)
+            ),
+        );
+    }
+
     /// The ring at a dot end, in the dot's style: none, filled, or hollow.
     fn write_flange(
         &mut self,
@@ -1027,30 +1094,8 @@ impl<'a> SvgWriter<'a> {
             }
             (DotStyle::Filled, TubeStyle::Filled) => TubeStyle::Filled,
         };
-        let ring = tube::flange(center, run, z);
+        let ring = tube::flange(center, run, z, self.iso_zoom);
         self.write_tube(depth, &ring, kind, style, offset);
-    }
-
-    /// `head` is the flat tip, the unit direction it points along and its length.
-    fn write_arrowhead_polygon(
-        &mut self,
-        depth: usize,
-        head: ((f32, f32), (f32, f32), f32),
-        z: f32,
-        kind: LineUse,
-        offset: ScreenPoint,
-    ) {
-        let (tip, direction, length) = head;
-        let corners =
-            arrowhead_vertices(tip, direction, length).map(|(x, y)| project_point(x, y, z, offset));
-        let color = self.palette.wire_style(kind).stroke.color;
-        self.line(
-            depth,
-            &format!(
-                r#"<polygon points="{}" fill="{color}"/>"#,
-                points_attribute(&corners)
-            ),
-        );
     }
 
     /// A Tee's spine as a tube down the spine box's center line (section 12.3, rule 6).
@@ -1068,7 +1113,7 @@ impl<'a> SvgWriter<'a> {
             start: (center_x, spine.y),
             end: (center_x, spine.bottom()),
             floor_z: z,
-            radius: ISO_TUBE_RADIUS_PX,
+            radius: ISO_TUBE_RADIUS_PX * self.iso_zoom,
         };
         self.write_tube(depth, &tube, kind, style, offset);
     }
@@ -1116,45 +1161,59 @@ impl<'a> SvgWriter<'a> {
             shorten_end(&mut points, arrow_length);
             points.reverse();
         }
-        let stroke = self.palette.wire_style(line_use).stroke;
-        // A dashed link skips each riser, so the dash pattern never lands on a slab edge as
-        // a solid tick; the gap reads as one more space between dashes. Every link skips a
-        // climb behind a hidden slab face, where the path passes under the slab's top edge.
-        let skips_risers = stroke.line != LineStyle::Solid;
-        let mut data = String::new();
-        let mut previous: Option<IsoPoint> = None;
-        for point in &points {
-            let epsilon = stencil_layout::GEOMETRY_EPSILON_PX;
-            let climbs = previous.is_some_and(|last| (last.z - point.z).abs() > epsilon);
-            let riser = previous.is_some_and(|last| {
-                (last.x - point.x).abs() <= epsilon && (last.y - point.y).abs() <= epsilon
-            });
-            let skip = climbs && (skips_risers || !riser);
-            let command = match (previous, skip) {
-                (None, _) => "M",
-                (Some(_), true) => " M",
-                (Some(_), false) => " L",
-            };
-            let screen = project_point(point.x, point.y, point.z, offset);
-            data.push_str(&format!(
-                "{command} {} {}",
-                format_number(screen.x),
-                format_number(screen.y)
-            ));
-            previous = Some(*point);
+        // Section 12.3 rule 7: a solid link is a tube per leg with a round joint at each
+        // corner; a patterned line, which a hollow tube would double, is one stroked path
+        // on the same height. Both end in a cone at an arrowed end.
+        let radius = link_tube_radius(route.line, route.tint) * self.iso_zoom;
+        match self.tube_style(line_use) {
+            TubeStyle::Filled => {
+                for pair in points.windows(2) {
+                    let (Some(&start), Some(&end)) = (pair.first(), pair.get(1)) else {
+                        continue;
+                    };
+                    let tube = Tube {
+                        start: (start.x, start.y),
+                        end: (end.x, end.y),
+                        floor_z: start.z,
+                        radius,
+                    };
+                    self.write_tube(depth + 1, &tube, line_use, TubeStyle::Filled, offset);
+                }
+                for joint in points.iter().skip(1).take(points.len().saturating_sub(2)) {
+                    self.write_joint(depth + 1, *joint, radius, line_use, offset);
+                }
+            }
+            TubeStyle::Hollow(_) => {
+                let stroke = self.palette.wire_style(line_use).stroke;
+                let data: Vec<String> = points
+                    .iter()
+                    .enumerate()
+                    .map(|(index, point)| {
+                        let screen = project_point(point.x, point.y, point.z + radius, offset);
+                        format!(
+                            "{} {} {}",
+                            if index == 0 { "M" } else { "L" },
+                            format_number(screen.x),
+                            format_number(screen.y)
+                        )
+                    })
+                    .collect();
+                self.line(
+                    depth + 1,
+                    &format!(
+                        r#"<path d="{}" fill="none"{} stroke-linejoin="round"/>"#,
+                        data.join(" "),
+                        stroke_attributes(stroke)
+                    ),
+                );
+            }
         }
-        self.line(
-            depth + 1,
-            &format!(
-                r#"<path d="{data}" fill="none"{} stroke-linejoin="round"/>"#,
-                stroke_attributes(stroke)
-            ),
-        );
         for (tip, direction) in [start_head, end_head].into_iter().flatten() {
-            self.write_arrowhead_polygon(
+            self.write_cone(
                 depth + 1,
-                ((tip.x, tip.y), direction, arrow_length),
-                tip.z,
+                ((tip.x, tip.y), direction),
+                (tip.z, radius),
+                (arrow_length, radius * LINK_CONE_RADIUS_SCALE),
                 line_use,
                 offset,
             );

@@ -20,11 +20,11 @@ use stencil_layout::{
 use stencil_model::checks::{CheckName, CheckOutcome};
 use stencil_model::grammar::Role;
 use stencil_model::pointer::NodePointer;
-use stencil_model::{Page, Projection, Shape, Theme};
+use stencil_model::{Line, Page, Projection, Shape, Theme};
 use stencil_render::iso::{
     Axis, ISO_MARGIN_PX, ISO_TUBE_RADIUS_PX, ISO_ZOOM_MAX, IsoPoint, IsoScene, Label, LabelParts,
-    PlaneMap, ScreenPoint, Solid, SolidShape, iso_labels_clear, iso_links_clear, project_point,
-    zoomed_geometry,
+    PlaneMap, ScreenPoint, Solid, SolidShape, iso_labels_clear, iso_links_clear, link_tube_radius,
+    project_point, zoomed_geometry,
 };
 use stencil_render::palette::{Face, LineUse, Palette, shade};
 use stencil_render::{DeviceScale, format_number, measured_json, render_png};
@@ -240,46 +240,15 @@ fn two_zone_link_page(to_side: &str) -> Page {
 }
 
 #[test]
-fn a_link_between_two_zones_steps_down_to_the_ground_and_back_up() {
+fn a_link_between_two_zones_lies_on_the_zones_top_throughout() {
     let page = two_zone_link_page("bottom");
     let (geometry, zoom) = zoomed_geometry(&common::layout_with_fixed_metrics(&page)).unwrap();
     let scene = project_zoomed(&geometry, zoom).unwrap();
     let path = &scene.link_paths[0];
-    let heights: Vec<f32> = path.iter().map(|point| point.z).collect();
-    assert_eq!(heights.first(), Some(&(6.0 * zoom)));
-    assert_eq!(heights.last(), Some(&(6.0 * zoom)));
-    assert!(heights.contains(&0.0), "{heights:?}");
-    // The link steps down the near zone's visible right face as a vertical riser, then
-    // enters the far zone through its hidden left edge: the ground piece stops one step
-    // of height before the edge, where it passes under the slab top on screen. It leaves
-    // and re-enters the far zone through its visible bottom edge on vertical risers.
-    let steps: Vec<(IsoPoint, IsoPoint)> = path
-        .windows(2)
-        .filter(|pair| pair[0].z != pair[1].z)
-        .map(|pair| (pair[0], pair[1]))
-        .collect();
-    assert_eq!(steps.len(), 4, "{path:?}");
-    let vertical = |(from, to): (IsoPoint, IsoPoint)| (from.x, from.y) == (to.x, to.y);
-    assert!(
-        steps[0].0.z > steps[0].1.z && vertical(steps[0]),
-        "{path:?}"
-    );
-    let (under_from, under_to) = steps[1];
-    assert!(under_from.z < under_to.z, "{path:?}");
-    assert_close(
-        under_to.x - under_from.x,
-        under_to.z - under_from.z,
-        "pass-under length",
-    );
-    assert_close(under_to.y, under_from.y, "pass-under along x");
-    assert!(
-        steps[2].0.z > steps[2].1.z && vertical(steps[2]),
-        "{path:?}"
-    );
-    assert!(
-        steps[3].0.z < steps[3].1.z && vertical(steps[3]),
-        "{path:?}"
-    );
+    // Section 12.3 rule 7: the path lies on the highest terrain it crosses, the two zones'
+    // top, and floats over the ground between them instead of stepping down and up.
+    assert!(path.len() >= 2, "{path:?}");
+    assert!(path.iter().all(|point| point.z == 6.0 * zoom), "{path:?}");
     let route = &geometry.links[0];
     let end = route.points.last().unwrap();
     let drawn_end = path.last().unwrap();
@@ -320,15 +289,19 @@ fn every_hero_link_reaches_its_endpoints_over_the_cloud_floor() {
         service_call.iter().all(|point| point.z == floor),
         "{service_call:?}"
     );
-    // The warehouse stands on the apis slab, one slab thickness above the cloud floor, and
-    // the last service call climbs onto it where it enters that slab.
+    // The warehouse stands on the apis slab, one slab thickness above the cloud floor, so
+    // the last service call lies at that slab's top throughout (section 12.3 rule 7).
     let to_warehouse = &scene.link_paths[3];
-    assert_eq!(to_warehouse.first().unwrap().z, floor);
-    assert_eq!(to_warehouse.last().unwrap().z, floor + 6.0 * scene.zoom);
+    assert!(
+        to_warehouse
+            .iter()
+            .all(|point| point.z == floor + 6.0 * scene.zoom),
+        "{to_warehouse:?}"
+    );
+    // Both VLANs run between two slabs of the cloud floor's height and float over the
+    // ground between them at that height.
     for path in &scene.link_paths[..2] {
-        assert_eq!(path.first().unwrap().z, floor);
-        assert_eq!(path.last().unwrap().z, floor);
-        assert!(path.iter().any(|point| point.z == 0.0), "{path:?}");
+        assert!(path.iter().all(|point| point.z == floor), "{path:?}");
     }
 }
 
@@ -459,7 +432,6 @@ fn the_iso_svg_has_the_section_12_5_structure() {
         1,
         "the block shadow filter only"
     );
-    assert!(!iso.svg.contains("<circle"));
     let root = document.root_element();
     let last = root.children().rfind(|node| node.is_element()).unwrap();
     assert_eq!(last.attribute("data-id"), Some("/links/3"));
@@ -1571,12 +1543,21 @@ fn iso_link_weights_rank_primary_failover_and_service_and_the_wire_legend_names_
         let parsed = common::parse_xml(&svg.svg);
         for (index, width) in widths.iter().enumerate() {
             let link = common::group(&parsed, &format!("/links/{index}"));
-            let path = common::children_named(link, "path")[0];
-            assert_eq!(
-                path.attribute("stroke-width"),
-                Some(width.as_str()),
-                "{theme:?}"
-            );
+            // A solid link is a tube of polygons under a shading theme; a dashed link, and
+            // every link under wire, is one stroked path at the theme's width.
+            let paths = common::children_named(link, "path");
+            if theme == "wire" || index == 1 {
+                assert_eq!(paths.len(), 1, "{theme} link {index}");
+                assert_eq!(
+                    paths[0].attribute("stroke-width"),
+                    Some(width.as_str()),
+                    "{theme:?}"
+                );
+            } else {
+                assert!(paths.is_empty(), "{theme} link {index}");
+                let polygons = common::children_named(link, "polygon").len();
+                assert!(polygons >= 4, "{theme} link {index}: {polygons} polygons");
+            }
             let entry = common::group(&parsed, &format!("/legend/{index}"));
             let swatch = common::children_named(entry, "line")[0];
             assert_eq!(
@@ -1830,18 +1811,18 @@ fn the_hero_primary_leaves_the_router_through_a_stub_with_its_tag_along_x() {
         stub_end.x - first.x >= stencil_layout::ISO_APPROACH_PX * scene.zoom - 1e-3,
         "{primary:?}"
     );
-    let step_down = primary[stub];
-    assert_eq!(
-        (step_down.x, step_down.y, step_down.z),
-        (stub_end.x, stub_end.y, 0.0),
+    // The path keeps that height throughout: it floats over the ground between the slabs.
+    assert!(
+        primary.iter().all(|point| point.z == first.z),
         "{primary:?}"
     );
     let tag = label_of(&scene, "/links/0");
     assert_eq!(tag.axis, Axis::X);
-    assert!(
-        primary.iter().any(|point| point.z == tag.z),
-        "tag z {} off the path {primary:?}",
-        tag.z
+    // The tag pill lies on the tube's top.
+    assert_close(
+        tag.z,
+        first.z + 2.0 * link_tube_radius(Line::Solid, Some(1)) * scene.zoom,
+        "tag on the tube top",
     );
     assert!(tag.opaque);
 }
@@ -1859,8 +1840,9 @@ fn the_hero_primary_tag_lies_on_its_drawn_leg() {
     let (center_x, center_y) = center_of(tag.flat);
     let center = tag.map.apply(center_x, center_y);
     let on_path = primary.windows(2).any(|pair| {
-        let start = project_point(pair[0].x, pair[0].y, pair[0].z, scene.offset);
-        let end = project_point(pair[1].x, pair[1].y, pair[1].z, scene.offset);
+        // The tag lies on the tube's top, so the leg is read at the tag's height.
+        let start = project_point(pair[0].x, pair[0].y, tag.z, scene.offset);
+        let end = project_point(pair[1].x, pair[1].y, tag.z, scene.offset);
         let cross =
             (end.x - start.x) * (center.y - start.y) - (end.y - start.y) * (center.x - start.x);
         let length = (end.x - start.x).hypot(end.y - start.y);
@@ -1961,28 +1943,24 @@ fn a_leg_beside_a_zone_edge_a_leg_that_turns_back_and_a_short_last_leg_are_defec
 }
 
 #[test]
-fn a_dashed_link_skips_its_risers_and_a_solid_one_draws_them() {
+fn a_dashed_link_is_one_stroked_path_and_a_solid_one_a_tube_of_polygons() {
     let hero = hero_page();
     let geometry = common::layout_with_cosmic_text(&hero);
     let svg = render_svg(&hero, &geometry).unwrap();
     let parsed = common::parse_xml(&svg.svg);
-    let data = |index: usize| {
-        let link = common::group(&parsed, &format!("/links/{index}"));
-        common::children_named(link, "path")[0]
-            .attribute("d")
-            .unwrap()
-            .to_string()
-    };
-    assert!(data(1).matches(" M ").count() >= 2, "{}", data(1));
-    // The primary steps down the on-prem slab's visible face as a drawn riser and passes
-    // under the Google Cloud slab's back edge with the pen lifted once.
-    assert_eq!(data(0).matches(" M ").count(), 1, "{}", data(0));
-    let heads = |index: usize| {
-        let link = common::group(&parsed, &format!("/links/{index}"));
-        common::children_named(link, "polygon").len()
-    };
-    assert_eq!(heads(0), 1);
-    assert_eq!(heads(1), 1);
+    let dashed = common::group(&parsed, "/links/1");
+    let paths = common::children_named(dashed, "path");
+    assert_eq!(paths.len(), 1);
+    let data = paths[0].attribute("d").unwrap();
+    assert_eq!(data.matches('M').count(), 1, "{data}");
+    assert!(data.contains(" L "), "{data}");
+    // The dashed link still ends in a cone, one filled outline under the hollow style.
+    assert!(!common::children_named(dashed, "polygon").is_empty());
+    let solid = common::group(&parsed, "/links/0");
+    assert!(common::children_named(solid, "path").is_empty());
+    // A tube per leg (body halves, caps and a shadow), a joint circle per corner, a cone.
+    assert!(common::children_named(solid, "polygon").len() >= 8);
+    assert!(!common::children_named(solid, "circle").is_empty());
 }
 
 #[test]

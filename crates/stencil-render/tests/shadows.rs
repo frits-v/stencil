@@ -61,7 +61,12 @@ fn center_draws_one_filter_and_one_shadow_first_in_each_opaque_block() {
         .filter(|solid| solid.shape == SolidShape::Block && solid.opaque)
         .collect();
     assert_eq!(opaque_blocks.len(), 4);
-    assert_eq!(svg.matches(SHADOW_REFERENCE).count(), opaque_blocks.len());
+    // Every opaque block casts a shadow, and so does every tube leg of a solid link: the
+    // hero's primary has three legs and its two service calls one each.
+    assert_eq!(
+        svg.matches(SHADOW_REFERENCE).count(),
+        opaque_blocks.len() + 5
+    );
 
     let document = common::parse_xml(&svg);
     for block in opaque_blocks {
@@ -136,9 +141,10 @@ fn every_theme_but_wire_shadows_the_hero() {
         let svg = render_svg(&with_theme(page.clone(), theme), &geometry)
             .unwrap()
             .svg;
+        // Four opaque blocks and five tube legs of solid links; wire shades nothing.
         assert_eq!(
             svg.matches(SHADOW_REFERENCE).count(),
-            if theme == "wire" { 0 } else { 4 },
+            if theme == "wire" { 0 } else { 9 },
             "{theme}"
         );
         examined += 1;

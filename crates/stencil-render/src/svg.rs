@@ -406,6 +406,8 @@ struct SvgWriter<'a> {
     text_elements: usize,
     canvas: Canvas,
     palette: Palette<'a>,
+    /// Section 12.2 rule 7: the zoom of an iso scene, which tube radii follow; 1 in flat.
+    iso_zoom: f32,
 }
 
 impl<'a> SvgWriter<'a> {
@@ -415,6 +417,7 @@ impl<'a> SvgWriter<'a> {
             text_elements: 0,
             canvas,
             palette,
+            iso_zoom: 1.0,
         }
     }
 

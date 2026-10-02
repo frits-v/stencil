@@ -134,8 +134,7 @@
                   "line": "solid",
                   "tint": 2,
                   "label": "VLAN 20",
-                  "sub": "server trunk",
-                  "to": "fw"
+                  "sub": "server trunk"
                 },
                 {
                   "tag": "Pipe",

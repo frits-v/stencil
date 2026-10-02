@@ -1,7 +1,7 @@
-//! Link paths over the slabs (section 12.3, rule 7): a routed polyline split where it
-//! crosses a slab edge, each piece at the top of the highest slab under it, a vertical
-//! riser at every change of height, and each end cut back to where it enters its endpoint
-//! block on screen.
+//! Link paths over the slabs (section 12.3, rule 7): a routed polyline lifted to the top of
+//! the highest slab it runs over, so it lies on the highest terrain it crosses and floats
+//! over lower floor by at most that difference, and each end cut back to where it enters
+//! its endpoint block on screen.
 
 use stencil_layout::{BoxRect, GEOMETRY_EPSILON_PX};
 use stencil_model::PagePoint;
@@ -35,22 +35,6 @@ pub(crate) fn ground_z(terrain: &[Terrain], x: f32, y: f32) -> f32 {
         .filter(|area| contains(area.bounds, x, y))
         .map(|area| area.top)
         .fold(0.0, f32::max)
-}
-
-fn same_place(first: IsoPoint, x: f32, y: f32) -> bool {
-    (first.x - x).abs() <= GEOMETRY_EPSILON_PX && (first.y - y).abs() <= GEOMETRY_EPSILON_PX
-}
-
-/// Appends a point, skipping a repeat; a point at the last point's place but another
-/// height is a riser.
-fn push_point(path: &mut Vec<IsoPoint>, x: f32, y: f32, z: f32) {
-    if let Some(last) = path.last()
-        && same_place(*last, x, y)
-        && (last.z - z).abs() <= GEOMETRY_EPSILON_PX
-    {
-        return;
-    }
-    path.push(IsoPoint { x, y, z });
 }
 
 /// Parameters in (0, 1) where the segment crosses an edge of a terrain footprint.
@@ -92,20 +76,42 @@ fn cuts(start: PagePoint, end: PagePoint, terrain: &[Terrain]) -> Vec<f32> {
     cuts
 }
 
-/// Drops a point that lies on the straight run between its neighbours at their height.
+/// The top of the highest terrain under any stretch of the polyline: each segment is
+/// sampled at the midpoint of every span between its edge crossings.
+pub(crate) fn route_z(points: &[PagePoint], terrain: &[Terrain]) -> f32 {
+    let mut highest: f32 = 0.0;
+    for pair in points.windows(2) {
+        let (Some(&start), Some(&end)) = (pair.first(), pair.get(1)) else {
+            continue;
+        };
+        for span in cuts(start, end, terrain).windows(2) {
+            let (Some(&from), Some(&to)) = (span.first(), span.get(1)) else {
+                continue;
+            };
+            let middle = (from + to) / 2.0;
+            let x = start.x + middle * (end.x - start.x);
+            let y = start.y + middle * (end.y - start.y);
+            highest = highest.max(ground_z(terrain, x, y));
+        }
+    }
+    if let Some(point) = points.first() {
+        highest = highest.max(ground_z(terrain, point.x, point.y));
+    }
+    highest
+}
+
+/// Drops a point that lies on the straight run between its neighbours.
 fn simplify(path: Vec<IsoPoint>) -> Vec<IsoPoint> {
     let mut kept: Vec<IsoPoint> = Vec::with_capacity(path.len());
     for point in path {
         if kept.len() >= 2
             && let (Some(&middle), Some(&first)) = (kept.last(), kept.get(kept.len() - 2))
         {
-            let flat = (first.z - middle.z).abs() <= GEOMETRY_EPSILON_PX
-                && (middle.z - point.z).abs() <= GEOMETRY_EPSILON_PX;
             let cross = (middle.x - first.x) * (point.y - first.y)
                 - (middle.y - first.y) * (point.x - first.x);
             let forward = (middle.x - first.x) * (point.x - middle.x)
                 + (middle.y - first.y) * (point.y - middle.y);
-            if flat && cross.abs() <= GEOMETRY_EPSILON_PX && forward >= 0.0 {
+            if cross.abs() <= GEOMETRY_EPSILON_PX && forward >= 0.0 {
                 kept.pop();
             }
         }
@@ -114,78 +120,19 @@ fn simplify(path: Vec<IsoPoint>) -> Vec<IsoPoint> {
     kept
 }
 
-/// The routed polyline laid over the terrain.
+/// The routed polyline lifted to the highest terrain it runs over.
 pub(crate) fn drape(points: &[PagePoint], terrain: &[Terrain]) -> Vec<IsoPoint> {
-    let mut path: Vec<IsoPoint> = Vec::with_capacity(points.len() * 2);
-    for pair in points.windows(2) {
-        let (Some(&start), Some(&end)) = (pair.first(), pair.get(1)) else {
-            continue;
-        };
-        let at = |parameter: f32| {
-            (
-                start.x + parameter * (end.x - start.x),
-                start.y + parameter * (end.y - start.y),
-            )
-        };
-        for span in cuts(start, end, terrain).windows(2) {
-            let (Some(&from), Some(&to)) = (span.first(), span.get(1)) else {
-                continue;
-            };
-            let middle = at((from + to) / 2.0);
-            let z = ground_z(terrain, middle.0, middle.1);
-            let (from_x, from_y) = at(from);
-            let (to_x, to_y) = at(to);
-            push_point(&mut path, from_x, from_y, z);
-            push_point(&mut path, to_x, to_y, z);
-        }
-    }
-    let mut path = simplify(path);
-    move_hidden_risers(&mut path);
-    path.dedup_by(|later, earlier| {
-        same_place(*earlier, later.x, later.y) && (earlier.z - later.z).abs() <= GEOMETRY_EPSILON_PX
-    });
-    path
-}
-
-/// A riser at a slab's back or left edge stands behind a face the viewer cannot see: on
-/// screen the lower piece would run across the slab's top for one step of height before
-/// climbing. The lower piece is cut back by that step, to where it passes under the slab's
-/// top edge on screen, and the two pieces no longer meet: the writer lifts the pen between
-/// them. The lower piece lies on the +x or +y side of such an edge.
-fn move_hidden_risers(path: &mut [IsoPoint]) {
-    for index in 0..path.len().saturating_sub(1) {
-        let (Some(&first), Some(&second)) = (path.get(index), path.get(index + 1)) else {
-            continue;
-        };
-        if !same_place(first, second.x, second.y)
-            || (first.z - second.z).abs() <= GEOMETRY_EPSILON_PX
-        {
-            continue;
-        }
-        let neighbour = if first.z < second.z {
-            index.checked_sub(1).and_then(|at| path.get(at))
-        } else {
-            path.get(index + 2)
-        };
-        let Some(&neighbour) = neighbour else {
-            continue;
-        };
-        let Some((dx, dy)) =
-            super::shapes::unit_direction((neighbour.x, neighbour.y), (first.x, first.y))
-        else {
-            continue;
-        };
-        if dx <= GEOMETRY_EPSILON_PX && dy <= GEOMETRY_EPSILON_PX {
-            continue;
-        }
-        let reach = (first.x - neighbour.x).hypot(first.y - neighbour.y);
-        let step = (first.z - second.z).abs().min(reach);
-        let lower = if first.z < second.z { index } else { index + 1 };
-        if let Some(point) = path.get_mut(lower) {
-            point.x -= dx * step;
-            point.y -= dy * step;
-        }
-    }
+    let z = route_z(points, terrain);
+    simplify(
+        points
+            .iter()
+            .map(|point| IsoPoint {
+                x: point.x,
+                y: point.y,
+                z,
+            })
+            .collect(),
+    )
 }
 
 fn screen(point: IsoPoint) -> ScreenPoint {
@@ -272,65 +219,22 @@ mod tests {
     }
 
     #[test]
-    fn a_path_from_one_slab_to_another_steps_down_and_up_at_the_edges() {
+    fn a_path_over_two_slabs_lies_on_the_higher_one_throughout() {
         let terrain = [
             slab(0.0, 0.0, 100.0, 100.0, 6.0),
             slab(200.0, 0.0, 100.0, 100.0, 6.0),
             slab(210.0, 10.0, 80.0, 80.0, 12.0),
         ];
         let path = drape(&[page_point(50.0, 50.0), page_point(250.0, 50.0)], &terrain);
-        let heights: Vec<(f32, f32)> = path.iter().map(|point| (point.x, point.z)).collect();
-        assert_eq!(
-            heights,
-            vec![
-                (50.0, 6.0),
-                (100.0, 6.0),
-                (100.0, 0.0),
-                (194.0, 0.0),
-                (200.0, 6.0),
-                (204.0, 6.0),
-                (210.0, 12.0),
-                (250.0, 12.0),
-            ]
-        );
-    }
-
-    #[test]
-    fn a_path_passes_under_a_hidden_edge_and_climbs_a_visible_one() {
-        let terrain = [slab(100.0, 0.0, 100.0, 100.0, 12.0)];
-        let onto = drape(&[page_point(50.0, 50.0), page_point(150.0, 50.0)], &terrain);
-        let places: Vec<(f32, f32)> = onto.iter().map(|point| (point.x, point.z)).collect();
-        assert_eq!(
-            places,
-            vec![(50.0, 0.0), (88.0, 0.0), (100.0, 12.0), (150.0, 12.0)]
-        );
-        let off = drape(&[page_point(150.0, 50.0), page_point(50.0, 50.0)], &terrain);
-        let places: Vec<(f32, f32)> = off.iter().map(|point| (point.x, point.z)).collect();
-        assert_eq!(
-            places,
-            vec![(150.0, 12.0), (100.0, 12.0), (88.0, 0.0), (50.0, 0.0)]
-        );
-        let back = drape(
-            &[page_point(150.0, -50.0), page_point(150.0, 50.0)],
+        assert_eq!(path.len(), 2);
+        assert!(path.iter().all(|point| point.z == 12.0), "{path:?}");
+        let low = drape(&[page_point(50.0, 50.0), page_point(150.0, 50.0)], &terrain);
+        assert!(low.iter().all(|point| point.z == 6.0), "{low:?}");
+        let ground = drape(
+            &[page_point(120.0, 50.0), page_point(180.0, 50.0)],
             &terrain,
         );
-        let places: Vec<(f32, f32)> = back.iter().map(|point| (point.y, point.z)).collect();
-        assert_eq!(
-            places,
-            vec![(-50.0, 0.0), (-12.0, 0.0), (0.0, 12.0), (50.0, 12.0)]
-        );
-        let front = drape(
-            &[page_point(250.0, 50.0), page_point(150.0, 50.0)],
-            &terrain,
-        );
-        let places: Vec<(f32, f32)> = front.iter().map(|point| (point.x, point.z)).collect();
-        assert_eq!(
-            places,
-            vec![(250.0, 0.0), (200.0, 0.0), (200.0, 12.0), (150.0, 12.0)]
-        );
-        let short = drape(&[page_point(95.0, 50.0), page_point(150.0, 50.0)], &terrain);
-        let places: Vec<(f32, f32)> = short.iter().map(|point| (point.x, point.z)).collect();
-        assert_eq!(places, vec![(95.0, 0.0), (100.0, 12.0), (150.0, 12.0)]);
+        assert!(ground.iter().all(|point| point.z == 0.0), "{ground:?}");
     }
 
     #[test]

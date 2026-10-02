@@ -726,7 +726,7 @@ pub(crate) fn local_part(part: &Part, axis: Axis, pivot: (f32, f32)) -> Part {
 fn link_label(
     route: &LinkRoute,
     drawn: &[PagePoint],
-    terrain: &[Terrain],
+    z: f32,
     zoom: f32,
     origin: (f32, f32),
     plane: &dyn Fn(f32) -> PlaneMap,
@@ -734,7 +734,6 @@ fn link_label(
     let tag = route.tag?;
     let (layout_x, layout_y) = center(tag);
     let (scene_center, _) = stencil_layout::longest_segment_midpoint(drawn);
-    let z = drape::ground_z(terrain, scene_center.x, scene_center.y);
     let shift = (
         origin.0 + (scene_center.x - origin.0) / zoom - layout_x,
         origin.1 + (scene_center.y - origin.1) / zoom - layout_y,
@@ -807,6 +806,16 @@ const ZERO_OFFSET: ScreenPoint = ScreenPoint { x: 0.0, y: 0.0 };
 /// rule 7): 18 for solid slot 1, 15 for every dash, 14 for the rest. Each is at least four
 /// times the widest stroke the line has in any theme, and it does not depend on the theme,
 /// so the drawn canvas does not either.
+/// Radius of a link's tube at zoom 1 (section 12.3 rule 7): the primary attachment is the
+/// thickest, a dashed line next, every other line the thinnest, the same in every theme.
+pub fn link_tube_radius(line: Line, tint: Option<u8>) -> f32 {
+    match (line, tint) {
+        (Line::Solid, Some(1)) => 4.5,
+        (Line::Dash, _) => 3.0,
+        (Line::Gray | Line::Solid | Line::Deny, _) => 2.5,
+    }
+}
+
 pub fn iso_link_arrowhead_length(line: Line, tint: Option<u8>) -> f32 {
     match (line, tint) {
         (Line::Solid, Some(1)) => 18.0,
@@ -1144,7 +1153,10 @@ pub fn project_zoomed(
                 extent.add(project_point(x, y, tip.z, ZERO_OFFSET));
             }
         }
-        if let Some(label) = link_label(route, points, &terrain, zoom, origin, &unshifted) {
+        // The tag pill lies on the tube's top, as a pipe's does.
+        let tag_z = path.first().map_or(0.0, |point| point.z)
+            + 2.0 * link_tube_radius(route.line, route.tint) * zoom;
+        if let Some(label) = link_label(route, points, tag_z, zoom, origin, &unshifted) {
             for corner in label.corners {
                 extent.add(corner);
             }

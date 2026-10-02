@@ -172,16 +172,30 @@ pub(crate) fn cone(
     })
 }
 
-/// The ring at a dot end, centered on the flat point `center` along `run`.
-pub(crate) fn flange(center: (f32, f32), run: (f32, f32), floor_z: f32) -> Tube {
-    let half = FLANGE_LENGTH_PX / 2.0;
+/// The ring at a dot end, centered on the flat point `center` along `run`, its sizes at
+/// `zoom`.
+pub(crate) fn flange(center: (f32, f32), run: (f32, f32), floor_z: f32, zoom: f32) -> Tube {
+    let half = FLANGE_LENGTH_PX * zoom / 2.0;
     Tube {
         start: (center.0 - run.0 * half, center.1 - run.1 * half),
         end: (center.0 + run.0 * half, center.1 + run.1 * half),
         // A ring sits on the same axis as its tube.
-        floor_z: floor_z + ISO_TUBE_RADIUS_PX - FLANGE_RADIUS_PX,
-        radius: FLANGE_RADIUS_PX,
+        floor_z: floor_z + (ISO_TUBE_RADIUS_PX - FLANGE_RADIUS_PX) * zoom,
+        radius: FLANGE_RADIUS_PX * zoom,
     }
+}
+
+/// The flat rectangle a tube covers on its plane: its shadow's shape.
+pub(crate) fn floor_print(tube: &Tube, offset: ScreenPoint) -> Option<[ScreenPoint; 4]> {
+    let run = tube.run()?;
+    let across = (-run.1 * tube.radius, run.0 * tube.radius);
+    let (start, end) = (tube.start, tube.end);
+    Some([
+        project_point(start.0 - across.0, start.1 - across.1, tube.floor_z, offset),
+        project_point(end.0 - across.0, end.1 - across.1, tube.floor_z, offset),
+        project_point(end.0 + across.0, end.1 + across.1, tube.floor_z, offset),
+        project_point(start.0 + across.0, start.1 + across.1, tube.floor_z, offset),
+    ])
 }
 
 /// The body of a band on the plane at `z`: the flat rectangle between its ends, as four
@@ -312,7 +326,7 @@ mod tests {
 
     #[test]
     fn a_flange_straddles_its_center_on_the_tube_axis() {
-        let ring = flange((30.0, 10.0), (0.0, 1.0), 6.0);
+        let ring = flange((30.0, 10.0), (0.0, 1.0), 6.0, 1.0);
         assert!(close(ring.start.1, 8.0) && close(ring.end.1, 12.0));
         assert!(close(ring.start.0, 30.0));
         assert!(close(ring.axis_z(), 6.0 + ISO_TUBE_RADIUS_PX));
