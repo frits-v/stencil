@@ -5,7 +5,7 @@
 use stencil_layout::{BoxRect, LinkRoute, NodeGeometry, NodeTag, PageGeometry, Part, PartName};
 use stencil_model::pointer::NodePointer;
 use stencil_model::{
-    LINKS_MAX, Link, Node, NodeRef, Page, PipeDir, PipeForm, Projection, Shape, Theme,
+    LINKS_MAX, Line, Link, Node, NodeRef, Page, PipeDir, PipeForm, Projection, Shape, Theme,
 };
 
 use super::DOT_RADIUS_PX;
@@ -875,6 +875,15 @@ impl<'a> SvgWriter<'a> {
                     kind,
                     offset,
                 );
+                if kind.line == Line::Deny {
+                    self.write_stop_plate(
+                        depth,
+                        (tip, outward),
+                        (z, z + ISO_TUBE_RADIUS_PX * zoom),
+                        kind,
+                        offset,
+                    );
+                }
             } else if !far {
                 self.write_flange(depth, (center, run), z, kind, offset);
             }
@@ -1073,6 +1082,37 @@ impl<'a> SvgWriter<'a> {
 
     /// The soft shadow a tube casts on its plane: its floor print, lowered and blurred like
     /// a block's.
+    /// A deny line's stop plate at `tip` (section 12.3 rule 5): its face toward the cone in
+    /// the cap tone and its top in the wire color, or both outlined under a hollow style.
+    fn write_stop_plate(
+        &mut self,
+        depth: usize,
+        (tip, outward): ((f32, f32), (f32, f32)),
+        (floor_z, axis_z): (f32, f32),
+        kind: LineUse,
+        offset: ScreenPoint,
+    ) {
+        let (face, top) = tube::stop_plate(tip, outward, (floor_z, axis_z), self.iso_zoom, offset);
+        let color = self.palette.wire_style(kind).stroke.color;
+        match self.tube_style(kind) {
+            TubeStyle::Hollow(_) => {
+                let fill = self.palette.page_background();
+                let outline = Stroke {
+                    width_px: HOLLOW_TUBE_OUTLINE_PX,
+                    line: LineStyle::Solid,
+                    color,
+                };
+                self.write_closed_path(depth, &top, fill, Some(outline));
+                self.write_closed_path(depth, &face, color, None);
+            }
+            TubeStyle::Filled => {
+                let dark = shade(color, TUBE_CAP_STEP).unwrap_or_else(|| color.to_string());
+                self.write_closed_path(depth, &top, color, None);
+                self.write_closed_path(depth, &face, &dark, None);
+            }
+        }
+    }
+
     fn write_tube_shadow(&mut self, depth: usize, tube: &Tube, offset: ScreenPoint) {
         let Some(shadow) = self.palette.iso_block_shadow() else {
             return;
@@ -1138,6 +1178,11 @@ impl<'a> SvgWriter<'a> {
         kind: LineUse,
         offset: ScreenPoint,
     ) {
+        // A deny line ends in a stop plate at its arrowed end and bare at the other: a
+        // hollow ring at its start read as a broken C.
+        if kind.line == Line::Deny {
+            return;
+        }
         let style = match (self.palette.wire_style(kind).dot, self.tube_style(kind)) {
             (DotStyle::None, _) => return,
             (DotStyle::Hollow, _) | (_, TubeStyle::Hollow(_)) => {
@@ -1268,6 +1313,15 @@ impl<'a> SvgWriter<'a> {
                 line_use,
                 offset,
             );
+            if route.line == Line::Deny {
+                self.write_stop_plate(
+                    depth + 1,
+                    ((tip.x, tip.y), direction),
+                    (tip.z, tip.z + radius),
+                    line_use,
+                    offset,
+                );
+            }
         }
         if let Some(label) = tag {
             self.write_link_tag_label(depth + 1, route, label)?;

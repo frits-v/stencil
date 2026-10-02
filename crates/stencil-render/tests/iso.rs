@@ -32,6 +32,7 @@ use stencil_render::{DeviceScale, format_number, measured_json, render_png};
 const HERO_JSON: &str = include_str!("../../../examples/hero-iso.json");
 const PLATFORM_JSON: &str = include_str!("../../../examples/platform-iso.json");
 const PEOPLE_JSON: &str = include_str!("../../../examples/people-iso.json");
+const ONPREM_JSON: &str = include_str!("../../../examples/onprem-iso.json");
 const ZERO: ScreenPoint = ScreenPoint { x: 0.0, y: 0.0 };
 
 const HERO_ON_PREM: &str = "/body/0/children/0/children/0";
@@ -2918,4 +2919,83 @@ fn a_pipe_through_floor_text_a_tag_nearer_another_pipe_and_a_label_without_a_blo
         defect_messages(&report),
         ["/body/0/orphan label /body/0/orphan at 0.00,0.00 along x has no block"]
     );
+}
+
+/// Section 12.3 rule 5: a deny line ends in a stop plate at its arrowed end, a wall across
+/// the run, and carries no ring at its other end; a deny link gets the same plate.
+#[test]
+fn a_deny_pipe_and_a_deny_link_end_in_a_stop_plate_and_a_deny_pipe_has_no_ring() {
+    let page: Page = serde_json::from_str(ONPREM_JSON).unwrap();
+    let geometry = common::layout_with_cosmic_text(&page);
+    let iso = render_svg(&page, &geometry).unwrap();
+    let document = common::parse_xml(&iso.svg);
+    let deny = geometry
+        .nodes
+        .iter()
+        .find(|node| {
+            node.tag == NodeTag::Pipe
+                && node.parts.iter().any(|part| {
+                    part.text
+                        .as_ref()
+                        .is_some_and(|run| run.text == "DMZ to inside")
+                })
+        })
+        .expect("the on-prem deny pipe");
+    let group = common::group(&document, &deny.pointer.to_string());
+    let polygons: Vec<roxmltree::Node> = group
+        .descendants()
+        .filter(|element| {
+            element.has_tag_name("polygon") && element.attribute("fill-opacity").is_none()
+        })
+        .collect();
+    // A hollow tube (far cap, outline and near cap), a hollow cone, the plate's top and
+    // face: no ring at the DMZ end, which would add three more.
+    assert_eq!(
+        polygons.len(),
+        6,
+        "{:?}",
+        polygons
+            .iter()
+            .map(|polygon| polygon.attribute("fill"))
+            .collect::<Vec<_>>()
+    );
+    let solid: Vec<_> = polygons
+        .iter()
+        .filter(|polygon| polygon.attribute("stroke").is_none())
+        .collect();
+    assert_eq!(
+        solid.len(),
+        2,
+        "the cone and the plate's face are filled without an outline"
+    );
+
+    let mut document = common::page_document(
+        json!([
+            {
+                "tag": "Row", "gap": 48,
+                "children": [
+                    { "tag": "Box", "kind": "region", "tint": 1, "label": "A", "children": [
+                        { "tag": "Item", "kind": "product", "id": "left", "title": "Left" } ] },
+                    { "tag": "Box", "kind": "region", "tint": 2, "label": "B", "children": [
+                        { "tag": "Item", "kind": "product", "id": "right", "title": "Right" } ] }
+                ]
+            }
+        ]),
+        json!([{ "line": "deny", "text": "blocked" }]),
+    );
+    document["links"] = json!([{ "from": "left", "to": "right", "line": "deny" }]);
+    document["projection"] = json!("iso");
+    let page: Page = serde_json::from_value(document).unwrap();
+    let geometry = common::layout_with_fixed_metrics(&page);
+    let iso = render_svg(&page, &geometry).unwrap();
+    let document = common::parse_xml(&iso.svg);
+    let group = common::group(&document, "/links/0");
+    let polygons = group
+        .descendants()
+        .filter(|element| {
+            element.has_tag_name("polygon") && element.attribute("fill-opacity").is_none()
+        })
+        .count();
+    // The cone, then the plate's top and face.
+    assert_eq!(polygons, 3);
 }

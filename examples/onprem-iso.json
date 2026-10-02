@@ -28,18 +28,6 @@
               "label": "Inside zone",
               "children": [
                 {
-                  "tag": "Item",
-                  "kind": "service",
-                  "title": "Core switch",
-                  "subtitle": "Layer 3, routes between VLANs",
-                  "facts": [
-                    {
-                      "text": "sw-core-01",
-                      "source": "built"
-                    }
-                  ]
-                },
-                {
                   "tag": "Box",
                   "kind": "group",
                   "tint": 1,
@@ -74,6 +62,18 @@
                     }
                   ],
                   "id": "vlan10"
+                },
+                {
+                  "tag": "Item",
+                  "kind": "service",
+                  "title": "Core switch",
+                  "subtitle": "Layer 3, routes between VLANs",
+                  "facts": [
+                    {
+                      "text": "sw-core-01",
+                      "source": "built"
+                    }
+                  ]
                 },
                 {
                   "tag": "Box",
@@ -119,29 +119,34 @@
               "gap": 12,
               "children": [
                 {
-                  "tag": "Pipe",
-                  "dir": "h",
-                  "line": "solid",
-                  "tint": 1,
-                  "label": "VLAN 10",
-                  "sub": "staff trunk",
-                  "from": "vlan10",
-                  "to": "fw"
+                  "tag": "Col",
+                  "children": [
+                    {
+                      "tag": "Pipe",
+                      "dir": "h",
+                      "line": "solid",
+                      "tint": 1,
+                      "label": "VLAN 10",
+                      "sub": "staff trunk",
+                      "from": "vlan10",
+                      "to": "fw"
+                    }
+                  ]
                 },
                 {
-                  "tag": "Pipe",
-                  "dir": "h",
-                  "line": "solid",
-                  "tint": 2,
-                  "label": "VLAN 20",
-                  "sub": "server trunk"
-                },
-                {
-                  "tag": "Pipe",
-                  "dir": "h",
-                  "line": "deny",
-                  "label": "DMZ to inside",
-                  "arrow": "start"
+                  "tag": "Col",
+                  "children": [
+                    {
+                      "tag": "Pipe",
+                      "dir": "h",
+                      "line": "solid",
+                      "tint": 2,
+                      "label": "VLAN 20",
+                      "sub": "server trunk",
+                      "from": "vlan20",
+                      "to": "fw"
+                    }
+                  ]
                 }
               ]
             },
@@ -173,23 +178,49 @@
               "gap": 12,
               "children": [
                 {
-                  "tag": "Pipe",
-                  "dir": "h",
-                  "line": "solid",
-                  "tint": 3,
-                  "label": "VLAN 30",
-                  "sub": "DMZ",
-                  "from": "fw"
+                  "tag": "Col",
+                  "children": [
+                    {
+                      "tag": "Pipe",
+                      "dir": "h",
+                      "line": "solid",
+                      "tint": 3,
+                      "label": "VLAN 30",
+                      "sub": "DMZ",
+                      "from": "fw",
+                      "to": "vlan30"
+                    }
+                  ]
                 },
                 {
-                  "tag": "Pipe",
-                  "dir": "h",
-                  "line": "solid",
-                  "tint": 4,
-                  "label": "VLAN 99",
-                  "sub": "transit",
-                  "form": "band",
-                  "from": "fw"
+                  "tag": "Col",
+                  "children": [
+                    {
+                      "tag": "Pipe",
+                      "dir": "h",
+                      "line": "solid",
+                      "tint": 4,
+                      "label": "VLAN 99",
+                      "sub": "transit",
+                      "form": "band",
+                      "from": "fw",
+                      "to": "vlan99"
+                    }
+                  ]
+                },
+                {
+                  "tag": "Col",
+                  "children": [
+                    {
+                      "tag": "Pipe",
+                      "dir": "h",
+                      "line": "deny",
+                      "label": "DMZ to inside",
+                      "arrow": "start",
+                      "from": "fw",
+                      "to": "dmz"
+                    }
+                  ]
                 }
               ]
             },
@@ -255,7 +286,8 @@
                   ],
                   "id": "vlan99"
                 }
-              ]
+              ],
+              "id": "dmz"
             }
           ]
         }

@@ -1683,6 +1683,14 @@ fn polygon_distance(first: &[ScreenPoint], second: &[ScreenPoint]) -> f32 {
     one_way(first, second).min(one_way(second, first))
 }
 
+/// The distance from a point to a convex polygon on screen: 0 inside or on its boundary.
+fn point_polygon_distance(point: ScreenPoint, polygon: &[ScreenPoint]) -> f32 {
+    if shapes::point_in_convex(point, polygon) {
+        return 0.0;
+    }
+    polygon_edge_distance(point, polygon)
+}
+
 /// The distance from a point to the nearest stroke of a drawn link path on screen.
 fn path_distance(point: ScreenPoint, path: &[IsoPoint], offset: ScreenPoint) -> f32 {
     path_strokes(path)
@@ -1741,8 +1749,10 @@ pub fn iso_labels_clear(scene: Option<&IsoScene>) -> CheckReport {
         }
     }
     // 2. An opaque solid painted after the label covers one of its marks, or stands closer
-    // to a mark than the label clearance. Link tags are painted after every solid, so for
-    // them every block counts, the way a tag must not lie where a block stands.
+    // to a mark than the label clearance at the zoom. Link tags are painted after every
+    // solid, so for them every block counts, the way a tag must not lie where a block
+    // stands.
+    let clearance = ISO_LABEL_CLEARANCE_PX * scene.zoom;
     for label in &labels {
         for solid in solids.iter().filter(|solid| solid.opaque) {
             let painted_later = match label.node {
@@ -1763,11 +1773,11 @@ pub fn iso_labels_clear(scene: Option<&IsoScene>) -> CheckReport {
                     pointer: label.owner.clone(),
                     message: format!("{} is covered by {}", describe(label), solid.pointer),
                 });
-            } else if nearest < ISO_LABEL_CLEARANCE_PX - GEOMETRY_EPSILON {
+            } else if nearest < clearance - GEOMETRY_EPSILON {
                 defects.push(Defect {
                     pointer: label.owner.clone(),
                     message: format!(
-                        "{} lies {nearest:.2} px from {}, closer than {ISO_LABEL_CLEARANCE_PX}",
+                        "{} lies {nearest:.2} px from {}, closer than {clearance:.2}",
                         describe(label),
                         solid.pointer
                     ),
@@ -1926,7 +1936,7 @@ pub fn iso_labels_clear(scene: Option<&IsoScene>) -> CheckReport {
             (Some(index), _) => scene.link_paths.get(index).map_or(f32::INFINITY, |path| {
                 path_distance(center, path, scene.offset)
             }),
-            (None, Some(surface)) => polygon_distance(&[center], &surface.outline),
+            (None, Some(surface)) => point_polygon_distance(center, &surface.outline),
             (None, None) => f32::INFINITY,
         };
         let mut nearer: Option<String> = None;
@@ -1941,7 +1951,7 @@ pub fn iso_labels_clear(scene: Option<&IsoScene>) -> CheckReport {
         }
         if nearer.is_none() {
             for surface in surfaces.iter().filter(|surface| !owns(label, surface)) {
-                if polygon_distance(&[center], &surface.outline) < own - GEOMETRY_EPSILON {
+                if point_polygon_distance(center, &surface.outline) < own - GEOMETRY_EPSILON {
                     nearer = Some(format!("pipe {}", surface.pointer));
                     break;
                 }
