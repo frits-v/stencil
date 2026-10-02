@@ -28,89 +28,95 @@
               "label": "Inside zone",
               "children": [
                 {
-                  "tag": "Box",
-                  "kind": "group",
-                  "tint": 1,
-                  "label": "VLAN 10 · staff",
+                  "tag": "Col",
+                  "gap": 12,
                   "children": [
                     {
-                      "tag": "Row",
+                      "tag": "Box",
+                      "kind": "group",
+                      "tint": 1,
+                      "label": "VLAN 10 · staff",
                       "children": [
                         {
-                          "tag": "Item",
-                          "kind": "service",
-                          "title": "Print server",
-                          "facts": [
+                          "tag": "Row",
+                          "children": [
                             {
-                              "text": "prn-01",
-                              "source": "built"
-                            }
-                          ]
-                        },
-                        {
-                          "tag": "Item",
-                          "kind": "service",
-                          "title": "Directory server",
-                          "facts": [
+                              "tag": "Item",
+                              "kind": "service",
+                              "title": "Print server",
+                              "facts": [
+                                {
+                                  "text": "prn-01",
+                                  "source": "built"
+                                }
+                              ]
+                            },
                             {
-                              "text": "dc-01",
-                              "source": "built"
+                              "tag": "Item",
+                              "kind": "service",
+                              "title": "Directory server",
+                              "facts": [
+                                {
+                                  "text": "dc-01",
+                                  "source": "built"
+                                }
+                              ]
                             }
                           ]
                         }
-                      ]
-                    }
-                  ],
-                  "id": "vlan10"
-                },
-                {
-                  "tag": "Item",
-                  "kind": "service",
-                  "title": "Core switch",
-                  "subtitle": "Layer 3, routes between VLANs",
-                  "facts": [
+                      ],
+                      "id": "vlan10"
+                    },
                     {
-                      "text": "sw-core-01",
-                      "source": "built"
-                    }
-                  ],
-                  "id": "core"
-                },
-                {
-                  "tag": "Box",
-                  "kind": "group",
-                  "tint": 2,
-                  "label": "VLAN 20 · servers",
-                  "children": [
+                      "tag": "Item",
+                      "kind": "service",
+                      "title": "Core switch",
+                      "subtitle": "Layer 3, routes between VLANs",
+                      "facts": [
+                        {
+                          "text": "sw-core-01",
+                          "source": "built"
+                        }
+                      ],
+                      "id": "core"
+                    },
                     {
-                      "tag": "Row",
+                      "tag": "Box",
+                      "kind": "group",
+                      "tint": 2,
+                      "label": "VLAN 20 · servers",
                       "children": [
                         {
-                          "tag": "Item",
-                          "kind": "service",
-                          "title": "Application server",
-                          "facts": [
+                          "tag": "Row",
+                          "children": [
                             {
-                              "text": "app-01",
-                              "source": "built"
-                            }
-                          ]
-                        },
-                        {
-                          "tag": "Item",
-                          "kind": "store",
-                          "title": "File server",
-                          "facts": [
+                              "tag": "Item",
+                              "kind": "service",
+                              "title": "Application server",
+                              "facts": [
+                                {
+                                  "text": "app-01",
+                                  "source": "built"
+                                }
+                              ]
+                            },
                             {
-                              "text": "fs-01",
-                              "source": "built"
+                              "tag": "Item",
+                              "kind": "store",
+                              "title": "File server",
+                              "facts": [
+                                {
+                                  "text": "fs-01",
+                                  "source": "built"
+                                }
+                              ]
                             }
                           ]
                         }
-                      ]
+                      ],
+                      "id": "vlan20"
                     }
-                  ],
-                  "id": "vlan20"
+                  ]
                 }
               ]
             },

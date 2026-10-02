@@ -1278,7 +1278,7 @@ fn the_hero_labels_are_clear() {
     // cylinder, and 2 link tags.
     assert_eq!(scene.labels.len(), 18);
     let report = iso_labels_clear(Some(&scene));
-    assert_eq!(report.examined, 406);
+    assert_eq!(report.examined, 417);
     assert!(report.defects.is_empty(), "{report:#?}");
     assert!(report.passed());
 }
@@ -2220,7 +2220,7 @@ fn the_platform_example_stands_one_item_of_each_form_with_its_labels_and_links_c
         assert_eq!(count, 1, "{form:?} in {forms:?}");
     }
     let labels = iso_labels_clear(Some(&scene));
-    assert_eq!(labels.examined, 236);
+    assert_eq!(labels.examined, 240);
     assert!(labels.defects.is_empty(), "{labels:#?}");
     assert!(labels.passed());
     let links = iso_links_clear(&geometry, Some(&scene));
@@ -3067,6 +3067,121 @@ fn band_page(line: &str) -> Value {
             { "line": "gray", "text": "control" }
         ]),
     )
+}
+
+/// Section 12.3 rule 8: a link into a laptop lands on the edge of its base plate, which is
+/// thick enough to read, and not on an edge of the hull between plate and screen.
+#[test]
+fn a_link_into_a_laptop_lands_on_the_edge_of_its_base_plate() {
+    let page: Page = serde_json::from_str(PEOPLE_JSON).unwrap();
+    let geometry = common::layout_with_cosmic_text(&page);
+    let laptop = geometry
+        .nodes
+        .iter()
+        .find(|node| node.shape == Some(Shape::Laptop))
+        .expect("the admin console laptop");
+    let footprint = laptop.part(PartName::Footprint).unwrap().bounds;
+    let scene = project_page(&geometry).unwrap();
+    let into = scene.link_paths[0].last().unwrap();
+    // The tip sits on the plate's left edge on screen: the top face's edge lies the plate's
+    // thickness behind the base edge in flat px.
+    assert!(
+        into.x <= footprint.x + 0.01
+            && into.x >= footprint.x - 6.0 * scene.zoom - 0.01
+            && into.y > footprint.y + 8.0
+            && into.y < footprint.bottom() - 8.0,
+        "the end {into:?} meets the plate's left edge {footprint:?}"
+    );
+    let plate = scene
+        .solids
+        .iter()
+        .find(|solid| {
+            solid.node
+                == geometry
+                    .nodes
+                    .iter()
+                    .position(|node| std::ptr::eq(node, laptop))
+                    .unwrap()
+        })
+        .unwrap();
+    // The plate's outline is six vertices of a thin box: its top edge on screen is at
+    // most LAPTOP_BASE_PX above its base edge, far under the screen slab's 40 px.
+    let top = plate
+        .outline
+        .iter()
+        .map(|point| point.y)
+        .fold(f32::INFINITY, f32::min);
+    let bottom = plate
+        .outline
+        .iter()
+        .map(|point| point.y)
+        .fold(f32::NEG_INFINITY, f32::max);
+    let depth = (footprint.width + footprint.height) / 2.0 * scene.zoom;
+    assert!(bottom - top <= depth + 6.0 + 0.01, "{:?}", plate.outline);
+    let report = iso_link_ends(&geometry, Some(&scene));
+    assert!(report.passed(), "{report:?}");
+}
+
+/// Section 12.7 rule 7b: a block standing off a filled slab whose silhouette overlaps the
+/// slab's on screen reads as half on the slab; a block standing on the slab does not.
+#[test]
+fn a_block_overlapping_a_slab_lip_is_a_defect_unless_it_stands_on_the_slab() {
+    let slab_footprint = BoxRect {
+        x: 0.0,
+        y: 0.0,
+        width: 200.0,
+        height: 100.0,
+    };
+    let make = |node: usize, shape: SolidShape, footprint: BoxRect, height: f32| {
+        let silhouette = stencil_render::iso::silhouette(footprint, 0.0, height, ZERO);
+        Solid {
+            node,
+            pointer: NodePointer::root().child("body").index(node),
+            shape,
+            base_z: 0.0,
+            height,
+            silhouette,
+            opaque: true,
+            footprint,
+            form: Shape::Block,
+            outline: silhouette.to_vec(),
+        }
+    };
+    let slab = make(0, SolidShape::Slab, slab_footprint, 6.0);
+    let in_front = BoxRect {
+        x: 50.0,
+        y: 110.0,
+        width: 64.0,
+        height: 64.0,
+    };
+    let mut scene = scene_with(Vec::new());
+    scene.solids = vec![slab.clone(), make(1, SolidShape::Block, in_front, 18.0)];
+    let report = iso_labels_clear(Some(&scene));
+    assert_eq!(
+        defect_messages(&report),
+        ["/body/1 block /body/1 overlaps the lip of slab /body/0 on screen"]
+    );
+    let on_the_slab = BoxRect {
+        x: 50.0,
+        y: 20.0,
+        width: 64.0,
+        height: 64.0,
+    };
+    let clear_in_front = BoxRect {
+        x: 50.0,
+        y: 130.0,
+        width: 64.0,
+        height: 64.0,
+    };
+    let mut scene = scene_with(Vec::new());
+    scene.solids = vec![
+        slab,
+        make(1, SolidShape::Block, on_the_slab, 18.0),
+        make(2, SolidShape::Block, clear_in_front, 18.0),
+    ];
+    let report = iso_labels_clear(Some(&scene));
+    assert_eq!(defect_messages(&report), Vec::<String>::new());
+    assert_eq!(report.examined, 1);
 }
 
 /// Section 12.7: tube radii follow the zoom, so the tag plane of a link lies a tube

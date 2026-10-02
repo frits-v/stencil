@@ -14,7 +14,7 @@ const TORSO_HEIGHT_SHARE: f32 = 0.56;
 /// Gap between the torso top and the head.
 const NECK_PX: f32 = 2.0;
 /// A laptop's base plate height.
-pub const LAPTOP_BASE_PX: f32 = 3.0;
+pub const LAPTOP_BASE_PX: f32 = 6.0;
 /// Depth of a laptop screen, along y.
 const SLAB_DEPTH_PX: f32 = 4.0;
 /// Depth of a phone, along y.
@@ -133,17 +133,12 @@ pub(crate) fn figure_outline(footprint: BoxRect, base_z: f32, top_z: f32) -> Vec
     convex_hull(&points)
 }
 
-/// The convex outline of a laptop on screen: the hull of its base and screen silhouettes.
-pub(crate) fn laptop_outline(footprint: BoxRect, base_z: f32, top_z: f32) -> Vec<ScreenPoint> {
-    let (base, screen) = laptop(footprint);
-    let mut points = silhouette(base, base_z, base_z + LAPTOP_BASE_PX, ZERO_OFFSET).to_vec();
-    points.extend(silhouette(
-        screen,
-        base_z + LAPTOP_BASE_PX,
-        top_z,
-        ZERO_OFFSET,
-    ));
-    convex_hull(&points)
+/// The outline of a laptop on screen: its base plate's silhouette, where a link lands. The
+/// hull of plate and screen would bridge the plate's front to the screen's top with an edge
+/// in the air, and a link landing on that edge touched nothing.
+pub(crate) fn laptop_outline(footprint: BoxRect, base_z: f32, _top_z: f32) -> Vec<ScreenPoint> {
+    let (base, _) = laptop(footprint);
+    silhouette(base, base_z, base_z + LAPTOP_BASE_PX, ZERO_OFFSET).to_vec()
 }
 
 /// The outline of a phone on screen: its slab's silhouette.
@@ -201,6 +196,36 @@ mod tests {
         );
         assert_eq!(panel[0], expected);
         assert!(panel[2].y > panel[1].y);
+    }
+
+    /// A laptop's outline is its base plate alone: a point on the plate's front edge lies
+    /// inside it and a point on the screen's face above it outside.
+    #[test]
+    fn a_laptop_outline_is_its_base_plate_without_the_screen() {
+        let footprint = footprint(56.0);
+        let outline = laptop_outline(footprint, 0.0, 40.0);
+        let (base, screen) = laptop(footprint);
+        let plate_front = project_point(
+            base.x + base.width / 2.0,
+            base.bottom(),
+            LAPTOP_BASE_PX,
+            ZERO_OFFSET,
+        );
+        let screen_face =
+            project_point(screen.x, screen.y + screen.height / 2.0, 20.0, ZERO_OFFSET);
+        let inside = |point: ScreenPoint| {
+            let centroid = ScreenPoint {
+                x: outline.iter().map(|p| p.x).sum::<f32>() / outline.len() as f32,
+                y: outline.iter().map(|p| p.y).sum::<f32>() / outline.len() as f32,
+            };
+            (0..outline.len()).all(|index| {
+                let (a, b) = (outline[index], outline[(index + 1) % outline.len()]);
+                let side = |p: ScreenPoint| (b.x - a.x) * (p.y - a.y) - (b.y - a.y) * (p.x - a.x);
+                side(point) * side(centroid) >= -1e-3
+            })
+        };
+        assert!(inside(plate_front), "{plate_front:?} in {outline:?}");
+        assert!(!inside(screen_face), "{screen_face:?} in {outline:?}");
     }
 
     #[test]
