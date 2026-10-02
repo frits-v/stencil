@@ -1,7 +1,7 @@
 //! Check reports (section 6) and the geometry-free checks; icon-matches-product lives in
 //! `products`.
 
-use crate::document::{Chrome, Line, Node, Page, line_tint};
+use crate::document::{Chrome, Line, Node, Page, PipeForm, line_tint};
 use crate::grammar::{GRAMMAR_REMEMBERED_MAX, Grammar};
 use crate::pointer::NodePointer;
 use crate::walk::{NodeRef, body_nodes, text_fields};
@@ -192,27 +192,35 @@ pub fn remembered_constants(page: &Page, grammar: &Grammar) -> CheckReport {
     }
 }
 
-/// What legend consistency compares: a line and its effective tint (section 13.1 rule 8).
+/// What legend consistency compares: a line, its effective tint and its form (section 13.1
+/// rule 8). A band and a tube of one line and tint are two looks, so two entries.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 struct LegendKey {
     line: Line,
     tint: Option<u8>,
+    form: PipeForm,
 }
 
 impl LegendKey {
-    fn new(line: Line, tint: Option<u8>) -> Self {
+    fn new(line: Line, tint: Option<u8>, form: PipeForm) -> Self {
         LegendKey {
             line,
             tint: line_tint(line, tint),
+            form,
         }
     }
 
-    /// The key in document terms, for example "line solid tint 2" or "line gray".
+    /// The key in document terms, for example "line solid tint 2", "line gray" or "line
+    /// solid tint 4 form band".
     fn describe(self) -> String {
-        match self.tint {
+        let mut key = match self.tint {
             Some(tint) => format!("line {} tint {tint}", self.line.as_str()),
             None => format!("line {}", self.line.as_str()),
+        };
+        if self.form == PipeForm::Band {
+            key.push_str(" form band");
         }
+        key
     }
 }
 
@@ -227,15 +235,23 @@ pub fn legend_consistency(page: &Page) -> CheckReport {
     for entry in body_nodes(page) {
         match entry.node {
             NodeRef::Node(Node::Pipe(pipe)) => {
-                uses.push((entry.pointer, LegendKey::new(pipe.line, pipe.tint), "Pipe"));
+                uses.push((
+                    entry.pointer,
+                    LegendKey::new(pipe.line, pipe.tint, pipe.form),
+                    "Pipe",
+                ));
             }
             NodeRef::TeeArm(arm) => {
-                uses.push((entry.pointer, LegendKey::new(arm.line, arm.tint), "Tee arm"));
+                uses.push((
+                    entry.pointer,
+                    LegendKey::new(arm.line, arm.tint, arm.form),
+                    "Tee arm",
+                ));
             }
             NodeRef::Node(Node::Tee(tee)) => {
                 uses.push((
                     entry.pointer,
-                    LegendKey::new(tee.line, tee.tint),
+                    LegendKey::new(tee.line, tee.tint, PipeForm::Tube),
                     "Tee spine",
                 ));
             }
@@ -257,7 +273,7 @@ pub fn legend_consistency(page: &Page) -> CheckReport {
     for (index, link) in page.links.iter().enumerate().take(LINKS_MAX + 1) {
         uses.push((
             links_pointer.index(index),
-            LegendKey::new(link.line, link.tint),
+            LegendKey::new(link.line, link.tint, PipeForm::Tube),
             "Link",
         ));
     }
@@ -267,7 +283,7 @@ pub fn legend_consistency(page: &Page) -> CheckReport {
         .legend
         .iter()
         .take(legend_examined)
-        .map(|legend_entry| LegendKey::new(legend_entry.line, legend_entry.tint))
+        .map(|legend_entry| LegendKey::new(legend_entry.line, legend_entry.tint, legend_entry.form))
         .collect();
 
     let single_key_without_legend = page.chrome == Chrome::None

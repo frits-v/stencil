@@ -5,9 +5,9 @@
 mod common;
 
 use common::{g7_page, item, legend_entry, page_with_body, pipe, pipe_value, tee};
-use stencil_model::PipeDir;
 use stencil_model::checks::{CheckName, CheckReport, legend_consistency};
 use stencil_model::{Chrome, LEGEND_ENTRIES_MAX, Line};
+use stencil_model::{Node, PipeDir, PipeForm};
 
 fn defects(report: &CheckReport) -> Vec<(String, String)> {
     report
@@ -200,6 +200,50 @@ fn a_dash_tint_2_needs_its_own_entry() {
     page.legend
         .push(legend_entry(Line::Dash, Some(2), "second failover"));
     assert!(legend_consistency(&page).passed());
+}
+
+#[test]
+fn a_band_pipe_needs_an_entry_of_its_form() {
+    let mut band = pipe_value(PipeDir::Horizontal, Line::Solid, Some(4), "a");
+    band.form = PipeForm::Band;
+    let mut page = page_with_body(vec![Node::Pipe(band), item("b")]);
+    page.legend = vec![legend_entry(Line::Solid, Some(4), "tube entry")];
+    let report = legend_consistency(&page);
+    assert_eq!(report.examined, 2);
+    assert_eq!(
+        defects(&report),
+        vec![
+            (
+                "/body/0".to_string(),
+                "Pipe line solid tint 4 form band has no legend entry".to_string()
+            ),
+            (
+                "/legend/0".to_string(),
+                "legend line solid tint 4 is never used".to_string()
+            ),
+        ]
+    );
+    page.legend[0].form = PipeForm::Band;
+    let report = legend_consistency(&page);
+    assert_eq!(report.examined, 2);
+    assert!(report.passed());
+}
+
+#[test]
+fn a_band_and_a_tube_of_one_line_take_two_entries() {
+    let mut band = pipe_value(PipeDir::Horizontal, Line::Solid, Some(1), "a");
+    band.form = PipeForm::Band;
+    let mut page = page_with_body(vec![
+        Node::Pipe(band),
+        item("b"),
+        pipe(Line::Solid, Some(1), "c"),
+    ]);
+    let mut band_entry = legend_entry(Line::Solid, Some(1), "band entry");
+    band_entry.form = PipeForm::Band;
+    page.legend = vec![legend_entry(Line::Solid, Some(1), "tube entry"), band_entry];
+    let report = legend_consistency(&page);
+    assert_eq!(report.examined, 4);
+    assert!(report.passed());
 }
 
 #[test]

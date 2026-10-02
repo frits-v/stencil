@@ -279,6 +279,7 @@ g7_cases=(
 	'asn-64512|s/subtitle: "private ASN · RFC 6996"/subtitle: "private ASN 64512"/|.subtitle: invalid value "private ASN 64512"'
 	'legend-unused-line|s/{line: "dash", text: "region failover, not a fifth line"},/&\n\t\t{line: "deny", text: "prohibited path"},/|_legendKeysUnusedInBody.deny'
 	'pipe-line-missing-from-legend|/{line: "dash", text: "region failover, not a fifth line"},/d|_pipeKeysMissingFromLegend."dash-1"'
+	'band-pipe-needs-its-own-legend-entry|s/label: "VLAN 1", sub: "EAD 1 · BGP"/form: "band", &/|_pipeKeysMissingFromLegend."solid-1-band"'
 	'item-without-subtitle-or-fact|s/title: "Cloud Router A", subtitle: "private ASN · RFC 6996"/title: "Cloud Router A"/|_itemsWithoutSubtitleOrFact."Cloud Router A"'
 	'empty-ask|s/subtitle: "same private ASN as Region A"/facts: [{text: "", source: "ask"}]/|.facts.0.text: invalid value ""'
 	'solid-tint-2-pipe-beside-region-tint-1|s/line:  "dash"/line:  "solid", tint: 2/|_pipeBesideZoneOfOtherTint'

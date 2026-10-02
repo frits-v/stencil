@@ -20,7 +20,7 @@ use stencil_layout::{
 use stencil_model::checks::{CheckName, CheckOutcome};
 use stencil_model::grammar::Role;
 use stencil_model::pointer::NodePointer;
-use stencil_model::{Line, Page, Projection, Shape, Theme};
+use stencil_model::{Line, Page, PipeForm, Projection, Shape, Theme};
 use stencil_render::iso::{
     Axis, ISO_MARGIN_PX, ISO_TUBE_RADIUS_PX, ISO_ZOOM_MAX, IsoPoint, IsoScene, Label, LabelParts,
     PlaneMap, ScreenPoint, Solid, SolidShape, iso_labels_clear, iso_link_ends, iso_links_apart,
@@ -2918,6 +2918,75 @@ fn a_pipe_through_floor_text_a_tag_nearer_another_pipe_and_a_label_without_a_blo
     assert_eq!(
         defect_messages(&report),
         ["/body/0/orphan label /body/0/orphan at 0.00,0.00 along x has no block"]
+    );
+}
+
+/// Section 2.2: a legend entry of the band form draws its swatch as a bar in the wire
+/// color, where every tube entry draws a wire, so the legend tells the two looks apart.
+#[test]
+fn a_band_legend_entry_draws_a_bar_swatch_and_a_tube_entry_a_wire() {
+    let page: Page = serde_json::from_str(ONPREM_JSON).unwrap();
+    let geometry = common::layout_with_cosmic_text(&page);
+    let iso = render_svg(&page, &geometry).unwrap();
+    let document = common::parse_xml(&iso.svg);
+    let band_index = page
+        .legend
+        .iter()
+        .position(|entry| entry.form == PipeForm::Band)
+        .expect("the VLAN 99 band entry");
+    for (index, entry) in page.legend.iter().enumerate() {
+        let group = common::group(&document, &format!("/legend/{index}"));
+        let wires = common::children_named(group, "line").len();
+        let bars = common::children_named(group, "rect");
+        if index == band_index {
+            assert_eq!((wires, bars.len()), (0, 1), "{}", entry.text);
+            assert_eq!(bars[0].attribute("height"), Some("8"));
+            assert_eq!(bars[0].attribute("width"), Some("26"));
+            assert_eq!(bars[0].attribute("stroke"), None, "a solid band is filled");
+        } else {
+            assert_eq!((wires, bars.len()), (1, 0), "{}", entry.text);
+        }
+    }
+}
+
+/// A patterned band is drawn hollow in its pattern, and so is its legend bar: page
+/// background inside, the line's dasharray on the outline.
+#[test]
+fn a_dashed_band_legend_entry_draws_a_hollow_bar_in_its_pattern() {
+    fn dash_every_tint_4_line(value: &mut Value) {
+        match value {
+            Value::Object(object) => {
+                if object.get("tint") == Some(&json!(4)) && object.contains_key("line") {
+                    object.insert("line".to_string(), json!("dash"));
+                }
+                for member in object.values_mut() {
+                    dash_every_tint_4_line(member);
+                }
+            }
+            Value::Array(members) => members.iter_mut().for_each(dash_every_tint_4_line),
+            _ => {}
+        }
+    }
+    let mut document: Value = serde_json::from_str(ONPREM_JSON).unwrap();
+    dash_every_tint_4_line(&mut document);
+    let page: Page = serde_json::from_value(document).unwrap();
+    let band_index = page
+        .legend
+        .iter()
+        .position(|entry| entry.form == PipeForm::Band)
+        .expect("the VLAN 99 band entry");
+    assert_eq!(page.legend[band_index].line, Line::Dash);
+    let geometry = common::layout_with_cosmic_text(&page);
+    let iso = render_svg(&page, &geometry).unwrap();
+    let document = common::parse_xml(&iso.svg);
+    let group = common::group(&document, &format!("/legend/{band_index}"));
+    let bars = common::children_named(group, "rect");
+    assert_eq!(bars.len(), 1);
+    assert_eq!(bars[0].attribute("fill"), Some("#FFFFFF"));
+    assert_eq!(bars[0].attribute("stroke-width"), Some("1.5"));
+    assert!(
+        bars[0].attribute("stroke-dasharray").is_some(),
+        "the bar's outline carries the dash pattern"
     );
 }
 

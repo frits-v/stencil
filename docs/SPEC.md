@@ -411,7 +411,7 @@ Root children, top to bottom:
 | `/legend` | omitted when `legend` is empty; flex row, wrap, column gap 16, row gap 6, margin-top 10 | one LegendEntry node per entry |
 | `/foot` | omitted when `foot` is absent; text leaf, margin-top 8 | style `foot` |
 
-A LegendEntry node is a flex row, `AlignItems::CENTER`, gap 6, holding three parts. The swatch is 26 by 2 and is drawn as a wire: a `<line>` along its box's center line with `stroke-width="2"` and the section 5.2 color and dasharray for its kind. The label uses style `legend_label` with the fixed text for its kind. The text uses style `legend_text`.
+A LegendEntry node is a flex row, `AlignItems::CENTER`, gap 6, holding three parts. The swatch is 26 by 2 and is drawn as a wire: a `<line>` along its box's center line with `stroke-width="2"` and the section 5.2 color and dasharray for its kind; an entry with `form: band` draws a `<rect>` 26 by `BAND_SWATCH_HEIGHT_PX` = 8 centered on that line instead, filled in the wire color, or filled with the page background and outlined 1.5 px in the line's pattern when the line is patterned, as the band of section 12.7 is. The label uses style `legend_label` with the fixed text for its kind. The text uses style `legend_text`.
 
 | PipeKind | Legend label |
 |---|---|
@@ -2823,6 +2823,7 @@ Field summary additions and changes (section 1.1):
 | Link | order | integer 1 to 256 | no | absent (section 13.6) |
 | LegendEntry | line | Line | yes | |
 | LegendEntry | tint | integer 1 to 8 | no | rule 2 |
+| LegendEntry | form | PipeForm (section 12.7) | no | `tube` |
 
 Line: `gray`, `solid`, `dash`, `deny`.
 
@@ -3136,7 +3137,7 @@ Rules:
 
    Arrow marker ids are `arrow-<theme name>-<line key>`. The keys are identifiers, not color claims: `blue` under the paper theme is drawn in paper's slot 1 wire.
 7. Canonical legend labels. Layout measures the LegendLabel run of each legend entry with the canonical label of its (line, effective tint), in every theme: `Solid gray` for gray, `Dashed red` for deny, `Solid <name>` for solid and `Dashed <name>` for dash, where `<name>` is `TINT_NAMES[tint - 1]`. For slots 1 and 2 these are the section 2.2 labels (`Solid blue`, `Solid pink`, `Dashed blue`), so center geometry does not move. What the renderer draws in place of the canonical label is section 13.4, rule 9.
-8. Legend consistency (section 6) keys every use and every legend entry on (line, effective tint). A used key with no entry, an entry whose key is never used, and a key listed twice are the three defects, with messages that name the key in document terms, for example `Pipe line solid tint 2 has no legend entry`. The examined count is unchanged: one per use plus one per examined legend entry. Section 13.7 adds one exception, for figures with `chrome: none`.
+8. Legend consistency (section 6) keys every use and every legend entry on (line, effective tint, form): a Pipe or Tee arm with `form: band` and a legend entry with `form: band` key on the band, every other use on the tube. A used key with no entry, an entry whose key is never used, and a key listed twice are the three defects, with messages that name the key in document terms, for example `Pipe line solid tint 2 has no legend entry` or `Pipe line solid tint 4 form band has no legend entry`. The core CUE schema appends `-band` to such a key. The examined count is unchanged: one per use plus one per examined legend entry. Section 13.7 adds one exception, for figures with `chrome: none`.
 9. `NodeGeometry.kind` becomes `Option<String>` and holds the key of rule 6; `NodeGeometry` gains `tint: Option<u8>`, the effective tint, which the measured JSON does not write (rule 5). `LinkRoute` gains `line: Line` in place of `kind` and `tint: Option<u8>`.
 
 Vet rules added to section 1.3. `validate_page` takes the resolved grammar: `validate_page(page: &Page, grammar: &Grammar) -> Vec<Violation>`.

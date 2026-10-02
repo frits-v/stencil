@@ -113,6 +113,7 @@ pub fn legend_entry(line: Line, tint: Option<u8>, text: &str) -> LegendEntry {
     LegendEntry {
         line,
         tint,
+        form: stencil_model::PipeForm::Tube,
         text: text.to_string(),
     }
 }

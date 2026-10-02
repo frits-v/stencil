@@ -69,15 +69,21 @@ import (
 
 // The legend key of a line: the line and its tint for solid and dash, slot 1
 // when tint is absent, and the line alone for gray and deny, whose tint has
-// no effect. Pipe (Tee arms included), Tee, Link and LegendEntry each carry
-// one as _lineKey.
+// no effect; a band form appends "-band", since a band and a tube of one
+// line are two looks. Pipe (Tee arms included), Tee, Link and LegendEntry
+// each carry one as _lineKey.
 #LineKey: {
 	#line:  #Line
 	#tint?: #TintSlot
-	key: [
+	#form?: #PipeForm
+	_lineTint: [
 		if #line == "gray" || #line == "deny" {#line},
 		if #tint != _|_ {"\(#line)-\(#tint)"},
 		"\(#line)-1",
+	][0]
+	key: [
+		if #form != _|_ if #form == "band" {"\(_lineTint)-band"},
+		_lineTint,
 	][0]
 	if #tint != _|_ if #line == "gray" || #line == "deny" {
 		_tintWithoutEffect: "tint \(#tint)" & "has no effect on a \(#line) line"
@@ -169,7 +175,8 @@ import (
 #LegendEntry: {
 	line:  #Line
 	tint?: #TintSlot
-	_lineKey: #LineKey & {#line: line, if tint != _|_ {#tint: tint}}
+	form?: #PipeForm
+	_lineKey: #LineKey & {#line: line, if tint != _|_ {#tint: tint}, if form != _|_ {#form: form}}
 	text: #Text
 }
 
@@ -328,7 +335,7 @@ import (
 	dir:   "h" | "v"
 	line:  #Line
 	tint?: #TintSlot
-	_lineKey: #LineKey & {#line: line, if tint != _|_ {#tint: tint}}
+	_lineKey: #LineKey & {#line: line, if tint != _|_ {#tint: tint}, if form != _|_ {#form: form}}
 	label:  #Text
 	sub?:   #Text
 	arrow?: #Arrow
