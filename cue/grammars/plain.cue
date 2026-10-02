@@ -63,6 +63,7 @@ grammar: stencil.#Grammar & {
 		parents: list.Concat([[for c in containers {c.name}], ["page"]])
 		if itemName == "person" {shape: "figure"}
 		if itemName == "device" {shape: "laptop"}
+		if itemName == "service" || itemName == "store" || itemName == "external" {shape: "block"}
 	}]
 	remembered: []
 }

@@ -155,6 +155,9 @@ grammar: stencil.#Grammar & {
 			{icon: "vertex-ai", class: "product", names: ["Vertex AI"]},
 		]
 		parents: list.Concat([[for c in containers {c.name}], ["page"]])
+		// Under iso a product stands as a block unless its icon's row says otherwise;
+		// an item asks for the raised card with shape: "card".
+		shape: "block"
 	}, {
 		// A user, operator or team, drawn as a standing figure under iso.
 		name:  "person"

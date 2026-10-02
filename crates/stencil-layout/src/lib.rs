@@ -49,6 +49,7 @@ pub fn shape_footprint_px(shape: Shape) -> f32 {
         Shape::Tile => 64.0,
         Shape::Tower => 44.0,
         Shape::Cylinder | Shape::Stack => 56.0,
+        Shape::Block => 64.0,
         Shape::Figure => 36.0,
         Shape::Laptop => 56.0,
         Shape::Phone => 28.0,
@@ -67,6 +68,7 @@ pub fn shape_height_px(shape: Shape) -> f32 {
         Shape::Tower => 44.0,
         Shape::Cylinder => 36.0,
         Shape::Stack => 30.0,
+        Shape::Block => ISO_BLOCK_HEIGHT_PX,
         Shape::Figure => 44.0,
         Shape::Laptop | Shape::Phone => 40.0,
     }

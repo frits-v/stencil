@@ -670,7 +670,7 @@ fn solid_outline(
             ));
             convex_hull(&points)
         }
-        Shape::Card | Shape::Tile | Shape::Tower => vertices.to_vec(),
+        Shape::Card | Shape::Tile | Shape::Tower | Shape::Block => vertices.to_vec(),
         Shape::Figure => sprites::figure_outline(footprint, base_z, top_z),
         Shape::Laptop => sprites::laptop_outline(footprint, base_z, top_z),
         Shape::Phone => sprites::phone_outline(footprint, base_z, top_z),
@@ -940,13 +940,22 @@ fn rule_8_route(route: &LinkRoute, geometry: &PageGeometry, solids: &[Solid]) ->
         geometry.nodes.get(route.to_node),
     );
     let straight = match ends {
-        (Some(from), Some(to)) => {
-            route::straightened(&route.points, from.bounds, to.bounds, &blocks)
-        }
+        (Some(from), Some(to)) => route::straightened(
+            &route.points,
+            attach_bounds(from),
+            attach_bounds(to),
+            &blocks,
+        ),
         _ => None,
     };
     let points = straight.unwrap_or_else(|| route.points.clone());
     route::kept_clear(&points, &zones, &blocks)
+}
+
+/// The box a link attaches to: an item's footprint when it stands on one, else its bounds.
+fn attach_bounds(node: &NodeGeometry) -> BoxRect {
+    node.part(PartName::Footprint)
+        .map_or(node.bounds, |part| part.bounds)
 }
 
 /// Every link: its adjusted flat route, and its path laid over the filled slabs and cut back

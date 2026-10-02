@@ -1,5 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="2215.44" height="1487.99" viewBox="0 0 2215.44 1487.99">
-  <rect x="0" y="0" width="2215.44" height="1487.99" fill="#FFFFFF"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="2481.74" height="1641.74" viewBox="0 0 2481.74 1641.74">
+  <rect x="0" y="0" width="2481.74" height="1641.74" fill="#FFFFFF"/>
   <defs><filter id="stencil-shadow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2.5"/></filter></defs>
   <g data-id="" data-tag="Page" data-projection="iso">
     <g data-id="/kicker" data-tag="Kicker">
@@ -15,85 +15,85 @@
     </g>
     <g data-id="/body" data-tag="Body">
       <g data-id="/body/0" data-tag="Zone" data-kind="system">
-        <polygon points="20,513.59 1492.24,1363.59 1492.24,1357.59 20,507.59" fill="#1A73E8"/>
-        <polygon points="2195.44,957.6 1492.24,1363.59 1492.24,1357.59 2195.44,951.6" fill="#1257B3"/>
-        <polygon points="723.2,101.6 2195.44,951.6 1492.24,1357.59 20,507.59" fill="#FAFBFC" stroke="#1A73E8" stroke-width="1.5" stroke-linejoin="round"/>
-        <g data-plane="6" data-axis="x" transform="matrix(0.87 0.5 -0.87 0.5 793.86 40.8)">
+        <polygon points="20,667.34 1492.24,1517.34 1492.24,1511.34 20,661.34" fill="#1A73E8"/>
+        <polygon points="2461.74,957.6 1492.24,1517.34 1492.24,1511.34 2461.74,951.6" fill="#1257B3"/>
+        <polygon points="989.5,101.6 2461.74,951.6 1492.24,1511.34 20,661.34" fill="#FAFBFC" stroke="#1A73E8" stroke-width="1.5" stroke-linejoin="round"/>
+        <g data-plane="6" data-axis="x" transform="matrix(0.87 0.5 -0.87 0.5 1060.17 40.8)">
           <text x="69" y="159.14" xml:space="preserve" font-family="Inter" font-size="25.2" font-weight="700" letter-spacing="0.25" fill="#1257B3">Head office site</text>
         </g>
         <g data-id="/body/0/children/0" data-tag="Row">
           <g data-id="/body/0/children/0/children/0" data-tag="Zone" data-kind="boundary">
-            <polygon points="650.24,207.22 1038.84,431.58 487.41,749.95 98.81,525.59" fill="none" stroke="#5F6368" stroke-width="2" stroke-dasharray="6 5" stroke-linejoin="round"/>
-            <g data-plane="6" data-axis="x" transform="matrix(0.87 0.5 -0.87 0.5 793.86 40.8)">
+            <polygon points="916.54,207.22 1299.85,428.52 482.11,900.64 98.81,679.34" fill="none" stroke="#5F6368" stroke-width="2" stroke-dasharray="6 5" stroke-linejoin="round"/>
+            <g data-plane="6" data-axis="x" transform="matrix(0.87 0.5 -0.87 0.5 1060.17 40.8)">
               <text x="121" y="301.3" xml:space="preserve" font-family="Inter" font-size="15" font-weight="700" fill="#5F6368">Inside zone</text>
             </g>
             <g data-id="/body/0/children/0/children/0/children/0" data-tag="Pcard">
-              <polygon points="600.01,276.72 939.25,472.58 855.2,521.11 515.96,325.25" fill="#202124" fill-opacity="0.2" filter="url(#stencil-shadow)"/>
-              <polygon points="515.96,322.25 855.2,518.11 855.2,500.11 515.96,304.25" fill="#EBEBEB" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
-              <polygon points="939.25,469.58 855.2,518.11 855.2,500.11 939.25,451.58" fill="#D6D6D6" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
-              <polygon points="600.01,255.72 939.25,451.58 855.2,500.11 515.96,304.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
-              <g data-plane="24" data-axis="x" transform="matrix(0.87 0.5 -0.87 0.5 793.86 22.8)">
-                <text x="140" y="373.13" xml:space="preserve" font-family="Inter" font-size="16.9" font-weight="700" fill="#202124">Core switch</text>
-                <text x="140" y="393.15" xml:space="preserve" font-family="Inter" font-size="15.6" font-weight="400" fill="#5F6368">Layer 3, routes between VLANs</text>
-                <text x="148" y="421.04" xml:space="preserve" font-family="Inter" font-size="15.6" font-weight="600" fill="#5F6368">• sw-core-01</text>
+              <polygon points="1005.57,357.12 1061,389.12 1005.57,421.12 950.15,389.12" fill="#202124" fill-opacity="0.2" filter="url(#stencil-shadow)"/>
+              <polygon points="950.15,386.12 1005.57,418.12 1005.57,400.12 950.15,368.12" fill="#EBEBEB" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
+              <polygon points="1061,386.12 1005.57,418.12 1005.57,400.12 1061,368.12" fill="#D6D6D6" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
+              <polygon points="1005.57,336.12 1061,368.12 1005.57,400.12 950.15,368.12" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
+              <g data-plane="6" data-axis="x" transform="matrix(0.87 0.5 -0.87 0.5 1060.17 40.8)">
+                <text x="264.65" y="435.63" xml:space="preserve" font-family="Inter" font-size="16.9" font-weight="700" fill="#202124">Core switch</text>
+                <text x="197.41" y="455.65" xml:space="preserve" font-family="Inter" font-size="15.6" font-weight="400" fill="#5F6368">Layer 3, routes between VLANs</text>
+                <text x="264.54" y="483.54" xml:space="preserve" font-family="Inter" font-size="15.6" font-weight="600" fill="#5F6368">• sw-core-01</text>
               </g>
             </g>
             <g data-id="/body/0/children/0/children/0/children/1" data-tag="Zone" data-kind="group-a">
-              <polygon points="332.06,428.42 671.3,624.28 671.3,618.28 332.06,422.42" fill="#ACCBF9"/>
-              <polygon points="843.07,525.11 671.3,624.28 671.3,618.28 843.07,519.11" fill="#85B3F7"/>
-              <polygon points="503.83,323.25 843.07,519.11 671.3,618.28 332.06,422.42" fill="#D2E3FC"/>
-              <g data-plane="12" data-axis="x" transform="matrix(0.87 0.5 -0.87 0.5 793.86 34.8)">
-                <text x="161.5" y="510.86" xml:space="preserve" font-family="Inter" font-size="15" font-weight="700" fill="#5F6368">VLAN 10 · staff</text>
+              <polygon points="420.83,530.92 754.77,723.72 754.77,717.72 420.83,524.92" fill="#ACCBF9"/>
+              <polygon points="1015.31,573.3 754.77,723.72 754.77,717.72 1015.31,567.3" fill="#85B3F7"/>
+              <polygon points="681.37,374.5 1015.31,567.3 754.77,717.72 420.83,524.92" fill="#D2E3FC"/>
+              <g data-plane="12" data-axis="x" transform="matrix(0.87 0.5 -0.87 0.5 1060.17 34.8)">
+                <text x="161.5" y="613.36" xml:space="preserve" font-family="Inter" font-size="15" font-weight="700" fill="#5F6368">VLAN 10 · staff</text>
               </g>
               <g data-id="/body/0/children/0/children/0/children/1/children/0" data-tag="Row">
                 <g data-id="/body/0/children/0/children/0/children/1/children/0/children/0" data-tag="Pcard">
-                  <polygon points="453.6,395.75 576.83,466.89 509.85,505.56 386.62,434.42" fill="#202124" fill-opacity="0.2" filter="url(#stencil-shadow)"/>
-                  <polygon points="386.62,431.42 509.85,502.56 509.85,484.56 386.62,413.42" fill="#EBEBEB" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
-                  <polygon points="576.83,463.89 509.85,502.56 509.85,484.56 576.83,445.89" fill="#D6D6D6" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
-                  <polygon points="453.6,374.75 576.83,445.89 509.85,484.56 386.62,413.42" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
-                  <g data-plane="30" data-axis="x" transform="matrix(0.87 0.5 -0.87 0.5 793.86 16.8)">
-                    <text x="180.5" y="582.69" xml:space="preserve" font-family="Inter" font-size="16.9" font-weight="700" fill="#202124">Print server</text>
-                    <text x="188.5" y="610.88" xml:space="preserve" font-family="Inter" font-size="15.6" font-weight="600" fill="#5F6368">• prn-01</text>
+                  <polygon points="670.24,469.58 725.66,501.58 670.24,533.58 614.81,501.58" fill="#202124" fill-opacity="0.2" filter="url(#stencil-shadow)"/>
+                  <polygon points="614.81,498.58 670.24,530.58 670.24,512.58 614.81,480.58" fill="#EBEBEB" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
+                  <polygon points="725.66,498.58 670.24,530.58 670.24,512.58 725.66,480.58" fill="#D6D6D6" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
+                  <polygon points="670.24,448.58 725.66,480.58 670.24,512.58 614.81,480.58" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
+                  <g data-plane="12" data-axis="x" transform="matrix(0.87 0.5 -0.87 0.5 1060.17 34.8)">
+                    <text x="190.32" y="747.69" xml:space="preserve" font-family="Inter" font-size="16.9" font-weight="700" fill="#202124">Print server</text>
+                    <text x="207.87" y="775.88" xml:space="preserve" font-family="Inter" font-size="15.6" font-weight="600" fill="#5F6368">• prn-01</text>
                   </g>
                 </g>
                 <g data-id="/body/0/children/0/children/0/children/1/children/0/children/1" data-tag="Pcard">
-                  <polygon points="588.95,473.89 738.28,560.11 671.3,598.78 521.97,512.56" fill="#202124" fill-opacity="0.2" filter="url(#stencil-shadow)"/>
-                  <polygon points="521.97,509.56 671.3,595.78 671.3,577.78 521.97,491.56" fill="#EBEBEB" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
-                  <polygon points="738.28,557.11 671.3,595.78 671.3,577.78 738.28,539.11" fill="#D6D6D6" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
-                  <polygon points="588.95,452.89 738.28,539.11 671.3,577.78 521.97,491.56" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
-                  <g data-plane="30" data-axis="x" transform="matrix(0.87 0.5 -0.87 0.5 793.86 16.8)">
-                    <text x="336.79" y="582.69" xml:space="preserve" font-family="Inter" font-size="16.9" font-weight="700" fill="#202124">Directory server</text>
-                    <text x="344.79" y="610.88" xml:space="preserve" font-family="Inter" font-size="15.6" font-weight="600" fill="#5F6368">• dc-01</text>
+                  <polygon points="815.99,553.73 871.42,585.73 815.99,617.73 760.57,585.73" fill="#202124" fill-opacity="0.2" filter="url(#stencil-shadow)"/>
+                  <polygon points="760.57,582.73 815.99,614.73 815.99,596.73 760.57,564.73" fill="#EBEBEB" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
+                  <polygon points="871.42,582.73 815.99,614.73 815.99,596.73 871.42,564.73" fill="#D6D6D6" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
+                  <polygon points="815.99,532.73 871.42,564.73 815.99,596.73 760.57,564.73" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
+                  <g data-plane="12" data-axis="x" transform="matrix(0.87 0.5 -0.87 0.5 1060.17 34.8)">
+                    <text x="339.74" y="747.69" xml:space="preserve" font-family="Inter" font-size="16.9" font-weight="700" fill="#202124">Directory server</text>
+                    <text x="379.58" y="775.88" xml:space="preserve" font-family="Inter" font-size="15.6" font-weight="600" fill="#5F6368">• dc-01</text>
                   </g>
                 </g>
               </g>
             </g>
             <g data-id="/body/0/children/0/children/0/children/2" data-tag="Zone" data-kind="group-b">
-              <polygon points="148.17,534.59 487.41,730.45 487.41,724.45 148.17,528.59" fill="#F8BFD2"/>
-              <polygon points="659.18,631.28 487.41,730.45 487.41,724.45 659.18,625.28" fill="#F49BB8"/>
-              <polygon points="319.94,429.42 659.18,625.28 487.41,724.45 148.17,528.59" fill="#FCE4EC"/>
-              <g data-plane="12" data-axis="x" transform="matrix(0.87 0.5 -0.87 0.5 793.86 34.8)">
-                <text x="161.5" y="723.2" xml:space="preserve" font-family="Inter" font-size="15" font-weight="700" fill="#5F6368">VLAN 20 · servers</text>
+              <polygon points="148.17,688.34 482.11,881.14 482.11,875.14 148.17,682.34" fill="#F8BFD2"/>
+              <polygon points="742.65,730.72 482.11,881.14 482.11,875.14 742.65,724.72" fill="#F49BB8"/>
+              <polygon points="408.71,531.92 742.65,724.72 482.11,875.14 148.17,682.34" fill="#FCE4EC"/>
+              <g data-plane="12" data-axis="x" transform="matrix(0.87 0.5 -0.87 0.5 1060.17 34.8)">
+                <text x="161.5" y="928.2" xml:space="preserve" font-family="Inter" font-size="15" font-weight="700" fill="#5F6368">VLAN 20 · servers</text>
               </g>
               <g data-id="/body/0/children/0/children/0/children/2/children/0" data-tag="Row">
                 <g data-id="/body/0/children/0/children/0/children/2/children/0/children/0" data-tag="Pcard">
-                  <polygon points="269.71,501.92 434.36,596.98 367.38,635.65 202.73,540.59" fill="#202124" fill-opacity="0.2" filter="url(#stencil-shadow)"/>
-                  <polygon points="202.73,537.59 367.38,632.65 367.38,614.65 202.73,519.59" fill="#EBEBEB" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
-                  <polygon points="434.36,593.98 367.38,632.65 367.38,614.65 434.36,575.98" fill="#D6D6D6" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
-                  <polygon points="269.71,480.92 434.36,575.98 367.38,614.65 202.73,519.59" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
-                  <g data-plane="30" data-axis="x" transform="matrix(0.87 0.5 -0.87 0.5 793.86 16.8)">
-                    <text x="180.5" y="795.03" xml:space="preserve" font-family="Inter" font-size="16.9" font-weight="700" fill="#202124">Application server</text>
-                    <text x="188.5" y="823.22" xml:space="preserve" font-family="Inter" font-size="15.6" font-weight="600" fill="#5F6368">• app-01</text>
+                  <polygon points="397.58,627 453,659 397.58,691 342.15,659" fill="#202124" fill-opacity="0.2" filter="url(#stencil-shadow)"/>
+                  <polygon points="342.15,656 397.58,688 397.58,670 342.15,638" fill="#EBEBEB" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
+                  <polygon points="453,656 397.58,688 397.58,670 453,638" fill="#D6D6D6" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
+                  <polygon points="397.58,606 453,638 397.58,670 342.15,638" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
+                  <g data-plane="12" data-axis="x" transform="matrix(0.87 0.5 -0.87 0.5 1060.17 34.8)">
+                    <text x="162.59" y="1062.53" xml:space="preserve" font-family="Inter" font-size="16.9" font-weight="700" fill="#202124">Application server</text>
+                    <text x="206.47" y="1090.72" xml:space="preserve" font-family="Inter" font-size="15.6" font-weight="600" fill="#5F6368">• app-01</text>
                   </g>
                 </g>
                 <g data-id="/body/0/children/0/children/0/children/2/children/0/children/1" data-tag="Pcard">
-                  <polygon points="446.48,603.98 554.39,666.28 487.41,704.95 379.5,642.65" fill="#202124" fill-opacity="0.2" filter="url(#stencil-shadow)"/>
-                  <polygon points="379.5,639.65 487.41,701.95 487.41,683.95 379.5,621.65" fill="#EBEBEB" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
-                  <polygon points="554.39,663.28 487.41,701.95 487.41,683.95 554.39,645.28" fill="#D6D6D6" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
-                  <polygon points="446.48,582.98 554.39,645.28 487.41,683.95 379.5,621.65" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
-                  <g data-plane="30" data-axis="x" transform="matrix(0.87 0.5 -0.87 0.5 793.86 16.8)">
-                    <text x="384.62" y="795.03" xml:space="preserve" font-family="Inter" font-size="16.9" font-weight="700" fill="#202124">File server</text>
-                    <text x="392.62" y="823.22" xml:space="preserve" font-family="Inter" font-size="15.6" font-weight="600" fill="#5F6368">• fs-01</text>
+                  <polygon points="543.33,711.15 598.76,743.15 543.33,775.15 487.91,743.15" fill="#202124" fill-opacity="0.2" filter="url(#stencil-shadow)"/>
+                  <polygon points="487.91,740.15 543.33,772.15 543.33,754.15 487.91,722.15" fill="#EBEBEB" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
+                  <polygon points="598.76,740.15 543.33,772.15 543.33,754.15 598.76,722.15" fill="#D6D6D6" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
+                  <polygon points="543.33,690.15 598.76,722.15 543.33,754.15 487.91,722.15" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
+                  <g data-plane="12" data-axis="x" transform="matrix(0.87 0.5 -0.87 0.5 1060.17 34.8)">
+                    <text x="363.65" y="1062.53" xml:space="preserve" font-family="Inter" font-size="16.9" font-weight="700" fill="#202124">File server</text>
+                    <text x="381.82" y="1090.72" xml:space="preserve" font-family="Inter" font-size="15.6" font-weight="600" fill="#5F6368">• fs-01</text>
                   </g>
                 </g>
               </g>
@@ -101,150 +101,150 @@
           </g>
           <g data-id="/body/0/children/0/children/1" data-tag="Col">
             <g data-id="/body/0/children/0/children/1/children/0" data-tag="Pipe" data-kind="blue">
-              <polygon points="800.3,544.81 800.45,543.43 800.88,541.97 801.57,540.54 802.46,539.23 803.51,538.12 804.63,537.31 805.75,536.83 806.79,536.73 807.69,537 808.38,537.64 808.81,538.6 808.96,539.81 808.81,541.18 808.38,542.64 807.69,544.07 806.79,545.39 805.75,546.49 804.63,547.31 803.51,547.78 802.46,547.89 801.57,547.61 800.88,546.97 800.45,546.01" fill="#1A73E8"/>
-              <polygon points="807.69,537 1070.27,688.61 1067.21,693.91 804.63,542.31" fill="#5295EE"/>
-              <polygon points="804.63,542.31 1067.21,693.91 1064.15,699.21 801.57,547.61" fill="#1A73E8"/>
-              <polygon points="1062.88,696.41 1063.03,695.03 1063.46,693.57 1064.15,692.14 1065.05,690.83 1066.09,689.73 1067.21,688.91 1068.33,688.43 1069.38,688.33 1070.27,688.61 1070.96,689.24 1071.39,690.2 1071.54,691.41 1071.39,692.79 1070.96,694.24 1070.27,695.68 1069.38,696.99 1068.33,698.09 1067.21,698.91 1066.09,699.39 1065.05,699.49 1064.15,699.21 1063.46,698.57 1063.03,697.62" fill="#104EA0"/>
-              <polygon points="796.83,544.81 797.04,542.87 797.65,540.84 798.61,538.83 799.87,536.99 801.33,535.45 802.9,534.31 804.47,533.64 805.93,533.49 807.18,533.88 808.15,534.77 808.75,536.11 808.96,537.81 808.75,539.74 808.15,541.77 807.18,543.78 805.93,545.62 804.47,547.16 802.9,548.31 801.33,548.97 799.87,549.12 798.61,548.73 797.65,547.84 797.04,546.5" fill="#1A73E8"/>
-              <polygon points="807.18,533.88 810.65,535.88 806.36,543.31 802.9,541.31" fill="#5295EE"/>
-              <polygon points="802.9,541.31 806.36,543.31 802.07,550.73 798.61,548.73" fill="#1A73E8"/>
-              <polygon points="800.3,546.81 800.5,544.87 801.11,542.84 802.07,540.83 803.33,538.99 804.79,537.45 806.36,536.31 807.93,535.64 809.39,535.49 810.65,535.88 811.61,536.77 812.22,538.11 812.42,539.81 812.22,541.74 811.61,543.77 810.65,545.78 809.39,547.62 807.93,549.16 806.36,550.31 804.79,550.97 803.33,551.12 802.07,550.73 801.11,549.84 800.5,548.5" fill="#104EA0"/>
-              <polygon points="1059.42,696.41 1059.62,694.48 1060.23,692.44 1061.19,690.43 1062.45,688.6 1063.91,687.05 1065.48,685.91 1067.05,685.24 1068.51,685.1 1069.77,685.48 1070.73,686.38 1071.34,687.72 1071.54,689.41 1071.34,691.34 1070.73,693.38 1069.77,695.38 1068.51,697.22 1067.05,698.76 1065.48,699.91 1063.91,700.58 1062.45,700.72 1061.19,700.33 1060.23,699.44 1059.62,698.1" fill="#1A73E8"/>
-              <polygon points="1069.77,685.48 1073.23,687.48 1068.94,694.91 1065.48,692.91" fill="#5295EE"/>
-              <polygon points="1065.48,692.91 1068.94,694.91 1064.66,702.33 1061.19,700.33" fill="#1A73E8"/>
-              <polygon points="1062.88,698.41 1063.09,696.48 1063.69,694.44 1064.66,692.43 1065.91,690.6 1067.38,689.05 1068.94,687.91 1070.51,687.24 1071.98,687.1 1073.23,687.48 1074.19,688.38 1074.8,689.72 1075.01,691.41 1074.8,693.34 1074.19,695.38 1073.23,697.38 1071.98,699.22 1070.51,700.76 1068.94,701.91 1067.38,702.58 1065.91,702.72 1064.66,702.33 1063.69,701.44 1063.09,700.1" fill="#104EA0"/>
-              <g data-plane="16" data-axis="x" transform="matrix(0.87 0.5 -0.87 0.5 793.86 30.8)">
-                <rect x="626.22" y="472.26" width="95.71" height="56.06" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
-                <text x="641.6" y="494.82" xml:space="preserve" font-family="Inter" font-size="15.6" font-weight="700" fill="#202124">VLAN 10</text>
-                <text x="634.97" y="517.1" xml:space="preserve" font-family="Inter" font-size="15.6" font-weight="600" fill="#5F6368">staff trunk</text>
+              <polygon points="928.15,618.62 928.3,617.24 928.73,615.79 929.42,614.35 930.32,613.04 931.36,611.94 932.48,611.12 933.6,610.64 934.65,610.54 935.54,610.82 936.23,611.46 936.66,612.41 936.81,613.62 936.66,615 936.23,616.46 935.54,617.89 934.65,619.2 933.6,620.3 932.48,621.12 931.36,621.6 930.32,621.7 929.42,621.42 928.73,620.79 928.3,619.83" fill="#1A73E8"/>
+              <polygon points="935.54,610.82 1253.9,794.62 1250.84,799.92 932.48,616.12" fill="#5295EE"/>
+              <polygon points="932.48,616.12 1250.84,799.92 1247.78,805.23 929.42,621.42" fill="#1A73E8"/>
+              <polygon points="1246.51,802.42 1246.66,801.05 1247.09,799.59 1247.78,798.16 1248.67,796.84 1249.72,795.74 1250.84,794.92 1251.96,794.45 1253,794.34 1253.9,794.62 1254.59,795.26 1255.02,796.22 1255.17,797.42 1255.02,798.8 1254.59,800.26 1253.9,801.69 1253,803 1251.96,804.11 1250.84,804.92 1249.72,805.4 1248.67,805.5 1247.78,805.23 1247.09,804.59 1246.66,803.63" fill="#104EA0"/>
+              <polygon points="924.69,618.62 924.89,616.69 925.5,614.65 926.46,612.65 927.72,610.81 929.18,609.27 930.75,608.12 932.32,607.45 933.78,607.31 935.04,607.7 936,608.59 936.6,609.93 936.81,611.62 936.6,613.55 936,615.59 935.04,617.6 933.78,619.43 932.32,620.98 930.75,622.12 929.18,622.79 927.72,622.93 926.46,622.55 925.5,621.65 924.89,620.31" fill="#1A73E8"/>
+              <polygon points="935.04,607.7 938.5,609.7 934.21,617.12 930.75,615.12" fill="#5295EE"/>
+              <polygon points="930.75,615.12 934.21,617.12 929.93,624.55 926.46,622.55" fill="#1A73E8"/>
+              <polygon points="928.15,620.62 928.36,618.69 928.96,616.65 929.93,614.65 931.18,612.81 932.64,611.27 934.21,610.12 935.78,609.45 937.24,609.31 938.5,609.7 939.46,610.59 940.07,611.93 940.28,613.62 940.07,615.55 939.46,617.59 938.5,619.6 937.24,621.43 935.78,622.98 934.21,624.12 932.64,624.79 931.18,624.93 929.93,624.55 928.96,623.65 928.36,622.31" fill="#104EA0"/>
+              <polygon points="1243.04,802.42 1243.25,800.49 1243.86,798.46 1244.82,796.45 1246.07,794.61 1247.54,793.07 1249.11,791.92 1250.67,791.26 1252.14,791.11 1253.39,791.5 1254.36,792.39 1254.96,793.73 1255.17,795.42 1254.96,797.36 1254.36,799.39 1253.39,801.4 1252.14,803.24 1250.67,804.78 1249.11,805.92 1247.54,806.59 1246.07,806.74 1244.82,806.35 1243.86,805.46 1243.25,804.12" fill="#1A73E8"/>
+              <polygon points="1253.39,791.5 1256.86,793.5 1252.57,800.92 1249.11,798.92" fill="#5295EE"/>
+              <polygon points="1249.11,798.92 1252.57,800.92 1248.28,808.35 1244.82,806.35" fill="#1A73E8"/>
+              <polygon points="1246.51,804.42 1246.71,802.49 1247.32,800.46 1248.28,798.45 1249.54,796.61 1251,795.07 1252.57,793.92 1254.14,793.26 1255.6,793.11 1256.86,793.5 1257.82,794.39 1258.43,795.73 1258.63,797.42 1258.43,799.36 1257.82,801.39 1256.86,803.4 1255.6,805.24 1254.14,806.78 1252.57,807.92 1251,808.59 1249.54,808.74 1248.28,808.35 1247.32,807.46 1246.71,806.12" fill="#104EA0"/>
+              <g data-plane="16" data-axis="x" transform="matrix(0.87 0.5 -0.87 0.5 1060.17 30.8)">
+                <rect x="620.1" y="626.01" width="95.71" height="56.06" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
+                <text x="635.48" y="648.57" xml:space="preserve" font-family="Inter" font-size="15.6" font-weight="700" fill="#202124">VLAN 10</text>
+                <text x="628.85" y="670.85" xml:space="preserve" font-family="Inter" font-size="15.6" font-weight="600" fill="#5F6368">staff trunk</text>
               </g>
             </g>
             <g data-id="/body/0/children/0/children/1/children/1" data-tag="Pipe" data-kind="pink">
-              <polygon points="749.15,593.84 749.3,592.46 749.73,591 750.42,589.57 751.32,588.26 752.36,587.15 753.48,586.34 754.6,585.86 755.65,585.76 756.54,586.03 757.23,586.67 757.66,587.63 757.81,588.84 757.66,590.21 757.23,591.67 756.54,593.1 755.65,594.42 754.6,595.52 753.48,596.34 752.36,596.81 751.32,596.92 750.42,596.64 749.73,596 749.3,595.04" fill="#C2185B"/>
-              <polygon points="756.54,586.03 1002.24,727.89 999.18,733.19 753.48,591.34" fill="#E63279"/>
-              <polygon points="753.48,591.34 999.18,733.19 996.12,738.49 750.42,596.64" fill="#C2185B"/>
-              <polygon points="994.85,735.69 994.99,734.31 995.43,732.85 996.12,731.42 997.01,730.11 998.06,729.01 999.18,728.19 1000.3,727.71 1001.34,727.61 1002.24,727.89 1002.93,728.52 1003.36,729.48 1003.51,730.69 1003.36,732.07 1002.93,733.52 1002.24,734.96 1001.34,736.27 1000.3,737.37 999.18,738.19 998.06,738.67 997.01,738.77 996.12,738.49 995.43,737.85 994.99,736.9" fill="#790F39"/>
-              <polygon points="745.69,593.84 745.89,591.9 746.5,589.87 747.46,587.86 748.72,586.02 750.18,584.48 751.75,583.34 753.32,582.67 754.78,582.52 756.04,582.91 757,583.8 757.6,585.14 757.81,586.84 757.6,588.77 757,590.8 756.04,592.81 754.78,594.65 753.32,596.19 751.75,597.34 750.18,598 748.72,598.15 747.46,597.76 746.5,596.87 745.89,595.53" fill="#C2185B"/>
-              <polygon points="756.04,582.91 759.5,584.91 755.21,592.34 751.75,590.34" fill="#E63279"/>
-              <polygon points="751.75,590.34 755.21,592.34 750.93,599.76 747.46,597.76" fill="#C2185B"/>
-              <polygon points="749.15,595.84 749.36,593.9 749.96,591.87 750.93,589.86 752.18,588.02 753.64,586.48 755.21,585.34 756.78,584.67 758.24,584.52 759.5,584.91 760.46,585.8 761.07,587.14 761.28,588.84 761.07,590.77 760.46,592.8 759.5,594.81 758.24,596.65 756.78,598.19 755.21,599.34 753.64,600 752.18,600.15 750.93,599.76 749.96,598.87 749.36,597.53" fill="#790F39"/>
-              <polygon points="991.38,735.69 991.59,733.76 992.2,731.72 993.16,729.71 994.41,727.88 995.88,726.33 997.45,725.19 999.01,724.52 1000.48,724.38 1001.73,724.76 1002.7,725.66 1003.3,727 1003.51,728.69 1003.3,730.62 1002.7,732.66 1001.73,734.66 1000.48,736.5 999.01,738.04 997.45,739.19 995.88,739.86 994.41,740 993.16,739.61 992.2,738.72 991.59,737.38" fill="#C2185B"/>
-              <polygon points="1001.73,724.76 1005.2,726.76 1000.91,734.19 997.45,732.19" fill="#E63279"/>
-              <polygon points="997.45,732.19 1000.91,734.19 996.62,741.61 993.16,739.61" fill="#C2185B"/>
-              <polygon points="994.85,737.69 995.05,735.76 995.66,733.72 996.62,731.71 997.88,729.88 999.34,728.33 1000.91,727.19 1002.48,726.52 1003.94,726.38 1005.2,726.76 1006.16,727.66 1006.76,729 1006.97,730.69 1006.76,732.62 1006.16,734.66 1005.2,736.66 1003.94,738.5 1002.48,740.04 1000.91,741.19 999.34,741.86 997.88,742 996.62,741.61 995.66,740.72 995.05,739.38" fill="#790F39"/>
-              <g data-plane="16" data-axis="x" transform="matrix(0.87 0.5 -0.87 0.5 793.86 30.8)">
-                <rect x="619.26" y="550.82" width="109.62" height="56.06" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
-                <text x="640.05" y="573.38" xml:space="preserve" font-family="Inter" font-size="15.6" font-weight="700" fill="#202124">VLAN 20</text>
-                <text x="628.01" y="595.66" xml:space="preserve" font-family="Inter" font-size="15.6" font-weight="600" fill="#5F6368">server trunk</text>
+              <polygon points="877,667.65 877.15,666.27 877.58,664.82 878.27,663.38 879.17,662.07 880.21,660.97 881.33,660.15 882.45,659.67 883.5,659.57 884.4,659.85 885.08,660.49 885.52,661.44 885.66,662.65 885.52,664.03 885.08,665.49 884.4,666.92 883.5,668.23 882.45,669.33 881.33,670.15 880.21,670.63 879.17,670.73 878.27,670.45 877.58,669.82 877.15,668.86" fill="#C2185B"/>
+              <polygon points="884.4,659.85 1185.86,833.9 1182.8,839.2 881.33,665.15" fill="#E63279"/>
+              <polygon points="881.33,665.15 1182.8,839.2 1179.74,844.51 878.27,670.45" fill="#C2185B"/>
+              <polygon points="1178.47,841.7 1178.62,840.33 1179.05,838.87 1179.74,837.44 1180.64,836.12 1181.68,835.02 1182.8,834.2 1183.92,833.73 1184.97,833.62 1185.86,833.9 1186.55,834.54 1186.99,835.5 1187.13,836.7 1186.99,838.08 1186.55,839.54 1185.86,840.97 1184.97,842.28 1183.92,843.39 1182.8,844.2 1181.68,844.68 1180.64,844.78 1179.74,844.51 1179.05,843.87 1178.62,842.91" fill="#790F39"/>
+              <polygon points="873.54,667.65 873.75,665.72 874.35,663.68 875.31,661.68 876.57,659.84 878.03,658.3 879.6,657.15 881.17,656.48 882.63,656.34 883.89,656.73 884.85,657.62 885.46,658.96 885.66,660.65 885.46,662.58 884.85,664.62 883.89,666.63 882.63,668.46 881.17,670.01 879.6,671.15 878.03,671.82 876.57,671.96 875.31,671.58 874.35,670.68 873.75,669.34" fill="#C2185B"/>
+              <polygon points="883.89,656.73 887.35,658.73 883.07,666.15 879.6,664.15" fill="#E63279"/>
+              <polygon points="879.6,664.15 883.07,666.15 878.78,673.58 875.31,671.58" fill="#C2185B"/>
+              <polygon points="877,669.65 877.21,667.72 877.82,665.68 878.78,663.68 880.03,661.84 881.5,660.3 883.07,659.15 884.63,658.48 886.1,658.34 887.35,658.73 888.32,659.62 888.92,660.96 889.13,662.65 888.92,664.58 888.32,666.62 887.35,668.63 886.1,670.46 884.63,672.01 883.07,673.15 881.5,673.82 880.03,673.96 878.78,673.58 877.82,672.68 877.21,671.34" fill="#790F39"/>
+              <polygon points="1175.01,841.7 1175.21,839.77 1175.82,837.74 1176.78,835.73 1178.04,833.89 1179.5,832.35 1181.07,831.2 1182.64,830.54 1184.1,830.39 1185.36,830.78 1186.32,831.67 1186.93,833.01 1187.13,834.7 1186.93,836.64 1186.32,838.67 1185.36,840.68 1184.1,842.52 1182.64,844.06 1181.07,845.2 1179.5,845.87 1178.04,846.02 1176.78,845.63 1175.82,844.74 1175.21,843.4" fill="#C2185B"/>
+              <polygon points="1185.36,830.78 1188.82,832.78 1184.53,840.2 1181.07,838.2" fill="#E63279"/>
+              <polygon points="1181.07,838.2 1184.53,840.2 1180.25,847.63 1176.78,845.63" fill="#C2185B"/>
+              <polygon points="1178.47,843.7 1178.68,841.77 1179.28,839.74 1180.25,837.73 1181.5,835.89 1182.97,834.35 1184.53,833.2 1186.1,832.54 1187.57,832.39 1188.82,832.78 1189.78,833.67 1190.39,835.01 1190.6,836.7 1190.39,838.64 1189.78,840.67 1188.82,842.68 1187.57,844.52 1186.1,846.06 1184.53,847.2 1182.97,847.87 1181.5,848.02 1180.25,847.63 1179.28,846.74 1178.68,845.4" fill="#790F39"/>
+              <g data-plane="16" data-axis="x" transform="matrix(0.87 0.5 -0.87 0.5 1060.17 30.8)">
+                <rect x="613.14" y="704.57" width="109.62" height="56.06" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
+                <text x="633.93" y="727.13" xml:space="preserve" font-family="Inter" font-size="15.6" font-weight="700" fill="#202124">VLAN 20</text>
+                <text x="621.89" y="749.41" xml:space="preserve" font-family="Inter" font-size="15.6" font-weight="600" fill="#5F6368">server trunk</text>
               </g>
             </g>
             <g data-id="/body/0/children/0/children/1/children/2" data-tag="Pipe" data-kind="deny">
-              <polygon points="697.69,631.55 697.84,630.17 698.27,628.71 698.96,627.28 699.86,625.97 700.9,624.86 702.02,624.05 703.14,623.57 704.19,623.47 705.08,623.74 705.77,624.38 706.2,625.34 706.35,626.55 706.2,627.92 705.77,629.38 705.08,630.81 704.19,632.13 703.14,633.23 702.02,634.05 700.9,634.52 699.86,634.63 698.96,634.35 698.27,633.71 697.84,632.75" fill="#FFFFFF" stroke="#C5221F" stroke-width="1.5" stroke-dasharray="6 5"/>
-              <polygon points="705.08,623.74 943.85,761.6 937.73,772.2 698.96,634.35" fill="#FFFFFF" stroke="#C5221F" stroke-width="1.5" stroke-dasharray="6 5"/>
-              <polygon points="936.46,769.4 936.61,768.02 937.04,766.56 937.73,765.13 938.62,763.82 939.67,762.72 940.79,761.9 941.91,761.42 942.95,761.32 943.85,761.6 944.54,762.23 944.97,763.19 945.12,764.4 944.97,765.78 944.54,767.23 943.85,768.67 942.95,769.98 941.91,771.08 940.79,771.9 939.67,772.38 938.62,772.48 937.73,772.2 937.04,771.56 936.61,770.61" fill="#FFFFFF" stroke="#C5221F" stroke-width="1.5" stroke-dasharray="6 5"/>
-              <polygon points="691.63,623.05 707.23,620.03 696.82,638.06" fill="#C5221F"/>
-              <polygon points="933,769.4 933.2,767.47 933.81,765.43 934.77,763.42 936.03,761.59 937.49,760.04 939.06,758.9 940.63,758.23 942.09,758.09 943.34,758.47 944.31,759.37 944.91,760.71 945.12,762.4 944.91,764.33 944.31,766.37 943.34,768.37 942.09,770.21 940.63,771.75 939.06,772.9 937.49,773.57 936.03,773.71 934.77,773.32 933.81,772.43 933.2,771.09" fill="#FFFFFF" stroke="#C5221F" stroke-width="1.5"/>
-              <polygon points="943.34,758.47 946.81,760.47 938.24,775.32 934.77,773.32" fill="#FFFFFF" stroke="#C5221F" stroke-width="1.5"/>
-              <polygon points="936.46,771.4 936.67,769.47 937.27,767.43 938.24,765.42 939.49,763.59 940.95,762.04 942.52,760.9 944.09,760.23 945.55,760.09 946.81,760.47 947.77,761.37 948.38,762.71 948.58,764.4 948.38,766.33 947.77,768.37 946.81,770.37 945.55,772.21 944.09,773.75 942.52,774.9 940.95,775.57 939.49,775.71 938.24,775.32 937.27,774.43 936.67,773.09" fill="#FFFFFF" stroke="#C5221F" stroke-width="1.5"/>
-              <g data-plane="16" data-axis="x" transform="matrix(0.87 0.5 -0.87 0.5 793.86 30.8)">
-                <rect x="612.97" y="629.38" width="122.21" height="33.78" rx="5.25" fill="#FFFFFF" stroke="#F4C7C3" stroke-width="1.5"/>
-                <text x="621.72" y="651.94" xml:space="preserve" font-family="Inter" font-size="15.6" font-weight="700" fill="#C5221F">DMZ to inside</text>
+              <polygon points="825.54,705.36 825.69,703.98 826.12,702.53 826.81,701.09 827.71,699.78 828.75,698.68 829.87,697.86 831,697.38 832.04,697.28 832.94,697.56 833.62,698.2 834.06,699.15 834.2,700.36 834.06,701.74 833.62,703.2 832.94,704.63 832.04,705.94 831,707.04 829.87,707.86 828.75,708.34 827.71,708.44 826.81,708.16 826.12,707.53 825.69,706.57" fill="#FFFFFF" stroke="#C5221F" stroke-width="1.5" stroke-dasharray="6 5"/>
+              <polygon points="832.94,697.56 1071.7,835.41 1065.58,846.02 826.81,708.16" fill="#FFFFFF" stroke="#C5221F" stroke-width="1.5" stroke-dasharray="6 5"/>
+              <polygon points="1064.31,843.21 1064.46,841.83 1064.89,840.38 1065.58,838.95 1066.48,837.63 1067.52,836.53 1068.64,835.71 1069.76,835.24 1070.81,835.13 1071.7,835.41 1072.39,836.05 1072.83,837.01 1072.97,838.21 1072.83,839.59 1072.39,841.05 1071.7,842.48 1070.81,843.79 1069.76,844.9 1068.64,845.71 1067.52,846.19 1066.48,846.29 1065.58,846.02 1064.89,845.38 1064.46,844.42" fill="#FFFFFF" stroke="#C5221F" stroke-width="1.5" stroke-dasharray="6 5"/>
+              <polygon points="819.48,696.86 835.08,693.85 824.67,711.88" fill="#C5221F"/>
+              <polygon points="1060.85,843.21 1061.06,841.28 1061.66,839.25 1062.62,837.24 1063.88,835.4 1065.34,833.86 1066.91,832.71 1068.48,832.05 1069.94,831.9 1071.2,832.29 1072.16,833.18 1072.77,834.52 1072.97,836.21 1072.77,838.15 1072.16,840.18 1071.2,842.19 1069.94,844.03 1068.48,845.57 1066.91,846.71 1065.34,847.38 1063.88,847.53 1062.62,847.14 1061.66,846.25 1061.06,844.91" fill="#FFFFFF" stroke="#C5221F" stroke-width="1.5"/>
+              <polygon points="1071.2,832.29 1074.66,834.29 1066.09,849.14 1062.62,847.14" fill="#FFFFFF" stroke="#C5221F" stroke-width="1.5"/>
+              <polygon points="1064.31,845.21 1064.52,843.28 1065.12,841.25 1066.09,839.24 1067.34,837.4 1068.81,835.86 1070.37,834.71 1071.94,834.05 1073.41,833.9 1074.66,834.29 1075.62,835.18 1076.23,836.52 1076.44,838.21 1076.23,840.15 1075.62,842.18 1074.66,844.19 1073.41,846.03 1071.94,847.57 1070.37,848.71 1068.81,849.38 1067.34,849.53 1066.09,849.14 1065.12,848.25 1064.52,846.91" fill="#FFFFFF" stroke="#C5221F" stroke-width="1.5"/>
+              <g data-plane="16" data-axis="x" transform="matrix(0.87 0.5 -0.87 0.5 1060.17 30.8)">
+                <rect x="606.85" y="783.13" width="122.21" height="33.78" rx="5.25" fill="#FFFFFF" stroke="#F4C7C3" stroke-width="1.5"/>
+                <text x="615.6" y="805.69" xml:space="preserve" font-family="Inter" font-size="15.6" font-weight="700" fill="#C5221F">DMZ to inside</text>
               </g>
             </g>
           </g>
           <g data-id="/body/0/children/0/children/2" data-tag="Col">
             <g data-id="/body/0/children/0/children/2/children/0" data-tag="Pcard">
-              <polygon points="1284.54,576.43 1449.75,671.81 898.31,990.18 733.11,894.8" fill="#202124" fill-opacity="0.2" filter="url(#stencil-shadow)"/>
-              <polygon points="733.11,891.8 898.31,987.18 898.31,969.18 733.11,873.8" fill="#EBEBEB" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
-              <polygon points="1449.75,668.81 898.31,987.18 898.31,969.18 1449.75,650.81" fill="#D6D6D6" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
-              <polygon points="1284.54,555.43 1449.75,650.81 898.31,969.18 733.11,873.8" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
-              <g data-plane="24" data-axis="x" transform="matrix(0.87 0.5 -0.87 0.5 793.86 22.8)">
-                <text x="834.93" y="547.47" xml:space="preserve" font-family="Inter" font-size="16.9" font-weight="700" fill="#202124">Edge firewall</text>
-                <text x="834.93" y="567.49" xml:space="preserve" font-family="Inter" font-size="15.6" font-weight="400" fill="#5F6368">stateful, zone policy</text>
-                <text x="842.93" y="595.38" xml:space="preserve" font-family="Inter" font-size="15.6" font-weight="600" fill="#5F6368">• fw-edge-01</text>
+              <polygon points="1278.86,791.74 1334.29,823.74 1278.86,855.74 1223.44,823.74" fill="#202124" fill-opacity="0.2" filter="url(#stencil-shadow)"/>
+              <polygon points="1223.44,820.74 1278.86,852.74 1278.86,834.74 1223.44,802.74" fill="#EBEBEB" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
+              <polygon points="1334.29,820.74 1278.86,852.74 1278.86,834.74 1334.29,802.74" fill="#D6D6D6" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
+              <polygon points="1278.86,770.74 1334.29,802.74 1278.86,834.74 1223.44,802.74" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
+              <g data-plane="6" data-axis="x" transform="matrix(0.87 0.5 -0.87 0.5 1060.17 40.8)">
+                <text x="852.85" y="712.47" xml:space="preserve" font-family="Inter" font-size="16.9" font-weight="700" fill="#202124">Edge firewall</text>
+                <text x="832.13" y="732.49" xml:space="preserve" font-family="Inter" font-size="15.6" font-weight="400" fill="#5F6368">stateful, zone policy</text>
+                <text x="855.92" y="760.38" xml:space="preserve" font-family="Inter" font-size="15.6" font-weight="600" fill="#5F6368">• fw-edge-01</text>
               </g>
             </g>
           </g>
           <g data-id="/body/0/children/0/children/3" data-tag="Col">
             <g data-id="/body/0/children/0/children/3/children/0" data-tag="Pipe" data-kind="solid-3">
-              <polygon points="1203.72,805.86 1203.86,804.48 1204.3,803.02 1204.98,801.59 1205.88,800.28 1206.93,799.18 1208.05,798.36 1209.17,797.88 1210.21,797.78 1211.11,798.06 1211.8,798.69 1212.23,799.65 1212.38,800.86 1212.23,802.24 1211.8,803.69 1211.11,805.13 1210.21,806.44 1209.17,807.54 1208.05,808.36 1206.93,808.84 1205.88,808.94 1204.98,808.66 1204.3,808.02 1203.86,807.07" fill="#007D78"/>
-              <polygon points="1211.11,798.06 1457.74,940.45 1454.68,945.75 1208.05,803.36" fill="#00BAB3"/>
-              <polygon points="1208.05,803.36 1454.68,945.75 1451.62,951.06 1204.98,808.66" fill="#007D78"/>
-              <polygon points="1450.35,948.25 1450.5,946.87 1450.93,945.42 1451.62,943.99 1452.52,942.67 1453.56,941.57 1454.68,940.75 1455.8,940.28 1456.85,940.17 1457.74,940.45 1458.43,941.09 1458.86,942.04 1459.01,943.25 1458.86,944.63 1458.43,946.09 1457.74,947.52 1456.85,948.83 1455.8,949.94 1454.68,950.75 1453.56,951.23 1452.52,951.33 1451.62,951.06 1450.93,950.42 1450.5,949.46" fill="#002B2A"/>
-              <polygon points="1200.25,805.86 1200.46,803.93 1201.06,801.89 1202.03,799.88 1203.28,798.05 1204.75,796.5 1206.31,795.36 1207.88,794.69 1209.35,794.55 1210.6,794.93 1211.56,795.83 1212.17,797.17 1212.38,798.86 1212.17,800.79 1211.56,802.83 1210.6,804.83 1209.35,806.67 1207.88,808.21 1206.31,809.36 1204.75,810.03 1203.28,810.17 1202.03,809.78 1201.06,808.89 1200.46,807.55" fill="#007D78"/>
-              <polygon points="1210.6,794.93 1214.07,796.93 1209.78,804.36 1206.31,802.36" fill="#00BAB3"/>
-              <polygon points="1206.31,802.36 1209.78,804.36 1205.49,811.78 1202.03,809.78" fill="#007D78"/>
-              <polygon points="1203.72,807.86 1203.92,805.93 1204.53,803.89 1205.49,801.88 1206.75,800.05 1208.21,798.5 1209.78,797.36 1211.35,796.69 1212.81,796.55 1214.07,796.93 1215.03,797.83 1215.63,799.17 1215.84,800.86 1215.63,802.79 1215.03,804.83 1214.07,806.83 1212.81,808.67 1211.35,810.21 1209.78,811.36 1208.21,812.03 1206.75,812.17 1205.49,811.78 1204.53,810.89 1203.92,809.55" fill="#002B2A"/>
-              <polygon points="1446.89,948.25 1447.09,946.32 1447.7,944.28 1448.66,942.28 1449.92,940.44 1451.38,938.9 1452.95,937.75 1454.52,937.09 1455.98,936.94 1457.24,937.33 1458.2,938.22 1458.8,939.56 1459.01,941.25 1458.8,943.18 1458.2,945.22 1457.24,947.23 1455.98,949.07 1454.52,950.61 1452.95,951.75 1451.38,952.42 1449.92,952.57 1448.66,952.18 1447.7,951.28 1447.09,949.95" fill="#007D78"/>
-              <polygon points="1457.24,937.33 1460.7,939.33 1456.41,946.75 1452.95,944.75" fill="#00BAB3"/>
-              <polygon points="1452.95,944.75 1456.41,946.75 1452.13,954.18 1448.66,952.18" fill="#007D78"/>
-              <polygon points="1450.35,950.25 1450.56,948.32 1451.16,946.28 1452.13,944.28 1453.38,942.44 1454.84,940.9 1456.41,939.75 1457.98,939.09 1459.44,938.94 1460.7,939.33 1461.66,940.22 1462.27,941.56 1462.47,943.25 1462.27,945.18 1461.66,947.22 1460.7,949.23 1459.44,951.07 1457.98,952.61 1456.41,953.75 1454.84,954.42 1453.38,954.57 1452.13,954.18 1451.16,953.28 1450.56,951.95" fill="#002B2A"/>
-              <g data-plane="16" data-axis="x" transform="matrix(0.87 0.5 -0.87 0.5 793.86 30.8)">
-                <rect x="1087.44" y="500.4" width="85.79" height="56.06" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
-                <text x="1096.19" y="522.96" xml:space="preserve" font-family="Inter" font-size="15.6" font-weight="700" fill="#202124">VLAN 30</text>
-                <text x="1112.42" y="545.24" xml:space="preserve" font-family="Inter" font-size="15.6" font-weight="600" fill="#5F6368">DMZ</text>
+              <polygon points="1277.56,848.49 1277.71,847.12 1278.14,845.66 1278.83,844.23 1279.73,842.91 1280.77,841.81 1281.89,840.99 1283.01,840.52 1284.06,840.41 1284.96,840.69 1285.64,841.33 1286.08,842.29 1286.22,843.49 1286.08,844.87 1285.64,846.33 1284.96,847.76 1284.06,849.07 1283.01,850.18 1281.89,850.99 1280.77,851.47 1279.73,851.57 1278.83,851.3 1278.14,850.66 1277.71,849.7" fill="#007D78"/>
+              <polygon points="1284.96,840.69 1554.89,996.54 1551.82,1001.84 1281.89,845.99" fill="#00BAB3"/>
+              <polygon points="1281.89,845.99 1551.82,1001.84 1548.76,1007.14 1278.83,851.3" fill="#007D78"/>
+              <polygon points="1547.49,1004.34 1547.64,1002.96 1548.07,1001.5 1548.76,1000.07 1549.66,998.76 1550.7,997.66 1551.82,996.84 1552.94,996.36 1553.99,996.26 1554.89,996.54 1555.57,997.17 1556.01,998.13 1556.15,999.34 1556.01,1000.72 1555.57,1002.17 1554.89,1003.61 1553.99,1004.92 1552.94,1006.02 1551.82,1006.84 1550.7,1007.32 1549.66,1007.42 1548.76,1007.14 1548.07,1006.5 1547.64,1005.55" fill="#002B2A"/>
+              <polygon points="1274.1,848.49 1274.31,846.56 1274.91,844.53 1275.87,842.52 1277.13,840.68 1278.59,839.14 1280.16,837.99 1281.73,837.33 1283.19,837.18 1284.45,837.57 1285.41,838.46 1286.02,839.8 1286.22,841.49 1286.02,843.43 1285.41,845.46 1284.45,847.47 1283.19,849.31 1281.73,850.85 1280.16,851.99 1278.59,852.66 1277.13,852.81 1275.87,852.42 1274.91,851.53 1274.31,850.19" fill="#007D78"/>
+              <polygon points="1284.45,837.57 1287.91,839.57 1283.63,846.99 1280.16,844.99" fill="#00BAB3"/>
+              <polygon points="1280.16,844.99 1283.63,846.99 1279.34,854.42 1275.87,852.42" fill="#007D78"/>
+              <polygon points="1277.56,850.49 1277.77,848.56 1278.38,846.53 1279.34,844.52 1280.59,842.68 1282.06,841.14 1283.63,839.99 1285.19,839.33 1286.66,839.18 1287.91,839.57 1288.88,840.46 1289.48,841.8 1289.69,843.49 1289.48,845.43 1288.88,847.46 1287.91,849.47 1286.66,851.31 1285.19,852.85 1283.63,853.99 1282.06,854.66 1280.59,854.81 1279.34,854.42 1278.38,853.53 1277.77,852.19" fill="#002B2A"/>
+              <polygon points="1544.03,1004.34 1544.24,1002.41 1544.84,1000.37 1545.8,998.36 1547.06,996.53 1548.52,994.98 1550.09,993.84 1551.66,993.17 1553.12,993.03 1554.38,993.41 1555.34,994.31 1555.95,995.65 1556.15,997.34 1555.95,999.27 1555.34,1001.31 1554.38,1003.31 1553.12,1005.15 1551.66,1006.69 1550.09,1007.84 1548.52,1008.51 1547.06,1008.65 1545.8,1008.26 1544.84,1007.37 1544.24,1006.03" fill="#007D78"/>
+              <polygon points="1554.38,993.41 1557.84,995.41 1553.56,1002.84 1550.09,1000.84" fill="#00BAB3"/>
+              <polygon points="1550.09,1000.84 1553.56,1002.84 1549.27,1010.26 1545.8,1008.26" fill="#007D78"/>
+              <polygon points="1547.49,1006.34 1547.7,1004.41 1548.31,1002.37 1549.27,1000.36 1550.52,998.53 1551.99,996.98 1553.56,995.84 1555.12,995.17 1556.59,995.03 1557.84,995.41 1558.81,996.31 1559.41,997.65 1559.62,999.34 1559.41,1001.27 1558.81,1003.31 1557.84,1005.31 1556.59,1007.15 1555.12,1008.69 1553.56,1009.84 1551.99,1010.51 1550.52,1010.65 1549.27,1010.26 1548.31,1009.37 1547.7,1008.03" fill="#002B2A"/>
+              <g data-plane="16" data-axis="x" transform="matrix(0.87 0.5 -0.87 0.5 1060.17 30.8)">
+                <rect x="1083.36" y="654.15" width="85.79" height="56.06" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
+                <text x="1092.11" y="676.71" xml:space="preserve" font-family="Inter" font-size="15.6" font-weight="700" fill="#202124">VLAN 30</text>
+                <text x="1108.34" y="698.99" xml:space="preserve" font-family="Inter" font-size="15.6" font-weight="600" fill="#5F6368">DMZ</text>
               </g>
             </g>
             <g data-id="/body/0/children/0/children/3/children/1" data-tag="Pipe" data-kind="solid-4">
-              <polygon points="1148.67,842.64 1395.31,985.03 1377.99,995.03 1131.35,852.64" fill="#A36E14"/>
-              <g data-plane="6" data-axis="x" transform="matrix(0.87 0.5 -0.87 0.5 793.86 40.8)">
-                <rect x="1087.6" y="578.96" width="85.46" height="56.06" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
-                <text x="1096.35" y="601.52" xml:space="preserve" font-family="Inter" font-size="15.6" font-weight="700" fill="#202124">VLAN 99</text>
-                <text x="1106.22" y="623.8" xml:space="preserve" font-family="Inter" font-size="15.6" font-weight="600" fill="#5F6368">transit</text>
+              <polygon points="1222.52,885.27 1492.45,1041.12 1475.13,1051.12 1205.2,895.27" fill="#A36E14"/>
+              <g data-plane="6" data-axis="x" transform="matrix(0.87 0.5 -0.87 0.5 1060.17 40.8)">
+                <rect x="1083.52" y="732.71" width="85.46" height="56.06" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
+                <text x="1092.27" y="755.27" xml:space="preserve" font-family="Inter" font-size="15.6" font-weight="700" fill="#202124">VLAN 99</text>
+                <text x="1102.15" y="777.55" xml:space="preserve" font-family="Inter" font-size="15.6" font-weight="600" fill="#5F6368">transit</text>
               </g>
             </g>
           </g>
           <g data-id="/body/0/children/0/children/4" data-tag="Zone" data-kind="boundary">
-            <polygon points="1663.9,792.46 2043.68,1011.72 1492.24,1330.09 1112.47,1110.83" fill="none" stroke="#5F6368" stroke-width="2" stroke-dasharray="6 5" stroke-linejoin="round"/>
-            <g data-plane="6" data-axis="x" transform="matrix(0.87 0.5 -0.87 0.5 793.86 40.8)">
-              <text x="1291.48" y="301.3" xml:space="preserve" font-family="Inter" font-size="15" font-weight="700" fill="#5F6368">DMZ</text>
+            <polygon points="1926.67,790.42 2309.98,1011.72 1492.24,1483.84 1108.94,1262.54" fill="none" stroke="#5F6368" stroke-width="2" stroke-dasharray="6 5" stroke-linejoin="round"/>
+            <g data-plane="6" data-axis="x" transform="matrix(0.87 0.5 -0.87 0.5 1060.17 40.8)">
+              <text x="1287.4" y="301.3" xml:space="preserve" font-family="Inter" font-size="15" font-weight="700" fill="#5F6368">DMZ</text>
             </g>
             <g data-id="/body/0/children/0/children/4/children/0" data-tag="Zone" data-kind="group-c">
-              <polygon points="1441.91,958.13 1772.32,1148.89 1772.32,1142.89 1441.91,952.13" fill="#BBF8FA"/>
-              <polygon points="1944.08,1049.72 1772.32,1148.89 1772.32,1142.89 1944.08,1043.72" fill="#94F4F8"/>
-              <polygon points="1613.67,852.96 1944.08,1043.72 1772.32,1142.89 1441.91,952.13" fill="#E1FCFD"/>
-              <g data-plane="12" data-axis="x" transform="matrix(0.87 0.5 -0.87 0.5 793.86 34.8)">
-                <text x="1331.98" y="399.8" xml:space="preserve" font-family="Inter" font-size="15" font-weight="700" fill="#004845">VLAN 30 · public services</text>
+              <polygon points="1615.91,1007.34 1949.85,1200.14 1949.85,1194.14 1615.91,1001.34" fill="#BBF8FA"/>
+              <polygon points="2210.39,1049.72 1949.85,1200.14 1949.85,1194.14 2210.39,1043.72" fill="#94F4F8"/>
+              <polygon points="1876.44,850.92 2210.39,1043.72 1949.85,1194.14 1615.91,1001.34" fill="#E1FCFD"/>
+              <g data-plane="12" data-axis="x" transform="matrix(0.87 0.5 -0.87 0.5 1060.17 34.8)">
+                <text x="1327.9" y="399.8" xml:space="preserve" font-family="Inter" font-size="15" font-weight="700" fill="#004845">VLAN 30 · public services</text>
               </g>
               <g data-id="/body/0/children/0/children/4/children/0/children/0" data-tag="Row">
                 <g data-id="/body/0/children/0/children/4/children/0/children/0/children/0" data-tag="Pcard">
-                  <polygon points="1563.44,925.46 1695.31,1001.59 1628.33,1040.26 1496.47,964.13" fill="#202124" fill-opacity="0.2" filter="url(#stencil-shadow)"/>
-                  <polygon points="1496.47,961.13 1628.33,1037.26 1628.33,1019.26 1496.47,943.13" fill="#EBEBEB" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
-                  <polygon points="1695.31,998.59 1628.33,1037.26 1628.33,1019.26 1695.31,980.59" fill="#D6D6D6" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
-                  <polygon points="1563.44,904.46 1695.31,980.59 1628.33,1019.26 1496.47,943.13" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
-                  <g data-plane="30" data-axis="x" transform="matrix(0.87 0.5 -0.87 0.5 793.86 16.8)">
-                    <text x="1350.98" y="471.63" xml:space="preserve" font-family="Inter" font-size="16.9" font-weight="700" fill="#202124">Web server</text>
-                    <text x="1358.98" y="499.82" xml:space="preserve" font-family="Inter" font-size="15.6" font-weight="600" fill="#5F6368">• web-01</text>
+                  <polygon points="1865.32,945.99 1920.74,977.99 1865.32,1009.99 1809.89,977.99" fill="#202124" fill-opacity="0.2" filter="url(#stencil-shadow)"/>
+                  <polygon points="1809.89,974.99 1865.32,1006.99 1865.32,988.99 1809.89,956.99" fill="#EBEBEB" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
+                  <polygon points="1920.74,974.99 1865.32,1006.99 1865.32,988.99 1920.74,956.99" fill="#D6D6D6" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
+                  <polygon points="1865.32,924.99 1920.74,956.99 1865.32,988.99 1809.89,956.99" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
+                  <g data-plane="12" data-axis="x" transform="matrix(0.87 0.5 -0.87 0.5 1060.17 34.8)">
+                    <text x="1357.61" y="534.13" xml:space="preserve" font-family="Inter" font-size="16.9" font-weight="700" fill="#202124">Web server</text>
+                    <text x="1371.17" y="562.32" xml:space="preserve" font-family="Inter" font-size="15.6" font-weight="600" fill="#5F6368">• web-01</text>
                   </g>
                 </g>
                 <g data-id="/body/0/children/0/children/4/children/0/children/0/children/1" data-tag="Pcard">
-                  <polygon points="1707.43,1008.59 1839.29,1084.72 1772.32,1123.39 1640.45,1047.26" fill="#202124" fill-opacity="0.2" filter="url(#stencil-shadow)"/>
-                  <polygon points="1640.45,1044.26 1772.32,1120.39 1772.32,1102.39 1640.45,1026.26" fill="#EBEBEB" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
-                  <polygon points="1839.29,1081.72 1772.32,1120.39 1772.32,1102.39 1839.29,1063.72" fill="#D6D6D6" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
-                  <polygon points="1707.43,987.59 1839.29,1063.72 1772.32,1102.39 1640.45,1026.26" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
-                  <g data-plane="30" data-axis="x" transform="matrix(0.87 0.5 -0.87 0.5 793.86 16.8)">
-                    <text x="1517.24" y="471.63" xml:space="preserve" font-family="Inter" font-size="16.9" font-weight="700" fill="#202124">Mail relay</text>
-                    <text x="1525.24" y="499.82" xml:space="preserve" font-family="Inter" font-size="15.6" font-weight="600" fill="#5F6368">• mx-01</text>
+                  <polygon points="2011.07,1030.14 2066.5,1062.14 2011.07,1094.14 1955.64,1062.14" fill="#202124" fill-opacity="0.2" filter="url(#stencil-shadow)"/>
+                  <polygon points="1955.64,1059.14 2011.07,1091.14 2011.07,1073.14 1955.64,1041.14" fill="#EBEBEB" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
+                  <polygon points="2066.5,1059.14 2011.07,1091.14 2011.07,1073.14 2066.5,1041.14" fill="#D6D6D6" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
+                  <polygon points="2011.07,1009.14 2066.5,1041.14 2011.07,1073.14 1955.64,1041.14" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
+                  <g data-plane="12" data-axis="x" transform="matrix(0.87 0.5 -0.87 0.5 1060.17 34.8)">
+                    <text x="1533.58" y="534.13" xml:space="preserve" font-family="Inter" font-size="16.9" font-weight="700" fill="#202124">Mail relay</text>
+                    <text x="1544.1" y="562.32" xml:space="preserve" font-family="Inter" font-size="15.6" font-weight="600" fill="#5F6368">• mx-01</text>
                   </g>
                 </g>
               </g>
             </g>
             <g data-id="/body/0/children/0/children/4/children/1" data-tag="Zone" data-kind="group-d">
-              <polygon points="1240.94,1074.16 1571.35,1264.92 1571.35,1258.92 1240.94,1068.16" fill="#F6F5A5"/>
-              <polygon points="1760.19,1155.89 1571.35,1264.92 1571.35,1258.92 1760.19,1149.89" fill="#F3F17F"/>
-              <polygon points="1429.78,959.13 1760.19,1149.89 1571.35,1258.92 1240.94,1068.16" fill="#FAF9CA"/>
-              <g data-plane="12" data-axis="x" transform="matrix(0.87 0.5 -0.87 0.5 793.86 34.8)">
-                <text x="1331.98" y="612.14" xml:space="preserve" font-family="Inter" font-size="15" font-weight="700" fill="#5A3900">VLAN 99 · transit</text>
+              <polygon points="1326.17,1174.62 1660.11,1367.42 1660.11,1361.42 1326.17,1168.62" fill="#F6F5A5"/>
+              <polygon points="1937.73,1207.14 1660.11,1367.42 1660.11,1361.42 1937.73,1201.14" fill="#F3F17F"/>
+              <polygon points="1603.79,1008.34 1937.73,1201.14 1660.11,1361.42 1326.17,1168.62" fill="#FAF9CA"/>
+              <g data-plane="12" data-axis="x" transform="matrix(0.87 0.5 -0.87 0.5 1060.17 34.8)">
+                <text x="1327.9" y="714.64" xml:space="preserve" font-family="Inter" font-size="15" font-weight="700" fill="#5A3900">VLAN 99 · transit</text>
               </g>
               <g data-id="/body/0/children/0/children/4/children/1/children/0" data-tag="Pcard">
-                <polygon points="1379.55,1031.63 1655.4,1190.89 1571.35,1239.42 1295.5,1080.16" fill="#202124" fill-opacity="0.2" filter="url(#stencil-shadow)"/>
-                <polygon points="1295.5,1077.16 1571.35,1236.42 1571.35,1218.42 1295.5,1059.16" fill="#EBEBEB" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
-                <polygon points="1655.4,1187.89 1571.35,1236.42 1571.35,1218.42 1655.4,1169.89" fill="#D6D6D6" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
-                <polygon points="1379.55,1010.63 1655.4,1169.89 1571.35,1218.42 1295.5,1059.16" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
-                <g data-plane="30" data-axis="x" transform="matrix(0.87 0.5 -0.87 0.5 793.86 16.8)">
-                  <text x="1350.98" y="683.97" xml:space="preserve" font-family="Inter" font-size="16.9" font-weight="700" fill="#202124">Edge router</text>
-                  <text x="1350.98" y="703.99" xml:space="preserve" font-family="Inter" font-size="15.6" font-weight="400" fill="#5F6368">ISP uplink</text>
-                  <text x="1358.98" y="731.88" xml:space="preserve" font-family="Inter" font-size="15.6" font-weight="600" fill="#5F6368">• rt-edge-01</text>
+                <polygon points="1665.53,1145.49 1720.96,1177.49 1665.53,1209.49 1610.11,1177.49" fill="#202124" fill-opacity="0.2" filter="url(#stencil-shadow)"/>
+                <polygon points="1610.11,1174.49 1665.53,1206.49 1665.53,1188.49 1610.11,1156.49" fill="#EBEBEB" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
+                <polygon points="1720.96,1174.49 1665.53,1206.49 1665.53,1188.49 1720.96,1156.49" fill="#D6D6D6" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
+                <polygon points="1665.53,1124.49 1720.96,1156.49 1665.53,1188.49 1610.11,1156.49" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
+                <g data-plane="12" data-axis="x" transform="matrix(0.87 0.5 -0.87 0.5 1060.17 34.8)">
+                  <text x="1441.2" y="848.97" xml:space="preserve" font-family="Inter" font-size="16.9" font-weight="700" fill="#202124">Edge router</text>
+                  <text x="1452.87" y="868.99" xml:space="preserve" font-family="Inter" font-size="15.6" font-weight="400" fill="#5F6368">ISP uplink</text>
+                  <text x="1442.78" y="896.88" xml:space="preserve" font-family="Inter" font-size="15.6" font-weight="600" fill="#5F6368">• rt-edge-01</text>
                 </g>
               </g>
             </g>
@@ -254,29 +254,29 @@
     </g>
     <g data-id="/legend" data-tag="Legend">
       <g data-id="/legend/0" data-tag="LegendEntry" data-kind="blue">
-        <line x1="20" y1="1460.79" x2="46" y2="1460.79" stroke="#1A73E8" stroke-width="3.75"/>
-        <text x="52" y="1465.16" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">Solid blue</text>
-        <text x="115.56" y="1465.16" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">VLAN 10, staff</text>
+        <line x1="20" y1="1614.54" x2="46" y2="1614.54" stroke="#1A73E8" stroke-width="3.75"/>
+        <text x="52" y="1618.91" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">Solid blue</text>
+        <text x="115.56" y="1618.91" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">VLAN 10, staff</text>
       </g>
       <g data-id="/legend/1" data-tag="LegendEntry" data-kind="pink">
-        <line x1="211.77" y1="1460.79" x2="237.77" y2="1460.79" stroke="#C2185B" stroke-width="2.5"/>
-        <text x="243.77" y="1465.16" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">Solid pink</text>
-        <text x="307.15" y="1465.16" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">VLAN 20, servers</text>
+        <line x1="211.77" y1="1614.54" x2="237.77" y2="1614.54" stroke="#C2185B" stroke-width="2.5"/>
+        <text x="243.77" y="1618.91" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">Solid pink</text>
+        <text x="307.15" y="1618.91" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">VLAN 20, servers</text>
       </g>
       <g data-id="/legend/2" data-tag="LegendEntry" data-kind="solid-3">
-        <line x1="422.71" y1="1460.79" x2="448.71" y2="1460.79" stroke="#007D78" stroke-width="2.5"/>
-        <text x="454.71" y="1465.16" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">Solid teal</text>
-        <text x="514.6" y="1465.16" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">VLAN 30, DMZ</text>
+        <line x1="422.71" y1="1614.54" x2="448.71" y2="1614.54" stroke="#007D78" stroke-width="2.5"/>
+        <text x="454.71" y="1618.91" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">Solid teal</text>
+        <text x="514.6" y="1618.91" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">VLAN 30, DMZ</text>
       </g>
       <g data-id="/legend/3" data-tag="LegendEntry" data-kind="solid-4">
-        <line x1="614.92" y1="1460.79" x2="640.92" y2="1460.79" stroke="#A36E14" stroke-width="2.5"/>
-        <text x="646.92" y="1465.16" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">Solid amber</text>
-        <text x="722.56" y="1465.16" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">VLAN 99, transit</text>
+        <line x1="614.92" y1="1614.54" x2="640.92" y2="1614.54" stroke="#A36E14" stroke-width="2.5"/>
+        <text x="646.92" y="1618.91" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">Solid amber</text>
+        <text x="722.56" y="1618.91" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">VLAN 99, transit</text>
       </g>
       <g data-id="/legend/4" data-tag="LegendEntry" data-kind="deny">
-        <line x1="831.17" y1="1460.79" x2="857.17" y2="1460.79" stroke="#C5221F" stroke-width="2.5" stroke-dasharray="6 5"/>
-        <text x="863.17" y="1465.16" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">Dashed red</text>
-        <text x="935.86" y="1465.16" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">blocked by the firewall</text>
+        <line x1="831.17" y1="1614.54" x2="857.17" y2="1614.54" stroke="#C5221F" stroke-width="2.5" stroke-dasharray="6 5"/>
+        <text x="863.17" y="1618.91" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">Dashed red</text>
+        <text x="935.86" y="1618.91" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">blocked by the firewall</text>
       </g>
     </g>
   </g>

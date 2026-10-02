@@ -27,14 +27,16 @@ fn site_page(fillers: usize, extra: Value) -> Page {
         link[key] = value.clone();
     }
     let mut column: Vec<Value> = (0..fillers)
-        .map(|index| json!({ "tag": "Item", "kind": "product", "title": format!("Cache {index}") }))
+        .map(|index| json!({ "tag": "Item", "kind": "product", "title": format!("Cache {index}"), "shape": "card" }))
         .collect();
-    column.push(json!({ "tag": "Item", "kind": "product", "id": "b", "title": "Gateway" }));
+    column.push(
+        json!({ "tag": "Item", "kind": "product", "id": "b", "title": "Gateway", "shape": "card" }),
+    );
     let mut document = common::page_document(
         json!([{ "tag": "Row", "gap": 64, "grow": [0, 0], "children": [
             { "tag": "Col", "children": [
                 { "tag": "Box", "kind": "onprem", "tint": 1, "label": "Site", "children": [
-                    { "tag": "Item", "kind": "product", "id": "a", "title": "Router" }
+                    { "tag": "Item", "kind": "product", "id": "a", "title": "Router", "shape": "card" }
                 ] }
             ] },
             { "tag": "Col", "gap": 64, "children": column }
@@ -162,35 +164,36 @@ fn an_authored_via_or_from_side_is_never_rerouted() {
     }
 }
 
-/// The hero's VLAN 2 is authored with `from_side: left`, so it keeps the route its author
-/// drew: it leaves the router's footprint through its left side and the on-prem slab
-/// through the left edge, and reaches the gcp floor over the ground.
+/// The hero's VLAN 2 is authored with a `via` in the gap between the sites, so it keeps
+/// the route its author drew: no slab exit moves it, and it passes through the waypoint.
 #[test]
 fn the_hero_vlan_2_keeps_its_authored_route() {
     let page: Page = serde_json::from_str(HERO_JSON).unwrap();
     let vlan_2 = &page.links[1];
     assert_eq!(vlan_2.label.as_deref(), Some("VLAN 2"));
-    assert_eq!(vlan_2.from_side, Some(Side::Left));
+    assert_eq!(vlan_2.via.len(), 1);
 
     let geometry = common::layout_with_cosmic_text(&page);
     let with_exit = scene_of(&page, &geometry);
     let without = project_page(&geometry, &SolidInputs::new(&geometry, &[], 6.0)).unwrap();
     assert_eq!(with_exit, without, "no hero link takes a slab exit");
 
-    let on_prem = slab_footprint(&with_exit, SLAB);
-    let path = &with_exit.link_paths[1];
-    assert_eq!(
-        sides_crossed(path, on_prem).first(),
-        Some(&Side::Left),
-        "{path:?}"
-    );
     let route = &geometry.links[1];
-    let start = route.points[0];
+    let via = vlan_2.via[0];
+    assert!(
+        route
+            .points
+            .iter()
+            .any(|point| (point.x - via.x).abs() < 0.01 && (point.y - via.y).abs() < 0.01),
+        "{:?}",
+        route.points
+    );
     let router = &geometry.nodes[route.from_node];
     // The router stands on a footprint (a tile), which is where its links attach.
     let footprint = router.part(PartName::Footprint).unwrap().bounds;
-    assert_eq!(start.x, footprint.x);
-    let flat_on_prem = geometry.nodes[route.from_node - 1].bounds;
-    assert_eq!(geometry.nodes[route.from_node - 1].pointer.as_str(), SLAB);
-    assert!(route.points.iter().any(|point| point.x < flat_on_prem.x));
+    let start = route.points[0];
+    assert!(
+        start.x >= footprint.x && start.x <= footprint.right(),
+        "{start:?} {footprint:?}"
+    );
 }

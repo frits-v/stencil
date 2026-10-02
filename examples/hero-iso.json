@@ -10,7 +10,10 @@
     {
       "tag": "Row",
       "gap": 64,
-      "grow": [0, 0],
+      "grow": [
+        0,
+        0
+      ],
       "children": [
         {
           "tag": "Col",
@@ -22,7 +25,14 @@
               "tint": 1,
               "label": "On-prem",
               "children": [
-                { "tag": "Item", "id": "router", "kind": "product", "icon": "hybrid", "title": "Edge router", "subtitle": "on-prem · BGP" }
+                {
+                  "tag": "Item",
+                  "id": "router",
+                  "kind": "product",
+                  "icon": "hybrid",
+                  "title": "Edge router",
+                  "subtitle": "on-prem · BGP"
+                }
               ]
             }
           ]
@@ -35,7 +45,10 @@
             {
               "tag": "Row",
               "gap": 64,
-              "grow": [0, 0],
+              "grow": [
+                0,
+                0
+              ],
               "children": [
                 {
                   "tag": "Box",
@@ -45,18 +58,35 @@
                     {
                       "tag": "Row",
                       "gap": 64,
-                      "grow": [0, 0],
+                      "grow": [
+                        0,
+                        0
+                      ],
                       "children": [
                         {
                           "tag": "Col",
                           "children": [
-                            { "tag": "Item", "id": "gateway", "kind": "product", "icon": "cloud-run", "title": "API gateway", "subtitle": "Cloud Run" }
+                            {
+                              "tag": "Item",
+                              "id": "gateway",
+                              "kind": "product",
+                              "icon": "cloud-run",
+                              "title": "API gateway",
+                              "subtitle": "Cloud Run"
+                            }
                           ]
                         },
                         {
                           "tag": "Col",
                           "children": [
-                            { "tag": "Item", "id": "model", "kind": "product", "icon": "vertex-ai", "title": "Model serving", "subtitle": "Vertex AI" }
+                            {
+                              "tag": "Item",
+                              "id": "model",
+                              "kind": "product",
+                              "icon": "vertex-ai",
+                              "title": "Model serving",
+                              "subtitle": "Vertex AI"
+                            }
                           ]
                         }
                       ]
@@ -68,7 +98,14 @@
                   "kind": "apis",
                   "label": "Google APIs",
                   "children": [
-                    { "tag": "Item", "id": "warehouse", "kind": "product", "icon": "bigquery", "title": "Warehouse", "subtitle": "BigQuery" }
+                    {
+                      "tag": "Item",
+                      "id": "warehouse",
+                      "kind": "product",
+                      "icon": "bigquery",
+                      "title": "Warehouse",
+                      "subtitle": "BigQuery"
+                    }
                   ]
                 }
               ]
@@ -79,14 +116,50 @@
     }
   ],
   "legend": [
-    { "line": "solid", "tint": 1, "text": "primary attachment" },
-    { "line": "dash", "text": "failover attachment" },
-    { "line": "gray", "text": "service call" }
+    {
+      "line": "solid",
+      "tint": 1,
+      "text": "primary attachment"
+    },
+    {
+      "line": "dash",
+      "text": "failover attachment"
+    },
+    {
+      "line": "gray",
+      "text": "service call"
+    }
   ],
   "links": [
-    { "from": "router", "to": "gateway", "line": "solid", "tint": 1, "label": "VLAN 1", "to_side": "left" },
-    { "from": "router", "to": "gateway", "line": "dash", "label": "VLAN 2", "from_side": "left", "to_side": "bottom" },
-    { "from": "gateway", "to": "model", "line": "gray" },
-    { "from": "model", "to": "warehouse", "line": "gray" }
+    {
+      "from": "router",
+      "to": "gateway",
+      "line": "solid",
+      "tint": 1,
+      "label": "VLAN 1",
+      "to_side": "left"
+    },
+    {
+      "from": "router",
+      "to": "gateway",
+      "line": "dash",
+      "label": "VLAN 2",
+      "via": [
+        {
+          "x": 300,
+          "y": 480
+        }
+      ]
+    },
+    {
+      "from": "gateway",
+      "to": "model",
+      "line": "gray"
+    },
+    {
+      "from": "model",
+      "to": "warehouse",
+      "line": "gray"
+    }
   ]
 }

@@ -259,6 +259,7 @@ fn gcp_has_a_product_kind_with_every_icon_once_in_icon_order_and_a_person_and_a_
     }
     let product = &grammar.items[0];
     assert_eq!(product.name, "product");
+    assert_eq!(product.shape, Some(Shape::Block));
     assert_eq!(product.icons, IconPack::Gcp);
     let mut expected_parents: Vec<&str> = GCP_TABLE.iter().map(|row| row.0).collect();
     expected_parents.push("page");
@@ -312,7 +313,13 @@ fn plain_has_four_containers_and_five_icon_free_items() {
     assert_eq!(items, ["service", "store", "external", "person", "device"]);
     assert_eq!(grammar.item("person").unwrap().shape, Some(Shape::Figure));
     assert_eq!(grammar.item("device").unwrap().shape, Some(Shape::Laptop));
-    assert_eq!(grammar.item("service").unwrap().shape, None);
+    for name in ["service", "store", "external"] {
+        assert_eq!(
+            grammar.item(name).unwrap().shape,
+            Some(Shape::Block),
+            "{name}"
+        );
+    }
     assert!(
         grammar
             .items

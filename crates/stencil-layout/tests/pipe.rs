@@ -327,8 +327,15 @@ fn an_iso_pipe_end_reaches_the_neighbour_box_it_lands_on() {
 fn an_iso_pipe_end_reaches_a_named_target() {
     let geometry = layout(&iso_gutter_page(Some(("edge", "hub"))));
     let pipe_node = node(&geometry, "/body/0/children/1/children/0");
-    let edge = node(&geometry, "/body/0/children/0/children/0");
-    let hub = node(&geometry, "/body/0/children/2/children/0");
+    // A product stands as a block under iso, so the target's attach box is its footprint.
+    let edge = part(
+        node(&geometry, "/body/0/children/0/children/0"),
+        PartName::Footprint,
+    );
+    let hub = part(
+        node(&geometry, "/body/0/children/2/children/0"),
+        PartName::Footprint,
+    );
     assert_close(
         dot_center_x(pipe_node, PartName::DotStart),
         edge.bounds.right(),
