@@ -1,0 +1,280 @@
+{
+  "title": "Two firewall zones and four VLANs at the head office",
+  "kicker": "On-prem network · head office site",
+  "lede": "The core switch trunks the staff and server VLANs to the edge firewall, which routes them to the DMZ and the transit VLAN. Traffic that starts in the DMZ never reaches the inside zone.",
+  "canvas": "internal",
+  "grammar": "plain",
+  "projection": "iso",
+  "width": 1700,
+  "body": [
+    {
+      "tag": "Box",
+      "kind": "system",
+      "label": "Head office site",
+      "children": [
+        {
+          "tag": "Row",
+          "grow": [
+            6,
+            0,
+            3,
+            0,
+            6
+          ],
+          "children": [
+            {
+              "tag": "Box",
+              "kind": "boundary",
+              "label": "Inside zone",
+              "children": [
+                {
+                  "tag": "Item",
+                  "kind": "service",
+                  "title": "Core switch",
+                  "subtitle": "Layer 3, routes between VLANs",
+                  "facts": [
+                    {
+                      "text": "sw-core-01",
+                      "source": "built"
+                    }
+                  ]
+                },
+                {
+                  "tag": "Box",
+                  "kind": "group",
+                  "tint": 1,
+                  "label": "VLAN 10 · staff",
+                  "children": [
+                    {
+                      "tag": "Row",
+                      "children": [
+                        {
+                          "tag": "Item",
+                          "kind": "service",
+                          "title": "Print server",
+                          "facts": [
+                            {
+                              "text": "prn-01",
+                              "source": "built"
+                            }
+                          ]
+                        },
+                        {
+                          "tag": "Item",
+                          "kind": "service",
+                          "title": "Directory server",
+                          "facts": [
+                            {
+                              "text": "dc-01",
+                              "source": "built"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "tag": "Box",
+                  "kind": "group",
+                  "tint": 2,
+                  "label": "VLAN 20 · servers",
+                  "children": [
+                    {
+                      "tag": "Row",
+                      "children": [
+                        {
+                          "tag": "Item",
+                          "kind": "service",
+                          "title": "Application server",
+                          "facts": [
+                            {
+                              "text": "app-01",
+                              "source": "built"
+                            }
+                          ]
+                        },
+                        {
+                          "tag": "Item",
+                          "kind": "store",
+                          "title": "File server",
+                          "facts": [
+                            {
+                              "text": "fs-01",
+                              "source": "built"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "tag": "Col",
+              "justify": "center",
+              "gap": 12,
+              "children": [
+                {
+                  "tag": "Pipe",
+                  "dir": "h",
+                  "line": "solid",
+                  "tint": 1,
+                  "label": "VLAN 10",
+                  "sub": "staff trunk"
+                },
+                {
+                  "tag": "Pipe",
+                  "dir": "h",
+                  "line": "solid",
+                  "tint": 2,
+                  "label": "VLAN 20",
+                  "sub": "server trunk"
+                },
+                {
+                  "tag": "Pipe",
+                  "dir": "h",
+                  "line": "deny",
+                  "label": "DMZ to inside",
+                  "arrow": "start"
+                }
+              ]
+            },
+            {
+              "tag": "Col",
+              "grow": [
+                1
+              ],
+              "children": [
+                {
+                  "tag": "Item",
+                  "kind": "service",
+                  "title": "Edge firewall",
+                  "subtitle": "stateful, zone policy",
+                  "facts": [
+                    {
+                      "text": "fw-edge-01",
+                      "source": "built"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "tag": "Col",
+              "justify": "center",
+              "gap": 12,
+              "children": [
+                {
+                  "tag": "Pipe",
+                  "dir": "h",
+                  "line": "solid",
+                  "tint": 3,
+                  "label": "VLAN 30",
+                  "sub": "DMZ"
+                },
+                {
+                  "tag": "Pipe",
+                  "dir": "h",
+                  "line": "solid",
+                  "tint": 4,
+                  "label": "VLAN 99",
+                  "sub": "transit"
+                }
+              ]
+            },
+            {
+              "tag": "Box",
+              "kind": "boundary",
+              "label": "DMZ",
+              "children": [
+                {
+                  "tag": "Box",
+                  "kind": "group",
+                  "tint": 3,
+                  "label": "VLAN 30 · public services",
+                  "children": [
+                    {
+                      "tag": "Row",
+                      "children": [
+                        {
+                          "tag": "Item",
+                          "kind": "service",
+                          "title": "Web server",
+                          "facts": [
+                            {
+                              "text": "web-01",
+                              "source": "built"
+                            }
+                          ]
+                        },
+                        {
+                          "tag": "Item",
+                          "kind": "service",
+                          "title": "Mail relay",
+                          "facts": [
+                            {
+                              "text": "mx-01",
+                              "source": "built"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "tag": "Box",
+                  "kind": "group",
+                  "tint": 4,
+                  "label": "VLAN 99 · transit",
+                  "children": [
+                    {
+                      "tag": "Item",
+                      "kind": "service",
+                      "title": "Edge router",
+                      "subtitle": "ISP uplink",
+                      "facts": [
+                        {
+                          "text": "rt-edge-01",
+                          "source": "built"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "legend": [
+    {
+      "line": "solid",
+      "tint": 1,
+      "text": "VLAN 10, staff"
+    },
+    {
+      "line": "solid",
+      "tint": 2,
+      "text": "VLAN 20, servers"
+    },
+    {
+      "line": "solid",
+      "tint": 3,
+      "text": "VLAN 30, DMZ"
+    },
+    {
+      "line": "solid",
+      "tint": 4,
+      "text": "VLAN 99, transit"
+    },
+    {
+      "line": "deny",
+      "text": "blocked by the firewall"
+    }
+  ]
+}

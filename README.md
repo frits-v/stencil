@@ -26,6 +26,10 @@ Five item shapes on one floor, under the isometric projection:
 
 ![One web path from the load balancer to the data layer](docs/gallery/platform-iso.png)
 
+Pipes as tubes on the floor, with flange rings and cones at their ends:
+
+![Two firewall zones and four VLANs at the head office](docs/gallery/onprem-iso.png)
+
 `examples/onepager.json`: a design one-pager with text blocks, callouts and numbered links tracing one request.
 
 The next three figures use the `plain` grammar.

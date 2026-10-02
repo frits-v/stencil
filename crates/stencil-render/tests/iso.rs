@@ -22,8 +22,8 @@ use stencil_model::grammar::Role;
 use stencil_model::pointer::NodePointer;
 use stencil_model::{Page, Projection, Shape, Theme};
 use stencil_render::iso::{
-    Axis, ISO_MARGIN_PX, ISO_ZOOM_MAX, IsoPoint, IsoScene, Label, LabelParts, PlaneMap,
-    ScreenPoint, Solid, SolidShape, iso_labels_clear, iso_links_clear, project_point,
+    Axis, ISO_MARGIN_PX, ISO_TUBE_RADIUS_PX, ISO_ZOOM_MAX, IsoPoint, IsoScene, Label, LabelParts,
+    PlaneMap, ScreenPoint, Solid, SolidShape, iso_labels_clear, iso_links_clear, project_point,
     zoomed_geometry,
 };
 use stencil_render::palette::{Face, LineUse, Palette, shade};
@@ -181,10 +181,11 @@ fn solids_stack_by_zone_depth_and_rows_draw_none() {
         (tile.shape, tile.base_z, tile.height),
         (SolidShape::Block, 12.0, 6.0)
     );
+    // A pipe is a surface whose height is the tube's diameter, so its tag lies on the tube.
     let pipe = solid_of("/body/0/children/1/children/0").unwrap();
     assert_eq!(
         (pipe.shape, pipe.base_z, pipe.height),
-        (SolidShape::Surface, 0.0, 0.0)
+        (SolidShape::Surface, 0.0, 2.0 * ISO_TUBE_RADIUS_PX)
     );
     assert!(solid_of("/body/0").is_none());
     assert!(solid_of("/body/0/children/1").is_none());
@@ -743,22 +744,56 @@ fn iso_layout_grows_a_card_title_by_the_type_scale_and_keeps_the_page_title_flat
     assert_eq!(title_style(&iso_geometry), title_style(&flat_geometry));
 }
 
+/// Section 12.3 rule 5: a pipe is a tube of polygons, with no flat dot ellipse, and its tag
+/// pill lies on the tube's top.
 #[test]
-fn pipe_dots_are_ellipses_on_the_floor() {
+fn pipes_are_tubes_with_their_tags_on_top() {
     let mut page: Page = serde_json::from_str(common::G7_JSON).unwrap();
     page.projection = stencil_model::Projection::Iso;
     let geometry = common::layout_with_cosmic_text(&page);
     let iso = render_svg(&page, &geometry).unwrap();
     let document = common::parse_xml(&iso.svg);
-    let ellipses: Vec<_> = document
-        .descendants()
-        .filter(|node| node.has_tag_name("ellipse"))
-        .collect();
-    assert!(!ellipses.is_empty());
-    for ellipse in ellipses {
-        assert_eq!(ellipse.attribute("rx"), Some("4.9"));
-        assert_eq!(ellipse.attribute("ry"), Some("2.83"));
+    let scene = project_page(&geometry).unwrap();
+    let mut examined = 0;
+    for node in geometry
+        .nodes
+        .iter()
+        .filter(|node| node.tag == NodeTag::Pipe)
+    {
+        let group = common::group(&document, &node.pointer.to_string());
+        let polygons = group
+            .descendants()
+            .filter(|element| element.has_tag_name("polygon"))
+            .count();
+        let ellipses = group
+            .descendants()
+            .filter(|element| element.has_tag_name("ellipse"))
+            .count();
+        // Two caps and two body halves at least, then a flange or cone per end.
+        assert!(polygons >= 6, "{}: {polygons} polygons", node.pointer);
+        assert_eq!(ellipses, 0, "{}", node.pointer);
+        let tag = label_of(&scene, &node.pointer.to_string());
+        let solid = scene
+            .solids
+            .iter()
+            .find(|solid| {
+                solid.node
+                    == geometry
+                        .nodes
+                        .iter()
+                        .position(|n| n.pointer == node.pointer)
+                        .unwrap()
+            })
+            .unwrap();
+        assert_eq!(
+            tag.z,
+            solid.base_z + 2.0 * ISO_TUBE_RADIUS_PX,
+            "{}",
+            node.pointer
+        );
+        examined += 1;
     }
+    assert!(examined > 0);
 }
 
 #[test]

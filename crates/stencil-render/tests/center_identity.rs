@@ -20,7 +20,7 @@ struct Example {
     geometry: &'static str,
 }
 
-const EXAMPLES: [Example; 7] = [
+const EXAMPLES: [Example; 8] = [
     Example {
         stem: "g7",
         document: include_str!("../../../examples/g7.json"),
@@ -52,6 +52,12 @@ const EXAMPLES: [Example; 7] = [
         geometry: include_str!("fixtures/onepager.center.geometry.json"),
     },
     Example {
+        stem: "onprem-iso",
+        document: include_str!("../../../examples/onprem-iso.json"),
+        svg: include_str!("fixtures/onprem-iso.center.svg"),
+        geometry: include_str!("fixtures/onprem-iso.center.geometry.json"),
+    },
+    Example {
         stem: "platform-iso",
         document: include_str!("../../../examples/platform-iso.json"),
         svg: include_str!("fixtures/platform-iso.center.svg"),
@@ -67,9 +73,18 @@ const EXAMPLES: [Example; 7] = [
 
 /// The example vetted and laid out under the built-in gcp grammar it names.
 fn page_and_geometry(example: &Example) -> (Page, PageGeometry) {
-    let grammar = common::gcp();
+    let named: Page = serde_json::from_str(example.document).unwrap();
+    let grammar = match named.grammar.as_deref() {
+        Some("plain") => common::grammar_for(&named),
+        _ => common::gcp(),
+    };
     let page = parse_and_vet(example.document, &grammar).unwrap();
-    assert_eq!(page.grammar.as_deref(), Some("gcp"), "{}", example.stem);
+    assert_eq!(
+        page.grammar.as_deref(),
+        Some(grammar.name.as_str()),
+        "{}",
+        example.stem
+    );
     let mut measurer = CosmicTextMeasurer::new().unwrap();
     let geometry = layout_page(&page, &grammar, &mut measurer).unwrap();
     (page, geometry)

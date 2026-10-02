@@ -12,13 +12,27 @@ use super::{
     close_groups_until_parent, escape_xml, frame_diagonal_box, group_open_tag, icon_chip_box,
     link_mismatch, part_mismatch, pipe_text_style_name, stroke_attributes, text_style_name,
 };
+use crate::iso::tube::{self, CONE_LENGTH_PX, CONE_RADIUS_PX, ISO_TUBE_RADIUS_PX, Tube};
 use crate::iso::{
-    ISO_DOT_RADIUS_X_PX, ISO_DOT_RADIUS_Y_PX, IsoPoint, Label, ScreenPoint, Solid, SolidInputs,
-    SolidShape, arrowhead_vertices, ellipse_radii, end_direction, iso_link_arrowhead_length,
-    label_axis, local_part, plane_member, project_point, project_zoomed, start_direction,
-    zoomed_geometry,
+    IsoPoint, Label, ScreenPoint, Solid, SolidInputs, SolidShape, arrowhead_vertices,
+    ellipse_radii, end_direction, iso_link_arrowhead_length, label_axis, local_part, plane_member,
+    project_point, project_zoomed, start_direction, zoomed_geometry,
 };
-use crate::palette::{DotStyle, FacePaint, LineStyle, LineUse, Palette, Stroke};
+use crate::palette::{DotStyle, FacePaint, LineStyle, LineUse, Palette, Stroke, shade};
+
+/// Lightness step of a tube's upper half over its wire color.
+const TUBE_LIT_STEP: i8 = 12;
+/// Lightness step of a tube's near cap under its wire color.
+const TUBE_CAP_STEP: i8 = -16;
+/// Outline width of a hollow tube.
+const HOLLOW_TUBE_OUTLINE_PX: f32 = 1.5;
+
+/// How a tube is painted.
+#[derive(Debug, Clone, Copy, PartialEq)]
+enum TubeStyle {
+    Filled,
+    Hollow(LineStyle),
+}
 use crate::{RenderError, SvgDocument, format_number};
 
 /// The id of the blur filter every block shadow references (section 13.11).
@@ -663,8 +677,8 @@ impl<'a> SvgWriter<'a> {
         self.write_box(depth, chip, ICON_CHIP_RADIUS_PX, paint);
     }
 
-    /// One wire from dot center to dot center, stopping at an arrowhead base, then the two
-    /// ends: an ellipse per dot or a projected arrowhead (section 12.3, rule 5).
+    /// A tube from dot center to dot center, stopping at a cone base, then the two ends: a
+    /// flange ring per dot or a cone at an arrowed end (section 12.3, rule 5).
     fn write_iso_pipe(
         &mut self,
         depth: usize,
@@ -682,57 +696,190 @@ impl<'a> SvgWriter<'a> {
         let dot_end = node
             .part(PartName::DotEnd)
             .ok_or_else(|| surface_mismatch(node))?;
-        let (run_x, run_y) = match dir {
+        let run = match dir {
             PipeDir::Horizontal => (1.0, 0.0),
             PipeDir::Vertical => (0.0, 1.0),
         };
         let start_center = box_center(dot_start.bounds);
         let end_center = box_center(dot_end.bounds);
-        // An arrowhead's tip is on the dot box's outer edge and its base 10 px inward.
+        // A cone's tip is on the dot box's outer edge and its base CONE_LENGTH_PX inward.
         let start_tip = (
-            start_center.0 - run_x * DOT_RADIUS_PX,
-            start_center.1 - run_y * DOT_RADIUS_PX,
+            start_center.0 - run.0 * DOT_RADIUS_PX,
+            start_center.1 - run.1 * DOT_RADIUS_PX,
         );
         let end_tip = (
-            end_center.0 + run_x * DOT_RADIUS_PX,
-            end_center.1 + run_y * DOT_RADIUS_PX,
+            end_center.0 + run.0 * DOT_RADIUS_PX,
+            end_center.1 + run.1 * DOT_RADIUS_PX,
         );
-        let arrow_length = stencil_layout::ARROWHEAD_LENGTH_PX;
-        let wire_start = if arrows.start {
+        let body_start = if arrows.start {
             (
-                start_tip.0 + run_x * arrow_length,
-                start_tip.1 + run_y * arrow_length,
+                start_tip.0 + run.0 * CONE_LENGTH_PX,
+                start_tip.1 + run.1 * CONE_LENGTH_PX,
             )
         } else {
             start_center
         };
-        let wire_end = if arrows.end {
+        let body_end = if arrows.end {
             (
-                end_tip.0 - run_x * arrow_length,
-                end_tip.1 - run_y * arrow_length,
+                end_tip.0 - run.0 * CONE_LENGTH_PX,
+                end_tip.1 - run.1 * CONE_LENGTH_PX,
             )
         } else {
             end_center
         };
-        let wire = self.palette.wire_style(kind);
-        self.write_screen_line(
-            depth,
-            project_point(wire_start.0, wire_start.1, z, offset),
-            project_point(wire_end.0, wire_end.1, z, offset),
-            wire.stroke,
-        );
+        let style = self.tube_style(kind);
+        let body = Tube {
+            start: body_start,
+            end: body_end,
+            floor_z: z,
+            radius: ISO_TUBE_RADIUS_PX,
+        };
+        self.write_tube(depth, &body, kind, style, offset);
         for (arrow_here, center, tip, outward) in [
-            (arrows.start, start_center, start_tip, (-run_x, -run_y)),
-            (arrows.end, end_center, end_tip, (run_x, run_y)),
+            (arrows.start, start_center, start_tip, (-run.0, -run.1)),
+            (arrows.end, end_center, end_tip, run),
         ] {
             if arrow_here {
-                let head = (tip, outward, arrow_length);
-                self.write_arrowhead_polygon(depth, head, z, kind, offset);
+                self.write_cone(depth, (tip, outward), z, kind, offset);
             } else {
-                self.write_ellipse_dot(depth, project_point(center.0, center.1, z, offset), kind);
+                self.write_flange(depth, (center, run), z, kind, offset);
             }
         }
         Ok(())
+    }
+
+    /// How a tube is painted: a theme that shades no faces draws every tube as an outline,
+    /// a patterned line draws its outline in that pattern, and any other tube is filled with
+    /// a lit upper half and a dark near cap.
+    fn tube_style(&self, kind: LineUse) -> TubeStyle {
+        let faces = &self.palette.theme().iso.faces;
+        let stroke = self.palette.wire_style(kind).stroke;
+        if faces.top == 0 && faces.left == 0 && faces.right == 0 {
+            TubeStyle::Hollow(LineStyle::Solid)
+        } else if stroke.line != LineStyle::Solid {
+            TubeStyle::Hollow(stroke.line)
+        } else {
+            TubeStyle::Filled
+        }
+    }
+
+    fn write_closed_path(
+        &mut self,
+        depth: usize,
+        points: &[ScreenPoint],
+        fill: &str,
+        stroke: Option<Stroke<'_>>,
+    ) {
+        let stroke = stroke.map(stroke_attributes).unwrap_or_default();
+        self.line(
+            depth,
+            &format!(
+                r#"<polygon points="{}" fill="{fill}"{stroke}/>"#,
+                points_attribute(points)
+            ),
+        );
+    }
+
+    /// The body of a tube and both its caps: the far cap under the body as its rounded end,
+    /// the near cap over it.
+    fn write_tube(
+        &mut self,
+        depth: usize,
+        tube: &Tube,
+        kind: LineUse,
+        style: TubeStyle,
+        offset: ScreenPoint,
+    ) {
+        let (Some(run), Some(body)) = (tube.run(), tube::body(tube, offset)) else {
+            return;
+        };
+        let color = self.palette.wire_style(kind).stroke.color;
+        let axis_z = tube.axis_z();
+        let cap = |at: (f32, f32)| tube::cross_section(at, run, axis_z, tube.radius, offset);
+        let (far, near) = if tube::faces_viewer(run) {
+            (tube.start, tube.end)
+        } else {
+            (tube.end, tube.start)
+        };
+        match style {
+            TubeStyle::Hollow(line) => {
+                let fill = self.palette.page_background();
+                let outline = Stroke {
+                    width_px: HOLLOW_TUBE_OUTLINE_PX,
+                    line,
+                    color,
+                };
+                self.write_closed_path(depth, &cap(far), fill, Some(outline));
+                self.write_closed_path(depth, &body.outline, fill, Some(outline));
+                self.write_closed_path(depth, &cap(near), fill, Some(outline));
+            }
+            TubeStyle::Filled => {
+                let lit = shade(color, TUBE_LIT_STEP).unwrap_or_else(|| color.to_string());
+                let dark = shade(color, TUBE_CAP_STEP).unwrap_or_else(|| color.to_string());
+                self.write_closed_path(depth, &cap(far), color, None);
+                self.write_closed_path(depth, &body.lit, &lit, None);
+                self.write_closed_path(depth, &body.shaded, color, None);
+                self.write_closed_path(depth, &cap(near), &dark, None);
+            }
+        }
+    }
+
+    /// A cone at an arrowed end: `head` is the flat tip and the unit direction it points
+    /// along. Its base shows only when it faces the viewer.
+    fn write_cone(
+        &mut self,
+        depth: usize,
+        (tip, outward): ((f32, f32), (f32, f32)),
+        z: f32,
+        kind: LineUse,
+        offset: ScreenPoint,
+    ) {
+        let axis_z = z + ISO_TUBE_RADIUS_PX;
+        let Some(cone) = tube::cone(
+            tip,
+            outward,
+            (CONE_LENGTH_PX, CONE_RADIUS_PX),
+            axis_z,
+            offset,
+        ) else {
+            return;
+        };
+        let color = self.palette.wire_style(kind).stroke.color;
+        match self.tube_style(kind) {
+            TubeStyle::Hollow(_) => {
+                let outline = [cone.lit[0], cone.lit[1], cone.shaded[2]];
+                self.write_closed_path(depth, &outline, color, None);
+            }
+            TubeStyle::Filled => {
+                let lit = shade(color, TUBE_LIT_STEP).unwrap_or_else(|| color.to_string());
+                let dark = shade(color, TUBE_CAP_STEP).unwrap_or_else(|| color.to_string());
+                self.write_closed_path(depth, &cone.lit, &lit, None);
+                self.write_closed_path(depth, &cone.shaded, color, None);
+                if cone.base_in_front {
+                    self.write_closed_path(depth, &cone.base, &dark, None);
+                }
+            }
+        }
+    }
+
+    /// The ring at a dot end, in the dot's style: none, filled, or hollow.
+    fn write_flange(
+        &mut self,
+        depth: usize,
+        (center, run): ((f32, f32), (f32, f32)),
+        z: f32,
+        kind: LineUse,
+        offset: ScreenPoint,
+    ) {
+        let style = match (self.palette.wire_style(kind).dot, self.tube_style(kind)) {
+            (DotStyle::None, _) => return,
+            (DotStyle::Hollow, _) | (_, TubeStyle::Hollow(_)) => {
+                TubeStyle::Hollow(LineStyle::Solid)
+            }
+            (DotStyle::Filled, TubeStyle::Filled) => TubeStyle::Filled,
+        };
+        let ring = tube::flange(center, run, z);
+        self.write_tube(depth, &ring, kind, style, offset);
     }
 
     /// `head` is the flat tip, the unit direction it points along and its length.
@@ -757,34 +904,7 @@ impl<'a> SvgWriter<'a> {
         );
     }
 
-    /// A 4 px dot on a horizontal plane is an ellipse on screen (section 12.2, rule 6),
-    /// filled or hollow as the flat dot.
-    fn write_ellipse_dot(&mut self, depth: usize, center: ScreenPoint, kind: LineUse) {
-        let wire = self.palette.wire_style(kind);
-        let (fill, ring) = match wire.dot {
-            DotStyle::None => return,
-            DotStyle::Filled => (wire.stroke.color, String::new()),
-            DotStyle::Hollow => (
-                self.palette.page_background(),
-                stroke_attributes(Stroke {
-                    width_px: crate::palette::HOLLOW_DOT_RING_PX,
-                    line: LineStyle::Solid,
-                    color: wire.stroke.color,
-                }),
-            ),
-        };
-        self.line(
-            depth,
-            &format!(
-                r#"<ellipse cx="{}" cy="{}" rx="{}" ry="{}" fill="{fill}"{ring}/>"#,
-                format_number(center.x),
-                format_number(center.y),
-                format_number(ISO_DOT_RADIUS_X_PX),
-                format_number(ISO_DOT_RADIUS_Y_PX),
-            ),
-        );
-    }
-
+    /// A Tee's spine as a tube down the spine box's center line (section 12.3, rule 6).
     fn write_spine(
         &mut self,
         depth: usize,
@@ -794,13 +914,14 @@ impl<'a> SvgWriter<'a> {
         offset: ScreenPoint,
     ) {
         let center_x = spine.x + spine.width / 2.0;
-        let stroke = self.palette.wire_style(kind).stroke;
-        self.write_screen_line(
-            depth,
-            project_point(center_x, spine.y, z, offset),
-            project_point(center_x, spine.bottom(), z, offset),
-            stroke,
-        );
+        let style = self.tube_style(kind);
+        let tube = Tube {
+            start: (center_x, spine.y),
+            end: (center_x, spine.bottom()),
+            floor_z: z,
+            radius: ISO_TUBE_RADIUS_PX,
+        };
+        self.write_tube(depth, &tube, kind, style, offset);
     }
 
     /// The link path of section 12.3 rule 7 as one `<path>`, shortened under each arrowhead
