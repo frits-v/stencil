@@ -8,11 +8,11 @@ Pipes. A Pipe is a tube with its tag on the tube top. PipeForm (2): tube band. "
 
 Links. A solid link is a tube per leg with joints and a cone at the arrowed end; a dashed or deny link is one stroked line. A link lies at the height of the tallest slab it crosses. It meets a solid through a 40 px stub on the side it attaches to; an arrow into the top or left side stops at the top face's edge; set to_side bottom or right for a face. A step between solids whose spans do not overlap sits mid-run, clear of edges and other links. Links that share a side of one node spread along it, and two links on one route draw side by side with staggered tags; when the lane is too narrow, iso-links-apart or iso-links-clear says so: give them opposite sides, a via point, or one link whose label names both.
 
-Text. Text reads along x (down-right); a vertical pipe's tag and a tag on a vertical link leg read along y (up-right), or set axis. Body text is 1.3 times its flat size, a Box name 1.25, the frame name 1.4; paddings and gaps 1.75. Names never wrap; other floor text keeps lines of at least 120 px: keep subtitles short, or widen the Box. Each Box keeps open floor behind and left of what stands on it, by the height of its tallest item, so a page may need more width.
+Text. Text reads along x (down-right); a vertical pipe's tag and a tag on a vertical link leg read along y (up-right), or set axis. Body text is 1.3 times its flat size, a Box name 1.25, the frame name 1.4; paddings and gaps 1.75. Names never wrap; other floor text keeps lines of at least 120 px: keep subtitles short, or widen the Box. Each Box keeps floor behind and left of what stands on it, by its tallest item's height, so a page may need more width.
 
-Size. A body narrower than the canvas is zoomed, up to 1.6 times, until it spans 80 percent of it. The drawn canvas runs up to about 1.5 times the page width, and text shrinks with it on a slide. Keep an iso page at 1400 or less, and check with --print-width 10 for a slide. Render at --scale 2.
+Size. A body narrower than the canvas is zoomed, up to 1.6 times, until it spans 80 percent of it. The drawn canvas runs up to about 1.5 times the page width, and text shrinks with it on a slide. Keep an iso page at 1400 or less and check with --print-width 10 for a slide. Render at --scale 2.
 
-Checks. check adds four checks under iso; under flat they are not applicable.
+Checks. check adds four checks under iso, not applicable under flat.
 
 | Check | Unit | Defect at | Message |
 |---|---|---|---|
@@ -23,4 +23,4 @@ Checks. check adds four checks under iso; under flat they are not applicable.
 
 Leave open floor: Row grow 0, items 64 apart, a 48 px gap between Boxes for a link leg, and overlapping spans for solids joined straight across.
 
-Outputs. The measured JSON canvas is the layout canvas: projection.canvas is the drawn one (the SVG viewBox). via points use the layout canvas.
+Outputs. Measured JSON canvas and links are the layout ones; projection.canvas (the SVG viewBox) and projection.links are the drawn canvas and paths. via points use layout px.

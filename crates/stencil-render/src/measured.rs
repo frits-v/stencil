@@ -47,9 +47,42 @@ pub fn measured_json(document: &Value, geometry: &PageGeometry, scene: Option<&I
     Value::Object(root)
 }
 
-/// The drawn canvas, the offset and footer shift, and every label on its plane in painter
-/// order: its screen corners, top-left first then clockwise in layout terms, and its axis.
+/// The drawn canvas, the offset and footer shift, every label on its plane in painter
+/// order (its screen corners, top-left first then clockwise in layout terms, and its axis),
+/// and every link's drawn path, in link order: the adjusted route laid over the slabs and
+/// cut back at its blocks, in zoomed flat px with its height, which is what the SVG draws
+/// where the top-level `links` hold the layout route.
 fn projection_json(scene: &IsoScene) -> Value {
+    let links: Vec<Value> = scene
+        .link_paths
+        .iter()
+        .enumerate()
+        .map(|(index, path)| {
+            let points: Vec<Value> = path
+                .iter()
+                .map(|point| {
+                    let mut object = Map::new();
+                    object.insert("x".to_string(), format_number(point.x).to_json());
+                    object.insert("y".to_string(), format_number(point.y).to_json());
+                    object.insert("z".to_string(), format_number(point.z).to_json());
+                    Value::Object(object)
+                })
+                .collect();
+            let mut object = Map::new();
+            object.insert(
+                "id".to_string(),
+                Value::String(
+                    NodePointer::root()
+                        .child("links")
+                        .index(index)
+                        .as_str()
+                        .to_string(),
+                ),
+            );
+            object.insert("path".to_string(), Value::Array(points));
+            Value::Object(object)
+        })
+        .collect();
     let labels: Vec<Value> = scene
         .labels
         .iter()
@@ -82,6 +115,9 @@ fn projection_json(scene: &IsoScene) -> Value {
     offset.insert("y".to_string(), format_number(scene.offset.y).to_json());
     let mut object = Map::new();
     object.insert("labels".to_string(), Value::Array(labels));
+    if !links.is_empty() {
+        object.insert("links".to_string(), Value::Array(links));
+    }
     object.insert("canvas".to_string(), Value::Object(canvas));
     object.insert(
         "footer_shift".to_string(),
