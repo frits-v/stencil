@@ -8,6 +8,7 @@ check links-avoid-boxes: examined 45 pairs, 0 defects
 check pipes-land: examined 4 pipe ends, 0 defects
 check iso-labels-clear: examined 315 pairs, 0 defects
 check iso-links-clear: examined 3 link legs, 0 defects
+check iso-link-ends: examined 2 link ends, 0 defects
 check print-fit: examined 0 text runs, not applicable: no print width
 check icon-matches-product: examined 5 items, 0 defects
-stencil check: 12 checks, 11 passed, 0 failed, 1 not applicable
+stencil check: 13 checks, 12 passed, 0 failed, 1 not applicable

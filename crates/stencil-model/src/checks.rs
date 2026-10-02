@@ -19,6 +19,7 @@ pub enum CheckName {
     PipesLand,
     IsoLabelsClear,
     IsoLinksClear,
+    IsoLinkEnds,
     PrintFit,
     IconMatchesProduct,
 }
@@ -37,6 +38,7 @@ impl CheckName {
             CheckName::PipesLand => "pipes-land",
             CheckName::IsoLabelsClear => "iso-labels-clear",
             CheckName::IsoLinksClear => "iso-links-clear",
+            CheckName::IsoLinkEnds => "iso-link-ends",
             CheckName::PrintFit => "print-fit",
             CheckName::IconMatchesProduct => "icon-matches-product",
         }
@@ -70,6 +72,8 @@ impl CheckName {
             (CheckName::PipesLand, false) => "pipe ends",
             (CheckName::IsoLinksClear, true) => "link leg",
             (CheckName::IsoLinksClear, false) => "link legs",
+            (CheckName::IsoLinkEnds, true) => "link end",
+            (CheckName::IsoLinkEnds, false) => "link ends",
             (CheckName::IconMatchesProduct, true) => "item",
             (CheckName::IconMatchesProduct, false) => "items",
         }

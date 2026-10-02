@@ -523,9 +523,10 @@ fn check_g7_passes_seven_checks_and_skips_the_link_iso_and_print_checks() {
             "check pipes-land: examined 8 pipe ends, 0 defects",
             "check iso-labels-clear: examined 0 pairs, not applicable: projection is flat",
             "check iso-links-clear: examined 0 link legs, not applicable: projection is flat",
+            "check iso-link-ends: examined 0 link ends, not applicable: projection is flat",
             "check print-fit: examined 0 text runs, not applicable: no print width",
             "check icon-matches-product: examined 6 items, 0 defects",
-            "stencil check: 12 checks, 7 passed, 0 failed, 5 not applicable",
+            "stencil check: 13 checks, 7 passed, 0 failed, 6 not applicable",
         ]
     );
     assert_eq!(outcome.stderr, "");
@@ -564,7 +565,7 @@ fn check_reports_overflowing_text_with_its_pointer() {
         .copied()
         .filter(|line| line.starts_with("check "))
         .collect();
-    assert_eq!(check_lines.len(), 12, "{}", outcome.stdout);
+    assert_eq!(check_lines.len(), 13, "{}", outcome.stdout);
     assert!(
         check_lines[0].starts_with("check child-inside-container: examined "),
         "{}",
@@ -612,7 +613,7 @@ fn check_reports_overflowing_text_with_its_pointer() {
     );
     assert_eq!(
         lines.last().copied(),
-        Some("stencil check: 12 checks, 5 passed, 1 failed, 6 not applicable"),
+        Some("stencil check: 13 checks, 5 passed, 1 failed, 7 not applicable"),
         "{}",
         outcome.stdout
     );
@@ -875,7 +876,7 @@ fn check_with_print_width_14_fails_print_fit_once_at_the_badge() {
     assert_eq!(lines[print_fit + 1], G7_BADGE_AT_14_INCHES);
     assert_eq!(
         lines.last().copied(),
-        Some("stencil check: 12 checks, 7 passed, 1 failed, 4 not applicable")
+        Some("stencil check: 13 checks, 7 passed, 1 failed, 5 not applicable")
     );
 }
 
