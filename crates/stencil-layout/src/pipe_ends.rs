@@ -4,7 +4,7 @@
 
 use stencil_model::{Node, NodeRef, Page, PipeDir, Projection, body_nodes};
 
-use crate::checks::{children_by_parent, pipe_ends};
+use crate::checks::{children_by_parent, landing_box, pipe_ends};
 use crate::compute::targeted_pipes;
 use crate::route::attach_box;
 use crate::{BoxRect, NodeTag, PageGeometry, PartName};
@@ -55,13 +55,31 @@ pub(crate) fn extend_pipe_ends(page: &Page, geometry: &mut PageGeometry) {
             (before_side, PartName::DotStart, from_target),
             (after_side, PartName::DotEnd, to_target),
         ] {
+            // An untargeted end reaches the nearest node across the pipe's center in the
+            // neighbour's subtree, not the neighbour's outer box: a Col or an item with
+            // wide floor text would leave the tube short of the solid.
             let landing: Option<BoxRect> = match target {
                 Some(target) => geometry.nodes.get(target).map(attach_box),
-                None => ends
-                    .iter()
-                    .find(|end| end.side == side)
-                    .and_then(|end| geometry.nodes.get(end.neighbor))
-                    .map(|neighbor| neighbor.bounds),
+                None => ends.iter().find(|end| end.side == side).and_then(|end| {
+                    let center = match dir {
+                        PipeDir::Horizontal => geometry
+                            .nodes
+                            .get(pipe)
+                            .map(|node| node.bounds.y + node.bounds.height / 2.0),
+                        PipeDir::Vertical => geometry
+                            .nodes
+                            .get(pipe)
+                            .map(|node| node.bounds.x + node.bounds.width / 2.0),
+                    }?;
+                    let pipe_before = part == PartName::DotEnd;
+                    landing_box(
+                        geometry,
+                        &children,
+                        end.neighbor,
+                        (*dir, center, pipe_before),
+                    )
+                    .map(|(_, attach)| attach)
+                }),
             };
             let Some(bounds) = landing else {
                 continue;

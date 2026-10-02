@@ -159,10 +159,13 @@
                       "source": "built"
                     }
                   ],
-                  "id": "fw"
+                  "id": "fw",
+                  "shape": "card"
                 }
               ],
-              "justify": "center"
+              "grow": [
+                1
+              ]
             },
             {
               "tag": "Col",

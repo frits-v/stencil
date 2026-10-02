@@ -181,3 +181,56 @@ fn a_vertical_pipe_is_examined_against_the_col_neighbors_above_and_below() {
         defect.message
     );
 }
+
+/// Section 12.3 rule 5 under iso: an untargeted end reaches the nearest node across the
+/// pipe's center in the neighbour's subtree, so a Col holding one item with floor text
+/// wider than its footprint still gets the tube on its solid; pipes-land reads the run axis.
+#[test]
+fn an_iso_pipe_end_reaches_the_solid_inside_a_col_and_a_short_end_is_a_defect() {
+    let page = page_from(json!({
+        "title": "Title", "kicker": "Kicker", "lede": "Lede", "width": 1100,
+        "canvas": "customer", "projection": "iso", "legend": [],
+        "body": [{ "tag": "Row", "gap": 32, "children": [
+            { "tag": "Box", "kind": "onprem", "label": "Site", "children": [
+                { "tag": "Item", "kind": "product", "title": "Edge" } ] },
+            { "tag": "Col", "children": [
+                { "tag": "Pipe", "dir": "h", "line": "solid", "label": "VLAN 1" } ] },
+            { "tag": "Col", "children": [
+                { "tag": "Item", "kind": "product", "title": "Edge firewall",
+                  "subtitle": "stateful, zone policy across both sites" } ] } ] }]
+    }));
+    let mut geometry = layout(&page);
+    let report = pipes_land(&page, &geometry);
+    assert_eq!(report.outcome(), CheckOutcome::Passed, "{report:?}");
+    assert_eq!(report.examined, 2);
+    let firewall = geometry
+        .nodes
+        .iter()
+        .find(|node| node.pointer.as_str() == "/body/0/children/2/children/0")
+        .unwrap();
+    let footprint = firewall
+        .part(stencil_layout::PartName::Footprint)
+        .unwrap()
+        .bounds;
+    let pipe = geometry
+        .nodes
+        .iter_mut()
+        .find(|node| node.pointer.as_str() == "/body/0/children/1/children/0")
+        .unwrap();
+    let dot = pipe
+        .parts
+        .iter_mut()
+        .find(|part| part.name == stencil_layout::PartName::DotEnd)
+        .unwrap();
+    assert!((dot.bounds.x + dot.bounds.width / 2.0 - footprint.x).abs() < 0.01);
+    dot.bounds.x -= 10.0;
+    let short = pipes_land(&page, &geometry);
+    assert_eq!(short.outcome(), CheckOutcome::Failed, "{short:?}");
+    assert!(
+        short.defects[0]
+            .message
+            .starts_with("right end stops 10.00 px short of /body/0/children/2/children/0"),
+        "{:?}",
+        short.defects
+    );
+}
