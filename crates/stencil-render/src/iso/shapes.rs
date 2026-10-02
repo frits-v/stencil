@@ -23,6 +23,65 @@ fn axis_interval(points: &[ScreenPoint], axis: (f32, f32)) -> (f32, f32) {
         })
 }
 
+/// `count` points around an axis-aligned ellipse, clockwise on screen from the leftmost.
+pub(crate) fn ellipse_points(
+    center: ScreenPoint,
+    radius_x: f32,
+    radius_y: f32,
+    count: usize,
+) -> Vec<ScreenPoint> {
+    (0..count)
+        .map(|index| {
+            let angle = std::f32::consts::PI + std::f32::consts::TAU * index as f32 / count as f32;
+            ScreenPoint {
+                x: center.x + radius_x * angle.cos(),
+                y: center.y + radius_y * angle.sin(),
+            }
+        })
+        .collect()
+}
+
+/// The convex hull of the points (Andrew's monotone chain), clockwise on screen, with
+/// collinear boundary points dropped. Fewer than three distinct points come back as given.
+pub(crate) fn convex_hull(points: &[ScreenPoint]) -> Vec<ScreenPoint> {
+    let mut sorted: Vec<ScreenPoint> = points.to_vec();
+    sorted.sort_by(|a, b| {
+        a.x.partial_cmp(&b.x)
+            .unwrap_or(std::cmp::Ordering::Equal)
+            .then(a.y.partial_cmp(&b.y).unwrap_or(std::cmp::Ordering::Equal))
+    });
+    sorted.dedup_by(|a, b| (a.x - b.x).abs() < 1e-6 && (a.y - b.y).abs() < 1e-6);
+    if sorted.len() < 3 {
+        return sorted;
+    }
+    let cross = |o: ScreenPoint, a: ScreenPoint, b: ScreenPoint| {
+        (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x)
+    };
+    let mut lower: Vec<ScreenPoint> = Vec::new();
+    for &point in &sorted {
+        while let [.., second_last, last] = lower.as_slice()
+            && cross(*second_last, *last, point) <= 0.0
+        {
+            lower.pop();
+        }
+        lower.push(point);
+    }
+    let mut upper: Vec<ScreenPoint> = Vec::new();
+    for &point in sorted.iter().rev() {
+        while let [.., second_last, last] = upper.as_slice()
+            && cross(*second_last, *last, point) <= 0.0
+        {
+            upper.pop();
+        }
+        upper.push(point);
+    }
+    lower.pop();
+    upper.pop();
+    // lower then upper runs counterclockwise in y-up terms, which is clockwise on screen.
+    lower.extend(upper);
+    lower
+}
+
 /// True when two convex polygons overlap by more than GEOMETRY_EPSILON_PX on the x and y
 /// axes and on the unit normal of every edge of either (separating axes).
 pub(crate) fn polygons_overlap(first: &[ScreenPoint], second: &[ScreenPoint]) -> bool {

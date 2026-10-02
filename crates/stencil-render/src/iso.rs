@@ -23,10 +23,11 @@ pub(crate) use shapes::unit_direction;
 pub use zoom::{ISO_FILL_FRACTION, ISO_ZOOM_MAX};
 
 use drape::Terrain;
-use shapes::{polygons_overlap, segment_crosses_convex};
+use shapes::{convex_hull, ellipse_points, polygons_overlap, segment_crosses_convex};
 
 pub use stencil_layout::ISO_BLOCK_HEIGHT_PX;
-use stencil_layout::unturned_box;
+use stencil_layout::{shape_height_px, unturned_box};
+use stencil_model::Shape;
 /// cos 30 degrees, written out so every build uses the same f32.
 pub const ISO_COS_30: f32 = 0.866_025_4;
 /// sin 30 degrees.
@@ -104,12 +105,20 @@ pub struct Solid {
     /// The theme's slab thickness for a filled slab, 0 for a ring zone and a surface,
     /// ISO_BLOCK_HEIGHT_PX for a block.
     pub height: f32,
-    /// The six section 12.3 silhouette vertices in canvas px, offset included.
+    /// The six section 12.3 silhouette vertices of the footprint box in canvas px, offset
+    /// included.
     pub silhouette: [ScreenPoint; 6],
+    /// The convex outline the solid covers on screen, offset included: the six silhouette
+    /// vertices of a box form, the hull of the top and base ellipses of a round one. The
+    /// checks and the link cut-back read this.
+    pub outline: Vec<ScreenPoint>,
+    /// The form of an item's block (section 12.3); card for every other solid.
+    pub form: Shape,
     /// True when the solid's faces are filled in every theme, so it hides what was drawn
     /// before it: a slab with height and every block except Note and Frame.
     pub opaque: bool,
-    /// The node's border box in zoomed flat px.
+    /// The box the solid rises from in zoomed flat px: the node's border box, or an item's
+    /// Footprint part when its shape is not a card.
     pub footprint: BoxRect,
 }
 
@@ -259,6 +268,28 @@ pub struct Label {
     /// True when every mark must lie on the owner block's top face: the parts of a Pcard,
     /// Fact, Note, Text, Callout or Frame, which are laid out to fit the block.
     pub contained: bool,
+    /// Which of the owner's plane members the label draws.
+    pub parts: LabelParts,
+}
+
+/// The members of a label: every plane member of the owner, or for an item with a
+/// footprint shape the icon alone on the solid's top or the text alone on the floor.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum LabelParts {
+    All,
+    Icon,
+    Text,
+}
+
+impl LabelParts {
+    /// True when a plane member of the owner belongs to this label.
+    pub fn holds(self, part: PartName) -> bool {
+        match self {
+            LabelParts::All => true,
+            LabelParts::Icon => part == PartName::Icon,
+            LabelParts::Text => part != PartName::Icon,
+        }
+    }
 }
 
 /// A flat point (x, y) at height z on screen (section 12.2, rule 1).
@@ -476,12 +507,14 @@ fn solid_shape(
 ) -> Option<(SolidShape, f32, f32)> {
     match node.tag {
         NodeTag::Zone => Some((SolidShape::Slab, slab_top, zone_height(index, inputs))),
-        NodeTag::Pcard
-        | NodeTag::Fact
-        | NodeTag::Note
-        | NodeTag::Text
-        | NodeTag::Callout
-        | NodeTag::Frame => Some((SolidShape::Block, slab_top, ISO_BLOCK_HEIGHT_PX)),
+        NodeTag::Pcard => Some((
+            SolidShape::Block,
+            slab_top,
+            shape_height_px(node.shape.unwrap_or_default()),
+        )),
+        NodeTag::Fact | NodeTag::Note | NodeTag::Text | NodeTag::Callout | NodeTag::Frame => {
+            Some((SolidShape::Block, slab_top, ISO_BLOCK_HEIGHT_PX))
+        }
         NodeTag::Pipe | NodeTag::Tee => Some((SolidShape::Surface, slab_top, 0.0)),
         NodeTag::Page
         | NodeTag::Kicker
@@ -497,28 +530,90 @@ fn solid_shape(
     }
 }
 
-/// The parts a body node draws on its plane (section 12.4): a zone's label at its slab
-/// top, a block's content at its top, a pipe's or tee's tag at its wire. None for a node
-/// with no plane member.
-fn node_label(
+/// The labels a body node draws on its planes (section 12.4): a zone's name at its slab
+/// top, a block's content at its top, a pipe's or tee's tag at its wire. An item whose
+/// shape is not a card has two: its icon on the solid's top and its text on the floor it
+/// stands on. Empty for a node with no plane member.
+fn node_labels(
     index: usize,
     node: &NodeGeometry,
     shape: SolidShape,
-    top_z: f32,
+    (base_z, top_z): (f32, f32),
     plane: &dyn Fn(f32) -> PlaneMap,
-) -> Option<Label> {
+) -> Vec<Label> {
     let members: Vec<&Part> = node
         .parts
         .iter()
         .filter(|part| plane_member(node.tag, part.name))
         .collect();
-    let (axis, pivot) = label_axis(&members);
+    let footprint_shape = node.tag == NodeTag::Pcard
+        && node.shape.is_some_and(|form| form != Shape::Card)
+        && node.part(PartName::Footprint).is_some();
+    if footprint_shape {
+        let (decal, floor): (Vec<&Part>, Vec<&Part>) =
+            members.iter().partition(|part| part.name == PartName::Icon);
+        return [
+            parts_label(
+                index,
+                node,
+                &decal,
+                top_z,
+                plane,
+                (false, true),
+                LabelParts::Icon,
+            ),
+            parts_label(
+                index,
+                node,
+                &floor,
+                base_z,
+                plane,
+                (false, false),
+                LabelParts::Text,
+            ),
+        ]
+        .into_iter()
+        .flatten()
+        .collect();
+    }
+    let contained = matches!(
+        node.tag,
+        NodeTag::Pcard
+            | NodeTag::Fact
+            | NodeTag::Note
+            | NodeTag::Text
+            | NodeTag::Callout
+            | NodeTag::Frame
+    );
+    parts_label(
+        index,
+        node,
+        &members,
+        top_z,
+        plane,
+        (shape == SolidShape::Surface, contained),
+        LabelParts::All,
+    )
+    .into_iter()
+    .collect()
+}
+
+/// One label over `members` at height `z`; None when they are empty.
+fn parts_label(
+    index: usize,
+    node: &NodeGeometry,
+    members: &[&Part],
+    z: f32,
+    plane: &dyn Fn(f32) -> PlaneMap,
+    (opaque, contained): (bool, bool),
+    parts: LabelParts,
+) -> Option<Label> {
+    let (axis, pivot) = label_axis(members);
     let local: Vec<Part> = members
         .iter()
         .map(|part| local_part(part, axis, pivot))
         .collect();
     let flat = local.iter().map(member_box).reduce(union)?;
-    let z = top_z;
     let map = match axis {
         Axis::X => plane(z),
         Axis::Y => plane(z).turned_about(pivot),
@@ -536,17 +631,51 @@ fn node_label(
             .filter(|part| part.text.is_some())
             .map(|part| map.corners(member_box(part)))
             .collect(),
-        opaque: shape == SolidShape::Surface,
-        contained: matches!(
-            node.tag,
-            NodeTag::Pcard
-                | NodeTag::Fact
-                | NodeTag::Note
-                | NodeTag::Text
-                | NodeTag::Callout
-                | NodeTag::Frame
-        ),
+        opaque,
+        contained,
+        parts,
     })
+}
+
+/// The convex outline a solid covers on screen before the offset: the six silhouette
+/// vertices of a box form; for a round form the hull of the base and top ellipses, each a
+/// circle inscribed in the footprint mapped by rule 6 of section 12.2.
+fn solid_outline(
+    form: Shape,
+    footprint: BoxRect,
+    base_z: f32,
+    top_z: f32,
+    vertices: &[ScreenPoint; 6],
+) -> Vec<ScreenPoint> {
+    match form {
+        Shape::Cylinder | Shape::Stack => {
+            let (center_x, center_y) = center(footprint);
+            let radius = footprint.width.min(footprint.height) / 2.0;
+            let (radius_x, radius_y) = ellipse_radii(radius);
+            let mut points = ellipse_points(
+                project_point(center_x, center_y, base_z, ZERO_OFFSET),
+                radius_x,
+                radius_y,
+                ROUND_OUTLINE_POINTS,
+            );
+            points.extend(ellipse_points(
+                project_point(center_x, center_y, top_z, ZERO_OFFSET),
+                radius_x,
+                radius_y,
+                ROUND_OUTLINE_POINTS,
+            ));
+            convex_hull(&points)
+        }
+        Shape::Card | Shape::Tile | Shape::Tower => vertices.to_vec(),
+    }
+}
+
+/// Points sampled around each ellipse of a round solid's outline.
+const ROUND_OUTLINE_POINTS: usize = 16;
+
+/// The screen semi-axes of a flat circle of radius r (section 12.2 rule 6).
+pub fn ellipse_radii(radius: f32) -> (f32, f32) {
+    (radius * 1.5_f32.sqrt(), radius * 0.5_f32.sqrt())
 }
 
 /// The axis a set of parts reads along, and the pivot of its turn: layout lays a y run out
@@ -630,6 +759,7 @@ fn link_label(
         marks,
         opaque: true,
         contained: false,
+        parts: LabelParts::All,
     })
 }
 
@@ -827,7 +957,7 @@ fn link_paths(
         solids
             .iter()
             .find(|solid| solid.node == node && solid.shape == SolidShape::Block)
-            .map(|solid| solid.silhouette)
+            .map(|solid| solid.outline.clone())
     };
     geometry
         .links
@@ -933,11 +1063,20 @@ pub fn project_zoomed(
         // Heights scale with the zoom, so a zoomed scene keeps the proportions of section
         // 12.3.
         let (base_z, height) = (flat_base_z * zoom, flat_height * zoom);
-        let outline = silhouette(node.bounds, base_z, base_z + height, ZERO_OFFSET);
+        let form = if node.tag == NodeTag::Pcard {
+            node.shape.unwrap_or_default()
+        } else {
+            Shape::Card
+        };
+        let footprint = node
+            .part(PartName::Footprint)
+            .map_or(node.bounds, |part| part.bounds);
+        let vertices = silhouette(footprint, base_z, base_z + height, ZERO_OFFSET);
+        let outline = solid_outline(form, footprint, base_z, base_z + height, &vertices);
         match shape {
             SolidShape::Slab | SolidShape::Block => {
-                for point in outline {
-                    extent.add(point);
+                for point in &outline {
+                    extent.add(*point);
                 }
             }
             SolidShape::Surface => {
@@ -955,11 +1094,13 @@ pub fn project_zoomed(
             shape,
             base_z,
             height,
-            silhouette: outline,
+            silhouette: vertices,
+            outline,
+            form,
             opaque,
-            footprint: node.bounds,
+            footprint,
         });
-        if let Some(label) = node_label(index, node, shape, base_z + height, &unshifted) {
+        for label in node_labels(index, node, shape, (base_z, base_z + height), &unshifted) {
             for corner in label.corners {
                 extent.add(corner);
             }
@@ -1020,6 +1161,10 @@ pub fn project_zoomed(
             x: point.x + offset.x,
             y: point.y + offset.y,
         });
+        for point in &mut solid.outline {
+            point.x += offset.x;
+            point.y += offset.y;
+        }
     }
     for label in &mut labels {
         label.map = label.map.shifted(offset);
@@ -1060,7 +1205,7 @@ fn visible_slab_edges(slab: &Solid, solids: &[&Solid]) -> Vec<(ScreenPoint, Scre
     let occluders: Vec<&[ScreenPoint]> = solids
         .iter()
         .filter(|solid| solid.opaque && solid.node > slab.node)
-        .map(|solid| solid.silhouette.as_slice())
+        .map(|solid| solid.outline.as_slice())
         .collect();
     slab.slab_edges()
         .into_iter()
@@ -1134,7 +1279,7 @@ pub fn iso_labels_clear(scene: Option<&IsoScene>) -> CheckReport {
             let covered = label
                 .marks
                 .iter()
-                .any(|mark| polygons_overlap(mark, &solid.silhouette));
+                .any(|mark| polygons_overlap(mark, &solid.outline));
             if covered {
                 defects.push(Defect {
                     pointer: label.owner.clone(),
@@ -1208,7 +1353,7 @@ pub fn iso_labels_clear(scene: Option<&IsoScene>) -> CheckReport {
         let leaves = label.marks.iter().any(|mark| {
             !mark
                 .iter()
-                .all(|corner| shapes::point_in_convex(*corner, &block.silhouette))
+                .all(|corner| shapes::point_in_convex(*corner, &block.outline))
         });
         if leaves {
             defects.push(Defect {

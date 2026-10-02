@@ -192,6 +192,7 @@ fn null_optional_fields_parse_as_absent() {
             title: "Store".to_string(),
             subtitle: None,
             facts: Vec::new(),
+            shape: None,
         }))
     );
 }

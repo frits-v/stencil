@@ -8,6 +8,7 @@ use std::collections::BTreeSet;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
+use crate::Shape;
 use crate::document::{IconName, KIND_PATTERN};
 use crate::pointer::NodePointer;
 
@@ -137,6 +138,9 @@ pub struct IconProducts {
     pub class: IconClass,
     #[schemars(length(min = 1))]
     pub names: Vec<String>,
+    /// Under iso, the solid an item with this icon stands as; absent is card.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub shape: Option<Shape>,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]

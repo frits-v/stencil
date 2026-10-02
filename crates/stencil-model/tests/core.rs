@@ -18,7 +18,7 @@ use stencil_model::{
     validate_page,
 };
 
-const EXAMPLES: [(&str, &str); 6] = [
+const EXAMPLES: [(&str, &str); 7] = [
     ("g7", include_str!("../../../examples/g7.json")),
     ("hero-iso", include_str!("../../../examples/hero-iso.json")),
     (
@@ -30,6 +30,10 @@ const EXAMPLES: [(&str, &str); 6] = [
         include_str!("../../../examples/network-hub-spoke.json"),
     ),
     ("onepager", include_str!("../../../examples/onepager.json")),
+    (
+        "platform-iso",
+        include_str!("../../../examples/platform-iso.json"),
+    ),
     (
         "stress-dense",
         include_str!("../../../examples/stress-dense.json"),
@@ -61,6 +65,7 @@ fn plain_item(kind: &str, icon: Option<IconName>) -> Node {
         title: "Thing".to_string(),
         subtitle: None,
         facts: Vec::new(),
+        shape: None,
     })
 }
 
@@ -323,6 +328,7 @@ fn facts_appear_in_text_fields_after_title_and_subtitle() {
                 source: FactSource::Ask,
             },
         ],
+        shape: None,
     }));
     let pointers: Vec<String> = text_fields(&page)
         .iter()
@@ -382,6 +388,7 @@ fn facts_too_many_above_eight() {
             title: "Many".to_string(),
             subtitle: None,
             facts,
+            shape: None,
         }),
         pipe(Line::Solid, Some(1), "p"),
     ]);
@@ -474,6 +481,7 @@ fn head(id: &str) -> Node {
         title: id.to_string(),
         subtitle: Some("Cloud Run".to_string()),
         facts: Vec::new(),
+        shape: None,
     })
 }
 

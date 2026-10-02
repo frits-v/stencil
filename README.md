@@ -22,6 +22,10 @@ Build the binary with `cargo build --release`; it lands at `target/release/stenc
 
 ![Design one-pager for a trigger evaluation service](docs/gallery/onepager.png)
 
+Five item shapes on one floor, under the isometric projection:
+
+![One web path from the load balancer to the data layer](docs/gallery/platform-iso.png)
+
 `examples/onepager.json`: a design one-pager with text blocks, callouts and numbered links tracing one request.
 
 The next three figures use the `plain` grammar.

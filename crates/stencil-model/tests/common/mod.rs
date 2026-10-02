@@ -37,6 +37,7 @@ pub fn item(title: &str) -> Node {
         title: title.to_string(),
         subtitle: None,
         facts: Vec::new(),
+        shape: None,
     })
 }
 
@@ -153,6 +154,7 @@ pub fn item_with_id(id: &str, title: &str) -> Node {
         title: title.to_string(),
         subtitle: None,
         facts: Vec::new(),
+        shape: None,
     })
 }
 

@@ -11,6 +11,7 @@ mod common;
 
 use common::{project_page, render_svg, with_theme};
 use serde_json::json;
+use stencil_model::Shape;
 use stencil_model::{Page, Projection};
 use stencil_render::iso::SolidShape;
 use stencil_render::{DeviceScale, render_png};
@@ -27,7 +28,7 @@ fn hero_page() -> Page {
 fn lone_item_page() -> Page {
     let document = common::page_document(
         json!([{ "tag": "Row", "gap": 64, "children": [
-            { "tag": "Item", "kind": "product", "icon": "gke", "title": "Cluster" },
+            { "tag": "Item", "kind": "product", "icon": "gke", "title": "Cluster", "shape": "card" },
             { "tag": "Note", "kind": "legend", "text": "a note" }
         ] }]),
         json!([]),
@@ -66,7 +67,12 @@ fn center_draws_one_filter_and_one_shadow_first_in_each_opaque_block() {
     for block in opaque_blocks {
         let group = common::group(&document, block.pointer.as_str());
         let first = group.children().find(|node| node.is_element()).unwrap();
-        assert!(first.has_tag_name("polygon"), "{}", block.pointer);
+        // A box form casts its base polygon, a round form its base ellipse (section 12.3).
+        let expected = match block.form {
+            Shape::Cylinder | Shape::Stack => "ellipse",
+            Shape::Card | Shape::Tile | Shape::Tower => "polygon",
+        };
+        assert!(first.has_tag_name(expected), "{}", block.pointer);
         assert_eq!(first.attribute("fill"), Some("#202124"));
         assert_eq!(first.attribute("fill-opacity"), Some("0.2"));
         assert_eq!(first.attribute("filter"), Some("url(#stencil-shadow)"));

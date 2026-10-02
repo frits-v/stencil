@@ -68,12 +68,12 @@ fn check_hero_passes_every_applicable_check_in_every_theme() {
         assert_eq!(outcome.code, ExitCode::Clean, "{theme}: {}", outcome.stdout);
         let lines = outcome.stdout_lines();
         assert!(
-            lines.contains(&"check iso-labels-clear: examined 146 pairs, 0 defects"),
+            lines.contains(&"check iso-labels-clear: examined 188 pairs, 0 defects"),
             "{theme}: {}",
             outcome.stdout
         );
         assert!(
-            lines.contains(&"check iso-links-clear: examined 8 link legs, 0 defects"),
+            lines.contains(&"check iso-links-clear: examined 11 link legs, 0 defects"),
             "{theme}: {}",
             outcome.stdout
         );

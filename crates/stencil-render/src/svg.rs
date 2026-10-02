@@ -667,6 +667,8 @@ impl<'a> SvgWriter<'a> {
     ) -> Result<(), RenderError> {
         let bounds = part.bounds;
         match part.name {
+            // The solid draws the footprint under iso; it has no flat drawing.
+            PartName::Footprint => {}
             PartName::Badge => {
                 let badge_paint = self.palette.badge(self.canvas);
                 self.write_box(depth, bounds, BADGE_RADIUS_PX, badge_paint);

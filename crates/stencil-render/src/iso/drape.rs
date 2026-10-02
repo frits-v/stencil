@@ -139,7 +139,53 @@ pub(crate) fn drape(points: &[PagePoint], terrain: &[Terrain]) -> Vec<IsoPoint> 
             push_point(&mut path, to_x, to_y, z);
         }
     }
-    simplify(path)
+    let mut path = simplify(path);
+    move_hidden_risers(&mut path);
+    path.dedup_by(|later, earlier| {
+        same_place(*earlier, later.x, later.y) && (earlier.z - later.z).abs() <= GEOMETRY_EPSILON_PX
+    });
+    path
+}
+
+/// A riser at a slab's back or left edge stands behind a face the viewer cannot see: on
+/// screen the lower piece would run across the slab's top for one step of height before
+/// climbing. The lower piece is cut back by that step, to where it passes under the slab's
+/// top edge on screen, and the two pieces no longer meet: the writer lifts the pen between
+/// them. The lower piece lies on the +x or +y side of such an edge.
+fn move_hidden_risers(path: &mut [IsoPoint]) {
+    for index in 0..path.len().saturating_sub(1) {
+        let (Some(&first), Some(&second)) = (path.get(index), path.get(index + 1)) else {
+            continue;
+        };
+        if !same_place(first, second.x, second.y)
+            || (first.z - second.z).abs() <= GEOMETRY_EPSILON_PX
+        {
+            continue;
+        }
+        let neighbour = if first.z < second.z {
+            index.checked_sub(1).and_then(|at| path.get(at))
+        } else {
+            path.get(index + 2)
+        };
+        let Some(&neighbour) = neighbour else {
+            continue;
+        };
+        let Some((dx, dy)) =
+            super::shapes::unit_direction((neighbour.x, neighbour.y), (first.x, first.y))
+        else {
+            continue;
+        };
+        if dx <= GEOMETRY_EPSILON_PX && dy <= GEOMETRY_EPSILON_PX {
+            continue;
+        }
+        let reach = (first.x - neighbour.x).hypot(first.y - neighbour.y);
+        let step = (first.z - second.z).abs().min(reach);
+        let lower = if first.z < second.z { index } else { index + 1 };
+        if let Some(point) = path.get_mut(lower) {
+            point.x -= dx * step;
+            point.y -= dy * step;
+        }
+    }
 }
 
 fn screen(point: IsoPoint) -> ScreenPoint {
@@ -240,13 +286,51 @@ mod tests {
                 (50.0, 6.0),
                 (100.0, 6.0),
                 (100.0, 0.0),
-                (200.0, 0.0),
+                (194.0, 0.0),
                 (200.0, 6.0),
-                (210.0, 6.0),
+                (204.0, 6.0),
                 (210.0, 12.0),
                 (250.0, 12.0),
             ]
         );
+    }
+
+    #[test]
+    fn a_path_passes_under_a_hidden_edge_and_climbs_a_visible_one() {
+        let terrain = [slab(100.0, 0.0, 100.0, 100.0, 12.0)];
+        let onto = drape(&[page_point(50.0, 50.0), page_point(150.0, 50.0)], &terrain);
+        let places: Vec<(f32, f32)> = onto.iter().map(|point| (point.x, point.z)).collect();
+        assert_eq!(
+            places,
+            vec![(50.0, 0.0), (88.0, 0.0), (100.0, 12.0), (150.0, 12.0)]
+        );
+        let off = drape(&[page_point(150.0, 50.0), page_point(50.0, 50.0)], &terrain);
+        let places: Vec<(f32, f32)> = off.iter().map(|point| (point.x, point.z)).collect();
+        assert_eq!(
+            places,
+            vec![(150.0, 12.0), (100.0, 12.0), (88.0, 0.0), (50.0, 0.0)]
+        );
+        let back = drape(
+            &[page_point(150.0, -50.0), page_point(150.0, 50.0)],
+            &terrain,
+        );
+        let places: Vec<(f32, f32)> = back.iter().map(|point| (point.y, point.z)).collect();
+        assert_eq!(
+            places,
+            vec![(-50.0, 0.0), (-12.0, 0.0), (0.0, 12.0), (50.0, 12.0)]
+        );
+        let front = drape(
+            &[page_point(250.0, 50.0), page_point(150.0, 50.0)],
+            &terrain,
+        );
+        let places: Vec<(f32, f32)> = front.iter().map(|point| (point.x, point.z)).collect();
+        assert_eq!(
+            places,
+            vec![(250.0, 0.0), (200.0, 0.0), (200.0, 12.0), (150.0, 12.0)]
+        );
+        let short = drape(&[page_point(95.0, 50.0), page_point(150.0, 50.0)], &terrain);
+        let places: Vec<(f32, f32)> = short.iter().map(|point| (point.x, point.z)).collect();
+        assert_eq!(places, vec![(95.0, 0.0), (100.0, 12.0), (150.0, 12.0)]);
     }
 
     #[test]

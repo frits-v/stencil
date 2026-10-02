@@ -27,6 +27,7 @@ fn geometry_node(pointer_text: &str, parent: Option<usize>, bounds: BoxRect) -> 
         kind: None,
         tint: None,
         container: None,
+        shape: None,
         parent,
         bounds,
         content: bounds,

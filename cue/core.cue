@@ -42,7 +42,10 @@ import (
 #Side:       "top" | "right" | "bottom" | "left"
 
 // The reading axis of a tag under iso (section 12.4).
-#Axis:        "x" | "y"
+#Axis: "x" | "y"
+
+// The solid an item stands as under iso (section 12.3).
+#Shape:       "card" | "tile" | "tower" | "cylinder" | "stack"
 #ListKind:    "plain" | "numbered" | "bulleted"
 #CalloutKind: "note" | "risk" | "decision" | "open"
 
@@ -282,6 +285,9 @@ import (
 	title:     #Text
 	subtitle?: #Text
 	facts?: [...#FactEntry] & list.MaxItems(8)
+	// Under iso, the solid the item stands as; absent follows its icon's row in
+	// the kind's product table, or card.
+	shape?: #Shape
 	_keys: {}
 	_ids: [if id != _|_ {id}]
 	_laneSets: []

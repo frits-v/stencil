@@ -589,6 +589,17 @@
               "type": "string",
               "pattern": "^[a-z][a-z0-9-]{0,31}$"
             },
+            "shape": {
+              "description": "Under iso, the solid the item stands as; absent takes the shape of its icon's row\nin the kind's product table, or card.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Shape"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
             "subtitle": {
               "type": [
                 "string",
@@ -959,6 +970,17 @@
       "enum": [
         "flat",
         "iso"
+      ]
+    },
+    "Shape": {
+      "description": "The solid an item stands as under iso (section 12.3): a card is the flat card raised,\nwith its content on top; every other shape carries the icon on its top and its text\non the floor beside it. Tile: a thin plate, for network and edge pieces. Tower: a tall\nnarrow box, for compute, clusters and nodes. Cylinder: databases and warehouses.\nStack: three stacked discs, for storage and buckets.",
+      "type": "string",
+      "enum": [
+        "card",
+        "tile",
+        "tower",
+        "cylinder",
+        "stack"
       ]
     },
     "Side": {

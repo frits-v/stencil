@@ -50,6 +50,8 @@ import (
 	icon:  #Icon
 	class: "product" | "category"
 	names: [...string & !="" & strings.MaxRunes(64)] & list.MinItems(1)
+	// Under iso, the solid an item with this icon stands as; absent is card.
+	shape?: "card" | "tile" | "tower" | "cylinder" | "stack"
 }
 
 #Remembered: {

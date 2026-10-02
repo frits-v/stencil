@@ -15,7 +15,7 @@ use stencil_model::{
 
 use crate::lanes::{LanesPlan, MessageRow};
 use crate::styles::{text_color, text_style_for};
-use crate::{Axis, ISO_APPROACH_PX, turned_box};
+use crate::{Axis, ISO_APPROACH_PX, ISO_BLOCK_HEIGHT_PX, shape_height_px, turned_box};
 use crate::{
     BoxRect, GEOMETRY_EPSILON_PX, LayoutError, LinkRoute, NodeGeometry, NodeTag, PageGeometry,
     Part, PartName, RouteStatus, TextAlign, TextRun,
@@ -108,11 +108,40 @@ fn searched_route(
 ) -> (Vec<PagePoint>, RouteStatus) {
     let sides = choose_sides(
         link,
-        (&from.1.bounds, &SIDE_ORDER),
-        (&to.1.bounds, &SIDE_ORDER),
+        (&attach_box(from.1), allowed_sides(from.1)),
+        (&attach_box(to.1), allowed_sides(to.1)),
     );
     let stubs = (iso && is_block(from.1), iso && is_block(to.1));
     route_between(geometry, from, to, sides, &link.via, stubs)
+}
+
+/// The box a link attaches to: an item's Footprint part under iso when its shape is not a
+/// card, where its solid stands (section 12.3), else the node's border box.
+fn attach_box(node: &NodeGeometry) -> BoxRect {
+    node.part(PartName::Footprint)
+        .map_or(node.bounds, |part| part.bounds)
+}
+
+/// The sides a link may attach to when the author chose none: every side, except that an
+/// item standing on a footprint keeps its bottom side, where its text lies on the floor.
+fn allowed_sides(node: &NodeGeometry) -> &'static [Side] {
+    if node.part(PartName::Footprint).is_some() {
+        &FOOTPRINT_SIDES
+    } else {
+        &SIDE_ORDER
+    }
+}
+
+/// The attach sides of a footprint item, in SIDE_ORDER without the bottom side.
+const FOOTPRINT_SIDES: [Side; 3] = [Side::Right, Side::Left, Side::Top];
+
+/// The height of a block under iso (section 12.3): an item's shape height, the block
+/// height for every other leaf.
+fn block_height(node: &NodeGeometry) -> f32 {
+    match node.tag {
+        NodeTag::Pcard => shape_height_px(node.shape.unwrap_or_default()),
+        _ => ISO_BLOCK_HEIGHT_PX,
+    }
 }
 
 /// A node drawn as a raised block under iso (section 12.3): a leaf other than a pipe or
@@ -139,32 +168,47 @@ fn route_between(
     via: &[PagePoint],
     (from_stub, to_stub): (bool, bool),
 ) -> (Vec<PagePoint>, RouteStatus) {
-    let start = side_midpoint(&from.bounds, from_side);
-    let end = side_midpoint(&to.bounds, to_side);
+    let (from_box, to_box) = (attach_box(from), attach_box(to));
+    let start = side_midpoint(&from_box, from_side);
+    let end = side_midpoint(&to_box, to_side);
     // Under iso a block end is reached through a straight stub outward from its side
     // (section 12.4): the search runs between the stub ends.
-    let outward = |point: PagePoint, side: Side| {
+    // A stub into a hidden side (top or left) is cut back by the block's height on
+    // screen, so it grows by that much.
+    let outward = |point: PagePoint, side: Side, node: &NodeGeometry| {
         let (dx, dy) = Direction::outward(side).unit();
+        let hidden = matches!(side, Side::Top | Side::Left);
+        let length = ISO_APPROACH_PX + if hidden { block_height(node) } else { 0.0 };
         PagePoint {
-            x: point.x + dx * ISO_APPROACH_PX,
-            y: point.y + dy * ISO_APPROACH_PX,
+            x: point.x + dx * length,
+            y: point.y + dy * length,
         }
     };
     let search_start = if from_stub {
-        outward(start, from_side)
+        outward(start, from_side, from)
     } else {
         start
     };
-    let search_end = if to_stub { outward(end, to_side) } else { end };
-    let obstacles = link_obstacles(geometry, from_node, to_node);
+    let search_end = if to_stub {
+        outward(end, to_side, to)
+    } else {
+        end
+    };
+    let mut obstacles = link_obstacles(geometry, from_node, to_node);
+    // The search runs between the stub ends, outside the blocks, so a stubbed block is an
+    // obstacle like any other: the route may not cut through it to reach its stub.
+    for (stub, node, bounds) in [(from_stub, from_node, from_box), (to_stub, to_node, to_box)] {
+        if stub {
+            obstacles.push(Obstacle { node, bounds });
+        }
+    }
     let endpoints = Endpoints {
-        from: from.bounds,
-        to: to.bounds,
+        from: from_box,
+        to: to_box,
         start: search_start,
         end: search_end,
         from_side,
         to_side,
-        from_stub,
         to_stub,
     };
     let with_stubs = |mut points: Vec<PagePoint>| {
@@ -209,7 +253,7 @@ pub fn reroute_link(
     let to_side = route
         .points
         .last()
-        .and_then(|end| side_holding(&to.bounds, *end))
+        .and_then(|end| side_holding(&attach_box(to), *end))
         .unwrap_or_else(|| facing_side(from_side));
     let (points, status) = route_between(
         geometry,
@@ -342,7 +386,7 @@ pub(crate) fn link_obstacles(geometry: &PageGeometry, from: usize, to: usize) ->
             current = geometry.nodes.get(index).and_then(|node| node.parent);
         }
     }
-    geometry
+    let mut obstacles: Vec<Obstacle> = geometry
         .nodes
         .iter()
         .enumerate()
@@ -353,7 +397,22 @@ pub(crate) fn link_obstacles(geometry: &PageGeometry, from: usize, to: usize) ->
                 bounds,
             })
         })
-        .collect()
+        .collect();
+    // An endpoint standing on a footprint keeps its own floor text clear of its links.
+    for index in [from, to] {
+        let Some(node) = geometry.nodes.get(index) else {
+            continue;
+        };
+        if node.part(PartName::Footprint).is_some()
+            && let Some(text) = node.part(PartName::Text)
+        {
+            obstacles.push(Obstacle {
+                node: index,
+                bounds: text.bounds,
+            });
+        }
+    }
+    obstacles
 }
 
 fn obstacle_box(node: &NodeGeometry) -> Option<BoxRect> {
@@ -576,9 +635,8 @@ struct Endpoints {
     end: PagePoint,
     from_side: Side,
     to_side: Side,
-    /// True at an end reached through an approach stub (section 12.4): the stub is the
-    /// straight leg out of the side, so the search may meet its end from any direction.
-    from_stub: bool,
+    /// True at an end reached through an approach stub (section 12.4). The to stub is the
+    /// straight approach, so the search may meet its end from any direction.
     to_stub: bool,
 }
 
@@ -937,8 +995,10 @@ fn grid_route(
         let (Some(&leg_start), Some(&leg_end)) = (leg.first(), leg.get(1)) else {
             return None;
         };
-        let leave = (leg_index == 0 && !endpoints.from_stub)
-            .then(|| Direction::outward(endpoints.from_side));
+        // A from stub keeps the first leg leaving outward, so the route never doubles back
+        // over its stub; a to stub is met from any direction, the stub itself being the
+        // straight approach.
+        let leave = (leg_index == 0).then(|| Direction::outward(endpoints.from_side));
         let arrive = (leg_index + 1 == leg_count && !endpoints.to_stub)
             .then(|| Direction::outward(endpoints.to_side).opposite());
         let leg_path = search_leg(

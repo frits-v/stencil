@@ -227,7 +227,8 @@
                     "class": "product",
                     "names": [
                         "BigQuery"
-                    ]
+                    ],
+                    "shape": "cylinder"
                 },
                 {
                     "icon": "cloud-run-flat",
@@ -250,21 +251,24 @@
                     "class": "product",
                     "names": [
                         "Cloud SQL"
-                    ]
+                    ],
+                    "shape": "cylinder"
                 },
                 {
                     "icon": "cloud-storage",
                     "class": "product",
                     "names": [
                         "Cloud Storage"
-                    ]
+                    ],
+                    "shape": "stack"
                 },
                 {
                     "icon": "compute-engine",
                     "class": "product",
                     "names": [
                         "Compute Engine"
-                    ]
+                    ],
+                    "shape": "tower"
                 },
                 {
                     "icon": "compute",
@@ -278,7 +282,8 @@
                         "Batch",
                         "Bare Metal Solution",
                         "Google Cloud VMware Engine"
-                    ]
+                    ],
+                    "shape": "tower"
                 },
                 {
                     "icon": "containers",
@@ -288,7 +293,8 @@
                         "GKE",
                         "Cloud Run",
                         "Artifact Registry"
-                    ]
+                    ],
+                    "shape": "tower"
                 },
                 {
                     "icon": "data-analytics",
@@ -304,7 +310,8 @@
                         "Cloud Composer",
                         "Datastream",
                         "Dataform"
-                    ]
+                    ],
+                    "shape": "cylinder"
                 },
                 {
                     "icon": "databases",
@@ -317,7 +324,8 @@
                         "Bigtable",
                         "Memorystore",
                         "Database Migration Service"
-                    ]
+                    ],
+                    "shape": "cylinder"
                 },
                 {
                     "icon": "devops",
@@ -335,7 +343,8 @@
                     "names": [
                         "Google Kubernetes Engine",
                         "GKE"
-                    ]
+                    ],
+                    "shape": "tower"
                 },
                 {
                     "icon": "hybrid",
@@ -346,7 +355,8 @@
                         "Dedicated Interconnect",
                         "Partner Interconnect",
                         "Cross-Cloud Interconnect"
-                    ]
+                    ],
+                    "shape": "tile"
                 },
                 {
                     "icon": "integration",
@@ -376,7 +386,8 @@
                         "Network Connectivity Center",
                         "Private Service Connect",
                         "Virtual Private Cloud"
-                    ]
+                    ],
+                    "shape": "tile"
                 },
                 {
                     "icon": "observability",
@@ -434,7 +445,8 @@
                         "Backup and DR Service",
                         "Storage Transfer Service",
                         "Google Cloud NetApp Volumes"
-                    ]
+                    ],
+                    "shape": "stack"
                 },
                 {
                     "icon": "vertex-ai",

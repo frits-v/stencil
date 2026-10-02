@@ -20,7 +20,7 @@ struct Example {
     geometry: &'static str,
 }
 
-const EXAMPLES: [Example; 6] = [
+const EXAMPLES: [Example; 7] = [
     Example {
         stem: "g7",
         document: include_str!("../../../examples/g7.json"),
@@ -50,6 +50,12 @@ const EXAMPLES: [Example; 6] = [
         document: include_str!("../../../examples/onepager.json"),
         svg: include_str!("fixtures/onepager.center.svg"),
         geometry: include_str!("fixtures/onepager.center.geometry.json"),
+    },
+    Example {
+        stem: "platform-iso",
+        document: include_str!("../../../examples/platform-iso.json"),
+        svg: include_str!("fixtures/platform-iso.center.svg"),
+        geometry: include_str!("fixtures/platform-iso.center.geometry.json"),
     },
     Example {
         stem: "stress-dense",
