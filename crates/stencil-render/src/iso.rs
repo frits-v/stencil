@@ -5,6 +5,8 @@ mod drape;
 mod exit;
 mod route;
 mod shapes;
+pub(crate) mod tube;
+pub use tube::ISO_TUBE_RADIUS_PX;
 mod zoom;
 
 use stencil_layout::{
@@ -15,7 +17,6 @@ use stencil_model::pointer::NodePointer;
 use stencil_model::{LINKS_MAX, Line, Link, NODES_MAX, PagePoint};
 
 use crate::RenderError;
-use crate::svg::DOT_RADIUS_PX;
 
 pub(crate) use drape::{end_direction, start_direction};
 pub use route::{ISO_LINK_CLEARANCE_PX, ISO_STRAIGHT_SHARED_MIN_PX};
@@ -34,12 +35,6 @@ pub const ISO_COS_30: f32 = 0.866_025_4;
 pub const ISO_SIN_30: f32 = 0.5;
 /// Smallest side margin of the projected body.
 pub const ISO_MARGIN_PX: f32 = 20.0;
-/// Screen semi-axes of a 4 px dot: `4 * sqrt(1.5)` across and `4 * sqrt(0.5)` down
-/// (section 12.2, rule 6).
-pub const ISO_DOT_RADIUS_X_PX: f32 = 4.898_979_5;
-pub const ISO_DOT_RADIUS_Y_PX: f32 = 2.828_427;
-/// Arrowhead length of a pipe, shared with the flat writer (section 11.2).
-const ARROWHEAD_LENGTH_PX: f32 = stencil_layout::ARROWHEAD_LENGTH_PX;
 /// Half width over length of every arrowhead, as in flat.
 const ARROWHEAD_WIDTH_RATIO: f32 =
     stencil_layout::ARROWHEAD_WIDTH_PX / 2.0 / stencil_layout::ARROWHEAD_LENGTH_PX;
@@ -515,7 +510,11 @@ fn solid_shape(
         NodeTag::Fact | NodeTag::Note | NodeTag::Text | NodeTag::Callout | NodeTag::Frame => {
             Some((SolidShape::Block, slab_top, ISO_BLOCK_HEIGHT_PX))
         }
-        NodeTag::Pipe | NodeTag::Tee => Some((SolidShape::Surface, slab_top, 0.0)),
+        NodeTag::Pipe | NodeTag::Tee => Some((
+            SolidShape::Surface,
+            slab_top,
+            2.0 * tube::ISO_TUBE_RADIUS_PX,
+        )),
         NodeTag::Page
         | NodeTag::Kicker
         | NodeTag::Title
@@ -792,18 +791,6 @@ impl Extent {
         self.min_y = self.min_y.min(point.y);
         self.max_y = self.max_y.max(point.y);
     }
-
-    /// A dot at a flat center: the four extreme points of its screen ellipse.
-    fn add_dot(&mut self, center: ScreenPoint) {
-        for (x, y) in [
-            (center.x - ISO_DOT_RADIUS_X_PX, center.y),
-            (center.x + ISO_DOT_RADIUS_X_PX, center.y),
-            (center.x, center.y - ISO_DOT_RADIUS_Y_PX),
-            (center.x, center.y + ISO_DOT_RADIUS_Y_PX),
-        ] {
-            self.add(ScreenPoint { x, y });
-        }
-    }
 }
 
 const ZERO_OFFSET: ScreenPoint = ScreenPoint { x: 0.0, y: 0.0 };
@@ -860,31 +847,38 @@ fn surface_stroke(node: &NodeGeometry, z: f32) -> Option<(ScreenPoint, ScreenPoi
     ))
 }
 
-/// Adds a pipe's or tee's surface primitives. The geometry does not record which ends carry
-/// an arrowhead, so both the dot and the arrowhead extent of each end are added. The extra
-/// vertices do not move the extent: an arrowhead on a pipe end lies inside the pipe's own
-/// box, and that box lies inside a zone top face or the gap between two zones.
+/// Adds a pipe's or tee's tube primitives. The geometry does not record which ends carry
+/// an arrowhead, so the widest ring a tube end can carry, a flange or a cone base, is added
+/// at both ends. The extra vertices do not move the extent: a pipe end lies inside the
+/// pipe's own box, and that box lies inside a zone top face or the gap between two zones.
 fn add_surface_extent(extent: &mut Extent, node: &NodeGeometry, z: f32) {
-    let dots = (node.part(PartName::DotStart), node.part(PartName::DotEnd));
-    if let (Some(start), Some(end)) = dots {
-        let start_center = center(start.bounds);
-        let end_center = center(end.bounds);
-        for (dot_center, other) in [(start_center, end_center), (end_center, start_center)] {
-            extent.add_dot(project_point(dot_center.0, dot_center.1, z, ZERO_OFFSET));
-            if let Some(outward) = unit_direction(other, dot_center) {
-                let tip = (
-                    dot_center.0 + outward.0 * DOT_RADIUS_PX,
-                    dot_center.1 + outward.1 * DOT_RADIUS_PX,
-                );
-                for (x, y) in arrowhead_vertices(tip, outward, ARROWHEAD_LENGTH_PX) {
-                    extent.add(project_point(x, y, z, ZERO_OFFSET));
-                }
+    let Some((start, end)) = surface_stroke(node, z) else {
+        return;
+    };
+    extent.add(start);
+    extent.add(end);
+    let flat_ends = match (node.part(PartName::DotStart), node.part(PartName::DotEnd)) {
+        (Some(start), Some(end)) => (center(start.bounds), center(end.bounds)),
+        _ => match node.part(PartName::Spine) {
+            Some(spine) => {
+                let (center_x, _) = center(spine.bounds);
+                (
+                    (center_x, spine.bounds.y),
+                    (center_x, spine.bounds.bottom()),
+                )
             }
+            None => return,
+        },
+    };
+    let Some(run) = unit_direction(flat_ends.0, flat_ends.1) else {
+        return;
+    };
+    let ring = tube::FLANGE_RADIUS_PX.max(tube::CONE_RADIUS_PX);
+    let axis_z = z + tube::ISO_TUBE_RADIUS_PX;
+    for at in [flat_ends.0, flat_ends.1] {
+        for point in tube::cross_section(at, run, axis_z, ring, ZERO_OFFSET) {
+            extent.add(point);
         }
-    }
-    if let Some((start, end)) = surface_stroke(node, z) {
-        extent.add(start);
-        extent.add(end);
     }
 }
 
