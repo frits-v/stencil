@@ -417,6 +417,9 @@ pub struct SolidInputs {
     /// Indexed like `Page.links`: true when the link has no authored `via` and no
     /// `from_side`, so it may be routed again to leave its slab (section 13.11 rule 2).
     pub slab_exits: Vec<bool>,
+    /// Indexed like `Page.links`: true when the link runs through authored `via` points,
+    /// whose corners section 12.7 rule 8 leaves where they are.
+    pub vias: Vec<bool>,
 }
 
 impl SolidInputs {
@@ -429,6 +432,11 @@ impl SolidInputs {
                 .iter()
                 .take(LINKS_MAX)
                 .map(|link| link.via.is_empty() && link.from_side.is_none())
+                .collect(),
+            vias: links
+                .iter()
+                .take(LINKS_MAX)
+                .map(|link| !link.via.is_empty())
                 .collect(),
         }
     }
@@ -988,8 +996,10 @@ fn adjusted_route(
     solids: &[Solid],
     inputs: &SolidInputs,
     clearance: f32,
+    others: &[Vec<PagePoint>],
 ) -> Vec<PagePoint> {
-    let adjusted = rule_8_route(route, geometry, solids, clearance);
+    let authored = inputs.vias.get(route.index).copied().unwrap_or(false);
+    let adjusted = rule_8_route(route, geometry, solids, clearance, authored, others);
     let may_exit = inputs.slab_exits.get(route.index).copied().unwrap_or(false);
     let exit = may_exit
         .then(|| exit::slab_exit_route(route, geometry, solids, &adjusted))
@@ -1002,6 +1012,8 @@ fn rule_8_route(
     geometry: &PageGeometry,
     solids: &[Solid],
     clearance: f32,
+    authored_corners: bool,
+    others: &[Vec<PagePoint>],
 ) -> Vec<PagePoint> {
     let blocks: Vec<BoxRect> = solids
         .iter()
@@ -1036,7 +1048,56 @@ fn rule_8_route(
         _ => None,
     };
     let points = straight.unwrap_or_else(|| route.points.clone());
+    // A Z left with its step at the end of a stub reads as a kink at the block, so the step
+    // moves to the first of STEP_FRACTIONS where it enters no block and lies clear of every
+    // zone edge and every other link's leg; a route through via points keeps the author's
+    // corners.
+    if !authored_corners {
+        for fraction in STEP_FRACTIONS {
+            let Some(moved) = route::step_at(&points, fraction) else {
+                break;
+            };
+            if route::enters_any(&moved, &blocks) {
+                continue;
+            }
+            let cleared = route::kept_clear(&moved, &zones, &blocks, clearance);
+            if step_clear(&cleared, &zones, others, clearance) {
+                return cleared;
+            }
+        }
+    }
     route::kept_clear(&points, &zones, &blocks, clearance)
+}
+
+/// Where a Z's step may go, as fractions of the run between its ends, tried in order: the
+/// middle, then nearer the target, where a step reads as the approach, then nearer the
+/// source.
+const STEP_FRACTIONS: [f32; 3] = [0.5, 0.75, 0.25];
+
+/// True when the middle leg of a three-leg route keeps `clearance` from every zone edge
+/// it runs beside and from every leg of `others` along its axis.
+fn step_clear(
+    points: &[PagePoint],
+    zones: &[BoxRect],
+    others: &[Vec<PagePoint>],
+    clearance: f32,
+) -> bool {
+    let legs = route::legs(&route::corners(points));
+    let (Some(&step), 3) = (legs.get(1), legs.len()) else {
+        return false;
+    };
+    let beside_an_edge = zones
+        .iter()
+        .flat_map(|zone| route::footprint_edges(*zone))
+        .any(|edge| {
+            route::parallel_gap(step, edge).is_some_and(|gap| gap < clearance - GEOMETRY_EPSILON)
+        });
+    let beside_a_link = others.iter().any(|other| {
+        route::legs(&route::corners(other))
+            .iter()
+            .any(|leg| route::near_parallel(step, *leg, clearance))
+    });
+    !beside_an_edge && !beside_a_link
 }
 
 /// The box a link attaches to: an item's footprint when it stands on one, else its bounds.
@@ -1275,17 +1336,33 @@ fn link_paths(
     // Routes adjusted at the base clearance give each end's side and attach point; a bundle
     // of coinciding routes is then laid out again with its widest offset added to the zone
     // clearance, so every member's inner legs stay clear once the bundle is moved whole.
-    let base: Vec<Vec<PagePoint>> = routes
-        .iter()
-        .map(|route| adjusted_route(route, geometry, solids, inputs, ISO_LINK_CLEARANCE_PX))
-        .collect();
+    // Each route is adjusted knowing the earlier routes as adjusted and the later ones as
+    // routed, so a moved step stays clear of its neighbours.
+    let raw: Vec<Vec<PagePoint>> = routes.iter().map(|route| route.points.clone()).collect();
+    let mut base: Vec<Vec<PagePoint>> = Vec::with_capacity(routes.len());
+    for (index, route) in routes.iter().enumerate() {
+        let others: Vec<Vec<PagePoint>> = base
+            .iter()
+            .chain(raw.iter().skip(index + 1))
+            .cloned()
+            .collect();
+        base.push(adjusted_route(
+            route,
+            geometry,
+            solids,
+            inputs,
+            ISO_LINK_CLEARANCE_PX,
+            &others,
+        ));
+    }
     let offsets = end_offsets(&routes, &base, zoom, &block_heights);
     let shared = shared_route_places(&base);
     let adjusted: Vec<Vec<PagePoint>> = routes
         .iter()
         .zip(&base)
         .zip(&shared)
-        .map(|((route, points), place)| {
+        .enumerate()
+        .map(|(index, ((route, points), place))| {
             if place.is_none() {
                 return points.clone();
             }
@@ -1295,12 +1372,19 @@ fn link_paths(
                 .filter(|(other, _)| same_route(other, points))
                 .map(|(_, [start, end])| start.0.abs().max(end.0.abs()))
                 .fold(0.0, f32::max);
+            let others: Vec<Vec<PagePoint>> = base
+                .iter()
+                .enumerate()
+                .filter(|(other, _)| *other != index)
+                .map(|(_, other)| other.clone())
+                .collect();
             adjusted_route(
                 route,
                 geometry,
                 solids,
                 inputs,
                 ISO_LINK_CLEARANCE_PX + widest,
+                &others,
             )
         })
         .collect();
@@ -2420,9 +2504,65 @@ pub fn iso_links_clear(geometry: &PageGeometry, scene: Option<&IsoScene>) -> Che
             }
         }
         let path_z = path.first().map_or(0.0, |point| point.z);
+        let run_before =
+            |leg_index: usize| -> f32 { legs.iter().take(leg_index).map(|leg| leg.length()).sum() };
+        let run_after = |leg_index: usize| -> f32 {
+            legs.iter()
+                .skip(leg_index + 1)
+                .map(|leg| leg.length())
+                .sum()
+        };
         for (leg_index, leg) in legs.iter().enumerate() {
             examined += 1;
             let inner = leg_index > 0 && leg_index + 1 < legs.len();
+            // A step between two legs that run the same way sits within a stub of an end
+            // although the run has room for it elsewhere: a kink at the block.
+            if inner
+                && let (Some(before), Some(after)) = (
+                    leg_index.checked_sub(1).and_then(|index| legs.get(index)),
+                    legs.get(leg_index + 1),
+                )
+                && route::same_way(*before, *after)
+            {
+                let (ahead, behind) = (run_before(leg_index), run_after(leg_index));
+                if ahead + behind >= 2.0 * stub - GEOMETRY_EPSILON {
+                    let (nearest, end) = if ahead <= behind {
+                        (ahead, "start")
+                    } else {
+                        (behind, "end")
+                    };
+                    if nearest <= stub + GEOMETRY_EPSILON {
+                        defects.push(Defect {
+                            pointer: pointer.clone(),
+                            message: format!(
+                                "leg {leg_index} steps {nearest:.2} px from the {end}, within a stub ({stub:.2} px)"
+                            ),
+                        });
+                    }
+                }
+            }
+            // A leg running back against the leg two before it across a leg shorter than a
+            // stub is a hook: the route went past its target and came back.
+            if let (Some(two_before), Some(between)) = (
+                leg_index.checked_sub(2).and_then(|index| legs.get(index)),
+                leg_index.checked_sub(1).and_then(|index| legs.get(index)),
+            ) && route::same_way(
+                *two_before,
+                route::FlatSegment {
+                    start: leg.end,
+                    end: leg.start,
+                },
+            ) && between.length() < stub - GEOMETRY_EPSILON
+            {
+                defects.push(Defect {
+                    pointer: pointer.clone(),
+                    message: format!(
+                        "leg {leg_index} runs back against leg {} across a leg of {:.2} px, shorter than a stub ({stub:.2} px)",
+                        leg_index - 2,
+                        between.length()
+                    ),
+                });
+            }
             if inner && leg.length() < least_inner - GEOMETRY_EPSILON {
                 defects.push(Defect {
                     pointer: pointer.clone(),

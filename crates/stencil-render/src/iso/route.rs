@@ -264,6 +264,66 @@ pub(crate) fn enters_any(points: &[PagePoint], blocks: &[BoxRect]) -> bool {
         })
 }
 
+/// A route of three legs whose first and last run the same way, a Z, with its middle leg
+/// moved to `fraction` of the run between its ends, so the step can sit away from both
+/// blocks instead of at the end of a stub, where the router leaves it. None for any other
+/// shape and for a step already there.
+pub(crate) fn step_at(points: &[PagePoint], fraction: f32) -> Option<Vec<PagePoint>> {
+    let kept = corners(points);
+    if kept.len() != 4 {
+        return None;
+    }
+    let legs = legs(&kept);
+    let (first, middle, last) = (legs.first()?, legs.get(1)?, legs.get(2)?);
+    if !same_way(*first, *last) {
+        return None;
+    }
+    let (start, end) = (kept.first()?, kept.last()?);
+    let mut moved = kept.clone();
+    let shift = if first.is_horizontal() && middle.is_vertical() {
+        let at = start.x + (end.x - start.x) * fraction;
+        for point in moved.iter_mut().skip(1).take(2) {
+            point.x = at;
+        }
+        at - middle.start.x
+    } else if first.is_vertical() && middle.is_horizontal() {
+        let at = start.y + (end.y - start.y) * fraction;
+        for point in moved.iter_mut().skip(1).take(2) {
+            point.y = at;
+        }
+        at - middle.start.y
+    } else {
+        return None;
+    };
+    (shift.abs() > GEOMETRY_EPSILON_PX).then_some(moved)
+}
+
+/// True when two legs are parallel and run the same way.
+pub(crate) fn same_way(a: FlatSegment, b: FlatSegment) -> bool {
+    let (ax, ay) = (a.end.x - a.start.x, a.end.y - a.start.y);
+    let (bx, by) = (b.end.x - b.start.x, b.end.y - b.start.y);
+    let cross = ax * by - ay * bx;
+    cross.abs() <= GEOMETRY_EPSILON_PX * ax.hypot(ay).max(1.0) && ax * bx + ay * by > 0.0
+}
+
+/// True when two legs run along one axis closer than `clearance` across it, with their
+/// extents within `clearance` of each other along it: side by side, or end to end with a
+/// gap a reader cannot see.
+pub(crate) fn near_parallel(a: FlatSegment, b: FlatSegment, clearance: f32) -> bool {
+    let within = |a0: f32, a1: f32, b0: f32, b1: f32| {
+        a0.max(a1) + clearance > b0.min(b1) && b0.max(b1) + clearance > a0.min(a1)
+    };
+    if a.is_horizontal() && b.is_horizontal() {
+        return (a.start.y - b.start.y).abs() < clearance
+            && within(a.start.x, a.end.x, b.start.x, b.end.x);
+    }
+    if a.is_vertical() && b.is_vertical() {
+        return (a.start.x - b.start.x).abs() < clearance
+            && within(a.start.y, a.end.y, b.start.y, b.end.y);
+    }
+    false
+}
+
 /// The polyline shifted sideways by `offset` to the left of its travel: every leg moves
 /// along its left normal and each corner is where the two moved legs meet. The ends move
 /// along the sides they attach to, since a route leaves its side at a right angle.
@@ -495,6 +555,92 @@ mod tests {
             width,
             height,
         }
+    }
+
+    /// A Z's step moves to the asked fraction of the run; a U, a longer route and a step
+    /// already there give nothing.
+    #[test]
+    fn a_step_moves_to_a_fraction_of_the_run_and_other_shapes_stay() {
+        let z = [
+            point(100.0, 50.0),
+            point(240.0, 50.0),
+            point(240.0, 90.0),
+            point(300.0, 90.0),
+        ];
+        assert_eq!(
+            step_at(&z, 0.5),
+            Some(vec![
+                point(100.0, 50.0),
+                point(200.0, 50.0),
+                point(200.0, 90.0),
+                point(300.0, 90.0),
+            ])
+        );
+        assert_eq!(
+            step_at(&z, 0.25).map(|moved| (moved[1].x, moved[2].x)),
+            Some((150.0, 150.0))
+        );
+        let down = [
+            point(50.0, 100.0),
+            point(50.0, 140.0),
+            point(90.0, 140.0),
+            point(90.0, 300.0),
+        ];
+        assert_eq!(
+            step_at(&down, 0.75).map(|moved| (moved[1].y, moved[2].y)),
+            Some((250.0, 250.0))
+        );
+        assert_eq!(step_at(&z, 0.7), None);
+        let u = [
+            point(100.0, 50.0),
+            point(240.0, 50.0),
+            point(240.0, 90.0),
+            point(100.0, 90.0),
+        ];
+        assert_eq!(step_at(&u, 0.5), None);
+        let longer = [
+            point(100.0, 50.0),
+            point(240.0, 50.0),
+            point(240.0, 90.0),
+            point(300.0, 90.0),
+            point(300.0, 120.0),
+        ];
+        assert_eq!(step_at(&longer, 0.5), None);
+    }
+
+    /// Legs side by side within the clearance, or end to end across a gap under it, are
+    /// near; a leg across the other's axis never is.
+    #[test]
+    fn near_parallel_legs_are_side_by_side_or_end_to_end_within_the_clearance() {
+        let leg = |x0: f32, y0: f32, x1: f32, y1: f32| FlatSegment {
+            start: point(x0, y0),
+            end: point(x1, y1),
+        };
+        assert!(near_parallel(
+            leg(100.0, 0.0, 100.0, 50.0),
+            leg(110.0, 20.0, 110.0, 80.0),
+            24.0
+        ));
+        assert!(near_parallel(
+            leg(100.0, 0.0, 100.0, 50.0),
+            leg(100.0, 60.0, 100.0, 90.0),
+            24.0
+        ));
+        assert!(!near_parallel(
+            leg(100.0, 0.0, 100.0, 50.0),
+            leg(100.0, 80.0, 100.0, 90.0),
+            24.0
+        ));
+        assert!(!near_parallel(
+            leg(100.0, 0.0, 100.0, 50.0),
+            leg(130.0, 0.0, 130.0, 50.0),
+            24.0
+        ));
+        assert!(!near_parallel(
+            leg(100.0, 0.0, 100.0, 50.0),
+            leg(90.0, 20.0, 150.0, 20.0),
+            24.0
+        ));
     }
 
     #[test]
