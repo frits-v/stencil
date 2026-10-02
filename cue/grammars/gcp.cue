@@ -228,8 +228,9 @@ _nesting: stencil.#GrammarNesting & {#grammar: grammar}
 #ServerlessProductIcons: ["cloud-run", "vertex-ai", "serverless"]
 
 // Global resources have no region; a hub drawn inside a region reads as
-// regional.
-#GlobalProductName: "\\b(Network Connectivity Center|Cloud CDN|Cloud DNS|Cloud Armor)\\b"
+// regional. Only products whose resource model has no location belong here:
+// Cloud Armor and Cloud DNS also have regional policies and zones.
+#GlobalProductName: "\\b(Network Connectivity Center)\\b"
 
 // The gcp walk over the body. Each node carries:
 //   _tinted       the tinted lines and Boxes in its subtree, keyed "solid-2" or

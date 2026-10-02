@@ -10,9 +10,11 @@ mod common;
 use common::{assert_close, layout, node, page_from};
 use serde_json::{Value, json};
 use stencil_layout::checks::{links_avoid_boxes, links_routed, text_fits_box};
-use stencil_layout::{BoxRect, LinkRoute, PageGeometry, PartName, RouteStatus};
+use stencil_layout::{
+    BoxRect, LinkRoute, OBSTACLE_CLEARANCE_PX, PageGeometry, PartName, RouteStatus, shape_height_px,
+};
 use stencil_model::checks::{CheckName, CheckOutcome};
-use stencil_model::{LINK_SEGMENTS_MAX, PagePoint};
+use stencil_model::{LINK_SEGMENTS_MAX, PagePoint, Shape};
 
 /// A customer page at width 640 with a blue legend entry so links of kind blue are listed.
 fn linked_page(body: Value, links: Value) -> Value {
@@ -381,4 +383,32 @@ fn an_iso_link_over_two_row_neighbours_routes_around_them() {
     let avoided = links_avoid_boxes(&geometry);
     assert!(avoided.passed(), "{avoided:?}");
     assert!(avoided.examined > 0);
+    // Under iso the laptop between the ends covers the floor behind and left of its
+    // footprint by its height on screen, so no leg runs through that strip either
+    // (section 12.4): the route keeps the obstacle clearance from the footprint grown by
+    // the laptop's height toward -x and -y.
+    let laptop = geometry
+        .nodes
+        .iter()
+        .find(|node| node.pointer.as_str() == "/body/0/children/0/children/1")
+        .unwrap();
+    let footprint = laptop.part(PartName::Footprint).unwrap().bounds;
+    let height = shape_height_px(Shape::Laptop);
+    let grown = BoxRect {
+        x: footprint.x - height - OBSTACLE_CLEARANCE_PX + 0.01,
+        y: footprint.y - height - OBSTACLE_CLEARANCE_PX + 0.01,
+        width: footprint.width + height + 2.0 * OBSTACLE_CLEARANCE_PX - 0.02,
+        height: footprint.height + height + 2.0 * OBSTACLE_CLEARANCE_PX - 0.02,
+    };
+    for pair in route.points.windows(2) {
+        let (a, b) = (pair[0], pair[1]);
+        let crosses = a.x.min(b.x) < grown.right()
+            && a.x.max(b.x) > grown.x
+            && a.y.min(b.y) < grown.bottom()
+            && a.y.max(b.y) > grown.y;
+        assert!(
+            !crosses,
+            "leg {a:?} to {b:?} runs through the laptop's shadow {grown:?}"
+        );
+    }
 }

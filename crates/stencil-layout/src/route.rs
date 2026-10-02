@@ -112,7 +112,7 @@ fn searched_route(
         (&attach_box(to.1), allowed_sides(to.1)),
     );
     let stubs = (iso && is_block(from.1), iso && is_block(to.1));
-    route_between(geometry, from, to, sides, &link.via, stubs)
+    route_between(geometry, from, to, sides, &link.via, stubs, iso)
 }
 
 /// The box a link attaches to: an item's Footprint part under iso when its shape is not a
@@ -167,11 +167,15 @@ fn route_between(
     (from_side, to_side): (Side, Side),
     via: &[PagePoint],
     (from_stub, to_stub): (bool, bool),
+    iso: bool,
 ) -> (Vec<PagePoint>, RouteStatus) {
     let (from_box, to_box) = (attach_box(from), attach_box(to));
     let start = side_midpoint(&from_box, from_side);
     let end = side_midpoint(&to_box, to_side);
     let mut obstacles = link_obstacles(geometry, from_node, to_node);
+    if iso {
+        obstacles.extend(block_shadows(geometry, &obstacles));
+    }
     // Under iso a block end is reached through a straight stub outward from its side
     // (section 12.4): the search runs between the stub ends.
     // A stub into a hidden side (top or left) is cut back by the block's height on
@@ -305,6 +309,7 @@ pub fn reroute_link(
         (from_side, to_side),
         via,
         (iso && is_block(from), iso && is_block(to)),
+        iso,
     );
     let (old_center, _) = longest_segment_midpoint(&route.points);
     let (new_center, _) = longest_segment_midpoint(&points);
@@ -456,6 +461,39 @@ pub(crate) fn link_obstacles(geometry: &PageGeometry, from: usize, to: usize) ->
         }
     }
     obstacles
+}
+
+/// Under iso a raised block covers the floor behind and left of its footprint by its
+/// height on screen: the top face at z lies over the floor at (x - z, y - z). A route that
+/// clears the footprint in flat px would run under that face, so each block obstacle casts
+/// a second obstacle, its raised box grown by its height toward -x and -y (section 12.4).
+pub(crate) fn block_shadows(geometry: &PageGeometry, obstacles: &[Obstacle]) -> Vec<Obstacle> {
+    obstacles
+        .iter()
+        .filter_map(|obstacle| {
+            let node = geometry.nodes.get(obstacle.node)?;
+            if !is_block(node) {
+                return None;
+            }
+            let raised = node
+                .part(PartName::Footprint)
+                .map_or(node.bounds, |part| part.bounds);
+            if raised != obstacle.bounds && obstacle.bounds != node.bounds {
+                // The endpoint's own floor text: flat, it casts nothing.
+                return None;
+            }
+            let height = block_height(node);
+            Some(Obstacle {
+                node: obstacle.node,
+                bounds: BoxRect {
+                    x: raised.x - height,
+                    y: raised.y - height,
+                    width: raised.width + height,
+                    height: raised.height + height,
+                },
+            })
+        })
+        .collect()
 }
 
 fn obstacle_box(node: &NodeGeometry) -> Option<BoxRect> {
