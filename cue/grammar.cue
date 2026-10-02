@@ -44,6 +44,9 @@ import (
 	// The icon-to-name table of icon-matches-product; empty when icons is none.
 	products: [...#IconProducts]
 	parents: [...#KindName] & list.MinItems(1)
+	// Under iso, the solid an item of this kind stands as when neither the item
+	// nor its icon's row names one; absent is card.
+	shape?: #Shape
 }
 
 #IconProducts: {
@@ -51,7 +54,7 @@ import (
 	class: "product" | "category"
 	names: [...string & !="" & strings.MaxRunes(64)] & list.MinItems(1)
 	// Under iso, the solid an item with this icon stands as; absent is card.
-	shape?: "card" | "tile" | "tower" | "cylinder" | "stack"
+	shape?: #Shape
 }
 
 #Remembered: {

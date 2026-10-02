@@ -8,7 +8,7 @@ use serde_json::{Value, json};
 use stencil_model::grammar::{
     BorderPattern, GrammarError, IconClass, IconPack, LabelStyle, Role, Tone, builtin_grammar_json,
 };
-use stencil_model::{Grammar, IconName, builtin_grammar, grammar_schema, parse_grammar};
+use stencil_model::{Grammar, IconName, Shape, builtin_grammar, grammar_schema, parse_grammar};
 
 const COMMITTED_GRAMMAR_SCHEMA: &str = include_str!("../../../schema/grammar.schema.json");
 
@@ -243,9 +243,20 @@ fn gcp_container_kinds_equal_the_section_13_3_table_field_for_field() {
 }
 
 #[test]
-fn gcp_has_one_product_kind_with_every_icon_once_in_icon_order() {
+fn gcp_has_a_product_kind_with_every_icon_once_in_icon_order_and_a_person_and_a_device() {
     let grammar = gcp();
-    assert_eq!(grammar.items.len(), 1);
+    let names: Vec<&str> = grammar
+        .items
+        .iter()
+        .map(|item| item.name.as_str())
+        .collect();
+    assert_eq!(names, ["product", "person", "device"]);
+    for (name, shape) in [("person", Shape::Figure), ("device", Shape::Laptop)] {
+        let kind = grammar.item(name).unwrap();
+        assert_eq!(kind.icons, IconPack::None, "{name}");
+        assert!(kind.products.is_empty(), "{name}");
+        assert_eq!(kind.shape, Some(shape), "{name}");
+    }
     let product = &grammar.items[0];
     assert_eq!(product.name, "product");
     assert_eq!(product.icons, IconPack::Gcp);
@@ -277,7 +288,7 @@ fn gcp_has_one_product_kind_with_every_icon_once_in_icon_order() {
 }
 
 #[test]
-fn plain_has_four_containers_and_four_icon_free_items() {
+fn plain_has_four_containers_and_five_icon_free_items() {
     let grammar = builtin_grammar("plain").unwrap().unwrap();
     let containers: Vec<(&str, Role)> = grammar
         .containers
@@ -298,7 +309,10 @@ fn plain_has_four_containers_and_four_icon_free_items() {
         .iter()
         .map(|item| item.name.as_str())
         .collect();
-    assert_eq!(items, ["service", "store", "external", "person"]);
+    assert_eq!(items, ["service", "store", "external", "person", "device"]);
+    assert_eq!(grammar.item("person").unwrap().shape, Some(Shape::Figure));
+    assert_eq!(grammar.item("device").unwrap().shape, Some(Shape::Laptop));
+    assert_eq!(grammar.item("service").unwrap().shape, None);
     assert!(
         grammar
             .items
@@ -418,7 +432,9 @@ fn a_grammar_with_no_kind_under_page_is_rejected() {
             parents.push(json!("vpc"));
         }
     }
-    document["items"][0]["parents"] = json!(["vpc"]);
+    for item in document["items"].as_array_mut().unwrap() {
+        item["parents"] = json!(["vpc"]);
+    }
     assert_eq!(
         grammar_faults(&document),
         [("grammar-no-top-level", String::new())]

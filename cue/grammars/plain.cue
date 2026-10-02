@@ -56,11 +56,13 @@ grammar: stencil.#Grammar & {
 			parents: ["page", "system", "boundary", "tile"]
 		},
 	]
-	items: [for itemName in ["service", "store", "external", "person"] {
+	items: [for itemName in ["service", "store", "external", "person", "device"] {
 		name:  itemName
 		icons: "none"
 		products: []
 		parents: list.Concat([[for c in containers {c.name}], ["page"]])
+		if itemName == "person" {shape: "figure"}
+		if itemName == "device" {shape: "laptop"}
 	}]
 	remembered: []
 }

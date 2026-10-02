@@ -155,6 +155,20 @@ grammar: stencil.#Grammar & {
 			{icon: "vertex-ai", class: "product", names: ["Vertex AI"]},
 		]
 		parents: list.Concat([[for c in containers {c.name}], ["page"]])
+	}, {
+		// A user, operator or team, drawn as a standing figure under iso.
+		name:  "person"
+		icons: "none"
+		products: []
+		parents: list.Concat([[for c in containers {c.name}], ["page"]])
+		shape: "figure"
+	}, {
+		// A client endpoint, drawn as a laptop under iso; an item may ask for a phone.
+		name:  "device"
+		icons: "none"
+		products: []
+		parents: list.Concat([[for c in containers {c.name}], ["page"]])
+		shape: "laptop"
 	}]
 	remembered: [
 		{

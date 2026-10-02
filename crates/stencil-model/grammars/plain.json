@@ -122,7 +122,21 @@
                 "group",
                 "tile",
                 "page"
-            ]
+            ],
+            "shape": "figure"
+        },
+        {
+            "name": "device",
+            "icons": "none",
+            "products": [],
+            "parents": [
+                "system",
+                "boundary",
+                "group",
+                "tile",
+                "page"
+            ],
+            "shape": "laptop"
         }
     ],
     "remembered": []

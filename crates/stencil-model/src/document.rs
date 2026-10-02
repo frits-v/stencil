@@ -376,7 +376,8 @@ pub struct Note {
 /// with its content on top; every other shape carries the icon on its top and its text
 /// on the floor beside it. Tile: a thin plate, for network and edge pieces. Tower: a tall
 /// narrow box, for compute, clusters and nodes. Cylinder: databases and warehouses.
-/// Stack: three stacked discs, for storage and buckets.
+/// Stack: three stacked discs, for storage and buckets. Figure: a standing person, for
+/// users and operators. Laptop and phone: client devices.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema, Default)]
 #[serde(rename_all = "lowercase")]
 pub enum Shape {
@@ -386,6 +387,9 @@ pub enum Shape {
     Tower,
     Cylinder,
     Stack,
+    Figure,
+    Laptop,
+    Phone,
 }
 
 impl Shape {
@@ -396,6 +400,9 @@ impl Shape {
             Shape::Tower => "tower",
             Shape::Cylinder => "cylinder",
             Shape::Stack => "stack",
+            Shape::Figure => "figure",
+            Shape::Laptop => "laptop",
+            Shape::Phone => "phone",
         }
     }
 }

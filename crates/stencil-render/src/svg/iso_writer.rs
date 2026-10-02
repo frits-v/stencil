@@ -12,6 +12,7 @@ use super::{
     close_groups_until_parent, escape_xml, frame_diagonal_box, group_open_tag, icon_chip_box,
     link_mismatch, part_mismatch, pipe_text_style_name, stroke_attributes, text_style_name,
 };
+use crate::iso::sprites;
 use crate::iso::tube::{self, CONE_LENGTH_PX, CONE_RADIUS_PX, ISO_TUBE_RADIUS_PX, Tube};
 use crate::iso::{
     IsoPoint, Label, ScreenPoint, Solid, SolidInputs, SolidShape, arrowhead_vertices,
@@ -26,6 +27,8 @@ const TUBE_LIT_STEP: i8 = 12;
 const TUBE_CAP_STEP: i8 = -16;
 /// Outline width of a hollow tube.
 const HOLLOW_TUBE_OUTLINE_PX: f32 = 1.5;
+/// Lightness step of a device's screen panel under the face it lies on.
+const SCREEN_PANEL_STEP: i8 = -28;
 
 /// How a tube is painted.
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -329,8 +332,80 @@ impl<'a> SvgWriter<'a> {
                 self.write_faces(depth, solid.footprint, solid.base_z, top_z, &paint, offset);
                 self.write_top_face_drawing(depth, node, document_node, top_z, offset);
             }
+            Shape::Figure => {
+                let figure = sprites::figure(solid.footprint, solid.base_z, top_z);
+                if solid.opaque {
+                    self.write_round_shadow(depth, figure.torso, solid.base_z, offset);
+                }
+                self.write_cylinder(
+                    depth,
+                    figure.torso,
+                    (solid.base_z, figure.torso_top_z),
+                    &paint,
+                    offset,
+                );
+                self.write_head(depth, &figure, &paint, offset);
+            }
+            Shape::Laptop => {
+                let (base, screen) = sprites::laptop(solid.footprint);
+                let plate_top = solid.base_z + sprites::LAPTOP_BASE_PX;
+                if solid.opaque {
+                    self.write_block_shadow(depth, base, solid.base_z, offset);
+                }
+                self.write_faces(depth, base, solid.base_z, plate_top, &paint, offset);
+                self.write_faces(depth, screen, plate_top, top_z, &paint, offset);
+                self.write_screen_panel(depth, screen, (plate_top, top_z), &paint, offset);
+            }
+            Shape::Phone => {
+                let slab = sprites::phone(solid.footprint);
+                if solid.opaque {
+                    self.write_block_shadow(depth, slab, solid.base_z, offset);
+                }
+                self.write_faces(depth, slab, solid.base_z, top_z, &paint, offset);
+                self.write_screen_panel(depth, slab, (solid.base_z, top_z), &paint, offset);
+            }
         }
         Ok(paint.top)
+    }
+
+    /// A figure's head: a sphere on screen is a circle, in the top face's paint with the
+    /// side stroke as its rim.
+    fn write_head(
+        &mut self,
+        depth: usize,
+        figure: &sprites::Figure,
+        paint: &FacePaint<'_>,
+        offset: ScreenPoint,
+    ) {
+        let (center, radius) = sprites::head(figure, offset);
+        let fill = paint.top.as_deref().unwrap_or("none");
+        let rim = paint.side_stroke.map(stroke_attributes).unwrap_or_default();
+        self.line(
+            depth,
+            &format!(
+                r#"<circle cx="{}" cy="{}" r="{}" fill="{fill}"{rim}/>"#,
+                format_number(center.x),
+                format_number(center.y),
+                format_number(radius)
+            ),
+        );
+    }
+
+    /// The screen of a device: a panel on its front face, darker than the face.
+    fn write_screen_panel(
+        &mut self,
+        depth: usize,
+        slab: BoxRect,
+        heights: (f32, f32),
+        paint: &FacePaint<'_>,
+        offset: ScreenPoint,
+    ) {
+        let Some(face) = paint.right.as_deref().or(paint.top.as_deref()) else {
+            return;
+        };
+        let fill = shade(face, SCREEN_PANEL_STEP).unwrap_or_else(|| face.to_string());
+        let panel = sprites::front_panel(slab, heights, offset);
+        self.write_closed_path(depth, &panel, &fill, None);
     }
 
     /// The shadow of a round solid: its base ellipse, lowered and blurred like a block's.

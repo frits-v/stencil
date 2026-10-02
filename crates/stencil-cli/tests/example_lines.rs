@@ -9,13 +9,14 @@ use std::path::{Path, PathBuf};
 
 use stencil_cli::{ExitCode, run};
 
-const STEMS: [&str; 8] = [
+const STEMS: [&str; 9] = [
     "g7",
     "hero-iso",
     "hybrid-ai",
     "network-hub-spoke",
     "onepager",
     "onprem-iso",
+    "people-iso",
     "platform-iso",
     "stress-dense",
 ];

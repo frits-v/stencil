@@ -30,6 +30,10 @@ Pipes as tubes on the floor, with flange rings and cones at their ends:
 
 ![Two firewall zones and four VLANs at the head office](docs/gallery/onprem-iso.png)
 
+People and client devices as drawn sprites, a figure, a laptop and a phone:
+
+![Staff and customers reach the API from their own devices](docs/gallery/people-iso.png)
+
 `examples/onepager.json`: a design one-pager with text blocks, callouts and numbered links tracing one request.
 
 The next three figures use the `plain` grammar.
