@@ -27,7 +27,8 @@ use stencil_render::iso::{
     project_page,
 };
 use stencil_render::{
-    DeviceScale, RenderError, SvgDocument, builtin_theme, measured_json, render_png, render_svg,
+    DeviceScale, PngSize, RenderError, SvgDocument, builtin_theme, measured_json, render_png_sized,
+    render_svg,
 };
 use stencil_text::{CosmicTextMeasurer, FontError};
 
@@ -362,6 +363,11 @@ pub fn output_names(input: &Path) -> Result<OutputNames, Failure> {
 /// Lays out with `CosmicTextMeasurer`, projects the page once when its projection is iso,
 /// and renders all three outputs in memory.
 pub fn render_page(loaded: &LoadedDocument, scale: DeviceScale) -> Result<RenderedPage, Failure> {
+    render_page_sized(loaded, PngSize::Scale(scale))
+}
+
+/// `render_page` with the PNG at a device scale or at an exact width.
+pub fn render_page_sized(loaded: &LoadedDocument, png: PngSize) -> Result<RenderedPage, Failure> {
     let mut measurer = CosmicTextMeasurer::new()?;
     let geometry = layout_page(&loaded.page, &loaded.grammar, &mut measurer)?;
     let scene = match loaded.page.projection {
@@ -376,7 +382,7 @@ pub fn render_page(loaded: &LoadedDocument, scale: DeviceScale) -> Result<Render
         }
     };
     let svg = render_svg(&loaded.page, &loaded.theme, &geometry)?;
-    let png = render_png(&svg.svg, svg.text_elements, scale)?;
+    let png = render_png_sized(&svg.svg, svg.text_elements, png)?;
     let measured = measured_json(&loaded.document, &geometry, scene.as_ref());
     Ok(RenderedPage {
         geometry,

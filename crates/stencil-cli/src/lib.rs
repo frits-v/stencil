@@ -18,7 +18,7 @@ use stencil_layout::LayoutError;
 use stencil_layout::checks::PrintWidth;
 use stencil_model::checks::CheckReport;
 use stencil_model::{ModelError, Projection};
-use stencil_render::DeviceScale;
+use stencil_render::{DeviceScale, PngSize, RenderError};
 
 pub use exit::ExitCode;
 
@@ -26,7 +26,7 @@ use exit::{clap_exit_code, failure_exit_code, prime_exit_code, reports_exit_code
 use pipeline::{
     Failure, LoadedDocument, OutputPaths, ThemeChoice, all_checks, grammar_violations,
     load_document_from, model_checks, output_names, print_fit_report, read_input, render_page,
-    theme_violations, write_outputs,
+    render_page_sized, theme_violations, write_outputs,
 };
 use report::{
     check_counts_text, grammar_violation_line, report_lines, theme_violation_line,
@@ -67,6 +67,10 @@ enum Command {
         /// PNG device scale, 1 to 4
         #[arg(long, default_value_t = DeviceScale::DEFAULT.get())]
         scale: u8,
+        /// PNG width in px, in place of --scale: 0.5 to 4 times the canvas width, with the
+        /// height following the canvas
+        #[arg(long, value_name = "PX", conflicts_with = "scale")]
+        png_width: Option<u32>,
         /// A built-in theme name or a theme file path ending in .json, overriding the
         /// document's `theme`
         #[arg(long, value_name = "THEME")]
@@ -166,6 +170,24 @@ fn parse_print_width(text: &str) -> Result<PrintWidth, String> {
     PrintWidth::new(inches).map_err(|error| error.to_string())
 }
 
+/// `render`'s `--scale` and `--png-width`; clap refuses the two together.
+#[derive(Debug, Clone, Copy)]
+struct PngArguments {
+    scale: u8,
+    width: Option<u32>,
+}
+
+impl PngArguments {
+    /// The width when given, which `render_png_sized` checks against the canvas; otherwise
+    /// the scale, checked here.
+    fn size(self) -> Result<PngSize, RenderError> {
+        match self.width {
+            Some(width) => Ok(PngSize::Width(width)),
+            None => Ok(PngSize::Scale(DeviceScale::new(self.scale)?)),
+        }
+    }
+}
+
 /// The `--projection` values, one per `Projection` variant (section 12.9).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, ValueEnum)]
 enum ProjectionArgument {
@@ -245,13 +267,17 @@ fn run_command(
             json,
             out_dir,
             scale,
+            png_width,
             theme,
             projection,
             print_width,
         } => render(
             &json,
             &out_dir,
-            scale,
+            PngArguments {
+                scale,
+                width: png_width,
+            },
             print_width,
             &Overrides { theme, projection },
             stdout,
@@ -327,13 +353,13 @@ fn vet(path: &Path, stdout: &mut dyn Write, stderr: &mut dyn Write) -> io::Resul
 fn render(
     path: &Path,
     out_dir: &Path,
-    scale: u8,
+    png: PngArguments,
     print_width: Option<PrintWidth>,
     overrides: &Overrides,
     stdout: &mut dyn Write,
     stderr: &mut dyn Write,
 ) -> io::Result<ExitCode> {
-    match render_to_disk(path, out_dir, scale, overrides, print_width) {
+    match render_to_disk(path, out_dir, png, overrides, print_width) {
         Ok((paths, print_report)) => {
             for written in [&paths.svg, &paths.png, &paths.measured] {
                 writeln!(stdout, "{}", written.display())?;
@@ -355,14 +381,14 @@ fn render(
 fn render_to_disk(
     path: &Path,
     out_dir: &Path,
-    scale: u8,
+    png: PngArguments,
     overrides: &Overrides,
     print_width: Option<PrintWidth>,
 ) -> Result<(OutputPaths, Option<CheckReport>), Failure> {
-    let scale = DeviceScale::new(scale)?;
+    let png = png.size()?;
     let names = output_names(path)?;
     let loaded = load_overridden_document(path, overrides)?;
-    let rendered = render_page(&loaded, scale)?;
+    let rendered = render_page_sized(&loaded, png)?;
     let paths = write_outputs(out_dir, &names, &rendered, path)?;
     let print_report = print_width
         .map(|width| print_fit_report(&rendered.geometry, rendered.scene.as_ref(), Some(width)));
