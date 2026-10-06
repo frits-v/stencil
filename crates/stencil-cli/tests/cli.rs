@@ -534,6 +534,101 @@ fn render_rejects_scale_five_before_writing() {
     assert!(!out_dir.exists());
 }
 
+/// The PNG is the asked width, and its height is the drawn canvas height at that width,
+/// rounded up as `--scale` rounds: the layout canvas in flat, the projection canvas in iso.
+#[test]
+fn render_png_width_sets_the_exact_width_and_the_height_from_the_canvas() {
+    let out_dir = scratch_directory("render_png_width");
+    let mut examined = 0;
+    for (stem, canvas_pointer) in [("hybrid-ai", "/canvas"), ("hero-iso", "/projection/canvas")] {
+        let input = repository_path(&format!("examples/{stem}.json"));
+        let outcome = run_stencil(&[
+            "render",
+            input.to_str().unwrap(),
+            "--out-dir",
+            out_dir.to_str().unwrap(),
+            "--png-width",
+            "2034",
+        ]);
+        assert_eq!(outcome.code, ExitCode::Clean, "{}", outcome.stderr);
+
+        let measured: Value = serde_json::from_slice(
+            &fs::read(out_dir.join(format!("{stem}.measured.json"))).unwrap(),
+        )
+        .unwrap();
+        let canvas = measured.pointer(canvas_pointer).unwrap();
+        let canvas_width = canvas["width"].as_f64().unwrap();
+        let canvas_height = canvas["height"].as_f64().unwrap();
+        assert_ne!(canvas_width, 2034.0, "{stem}");
+        let png = resvg::tiny_skia::Pixmap::load_png(out_dir.join(format!("{stem}.png"))).unwrap();
+        assert_eq!(png.width(), 2034, "{stem}");
+        let expected_height = (canvas_height * 2034.0 / canvas_width).ceil();
+        assert_eq!(f64::from(png.height()), expected_height, "{stem}");
+        examined += 1;
+    }
+    assert_eq!(examined, 2);
+}
+
+/// hybrid-ai's canvas is 1480 px wide, so widths 740 to 5920 render.
+#[test]
+fn render_rejects_a_png_width_outside_half_to_four_times_the_canvas_before_writing() {
+    let input = repository_path("examples/hybrid-ai.json");
+    let mut examined = 0;
+    for (width, renders) in [
+        ("739", false),
+        ("740", true),
+        ("5920", true),
+        ("5921", false),
+        ("0", false),
+    ] {
+        let out_dir = scratch_directory(&format!("render_png_width_{width}")).join("out");
+        let outcome = run_stencil(&[
+            "render",
+            input.to_str().unwrap(),
+            "--out-dir",
+            out_dir.to_str().unwrap(),
+            "--png-width",
+            width,
+        ]);
+        if renders {
+            assert_eq!(outcome.code, ExitCode::Clean, "{width}: {}", outcome.stderr);
+        } else {
+            assert_eq!(outcome.code, ExitCode::CouldNotRun, "{width}");
+            assert_eq!(outcome.stdout, "");
+            assert!(
+                outcome.stderr.contains(&format!(
+                    "PNG width {width} px is outside 740 to 5920 px, 0.5 to 4 times the 1480 px canvas"
+                )),
+                "{}",
+                outcome.stderr
+            );
+            assert!(!out_dir.exists(), "{width}");
+        }
+        examined += 1;
+    }
+    assert_eq!(examined, 5);
+}
+
+#[test]
+fn render_refuses_a_png_width_together_with_a_scale() {
+    let out_dir = scratch_directory("render_png_width_and_scale").join("out");
+
+    let outcome = run_stencil(&[
+        "render",
+        &g7_path(),
+        "--out-dir",
+        out_dir.to_str().unwrap(),
+        "--scale",
+        "2",
+        "--png-width",
+        "2034",
+    ]);
+
+    assert_eq!(outcome.code, ExitCode::CouldNotRun);
+    assert!(outcome.stderr.contains("--png-width"), "{}", outcome.stderr);
+    assert!(!out_dir.exists());
+}
+
 #[cfg(unix)]
 #[test]
 fn render_into_a_read_only_directory_could_not_run() {

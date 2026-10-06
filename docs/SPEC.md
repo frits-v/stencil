@@ -1219,6 +1219,22 @@ pub fn render_png(
     scale: DeviceScale,
 ) -> Result<Vec<u8>, RenderError>;
 
+/// render_png at a device scale or at an exact width (section 5.3, step 5).
+pub fn render_png_sized(
+    svg: &str,
+    expected_text_elements: usize,
+    size: PngSize,
+) -> Result<Vec<u8>, RenderError>;
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum PngSize {
+    Scale(DeviceScale),
+    Width(u32),
+}
+
+/// Smallest ratio of a PngSize::Width to the canvas width; the largest is DeviceScale::MAX.
+pub const PNG_WIDTH_SCALE_MIN: f64 = 0.5;
+
 /// Section 5.4 shape. `document` is the input parsed as serde_json::Value.
 pub fn measured_json(document: &serde_json::Value, geometry: &PageGeometry) -> serde_json::Value;
 
@@ -1260,6 +1276,8 @@ impl DeviceScale {
 pub enum RenderError {
     #[error("device scale {value} is outside 1 to 4")]
     ScaleOutOfRange { value: u8 },
+    #[error("PNG width {width} px is outside {min} to {max} px, 0.5 to 4 times the {canvas_width} px canvas")]
+    PngWidthOutOfRange { width: u32, min: u32, max: u32, canvas_width: NumberRepr },
     #[error("geometry node {found} does not match document node {expected}")]
     GeometryMismatch { expected: NodePointer, found: NodePointer },
     #[error("generated SVG does not parse: {message}")]
@@ -1365,7 +1383,7 @@ The payload is the base64 of the `BUNDLED_FONTS` file that `stencil_text::bundle
    No generic family is pointed at Inter on this database (`set_serif_family` and its siblings are never called). `docs/api-notes/resvg.md` records the resolver and the failure it closes.
 3. Parse with `usvg::Tree::from_str`.
 4. Count `usvg::Node::Text` nodes, descending recursively through `Node::Group` children only: not into a text node's flattened group and not into the tree of an `<image>` (icons hold no text). The walk visits at most 16 × NODES_MAX = 65,536 groups, well above the one `<g>` per geometry node a vetted page writes, and returns `Svg` when the tree holds more. When a `<text>` element's font does not resolve, usvg 0.48 drops the element and raises no error. `parser/text.rs` returns before it pushes the `Node::Text`, and text layout returns `None` when it placed no glyphs, so a dropped string leaves no node behind. The count is compared with `expected_text_elements`, which the caller takes from `SvgDocument::text_elements`. Fewer returns `TextNotRendered { count: expected - found }`. More returns `TextCountExceeded`, which means the caller passed the wrong number. Equal goes on to the lookup tally from step 2: a span whose family does not resolve inside a `<text>` that still places other glyphs, or a character that no longer falls back, leaves the node count intact, so any counted miss returns `FontNotResolved { lookups }`. The tally counts resolver calls, not `<text>` elements, so one span with two unresolvable characters counts 2.
-5. Compute `ceil(width * scale)` and `ceil(height * scale)` in f64. `width` and `height` are the parsed tree's size, which is the SVG's `width` and `height` attributes, so they are the canvas size already rounded to 2 decimals by section 5.1. A layout height of 652.004 is written as 652 and renders 1304 px tall at scale 2, not 1305. When either extent is not finite or below 1, or their product is above `PNG_PIXELS_MAX`, return `PixmapAllocation` before anything is allocated. Otherwise allocate a `tiny_skia::Pixmap` of that size, fill it with white (`Color::WHITE`), and render with `resvg::render(&tree, Transform::from_scale(scale, scale), &mut pixmap.as_mut())`.
+5. Compute `ceil(width * scale)` and `ceil(height * scale)` in f64. `width` and `height` are the parsed tree's size, which is the SVG's `width` and `height` attributes, so they are the canvas size already rounded to 2 decimals by section 5.1. A layout height of 652.004 is written as 652 and renders 1304 px tall at scale 2, not 1305. When either extent is not finite or below 1, or their product is above `PNG_PIXELS_MAX`, return `PixmapAllocation` before anything is allocated. Otherwise allocate a `tiny_skia::Pixmap` of that size, fill it with white (`Color::WHITE`), and render with `resvg::render(&tree, Transform::from_scale(scale, scale), &mut pixmap.as_mut())`. `PngSize::Width(w)` keeps `w` as the pixmap width, which must lie between `ceil(width * PNG_WIDTH_SCALE_MIN)` and `floor(width * DeviceScale::MAX)` or `PngWidthOutOfRange` is returned, takes `scale = w / width` and the height `ceil(height * scale)`, and renders at that scale under the same budget. The tree is rasterized at the fractional scale, so text is drawn at its final size, never resampled. hybrid-ai, 1480 by 1177.6, renders 2034 by 1619 at width 2034.
 6. Encode with `pixmap.encode_png()`.
 
 `stencil_render::PNG_PIXELS_MAX` is 2^27 = 134,217,728 pixels, a 512 MiB RGBA buffer. No vet limit bounds the canvas height: 4096 nodes stacked in Cols give a canvas close to 200,000 px tall. On a 64-bit target `tiny_skia::Pixmap::new` only checks its size arithmetic, so it never returns `None` for such a canvas, and the allocation either aborts the process or maps memory lazily and thrashes while the pixmap is filled. The budget is therefore the only allocation guard. At scale 2 it admits a 1320 px wide canvas up to 25,420 px tall and a 2600 px wide canvas up to 12,905 px tall. `stencil check` renders at the default scale, so a document over the budget at scale 2 fails `check` with exit 2 as it fails `render`.
@@ -1470,7 +1488,7 @@ Exit codes: `stencil vet` and `stencil check` exit 1 when any report fails, incl
 
 ```
 stencil vet <json>
-stencil render <json> --out-dir <dir> [--scale <1-4>] [--print-width <inches>]
+stencil render <json> --out-dir <dir> [--scale <1-4> | --png-width <px>] [--print-width <inches>]
 stencil check <json> [--print-width <inches>]
 stencil schema
 stencil prime [<topic>]
@@ -1480,7 +1498,7 @@ stencil gallery <out-dir> [--examples <dir>]
 | Command | Does | Output on stdout |
 |---|---|---|
 | `vet` | parse, `validate_page`, then, only when there is no violation, `remembered-constants`, `legend-consistency` and `icon-matches-product` | one line per violation, or one line per check and one line per defect; one summary line |
-| `render` | parse and `validate_page` only (violations stop the command with exit 1; the model checks do not run, so a legend inconsistency does not stop a render), layout with `CosmicTextMeasurer`, SVG, PNG at `--scale` (default 2), measured JSON; creates `--out-dir` if missing and overwrites existing outputs | the three written paths, absolute |
+| `render` | parse and `validate_page` only (violations stop the command with exit 1; the model checks do not run, so a legend inconsistency does not stop a render), layout with `CosmicTextMeasurer`, SVG, PNG at `--scale` (default 2) or `--png-width` px wide (0.5 to 4 times the drawn canvas width, the two flags refused together), measured JSON; creates `--out-dir` if missing and overwrites existing outputs | the three written paths, absolute |
 | `check` | everything `render` does, held in memory without writing files, then all fourteen checks | one line per check, one line per defect, one summary line; or an `error` line and the summary line when layout or render fails with exit 1 |
 | `schema` | prints `page_schema()` as pretty JSON | the schema |
 | `prime` | prints the authoring briefing for an agent: `crates/stencil-cli/prime/base.md` with the vocabulary table rendered from `page_schema()`, so tag names, field names, bounds and enum values come from the model; at most 6,000 bytes. With a topic (`themes`, `links`, `blocks`, `layout`, `checks`, `cue`, `example`), that topic's text instead, each at most 4,000 bytes except `example`, which is `examples/g7.json` verbatim. An unknown topic writes one line to stderr naming the topics and exits 2 | the briefing or the topic |
@@ -1538,7 +1556,7 @@ Every error variant maps to one code. The mapping is an exhaustive `match` with 
 | `LayoutError::Measure` with source `EmptyText`, `InvalidStyle`, `InvalidMaxWidth` or `Backend` | 2 |
 | `LayoutError::Taffy`, `LayoutError::NonFinite` | 2 |
 | `FontError`, any variant, and `RenderError::Fonts` | 2 |
-| `RenderError::ScaleOutOfRange`, `GeometryMismatch`, `Svg`, `TextNotRendered`, `TextCountExceeded`, `FontNotResolved`, `PixmapAllocation`, `PngEncode` | 2 |
+| `RenderError::ScaleOutOfRange`, `PngWidthOutOfRange`, `GeometryMismatch`, `Svg`, `TextNotRendered`, `TextCountExceeded`, `FontNotResolved`, `PixmapAllocation`, `PngEncode` | 2 |
 | `PrimeError`, any variant: the briefing is built from the binary's own schema and texts, so a failure is an internal fault | 2 |
 | a failing `CheckReport`, zero examined included; a not-applicable report does not fail, and a run is clean only when at least one report passed | 1 |
 
@@ -1880,6 +1898,7 @@ All tests except the wrap-epsilon regression use `FixedMetricsMeasurer::default(
 - `vet` on a document with one vet violation prints its `violation` line and `stencil vet: 1 violation, checks not run`, and exits 1.
 - `vet` on malformed JSON exits 1. `vet`, `check` and `render` on a missing file exit 2 with empty stdout, and `render` creates no out-dir. `vet /dev/zero` exits 2 naming the 67,108,864-byte limit, and an input of exactly that many bytes (g7 padded with spaces) is read and vets clean. `vet` and `check` on a 4097-node document exit 1 with `violation nodes-exceeded /body: more than 4096 nodes`. An unknown subcommand or flag exits 2. `--help` and `--version` exit 0, write the text to stdout and write nothing to stderr.
 - `render` writes the three files to a temporary directory and prints exactly their three absolute paths in the order SVG, PNG, measured JSON. `--scale 5` exits 2. An `--out-dir` under a read-only directory exits 2.
+- `render --png-width 2034` writes hybrid-ai and hero-iso PNGs 2034 px wide and `ceil(h * 2034 / w)` tall, where `w` and `h` are the measured JSON's `canvas` in flat and `projection.canvas` in iso. On hybrid-ai's 1480 px canvas 740 and 5920 render, and 0, 739 and 5921 exit 2 with `PngWidthOutOfRange` and write nothing; `--scale` with `--png-width` exits 2.
 - `check examples/g7.json` exits 0 and prints the fourteen lines in `CheckName` order: the five with the counts from section 9.4, both link checks as not applicable, pipes-land with 8 pipe ends and no defect, the four iso checks and print-fit as not applicable, icon-matches-product with 6 items, and the summary `14 checks, 7 passed, 0 failed, 7 not applicable`.
 - `check` on a document whose text overflows exits 1 and names the pointer. The document has one Pipe and a matching legend entry, so child-inside-container is the only failing check. The Pipe sits in the body with no Row or Col sibling, so pipes-land is not applicable, and the summary is `12 checks, 5 passed, 1 failed, 6 not applicable`.
 - `vet` and `check` on a file whose bytes are not UTF-8 exit 1 and print the `error` line with the line and column of the first invalid byte and `document does not parse, checks not run`.
@@ -4299,7 +4318,7 @@ Step (e) changes every iso render: hero-iso in every theme but wire gains block 
 
 ```
 stencil vet <json>
-stencil render <json> --out-dir <dir> [--scale <1-4>] [--theme <theme>] [--projection flat|iso] [--print-width <inches>]
+stencil render <json> --out-dir <dir> [--scale <1-4> | --png-width <px>] [--theme <theme>] [--projection flat|iso] [--print-width <inches>]
 stencil check <json> [--theme <theme>] [--projection flat|iso] [--print-width <inches>]
 stencil gallery <out-dir> [--examples <dir>]
 stencil theme show <name>

@@ -95,6 +95,7 @@ pub fn render_exit_code(error: &RenderError) -> ExitCode {
     match error {
         RenderError::Fonts(font_error) => font_exit_code(font_error),
         RenderError::ScaleOutOfRange { .. }
+        | RenderError::PngWidthOutOfRange { .. }
         | RenderError::GeometryMismatch { .. }
         | RenderError::Svg { .. }
         | RenderError::TextNotRendered { .. }

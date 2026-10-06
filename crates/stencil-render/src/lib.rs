@@ -17,7 +17,7 @@ use stencil_text::FontError;
 
 pub use icons::{icon_data_uri, icon_svg_bytes};
 pub use measured::measured_json;
-pub use png::{PNG_PIXELS_MAX, render_png};
+pub use png::{PNG_PIXELS_MAX, PNG_WIDTH_SCALE_MIN, render_png, render_png_sized};
 pub use svg::render_svg;
 pub use themes::{builtin_theme, builtin_theme_json};
 
@@ -95,10 +95,27 @@ impl DeviceScale {
     }
 }
 
+/// How `render_png_sized` sizes the PNG: by a device scale, or to an exact width in px with
+/// the height following the canvas.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum PngSize {
+    Scale(DeviceScale),
+    Width(u32),
+}
+
 #[derive(Debug, thiserror::Error)]
 pub enum RenderError {
     #[error("device scale {value} is outside 1 to 4")]
     ScaleOutOfRange { value: u8 },
+    #[error(
+        "PNG width {width} px is outside {min} to {max} px, 0.5 to 4 times the {canvas_width} px canvas"
+    )]
+    PngWidthOutOfRange {
+        width: u32,
+        min: u32,
+        max: u32,
+        canvas_width: NumberRepr,
+    },
     #[error("geometry node {found} does not match document node {expected}")]
     GeometryMismatch {
         expected: NodePointer,

@@ -8,12 +8,16 @@ use resvg::usvg::{self, FontResolver, FontStretch, FontStyle, ImageHrefResolver,
 use stencil_model::NODES_MAX;
 use stencil_text::{BUNDLED_FONTS, FontError, verify_bundled_fonts};
 
-use crate::{DeviceScale, RenderError};
+use crate::{DeviceScale, PngSize, RenderError, format_number};
 
 const DEFAULT_FONT_FAMILY: &str = "Inter";
 
 /// Largest pixmap render_png allocates, in pixels (section 5.3, step 5): 512 MiB of RGBA.
 pub const PNG_PIXELS_MAX: u64 = 1 << 27;
+
+/// Smallest ratio of a `PngSize::Width` to the canvas width; the largest is
+/// `DeviceScale::MAX`. Below half size the 8 px foot and legend text draw 4 px tall.
+pub const PNG_WIDTH_SCALE_MIN: f64 = 0.5;
 
 /// Upper bound on the groups `count_text_nodes` visits. A vetted page writes one `<g>` per
 /// geometry node: at most NODES_MAX body nodes plus the page-level nodes.
@@ -27,6 +31,16 @@ pub fn render_png(
     svg: &str,
     expected_text_elements: usize,
     scale: DeviceScale,
+) -> Result<Vec<u8>, RenderError> {
+    render_png_sized(svg, expected_text_elements, PngSize::Scale(scale))
+}
+
+/// `render_png` at a device scale or at an exact width. A width renders the tree at
+/// `width / canvas width`, so text is rasterized at that size rather than resampled.
+pub fn render_png_sized(
+    svg: &str,
+    expected_text_elements: usize,
+    size: PngSize,
 ) -> Result<Vec<u8>, RenderError> {
     verify_bundled_fonts()?;
     let font_database = bundled_font_database()?;
@@ -64,11 +78,16 @@ pub fn render_png(
         return Err(RenderError::FontNotResolved { lookups });
     }
 
-    let size = tree.size();
-    let (width, height) = pixmap_size(size.width(), size.height(), scale)?;
+    let extent = tree.size();
+    let (width, height, scale_factor) = match size {
+        PngSize::Scale(scale) => {
+            let (width, height) = pixmap_size(extent.width(), extent.height(), scale)?;
+            (width, height, f32::from(scale.get()))
+        }
+        PngSize::Width(width) => pixmap_size_at_width(width, extent.width(), extent.height())?,
+    };
     let mut pixmap =
         Pixmap::new(width, height).ok_or(RenderError::PixmapAllocation { width, height })?;
-    let scale_factor = f32::from(scale.get());
     // The SVG paints a white canvas rect; filling first also whitens the partial last
     // row or column that ceil adds when the canvas size has a fractional part.
     pixmap.fill(Color::WHITE);
@@ -89,6 +108,37 @@ fn pixmap_size(width: f32, height: f32, scale: DeviceScale) -> Result<(u32, u32)
     let scale = f64::from(scale.get());
     let width_px = saturating_pixels((f64::from(width) * scale).ceil());
     let height_px = saturating_pixels((f64::from(height) * scale).ceil());
+    within_budget(width_px, height_px)
+}
+
+/// `width_px` as asked and `ceil(height * width_px / width)`, with the factor the tree is
+/// drawn at. `width` and `height` are a parsed tree's size, which usvg keeps finite and
+/// positive. The width must lie within PNG_WIDTH_SCALE_MIN to DeviceScale::MAX times the
+/// canvas width, rounded inward to whole px.
+fn pixmap_size_at_width(
+    width_px: u32,
+    width: f32,
+    height: f32,
+) -> Result<(u32, u32, f32), RenderError> {
+    let canvas_width = f64::from(width);
+    let min = saturating_pixels((canvas_width * PNG_WIDTH_SCALE_MIN).ceil());
+    let max = saturating_pixels((canvas_width * f64::from(DeviceScale::MAX)).floor());
+    if width_px < min.max(1) || width_px > max {
+        return Err(RenderError::PngWidthOutOfRange {
+            width: width_px,
+            min,
+            max,
+            canvas_width: format_number(width),
+        });
+    }
+    let scale = f64::from(width_px) / canvas_width;
+    let height_px = saturating_pixels((f64::from(height) * scale).ceil());
+    let (width_px, height_px) = within_budget(width_px, height_px)?;
+    Ok((width_px, height_px, scale as f32))
+}
+
+/// Both extents at least 1 px and their product within PNG_PIXELS_MAX.
+fn within_budget(width_px: u32, height_px: u32) -> Result<(u32, u32), RenderError> {
     let pixels = u64::from(width_px) * u64::from(height_px);
     if width_px == 0 || height_px == 0 || pixels > PNG_PIXELS_MAX {
         return Err(RenderError::PixmapAllocation {
@@ -275,6 +325,47 @@ mod tests {
                 "{width}x{height}"
             );
         }
+    }
+
+    #[test]
+    fn a_png_width_keeps_the_width_and_derives_the_height_and_factor() {
+        let (width, height, factor) = pixmap_size_at_width(2034, 1480.0, 1178.0).unwrap();
+        assert_eq!((width, height), (2034, 1619));
+        assert!((f64::from(factor) - 2034.0 / 1480.0).abs() < 1e-6);
+        assert_eq!(
+            pixmap_size_at_width(2034, 1480.0, 1178.0).unwrap(),
+            (width, height, factor)
+        );
+    }
+
+    #[test]
+    fn a_png_width_lies_within_half_to_four_times_the_canvas() {
+        assert_eq!(pixmap_size_at_width(740, 1480.0, 100.0).unwrap().0, 740);
+        assert_eq!(pixmap_size_at_width(5920, 1480.0, 100.0).unwrap().0, 5920);
+        for width in [0, 739, 5921] {
+            assert!(
+                matches!(
+                    pixmap_size_at_width(width, 1480.0, 100.0),
+                    Err(RenderError::PngWidthOutOfRange {
+                        min: 740,
+                        max: 5920,
+                        ..
+                    })
+                ),
+                "{width}"
+            );
+        }
+    }
+
+    #[test]
+    fn a_png_width_keeps_the_pixel_budget() {
+        assert!(matches!(
+            pixmap_size_at_width(4096, 2048.0, 40000.0),
+            Err(RenderError::PixmapAllocation {
+                width: 4096,
+                height: 80000
+            })
+        ));
     }
 
     /// Root plus `sibling_groups` groups, each kept by usvg because it has an id.
