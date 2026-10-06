@@ -46,6 +46,20 @@ pub const BUNDLED_FONTS: [FontFile; 4] = [
     },
 ];
 
+/// The bundled file that holds `family` at `weight`. Every style a layout can set names one,
+/// so the SVG writer embeds exactly the files the PNG renders with.
+pub fn bundled_font(family: FontFamily, weight: FontWeight) -> FontFile {
+    let [regular, semi_bold, bold, extra_bold] = BUNDLED_FONTS;
+    match family {
+        FontFamily::Inter => match weight {
+            FontWeight::Regular => regular,
+            FontWeight::SemiBold => semi_bold,
+            FontWeight::Bold => bold,
+            FontWeight::ExtraBold => extra_bold,
+        },
+    }
+}
+
 #[derive(Debug, thiserror::Error)]
 pub enum FontError {
     #[error("bundled font {file_name} does not parse")]
@@ -165,6 +179,28 @@ mod tests {
                 }
             ),
             "{error:?}"
+        );
+    }
+
+    #[test]
+    fn bundled_font_returns_the_file_of_the_asked_weight() {
+        let weights = [
+            FontWeight::Regular,
+            FontWeight::SemiBold,
+            FontWeight::Bold,
+            FontWeight::ExtraBold,
+        ];
+        let file_names: Vec<&str> = weights
+            .iter()
+            .map(|weight| {
+                let file = bundled_font(FontFamily::Inter, *weight);
+                assert_eq!(file.weight, *weight);
+                file.file_name
+            })
+            .collect();
+        assert_eq!(
+            file_names,
+            BUNDLED_FONTS.map(|file| file.file_name).to_vec()
         );
     }
 

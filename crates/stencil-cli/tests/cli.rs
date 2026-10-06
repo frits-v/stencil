@@ -5,12 +5,15 @@
     clippy::indexing_slicing
 )]
 
+use std::collections::{BTreeMap, BTreeSet};
 use std::ffi::OsString;
 use std::fs;
 use std::path::{Path, PathBuf};
 
+use base64::Engine as _;
 use serde_json::{Value, json};
 use stencil_cli::{ExitCode, run};
+use stencil_text::BUNDLED_FONTS;
 
 struct Outcome {
     code: ExitCode,
@@ -377,6 +380,92 @@ fn render_writes_three_files_and_prints_their_absolute_paths() {
     let measured: Value = serde_json::from_slice(&fs::read(&expected[2]).unwrap()).unwrap();
     assert_eq!(measured["document"], g7_document());
     assert_eq!(measured["canvas"]["width"], json!(1320));
+}
+
+/// The `font-weight` values of every `<text>` element, and of every `@font-face` rule with
+/// the bytes its `data:` URI decodes to.
+fn text_weights_and_font_faces(svg: &str) -> (BTreeSet<u16>, BTreeMap<u16, Vec<u8>>) {
+    let text_weights = svg
+        .lines()
+        .filter(|line| line.trim_start().starts_with("<text "))
+        .map(|line| {
+            let after = line.split_once(r#" font-weight=""#).unwrap().1;
+            after.split_once('"').unwrap().0.parse().unwrap()
+        })
+        .collect();
+    let mut faces = BTreeMap::new();
+    for rule in svg.split("@font-face").skip(1) {
+        let rule = rule.split_once('}').unwrap().0;
+        assert!(rule.contains(r#"font-family: "Inter";"#), "{rule:.120}");
+        let weight: u16 = rule
+            .split_once("font-weight: ")
+            .unwrap()
+            .1
+            .split_once(';')
+            .unwrap()
+            .0
+            .parse()
+            .unwrap();
+        let payload = rule
+            .split_once(r#"url("data:font/ttf;base64,"#)
+            .unwrap()
+            .1
+            .split_once('"')
+            .unwrap()
+            .0;
+        let bytes = base64::engine::general_purpose::STANDARD
+            .decode(payload)
+            .unwrap();
+        assert!(
+            faces.insert(weight, bytes).is_none(),
+            "weight {weight} twice"
+        );
+    }
+    (text_weights, faces)
+}
+
+/// hybrid-ai sets text in all four weights, and onepager and the iso hero in 400, 700 and 800
+/// only.
+#[test]
+fn the_svg_embeds_a_font_face_for_each_weight_its_text_uses_and_no_other() {
+    let out_dir = scratch_directory("render_embeds_fonts");
+    let mut examined = 0;
+    for (stem, expected_weights) in [
+        ("hybrid-ai", vec![400, 600, 700, 800]),
+        ("onepager", vec![400, 700, 800]),
+        ("hero-iso", vec![400, 700, 800]),
+    ] {
+        let input = repository_path(&format!("examples/{stem}.json"));
+        let outcome = run_stencil(&[
+            "render",
+            input.to_str().unwrap(),
+            "--out-dir",
+            out_dir.to_str().unwrap(),
+        ]);
+        assert_eq!(outcome.code, ExitCode::Clean, "{}", outcome.stderr);
+
+        let svg = fs::read_to_string(out_dir.join(format!("{stem}.svg"))).unwrap();
+        let (text_weights, faces) = text_weights_and_font_faces(&svg);
+        assert_eq!(
+            text_weights.iter().copied().collect::<Vec<_>>(),
+            expected_weights,
+            "{stem}"
+        );
+        assert_eq!(
+            faces.keys().copied().collect::<BTreeSet<_>>(),
+            text_weights,
+            "{stem}"
+        );
+        for (weight, bytes) in &faces {
+            let bundled = BUNDLED_FONTS
+                .iter()
+                .find(|file| file.weight.css_value() == *weight)
+                .unwrap();
+            assert!(bytes.as_slice() == bundled.bytes, "{stem}: {weight}");
+        }
+        examined += 1;
+    }
+    assert_eq!(examined, 3);
 }
 
 #[test]

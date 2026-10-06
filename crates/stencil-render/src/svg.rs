@@ -9,15 +9,16 @@ use stencil_layout::{
 };
 use stencil_model::grammar::Role;
 use stencil_model::pointer::NodePointer;
-use stencil_model::text::TextStyleName;
+use stencil_model::text::{FontFamily, FontWeight, TextStyleName};
 
+use base64::Engine as _;
 use stencil_model::text::TextMeasurer;
 use stencil_model::{
     Arrow, Canvas, Chrome, FactSource, IconName, LEGEND_ENTRIES_MAX, LINKS_MAX, LegendEntry, Link,
     Node, NodeRef, NoteKind, Page, PagePoint, Pipe, PipeDir, PipeForm, Projection, Theme,
     body_nodes,
 };
-use stencil_text::CosmicTextMeasurer;
+use stencil_text::{CosmicTextMeasurer, bundled_font};
 
 use crate::icons::icon_data_uri;
 use crate::palette::{self, BoxPaint, DotStyle, LineStyle, LineUse, Palette, Stroke};
@@ -125,10 +126,7 @@ pub fn render_svg(
     }
     writer.line(0, "</svg>");
 
-    Ok(SvgDocument {
-        svg: writer.output,
-        text_elements: writer.text_elements,
-    })
+    Ok(writer.into_document())
 }
 
 /// Pointers and document nodes in section 4.4 geometry order. The body portion is
@@ -407,6 +405,8 @@ struct PartContext<'a> {
 struct SvgWriter<'a> {
     output: String,
     text_elements: usize,
+    /// The family and weight of every `<text>` written, each once.
+    font_faces: Vec<(FontFamily, FontWeight)>,
     canvas: Canvas,
     palette: Palette<'a>,
     /// Section 12.2 rule 7: the zoom of an iso scene, which tube radii follow; 1 in flat.
@@ -418,6 +418,7 @@ impl<'a> SvgWriter<'a> {
         SvgWriter {
             output: String::new(),
             text_elements: 0,
+            font_faces: Vec::new(),
             canvas,
             palette,
             iso_zoom: 1.0,
@@ -430,6 +431,17 @@ impl<'a> SvgWriter<'a> {
         }
         self.output.push_str(content);
         self.output.push('\n');
+    }
+
+    /// The written SVG, with its faces ordered by family name and then weight.
+    fn into_document(self) -> SvgDocument {
+        let mut font_faces = self.font_faces;
+        font_faces.sort_by_key(|(family, weight)| (family.css_name(), weight.css_value()));
+        SvgDocument {
+            svg: self.output,
+            text_elements: self.text_elements,
+            font_faces,
+        }
     }
 
     /// Shapes first, then the node's text; child groups follow from the caller.
@@ -1159,6 +1171,10 @@ impl<'a> SvgWriter<'a> {
         let transform =
             transform.map_or(String::new(), |matrix| format!(r#" transform="{matrix}""#));
         let style = run.style;
+        if !run.metrics.lines.is_empty() && !self.font_faces.contains(&(style.family, style.weight))
+        {
+            self.font_faces.push((style.family, style.weight));
+        }
         let letter_spacing_px = style.letter_spacing_em * style.size_px;
         let letter_spacing = if format_number(letter_spacing_px) == crate::NumberRepr::Integer(0) {
             String::new()
@@ -1477,6 +1493,43 @@ fn left_rounded_strip_path(bounds: BoxRect, radius: f32) -> String {
     )
 }
 
+impl SvgDocument {
+    /// The SVG with one `@font-face` per entry of `font_faces`, its bundled file as a `data:`
+    /// URI, in a `<style>` right after the opening `<svg>` tag, so the file renders in Inter
+    /// where Inter is not installed (section 5.2). A document with no text is returned as is.
+    pub fn self_contained(&self) -> Result<String, RenderError> {
+        let Some((open_tag, rest)) = self.svg.split_once('\n') else {
+            return Err(RenderError::Svg {
+                message: "SVG has no line after its opening tag".to_string(),
+            });
+        };
+        if !open_tag.starts_with("<svg ") {
+            return Err(RenderError::Svg {
+                message: format!("SVG starts with {open_tag:.40} instead of <svg"),
+            });
+        }
+        if self.font_faces.is_empty() {
+            return Ok(self.svg.clone());
+        }
+        let mut output = String::new();
+        output.push_str(open_tag);
+        output.push_str("\n  <defs>\n    <style>\n");
+        for (family, weight) in &self.font_faces {
+            let file = bundled_font(*family, *weight);
+            output.push_str(&format!(
+                r#"      @font-face {{ font-family: "{}"; font-style: normal; font-weight: {}; src: url("data:font/ttf;base64,{}") format("truetype"); }}"#,
+                family.css_name(),
+                weight.css_value(),
+                base64::engine::general_purpose::STANDARD.encode(file.bytes)
+            ));
+            output.push('\n');
+        }
+        output.push_str("    </style>\n  </defs>\n");
+        output.push_str(rest);
+        Ok(output)
+    }
+}
+
 fn escape_xml(text: &str) -> String {
     let mut escaped = String::with_capacity(text.len());
     for character in text.chars() {
@@ -1495,6 +1548,29 @@ fn escape_xml(text: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn a_document_without_text_is_self_contained_as_written() {
+        let document = SvgDocument {
+            svg: "<svg xmlns=\"http://www.w3.org/2000/svg\">\n</svg>\n".to_string(),
+            text_elements: 0,
+            font_faces: Vec::new(),
+        };
+        assert_eq!(document.self_contained().unwrap(), document.svg);
+    }
+
+    #[test]
+    fn self_contained_rejects_a_document_that_does_not_open_with_svg() {
+        let document = SvgDocument {
+            svg: "<g>\n</g>\n".to_string(),
+            text_elements: 1,
+            font_faces: vec![(FontFamily::Inter, FontWeight::Bold)],
+        };
+        assert!(matches!(
+            document.self_contained(),
+            Err(RenderError::Svg { .. })
+        ));
+    }
 
     #[test]
     fn escape_xml_escapes_markup_characters() {

@@ -1027,6 +1027,10 @@ pub struct FontFile {
 /// Inter-Regular, Inter-SemiBold, Inter-Bold, Inter-ExtraBold, via include_bytes!.
 pub const BUNDLED_FONTS: [FontFile; 4];
 
+/// The bundled file that holds `family` at `weight`; an exhaustive match, so every style a
+/// layout can set names one.
+pub fn bundled_font(family: FontFamily, weight: FontWeight) -> FontFile;
+
 /// The public check over the four compiled-in faces; `verify_fonts` stays crate-private so
 /// only the font-swap test can pass it other files.
 pub fn verify_bundled_fonts() -> Result<(), FontError>;
@@ -1191,6 +1195,15 @@ pub struct SvgDocument {
     pub svg: String,
     /// Number of <text> elements written: one per line of every TextRun.
     pub text_elements: usize,
+    /// The family and weight of the <text> elements, each once, ordered by family name and
+    /// then weight.
+    pub font_faces: Vec<(FontFamily, FontWeight)>,
+}
+
+impl SvgDocument {
+    /// The SVG with an @font-face per entry of `font_faces` (section 5.2). `render` writes
+    /// this; `render_png` takes `svg`.
+    pub fn self_contained(&self) -> Result<String, RenderError>;
 }
 
 /// Largest pixmap render_png allocates, in pixels (section 5.3, step 5).
@@ -1331,7 +1344,13 @@ Structure:
 
 The only `http` string in the SVG is the SVG namespace URI. There are no external references of any kind.
 
-When the SVG is opened outside resvg, text renders correctly only if Inter is installed on that machine. The PNG is the deliverable, and the SVG is its exact source for resvg.
+`render_svg` returns the SVG that `render_png` parses, which names the family and embeds no font. The file `render` writes is `SvgDocument::self_contained`: the same document with a `<defs><style>` block directly after the opening `<svg>` tag that holds one `@font-face` per family and weight its `<text>` elements use, in `font_faces` order and no other:
+
+```css
+@font-face { font-family: "Inter"; font-style: normal; font-weight: 700; src: url("data:font/ttf;base64,…") format("truetype"); }
+```
+
+The payload is the base64 of the `BUNDLED_FONTS` file that `stencil_text::bundled_font` returns for that family and weight, unmodified, so a browser, a slide or document import or any other rasterizer draws the SVG in the faces the PNG was rendered and measured with, whether or not Inter is installed. A figure using all four weights grows by about 2.2 MB. A document with no text is written as `render_svg` returned it. The `data:` URIs are not external references.
 
 ### 5.3 PNG
 
@@ -1548,7 +1567,7 @@ Family: Inter, SIL Open Font License 1.1. Four static instances from the Inter 4
 
 - `assets/fonts/OFL.txt` holds the license text from the same archive. `assets/fonts/FONTS.md` holds the table above with the SHA-256 column filled in and the release version and archive URL. `BUNDLED_FONTS` copies the hashes, and a test compares them with the compiled bytes.
 - Static instances are used instead of the variable font, so each weight is a separate face with fixed metrics and cosmic-text and usvg select the same face. `docs/api-notes/cosmic-text.md` recommends bundling `InterVariable.ttf` alone; the spec does not follow it, for this reason.
-- The files are not subset, renamed or otherwise modified, so the OFL's clauses on modified versions do not apply. The SVG names the family and does not embed the font. The license permits bundling the files with the software, and `OFL.txt` ships next to them.
+- The files are not subset, renamed or otherwise modified, so the OFL's clauses on modified versions do not apply. The license permits bundling the files with the software, and `OFL.txt` ships next to them. The written SVG embeds the files its text uses unmodified (section 5.2); each carries its copyright notice and the OFL notice in its `name` table, the machine-readable metadata the OFL accepts in place of a separate license file.
 - Helvetica Neue, the face the HTML stencil uses, is a system `.ttc` that may not be redistributed, so it is not an option. Google Sans stays excluded for the brand reason recorded in the stencil provenance.
 - Only these four faces are ever loaded, into the cosmic-text database and into the usvg database alike. A character Inter lacks is a `MissingGlyph` defect, never a fallback.
 
@@ -1838,6 +1857,7 @@ All tests except the wrap-epsilon regression use `FixedMetricsMeasurer::default(
 
 - SVG parses with usvg. There is one `<g data-id>` per geometry node, in the same order with the same pointers. The only `http` substring is the namespace URI.
 - Every `<text>` has `xml:space="preserve"` and `font-family="Inter"` with no fallback list. `letter-spacing` is present exactly for the styles with nonzero spacing.
+- The SVG `render` writes holds one `@font-face` per weight its `<text>` elements use and none for another, each decoding to the bundled file of that weight: hybrid-ai uses 400, 600, 700 and 800, onepager and hero-iso 400, 700 and 800 (`the_svg_embeds_a_font_face_for_each_weight_its_text_uses_and_no_other` in `crates/stencil-cli/tests/cli.rs`).
 - Icons: each data URI decodes to bytes whose SHA-256 equals the section 8.2 table. A render of a Pcard for each of the 23 icons parses.
 - Colors: for each ZoneKind the rect fill, stroke, stroke width and dasharray match section 2.4. For each PipeKind the wire color and dasharray match section 5.2, and a Tee of that kind draws its spine, and a legend entry of that kind its swatch `<line>`, in the same color and dasharray. A `deny` Tee's hub has stroke #F4C7C3 and text fill #C5221F.
 - Numbers: no attribute value has more than 2 decimals, and `-0` never appears. `format_number` gives `Integer(0)` for -0.0 and -0.001, `Integer(1320)` for 1320.0, `Integer(652)` for 652.004 and `Decimal(652.4)` for 652.4.

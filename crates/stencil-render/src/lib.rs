@@ -12,6 +12,7 @@ mod svg;
 use std::fmt;
 
 use stencil_model::pointer::NodePointer;
+use stencil_model::text::{FontFamily, FontWeight};
 use stencil_text::FontError;
 
 pub use icons::{icon_data_uri, icon_svg_bytes};
@@ -25,6 +26,9 @@ pub struct SvgDocument {
     pub svg: String,
     /// Number of <text> elements written: one per line of every TextRun.
     pub text_elements: usize,
+    /// The family and weight of the `<text>` elements, each once, ordered by family name and
+    /// then weight. `self_contained` embeds these faces and no other.
+    pub font_faces: Vec<(FontFamily, FontWeight)>,
 }
 
 /// Section 5.1 rounding. The SVG writer and measured_json both call it.
