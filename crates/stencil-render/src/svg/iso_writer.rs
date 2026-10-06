@@ -160,10 +160,7 @@ pub(super) fn render_iso(
     }
     writer.line(0, "</svg>");
 
-    Ok(SvgDocument {
-        svg: writer.output,
-        text_elements: writer.text_elements,
-    })
+    Ok(writer.into_document())
 }
 
 fn shifted_box(bounds: BoxRect, delta_x: f32, delta_y: f32) -> BoxRect {

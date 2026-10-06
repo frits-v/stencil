@@ -465,8 +465,9 @@ pub fn write_outputs(
         png: directory.join(&names.png),
         measured: directory.join(&names.measured),
     };
+    let svg = rendered.svg.self_contained()?;
     let outputs = [
-        (&names.svg, &paths.svg, rendered.svg.svg.as_bytes()),
+        (&names.svg, &paths.svg, svg.as_bytes()),
         (&names.png, &paths.png, rendered.png.as_slice()),
         (&names.measured, &paths.measured, measured_bytes.as_slice()),
     ];

@@ -72,7 +72,7 @@ stencil prime grammar gcp
 stencil vet examples/g7.json
 ```
 
-`stencil render <json> --out-dir <dir> [--scale <1-4>] [--print-width <inches>]` lays out the page and writes `<stem>.svg`, `<stem>.png` and `<stem>.measured.json` into the output directory, creating it when missing. It prints the three absolute paths. The PNG scale defaults to 2. With `--print-width` it then runs print fit, prints its lines and exits 1 when a text run would print below 8 pt; the files stay written.
+`stencil render <json> --out-dir <dir> [--scale <1-4>] [--print-width <inches>]` lays out the page and writes `<stem>.svg`, `<stem>.png` and `<stem>.measured.json` into the output directory, creating it when missing. It prints the three absolute paths. The SVG embeds the Inter faces its text uses, so it renders the same as the PNG where Inter is not installed. The PNG scale defaults to 2. With `--print-width` it then runs print fit, prints its lines and exits 1 when a text run would print below 8 pt; the files stay written.
 
 ```bash
 stencil render examples/g7.json --out-dir out
