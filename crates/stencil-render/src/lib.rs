@@ -4,7 +4,6 @@ pub mod iso;
 pub mod palette;
 pub mod themes;
 
-mod fillet;
 mod icons;
 mod measured;
 mod png;

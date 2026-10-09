@@ -297,7 +297,7 @@ g7_cases=(
 	'width-above-2560|s/^\ttitle: /\twidth: 2600\n&/|customer.width: invalid value 2600'
 	'corner-above-16|s/^\ttitle: /\tcorner: 17\n&/|customer.corner: invalid value 17'
 	'corner-negative|s/^\ttitle: /\tcorner: -1\n&/|customer.corner: invalid value -1'
-	'bend-unknown|s/^\ttitle: /\tbend: "spline"\n&/|customer.bend:|"spline"'
+	'bend-unknown|s/^\ttitle: /\tbend: "zigzag"\n&/|customer.bend:|"zigzag"'
 	'solid-tint-2-pipe-between-metros|/sits level with metro i/,/grow:/s/grow: \[1, 1\]/grow: [1, 0, 1]/; /title: "On-prem router 2"/,/^\t\t\t\t\t},$/s/^\t\t\t\t\t},$/&\n\t\t\t\t\t{tag: "Pipe", dir: "h", line: "solid", tint: 2, label: "stray"},/|customer.body.0.children.0._pipeBesideZoneOfOtherTint.stray'
 	'empty-gutter-half|/halves share the column height/,/grow:/s/grow: \[1, 1\]/grow: [1, 1, 0]/; s/{tag: "Pipe", dir: "h", line: "solid", tint: 2, label: "VLAN 4"[^}]*},/&\n]}, {tag: "Col", children: [/|customer.body.0.children.1.children.2.children: invalid value []|list.MinItems(1)'
 	"text-above-400|s/title: \"Cloud Router A\"/title: \"$long_text\"/|customer.body.0.children.2.children.0.children.0.children.0.title: invalid value|strings.MaxRunes(400)"

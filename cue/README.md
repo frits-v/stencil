@@ -115,7 +115,7 @@ a hidden struct keyed by the offending item, so the error path names it.
 - Ordered links. A link with `order` joins two different heads of one Lanes node, a head being
   a direct child of it (`_orderedLinkNotBetweenLaneHeads.<link index>`), and no two messages of
   one Lanes node share an order (`_linkOrderUsedTwice.<order>`).
-- Link bends. `corner` on the page is 0 to 16 and `bend` is `arc` or `curve`. A grammar's
+- Link bends. `corner` on the page is 0 to 16 and `bend` is `arc`, `curve` or `spline`. A grammar's
   `lines` holds at most one entry per line (`_linesAreUnique`), each with an optional `corner`
   and `bend` that win over the page's for links of that line.
 - Canvas. `canvas` is `"customer"` or `"internal"` and must be concrete, so each exported

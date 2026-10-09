@@ -453,3 +453,43 @@ fn an_iso_link_over_two_row_neighbours_routes_around_them() {
         );
     }
 }
+
+/// A route laid along the top and right edges of a box it does not join passes as a
+/// polyline, but its bend rounds into the box: links-avoid-boxes reads the drawn line.
+#[test]
+fn links_avoid_boxes_reads_the_rounded_bend_not_the_polyline() {
+    let page = page_from(linked_page(
+        json!([{ "tag": "Row", "gap": 64, "children": [card("a"), card("middle"), card("b")] }]),
+        json!([{ "from": "a", "to": "b", "line": "solid", "tint": 1, "arrow": "none" }]),
+    ));
+    let mut geometry = layout(&page);
+    let middle = node(&geometry, "/body/0/children/1").bounds;
+    let route = &mut geometry.links[0];
+    route.points = vec![
+        PagePoint {
+            x: middle.x - 30.0,
+            y: middle.y,
+        },
+        PagePoint {
+            x: middle.right(),
+            y: middle.y,
+        },
+        PagePoint {
+            x: middle.right(),
+            y: middle.bottom() + 30.0,
+        },
+    ];
+    route.corner = 0.0;
+    let square = links_avoid_boxes(&geometry);
+    assert!(square.defects.is_empty(), "{:?}", square.defects);
+
+    geometry.links[0].corner = 16.0;
+    let rounded = links_avoid_boxes(&geometry);
+    assert_eq!(rounded.examined, square.examined);
+    assert_eq!(rounded.defects.len(), 1, "{:?}", rounded.defects);
+    assert!(
+        rounded.defects[0].message.starts_with("segment 0 "),
+        "{}",
+        rounded.defects[0].message
+    );
+}

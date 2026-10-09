@@ -41,9 +41,10 @@ import (
 #Arrow:      "none" | "end" | "start" | "both"
 #Side:       "top" | "right" | "bottom" | "left"
 
-// How a routed link draws a bend: a quarter circle, or a cubic with both control
-// points on the corner.
-#Bend: "arc" | "curve"
+// How a routed link draws a bend: a quarter circle, a cubic with both control
+// points on the corner, or a spline from leg middle to leg middle through the
+// whole route.
+#Bend: "arc" | "curve" | "spline"
 
 // The radius of a routed link's bends, clamped by the renderer to half the
 // shorter leg; 0 draws square corners.

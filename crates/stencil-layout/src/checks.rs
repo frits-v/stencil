@@ -8,9 +8,13 @@ use stencil_model::pointer::NodePointer;
 use stencil_model::{Node, NodeRef, Page, PipeDir, Projection, body_nodes};
 
 use crate::compute::{PipeTarget, move_extent, targeted_pipes};
+use crate::drawn::{chain_enters, drawn_link, push_flattened};
 use crate::route::attach_box;
-use crate::route::{link_obstacles, segment_enters};
-use crate::{BoxRect, GEOMETRY_EPSILON_PX, NodeTag, PageGeometry, Part, PartName, RouteStatus};
+use crate::route::link_obstacles;
+use crate::{
+    BoxRect, GEOMETRY_EPSILON_PX, LinkRoute, NodeTag, PageGeometry, Part, PartName, RouteStatus,
+};
+use stencil_model::PagePoint;
 
 /// Why print-fit does not apply when no `--print-width` was given.
 const NO_PRINT_WIDTH: &str = "no print width";
@@ -334,13 +338,14 @@ pub fn links_avoid_boxes(geometry: &PageGeometry) -> CheckReport {
     for route in &geometry.links {
         let pointer = links_pointer.index(route.index);
         let obstacles = link_obstacles(geometry, route.from_node, route.to_node);
-        for (segment_index, segment) in route.points.windows(2).enumerate() {
+        let chains = drawn_chains(geometry, route);
+        for (segment_index, (segment, chain)) in route.points.windows(2).zip(&chains).enumerate() {
             let (Some(&start), Some(&end)) = (segment.first(), segment.get(1)) else {
                 continue;
             };
             for obstacle in &obstacles {
                 examined += 1;
-                if segment_enters(start, end, &obstacle.bounds) {
+                if chain_enters(chain, &obstacle.bounds) {
                     defects.push(Defect {
                         pointer: pointer.clone(),
                         message: format!(
@@ -404,6 +409,35 @@ pub fn links_avoid_boxes(geometry: &PageGeometry) -> CheckReport {
         defects,
         not_applicable: None,
     }
+}
+
+/// The drawn line along each route leg, its bend included, from where the line stands at
+/// the leg's start; the first chain starts and the last ends on the route's own ends, where
+/// an arrowhead covers the straight the stroke leaves out.
+fn drawn_chains(geometry: &PageGeometry, route: &LinkRoute) -> Vec<Vec<PagePoint>> {
+    let drawn = drawn_link(geometry, route);
+    let mut chains = Vec::with_capacity(drawn.legs.len());
+    let mut at = drawn.start;
+    for (index, leg) in drawn.legs.iter().enumerate() {
+        let mut chain = Vec::with_capacity(leg.len() + 2);
+        if index == 0
+            && let Some(first) = route.points.first()
+        {
+            chain.push(*first);
+        }
+        chain.push(at);
+        for piece in leg {
+            push_flattened(&mut chain, at, *piece);
+            at = piece.to();
+        }
+        if index + 1 == drawn.legs.len()
+            && let Some(last) = route.points.last()
+        {
+            chain.push(*last);
+        }
+        chains.push(chain);
+    }
+    chains
 }
 
 /// One pipe end facing a neighbor: the pipe, the side, and the Row or Col child on that side.

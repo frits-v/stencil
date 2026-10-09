@@ -138,11 +138,12 @@
       ]
     },
     "Bend": {
-      "description": "The curve a routed link takes through a bend: a quarter circle, or a cubic whose control\npoints both sit on the corner, which meets each leg with no jump in curvature.",
+      "description": "The curve a routed link takes through a bend: a quarter circle, a cubic whose control\npoints both sit on the corner, which meets each leg with no jump in curvature, or a\nspline: a quadratic from the middle of one leg to the middle of the next with its control\npoint on the corner, so the whole route is one smooth curve.",
       "type": "string",
       "enum": [
         "arc",
-        "curve"
+        "curve",
+        "spline"
       ]
     },
     "CalloutKind": {

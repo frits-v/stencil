@@ -55,6 +55,7 @@ fn commands(path: &str, command: &str) -> Vec<Vec<f32>> {
     let width = match command {
         "A" => 7,
         "C" => 6,
+        "Q" => 4,
         _ => 2,
     };
     tokens
@@ -269,7 +270,12 @@ fn the_measured_json_is_the_same_at_every_radius_and_bend() {
         let mut square = page.clone();
         square.corner = Some(0.0);
         let expected = measured(&square, &grammar, &document);
-        for (corner, bend) in [(6.0, Bend::Arc), (16.0, Bend::Arc), (16.0, Bend::Curve)] {
+        for (corner, bend) in [
+            (6.0, Bend::Arc),
+            (16.0, Bend::Arc),
+            (16.0, Bend::Curve),
+            (6.0, Bend::Spline),
+        ] {
             let mut rounded = page.clone();
             rounded.corner = Some(corner);
             rounded.bend = Some(bend);
@@ -281,7 +287,7 @@ fn the_measured_json_is_the_same_at_every_radius_and_bend() {
             examined += 1;
         }
     }
-    assert_eq!(examined, 3 * SQUARE_EXAMPLES.len());
+    assert_eq!(examined, 4 * SQUARE_EXAMPLES.len());
 }
 
 /// Every `A` of the patterned links under iso: a floor quarter circle projects to an
@@ -325,4 +331,81 @@ fn an_iso_dashed_link_bends_on_a_projected_ellipse_and_a_tube_keeps_its_joints()
     }
     assert!(tubes > 0, "hero-iso has no link drawn as a tube");
     assert!(arcs > 0, "no patterned link of hero-iso has a bend");
+}
+
+#[test]
+fn a_spline_bend_runs_from_the_middle_of_one_leg_to_the_middle_of_the_next() {
+    let rendered = render_with(dogleg_document(), None, Some("spline"));
+    let route = &rendered.geometry.links[0];
+    let [start, corner, tip] = [route.points[0], route.points[1], route.points[2]];
+    let path = link_path(&rendered.svg.svg, 0);
+    assert!(
+        commands(&path, "A").is_empty() && commands(&path, "C").is_empty(),
+        "{path}"
+    );
+    let splines = commands(&path, "Q");
+    assert_eq!(splines.len(), 1, "{path}");
+    // The end leg is drawn up to the arrowhead base, 10 px short of the tip.
+    let base_y = tip.y - 10.0;
+    let close = |actual: f32, expected: f32| (actual - expected).abs() <= 0.006;
+    assert!(
+        close(splines[0][0], corner.x) && close(splines[0][1], corner.y),
+        "{path}"
+    );
+    assert!(close(splines[0][2], corner.x), "{path}");
+    assert!(close(splines[0][3], (corner.y + base_y) / 2.0), "{path}");
+    let entry = commands(&path, "L")[0].clone();
+    assert!(close(entry[0], (start.x + corner.x) / 2.0), "{path}");
+    let report = stencil_layout::checks::links_avoid_boxes(&rendered.geometry);
+    assert!(report.defects.is_empty(), "{:?}", report.defects);
+}
+
+/// `a` and `b` at their content widths either side of a frame taller than both, linked
+/// bottom to bottom: the route runs under the frame, and a spline at either elbow would cut
+/// the frame's lower corner.
+fn under_the_frame_document() -> Value {
+    let mut document = common::page_document(
+        json!([{ "tag": "Row", "gap": 16, "grow": [0, 1, 0], "children": [
+            { "tag": "Col", "children": [card("a")] },
+            { "tag": "Col", "children": [{ "tag": "Frame", "label": "console", "height": 160 }] },
+            { "tag": "Col", "children": [card("b")] }
+        ]}]),
+        json!([{ "line": "solid", "tint": 1, "text": "request path" }]),
+    );
+    document["bend"] = json!("spline");
+    document["links"] = json!([
+        { "from": "a", "to": "b", "line": "solid", "tint": 1, "arrow": "none", "from_side": "bottom", "to_side": "bottom" }
+    ]);
+    document
+}
+
+#[test]
+fn a_spline_bend_that_would_cross_a_box_falls_back_to_a_curve() {
+    let rendered = common::render_document_with_fixed_metrics(under_the_frame_document());
+    let route = &rendered.geometry.links[0];
+    assert_eq!(route.points.len(), 4, "{:?}", route.points);
+    let path = link_path(&rendered.svg.svg, 0);
+    assert!(commands(&path, "Q").is_empty(), "{path}");
+    let curves = commands(&path, "C");
+    assert_eq!(curves.len(), 2, "{path}");
+    assert_eq!(curves[0][..2], [route.points[1].x, route.points[1].y]);
+    let report = stencil_layout::checks::links_avoid_boxes(&rendered.geometry);
+    assert!(report.defects.is_empty(), "{:?}", report.defects);
+}
+
+#[test]
+fn under_iso_a_spline_draws_as_a_curve() {
+    let (page, grammar) = vetted(&SQUARE_EXAMPLES[2]);
+    let mut spline = page.clone();
+    spline.bend = Some(Bend::Spline);
+    let mut curve = page;
+    curve.bend = Some(Bend::Curve);
+    let geometry = layout(&spline, &grammar);
+    let theme = common::theme("center");
+    assert_eq!(
+        render_svg(&spline, &theme, &geometry).unwrap().svg,
+        render_svg(&curve, &theme, &layout(&curve, &grammar))
+            .unwrap()
+            .svg
+    );
 }

@@ -96,6 +96,7 @@ pub(crate) fn route_links(
             status,
             corner,
             bend,
+            arrow: link.arrow,
         });
     }
     Ok(routes)

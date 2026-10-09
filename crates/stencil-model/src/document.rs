@@ -644,14 +644,17 @@ pub enum Arrow {
     Both,
 }
 
-/// The curve a routed link takes through a bend: a quarter circle, or a cubic whose control
-/// points both sit on the corner, which meets each leg with no jump in curvature.
+/// The curve a routed link takes through a bend: a quarter circle, a cubic whose control
+/// points both sit on the corner, which meets each leg with no jump in curvature, or a
+/// spline: a quadratic from the middle of one leg to the middle of the next with its control
+/// point on the corner, so the whole route is one smooth curve.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema, Default)]
 #[serde(rename_all = "lowercase")]
 pub enum Bend {
     #[default]
     Arc,
     Curve,
+    Spline,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
