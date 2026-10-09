@@ -23,3 +23,14 @@ fn history_comments() {
     // ok: rust-history-trace-comment
     // A tag lies nearest its own connector.
 }
+
+fn cargo_commands() {
+    // ruleid: rust-cargo-build-bypasses-mbx
+    run(Command::new("cargo").args(["clippy", "--workspace", "--all-targets"]));
+    // ruleid: rust-cargo-build-bypasses-mbx
+    run(Command::new("cargo").arg("test"));
+    // ok: rust-cargo-build-bypasses-mbx
+    run(Command::new("cargo").args(["fmt", "--all", "--check"]));
+    // ok: rust-cargo-build-bypasses-mbx
+    run(Command::new("mbx").args(["build", "--release"]));
+}

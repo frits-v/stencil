@@ -1,4 +1,6 @@
 //! Repository tasks, run through the mise tasks: `cargo run -q -p xtask -- <command>`.
+//! Builds go through `mbx` by name: a child of `cargo run` finds rustup's cargo on PATH, not
+//! the mise wrapper that routes cargo through the mbx cache.
 
 mod decode;
 
@@ -110,11 +112,11 @@ fn ci() -> Result<(), String> {
     ));
     outcomes.push((
         "clippy",
-        run(Command::new("cargo").args(["clippy", "--workspace", "--all-targets"])),
+        run(Command::new("mbx").args(["clippy", "--workspace", "--all-targets"])),
     ));
     outcomes.push((
         "test",
-        run(Command::new("cargo").args(["test", "--workspace"])),
+        run(Command::new("mbx").args(["test", "--workspace"])),
     ));
     outcomes.push(("cue", run(Command::new("cue/check.sh").env("CUE", "cue"))));
     outcomes.push(("gallery", gallery(&gallery_dir)));
@@ -258,7 +260,7 @@ fn workflows() -> Result<String, String> {
 }
 
 fn gallery(dir: &str) -> Result<(), String> {
-    run(Command::new("cargo").args(["build", "--release"]))?;
+    run(Command::new("mbx").args(["build", "--release"]))?;
     run(Command::new(STENCIL).args(["gallery", dir]))
 }
 

@@ -18,3 +18,17 @@ rules:
       # The lookbehinds exempt the instrumental "is/are/was used to", which says what a
       # thing is for rather than what it once did.
       - pattern-regex: '(?i)//[^\n]*\b(?:previously|(?<!\bis\s)(?<!\bare\s)(?<!\bwas\s)(?<!\bwere\s)(?<!\bbe\s)(?<!\bbeen\s)(?<!\bbeing\s)used\s+to|now\s+does|was\s+\w+\s+before|this\s+replaces|we\s+changed|removed\s+the|an\s+earlier\s+version|first\s+two\s+versions)\b'
+
+  - id: rust-cargo-build-bypasses-mbx
+    message: >-
+      A cargo started from Rust finds rustup's cargo on PATH, not the mise wrapper, so the
+      build skips the mbx cache. Start `mbx` with the same subcommand instead.
+    languages: [rust]
+    severity: ERROR
+    patterns:
+      - pattern-either:
+          - pattern: Command::new("cargo").args([$SUBCOMMAND, ...])
+          - pattern: Command::new("cargo").arg($SUBCOMMAND)
+      - metavariable-regex:
+          metavariable: $SUBCOMMAND
+          regex: '^"(bench|build|check|clippy|doc|install|run|rustc|test)"$'
