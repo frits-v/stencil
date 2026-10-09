@@ -1,20 +1,33 @@
 [tools]
+rust = { version = "1.94", components = "rustfmt,clippy" }
 cue = "0.17.1"
 opengrep = "1.30.2"
 zizmor = "1.30.1"
 "github:jdx/jactionlint" = "2.0.2"
 
-[tasks.land]
-description = "Merge a pull request only after its CI workflow run passes: mise run land -- <number>"
-run = "scripts/land.sh {{arg(name=\"pr\")}}"
+[tasks.ci]
+description = "Every check CI runs: fmt, clippy, tests, CUE, gallery docs, opengrep, zizmor and jactionlint"
+run = "cargo run -q -p xtask -- ci"
 
 [tasks.opengrep]
 description = "Test the opengrep rules against their fixtures, then scan the repository with them"
-run = "scripts/opengrep.sh"
+run = "cargo run -q -p xtask -- opengrep"
 
 [tasks.workflows]
-description = "Audit the GitHub workflows with zizmor and jactionlint at their pedantic levels"
-run = "scripts/workflows.sh"
+description = "Audit the GitHub workflows with zizmor and jactionlint at pedantic"
+run = "cargo run -q -p xtask -- workflows"
+
+[tasks.gallery]
+description = "Build the release binary and render every example into target/gallery"
+run = "cargo run -q -p xtask -- gallery target/gallery"
+
+[tasks.release]
+description = "Publish the GitHub release of tag GITHUB_REF_NAME with the gallery attached"
+run = "cargo run -q -p xtask -- release"
+
+[tasks.land]
+description = "Merge a pull request only after its CI workflow run passes: mise run land -- <number>"
+run = "scripts/land.sh {{arg(name=\"pr\")}}"
 
 [tasks.gallery-docs]
 description = "Regenerate the README PNGs in docs/gallery from the examples"
