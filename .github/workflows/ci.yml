@@ -17,6 +17,7 @@ jobs:
     timeout-minutes: 45
     permissions:
       contents: read # checkout, and the online action lookups of zizmor and jactionlint
+      security-events: write # upload-sarif records the findings in code scanning
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -45,6 +46,12 @@ jobs:
           name: ci
           path: target/ci
           if-no-files-found: error
+      # A pull request from a fork gets a read-only token, so only this repository's own
+      # runs upload.
+      - uses: github/codeql-action/upload-sarif@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2 # v4.38.2
+        if: ${{ !cancelled() && hashFiles('target/ci/sarif/*.sarif') != '' && (github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository) }}
+        with:
+          sarif_file: target/ci/sarif
       - if: ${{ success() && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
         run: mise run cache-trim
       - uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0

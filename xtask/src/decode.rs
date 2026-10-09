@@ -161,6 +161,21 @@ pub fn jactionlint_files(log: &str) -> Result<usize, String> {
     Err("jactionlint printed no `Found N errors in M files` summary".to_string())
 }
 
+/// The number of runs in a SARIF 2.1.0 log. A log without a run gives code scanning
+/// nothing to record for its tool, so it is an error.
+pub fn sarif_runs(log: &Value, tool: &str) -> Result<usize, String> {
+    let context = format!("{tool} SARIF");
+    let version = text(log, "version", &context)?;
+    if version != "2.1.0" {
+        return Err(format!("{context}: version {version}, expected 2.1.0"));
+    }
+    let runs = array(log, "runs", &context)?.len();
+    if runs == 0 {
+        return Err(format!("{context}: no runs"));
+    }
+    Ok(runs)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -285,5 +300,14 @@ mod tests {
                    verbose: Found 0 errors in 3 files\n";
         assert!(jactionlint_files(log).is_err());
         assert!(jactionlint_files("verbose: Linting 3 files\n").is_err());
+    }
+
+    #[test]
+    fn a_sarif_log_counts_its_runs_and_rejects_none_or_another_version() {
+        let log = json!({"version": "2.1.0", "runs": [{"tool": {"driver": {"name": "zizmor"}}, "results": []}]});
+        assert_eq!(sarif_runs(&log, "zizmor"), Ok(1));
+        assert!(sarif_runs(&json!({"version": "2.1.0", "runs": []}), "zizmor").is_err());
+        assert!(sarif_runs(&json!({"version": "2.0.0", "runs": [{}]}), "zizmor").is_err());
+        assert!(sarif_runs(&json!({"runs": [{}]}), "zizmor").is_err());
     }
 }

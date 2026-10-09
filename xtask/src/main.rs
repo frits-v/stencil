@@ -12,6 +12,7 @@ use std::process::{Command, ExitCode, Output};
 const RULES: &str = "opengrep/rust.yml";
 const RULE_FIXTURES: &str = "opengrep";
 const CI_OUT: &str = "target/ci";
+const SARIF_DIR: &str = "target/ci/sarif";
 const STENCIL: &str = "target/release/stencil";
 const GALLERY_DIRS_MAX: usize = 256;
 const GALLERY_IMAGES_MAX: usize = 64;
@@ -159,6 +160,25 @@ fn ci() -> Result<(), String> {
     }
 }
 
+/// Where a tool's SARIF log goes for the code scanning upload; creates the directory.
+fn sarif_path(tool: &str) -> Result<String, String> {
+    fs::create_dir_all(SARIF_DIR).map_err(|error| format!("cannot create {SARIF_DIR}: {error}"))?;
+    Ok(format!("{SARIF_DIR}/{tool}.sarif"))
+}
+
+fn check_sarif(tool: &str, path: &str) -> Result<(), String> {
+    let log = fs::read(path).map_err(|error| format!("cannot read {path}: {error}"))?;
+    let value: serde_json::Value = serde_json::from_slice(&log)
+        .map_err(|error| format!("{tool} wrote no SARIF log to {path}: {error}"))?;
+    decode::sarif_runs(&value, tool).map(|_| ())
+}
+
+fn write_sarif(tool: &str, output: &Output) -> Result<(), String> {
+    let path = sarif_path(tool)?;
+    fs::write(&path, &output.stdout).map_err(|error| format!("cannot write {path}: {error}"))?;
+    check_sarif(tool, &path)
+}
+
 fn opengrep() -> Result<String, String> {
     let rules =
         fs::read_to_string(RULES).map_err(|error| format!("cannot read {RULES}: {error}"))?;
@@ -173,20 +193,26 @@ fn opengrep() -> Result<String, String> {
     decode::fixtures_cover(&rule_ids, &checks)?;
     println!("opengrep: {} rules pass their fixtures", checks.len());
 
-    let scan = capture(Command::new("opengrep").args([
-        "scan",
-        "--config",
-        RULES,
-        "--error",
-        "--disable-version-check",
-        "--quiet",
-        "--exclude",
-        RULE_FIXTURES,
-        "--json",
-        ".",
-    ]))?;
+    let sarif = sarif_path("opengrep")?;
+    let scan = capture(
+        Command::new("opengrep")
+            .args([
+                "scan",
+                "--config",
+                RULES,
+                "--error",
+                "--disable-version-check",
+                "--quiet",
+                "--exclude",
+                RULE_FIXTURES,
+                "--json",
+            ])
+            .arg(format!("--sarif-output={sarif}"))
+            .arg("."),
+    )?;
     let code = exit_code(&scan, &[0, 1], "opengrep scan")?;
     let summary = decode::scan_summary(&parse_json(&scan, "opengrep scan")?)?;
+    check_sarif("opengrep", &sarif)?;
     if summary.files == 0 {
         return Err("opengrep scan examined no files".to_string());
     }
@@ -232,8 +258,31 @@ fn github_token() -> Result<String, String> {
     )
 }
 
+/// The SARIF logs are written before the gating runs, so a run that fails still uploads
+/// the findings it failed on.
 fn workflows() -> Result<String, String> {
     let token = github_token()?;
+    let zizmor_sarif = capture(
+        Command::new("zizmor")
+            .args([
+                "--persona=pedantic",
+                "--no-progress",
+                "--no-exit-codes",
+                "--format=sarif",
+                ".github",
+            ])
+            .env("GH_TOKEN", &token),
+    )?;
+    exit_code(&zizmor_sarif, &[0], "zizmor")?;
+    write_sarif("zizmor", &zizmor_sarif)?;
+    let lint_sarif = capture(
+        Command::new("jactionlint")
+            .args(["--online=strict", "--format=sarif"])
+            .env("GH_TOKEN", &token),
+    )?;
+    exit_code(&lint_sarif, &[0, 1], "jactionlint")?;
+    write_sarif("jactionlint", &lint_sarif)?;
+
     run(Command::new("zizmor")
         .args(["--persona=pedantic", "--no-progress", ".github"])
         .env("GH_TOKEN", &token))?;

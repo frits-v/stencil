@@ -2,8 +2,9 @@ profile: pedantic
 online: true
 rules:
   # A workflow checks out and installs the mise pins; every tool and every step after that
-  # is a mise task, so no other action has a job here.
+  # is a mise task. The one other action uploads the SARIF logs the xtask writes.
   forbidden-uses:
     allow:
       - actions/*
       - jdx/mise-action
+      - github/codeql-action/upload-sarif
