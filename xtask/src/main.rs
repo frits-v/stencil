@@ -95,6 +95,11 @@ fn parse_json(output: &Output, tool: &str) -> Result<serde_json::Value, String> 
 
 /// Runs every step even after one fails, so one CI run reports all of them.
 fn ci() -> Result<(), String> {
+    // target/ comes back with the mbx store in CI, so the last run's outputs are cleared
+    // before this run's artifact is written.
+    if Path::new(CI_OUT).exists() {
+        fs::remove_dir_all(CI_OUT).map_err(|error| format!("cannot clear {CI_OUT}: {error}"))?;
+    }
     let gallery_dir = format!("{CI_OUT}/gallery");
     let gallery_docs = format!("{CI_OUT}/gallery-docs");
     let theme_docs = format!("{CI_OUT}/theme-docs");

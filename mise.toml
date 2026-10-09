@@ -1,5 +1,9 @@
+min_version = "2026.9.2"
+
 [tools]
-rust = { version = "1.94", components = "rustfmt,clippy" }
+# mr_boxington runs cargo through mbx, the shared compiler-output cache (mise 2026.9.2+).
+rust = { version = "1.94", components = "rustfmt,clippy", mr_boxington = true }
+mr-boxington = "1.23.0"
 cue = "0.17.1"
 opengrep = "1.30.2"
 zizmor = "1.30.1"
@@ -24,6 +28,10 @@ run = "cargo run -q -p xtask -- gallery target/gallery"
 [tasks.release]
 description = "Publish the GitHub release of tag GITHUB_REF_NAME with the gallery attached"
 run = "cargo run -q -p xtask -- release"
+
+[tasks.cache-trim]
+description = "Collect the mbx store down to the size CI saves"
+run = "mbx gc --max-size 3GiB"
 
 [tasks.land]
 description = "Merge a pull request only after its CI workflow run passes: mise run land -- <number>"

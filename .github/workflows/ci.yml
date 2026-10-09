@@ -21,7 +21,21 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      # Every run restores the mbx store; only a push to main saves it, so a pull request
+      # never writes compiler outputs another run reads.
+      - uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            ~/.cargo/.global-cache
+            ~/.cache/mbx
+          key: ${{ runner.os }}-${{ runner.arch }}-mbx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-${{ runner.arch }}-mbx-
       - uses: jdx/mise-action@2d8d4cafcbd33be2ea37d2b6f5ad595363d1f1ca # v5.1.1
+        with:
+          version: 2026.9.13
       - env:
           GH_TOKEN: ${{ github.token }}
         run: mise run ci
@@ -31,3 +45,14 @@ jobs:
           name: ci
           path: target/ci
           if-no-files-found: error
+      - if: ${{ success() && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+        run: mise run cache-trim
+      - uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        if: ${{ success() && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            ~/.cargo/.global-cache
+            ~/.cache/mbx
+          key: ${{ runner.os }}-${{ runner.arch }}-mbx-${{ github.sha }}
