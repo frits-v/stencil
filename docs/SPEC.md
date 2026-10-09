@@ -3485,6 +3485,8 @@ pub fn grammar_schema() -> schemars::Schema;
 impl Grammar {
     pub fn container(&self, kind: &str) -> Option<&ContainerKind>;
     pub fn item(&self, kind: &str) -> Option<&ItemKind>;
+    /// The line kind of section 11.6 for `line`, if the grammar lists one.
+    pub fn line(&self, line: Line) -> Option<&LineKind>;
 }
 ```
 
