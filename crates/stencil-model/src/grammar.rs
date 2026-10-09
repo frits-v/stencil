@@ -9,8 +9,9 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use crate::Shape;
-use crate::document::{IconName, KIND_PATTERN};
+use crate::document::{Bend, IconName, KIND_PATTERN, LINK_CORNER_MAX_PX, Line};
 use crate::pointer::NodePointer;
+use crate::vet::is_corner_in_range;
 
 /// The kind name a `parents` list uses for the top level of the page body.
 pub const PAGE_PARENT: &str = "page";
@@ -35,8 +36,25 @@ pub struct Grammar {
     pub containers: Vec<ContainerKind>,
     #[schemars(length(min = 1, max = 32))]
     pub items: Vec<ItemKind>,
+    /// A house style per line: how routed links of that line draw their bends.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[schemars(length(max = 4))]
+    pub lines: Vec<LineKind>,
     #[schemars(length(max = 64))]
     pub remembered: Vec<Remembered>,
+}
+
+/// The bends of the routed links of one line, which win over the page's `corner` and
+/// `bend`.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct LineKind {
+    pub line: Line,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(range(min = 0.0, max = 16.0))]
+    pub corner: Option<f32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub bend: Option<Bend>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
@@ -175,6 +193,10 @@ impl Grammar {
             .find(|container| container.name == kind)
     }
 
+    pub fn line(&self, line: Line) -> Option<&LineKind> {
+        self.lines.iter().find(|kind| kind.line == line)
+    }
+
     pub fn item(&self, kind: &str) -> Option<&ItemKind> {
         self.items
             .iter()
@@ -206,6 +228,8 @@ pub enum GrammarRule {
     IconTable,
     RememberedOutOfRange,
     RememberedDuplicate,
+    LineDuplicate,
+    CornerOutOfRange,
 }
 
 impl GrammarRule {
@@ -225,6 +249,8 @@ impl GrammarRule {
             GrammarRule::IconTable => "grammar-icon-table",
             GrammarRule::RememberedOutOfRange => "grammar-remembered-out-of-range",
             GrammarRule::RememberedDuplicate => "grammar-remembered-duplicate",
+            GrammarRule::LineDuplicate => "grammar-line-duplicate",
+            GrammarRule::CornerOutOfRange => "grammar-corner-out-of-range",
         }
     }
 }
@@ -384,8 +410,32 @@ pub fn validate_grammar(grammar: &Grammar) -> Vec<GrammarViolation> {
         );
     }
 
+    check_lines(&root.child("lines"), grammar, &mut violations);
     check_remembered(&root.child("remembered"), grammar, &mut violations);
     violations.0
+}
+
+fn check_lines(pointer: &NodePointer, grammar: &Grammar, violations: &mut Violations) {
+    let mut seen: BTreeSet<Line> = BTreeSet::new();
+    for (index, kind) in grammar.lines.iter().enumerate() {
+        let kind_pointer = pointer.index(index);
+        if !seen.insert(kind.line) {
+            violations.push(
+                kind_pointer.child("line"),
+                GrammarRule::LineDuplicate,
+                format!("line {} is listed twice", kind.line.as_str()),
+            );
+        }
+        if let Some(corner) = kind.corner
+            && !is_corner_in_range(corner)
+        {
+            violations.push(
+                kind_pointer.child("corner"),
+                GrammarRule::CornerOutOfRange,
+                format!("corner {corner} is outside 0 to {LINK_CORNER_MAX_PX}"),
+            );
+        }
+    }
 }
 
 fn check_kind_count(pointer: &NodePointer, count: usize, violations: &mut Violations) {

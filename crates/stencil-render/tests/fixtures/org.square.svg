@@ -172,7 +172,7 @@
     </g>
   </g>
   <g data-id="/links/0" data-tag="Link" data-kind="blue">
-    <path d="M 236.67 261.7 L 236.67 200.8 A 6 6 0 0 1 242.67 194.8 L 594.56 194.8" fill="none" stroke="#1A73E8" stroke-width="2" stroke-linejoin="round"/>
+    <path d="M 236.67 261.7 L 236.67 194.8 L 594.56 194.8" fill="none" stroke="#1A73E8" stroke-width="2" stroke-linejoin="round"/>
     <line x1="594.56" y1="194.8" x2="604.56" y2="194.8" stroke="none" marker-end="url(#arrow-center-blue)"/>
   </g>
   <g data-id="/links/1" data-tag="Link" data-kind="blue">
@@ -180,7 +180,7 @@
     <line x1="660" y1="227.8" x2="660" y2="217.8" stroke="none" marker-end="url(#arrow-center-blue)"/>
   </g>
   <g data-id="/links/2" data-tag="Link" data-kind="blue">
-    <path d="M 1083.33 261.7 L 1083.33 200.8 A 6 6 0 0 0 1077.33 194.8 L 725.44 194.8" fill="none" stroke="#1A73E8" stroke-width="2" stroke-linejoin="round"/>
+    <path d="M 1083.33 261.7 L 1083.33 194.8 L 725.44 194.8" fill="none" stroke="#1A73E8" stroke-width="2" stroke-linejoin="round"/>
     <line x1="725.44" y1="194.8" x2="715.44" y2="194.8" stroke="none" marker-end="url(#arrow-center-blue)"/>
   </g>
   <g data-id="/links/3" data-tag="Link" data-kind="dash">

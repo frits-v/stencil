@@ -174,7 +174,7 @@
     </g>
   </g>
   <g data-id="/links/0" data-tag="Link" data-kind="blue">
-    <path d="M 1374.58 147.6 L 1374.58 283.2 A 6 6 0 0 1 1368.58 289.2 L 1180.47 289.2" fill="none" stroke="#1A73E8" stroke-width="2" stroke-linejoin="round"/>
+    <path d="M 1374.58 147.6 L 1374.58 289.2 L 1180.47 289.2" fill="none" stroke="#1A73E8" stroke-width="2" stroke-linejoin="round"/>
     <line x1="1180.47" y1="289.2" x2="1170.47" y2="289.2" stroke="none" marker-end="url(#arrow-center-blue)"/>
     <rect x="1218.28" y="274.65" width="108.5" height="29.1" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
     <text x="1227.03" y="293.57" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">1 submit trigger</text>
@@ -198,13 +198,13 @@
     <text x="1067.9" y="568.57" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">4 deliver job</text>
   </g>
   <g data-id="/links/4" data-tag="Link" data-kind="blue">
-    <path d="M 1037.22 619.2 L 845.36 619.2 A 6 6 0 0 0 839.36 625.2 L 839.36 696.2" fill="none" stroke="#1A73E8" stroke-width="2" stroke-linejoin="round"/>
+    <path d="M 1037.22 619.2 L 839.36 619.2 L 839.36 696.2" fill="none" stroke="#1A73E8" stroke-width="2" stroke-linejoin="round"/>
     <line x1="839.36" y1="696.2" x2="839.36" y2="706.2" stroke="none" marker-end="url(#arrow-center-blue)"/>
     <rect x="887.35" y="604.65" width="101.87" height="29.1" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
     <text x="896.1" y="623.57" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">5 evaluate clip</text>
   </g>
   <g data-id="/links/5" data-tag="Link" data-kind="blue">
-    <path d="M 1170.78 619.2 L 1365.78 619.2 A 6 6 0 0 1 1371.78 625.2 L 1371.78 696.2" fill="none" stroke="#1A73E8" stroke-width="2" stroke-linejoin="round"/>
+    <path d="M 1170.78 619.2 L 1371.78 619.2 L 1371.78 696.2" fill="none" stroke="#1A73E8" stroke-width="2" stroke-linejoin="round"/>
     <line x1="1371.78" y1="696.2" x2="1371.78" y2="706.2" stroke="none" marker-end="url(#arrow-center-blue)"/>
     <rect x="1220.39" y="604.65" width="101.79" height="29.1" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
     <text x="1229.14" y="623.57" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">6 write verdict</text>

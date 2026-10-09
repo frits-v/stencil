@@ -15,6 +15,8 @@ A link is a routed orthogonal line between two nodes, drawn after layout on top 
 | axis | iso only: x or y, the axis the tag reads along; absent follows the leg it sits on (a Pipe tag follows its dir); see stencil prime iso |
 | order | 1-256; only between two heads of one Lanes node, where it makes the link a message row (stencil prime grammar plain) |
 
+Bends are rounded: Page corner (0-16, default 6, 0 for square) is the radius, held to half the shorter leg; Page bend arc draws a quarter circle, curve a cubic that eases into each leg. A grammar's lines entry sets both for one line and wins over the page. Only the drawing changes: routes, checks and the measured JSON do not.
+
 At most 256 links per page. The canvas is width + 40 px wide; read coordinates for via from out/<stem>.measured.json, where every node has x, y, width and height.
 
 Attach points: with both sides set, those. With neither and no via, the facing pair (right to left, bottom to top, left to right, top to bottom) whose midpoints are closest. Otherwise each open end takes the side nearest what it faces: the first via point, the last via point, or the other end.

@@ -14,12 +14,13 @@ use stencil_model::text::{FontFamily, FontWeight, TextStyleName};
 use base64::Engine as _;
 use stencil_model::text::TextMeasurer;
 use stencil_model::{
-    Arrow, Canvas, Chrome, FactSource, IconName, LEGEND_ENTRIES_MAX, LINKS_MAX, LegendEntry, Link,
-    Node, NodeRef, NoteKind, Page, PagePoint, Pipe, PipeDir, PipeForm, Projection, Theme,
+    Arrow, Bend, Canvas, Chrome, FactSource, IconName, LEGEND_ENTRIES_MAX, LINKS_MAX, LegendEntry,
+    Link, Node, NodeRef, NoteKind, Page, PagePoint, Pipe, PipeDir, PipeForm, Projection, Theme,
     body_nodes,
 };
 use stencil_text::{CosmicTextMeasurer, bundled_font};
 
+use crate::fillet::fillet;
 use crate::icons::icon_data_uri;
 use crate::palette::{self, BoxPaint, DotStyle, LineStyle, LineUse, Palette, Stroke};
 use crate::{RenderError, SvgDocument, format_number};
@@ -944,7 +945,7 @@ impl<'a> SvgWriter<'a> {
             depth + 1,
             &format!(
                 r#"<path d="{}" fill="none"{} stroke-linejoin="round"/>"#,
-                polyline_path(&points),
+                link_path(&points, route.corner, route.bend),
                 stroke_attributes(stroke)
             ),
         );
@@ -1369,16 +1370,53 @@ fn rounded_path(bounds: BoxRect, radii: [f32; 4]) -> String {
     )
 }
 
-/// `M x y L x y ...` through every point.
-fn polyline_path(points: &[PagePoint]) -> String {
+/// `M x y L x y ...` through every point, each bend between perpendicular legs rounded
+/// by `corner` as `bend` says. The points are those after the arrowhead trim, so no bend
+/// reaches under an arrowhead.
+fn link_path(points: &[PagePoint], corner: f32, bend: Bend) -> String {
+    let number = format_number;
     let mut path = String::new();
     for (index, point) in points.iter().enumerate() {
-        let command = if index == 0 { "M" } else { " L" };
-        path.push_str(&format!(
-            "{command} {} {}",
-            format_number(point.x),
-            format_number(point.y)
-        ));
+        let neighbours = index
+            .checked_sub(1)
+            .and_then(|previous| points.get(previous))
+            .zip(points.get(index + 1));
+        let rounded = neighbours.and_then(|(previous, next)| {
+            fillet(
+                (previous.x, previous.y),
+                (point.x, point.y),
+                (next.x, next.y),
+                corner,
+            )
+        });
+        let Some(rounded) = rounded else {
+            let command = if index == 0 { "M" } else { " L" };
+            path.push_str(&format!(
+                "{command} {} {}",
+                number(point.x),
+                number(point.y)
+            ));
+            continue;
+        };
+        let (start, end) = (rounded.start, rounded.end);
+        path.push_str(&format!(" L {} {}", number(start.0), number(start.1)));
+        match bend {
+            Bend::Arc => path.push_str(&format!(
+                " A {} {} 0 0 {} {} {}",
+                number(rounded.radius),
+                number(rounded.radius),
+                u8::from(rounded.clockwise),
+                number(end.0),
+                number(end.1)
+            )),
+            Bend::Curve => path.push_str(&format!(
+                " C {corner_x} {corner_y} {corner_x} {corner_y} {} {}",
+                number(end.0),
+                number(end.1),
+                corner_x = number(point.x),
+                corner_y = number(point.y),
+            )),
+        }
     }
     path
 }
@@ -1597,6 +1635,28 @@ mod tests {
         assert_eq!(tip, PagePoint { x: 0.0, y: 0.0 });
         assert_eq!(base, PagePoint { x: 10.0, y: 0.0 });
         assert_eq!(long[0], base);
+    }
+
+    #[test]
+    fn two_bends_on_a_short_leg_each_take_half_of_it_and_corner_0_draws_the_polyline() {
+        let points = [
+            PagePoint { x: 0.0, y: 0.0 },
+            PagePoint { x: 100.0, y: 0.0 },
+            PagePoint { x: 100.0, y: 8.0 },
+            PagePoint { x: 200.0, y: 8.0 },
+        ];
+        assert_eq!(
+            link_path(&points, 6.0, Bend::Arc),
+            "M 0 0 L 96 0 A 4 4 0 0 1 100 4 L 100 4 A 4 4 0 0 0 104 8 L 200 8"
+        );
+        assert_eq!(
+            link_path(&points, 6.0, Bend::Curve),
+            "M 0 0 L 96 0 C 100 0 100 0 100 4 L 100 4 C 100 8 100 8 104 8 L 200 8"
+        );
+        assert_eq!(
+            link_path(&points, 0.0, Bend::Arc),
+            "M 0 0 L 100 0 L 100 8 L 200 8"
+        );
     }
 
     #[test]

@@ -354,7 +354,7 @@ fn an_unknown_field_is_a_json_error_naming_the_origin() {
 #[test]
 #[allow(clippy::type_complexity)]
 fn each_grammar_fault_is_reported_with_its_rule() {
-    let cases: [(&str, fn(&mut Value), &str, &str); 9] = [
+    let cases: [(&str, fn(&mut Value), &str, &str); 12] = [
         (
             "duplicate name",
             |grammar| {
@@ -416,6 +416,27 @@ fn each_grammar_fault_is_reported_with_its_rule() {
             |grammar| grammar["remembered"][1]["literal"] = json!("64512"),
             "grammar-remembered-duplicate",
             "/remembered/1/literal",
+        ),
+        (
+            "line listed twice",
+            |grammar| {
+                grammar["lines"] =
+                    json!([{ "line": "dash", "corner": 4 }, { "line": "dash", "bend": "curve" }]);
+            },
+            "grammar-line-duplicate",
+            "/lines/1/line",
+        ),
+        (
+            "line corner above 16",
+            |grammar| grammar["lines"] = json!([{ "line": "solid", "corner": 17 }]),
+            "grammar-corner-out-of-range",
+            "/lines/0/corner",
+        ),
+        (
+            "line corner below 0",
+            |grammar| grammar["lines"] = json!([{ "line": "solid", "corner": -0.5 }]),
+            "grammar-corner-out-of-range",
+            "/lines/0/corner",
         ),
     ];
     for (name, fault, rule, pointer) in cases {

@@ -2071,7 +2071,7 @@ Rendering: each route is a `<polyline>` (or `<path>` with `L` commands) in the w
 
 SVG structure: after the page group closes, one `<g data-id="/links/<i>" data-tag="Link" data-kind="<kind>">` per route in link order. Inside it, in order:
 
-- A `<path d="M x y L x y ..." fill="none">` with the kind's stroke and `stroke-linejoin="round"`. At an arrowed end the path stops 10 px short of the attach point, or at the previous corner when the end segment is shorter, so the stroke ends under the arrowhead's base as a pipe wire does.
+- A `<path d="M x y L x y ..." fill="none">` with the kind's stroke and `stroke-linejoin="round"`, each bend rounded as [section 11.6](#116-link-corners) says. At an arrowed end the path stops 10 px short of the attach point, or at the previous corner when the end segment is shorter, so the stroke ends under the arrowhead's base as a pipe wire does.
 - One unstroked `<line>` per arrowhead from its base to its tip on the endpoint box edge, carrying `marker-end` with the `arrow-<theme>-<kind>` marker that pipes use. The marker set in `<defs>` covers every kind used by an arrowed Pipe, Tee arm or link.
 - With a label, the tag `<rect>` (tag paint of the kind, radius 6) and the `tag_label` and `tag_sub` texts. The opaque tag fill masks the segment under it; the path itself is not split.
 
@@ -2150,6 +2150,43 @@ Deviation, `wire` Callout: the kind word is not prefixed to the title. The prefi
 `examples/onepager.json` is a one-page design document at width 1440: title, kicker and lede; a left column of `Text` blocks (Problem, Goals numbered, Non-goals, Interfaces) and two `Callout` blocks (a risk and a decision); a right column holding a `gcp` zone whose cards carry ids and are connected by six numbered `links` with arrows that trace one request through gateway, API, queue, worker and database, plus one `deny` link; and a bottom row of two `Frame` blocks for the console screens. The legend names every kind used.
 
 Tests: `stencil-model` vets each new rule with a failing fixture; `stencil-layout` routes a link around one obstacle and asserts the polyline never enters it, routes with `via`, and produces `Fallback` for an endpoint fully enclosed by obstacles; `stencil-render` renders the same document under the three themes and asserts the measured JSON bytes are identical while the SVG bytes differ; `stencil-cli` renders `examples/onepager.json` under every theme with `check` exiting 0.
+
+### 11.6 Link corners
+
+A routed link rounds each bend between two perpendicular legs. The radius and the curve are drawing parameters: routing, every check and the measured JSON read the routed polyline and do not change with them.
+
+```rust
+pub const LINK_CORNER_DEFAULT_PX: f32 = 6.0;
+pub const LINK_CORNER_MAX_PX: f32 = 16.0;
+
+// On Page, after chrome:
+#[serde(default, skip_serializing_if = "Option::is_none")]
+#[schemars(range(min = 0.0, max = 16.0))]
+pub corner: Option<f32>,
+#[serde(default, skip_serializing_if = "Option::is_none")]
+pub bend: Option<Bend>,
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema, Default)]
+#[serde(rename_all = "lowercase")]
+pub enum Bend { #[default] Arc, Curve }
+
+// On LinkRoute; the measured JSON does not write them.
+pub corner: f32,
+pub bend: Bend,
+```
+
+1. Resolution. Layout sets each route's `corner` and `bend` from the grammar's line kind for the link's `line` (section 13.2, `lines`), then the page's `corner` and `bend`, then `LINK_CORNER_DEFAULT_PX` and `arc`, each field on its own. A grammar thus sets a house style per line that a page cannot override.
+2. Clamp. At each interior point of the drawn polyline whose two legs are perpendicular, the radius is `min(corner, shorter leg / 2)`, so two bends on one leg never overlap. A radius below `GEOMETRY_EPSILON_PX`, a zero-length leg or two legs that are not perpendicular leave the corner square. The polyline is the one after the arrowhead trim of section 11.2, so a bend never reaches under an arrowhead and the arrowhead geometry is the same at every radius.
+3. Path. The bend replaces the corner point with `L` to the point `r` before the corner on the incoming leg, then for `arc` `A r r 0 0 s` to the point `r` past it on the outgoing leg, `s` 1 for a clockwise turn with y down; for `curve` `C` with both control points on the corner and the same end, a cubic whose curvature is zero where it meets each leg. With `corner: 0` the path is the section 11.2 path byte for byte.
+4. Iso. A patterned link (section 12.3 rule 7) is one stroked path, and its bends are the flat fillet on the floor projected: the radius is `corner` times the body zoom, an arc is `A rx ry 0 0 s` with `(rx, ry) = ellipse_radii(r)`, since a floor circle projects to an ellipse with its axes on the screen's and the projection keeps a turn's orientation, and a curve is the cubic of the projected points. A bend whose three points differ in height stays square. A solid link stays a tube per leg with a round joint at each corner, which is the same at every radius.
+
+Vet rule added to section 1.3:
+
+| Rule | Condition | Pointer | Message |
+|---|---|---|---|
+| `corner-out-of-range` | `corner` below 0, above 16 or not finite | `/corner` | `corner <n> is outside 0 to 16` |
+
+CUE: `#Page` gains `corner?: #Corner` and `bend?: #Bend`, and `#Grammar` gains `lines?: [...#LineKind]` with at most 4 entries whose lines are unique (`_linesAreUnique`); `cue/check.sh` rejects a page corner of 17 and of -1, an unknown bend, a line kind corner of 17 and a line listed twice. `stencil prime` lists both page fields with their defaults, and the links topic describes them.
 
 ## 12. Isometric projection
 
@@ -3207,7 +3244,7 @@ Vet rules added to section 1.3. `validate_page` takes the resolved grammar: `val
 
 `VetRule` gains one variant per row, with `as_str` as in the first column. Because the grammar a page names is known only after parsing, `parse_page(json_text)` becomes serde parsing alone, and callers run `validate_page(&page, &grammar)` once `page.grammar` is resolved; `pipeline::load_document` does both, and `grammar-unknown` is checked before resolution. Pipe ids join the id namespace of section 11.2, so `id-duplicate` covers them. `kind-parent-not-allowed` follows the section 1.3 walk bounds; it reads the nearest Box ancestor from `NodeEntry` parents.
 
-Document order (section 4.2): an Item gives `title`, `subtitle`, then each fact's `text`; a Page gives `title`, `kicker`, `lede`, `foot`, `width`, `canvas`, `grammar`, `theme`, `theme_overrides`, `projection`, `chrome`, `body`, `legend`, `links`. `text_fields` includes every fact entry, at `/…/facts/<i>/text`.
+Document order (section 4.2): an Item gives `title`, `subtitle`, then each fact's `text`; a Page gives `title`, `kicker`, `lede`, `foot`, `width`, `canvas`, `grammar`, `theme`, `theme_overrides`, `projection`, `chrome`, `corner`, `bend`, `body`, `legend`, `links`. `text_fields` includes every fact entry, at `/…/facts/<i>/text`.
 
 Layout. A Box reads everything layout needs from its container kind: the role (a `frame` lays out as the section 2.4 gcp zone with bar and body; every other role as the non-gcp zone), the border width, padding, radius and label style. An Item lays out as the section 2.5 Pcard. Neither reads the tint or the theme, so geometry depends on the document and the grammar alone. A drawn border width never changes a box: layout reserves the grammar's width whatever the theme draws, as the wire theme already does.
 
@@ -3424,6 +3461,20 @@ pub struct Remembered {
     pub reason: String,
 }
 
+// On Grammar, after items; section 11.6.
+#[serde(default, skip_serializing_if = "Vec::is_empty")]
+#[schemars(length(max = 4))]
+pub lines: Vec<LineKind>,
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct LineKind {
+    pub line: Line,
+    #[schemars(range(min = 0.0, max = 16.0))]
+    pub corner: Option<f32>,
+    pub bend: Option<Bend>,
+}
+
 /// The embedded built-in of that name, parsed and validated.
 pub fn builtin_grammar(name: &str) -> Option<Result<Grammar, GrammarError>>;
 /// serde_json parse followed by validate_grammar.
@@ -3434,12 +3485,14 @@ pub fn grammar_schema() -> schemars::Schema;
 impl Grammar {
     pub fn container(&self, kind: &str) -> Option<&ContainerKind>;
     pub fn item(&self, kind: &str) -> Option<&ItemKind>;
+    /// The line kind of section 11.6 for `line`, if the grammar lists one.
+    pub fn line(&self, line: Line) -> Option<&LineKind>;
 }
 ```
 
 `GrammarViolation` and `GrammarError` have the shape of the theme ones in section 13.4 (pointer into the grammar document, a `GrammarRule`, a message; `Json` and `Invalid` variants with an `origin` naming the file or built-in).
 
-Grammar rules, in `validate_grammar`, all reported in field order: container and item names are unique across both lists (`grammar-name-duplicate`); every parent is a container kind of the grammar or `page` (`grammar-parent-unknown`); at least one kind lists `page` (`grammar-no-top-level`); a `frame` kind has no tone and label `bar`, and every other kind has a tone and a label other than `bar` (`grammar-role-mismatch`); `default_tint` only on a tintable kind (`grammar-default-tint-untintable`); border width 0 exactly when the pattern is `none` (`grammar-border-mismatch`); an item kind with icons `none` has no products, and within one item kind each icon appears at most once (`grammar-icon-table`); `remembered` literals are distinct (`grammar-remembered-duplicate`). A grammar file that fails stops `vet`, `render`, `check` and `gallery` before layout, printed and mapped to exit codes exactly as a theme failure is (section 13.4 rule 5).
+Grammar rules, in `validate_grammar`, all reported in field order: container and item names are unique across both lists (`grammar-name-duplicate`); every parent is a container kind of the grammar or `page` (`grammar-parent-unknown`); at least one kind lists `page` (`grammar-no-top-level`); a `frame` kind has no tone and label `bar`, and every other kind has a tone and a label other than `bar` (`grammar-role-mismatch`); `default_tint` only on a tintable kind (`grammar-default-tint-untintable`); border width 0 exactly when the pattern is `none` (`grammar-border-mismatch`); an item kind with icons `none` has no products, and within one item kind each icon appears at most once (`grammar-icon-table`); `remembered` literals are distinct (`grammar-remembered-duplicate`); each line appears in `lines` at most once (`grammar-line-duplicate`) and its `corner` is 0 to 16 (`grammar-corner-out-of-range`). A grammar file that fails stops `vet`, `render`, `check` and `gallery` before layout, printed and mapped to exit codes exactly as a theme failure is (section 13.4 rule 5).
 
 What a grammar decides and what it does not:
 

@@ -9,8 +9,8 @@ use stencil_model::Projection;
 use stencil_model::pointer::NodePointer;
 use stencil_model::text::{TextMeasurer, TextMetrics, TextStyleName};
 use stencil_model::{
-    LINK_SEGMENTS_MAX, LINKS_MAX, Line, Link, Page, PagePoint, ROUTER_GRID_LINES_MAX, Side,
-    VetRule, Violation, body_nodes, line_tint,
+    Bend, Grammar, LINK_CORNER_DEFAULT_PX, LINK_SEGMENTS_MAX, LINKS_MAX, Line, Link, Page,
+    PagePoint, ROUTER_GRID_LINES_MAX, Side, VetRule, Violation, body_nodes, line_tint,
 };
 
 use crate::lanes::{LanesPlan, MessageRow};
@@ -49,6 +49,7 @@ pub(crate) struct Obstacle {
 /// of a Lanes node is not searched for: it runs straight across its row (section 13.6).
 pub(crate) fn route_links(
     page: &Page,
+    grammar: &Grammar,
     geometry: &PageGeometry,
     lanes_plan: &LanesPlan,
     measurer: &mut dyn TextMeasurer,
@@ -82,6 +83,7 @@ pub(crate) fn route_links(
         };
         let parts = tag_parts(page, link, &link_pointer, &points, measurer)?;
         let tag = parts.first().map(|part| part.bounds);
+        let (corner, bend) = link_bend(page, grammar, link.line);
         routes.push(LinkRoute {
             index,
             line: link.line,
@@ -92,9 +94,26 @@ pub(crate) fn route_links(
             tag,
             parts,
             status,
+            corner,
+            bend,
         });
     }
     Ok(routes)
+}
+
+/// The corner radius and bend of a link's line: the grammar's line kind first, then the
+/// page, then the defaults.
+fn link_bend(page: &Page, grammar: &Grammar, line: Line) -> (f32, Bend) {
+    let kind = grammar.line(line);
+    let corner = kind
+        .and_then(|kind| kind.corner)
+        .or(page.corner)
+        .unwrap_or(LINK_CORNER_DEFAULT_PX);
+    let bend = kind
+        .and_then(|kind| kind.bend)
+        .or(page.bend)
+        .unwrap_or_default();
+    (corner, bend)
 }
 
 /// The A* route of section 11.2, or the fallback L when there is none. Under iso an end

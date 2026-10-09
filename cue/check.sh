@@ -295,6 +295,9 @@ g7_cases=(
 	'grow-weight-negative|/halves share the column height/,/grow:/s/grow: \[1, 1\]/grow: [1, -1]/|.grow.1: invalid value -1'
 	'width-below-640|s/^\ttitle: /\twidth: 600\n&/|customer.width: invalid value 600'
 	'width-above-2560|s/^\ttitle: /\twidth: 2600\n&/|customer.width: invalid value 2600'
+	'corner-above-16|s/^\ttitle: /\tcorner: 17\n&/|customer.corner: invalid value 17'
+	'corner-negative|s/^\ttitle: /\tcorner: -1\n&/|customer.corner: invalid value -1'
+	'bend-unknown|s/^\ttitle: /\tbend: "spline"\n&/|customer.bend:|"spline"'
 	'solid-tint-2-pipe-between-metros|/sits level with metro i/,/grow:/s/grow: \[1, 1\]/grow: [1, 0, 1]/; /title: "On-prem router 2"/,/^\t\t\t\t\t},$/s/^\t\t\t\t\t},$/&\n\t\t\t\t\t{tag: "Pipe", dir: "h", line: "solid", tint: 2, label: "stray"},/|customer.body.0.children.0._pipeBesideZoneOfOtherTint.stray'
 	'empty-gutter-half|/halves share the column height/,/grow:/s/grow: \[1, 1\]/grow: [1, 1, 0]/; s/{tag: "Pipe", dir: "h", line: "solid", tint: 2, label: "VLAN 4"[^}]*},/&\n]}, {tag: "Col", children: [/|customer.body.0.children.1.children.2.children: invalid value []|list.MinItems(1)'
 	"text-above-400|s/title: \"Cloud Router A\"/title: \"$long_text\"/|customer.body.0.children.2.children.0.children.0.children.0.title: invalid value|strings.MaxRunes(400)"
@@ -326,6 +329,8 @@ g7_cases=(
 sequence_cases=(
 	'ordered-link-to-a-node-that-is-not-a-lane-head|s/label: "Job service"/id: "job-service", &/; s/to: "console", line: "solid", label: "submit job"/to: "job-service", line: "solid", label: "submit job"/|_orderedLinkNotBetweenLaneHeads."0"'
 	'two-ordered-links-with-one-order|s/label: "POST \/jobs", order: 2/label: "POST \/jobs", order: 1/|_linkOrderUsedTwice."1"'
+	'line-kind-corner-above-16|s/^figure: plain.#Page \& {/_house: plain.grammar \& {lines: [{line: "solid", corner: 17}]}\n&/|_house.lines.0.corner: invalid value 17'
+	'line-kind-listed-twice|s/^figure: plain.#Page \& {/_house: plain.grammar \& {lines: [{line: "dash", corner: 4}, {line: "dash", bend: "curve"}]}\n&/|_house._linesAreUnique'
 )
 cases=()
 for entry in "${g7_cases[@]}"; do
