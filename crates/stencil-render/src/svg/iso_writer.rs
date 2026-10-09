@@ -2,7 +2,9 @@
 //! geometry order, each node's label on its plane right after its solid, then links with
 //! their tags on the terrain.
 
-use stencil_layout::{BoxRect, LinkRoute, NodeGeometry, NodeTag, PageGeometry, Part, PartName};
+use stencil_layout::{
+    BoxRect, LinkRoute, NodeGeometry, NodeTag, PageGeometry, Part, PartName, fillet,
+};
 use stencil_model::pointer::NodePointer;
 use stencil_model::{
     Bend, LINKS_MAX, Line, Link, Node, NodeRef, Page, PipeDir, PipeForm, Projection, Shape, Theme,
@@ -14,7 +16,6 @@ use super::{
     close_groups_until_parent, escape_xml, frame_diagonal_box, group_open_tag, icon_chip_box,
     link_mismatch, part_mismatch, pipe_text_style_name, stroke_attributes, text_style_name,
 };
-use crate::fillet::fillet;
 use crate::iso::sprites;
 use crate::iso::tube::{
     self, BAND_HEAD_LENGTH_PX, CONE_LENGTH_PX, CONE_RADIUS_PX, FLANGE_LENGTH_PX,
@@ -1490,7 +1491,8 @@ fn iso_link_path(
                     format_number(end.y)
                 ));
             }
-            Bend::Curve => {
+            // Under iso a spline draws as a curve: the iso checks read the route leg by leg.
+            Bend::Curve | Bend::Spline => {
                 let at = screen(point.x, point.y, point.z);
                 let (corner_x, corner_y) = (format_number(at.x), format_number(at.y));
                 data.push(format!(

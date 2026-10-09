@@ -4,8 +4,8 @@ mod iso_writer;
 
 use std::collections::BTreeSet;
 use stencil_layout::{
-    BoxRect, ContainerLook, LinkRoute, NodeGeometry, PageGeometry, Part, PartName, TextAlign,
-    TextRun, container_label_style, fact_presentation,
+    BoxRect, ContainerLook, DrawnLink, LinkRoute, NodeGeometry, PageGeometry, Part, PartName,
+    PathPiece, TextAlign, TextRun, container_label_style, drawn_link, fact_presentation,
 };
 use stencil_model::grammar::Role;
 use stencil_model::pointer::NodePointer;
@@ -14,13 +14,12 @@ use stencil_model::text::{FontFamily, FontWeight, TextStyleName};
 use base64::Engine as _;
 use stencil_model::text::TextMeasurer;
 use stencil_model::{
-    Arrow, Bend, Canvas, Chrome, FactSource, IconName, LEGEND_ENTRIES_MAX, LINKS_MAX, LegendEntry,
-    Link, Node, NodeRef, NoteKind, Page, PagePoint, Pipe, PipeDir, PipeForm, Projection, Theme,
+    Arrow, Canvas, Chrome, FactSource, IconName, LEGEND_ENTRIES_MAX, LINKS_MAX, LegendEntry, Link,
+    Node, NodeRef, NoteKind, Page, PagePoint, Pipe, PipeDir, PipeForm, Projection, Theme,
     body_nodes,
 };
 use stencil_text::{CosmicTextMeasurer, bundled_font};
 
-use crate::fillet::fillet;
 use crate::icons::icon_data_uri;
 use crate::palette::{self, BoxPaint, DotStyle, LineStyle, LineUse, Palette, Stroke};
 use crate::{RenderError, SvgDocument, format_number};
@@ -119,11 +118,10 @@ pub fn render_svg(
     }
     // Links paint after every node, so zone fills never cover them (section 11.2).
     for route in geometry.links.iter().take(LINKS_MAX) {
-        let link = page
-            .links
-            .get(route.index)
-            .ok_or_else(|| link_mismatch(route))?;
-        writer.write_link(1, route, link)?;
+        if page.links.get(route.index).is_none() {
+            return Err(link_mismatch(route));
+        }
+        writer.write_link(1, geometry, route)?;
     }
     writer.line(0, "</svg>");
 
@@ -915,8 +913,8 @@ impl<'a> SvgWriter<'a> {
     fn write_link(
         &mut self,
         depth: usize,
+        geometry: &PageGeometry,
         route: &LinkRoute,
-        link: &Link,
     ) -> Result<(), RenderError> {
         let pointer = NodePointer::root().child("links").index(route.index);
         self.line(
@@ -928,28 +926,17 @@ impl<'a> SvgWriter<'a> {
             ),
         );
         let line_use = LineUse::new(route.line, route.tint);
-        let arrows = ArrowEnds::from_arrow(link.arrow);
-        let mut points = route.points.clone();
-        let start_arrow = if arrows.start {
-            trim_start(&mut points)
-        } else {
-            None
-        };
-        let end_arrow = if arrows.end {
-            trim_end(&mut points)
-        } else {
-            None
-        };
+        let drawn = drawn_link(geometry, route);
         let stroke = self.palette.wire_style(line_use).stroke;
         self.line(
             depth + 1,
             &format!(
                 r#"<path d="{}" fill="none"{} stroke-linejoin="round"/>"#,
-                link_path(&points, route.corner, route.bend),
+                link_path(&drawn),
                 stroke_attributes(stroke)
             ),
         );
-        for (base, tip) in [start_arrow, end_arrow].into_iter().flatten() {
+        for (base, tip) in [drawn.start_arrow, drawn.end_arrow].into_iter().flatten() {
             self.write_arrow_carrier(depth + 1, base, tip, line_use);
         }
         for part in &route.parts {
@@ -1370,117 +1357,36 @@ fn rounded_path(bounds: BoxRect, radii: [f32; 4]) -> String {
     )
 }
 
-/// `M x y L x y ...` through every point, each bend between perpendicular legs rounded
-/// by `corner` as `bend` says. The points are those after the arrowhead trim, so no bend
-/// reaches under an arrowhead.
-fn link_path(points: &[PagePoint], corner: f32, bend: Bend) -> String {
+/// `M x y` at the drawn start, then each piece: `L` for a straight, `A` for an arc, `C` for a
+/// curve with both control points on its corner, `Q` for a spline piece.
+fn link_path(drawn: &DrawnLink) -> String {
     let number = format_number;
-    let mut path = String::new();
-    for (index, point) in points.iter().enumerate() {
-        let neighbours = index
-            .checked_sub(1)
-            .and_then(|previous| points.get(previous))
-            .zip(points.get(index + 1));
-        let rounded = neighbours.and_then(|(previous, next)| {
-            fillet(
-                (previous.x, previous.y),
-                (point.x, point.y),
-                (next.x, next.y),
-                corner,
-            )
-        });
-        let Some(rounded) = rounded else {
-            let command = if index == 0 { "M" } else { " L" };
-            path.push_str(&format!(
-                "{command} {} {}",
-                number(point.x),
-                number(point.y)
-            ));
-            continue;
-        };
-        let (start, end) = (rounded.start, rounded.end);
-        path.push_str(&format!(" L {} {}", number(start.0), number(start.1)));
-        match bend {
-            Bend::Arc => path.push_str(&format!(
-                " A {} {} 0 0 {} {} {}",
-                number(rounded.radius),
-                number(rounded.radius),
-                u8::from(rounded.clockwise),
-                number(end.0),
-                number(end.1)
+    let mut path = format!("M {} {}", number(drawn.start.x), number(drawn.start.y));
+    for piece in drawn.legs.iter().flatten() {
+        let to = piece.to();
+        let (to_x, to_y) = (number(to.x), number(to.y));
+        match *piece {
+            PathPiece::Line(_) => path.push_str(&format!(" L {to_x} {to_y}")),
+            PathPiece::Arc {
+                radius, clockwise, ..
+            } => path.push_str(&format!(
+                " A {radius} {radius} 0 0 {} {to_x} {to_y}",
+                u8::from(clockwise),
+                radius = number(radius),
             )),
-            Bend::Curve => path.push_str(&format!(
-                " C {corner_x} {corner_y} {corner_x} {corner_y} {} {}",
-                number(end.0),
-                number(end.1),
-                corner_x = number(point.x),
-                corner_y = number(point.y),
+            PathPiece::Cubic { corner, .. } => path.push_str(&format!(
+                " C {x} {y} {x} {y} {to_x} {to_y}",
+                x = number(corner.x),
+                y = number(corner.y),
+            )),
+            PathPiece::Quad { corner, .. } => path.push_str(&format!(
+                " Q {} {} {to_x} {to_y}",
+                number(corner.x),
+                number(corner.y),
             )),
         }
     }
     path
-}
-
-/// Pulls the last point back along the last segment by the arrowhead length, or to the
-/// previous corner when the segment is shorter, so the stroke ends under the arrowhead's
-/// base. Returns the (base, tip) of the arrowhead, which points along the last segment.
-fn trim_end(points: &mut [PagePoint]) -> Option<(PagePoint, PagePoint)> {
-    let count = points.len();
-    let tip = *points.last()?;
-    let previous = *points.get(count.checked_sub(2)?)?;
-    let base = arrow_base(previous, tip);
-    if let Some(last) = points.last_mut() {
-        *last = base.stroke_end;
-    }
-    Some((base.marker_base, tip))
-}
-
-/// `trim_end` for the first point, with the arrowhead pointing back along the first segment.
-fn trim_start(points: &mut [PagePoint]) -> Option<(PagePoint, PagePoint)> {
-    let tip = *points.first()?;
-    let next = *points.get(1)?;
-    let base = arrow_base(next, tip);
-    if let Some(first) = points.first_mut() {
-        *first = base.stroke_end;
-    }
-    Some((base.marker_base, tip))
-}
-
-#[derive(Debug, Clone, Copy)]
-struct ArrowBase {
-    /// Where the stroke stops: the arrowhead base, or the segment's far end when the
-    /// segment is shorter than the arrowhead.
-    stroke_end: PagePoint,
-    /// A point one arrowhead length back from the tip along the segment's direction, which
-    /// orients the marker.
-    marker_base: PagePoint,
-}
-
-/// The arrowhead base on the segment from `from` to the tip `tip`.
-fn arrow_base(from: PagePoint, tip: PagePoint) -> ArrowBase {
-    let delta_x = tip.x - from.x;
-    let delta_y = tip.y - from.y;
-    let length = (delta_x * delta_x + delta_y * delta_y).sqrt();
-    if length <= f32::EPSILON {
-        return ArrowBase {
-            stroke_end: tip,
-            marker_base: from,
-        };
-    }
-    let unit_x = delta_x / length;
-    let unit_y = delta_y / length;
-    let marker_base = PagePoint {
-        x: tip.x - unit_x * ARROW_LENGTH_PX,
-        y: tip.y - unit_y * ARROW_LENGTH_PX,
-    };
-    let trimmed = ARROW_LENGTH_PX.min(length);
-    ArrowBase {
-        stroke_end: PagePoint {
-            x: tip.x - unit_x * trimmed,
-            y: tip.y - unit_y * trimmed,
-        },
-        marker_base,
-    }
 }
 
 /// The left `bounds.width` px of a rounded rectangle whose left corners have `radius`,
@@ -1619,43 +1525,42 @@ mod tests {
     }
 
     #[test]
-    fn a_short_end_segment_trims_to_its_corner_and_keeps_a_full_length_arrowhead() {
-        let mut points = vec![
-            PagePoint { x: 0.0, y: 0.0 },
-            PagePoint { x: 100.0, y: 0.0 },
-            PagePoint { x: 100.0, y: 6.0 },
-        ];
-        let (base, tip) = trim_end(&mut points).unwrap();
-        assert_eq!(tip, PagePoint { x: 100.0, y: 6.0 });
-        assert_eq!(base, PagePoint { x: 100.0, y: -4.0 });
-        assert_eq!(points[2], PagePoint { x: 100.0, y: 0.0 });
-
-        let mut long = vec![PagePoint { x: 0.0, y: 0.0 }, PagePoint { x: 50.0, y: 0.0 }];
-        let (base, tip) = trim_start(&mut long).unwrap();
-        assert_eq!(tip, PagePoint { x: 0.0, y: 0.0 });
-        assert_eq!(base, PagePoint { x: 10.0, y: 0.0 });
-        assert_eq!(long[0], base);
-    }
-
-    #[test]
-    fn two_bends_on_a_short_leg_each_take_half_of_it_and_corner_0_draws_the_polyline() {
-        let points = [
-            PagePoint { x: 0.0, y: 0.0 },
-            PagePoint { x: 100.0, y: 0.0 },
-            PagePoint { x: 100.0, y: 8.0 },
-            PagePoint { x: 200.0, y: 8.0 },
-        ];
+    fn each_piece_writes_its_path_command() {
+        let at = |x: f32, y: f32| PagePoint { x, y };
+        let drawn = DrawnLink {
+            start: at(0.0, 0.0),
+            legs: vec![
+                vec![
+                    PathPiece::Line(at(96.0, 0.0)),
+                    PathPiece::Arc {
+                        radius: 4.0,
+                        clockwise: true,
+                        corner: at(100.0, 0.0),
+                        to: at(100.0, 4.0),
+                    },
+                ],
+                vec![
+                    PathPiece::Line(at(100.0, 4.0)),
+                    PathPiece::Cubic {
+                        corner: at(100.0, 8.0),
+                        to: at(104.0, 8.0),
+                    },
+                ],
+                vec![
+                    PathPiece::Line(at(150.0, 8.0)),
+                    PathPiece::Quad {
+                        corner: at(200.0, 8.0),
+                        to: at(200.0, 30.5),
+                    },
+                ],
+                vec![PathPiece::Line(at(200.0, 53.0))],
+            ],
+            start_arrow: None,
+            end_arrow: None,
+        };
         assert_eq!(
-            link_path(&points, 6.0, Bend::Arc),
-            "M 0 0 L 96 0 A 4 4 0 0 1 100 4 L 100 4 A 4 4 0 0 0 104 8 L 200 8"
-        );
-        assert_eq!(
-            link_path(&points, 6.0, Bend::Curve),
-            "M 0 0 L 96 0 C 100 0 100 0 100 4 L 100 4 C 100 8 100 8 104 8 L 200 8"
-        );
-        assert_eq!(
-            link_path(&points, 0.0, Bend::Arc),
-            "M 0 0 L 100 0 L 100 8 L 200 8"
+            link_path(&drawn),
+            "M 0 0 L 96 0 A 4 4 0 0 1 100 4 L 100 4 C 100 8 100 8 104 8 L 150 8 Q 200 8 200 30.5 L 200 53"
         );
     }
 

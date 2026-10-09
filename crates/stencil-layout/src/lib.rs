@@ -6,6 +6,7 @@ pub mod styles;
 
 mod build;
 mod compute;
+mod drawn;
 mod lanes;
 mod pipe_ends;
 mod route;
@@ -15,10 +16,11 @@ use stencil_model::grammar::{BorderPattern, LabelStyle, Role, Tone};
 use stencil_model::pointer::NodePointer;
 use stencil_model::text::{MeasureError, TextMeasurer, TextMetrics, TextStyle};
 use stencil_model::{
-    Bend, Grammar, Line, Page, PagePoint, PipeForm, Violation, line_key, validate_page,
+    Arrow, Bend, Grammar, Line, Page, PagePoint, PipeForm, Violation, line_key, validate_page,
 };
 
 pub use build::{container_label_style, fact_presentation};
+pub use drawn::{DrawnLink, Fillet, PathPiece, drawn_link, fillet, push_flattened};
 pub use route::{
     OBSTACLE_CLEARANCE_PX, longest_segment_midpoint, longest_segment_point, reroute_link,
 };
@@ -180,6 +182,8 @@ pub struct LinkRoute {
     /// leg; 0 draws square corners. A drawing parameter: the measured JSON does not write it.
     pub corner: f32,
     pub bend: Bend,
+    /// The link's arrowheads, which shorten the drawn line at their ends.
+    pub arrow: Arrow,
 }
 
 impl LinkRoute {

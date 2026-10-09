@@ -2065,7 +2065,7 @@ Checks, in section 6 terms, examined counts included:
 | Check | Examined | Defect |
 |---|---|---|
 | `links-routed` | one per link | `status: Fallback` |
-| `links-avoid-boxes` | one per segment and obstacle pair | a segment crosses an obstacle box, or a tag overlaps a node box other than a container or an ancestor of an endpoint |
+| `links-avoid-boxes` | one per segment and obstacle pair | the drawn line along a segment, its bend included (section 11.6), crosses an obstacle box, or a tag overlaps a node box other than a container or an ancestor of an endpoint |
 
 Rendering: each route is a `<polyline>` (or `<path>` with `L` commands) in the wire color and line style of its kind, with an arrowhead as a filled triangle, 10 px long and 8 px wide, at each end the `arrow` value names, drawn with a `<marker>` per kind and theme. The tag is drawn exactly like a pipe tag. Links are drawn after every node, so they paint over zone fills and never under them. The measured JSON gains `links` with the routed points, tag box and status (section 5.4).
 
@@ -2153,7 +2153,7 @@ Tests: `stencil-model` vets each new rule with a failing fixture; `stencil-layou
 
 ### 11.6 Link corners
 
-A routed link rounds each bend between two perpendicular legs. The radius and the curve are drawing parameters: routing, every check and the measured JSON read the routed polyline and do not change with them.
+A routed link rounds each bend between two perpendicular legs, or draws its whole route as one smooth curve. The radius and the curve are drawing parameters: routing and the measured JSON do not change with them, and `links-avoid-boxes` reads the line as drawn.
 
 ```rust
 pub const LINK_CORNER_DEFAULT_PX: f32 = 6.0;
@@ -2168,17 +2168,35 @@ pub bend: Option<Bend>,
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema, Default)]
 #[serde(rename_all = "lowercase")]
-pub enum Bend { #[default] Arc, Curve }
+pub enum Bend { #[default] Arc, Curve, Spline }
 
 // On LinkRoute; the measured JSON does not write them.
 pub corner: f32,
 pub bend: Bend,
+pub arrow: Arrow,
+
+// stencil-layout: the drawn line, shared by the flat writer and links-avoid-boxes.
+pub enum PathPiece {
+    Line(PagePoint),
+    Arc { radius: f32, clockwise: bool, corner: PagePoint, to: PagePoint },
+    Cubic { corner: PagePoint, to: PagePoint },
+    Quad { corner: PagePoint, to: PagePoint },
+}
+pub struct DrawnLink {
+    pub start: PagePoint,
+    pub legs: Vec<Vec<PathPiece>>,
+    pub start_arrow: Option<(PagePoint, PagePoint)>,
+    pub end_arrow: Option<(PagePoint, PagePoint)>,
+}
+pub fn drawn_link(geometry: &PageGeometry, route: &LinkRoute) -> DrawnLink;
 ```
 
 1. Resolution. Layout sets each route's `corner` and `bend` from the grammar's line kind for the link's `line` (section 13.2, `lines`), then the page's `corner` and `bend`, then `LINK_CORNER_DEFAULT_PX` and `arc`, each field on its own. A grammar thus sets a house style per line that a page cannot override.
 2. Clamp. At each interior point of the drawn polyline whose two legs are perpendicular, the radius is `min(corner, shorter leg / 2)`, so two bends on one leg never overlap. A radius below `GEOMETRY_EPSILON_PX`, a zero-length leg or two legs that are not perpendicular leave the corner square. The polyline is the one after the arrowhead trim of section 11.2, so a bend never reaches under an arrowhead and the arrowhead geometry is the same at every radius.
 3. Path. The bend replaces the corner point with `L` to the point `r` before the corner on the incoming leg, then for `arc` `A r r 0 0 s` to the point `r` past it on the outgoing leg, `s` 1 for a clockwise turn with y down; for `curve` `C` with both control points on the corner and the same end, a cubic whose curvature is zero where it meets each leg. With `corner: 0` the path is the section 11.2 path byte for byte.
-4. Iso. A patterned link (section 12.3 rule 7) is one stroked path, and its bends are the flat fillet on the floor projected: the radius is `corner` times the body zoom, an arc is `A rx ry 0 0 s` with `(rx, ry) = ellipse_radii(r)`, since a floor circle projects to an ellipse with its axes on the screen's and the projection keeps a turn's orientation, and a curve is the cubic of the projected points. A bend whose three points differ in height stays square. A solid link stays a tube per leg with a round joint at each corner, which is the same at every radius.
+4. Spline. With `bend: spline` each bend between two legs that turn (any angle) is a `Q` from the middle of the incoming leg to the middle of the outgoing one, its control point on the corner, so consecutive pieces meet tangent at every leg middle and the line is one smooth curve. The first and last half legs stay straight, so the arrowheads are those of the polyline, and a tag, centered on a leg middle, sits on the curve. Leg middles are read on the trimmed polyline. A piece whose chords, together with the straight leading into it, enter an obstacle of the link (the section 11.2 obstacle set) falls back to the `curve` of rule 3 at that bend, at the link's `corner`; `corner: 0` makes that bend square.
+5. Check. `drawn_link` groups the pieces by route leg, each bend with its incoming leg. `links-avoid-boxes` reads each leg's pieces, a curve as 8 chords, from where the line stands at the leg's start, the first leg from the route's first point and the last to its last point, where the arrowhead covers what the stroke leaves out. An axis-aligned step is tested as a route segment is; a diagonal chord is clipped against the obstacle's interior. The examined count stays one per segment and obstacle pair.
+6. Iso. A patterned link (section 12.3 rule 7) is one stroked path, and its bends are the flat fillet on the floor projected: the radius is `corner` times the body zoom, an arc is `A rx ry 0 0 s` with `(rx, ry) = ellipse_radii(r)`, since a floor circle projects to an ellipse with its axes on the screen's and the projection keeps a turn's orientation, and a curve is the cubic of the projected points. A bend whose three points differ in height stays square. A solid link stays a tube per leg with a round joint at each corner, which is the same at every radius. `spline` draws as `curve` under iso: the iso checks read the route leg by leg (section 12.7), and a tube has no bent form.
 
 Vet rule added to section 1.3:
 
@@ -2186,7 +2204,7 @@ Vet rule added to section 1.3:
 |---|---|---|---|
 | `corner-out-of-range` | `corner` below 0, above 16 or not finite | `/corner` | `corner <n> is outside 0 to 16` |
 
-CUE: `#Page` gains `corner?: #Corner` and `bend?: #Bend`, and `#Grammar` gains `lines?: [...#LineKind]` with at most 4 entries whose lines are unique (`_linesAreUnique`); `cue/check.sh` rejects a page corner of 17 and of -1, an unknown bend, a line kind corner of 17 and a line listed twice. `stencil prime` lists both page fields with their defaults, and the links topic describes them.
+CUE: `#Page` gains `corner?: #Corner` and `bend?: #Bend`, and `#Grammar` gains `lines?: [...#LineKind]` with at most 4 entries whose lines are unique (`_linesAreUnique`); `cue/check.sh` rejects a page corner of 17 and of -1, an unknown bend (`zigzag`), a line kind corner of 17 and a line listed twice. `stencil prime` lists both page fields with their defaults, and the links topic describes them.
 
 ## 12. Isometric projection
 
