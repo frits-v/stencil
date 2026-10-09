@@ -9,8 +9,8 @@ its rules; a figure file writes one topology against a grammar's `#Page`.
 | File | Package | Contents |
 |---|---|---|
 | `cue.mod/module.cue` | | the module `github.com/frits-v/stencil/cue@v0`, language v0.17.1 |
-| `core.cue` | `stencil` | `#Page` and the core nodes: `Row`, `Col`, `Lanes`, `Box`, `Item`, `Fact`, `Note`, `Pipe`, `Tee`, `Text`, `Callout`, `Frame`, plus `#LegendEntry`, `#Link`, `#Line`, `#TintSlot` and `#FactEntry` |
-| `grammar.cue` | `stencil` | `#Grammar` and its parts, and `#GrammarNesting`, the kind and nesting rules every grammar shares |
+| `core.cue` | `stencil` | `#Page` and the core nodes: `Row`, `Col`, `Lanes`, `Box`, `Item`, `Fact`, `Note`, `Pipe`, `Tee`, `Text`, `Callout`, `Frame`, plus `#LegendEntry`, `#Link`, `#Line`, `#Bend`, `#Corner`, `#TintSlot` and `#FactEntry` |
+| `grammar.cue` | `stencil` | `#Grammar` and its parts (`#LineKind` among them), and `#GrammarNesting`, the kind and nesting rules every grammar shares |
 | `theme.cue` | `stencil` | `#Theme`, the closed theme definition every theme file vets against: `cue vet -c -d '#Theme' . <file>.json` |
 | `grammars/gcp.cue` | `gcp` | the Google Cloud grammar data and rules, and the gcp `#Page` |
 | `grammars/plain.cue` | `plain` | the domain-neutral grammar data and the plain `#Page` |
@@ -115,6 +115,9 @@ a hidden struct keyed by the offending item, so the error path names it.
 - Ordered links. A link with `order` joins two different heads of one Lanes node, a head being
   a direct child of it (`_orderedLinkNotBetweenLaneHeads.<link index>`), and no two messages of
   one Lanes node share an order (`_linkOrderUsedTwice.<order>`).
+- Link bends. `corner` on the page is 0 to 16 and `bend` is `arc` or `curve`. A grammar's
+  `lines` holds at most one entry per line (`_linesAreUnique`), each with an optional `corner`
+  and `bend` that win over the page's for links of that line.
 - Canvas. `canvas` is `"customer"` or `"internal"` and must be concrete, so each exported
   figure has exactly one.
 - Page and container fields. `width` is optional, 640 to 2560; the renderer defaults it to

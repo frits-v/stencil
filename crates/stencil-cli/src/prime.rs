@@ -7,10 +7,10 @@ use serde::Serialize;
 use serde_json::{Map, Value};
 use stencil_model::grammar::{BorderPattern, IconPack, LabelStyle, Role, Tone};
 use stencil_model::{
-    Arrow, BUILTIN_GRAMMARS, Chrome, FactSource, GAP_DEFAULT_PX, GRAMMAR_DEFAULT,
+    Arrow, BUILTIN_GRAMMARS, Bend, Chrome, FactSource, GAP_DEFAULT_PX, GRAMMAR_DEFAULT,
     GRAMMAR_REFERENCE_PATTERN, GROW_WEIGHT_MAX, Grammar, GrammarError, ID_PATTERN, Justify,
-    KIND_PATTERN, LANE_GAP_DEFAULT_PX, TEXT_SCALARS_MAX, THEME_DEFAULT, THEME_REFERENCE_PATTERN,
-    builtin_grammar,
+    KIND_PATTERN, LANE_GAP_DEFAULT_PX, LINK_CORNER_DEFAULT_PX, TEXT_SCALARS_MAX, THEME_DEFAULT,
+    THEME_REFERENCE_PATTERN, builtin_grammar,
 };
 
 const BASE_TEXT: &str = include_str!("../prime/base.md");
@@ -265,6 +265,7 @@ pub fn field_notes() -> Result<Vec<FieldNote>, PrimeError> {
     let justify = serialized_name("justify", Justify::Start)?;
     let pipe_arrow = serialized_name("pipe arrow", Arrow::None)?;
     let chrome = serialized_name("chrome", Chrome::default())?;
+    let bend = serialized_name("bend", Bend::default())?;
     let source = serialized_name("fact source", FactSource::default())?;
     let note = |object, field, note: String| FieldNote {
         object,
@@ -283,6 +284,8 @@ pub fn field_notes() -> Result<Vec<FieldNote>, PrimeError> {
             format!("={theme}; a built-in name or a .json path"),
         ),
         note("Page", "chrome", format!("={chrome}")),
+        note("Page", "corner", format!("={LINK_CORNER_DEFAULT_PX}")),
+        note("Page", "bend", format!("={bend}")),
         note("Pipe", "arrow", format!("={pipe_arrow}")),
         note("Tee", "arms", "dir h".to_string()),
         note("Fact", "source", format!("={source}")),
@@ -508,7 +511,7 @@ fn describe_property(
     match primary_type(property) {
         Some("string") => Ok(describe_string(property)),
         Some("integer") => Ok(describe_integer(property)),
-        Some("number") => Ok("number".to_string()),
+        Some("number") => Ok(describe_number(property)),
         Some("object") if property.get("additionalProperties") == Some(&Value::Bool(true)) => {
             Ok("object".to_string())
         }
@@ -582,6 +585,16 @@ fn describe_integer(property: &Value) -> String {
         (_, Some(high)) if Some(high) == format_maximum => "int".to_string(),
         (Some(low), Some(high)) => format!("{low}-{high}"),
         _ => "int".to_string(),
+    }
+}
+
+/// `low-high` when both bounds are set, else `number`.
+fn describe_number(property: &Value) -> String {
+    let minimum = property.get("minimum").and_then(Value::as_f64);
+    let maximum = property.get("maximum").and_then(Value::as_f64);
+    match (minimum, maximum) {
+        (Some(low), Some(high)) => format!("{low}-{high}"),
+        _ => "number".to_string(),
     }
 }
 

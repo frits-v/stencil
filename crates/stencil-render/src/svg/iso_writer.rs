@@ -5,7 +5,7 @@
 use stencil_layout::{BoxRect, LinkRoute, NodeGeometry, NodeTag, PageGeometry, Part, PartName};
 use stencil_model::pointer::NodePointer;
 use stencil_model::{
-    LINKS_MAX, Line, Link, Node, NodeRef, Page, PipeDir, PipeForm, Projection, Shape, Theme,
+    Bend, LINKS_MAX, Line, Link, Node, NodeRef, Page, PipeDir, PipeForm, Projection, Shape, Theme,
 };
 
 use super::DOT_RADIUS_PX;
@@ -14,6 +14,7 @@ use super::{
     close_groups_until_parent, escape_xml, frame_diagonal_box, group_open_tag, icon_chip_box,
     link_mismatch, part_mismatch, pipe_text_style_name, stroke_attributes, text_style_name,
 };
+use crate::fillet::fillet;
 use crate::iso::sprites;
 use crate::iso::tube::{
     self, BAND_HEAD_LENGTH_PX, CONE_LENGTH_PX, CONE_RADIUS_PX, FLANGE_LENGTH_PX,
@@ -1278,24 +1279,12 @@ impl<'a> SvgWriter<'a> {
             }
             TubeStyle::Hollow(_) => {
                 let stroke = self.palette.wire_style(line_use).stroke;
-                let data: Vec<String> = points
-                    .iter()
-                    .enumerate()
-                    .map(|(index, point)| {
-                        let screen = project_point(point.x, point.y, point.z + radius, offset);
-                        format!(
-                            "{} {} {}",
-                            if index == 0 { "M" } else { "L" },
-                            format_number(screen.x),
-                            format_number(screen.y)
-                        )
-                    })
-                    .collect();
+                let corner = route.corner * self.iso_zoom;
                 self.line(
                     depth + 1,
                     &format!(
                         r#"<path d="{}" fill="none"{} stroke-linejoin="round"/>"#,
-                        data.join(" "),
+                        iso_link_path(&points, (corner, route.bend), radius, offset),
                         stroke_attributes(stroke)
                     ),
                 );
@@ -1443,4 +1432,74 @@ fn surface_mismatch(node: &NodeGeometry) -> RenderError {
         expected: node.pointer.clone(),
         found: node.pointer.child("<surface>"),
     }
+}
+
+/// The patterned link path on screen, its axis `lift` above the floor points. A bend
+/// between perpendicular legs on one plane is the flat fillet projected: a floor circle is
+/// an ellipse of `ellipse_radii` with its axes on the screen's, and a cubic projects to the
+/// cubic of its projected points. The projection keeps the turn's orientation, so the
+/// sweep flag is the floor's.
+fn iso_link_path(
+    points: &[IsoPoint],
+    (corner, bend): (f32, Bend),
+    lift: f32,
+    offset: ScreenPoint,
+) -> String {
+    let screen = |x: f32, y: f32, z: f32| project_point(x, y, z + lift, offset);
+    let mut data: Vec<String> = Vec::with_capacity(points.len() * 2);
+    for (index, point) in points.iter().enumerate() {
+        let neighbours = index
+            .checked_sub(1)
+            .and_then(|previous| points.get(previous))
+            .zip(points.get(index + 1))
+            .filter(|(previous, next)| previous.z == point.z && next.z == point.z);
+        let rounded = neighbours.and_then(|(previous, next)| {
+            fillet(
+                (previous.x, previous.y),
+                (point.x, point.y),
+                (next.x, next.y),
+                corner,
+            )
+        });
+        let Some(rounded) = rounded else {
+            let at = screen(point.x, point.y, point.z);
+            let command = if index == 0 { "M" } else { "L" };
+            data.push(format!(
+                "{command} {} {}",
+                format_number(at.x),
+                format_number(at.y)
+            ));
+            continue;
+        };
+        let start = screen(rounded.start.0, rounded.start.1, point.z);
+        let end = screen(rounded.end.0, rounded.end.1, point.z);
+        data.push(format!(
+            "L {} {}",
+            format_number(start.x),
+            format_number(start.y)
+        ));
+        match bend {
+            Bend::Arc => {
+                let (radius_x, radius_y) = ellipse_radii(rounded.radius);
+                data.push(format!(
+                    "A {} {} 0 0 {} {} {}",
+                    format_number(radius_x),
+                    format_number(radius_y),
+                    u8::from(rounded.clockwise),
+                    format_number(end.x),
+                    format_number(end.y)
+                ));
+            }
+            Bend::Curve => {
+                let at = screen(point.x, point.y, point.z);
+                let (corner_x, corner_y) = (format_number(at.x), format_number(at.y));
+                data.push(format!(
+                    "C {corner_x} {corner_y} {corner_x} {corner_y} {} {}",
+                    format_number(end.x),
+                    format_number(end.y)
+                ));
+            }
+        }
+    }
+    data.join(" ")
 }

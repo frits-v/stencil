@@ -3,6 +3,17 @@
   "title": "Page",
   "type": "object",
   "properties": {
+    "bend": {
+      "description": "How a routed link draws its bends; absent is arc. A line kind's bend wins.",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Bend"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
     "body": {
       "type": "array",
       "items": {
@@ -16,6 +27,16 @@
     },
     "chrome": {
       "$ref": "#/$defs/Chrome"
+    },
+    "corner": {
+      "description": "The radius of every routed link's bends; absent is 6, 0 draws square corners. A line\nkind of the grammar that sets its own wins.",
+      "type": [
+        "number",
+        "null"
+      ],
+      "format": "float",
+      "maximum": 16.0,
+      "minimum": 0.0
     },
     "foot": {
       "type": [
@@ -114,6 +135,14 @@
       "enum": [
         "x",
         "y"
+      ]
+    },
+    "Bend": {
+      "description": "The curve a routed link takes through a bend: a quarter circle, or a cubic whose control\npoints both sit on the corner, which meets each leg with no jump in curvature.",
+      "type": "string",
+      "enum": [
+        "arc",
+        "curve"
       ]
     },
     "CalloutKind": {

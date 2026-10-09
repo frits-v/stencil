@@ -12,8 +12,8 @@ use crate::walk::{
 };
 use crate::{
     CHILDREN_MAX, DEPTH_MAX, FRAME_HEIGHT_MAX, FRAME_HEIGHT_MIN, GAP_MAX_PX, GROW_WEIGHT_MAX,
-    ID_PATTERN, LEGEND_ENTRIES_MAX, LINK_VIA_MAX, LINKS_MAX, NODES_MAX, PAGE_WIDTH_MAX,
-    PAGE_WIDTH_MIN, TEXT_BODY_LINES_MAX, TEXT_SCALARS_MAX,
+    ID_PATTERN, LEGEND_ENTRIES_MAX, LINK_CORNER_MAX_PX, LINK_VIA_MAX, LINKS_MAX, NODES_MAX,
+    PAGE_WIDTH_MAX, PAGE_WIDTH_MIN, TEXT_BODY_LINES_MAX, TEXT_SCALARS_MAX,
 };
 
 /// Horizontal padding of the page root on both sides (section 2.2): the canvas is
@@ -68,6 +68,7 @@ pub enum VetRule {
     LinkOrderOutsideLanes,
     LinkOrderDuplicate,
     LanesInIso,
+    CornerOutOfRange,
 }
 
 impl VetRule {
@@ -113,6 +114,7 @@ impl VetRule {
             VetRule::LinkOrderOutsideLanes => "link-order-outside-lanes",
             VetRule::LinkOrderDuplicate => "link-order-duplicate",
             VetRule::LanesInIso => "lanes-in-iso",
+            VetRule::CornerOutOfRange => "corner-out-of-range",
         }
     }
 }
@@ -127,6 +129,11 @@ impl Violations {
             message,
         });
     }
+}
+
+/// The bound of `corner` on a page and on a grammar's line kind.
+pub fn is_corner_in_range(corner: f32) -> bool {
+    corner.is_finite() && (0.0..=LINK_CORNER_MAX_PX).contains(&corner)
 }
 
 /// True when `reference` is a built-in grammar name or a string ending in `.json`, the
@@ -191,6 +198,16 @@ pub fn validate_page(page: &Page, grammar: &Grammar) -> Vec<Violation> {
             root.child("projection"),
             VetRule::LanesInIso,
             "a page with Lanes cannot be drawn in iso".to_string(),
+        );
+    }
+
+    if let Some(corner) = page.corner
+        && !is_corner_in_range(corner)
+    {
+        violations.push(
+            root.child("corner"),
+            VetRule::CornerOutOfRange,
+            format!("corner {corner} is outside 0 to {LINK_CORNER_MAX_PX}"),
         );
     }
 

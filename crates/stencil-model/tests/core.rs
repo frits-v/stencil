@@ -454,6 +454,40 @@ fn lanes_too_many_and_lanes_in_iso() {
     );
 }
 
+#[test]
+fn corner_parses_vets_from_0_to_16_and_is_not_serialized_when_absent() {
+    let page = page_with_body(vec![pipe(Line::Solid, Some(1), "p")]);
+    let written = serde_json::to_value(&page).unwrap();
+    assert!(written.get("corner").is_none() && written.get("bend").is_none());
+    let mut page = page;
+    for corner in [0.0, 6.0, 16.0] {
+        page.corner = Some(corner);
+        assert_eq!(rules(&page, &gcp()), vec![], "corner {corner}");
+    }
+    page.corner = Some(16.5);
+    assert_eq!(
+        rules(&page, &gcp()),
+        one(
+            "/corner",
+            "corner-out-of-range",
+            "corner 16.5 is outside 0 to 16"
+        )
+    );
+    page.corner = Some(-1.0);
+    assert_eq!(
+        rules(&page, &gcp()),
+        one(
+            "/corner",
+            "corner-out-of-range",
+            "corner -1 is outside 0 to 16"
+        )
+    );
+    page.corner = None;
+    page.bend = Some(stencil_model::Bend::Curve);
+    let written = serde_json::to_value(&page).unwrap();
+    assert_eq!(written["bend"], "curve");
+}
+
 /// Plain-grammar examples, each with Lanes or links, vetted under the grammar they name.
 const PLAIN_EXAMPLES: [(&str, &str); 5] = [
     ("sequence", include_str!("../../../examples/sequence.json")),

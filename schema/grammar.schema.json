@@ -19,6 +19,14 @@
       "maxItems": 32,
       "minItems": 1
     },
+    "lines": {
+      "description": "A house style per line: how routed links of that line draw their bends.",
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/LineKind"
+      },
+      "maxItems": 4
+    },
     "name": {
       "type": "string",
       "pattern": "^[a-z][a-z0-9-]{0,31}$"
@@ -39,6 +47,14 @@
     "remembered"
   ],
   "$defs": {
+    "Bend": {
+      "description": "The curve a routed link takes through a bend: a quarter circle, or a cubic whose control\npoints both sit on the corner, which meets each leg with no jump in curvature.",
+      "type": "string",
+      "enum": [
+        "arc",
+        "curve"
+      ]
+    },
     "BorderPattern": {
       "type": "string",
       "enum": [
@@ -281,6 +297,47 @@
           "type": "string",
           "const": "bar"
         }
+      ]
+    },
+    "Line": {
+      "type": "string",
+      "enum": [
+        "gray",
+        "solid",
+        "dash",
+        "deny"
+      ]
+    },
+    "LineKind": {
+      "description": "The bends of the routed links of one line, which win over the page's `corner` and\n`bend`.",
+      "type": "object",
+      "properties": {
+        "bend": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Bend"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "corner": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "format": "float",
+          "maximum": 16.0,
+          "minimum": 0.0
+        },
+        "line": {
+          "$ref": "#/$defs/Line"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "line"
       ]
     },
     "Remembered": {

@@ -39,6 +39,9 @@ pub const LANE_GAP_DEFAULT_PX: u16 = 32;
 /// Smallest height of one message row in a Lanes band (section 13.6).
 pub const LANE_ROW_MIN_PX: f32 = 36.0;
 pub const LINK_ORDER_MAX: u16 = 256;
+/// The radius of a routed link's bends when neither its line kind nor the page sets one.
+pub const LINK_CORNER_DEFAULT_PX: f32 = 6.0;
+pub const LINK_CORNER_MAX_PX: f32 = 16.0;
 /// A grammar kind name: a Box or Item `kind`.
 pub const KIND_PATTERN: &str = r"^[a-z][a-z0-9-]{0,31}$";
 pub const BUILTIN_GRAMMARS: [&str; 2] = ["gcp", "plain"];
@@ -152,6 +155,14 @@ pub struct Page {
     pub projection: Projection,
     #[serde(default, skip_serializing_if = "is_default_chrome")]
     pub chrome: Chrome,
+    /// The radius of every routed link's bends; absent is 6, 0 draws square corners. A line
+    /// kind of the grammar that sets its own wins.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(range(min = 0.0, max = 16.0))]
+    pub corner: Option<f32>,
+    /// How a routed link draws its bends; absent is arc. A line kind's bend wins.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub bend: Option<Bend>,
     #[schemars(length(min = 1, max = 256))]
     pub body: Vec<Node>,
     #[schemars(length(max = 16))]
@@ -631,6 +642,16 @@ pub enum Arrow {
     End,
     Start,
     Both,
+}
+
+/// The curve a routed link takes through a bend: a quarter circle, or a cubic whose control
+/// points both sit on the corner, which meets each leg with no jump in curvature.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema, Default)]
+#[serde(rename_all = "lowercase")]
+pub enum Bend {
+    #[default]
+    Arc,
+    Curve,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]

@@ -12,6 +12,10 @@ import (
 	name: #KindName
 	containers: [...#ContainerKind] & list.MinItems(1) & list.MaxItems(32)
 	items: [...#ItemKind] & list.MinItems(1) & list.MaxItems(32)
+	// A house style per line for routed links, winning over the page's.
+	lines?: [...#LineKind] & list.MaxItems(4)
+	_lineNames: [if lines != _|_ for l in lines {l.line}]
+	_linesAreUnique: _lineNames & list.UniqueItems()
 	// Literals no text field may carry, checked by remembered-constants.
 	remembered: [...#Remembered] & list.MaxItems(64)
 }
@@ -35,6 +39,12 @@ import (
 	label: "plain" | "accent" | "bar"
 	// Container kinds a Box of this kind may sit in, or "page" for the top level.
 	parents: [...#KindName] & list.MinItems(1)
+}
+
+#LineKind: {
+	line:    #Line
+	corner?: #Corner
+	bend?:   #Bend
 }
 
 #ItemKind: {

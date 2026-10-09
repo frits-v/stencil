@@ -180,7 +180,10 @@ fn a_link_draws_its_path_the_marker_at_the_arrow_end_and_its_tag() {
 
 #[test]
 fn arrow_start_marks_the_from_end_and_none_draws_no_marker() {
-    let rendered = common::render_document_with_fixed_metrics(linked_document("wire"));
+    // Square corners, so the drawn path is the route point for point.
+    let mut document = linked_document("wire");
+    document["corner"] = json!(0);
+    let rendered = common::render_document_with_fixed_metrics(document);
     let document = common::parse_xml(&rendered.svg.svg);
 
     let start_link = link_group(&document, 1);

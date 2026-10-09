@@ -14,7 +14,9 @@ mod theme_labels;
 use stencil_model::grammar::{BorderPattern, LabelStyle, Role, Tone};
 use stencil_model::pointer::NodePointer;
 use stencil_model::text::{MeasureError, TextMeasurer, TextMetrics, TextStyle};
-use stencil_model::{Grammar, Line, Page, PagePoint, PipeForm, Violation, line_key, validate_page};
+use stencil_model::{
+    Bend, Grammar, Line, Page, PagePoint, PipeForm, Violation, line_key, validate_page,
+};
 
 pub use build::{container_label_style, fact_presentation};
 pub use route::{
@@ -139,7 +141,7 @@ pub fn layout_page(
     compute::translate_pipe_slots(page, &mut geometry);
     pipe_ends::extend_pipe_ends(page, &mut geometry);
     lanes::add_lifelines(&mut geometry);
-    geometry.links = route::route_links(page, &geometry, &lanes_plan, measurer)?;
+    geometry.links = route::route_links(page, grammar, &geometry, &lanes_plan, measurer)?;
     Ok(geometry)
 }
 
@@ -174,6 +176,10 @@ pub struct LinkRoute {
     /// label.
     pub parts: Vec<Part>,
     pub status: RouteStatus,
+    /// The radius the writer rounds each bend with, before its clamp to half the shorter
+    /// leg; 0 draws square corners. A drawing parameter: the measured JSON does not write it.
+    pub corner: f32,
+    pub bend: Bend,
 }
 
 impl LinkRoute {

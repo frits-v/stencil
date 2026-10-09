@@ -41,6 +41,14 @@ import (
 #Arrow:      "none" | "end" | "start" | "both"
 #Side:       "top" | "right" | "bottom" | "left"
 
+// How a routed link draws a bend: a quarter circle, or a cubic with both control
+// points on the corner.
+#Bend: "arc" | "curve"
+
+// The radius of a routed link's bends, clamped by the renderer to half the
+// shorter leg; 0 draws square corners.
+#Corner: number & >=0 & <=16
+
 // The reading axis of a tag under iso (section 12.4).
 #Axis: "x" | "y"
 
@@ -105,7 +113,10 @@ import (
 	theme_overrides?: {...}
 	projection?: #Projection
 	chrome?:     #Chrome
-	body:        #Children
+	// Absent is 6 and arc; a line kind of the grammar that sets its own wins.
+	corner?: #Corner
+	bend?:   #Bend
+	body:    #Children
 	legend: [...#LegendEntry] & list.MaxItems(16)
 	links?: [...#Link] & list.MaxItems(256)
 
