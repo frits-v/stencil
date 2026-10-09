@@ -1,9 +1,14 @@
 [tools]
 cue = "0.17.1"
+opengrep = "1.30.2"
 
 [tasks.land]
 description = "Merge a pull request only after its CI workflow run passes: mise run land -- <number>"
 run = "scripts/land.sh {{arg(name=\"pr\")}}"
+
+[tasks.opengrep]
+description = "Test the opengrep rules against their fixtures, then scan the repository with them"
+run = "scripts/opengrep.sh"
 
 [tasks.gallery-docs]
 description = "Regenerate the README PNGs in docs/gallery from the examples"
