@@ -3,36 +3,46 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+permissions: {}
 concurrency:
   group: pages
   cancel-in-progress: false
+defaults:
+  run:
+    shell: bash
 jobs:
   build:
+    name: build the gallery site
     # GitHub Pages is unavailable while the repository is private on the free plan.
-    if: github.event.repository.visibility == 'public'
-    runs-on: ubuntu-latest
+    if: ${{ github.event.repository.visibility == 'public' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
     permissions:
-      contents: read
+      contents: read # checkout only
     steps:
-      - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@6bed0761d98439e5a578e2877258200ad565ba87 # stable
-      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2
-      - run: cargo build --release
-      - run: ./target/release/stencil gallery target/gallery
-      - uses: actions/configure-pages@v6
-      - uses: actions/upload-pages-artifact@v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: jdx/mise-action@2d8d4cafcbd33be2ea37d2b6f5ad595363d1f1ca # v5.1.1
+        with:
+          version: 2026.9.13
+      - run: mise run gallery
+      - uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
+      - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
         with:
           path: target/gallery
   deploy:
+    name: deploy the gallery site
     needs: build
-    if: github.event.repository.visibility == 'public'
-    runs-on: ubuntu-latest
+    if: ${{ github.event.repository.visibility == 'public' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
     permissions:
-      pages: write
-      id-token: write
+      pages: write # deploy-pages publishes the site
+      id-token: write # deploy-pages authenticates to Pages with OIDC
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - id: deployment
-        uses: actions/deploy-pages@v5
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1

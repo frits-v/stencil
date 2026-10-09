@@ -6,6 +6,7 @@ members = [
     "crates/stencil-layout",
     "crates/stencil-render",
     "crates/stencil-cli",
+    "xtask",
 ]
 
 [workspace.package]
