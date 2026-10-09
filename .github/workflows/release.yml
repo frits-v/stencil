@@ -2,15 +2,26 @@ name: release
 on:
   push:
     tags: ['v*']
-permissions:
-  contents: write
+permissions: {}
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+defaults:
+  run:
+    shell: bash
 jobs:
   gallery:
-    runs-on: ubuntu-latest
+    name: release with the gallery attached
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: write # gh release create
     steps:
-      - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@6bed0761d98439e5a578e2877258200ad565ba87 # stable
-      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      # No build cache: a published artifact is built from a clean target directory.
+      - run: rustup toolchain install stable --profile minimal && rustup default stable
       - run: cargo build --release
       - run: ./target/release/stencil gallery target/gallery
       - run: cd target && zip -r -X ../gallery.zip gallery
