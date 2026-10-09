@@ -191,7 +191,7 @@
     </g>
   </g>
   <g data-id="/links/1" data-tag="Link" data-kind="dash">
-    <path d="M 264.92 233.82 L 379.99 300.26 L 264.63 366.87 L 347.19 339.44 L 451.59 399.72" fill="none" stroke="#1A73E8" stroke-width="2.5" stroke-dasharray="6 5" stroke-linejoin="round"/>
+    <path d="M 264.92 233.82 L 374.79 297.26 A 7.35 4.24 0 0 1 374.79 303.26 L 264.63 366.87 L 347.19 339.44 L 451.59 399.72" fill="none" stroke="#1A73E8" stroke-width="2.5" stroke-dasharray="6 5" stroke-linejoin="round"/>
     <polygon points="464.58,407.22 455.08,393.67 448.1,405.76" fill="#1A73E8"/>
     <g data-plane="12" data-axis="x" transform="matrix(0.87 0.5 -0.87 0.5 503.99 93.25)">
       <rect x="185.93" y="316.83" width="75.02" height="33.78" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
