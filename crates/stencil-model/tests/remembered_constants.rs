@@ -258,10 +258,10 @@ fn examined_equals_text_field_count() {
 }
 
 #[test]
-fn g7_examines_36_fields_and_passes() {
+fn g7_examines_37_fields_and_passes() {
     let report = remembered_constants(&g7_page(), &common::gcp());
     assert_eq!(report.check, CheckName::RememberedConstants);
-    assert_eq!(report.examined, 36);
+    assert_eq!(report.examined, 37);
     assert!(report.passed());
 }
 

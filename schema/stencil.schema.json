@@ -3,6 +3,15 @@
   "title": "Page",
   "type": "object",
   "properties": {
+    "badge": {
+      "description": "The pill before the kicker, printed uppercase, for example Draft; absent draws none.",
+      "type": [
+        "string",
+        "null"
+      ],
+      "maxLength": 400,
+      "minLength": 1
+    },
     "bend": {
       "description": "How a routed link draws its bends; absent is arc. A line kind's bend wins.",
       "anyOf": [
@@ -21,9 +30,6 @@
       },
       "maxItems": 256,
       "minItems": 1
-    },
-    "canvas": {
-      "$ref": "#/$defs/Canvas"
     },
     "chrome": {
       "$ref": "#/$defs/Chrome"
@@ -115,7 +121,6 @@
     "title",
     "kicker",
     "lede",
-    "canvas",
     "body",
     "legend"
   ],
@@ -153,13 +158,6 @@
         "risk",
         "decision",
         "open"
-      ]
-    },
-    "Canvas": {
-      "type": "string",
-      "enum": [
-        "customer",
-        "internal"
       ]
     },
     "Chrome": {

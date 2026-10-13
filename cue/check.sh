@@ -243,7 +243,7 @@ cat >"$chrome_none" <<'JSON'
   "title": "Captioned",
   "kicker": "Captioned figure",
   "lede": "Drawn without chrome.",
-  "canvas": "internal",
+  "badge": "Internal",
   "grammar": "gcp",
   "chrome": "none",
   "body": [
@@ -286,7 +286,7 @@ g7_cases=(
 	'solid-tint-2-tee-arm-inside-region-tint-1|s/{tag: "Fact", text: "BGP peering[^}]*},/&\n{tag: "Tee", line: "solid", tint: 1, hub: "hub", arms: [{tag: "Pipe", dir: "h", line: "solid", tint: 1, label: "arm 1"}, {tag: "Pipe", dir: "h", line: "solid", tint: 2, label: "arm 2"}]},/|_otherTintInsideZone."solid-2"'
 	'solid-tint-2-tee-spine-inside-region-tint-1|s/{tag: "Fact", text: "BGP peering[^}]*},/&\n{tag: "Tee", line: "solid", tint: 2, hub: "hub", arms: [{tag: "Pipe", dir: "h", line: "solid", tint: 1, label: "arm 1"}, {tag: "Pipe", dir: "h", line: "solid", tint: 1, label: "arm 2"}]},/|_otherTintInsideZone."solid-2"'
 	'onprem-tint-2-inside-region-default-tint|/kind:  "region"/,/label: "Region A"/{/tint:  1/d;}; s/{tag: "Fact", text: "BGP peering[^}]*},/&\n{tag: "Box", kind: "optional", label: "standby", children: [{tag: "Box", kind: "onprem", tint: 2, label: "colo", children: [{tag: "Fact", text: "rack"}]}]},/|_otherTintInsideZone."onprem-2"|inside region tint 1'
-	'workshop-label-on-customer-canvas|s/canvas: "internal"$/canvas: "customer"/|internal._workshop'
+	'workshop-label-on-customer-canvas|s/_audience: "internal"$/_audience: "customer"/|internal._workshop'
 	'grow-length-mismatch|s/grow: \[0, 0, 1\]/grow: [0, 1]/|customer.body.0._growLengthMatchesChildren'
 	'grow-weight-above-100|/halves share the column height/,/grow:/s/grow: \[1, 1\]/grow: [1, 101]/|.grow.1: invalid value 101'
 	'justify-unknown|s/justify: "center"/justify: "middle"/|customer.body.0.children.1.children.0.justify:|"middle"'

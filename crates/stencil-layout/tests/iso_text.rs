@@ -23,7 +23,7 @@ fn page(body: Value, iso: bool) -> stencil_model::Page {
         "kicker": "Kicker",
         "lede": "Lede",
         "width": 640,
-        "canvas": "customer",
+        "badge": "Customer",
         "body": body,
         "legend": []
     });

@@ -596,7 +596,7 @@ fn several_faults_are_all_reported_in_document_order() {
     // Keys are written kicker before title and legend before body; document order is the
     // struct declaration order, so /title still comes first.
     let json_text = r#"{
-        "canvas": "internal",
+        "badge": "Internal",
         "legend": [ { "line": "solid", "tint": 1, "text": "request path" } ],
         "kicker": "Kicker ",
         "body": [

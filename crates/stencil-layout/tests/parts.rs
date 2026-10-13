@@ -14,7 +14,7 @@ fn every_tag_geometry() -> PageGeometry {
         "kicker": "Parts",
         "lede": "One of each.",
         "foot": "Foot text",
-        "canvas": "customer",
+        "badge": "Customer",
         "body": [
             {
                 "tag": "Row",

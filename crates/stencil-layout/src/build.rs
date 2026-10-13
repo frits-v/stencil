@@ -6,10 +6,10 @@ use stencil_model::pointer::NodePointer;
 use stencil_model::products::item_shape;
 use stencil_model::text::{TextStyle, TextStyleName};
 use stencil_model::{
-    Arrow, BoxNode, Callout, Canvas, Chrome, DEPTH_MAX, Fact, FactSource, Frame, GAP_DEFAULT_PX,
-    Grammar, Item, Justify, LANE_GAP_DEFAULT_PX, Lanes, LegendEntry, ListKind, Node, Note,
-    NoteKind, Page, Pipe, PipeDir, PipeForm, Projection, Shape, Tee, TeeArm, Text, VetRule,
-    Violation, box_key, box_tint, legend_label, line_key, line_tint,
+    Arrow, BoxNode, Callout, Chrome, DEPTH_MAX, Fact, FactSource, Frame, GAP_DEFAULT_PX, Grammar,
+    Item, Justify, LANE_GAP_DEFAULT_PX, Lanes, LegendEntry, ListKind, Node, Note, NoteKind, Page,
+    Pipe, PipeDir, PipeForm, Projection, Shape, Tee, TeeArm, Text, VetRule, Violation, box_key,
+    box_tint, legend_label, line_key, line_tint,
 };
 use taffy::prelude::{
     AlignItems, AlignSelf, Dimension, Display, FlexDirection, FlexWrap, JustifyContent,
@@ -112,7 +112,6 @@ pub(crate) fn build_page(
         tree: TaffyTree::new(),
         records: Vec::new(),
         text_leaves: Vec::new(),
-        canvas: page.canvas,
         grammar,
         lanes_plan,
         iso: page.projection == Projection::Iso,
@@ -131,7 +130,6 @@ struct Builder<'page> {
     tree: LayoutTree,
     records: Vec<NodeRecord>,
     text_leaves: Vec<TextLeaf>,
-    canvas: Canvas,
     grammar: &'page Grammar,
     lanes_plan: &'page LanesPlan,
     /// True under iso: every zone label reserves the floor its placard needs.
@@ -325,13 +323,6 @@ fn note_style(kind: NoteKind) -> TextStyleName {
     }
 }
 
-fn canvas_badge_text(canvas: Canvas) -> &'static str {
-    match canvas {
-        Canvas::Customer => "Customer",
-        Canvas::Internal => "Internal",
-    }
-}
-
 struct TextSpec<'a> {
     text: &'a str,
     style_name: TextStyleName,
@@ -439,7 +430,7 @@ impl Builder<'_> {
         self.text_leaves.push(TextLeaf {
             text,
             style: text_style_for(spec.style_name, self.iso),
-            color: text_color(spec.style_name, self.canvas, spec.line),
+            color: text_color(spec.style_name, spec.line),
             align: spec.align,
             axis,
             min_line_px,
@@ -550,22 +541,39 @@ impl Builder<'_> {
             ..flex_row(AlignItems::CENTER)
         };
         let kicker = self.container(style, root, &pointer)?;
-        let badge_style = Style {
-            padding: sides(2.0, 7.0, 2.0, 7.0),
-            ..flex_column(AlignItems::STRETCH)
+        let badge_parts = match &page.badge {
+            Some(text) => {
+                let badge_style = Style {
+                    padding: sides(2.0, 7.0, 2.0, 7.0),
+                    ..flex_column(AlignItems::STRETCH)
+                };
+                let badge = self.container(badge_style, kicker, &pointer)?;
+                let (badge_text, badge_leaf) = self.text_leaf(
+                    base_style(),
+                    Some(badge),
+                    TextSpec {
+                        text,
+                        style_name: TextStyleName::Badge,
+                        line: None,
+                        align: TextAlign::Start,
+                        source: NodePointer::root().child("badge"),
+                    },
+                )?;
+                vec![
+                    PartRecord {
+                        name: PartName::Badge,
+                        taffy_node: badge,
+                        text_leaf: None,
+                    },
+                    PartRecord {
+                        name: PartName::BadgeText,
+                        taffy_node: badge_text,
+                        text_leaf: Some(badge_leaf),
+                    },
+                ]
+            }
+            None => Vec::new(),
         };
-        let badge = self.container(badge_style, kicker, &pointer)?;
-        let (badge_text, badge_leaf) = self.text_leaf(
-            base_style(),
-            Some(badge),
-            TextSpec {
-                text: canvas_badge_text(page.canvas),
-                style_name: TextStyleName::Badge,
-                line: None,
-                align: TextAlign::Start,
-                source: NodePointer::root().child("canvas"),
-            },
-        )?;
         let kicker_text_style = Style {
             flex_grow: 1.0,
             flex_basis: length(0.0),
@@ -583,23 +591,12 @@ impl Builder<'_> {
             },
         )?;
         let mut record = Self::record(pointer, NodeTag::Kicker, None, Some(root_index), kicker);
-        record.parts = vec![
-            PartRecord {
-                name: PartName::Badge,
-                taffy_node: badge,
-                text_leaf: None,
-            },
-            PartRecord {
-                name: PartName::BadgeText,
-                taffy_node: badge_text,
-                text_leaf: Some(badge_leaf),
-            },
-            PartRecord {
-                name: PartName::Text,
-                taffy_node: kicker_text,
-                text_leaf: Some(kicker_leaf),
-            },
-        ];
+        record.parts = badge_parts;
+        record.parts.push(PartRecord {
+            name: PartName::Text,
+            taffy_node: kicker_text,
+            text_leaf: Some(kicker_leaf),
+        });
         self.push_record(record);
         Ok(())
     }

@@ -23,7 +23,7 @@ fn linked_page(body: Value, links: Value) -> Value {
         "kicker": "Kicker",
         "lede": "Lede",
         "width": 640,
-        "canvas": "customer",
+        "badge": "Customer",
         "body": body,
         "legend": [{ "line": "solid", "tint": 1, "text": "request path" }],
         "links": links

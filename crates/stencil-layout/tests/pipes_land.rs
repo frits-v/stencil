@@ -189,7 +189,7 @@ fn a_vertical_pipe_is_examined_against_the_col_neighbors_above_and_below() {
 fn an_iso_pipe_end_reaches_the_solid_inside_a_col_and_a_short_end_is_a_defect() {
     let page = page_from(json!({
         "title": "Title", "kicker": "Kicker", "lede": "Lede", "width": 1100,
-        "canvas": "customer", "projection": "iso", "legend": [],
+        "badge": "Customer", "projection": "iso", "legend": [],
         "body": [{ "tag": "Row", "gap": 32, "children": [
             { "tag": "Box", "kind": "onprem", "label": "Site", "children": [
                 { "tag": "Item", "kind": "product", "id": "edge", "title": "Edge" } ] },
@@ -247,7 +247,7 @@ fn an_iso_pipe_end_that_lands_on_a_zone_of_devices_without_a_target_is_a_defect(
         }
         json!({
             "title": "Title", "kicker": "Kicker", "lede": "Lede", "width": 1100,
-            "canvas": "customer", "projection": "iso", "legend": [],
+            "badge": "Customer", "projection": "iso", "legend": [],
             "body": [{ "tag": "Row", "gap": 32, "children": [
                 { "tag": "Box", "kind": "onprem", "label": "Site", "children": [
                     { "tag": "Item", "kind": "product", "id": "e", "title": "Edge" } ] },

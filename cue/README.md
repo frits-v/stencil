@@ -48,7 +48,7 @@ stencil render out/g7-customer.json --out-dir out
 your own exports the field its file binds the page to, for example `-e topology` for
 `topology: gcp.#Page & {...}`.
 
-`-c` reports each non-concrete field by path (for example a figure with no `canvas`); without
+`-c` reports each non-concrete field by path (for example a figure with no `title`); without
 it, vet only says that some instances are incomplete. `stencil render` writes `<stem>.svg`,
 `<stem>.png` and `<stem>.measured.json` in `--out-dir`.
 
@@ -122,8 +122,8 @@ a hidden struct keyed by the offending item, so the error path names it.
 - Link bends. `corner` on the page is 0 to 16 and `bend` is `arc`, `curve` or `spline`. A grammar's
   `lines` holds at most one entry per line (`_linesAreUnique`), each with an optional `corner`
   and `bend` that win over the page's for links of that line.
-- Canvas. `canvas` is `"customer"` or `"internal"` and must be concrete, so each exported
-  figure has exactly one.
+- Badge. `badge` is an optional text field, the pill before the kicker; a page without one
+  draws none.
 - Page and container fields. `width` is optional, 640 to 2560; the renderer defaults it to
   1280, so the export omits it unless a figure sets it. On a `Row` or `Col`, `gap` is 0 to 64,
   `justify` is `start`, `center`, `end` or `space-between`, and `grow` carries one weight from
@@ -177,12 +177,14 @@ _nesting: stencil.#GrammarNesting & {#grammar: grammar}
 
 ## Two canvases
 
-`customer` is concrete except for two kinds of slot: `canvas` defaults to `"customer"`, and the
-hidden `_workshop` labels default to empty strings and are concatenated onto box labels and the
-failover pipe. `internal: customer & {canvas: "internal", _workshop: {...}}` fills the slots.
-Because everything else is concrete, the internal canvas can add labels but any change to a
-pipe, item or legend entry is a unification conflict. While `canvas` is `"customer"`, every
-`_workshop` label must be empty, so workshop text cannot reach the customer canvas.
+g7 draws two canvases from one source. `customer` is concrete except for two kinds of slot: the
+hidden `_audience` defaults to `"customer"` and sets the badge, and the hidden `_workshop`
+labels default to empty strings and are concatenated onto box labels and the failover pipe.
+`internal: customer & {_audience: "internal", _workshop: {...}}` fills the slots. Because
+everything else is concrete, the internal canvas can add labels but any change to a pipe, item
+or legend entry is a unification conflict. While `_audience` is `"customer"`, every `_workshop`
+label must be empty, so workshop text cannot reach the customer canvas. The pattern is g7's own:
+a figure with one audience sets `badge`, or leaves it out.
 
 ## Limits
 

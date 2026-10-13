@@ -1,9 +1,9 @@
 #![allow(dead_code, clippy::expect_used)]
 
 use stencil_model::{
-    Arrow, BoxNode, Callout, CalloutKind, Canvas, Chrome, Col, FRAME_HEIGHT_DEFAULT, Fact,
-    FactSource, Frame, Grammar, Item, LegendEntry, Line, Link, ListKind, Node, Page, Pipe, PipeDir,
-    Row, Tee, TeeArm, Text, builtin_grammar,
+    Arrow, BoxNode, Callout, CalloutKind, Chrome, Col, FRAME_HEIGHT_DEFAULT, Fact, FactSource,
+    Frame, Grammar, Item, LegendEntry, Line, Link, ListKind, Node, Page, Pipe, PipeDir, Row, Tee,
+    TeeArm, Text, builtin_grammar,
 };
 
 pub const G7_JSON: &str = include_str!("../../../../examples/g7.json");
@@ -126,7 +126,7 @@ pub fn page_with_body(body: Vec<Node>) -> Page {
         lede: "Lede".to_string(),
         foot: None,
         width: 1280,
-        canvas: Canvas::Customer,
+        badge: None,
         grammar: None,
         theme: None,
         theme_overrides: None,

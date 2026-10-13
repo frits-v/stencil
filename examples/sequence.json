@@ -2,7 +2,7 @@
   "title": "A batch job from submission to completion",
   "kicker": "Request flow · job service",
   "lede": "An operator submits a job in the console. The API queues it and answers at once; a worker pulls the job, reports progress and acknowledges it once the result is stored. A cancel that arrives while the job runs is refused.",
-  "canvas": "internal",
+  "badge": "Internal",
   "grammar": "plain",
   "body": [
     {

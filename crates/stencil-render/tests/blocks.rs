@@ -112,7 +112,7 @@ fn text_blocks_draw_box_heading_lines_and_markers() {
             assert!(close(number(*bullet, "cy"), marker.y + marker.height / 2.0));
             assert_eq!(
                 bullet.attribute("fill"),
-                Some(palette.list_bullet(stencil_model::Canvas::Customer)),
+                Some(palette.list_bullet()),
                 "{name}"
             );
         }

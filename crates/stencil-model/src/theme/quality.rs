@@ -297,12 +297,8 @@ fn text_rows(theme: &Theme, rows: &mut Rows) {
     );
     rows.text(("ask.ink", &theme.ask.ink), ("ask.fill", &theme.ask.fill));
     rows.text(
-        ("badge.customer.ink", &theme.badge.customer.ink),
-        ("badge.customer.fill", &theme.badge.customer.fill),
-    );
-    rows.text(
-        ("badge.internal.ink", &theme.badge.internal.ink),
-        ("badge.internal.fill", &theme.badge.internal.fill),
+        ("badge.ink", &theme.badge.ink),
+        ("badge.fill", &theme.badge.fill),
     );
     rows.text(
         ("frame.bar_ink", &theme.frame.bar_ink),

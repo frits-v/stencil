@@ -31,7 +31,7 @@ Rules CUE adds beyond stencil vet, under the gcp grammar:
 
 In the g7 view (cue/figures/g7.cue), gutter pipe p leaves item p of the left column; a tint 1 pipe leaves a tint 1 onprem item and lands in the tint 1 region, tint 2 pairs the same way; the gutter has one pipe per item and one half per on-prem Box (_leavesCardInItsMetro, _onePipePerCard, _oneHalfPerMetro, _halfBesideItsMetro).
 
-Two canvases from one source, as cue/figures/g7.cue does with its fields customer and internal: the first page field is concrete except canvas and some hidden labels, and the second is the first & {canvas: "internal", <labels>}. Any change to a pipe, item or legend entry is a unification conflict, so internal text cannot reach the customer canvas.
+Two versions from one source, as cue/figures/g7.cue does with its fields customer and internal: the first page field is concrete except a hidden audience, which sets its badge, and some hidden labels; the second is the first & {_audience: "internal", <labels>}. Any change to a pipe, item or legend entry is a unification conflict, so internal text cannot reach the customer version.
 
 When one node fails, the per-page sets built from it come up empty, so a single error can also report every legend key as unused. The first error on a body path is the cause.
 

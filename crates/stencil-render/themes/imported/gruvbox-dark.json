@@ -9,14 +9,8 @@
   },
   "kicker": "#458588",
   "badge": {
-    "customer": {
-      "fill": "#2D3939",
-      "ink": "#F9F5D7"
-    },
-    "internal": {
-      "fill": "#413239",
-      "ink": "#F9F5D7"
-    }
+    "fill": "#2D3939",
+    "ink": "#F9F5D7"
   },
   "card": {
     "fill": "#4C4642",

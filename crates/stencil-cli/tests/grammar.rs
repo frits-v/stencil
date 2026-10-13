@@ -59,7 +59,7 @@ fn page(grammar: &str, item_kind: &str) -> Value {
         "title": "Grammar figure",
         "kicker": "Test",
         "lede": "One item and one hop.",
-        "canvas": "internal",
+        "badge": "Internal",
         "grammar": grammar,
         "body": [
             { "tag": "Item", "kind": item_kind, "title": "API", "subtitle": "Cloud Run" },
@@ -129,7 +129,7 @@ fn a_grammar_path_resolves_against_the_document_directory() {
     assert!(
         outcome
             .stdout
-            .contains("check remembered-constants: examined 7 text fields, 0 defects"),
+            .contains("check remembered-constants: examined 8 text fields, 0 defects"),
         "{}",
         outcome.stdout
     );
@@ -226,7 +226,7 @@ fn an_absent_grammar_is_gcp() {
     assert!(
         outcome
             .stdout
-            .contains("check remembered-constants: examined 7 text fields, 0 defects")
+            .contains("check remembered-constants: examined 8 text fields, 0 defects")
     );
 }
 

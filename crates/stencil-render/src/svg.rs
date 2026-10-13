@@ -14,9 +14,8 @@ use stencil_model::text::{FontFamily, FontWeight, TextStyleName};
 use base64::Engine as _;
 use stencil_model::text::TextMeasurer;
 use stencil_model::{
-    Arrow, Canvas, Chrome, FactSource, IconName, LEGEND_ENTRIES_MAX, LINKS_MAX, LegendEntry, Link,
-    Node, NodeRef, NoteKind, Page, PagePoint, Pipe, PipeDir, PipeForm, Projection, Theme,
-    body_nodes,
+    Arrow, Chrome, FactSource, IconName, LEGEND_ENTRIES_MAX, LINKS_MAX, LegendEntry, Link, Node,
+    NodeRef, NoteKind, Page, PagePoint, Pipe, PipeDir, PipeForm, Projection, Theme, body_nodes,
 };
 use stencil_text::{CosmicTextMeasurer, bundled_font};
 
@@ -77,7 +76,7 @@ pub fn render_svg(
         return iso_writer::render_iso(page, theme, geometry, &expected);
     }
 
-    let mut writer = SvgWriter::new(page.canvas, Palette::new(theme, Projection::Flat));
+    let mut writer = SvgWriter::new(Palette::new(theme, Projection::Flat));
     let mut relabeler = Relabeler::default();
     let width = format_number(geometry.canvas.width);
     let height = format_number(geometry.canvas.height);
@@ -406,19 +405,17 @@ struct SvgWriter<'a> {
     text_elements: usize,
     /// The family and weight of every `<text>` written, each once.
     font_faces: Vec<(FontFamily, FontWeight)>,
-    canvas: Canvas,
     palette: Palette<'a>,
     /// Section 12.2 rule 7: the zoom of an iso scene, which tube radii follow; 1 in flat.
     iso_zoom: f32,
 }
 
 impl<'a> SvgWriter<'a> {
-    fn new(canvas: Canvas, palette: Palette<'a>) -> Self {
+    fn new(palette: Palette<'a>) -> Self {
         SvgWriter {
             output: String::new(),
             text_elements: 0,
             font_faces: Vec::new(),
-            canvas,
             palette,
             iso_zoom: 1.0,
         }
@@ -486,11 +483,9 @@ impl<'a> SvgWriter<'a> {
         }
         let style_name = text_style_name(document_node, node.container, part.name)
             .ok_or_else(|| part_mismatch(node, part))?;
-        Ok(self.palette.text_ink(
-            style_name,
-            self.canvas,
-            context.line.map(|line_use| line_use.line),
-        ))
+        Ok(self
+            .palette
+            .text_ink(style_name, context.line.map(|line_use| line_use.line)))
     }
 
     /// Draws the box of the node itself, below its parts, and returns what the parts need.
@@ -692,7 +687,7 @@ impl<'a> SvgWriter<'a> {
             // The solid draws the footprint under iso; it has no flat drawing.
             PartName::Footprint => {}
             PartName::Badge => {
-                let badge_paint = self.palette.badge(self.canvas);
+                let badge_paint = self.palette.badge();
                 self.write_box(depth, bounds, BADGE_RADIUS_PX, badge_paint);
             }
             PartName::Bar => {
@@ -789,7 +784,7 @@ impl<'a> SvgWriter<'a> {
                 self.write_rect(depth, bounds, FRAME_CHIP_RADIUS_PX, Some(fill), None);
             }
             PartName::Marker if part.text.is_none() => {
-                let fill = self.palette.list_bullet(self.canvas);
+                let fill = self.palette.list_bullet();
                 self.line(
                     depth,
                     &format!(
@@ -948,9 +943,7 @@ impl<'a> SvgWriter<'a> {
                 (PartName::TagLabel | PartName::TagSub, Some(run)) => {
                     let style_name =
                         pipe_text_style_name(part.name).ok_or_else(|| link_mismatch(route))?;
-                    let fill = self
-                        .palette
-                        .text_ink(style_name, self.canvas, Some(route.line));
+                    let fill = self.palette.text_ink(style_name, Some(route.line));
                     self.write_text_run(depth + 1, &pointer, part.bounds, run, fill)?;
                 }
                 _ => return Err(link_mismatch(route)),

@@ -7,11 +7,13 @@ import (
 )
 
 // The customer canvas. It is written open on exactly the slots the internal
-// canvas fills: the canvas value (a default) and the workshop labels (empty
-// defaults, concatenated onto box labels). Everything else is concrete, so a
-// canvas derived by unification can add labels but cannot change a pipe.
+// canvas fills: the audience (a default, which sets the badge) and the
+// workshop labels (empty defaults, concatenated onto box labels). Everything
+// else is concrete, so a canvas derived by unification can add labels but
+// cannot change a pipe.
 customer: gcp.#Page & {
-	canvas:  *"customer" | "internal"
+	_audience: *"customer" | "internal"
+	badge: [if _audience == "customer" {"Customer"}, "Internal"][0]
 	grammar: "gcp"
 
 	_workshop: {
@@ -23,7 +25,7 @@ customer: gcp.#Page & {
 		failover: *"" | string
 	}
 	// Workshop labels stay off the customer canvas.
-	if canvas == "customer" {
+	if _audience == "customer" {
 		_workshop: [string]: ""
 	}
 
@@ -145,7 +147,7 @@ customer: gcp.#Page & {
 // The internal canvas: the same pipes, plus workshop labels. The values are
 // instructions naming where each label comes from, not the labels themselves.
 internal: customer & {
-	canvas: "internal"
+	_audience: "internal"
 	_workshop: {
 		metro1:   " · colo from the workshop"
 		metro2:   " · colo from the workshop"

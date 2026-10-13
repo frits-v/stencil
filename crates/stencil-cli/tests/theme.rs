@@ -293,7 +293,7 @@ fn theme_check_prints_every_row_and_exits_by_the_failures() {
     let center = run_stencil(&["theme", "check", "center"]);
     assert_eq!(center.code, ExitCode::Defects);
     let lines: Vec<&str> = center.stdout.lines().collect();
-    assert_eq!(lines.len(), 224);
+    assert_eq!(lines.len(), 223);
     assert_eq!(
         lines[0],
         "row contrast ink.primary on page: 16.10, at least 4.50, passed"
@@ -303,8 +303,8 @@ fn theme_check_prints_every_row_and_exits_by_the_failures() {
         &"row separation wires deuteranopia: 13.16 between pink and green, at least 12.00, passed"
     ));
     assert_eq!(
-        lines[223],
-        "stencil theme check center: 223 rows, 222 passed, 1 failed"
+        lines[222],
+        "stencil theme check center: 222 rows, 221 passed, 1 failed"
     );
 
     let paper = run_stencil(&["theme", "check", "paper"]);
@@ -312,7 +312,7 @@ fn theme_check_prints_every_row_and_exits_by_the_failures() {
     assert!(
         paper
             .stdout
-            .ends_with("stencil theme check paper: 223 rows, 223 passed, 0 failed\n")
+            .ends_with("stencil theme check paper: 222 rows, 222 passed, 0 failed\n")
     );
 
     let wire = run_stencil(&["theme", "check", "wire"]);
@@ -330,7 +330,7 @@ fn theme_check_prints_every_row_and_exits_by_the_failures() {
     );
     assert!(
         wire.stdout.ends_with(
-            "stencil theme check wire: 223 rows, 215 passed, 0 failed, 8 not applicable\n"
+            "stencil theme check wire: 222 rows, 214 passed, 0 failed, 8 not applicable\n"
         )
     );
 

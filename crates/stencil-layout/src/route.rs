@@ -1308,7 +1308,7 @@ fn tag_run(
     Ok(TextRun {
         text: text.to_string(),
         style,
-        color: text_color(style_name, page.canvas, Some(line)),
+        color: text_color(style_name, Some(line)),
         align: TextAlign::Center,
         metrics,
     })

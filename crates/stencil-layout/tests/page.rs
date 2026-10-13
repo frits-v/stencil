@@ -68,7 +68,7 @@ fn long_kicker_wraps_inside_the_kicker() {
         "kicker": long_kicker,
         "lede": "Lede",
         "width": 640,
-        "canvas": "internal",
+        "badge": "Internal",
         "body": one_pipe_body(),
         "legend": []
     }));
@@ -102,12 +102,12 @@ fn badge_names_the_canvas_uppercased() {
 }
 
 #[test]
-fn internal_canvas_badge_reads_internal_in_purple() {
+fn a_badge_prints_its_own_text_uppercase() {
     let page = page_from(json!({
         "title": "Title",
         "kicker": "Kicker",
         "lede": "Lede",
-        "canvas": "internal",
+        "badge": "Design review",
         "body": one_pipe_body(),
         "legend": []
     }));
@@ -116,8 +116,41 @@ fn internal_canvas_badge_reads_internal_in_purple() {
         .text
         .clone()
         .unwrap();
-    assert_eq!(run.text, "INTERNAL");
-    assert_eq!(run.color, "#7B1FA2");
+    assert_eq!(run.text, "DESIGN REVIEW");
+    assert_eq!(run.color, "#174EA6");
+}
+
+#[test]
+fn without_a_badge_the_kicker_starts_where_the_badge_did() {
+    let document = |badge: Option<&str>| {
+        let mut document = json!({
+            "title": "Title",
+            "kicker": "Kicker",
+            "lede": "Lede",
+            "body": one_pipe_body(),
+            "legend": []
+        });
+        if let Some(badge) = badge {
+            document["badge"] = json!(badge);
+        }
+        document
+    };
+    let badged = layout(&page_from(document(Some("Draft"))));
+    let plain = layout(&page_from(document(None)));
+    let kicker = node(&plain, "/kicker");
+    assert!(kicker.part(PartName::Badge).is_none());
+    assert!(kicker.part(PartName::BadgeText).is_none());
+    let badge = part(node(&badged, "/kicker"), PartName::Badge);
+    assert_close(
+        part(kicker, PartName::Text).bounds.x,
+        badge.bounds.x,
+        "kicker text x without a badge",
+    );
+    assert_close(
+        kicker.bounds.y,
+        node(&badged, "/kicker").bounds.y,
+        "kicker row y",
+    );
 }
 
 #[test]

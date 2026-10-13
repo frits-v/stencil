@@ -65,9 +65,9 @@ import "list"
 	}
 	kicker: #Color
 	badge: {
-		customer: #Swatch
-		internal: #Swatch
-		border?:  #Stroke
+		fill:    #Color
+		ink:     #Color
+		border?: #Stroke
 	}
 	card: {
 		fill:   #Color

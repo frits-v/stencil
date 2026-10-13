@@ -82,7 +82,7 @@ fn a_box_records_its_key_tint_and_container_look() {
 #[test]
 fn plain_kinds_take_the_plain_grammar_padding_and_border() {
     let page = page_from(json!({
-        "title": "Plain", "kicker": "Kicker", "lede": "Lede", "canvas": "internal",
+        "title": "Plain", "kicker": "Kicker", "lede": "Lede", "badge": "Internal",
         "grammar": "plain",
         "body": [
             { "tag": "Box", "kind": "boundary", "label": "Trust edge", "children": [
@@ -179,7 +179,7 @@ fn a_fact_node_takes_the_style_and_prefix_of_its_source() {
 fn chrome_none_page() -> Value {
     json!({
         "title": "Captioned", "kicker": "Kicker", "lede": "Lede", "foot": "Foot",
-        "canvas": "customer", "chrome": "none",
+        "badge": "Customer", "chrome": "none",
         "body": [{ "tag": "Pipe", "dir": "h", "line": "solid", "label": "hop" }],
         "legend": [{ "line": "solid", "text": "request path" }]
     })
@@ -242,7 +242,7 @@ fn lanes_lay_their_heads_out_as_equal_columns_32_apart() {
 fn lanes_with_messages() -> Value {
     json!({
         "title": "Title", "kicker": "Kicker", "lede": "Lede",
-        "canvas": "internal", "grammar": "plain",
+        "badge": "Internal", "grammar": "plain",
         "body": [{ "tag": "Lanes", "children": [
             { "tag": "Item", "id": "a", "kind": "person", "title": "Client" },
             { "tag": "Item", "id": "b", "kind": "service", "title": "A much longer service name" },

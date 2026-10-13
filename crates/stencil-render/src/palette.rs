@@ -8,8 +8,7 @@ use stencil_model::grammar::{BorderPattern, Role};
 use stencil_model::text::TextStyleName;
 use stencil_model::theme::{SolidEdges, ThemeStroke, Tint, solid_dot};
 use stencil_model::{
-    CalloutKind, Canvas, Line, Projection, Theme, drawn_legend_label, legend_label, line_key,
-    line_tint,
+    CalloutKind, Line, Projection, Theme, drawn_legend_label, legend_label, line_key, line_tint,
 };
 
 pub use stencil_model::theme::{DotStyle, LinePattern as LineStyle};
@@ -269,15 +268,11 @@ impl<'a> Palette<'a> {
         }
     }
 
-    /// The canvas badge on the page kicker.
-    pub fn badge(self, canvas: Canvas) -> BoxPaint<'a> {
+    /// The badge before the page kicker.
+    pub fn badge(self) -> BoxPaint<'a> {
         let badge = &self.theme.badge;
-        let swatch = match canvas {
-            Canvas::Customer => &badge.customer,
-            Canvas::Internal => &badge.internal,
-        };
         BoxPaint {
-            fill: swatch.fill.as_str(),
+            fill: badge.fill.as_str(),
             border: badge.border.as_ref().map(Stroke::of),
         }
     }
@@ -415,8 +410,8 @@ impl<'a> Palette<'a> {
     }
 
     /// The dot of a bulleted Text line, in the body ink.
-    pub fn list_bullet(self, canvas: Canvas) -> &'a str {
-        self.text_ink(TextStyleName::BlockBody, canvas, None)
+    pub fn list_bullet(self) -> &'a str {
+        self.text_ink(TextStyleName::BlockBody, None)
     }
 
     /// Fill of the flat rounded square under every icon (section 11.1); None draws none.
@@ -424,15 +419,12 @@ impl<'a> Palette<'a> {
         self.theme.icon_chip.as_ref().map(|chip| chip.as_str())
     }
 
-    /// Text color of a style. `canvas` decides `badge`; `line` is the line of the Pipe, Tee
+    /// Text color of a style. `line` is the line of the Pipe, Tee
     /// or Link a `tag_label` run belongs to. A Box label takes `container_label_ink`.
-    pub fn text_ink(self, name: TextStyleName, canvas: Canvas, line: Option<Line>) -> &'a str {
+    pub fn text_ink(self, name: TextStyleName, line: Option<Line>) -> &'a str {
         let theme = self.theme;
         let color = match name {
-            TextStyleName::Badge => match canvas {
-                Canvas::Customer => &theme.badge.customer.ink,
-                Canvas::Internal => &theme.badge.internal.ink,
-            },
+            TextStyleName::Badge => &theme.badge.ink,
             TextStyleName::Kicker => &theme.kicker,
             TextStyleName::Title | TextStyleName::CardFunction | TextStyleName::BlockBody => {
                 &theme.ink.primary

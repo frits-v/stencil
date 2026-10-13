@@ -1,8 +1,8 @@
 //! Text colors of section 2.9, keyed by `TextStyleName`. The style values themselves are
 //! `stencil_model::text::TEXT_STYLES`.
 
+use stencil_model::Line;
 use stencil_model::text::{TextStyle, TextStyleName};
-use stencil_model::{Canvas, Line};
 
 use crate::{ISO_FRAME_LABEL_SCALE, ISO_TYPE_SCALE, ISO_ZONE_LABEL_SCALE};
 
@@ -12,19 +12,15 @@ pub const TEXT_BLUE: &str = "#1A73E8";
 pub const TEXT_WHITE: &str = "#FFFFFF";
 pub const TEXT_AMBER: &str = "#B06000";
 pub const TEXT_DENY: &str = "#C5221F";
-pub const BADGE_TEXT_CUSTOMER: &str = "#174EA6";
-pub const BADGE_TEXT_INTERNAL: &str = "#7B1FA2";
-pub const BADGE_FILL_CUSTOMER: &str = "#E8F0FE";
-pub const BADGE_FILL_INTERNAL: &str = "#F3E5F5";
+pub const BADGE_TEXT: &str = "#174EA6";
+/// Background of the badge before the page kicker.
+pub const BADGE_FILL: &str = "#E8F0FE";
 
-/// Text color of a style. `canvas` decides `badge`; `line` is the line of the Pipe, Tee or
-/// Link a `tag_label` run belongs to, and `deny` turns it red. Other styles ignore both.
-pub fn text_color(name: TextStyleName, canvas: Canvas, line: Option<Line>) -> &'static str {
+/// Text color of a style. `line` is the line of the Pipe, Tee or Link a `tag_label` run
+/// belongs to, and `deny` turns it red. Other styles ignore it.
+pub fn text_color(name: TextStyleName, line: Option<Line>) -> &'static str {
     match name {
-        TextStyleName::Badge => match canvas {
-            Canvas::Customer => BADGE_TEXT_CUSTOMER,
-            Canvas::Internal => BADGE_TEXT_INTERNAL,
-        },
+        TextStyleName::Badge => BADGE_TEXT,
         TextStyleName::Kicker => TEXT_BLUE,
         TextStyleName::Title
         | TextStyleName::CardFunction
@@ -44,14 +40,6 @@ pub fn text_color(name: TextStyleName, canvas: Canvas, line: Option<Line>) -> &'
         | TextStyleName::NoteLegend
         | TextStyleName::LegendText
         | TextStyleName::Foot => TEXT_MUTED,
-    }
-}
-
-/// Background of the canvas badge on the page kicker.
-pub fn badge_fill(canvas: Canvas) -> &'static str {
-    match canvas {
-        Canvas::Customer => BADGE_FILL_CUSTOMER,
-        Canvas::Internal => BADGE_FILL_INTERNAL,
     }
 }
 
@@ -96,20 +84,6 @@ mod tests {
     use stencil_model::text::TEXT_STYLES;
 
     #[test]
-    fn badge_color_follows_canvas() {
-        assert_eq!(
-            text_color(TextStyleName::Badge, Canvas::Customer, None),
-            "#174EA6"
-        );
-        assert_eq!(
-            text_color(TextStyleName::Badge, Canvas::Internal, None),
-            "#7B1FA2"
-        );
-        assert_eq!(badge_fill(Canvas::Customer), "#E8F0FE");
-        assert_eq!(badge_fill(Canvas::Internal), "#F3E5F5");
-    }
-
-    #[test]
     fn tag_label_is_red_only_for_deny() {
         for line in Line::ALL {
             let expected = if line == Line::Deny {
@@ -117,10 +91,7 @@ mod tests {
             } else {
                 "#202124"
             };
-            assert_eq!(
-                text_color(TextStyleName::TagLabel, Canvas::Customer, Some(line)),
-                expected
-            );
+            assert_eq!(text_color(TextStyleName::TagLabel, Some(line)), expected);
         }
     }
 
@@ -148,11 +119,7 @@ mod tests {
         ];
         for (named, (name, color)) in TEXT_STYLES.iter().zip(expected) {
             assert_eq!(named.name.as_str(), name);
-            assert_eq!(
-                text_color(named.name, Canvas::Customer, None),
-                color,
-                "{name}"
-            );
+            assert_eq!(text_color(named.name, None), color, "{name}");
         }
     }
 }

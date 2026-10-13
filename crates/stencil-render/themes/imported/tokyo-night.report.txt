@@ -12,8 +12,7 @@ row contrast tag.sub_ink on tag.fill: 5.76, at least 4.50, passed
 row contrast deny.tag_ink on tag.fill: 8.38, at least 4.50, passed
 row contrast fact.ink on fact.fill: 8.52, at least 4.50, passed
 row contrast ask.ink on ask.fill: 8.65, at least 4.50, passed
-row contrast badge.customer.ink on badge.customer.fill: 8.37, at least 4.50, passed
-row contrast badge.internal.ink on badge.internal.fill: 8.40, at least 4.50, passed
+row contrast badge.ink on badge.fill: 8.37, at least 4.50, passed
 row contrast frame.bar_ink on frame.bar_fill: 8.11, at least 4.50, passed
 row contrast ink.zone_label on frame.body_fill: 8.52, at least 4.50, passed
 row contrast ink.zone_label on tones.neutral.fill: 7.11, at least 4.50, passed
@@ -221,4 +220,4 @@ row separation fills normal: 1.35 between blue and yellow, at least 8.00, FAILED
 row separation fills deuteranopia: 1.43 between blue and yellow, at least 5.00, FAILED
 row separation fills protanopia: 0.36 between blue and orange, at least 5.00, FAILED
 row separation fills tritanopia: 0.80 between blue and yellow, at least 5.00, FAILED
-stencil theme check tokyo-night: 223 rows, 206 passed, 17 failed
+stencil theme check tokyo-night: 222 rows, 205 passed, 17 failed

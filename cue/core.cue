@@ -30,7 +30,6 @@ import (
 // the Rust model.
 #Children: [...#Node] & list.MinItems(1) & list.MaxItems(256)
 
-#Canvas:     "customer" | "internal"
 #Line:       "gray" | "solid" | "dash" | "deny"
 #TintSlot:   int & >=1 & <=8
 #FactSource: "doc" | "built" | "ask"
@@ -100,12 +99,13 @@ import (
 }
 
 #Page: {
-	title:    #Text
-	kicker:   #Text
-	lede:     #Text
-	foot?:    #Text
-	width?:   int & >=640 & <=2560
-	canvas:   #Canvas
+	title:  #Text
+	kicker: #Text
+	lede:   #Text
+	foot?:  #Text
+	width?: int & >=640 & <=2560
+	// The pill before the kicker, printed uppercase; absent draws none.
+	badge?:   #Text
 	grammar?: #GrammarReference
 	theme?:   #ThemeReference
 	// A partial theme merged onto the chosen one. Open here: the Rust loader

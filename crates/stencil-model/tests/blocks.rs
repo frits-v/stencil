@@ -41,7 +41,7 @@ fn page_with(node: Node) -> Page {
 
 fn page_json(body: serde_json::Value) -> String {
     serde_json::json!({
-        "title": "t", "kicker": "k", "lede": "l", "canvas": "internal",
+        "title": "t", "kicker": "k", "lede": "l", "badge": "Internal",
         "body": body, "legend": []
     })
     .to_string()

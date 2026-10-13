@@ -150,17 +150,17 @@
             }
           ]
         },
-        "customer": {
-          "$ref": "#/$defs/Swatch"
+        "fill": {
+          "$ref": "#/$defs/Color"
         },
-        "internal": {
-          "$ref": "#/$defs/Swatch"
+        "ink": {
+          "$ref": "#/$defs/Color"
         }
       },
       "additionalProperties": false,
       "required": [
-        "customer",
-        "internal"
+        "fill",
+        "ink"
       ]
     },
     "BlockShadow": {

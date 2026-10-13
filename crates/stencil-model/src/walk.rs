@@ -154,6 +154,12 @@ pub(crate) fn push_page_head_text_fields<'a>(page: &'a Page, fields: &mut Vec<Te
             text: foot,
         });
     }
+    if let Some(badge) = &page.badge {
+        fields.push(TextField {
+            pointer: root.child("badge"),
+            text: badge,
+        });
+    }
 }
 
 /// The first LEGEND_ENTRIES_MAX + 1 legend texts: one past the limit is enough for vet to

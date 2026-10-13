@@ -2,7 +2,7 @@
   "title": "Who reports to whom across three divisions",
   "kicker": "Organization chart · Northwind Labs",
   "lede": "Each division head reports to the chief executive. Teams sit inside their division, each led by the person on its left. The head of operations also answers, on a dotted line, to the head of product for the support roadmap.",
-  "canvas": "internal",
+  "badge": "Internal",
   "grammar": "plain",
   "body": [
     {

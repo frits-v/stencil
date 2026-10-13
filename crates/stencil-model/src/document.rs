@@ -139,7 +139,10 @@ pub struct Page {
     #[serde(default = "page_width_default")]
     #[schemars(range(min = 640, max = 2560))]
     pub width: u32,
-    pub canvas: Canvas,
+    /// The pill before the kicker, printed uppercase, for example Draft; absent draws none.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(length(min = 1, max = 400))]
+    pub badge: Option<String>,
     /// A built-in grammar name or a path ending in `.json`; absent means gcp.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[schemars(regex(pattern = GRAMMAR_REFERENCE_PATTERN))]
@@ -170,13 +173,6 @@ pub struct Page {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[schemars(length(max = 256))]
     pub links: Vec<Link>,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
-#[serde(rename_all = "lowercase")]
-pub enum Canvas {
-    Customer,
-    Internal,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema, Default)]
