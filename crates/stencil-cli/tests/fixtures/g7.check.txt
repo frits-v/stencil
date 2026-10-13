@@ -1,7 +1,7 @@
 check child-inside-container: examined 33 relations, 0 defects
 check siblings-do-not-overlap: examined 32 pairs, 0 defects
 check text-fits-box: examined 40 text runs, 0 defects
-check remembered-constants: examined 36 text fields, 0 defects
+check remembered-constants: examined 37 text fields, 0 defects
 check legend-consistency: examined 8 relations, 0 defects
 check links-routed: examined 0 links, not applicable: page has no links
 check links-avoid-boxes: examined 0 pairs, not applicable: page has no links
