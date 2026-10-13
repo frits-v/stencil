@@ -9,14 +9,8 @@
   },
   "kicker": "#222222",
   "badge": {
-    "customer": {
-      "fill": "#FFFFFF",
-      "ink": "#222222"
-    },
-    "internal": {
-      "fill": "#FFFFFF",
-      "ink": "#222222"
-    },
+    "fill": "#FFFFFF",
+    "ink": "#222222",
     "border": {
       "color": "#222222",
       "width": 1.25,

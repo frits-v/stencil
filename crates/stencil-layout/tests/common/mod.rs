@@ -24,7 +24,7 @@ pub fn page_with_body(width: u32, body: Value) -> Page {
         "kicker": "Kicker",
         "lede": "Lede",
         "width": width,
-        "canvas": "customer",
+        "badge": "Customer",
         "body": body,
         "legend": []
     }))

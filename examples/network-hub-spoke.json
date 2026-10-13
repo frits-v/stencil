@@ -4,7 +4,7 @@
   "lede": "Two metros land four VLAN attachments on two Cloud Routers in the transit hub. Spokes attach through Network Connectivity Center. Tiers sit in their own subnets with no public IPs; ingress enters through one load balancer with Cloud Armor and IAP in front.",
   "foot": "Illustrative topology · hop facts are placeholders, not looked-up values",
   "width": 1440,
-  "canvas": "customer",
+  "badge": "Customer",
   "grammar": "gcp",
   "body": [
     {

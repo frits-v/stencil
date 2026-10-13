@@ -343,7 +343,7 @@ pub fn base16_theme(
             ink: higher_contrast(primary, page, fill),
         }
     });
-    let [slot_1, slot_2, _, slot_4, _, slot_6, _, _] = slots;
+    let [slot_1, _, _, slot_4, _, slot_6, _, _] = slots;
     let swatch = |slot: Slot| Swatch {
         fill: slot.fill.color(),
         ink: slot.ink.color(),
@@ -407,8 +407,8 @@ pub fn base16_theme(
         },
         kicker: blue.color(),
         badge: BadgeRole {
-            customer: swatch(slot_1),
-            internal: swatch(slot_2),
+            fill: slot_1.fill.color(),
+            ink: slot_1.ink.color(),
             border: None,
         },
         card: CardRole {

@@ -80,7 +80,7 @@ fn minimal_page(body: Value, legend: Value) -> Value {
         "title": "Minimal figure",
         "kicker": "Test",
         "lede": "One row.",
-        "canvas": "internal",
+        "badge": "Internal",
         "body": body,
         "legend": legend,
     })
@@ -93,7 +93,7 @@ fn vet_g7_passes_the_three_model_checks() {
     assert_eq!(
         outcome.stdout_lines(),
         vec![
-            "check remembered-constants: examined 36 text fields, 0 defects",
+            "check remembered-constants: examined 37 text fields, 0 defects",
             "check legend-consistency: examined 8 relations, 0 defects",
             "check icon-matches-product: examined 6 items, 0 defects",
             "stencil vet: 0 violations, 3 checks, 3 passed, 0 failed",
@@ -117,7 +117,7 @@ fn vet_reports_a_remembered_constant_in_a_pipe_sub() {
     let lines = outcome.stdout_lines();
     assert_eq!(
         lines[0],
-        "check remembered-constants: examined 36 text fields, 1 defect"
+        "check remembered-constants: examined 37 text fields, 1 defect"
     );
     assert!(
         lines[1].starts_with(
@@ -700,7 +700,7 @@ fn check_g7_passes_seven_checks_and_skips_the_link_iso_and_print_checks() {
             "check child-inside-container: examined 33 relations, 0 defects",
             "check siblings-do-not-overlap: examined 32 pairs, 0 defects",
             "check text-fits-box: examined 40 text runs, 0 defects",
-            "check remembered-constants: examined 36 text fields, 0 defects",
+            "check remembered-constants: examined 37 text fields, 0 defects",
             "check legend-consistency: examined 8 relations, 0 defects",
             "check links-routed: examined 0 links, not applicable: page has no links",
             "check links-avoid-boxes: examined 0 pairs, not applicable: page has no links",

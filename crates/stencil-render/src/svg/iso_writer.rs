@@ -62,7 +62,7 @@ pub(super) fn render_iso(
     let scene = project_zoomed(&zoomed, zoom, &solid_inputs)?;
     let geometry = &zoomed;
     let palette = Palette::new(theme, Projection::Iso);
-    let mut writer = SvgWriter::new(page.canvas, palette);
+    let mut writer = SvgWriter::new(palette);
     writer.iso_zoom = zoom;
     let width = format_number(scene.canvas.width);
     let height = format_number(scene.canvas.height);
@@ -1374,11 +1374,9 @@ impl<'a> SvgWriter<'a> {
                     .ok_or_else(|| part_mismatch(node, part))?;
                 let fill = match zone_ink {
                     Some(ink) => ink,
-                    None => self.palette.text_ink(
-                        style_name,
-                        self.canvas,
-                        context.line.map(|line_use| line_use.line),
-                    ),
+                    None => self
+                        .palette
+                        .text_ink(style_name, context.line.map(|line_use| line_use.line)),
                 };
                 self.write_text_run(depth + 1, &node.pointer, part.bounds, run, fill)?;
             }
@@ -1407,9 +1405,7 @@ impl<'a> SvgWriter<'a> {
                 (PartName::TagLabel | PartName::TagSub, Some(run)) => {
                     let style_name =
                         pipe_text_style_name(part.name).ok_or_else(|| link_mismatch(route))?;
-                    let fill = self
-                        .palette
-                        .text_ink(style_name, self.canvas, Some(route.line));
+                    let fill = self.palette.text_ink(style_name, Some(route.line));
                     self.write_text_run(depth + 1, &pointer, part.bounds, run, fill)?;
                 }
                 _ => return Err(link_mismatch(route)),

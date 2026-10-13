@@ -3,7 +3,7 @@
   "kicker": "Landing zone · transit",
   "lede": "One Dedicated Interconnect with two VLAN attachments lands on the transit hub, which routes the branch on to europe-north1.",
   "width": 1800,
-  "canvas": "customer",
+  "badge": "Customer",
   "grammar": "gcp",
   "projection": "iso",
   "body": [

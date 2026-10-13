@@ -283,7 +283,7 @@ fn iso_gutter_page(from_to: Option<(&str, &str)>) -> stencil_model::Page {
     }
     let document = json!({
         "title": "Title", "kicker": "Kicker", "lede": "Lede", "width": 1100,
-        "canvas": "customer", "projection": "iso", "legend": [],
+        "badge": "Customer", "projection": "iso", "legend": [],
         "body": [{ "tag": "Row", "gap": 32, "children": [
             { "tag": "Box", "kind": "onprem", "label": "Site", "children": [
                 { "tag": "Item", "kind": "product", "id": "edge", "title": "Edge" } ] },
@@ -365,7 +365,7 @@ fn a_flat_pipe_end_stays_in_its_box() {
 fn an_iso_tee_spine_stands_on_the_left_neighbour_edge() {
     let geometry = layout(&common::page_from(json!({
         "title": "Title", "kicker": "Kicker", "lede": "Lede", "width": 1100,
-        "canvas": "customer", "projection": "iso", "legend": [],
+        "badge": "Customer", "projection": "iso", "legend": [],
         "body": [{ "tag": "Row", "gap": 32, "children": [
             { "tag": "Box", "kind": "onprem", "label": "Site", "children": [card("Edge")] },
             { "tag": "Col", "children": [

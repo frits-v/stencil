@@ -125,7 +125,7 @@ fn golden_g7() {
             (CheckName::ChildInsideContainer, 33),
             (CheckName::SiblingsDoNotOverlap, 32),
             (CheckName::TextFitsBox, 40),
-            (CheckName::RememberedConstants, 36),
+            (CheckName::RememberedConstants, 37),
             (CheckName::LegendConsistency, 8),
             (CheckName::LinksRouted, 0),
             (CheckName::LinksAvoidBoxes, 0),

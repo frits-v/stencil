@@ -176,8 +176,8 @@ pub struct Inks {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct BadgeRole {
-    pub customer: Swatch,
-    pub internal: Swatch,
+    pub fill: Color,
+    pub ink: Color,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub border: Option<ThemeStroke>,
 }
@@ -765,8 +765,8 @@ pub fn validate_theme(theme: &Theme) -> Vec<ThemeViolation> {
     checker.color(ink.child("zone_label"), &theme.ink.zone_label);
     checker.color(root.child("kicker"), &theme.kicker);
     let badge = root.child("badge");
-    checker.swatch(&badge.child("customer"), &theme.badge.customer);
-    checker.swatch(&badge.child("internal"), &theme.badge.internal);
+    checker.color(badge.child("fill"), &theme.badge.fill);
+    checker.color(badge.child("ink"), &theme.badge.ink);
     checker.optional_stroke(&badge.child("border"), theme.badge.border.as_ref());
     let card = root.child("card");
     checker.color(card.child("fill"), &theme.card.fill);

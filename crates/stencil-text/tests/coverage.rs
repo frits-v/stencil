@@ -6,8 +6,7 @@ use std::collections::BTreeSet;
 
 use stencil_model::text::{TextMeasurer, TextStyleName};
 use stencil_model::{
-    Canvas, FactSource, Node, NodeRef, NoteKind, Page, body_nodes, legend_label, parse_page,
-    text_fields,
+    FactSource, Node, NodeRef, NoteKind, Page, body_nodes, legend_label, parse_page, text_fields,
 };
 use stencil_text::CosmicTextMeasurer;
 
@@ -98,13 +97,11 @@ fn drawn_texts(page: &Page) -> (Vec<DrawnText>, usize) {
     for entry in &page.legend {
         authored.push(drawn(&entry.text, TextStyleName::LegendText));
     }
+    if let Some(badge) = &page.badge {
+        authored.push(drawn(badge, TextStyleName::Badge));
+    }
     let authored_count = authored.len();
 
-    let badge = match page.canvas {
-        Canvas::Customer => "Customer",
-        Canvas::Internal => "Internal",
-    };
-    authored.push(drawn(badge, TextStyleName::Badge));
     for entry in &page.legend {
         authored.push(drawn(
             legend_label(entry.line, entry.tint),

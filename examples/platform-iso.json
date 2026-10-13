@@ -3,7 +3,7 @@
   "kicker": "Data platform · cover figure",
   "lede": "Requests enter at the load balancer, run through the web tier to the API, and land in the database, reached over private services access, and the object store.",
   "width": 1100,
-  "canvas": "customer",
+  "badge": "Customer",
   "grammar": "gcp",
   "projection": "iso",
   "body": [

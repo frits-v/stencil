@@ -250,7 +250,7 @@ fn via_outside_follows_the_page_width() {
 #[test]
 fn an_overflowing_json_coordinate_is_outside() {
     let document = serde_json::json!({
-        "title": "t", "kicker": "k", "lede": "l", "canvas": "internal",
+        "title": "t", "kicker": "k", "lede": "l", "badge": "Internal",
         "body": [ { "tag": "Item", "kind": "product", "id": "a", "title": "A" }, { "tag": "Item", "kind": "product", "id": "b", "title": "B" } ],
         "legend": [ { "line": "solid", "tint": 1, "text": "b" } ],
         "links": [ { "from": "a", "to": "b", "line": "solid", "tint": 1, "via": [ { "x": 1e39, "y": 0 } ] } ]

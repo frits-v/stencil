@@ -3,7 +3,7 @@
   "kicker": "Hybrid platform · cover figure",
   "lede": "Two Interconnect attachments carry on-prem traffic into the Shared VPC, which reaches the API gateway, model serving and the warehouse as managed services beside it.",
   "width": 1600,
-  "canvas": "customer",
+  "badge": "Customer",
   "grammar": "gcp",
   "projection": "iso",
   "body": [

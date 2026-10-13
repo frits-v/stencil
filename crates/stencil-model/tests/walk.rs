@@ -98,20 +98,21 @@ fn tee_arms_follow_the_tee_before_its_next_sibling() {
 fn g7_text_fields_in_document_order() {
     let page = g7_page();
     let fields = text_fields(&page);
-    assert_eq!(fields.len(), 36);
+    assert_eq!(fields.len(), 37);
     let pointers: Vec<&str> = fields.iter().map(|field| field.pointer.as_str()).collect();
     assert_eq!(
-        pointers[..5],
+        pointers[..6],
         [
             "/title",
             "/kicker",
             "/lede",
             "/foot",
+            "/badge",
             "/body/0/children/0/children/0/label"
         ]
     );
     assert_eq!(
-        pointers[33..],
+        pointers[34..],
         ["/legend/0/text", "/legend/1/text", "/legend/2/text"]
     );
     let document = g7_value();

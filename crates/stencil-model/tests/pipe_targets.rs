@@ -14,7 +14,7 @@ use stencil_model::{Page, validate_page};
 
 fn page(body: Value) -> Page {
     serde_json::from_value(json!({
-        "title": "Title", "kicker": "Kicker", "lede": "Lede", "canvas": "customer",
+        "title": "Title", "kicker": "Kicker", "lede": "Lede", "badge": "Customer",
         "body": body,
         "legend": [{ "line": "solid", "text": "request path" }]
     }))

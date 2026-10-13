@@ -59,7 +59,7 @@ fn section_10_stress_document() -> Value {
         "title": "Fifteen Cloud Run services in five rows behind one service perimeter",
         "kicker": "Service perimeter · Cloud Run",
         "lede": "Five rows of cards and pipes inside a service perimeter.",
-        "canvas": "internal",
+        "badge": "Internal",
         "grammar": "gcp",
         "body": [{
             "tag": "Box",

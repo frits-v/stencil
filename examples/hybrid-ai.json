@@ -3,7 +3,7 @@
   "kicker": "Hybrid multi-cloud AI platform",
   "lede": "Three producers outside the frame, one Shared VPC across two regions, one service perimeter around every AI service. Every hop is a labeled line; the public internet is drawn once, as the prohibited path.",
   "foot": "Illustrative topology · hop facts are placeholders, not looked-up values",
-  "canvas": "customer",
+  "badge": "Customer",
   "grammar": "gcp",
   "body": [
     {

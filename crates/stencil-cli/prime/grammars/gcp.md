@@ -30,5 +30,4 @@ Lines: gray for internal calls, solid tint 1 and tint 2 for the two paired paths
 Rules no check enforces:
 
 - Every product on a hop carries a fact read from the live doc at authoring time (source doc), or an explicit ask; never a remembered value. A built fact holds as-built names (bucket names, VLAN IDs, project ids) and needs no live doc.
-- One audience per figure: canvas customer or internal.
 - Official product names in subtitle: Cloud Run, Cloud SQL, Pub/Sub.

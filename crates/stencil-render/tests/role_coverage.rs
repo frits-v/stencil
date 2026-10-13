@@ -43,7 +43,7 @@ fn fact() -> Value {
 
 /// A gcp figure that draws every container tone, every tint slot, every line in every slot,
 /// an item with an icon, a doc fact and an ask, a Fact, each block and the full chrome.
-fn every_role_document(canvas: &str, projection: &str) -> Value {
+fn every_role_document(projection: &str) -> Value {
     let mut pipes = vec![
         pipe("gray", None, "none"),
         pipe("deny", None, "end"),
@@ -110,22 +110,21 @@ fn every_role_document(canvas: &str, projection: &str) -> Value {
         ]),
         json!(legend),
     );
-    document["canvas"] = json!(canvas);
+    document["badge"] = json!("Draft");
     document["projection"] = json!(projection);
     document["foot"] = json!("foot");
     document
 }
 
 /// The figures the coverage renders, each with the grammar it is laid out under: the gcp
-/// figure flat in both canvases and in iso, the plain sequence example for the lanes, and a
+/// figure flat and in iso, the plain sequence example for the lanes, and a
 /// soft-tone Box under a grammar that gives that tone a solid border, which no built-in
 /// grammar does.
 fn figures() -> Vec<(Page, Grammar)> {
     let page = |document: Value| -> Page { serde_json::from_value(document).unwrap() };
     let mut figures: Vec<(Page, Grammar)> = [
-        every_role_document("customer", "flat"),
-        every_role_document("internal", "flat"),
-        every_role_document("customer", "iso"),
+        every_role_document("flat"),
+        every_role_document("iso"),
         serde_json::from_str(include_str!("../../../examples/sequence.json")).unwrap(),
     ]
     .into_iter()

@@ -55,7 +55,7 @@ fn missing_tag_fails() {
 #[test]
 fn tag_is_accepted_on_every_node_kind() {
     let document = serde_json::json!({
-        "title": "t", "kicker": "k", "lede": "l", "canvas": "internal",
+        "title": "t", "kicker": "k", "lede": "l", "badge": "Internal",
         "legend": [ { "line": "solid", "tint": 1, "text": "b" } ],
         "body": [
             { "tag": "Row", "children": [ { "tag": "Fact", "text": "f" } ] },
@@ -103,7 +103,7 @@ fn tee_arm_tagged_zone_fails() {
 
 fn page_with_blocks() -> serde_json::Value {
     serde_json::json!({
-        "title": "t", "kicker": "k", "lede": "l", "canvas": "internal", "theme": "dusk",
+        "title": "t", "kicker": "k", "lede": "l", "badge": "Internal", "theme": "dusk",
         "legend": [ { "line": "solid", "tint": 1, "text": "b" } ],
         "body": [
             { "tag": "Text", "id": "goals", "heading": "Goals", "body": ["a", "b"], "list": "numbered" },

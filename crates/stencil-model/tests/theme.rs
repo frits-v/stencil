@@ -285,16 +285,16 @@ fn override_faults_point_into_theme_overrides() {
 #[test]
 fn quality_counts_match_section_13_5_for_every_builtin() {
     let expected = [
-        ("center", 222, 1, 0),
-        ("paper", 223, 0, 0),
-        ("dusk", 223, 0, 0),
-        ("clear", 223, 0, 0),
-        ("clear-dark", 223, 0, 0),
-        ("wire", 215, 0, 8),
+        ("center", 221, 1, 0),
+        ("paper", 222, 0, 0),
+        ("dusk", 222, 0, 0),
+        ("clear", 222, 0, 0),
+        ("clear-dark", 222, 0, 0),
+        ("wire", 214, 0, 8),
     ];
     for (name, passed, failed, not_applicable) in expected {
         let report = theme_quality(&builtin(name));
-        assert_eq!(report.rows.len(), 223, "{name}");
+        assert_eq!(report.rows.len(), 222, "{name}");
         assert_eq!(report.counts(), (passed, failed, not_applicable), "{name}");
     }
     let center = theme_quality(&builtin("center"));
@@ -324,7 +324,7 @@ const RESEARCH_CHECKER_VALUES: [(&str, &str, f64); 22] = [
     ("center", "tag.sub_ink on tag.fill", 6.05),
     ("center", "deny.tag_ink on tag.fill", 5.80),
     ("center", "fact.ink on fact.fill", 5.44),
-    ("center", "badge.customer.ink on badge.customer.fill", 6.85),
+    ("center", "badge.ink on badge.fill", 6.85),
     ("center", "frame.bar_ink on frame.bar_fill", 4.51),
     (
         "center",

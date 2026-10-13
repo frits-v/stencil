@@ -284,6 +284,11 @@ pub fn field_notes() -> Result<Vec<FieldNote>, PrimeError> {
             format!("={theme}; a built-in name or a .json path"),
         ),
         note("Page", "chrome", format!("={chrome}")),
+        note(
+            "Page",
+            "badge",
+            "=none; the pill before the kicker".to_string(),
+        ),
         note("Page", "corner", format!("={LINK_CORNER_DEFAULT_PX}")),
         note("Page", "bend", format!("={bend}")),
         note("Pipe", "arrow", format!("={pipe_arrow}")),
@@ -679,7 +684,7 @@ mod tests {
     #[test]
     fn a_reference_to_a_missing_definition_is_a_shape_error() {
         let mut schema = stencil_model::page_schema().as_value().clone();
-        schema["properties"]["canvas"] = json!({ "$ref": "#/$defs/Missing" });
+        schema["properties"]["chrome"] = json!({ "$ref": "#/$defs/Missing" });
         assert!(matches!(
             vocabulary(&schema),
             Err(PrimeError::SchemaShape { .. })

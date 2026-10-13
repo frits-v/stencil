@@ -63,7 +63,7 @@ fn row_page(first_card: &str) -> Value {
         "title": "Row of cards",
         "kicker": "Test",
         "lede": "One row.",
-        "canvas": "internal",
+        "badge": "Internal",
         "width": 640,
         "body": [
             {

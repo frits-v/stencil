@@ -126,18 +126,14 @@ pub struct Page {
     #[serde(default = "page_width_default")]
     #[schemars(range(min = 640, max = 2560))]
     pub width: u32,
-    pub canvas: Canvas,
+    /// The pill before the kicker, printed uppercase; absent draws none (section 11.7).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(length(min = 1, max = 400))]
+    pub badge: Option<String>,
     #[schemars(length(min = 1, max = 256))]
     pub body: Vec<Node>,
     #[schemars(length(max = 16))]
     pub legend: Vec<LegendEntry>,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
-#[serde(rename_all = "lowercase")]
-pub enum Canvas {
-    Customer,
-    Internal,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
@@ -404,7 +400,7 @@ Root children, top to bottom:
 
 | Pointer | Box | Inside |
 |---|---|---|
-| `/kicker` | flex row, `AlignItems::CENTER`, gap 6, margin-bottom 6 | badge part (padding 2/7, radius 4, text style `badge`, text `Customer` or `Internal` uppercased), kicker text part (style `kicker`, uppercased, `flex_grow` 1, `flex_basis` 0, min-width auto, so a long kicker wraps inside the page width) |
+| `/kicker` | flex row, `AlignItems::CENTER`, gap 6, margin-bottom 6 | badge part when the page has a `badge` (padding 2/7, radius 4, text style `badge`, the badge text uppercased), kicker text part (style `kicker`, uppercased, `flex_grow` 1, `flex_basis` 0, min-width auto, so a long kicker wraps inside the page width) |
 | `/title` | text leaf | style `title` |
 | `/lede` | text leaf, margin 4 top, 16 bottom | style `lede` |
 | `/body` | flex column, gap 8, `AlignItems::STRETCH` | the body nodes, each with `flex_grow` 0 and `flex_basis` auto |
@@ -525,11 +521,11 @@ The hub is drawn after the spine. The two may overlap, and both are parts, so th
 
 ### 2.9 Text styles
 
-Every string on the canvas uses one of these styles. Family, weight, size, line height, letter spacing and the uppercase flag are defined once in `stencil_model::text::TEXT_STYLES` (section 3), and the idempotence and parity tests in section 10 iterate over that list. Code names a style by `TextStyleName`, never by string, so a misspelled style does not compile. The colors live in `stencil_layout::styles`, keyed by `TextStyleName`, because `badge` depends on the canvas and `tag_label` on the pipe kind, which a style value does not carry.
+Every string on the canvas uses one of these styles. Family, weight, size, line height, letter spacing and the uppercase flag are defined once in `stencil_model::text::TEXT_STYLES` (section 3), and the idempotence and parity tests in section 10 iterate over that list. Code names a style by `TextStyleName`, never by string, so a misspelled style does not compile. The colors live in `stencil_layout::styles`, keyed by `TextStyleName`, because `tag_label` depends on the pipe kind, which a style value does not carry.
 
 | Style | Weight | Size px | Line height px | Letter spacing em | Color | Transform |
 |---|---|---|---|---|---|---|
-| badge | 800 | 10 | 12.0 | 0.07 | customer #174EA6 on #E8F0FE, internal #7B1FA2 on #F3E5F5 | uppercase |
+| badge | 800 | 10 | 12.0 | 0.07 | #174EA6 on #E8F0FE | uppercase |
 | kicker | 700 | 11 | 13.2 | 0.08 | #1A73E8 | uppercase |
 | title | 700 | 20 | 24.0 | -0.02 | #202124 | |
 | lede | 400 | 13 | 15.6 | 0 | #5F6368 | |
@@ -1674,7 +1670,7 @@ This is the g7 customer canvas as data. `examples/g7.json` is maintained by hand
   "kicker": "Dedicated Interconnect 99.99% · two metros, two regions",
   "lede": "VLAN IDs, EAD, and BGP sit on the hops. A reader following the lines sees four attachments, not one bundled cable.",
   "foot": "Illustrative topology · each metro has one VLAN in each EAD",
-  "canvas": "customer",
+  "badge": "Customer",
   "body": [
     {
       "tag": "Row",
@@ -2206,6 +2202,12 @@ Vet rule added to section 1.3:
 
 CUE: `#Page` gains `corner?: #Corner` and `bend?: #Bend`, and `#Grammar` gains `lines?: [...#LineKind]` with at most 4 entries whose lines are unique (`_linesAreUnique`); `cue/check.sh` rejects a page corner of 17 and of -1, an unknown bend (`zigzag`), a line kind corner of 17 and a line listed twice. `stencil prime` lists both page fields with their defaults, and the links topic describes them.
 
+### 11.7 Badge
+
+The pill before the page kicker is the page's optional `badge`, a text field: `"badge": "Draft"` draws DRAFT in the `badge` style, and a page without one draws no pill, so the kicker text starts where the pill would. The text is authored, so `text_fields` reads it at `/badge` after `/foot` and `remembered-constants` examines it. The theme paints every badge alike from `badge.fill`, `badge.ink` and the optional `badge.border`; the quality report has one contrast row for it. `chrome: none` drops it with the rest of the chrome.
+
+A document that sets `canvas` is a JSON error naming the unknown field; `"canvas": "customer"` migrates to `"badge": "Customer"`, `"internal"` to `"badge": "Internal"`, or the field is dropped. The examples migrate with the same words, so their geometry is unchanged and only the pill's paint moves on the pages that were internal. CUE's `#Page` has `badge?: #Text`; `cue/figures/g7.cue` keeps its two versions with a hidden `_audience` that sets the badge and gates the workshop labels.
+
 ## 12. Isometric projection
 
 `Page` gains an optional `projection` field, and the CLI `--projection` flag overrides it. An `iso` render draws the laid-out body as a 30 degree isometric floor plan: the flat layout lies on the floor, filled zones become slabs, a vpc becomes a dashed ring, leaf blocks become boxes, pipes lie on the slab they belong to, links run over the slabs to the blocks they join, and every label lies on the surface it names (section 12.4), the way a floor plan prints its names on the floor and a box carries its own on top. Layout under iso differs from flat only as section 12.4 rule 4 says: body type grows so sheared text reads, a zone keeps open floor under its name, and a tag that reads along y is a strip. The eight checks of sections 6 and 11.2 run on that layout. Every rule in sections 1 to 11 still holds unless this section names the change.
@@ -2645,7 +2647,7 @@ The numbers in this example are illustrative.
   "kicker": "Hybrid platform · cover figure",
   "lede": "Two Interconnect attachments carry on-prem traffic into the Shared VPC, which reaches the API gateway, model serving and the warehouse as managed services beside it.",
   "width": 1600,
-  "canvas": "customer",
+  "badge": "Customer",
   "grammar": "gcp",
   "projection": "iso",
   "body": [
@@ -2973,7 +2975,9 @@ pub struct Page {
     #[serde(default = "page_width_default")]
     #[schemars(range(min = 640, max = 2560))]
     pub width: u32,
-    pub canvas: Canvas,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(length(min = 1, max = 400))]
+    pub badge: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[schemars(regex(pattern = GRAMMAR_REFERENCE_PATTERN))]
     pub grammar: Option<String>,
@@ -3262,7 +3266,7 @@ Vet rules added to section 1.3. `validate_page` takes the resolved grammar: `val
 
 `VetRule` gains one variant per row, with `as_str` as in the first column. Because the grammar a page names is known only after parsing, `parse_page(json_text)` becomes serde parsing alone, and callers run `validate_page(&page, &grammar)` once `page.grammar` is resolved; `pipeline::load_document` does both, and `grammar-unknown` is checked before resolution. Pipe ids join the id namespace of section 11.2, so `id-duplicate` covers them. `kind-parent-not-allowed` follows the section 1.3 walk bounds; it reads the nearest Box ancestor from `NodeEntry` parents.
 
-Document order (section 4.2): an Item gives `title`, `subtitle`, then each fact's `text`; a Page gives `title`, `kicker`, `lede`, `foot`, `width`, `canvas`, `grammar`, `theme`, `theme_overrides`, `projection`, `chrome`, `corner`, `bend`, `body`, `legend`, `links`. `text_fields` includes every fact entry, at `/…/facts/<i>/text`.
+Document order (section 4.2): an Item gives `title`, `subtitle`, then each fact's `text`; a Page gives `title`, `kicker`, `lede`, `foot`, `width`, `badge`, `grammar`, `theme`, `theme_overrides`, `projection`, `chrome`, `corner`, `bend`, `body`, `legend`, `links`. `text_fields` includes every fact entry, at `/…/facts/<i>/text`.
 
 Layout. A Box reads everything layout needs from its container kind: the role (a `frame` lays out as the section 2.4 gcp zone with bar and body; every other role as the non-gcp zone), the border width, padding, radius and label style. An Item lays out as the section 2.5 Pcard. Neither reads the tint or the theme, so geometry depends on the document and the grammar alone. A drawn border width never changes a box: layout reserves the grammar's width whatever the theme draws, as the wire theme already does.
 
@@ -3682,9 +3686,9 @@ import "list"
 	}
 	kicker: #Color
 	badge: {
-		customer: #Swatch
-		internal: #Swatch
-		border?:  #Stroke
+		fill:    #Color
+		ink:     #Color
+		border?: #Stroke
 	}
 	card: {
 		fill:   #Color
@@ -3855,7 +3859,7 @@ pub struct Tint {
 }
 
 pub struct Inks { pub primary: Color, pub secondary: Color, pub zone_label: Color }
-pub struct BadgeRole { pub customer: Swatch, pub internal: Swatch, pub border: Option<ThemeStroke> }
+pub struct BadgeRole { pub fill: Color, pub ink: Color, pub border: Option<ThemeStroke> }
 pub struct CardRole { pub fill: Color, pub border: ThemeStroke }
 pub struct TagRole { pub fill: Color, pub border: ThemeStroke, pub ink: Color, pub sub_ink: Color }
 pub struct LegendRole { pub label_ink: Color, pub text_ink: Color }
@@ -4073,7 +4077,7 @@ Mapping a research palette onto `#Theme`. Every research role maps to one theme 
 | `card_fill`, `card_border` | `card.fill`, `card.border.color` |
 | `tag_fill`, `tag_border`, `tag_ink`, `tag_sub_ink` | `tag.fill`, `tag.border.color`, `tag.ink`, `tag.sub_ink` |
 | `fact_fill`, `fact_ink` | `fact.fill`, `fact.ink` |
-| `badge_fill`, `badge_ink` | `badge.customer` |
+| `badge_fill`, `badge_ink` | `badge.fill`, `badge.ink` |
 | `kicker_ink`, `legend_ink`, `foot_ink` | `kicker`, `legend.text_ink`, `foot` |
 | `gcp_bar_fill`, `gcp_bar_ink`, `gcp_frame_border`, `gcp_body_fill` | `frame.bar_fill`, `frame.bar_ink`, `frame.border`, `frame.body_fill` |
 | `vpc_border` | `tones.strong.border`; `placeholder.border` |
@@ -4097,7 +4101,6 @@ The research keys are gcp kind names because the research was run against the gc
 | widths and patterns | center's: card and tag borders 1.5, every line 2 px; gray and solid lines solid, dash and deny dashed; every dot filled; no `containers` overrides (container widths and patterns come from the grammar) |
 | `lanes.lifeline` | `ink.secondary`, 1 px, dashed |
 | `ask` | slot 4: its fill and ink |
-| `badge.internal` | slot 5. When the customer badge is filled with slot 1's wire (dusk), the internal badge is slot 5's wire with the page as ink; otherwise slot 5's fill and ink |
 | `callout` | note: slot 1 wire on slot 1 fill; risk: the deny wire on `mix(page, deny wire, r)`; decision: slot 6 wire on slot 6 fill; open: slot 4 wire on slot 4 fill; r is 0.22 on a light page and 0.18 on a dark one (L* of `page` below 50) |
 | `iso.faces` | top 0, left -8, right -16 on a light page (center's steps); 0, -4, -8 on a dark page (the steps section 12.6 gave dusk) |
 | `iso.slab_thickness` | 6 |
@@ -4243,7 +4246,7 @@ Mapping. `r` is 0.18 when `base00` has L* below 50 (a dark scheme) and 0.22 othe
 | `deny` | color `base08`, tag border `mix(base00, base08, 0.5)`, tag ink the higher contrast of `base08` and `ink.primary` on `tag.fill` |
 | dash | slot 1's wire, which is `base0D` (section 13.1 rule 3) |
 | each tint slot | wire: the accent in the table below; fill `mix(base00, accent, r)`; border `mix(base00, accent, 0.5)`, the accent at half strength; ink the higher contrast of `ink.primary` and `base00` on the fill |
-| `badge.customer`, `badge.internal`, `ask` | slot 1, slot 2 and slot 4, each its fill and ink |
+| `badge`, `ask` | slot 1 and slot 4, each its fill and ink |
 | `callout` | note slot 1, decision slot 6, open slot 4 (wire on fill); risk `base08` on `mix(base00, base08, r)` |
 | `icon_chip`, `iso.chip.fill` | `#FFFFFF` |
 | `lanes.lifeline` | `base04`, 1 px, dashed |

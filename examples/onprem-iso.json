@@ -2,7 +2,7 @@
   "title": "Two firewall zones and four VLANs at the head office",
   "kicker": "On-prem network · head office site",
   "lede": "The core switch trunks VLAN 10 and VLAN 20 to the edge firewall, which carries them on to the DMZ and the transit VLAN. Traffic from the DMZ never reaches the inside zone.",
-  "canvas": "internal",
+  "badge": "Internal",
   "grammar": "plain",
   "projection": "iso",
   "width": 1700,

@@ -143,7 +143,7 @@ pub fn page_document(body: Value, legend: Value) -> Value {
         "title": "Title",
         "kicker": "Kicker",
         "lede": "Lede",
-        "canvas": "customer",
+        "badge": "Customer",
         "body": body,
         "legend": legend
     })

@@ -472,7 +472,7 @@ fn page_card_and_text_inks_follow_the_theme_in_every_theme() {
         let kicker_texts = common::children_named(common::group(&document, "/kicker"), "text");
         let ink = |color: &stencil_model::theme::Color| Some(color.as_str().to_string());
         let fill_of = |node: roxmltree::Node<'_, '_>| node.attribute("fill").map(str::to_string);
-        assert_eq!(fill_of(kicker_texts[0]), ink(&theme.badge.customer.ink));
+        assert_eq!(fill_of(kicker_texts[0]), ink(&theme.badge.ink));
         assert_eq!(fill_of(kicker_texts[1]), ink(&theme.kicker));
         assert_eq!(first_text_fill("/title"), theme.ink.primary.as_str());
         assert_eq!(first_text_fill("/lede"), theme.ink.secondary.as_str());
@@ -513,21 +513,15 @@ fn page_card_and_text_inks_follow_the_theme_in_every_theme() {
 }
 
 #[test]
-fn badges_follow_the_theme_and_canvas() {
+fn a_badge_follows_the_theme_and_a_page_without_one_draws_none() {
     let literal = [
-        ("center", "customer", "#E8F0FE", None, "#174EA6"),
-        ("center", "internal", "#F3E5F5", None, "#7B1FA2"),
-        ("wire", "customer", "#FFFFFF", Some("#222222"), "#222222"),
-        ("wire", "internal", "#FFFFFF", Some("#222222"), "#222222"),
+        ("center", "#E8F0FE", None, "#174EA6"),
+        ("wire", "#FFFFFF", Some("#222222"), "#222222"),
     ];
-    for (theme_name, canvas, fill, stroke, ink) in literal {
+    for (theme_name, fill, stroke, ink) in literal {
         let theme = common::theme(theme_name);
-        let swatch = match canvas {
-            "customer" => &theme.badge.customer,
-            _ => &theme.badge.internal,
-        };
-        assert_eq!(swatch.fill.as_str(), fill);
-        assert_eq!(swatch.ink.as_str(), ink);
+        assert_eq!(theme.badge.fill.as_str(), fill);
+        assert_eq!(theme.badge.ink.as_str(), ink);
         assert_eq!(
             theme
                 .badge
@@ -539,40 +533,41 @@ fn badges_follow_the_theme_and_canvas() {
     }
     for theme_name in THEMES {
         let theme = common::theme(theme_name);
-        for canvas in ["customer", "internal"] {
-            let swatch = match canvas {
-                "customer" => &theme.badge.customer,
-                _ => &theme.badge.internal,
-            };
-            let mut document = palette_document();
-            document["canvas"] = json!(canvas);
-            let rendered = render_themed(document, theme_name);
-            let svg = common::parse_xml(&rendered.svg.svg);
-            let kicker = common::group(&svg, "/kicker");
-            let badge = common::children_named(kicker, "rect")[0];
-            let context = format!("{theme_name} {canvas}");
-            assert_eq!(
-                badge.attribute("fill"),
-                Some(swatch.fill.as_str()),
-                "{context}"
-            );
-            assert_eq!(
-                badge.attribute("stroke"),
-                theme
-                    .badge
-                    .border
-                    .as_ref()
-                    .map(|border| border.color.as_str()),
-                "{context}"
-            );
-            let badge_text = common::children_named(kicker, "text")[0];
-            assert_eq!(
-                badge_text.attribute("fill"),
-                Some(swatch.ink.as_str()),
-                "{context}"
-            );
-        }
+        let mut document = palette_document();
+        document["badge"] = json!("Draft");
+        let rendered = render_themed(document, theme_name);
+        let svg = common::parse_xml(&rendered.svg.svg);
+        let kicker = common::group(&svg, "/kicker");
+        let badge = common::children_named(kicker, "rect")[0];
+        assert_eq!(
+            badge.attribute("fill"),
+            Some(theme.badge.fill.as_str()),
+            "{theme_name}"
+        );
+        assert_eq!(
+            badge.attribute("stroke"),
+            theme
+                .badge
+                .border
+                .as_ref()
+                .map(|border| border.color.as_str()),
+            "{theme_name}"
+        );
+        let badge_text = common::children_named(kicker, "text")[0];
+        assert_eq!(
+            badge_text.attribute("fill"),
+            Some(theme.badge.ink.as_str()),
+            "{theme_name}"
+        );
+        assert_eq!(badge_text.text(), Some("DRAFT"), "{theme_name}");
     }
+    let mut document = palette_document();
+    document.as_object_mut().unwrap().remove("badge");
+    let rendered = render_themed(document, "center");
+    let svg = common::parse_xml(&rendered.svg.svg);
+    let kicker = common::group(&svg, "/kicker");
+    assert!(common::children_named(kicker, "rect").is_empty());
+    assert_eq!(common::children_named(kicker, "text").len(), 1);
 }
 
 #[test]
@@ -941,29 +936,21 @@ fn overrides_recolor_one_slot_wire_and_nothing_else() {
 #[test]
 fn center_inks_equal_the_layout_text_colors() {
     use stencil_layout::styles;
+    use stencil_model::Line;
     use stencil_model::text::TEXT_STYLES;
-    use stencil_model::{Canvas, Line};
     let center = common::theme("center");
     let palette = Palette::new(&center, Projection::Flat);
     for named in TEXT_STYLES {
-        for canvas in [Canvas::Customer, Canvas::Internal] {
-            for line in [None, Some(Line::Gray), Some(Line::Deny)] {
-                assert_eq!(
-                    palette.text_ink(named.name, canvas, line),
-                    styles::text_color(named.name, canvas, line),
-                    "{}",
-                    named.name.as_str()
-                );
-            }
+        for line in [None, Some(Line::Gray), Some(Line::Deny)] {
+            assert_eq!(
+                palette.text_ink(named.name, line),
+                styles::text_color(named.name, line),
+                "{}",
+                named.name.as_str()
+            );
         }
     }
-    for canvas in [Canvas::Customer, Canvas::Internal] {
-        assert_eq!(
-            palette.badge(canvas).fill,
-            styles::badge_fill(canvas),
-            "{canvas:?}"
-        );
-    }
+    assert_eq!(palette.badge().fill, styles::BADGE_FILL);
     let slot_names: Vec<&str> = center.tints.iter().map(|tint| tint.name.as_str()).collect();
     assert_eq!(slot_names, stencil_model::TINT_NAMES);
 }
@@ -995,16 +982,6 @@ fn research_themes_follow_the_derivation_rules() {
         );
         assert_eq!(theme.ask.fill, slot(4).fill, "{name}");
         assert_eq!(theme.ask.ink, slot(4).ink, "{name}");
-        let internal = if theme.badge.customer.fill == slot(1).wire {
-            (&slot(5).wire, &theme.page)
-        } else {
-            (&slot(5).fill, &slot(5).ink)
-        };
-        assert_eq!(
-            (&theme.badge.internal.fill, &theme.badge.internal.ink),
-            internal,
-            "{name}"
-        );
         assert_eq!(theme.callout.note.accent, slot(1).wire, "{name}");
         assert_eq!(theme.callout.note.fill, slot(1).fill, "{name}");
         assert_eq!(theme.callout.decision.accent, slot(6).wire, "{name}");

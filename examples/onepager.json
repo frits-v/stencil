@@ -4,7 +4,7 @@
   "lede": "An operator describes an event in their own words. The service turns the description into an evaluation plan, runs the plan over each new clip, and stores a verdict with the frames that support it.",
   "foot": "The numbered links follow one request from the console to a stored verdict.",
   "width": 1440,
-  "canvas": "internal",
+  "badge": "Internal",
   "grammar": "gcp",
   "body": [
     {

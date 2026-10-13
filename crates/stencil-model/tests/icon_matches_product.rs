@@ -33,7 +33,7 @@ fn gcp_table() -> Vec<IconProducts> {
 
 fn page_of_items(items: Value) -> Page {
     serde_json::from_value(json!({
-        "title": "Title", "kicker": "Kicker", "lede": "Lede", "canvas": "customer",
+        "title": "Title", "kicker": "Kicker", "lede": "Lede", "badge": "Customer",
         "body": [{ "tag": "Row", "children": items }],
         "legend": []
     }))
@@ -199,7 +199,7 @@ fn a_gcp_page_whose_items_carry_neither_examines_nothing_and_fails() {
 #[test]
 fn a_plain_page_is_not_applicable() {
     let page: Page = serde_json::from_value(json!({
-        "title": "Title", "kicker": "Kicker", "lede": "Lede", "canvas": "internal",
+        "title": "Title", "kicker": "Kicker", "lede": "Lede", "badge": "Internal",
         "grammar": "plain",
         "body": [{ "tag": "Item", "kind": "service", "title": "API", "subtitle": "BigQuery" }],
         "legend": []
