@@ -3,8 +3,10 @@
 Figures can be authored in CUE, which carries rules the Rust side does not evaluate. cue/core.cue holds the core vocabulary, cue/grammar.cue the #Grammar definition, and cue/grammars/gcp.cue and plain.cue each grammar's data, kinds and rules as packages gcp and plain. cue/ is the module root, so every command runs from inside it. The pinned CUE version is 0.17.1. In order, each step stopping on failure:
 
     cd cue && cue vet -c ./figures:gcp
-    cue export ./figures:gcp -e customer --out json -o ../fig.json
+    cue export ./figures:gcp -e <field> --out json -o ../fig.json
     cd .. && stencil check fig.json && stencil render fig.json --out-dir out
+
+<field> is the path of the field your figure file binds its page to, named after the figure: a file that writes `topology: gcp.#Page & {...}` exports with `-e topology`, one that writes `figures: topology: ...` with `-e figures.topology`. No name is fixed. Outside this repository, ./figures:gcp is your own figure package, importing github.com/frits-v/stencil/cue/grammars:gcp.
 
 -c reports each non-concrete field by path. A plain JSON figure vets against a grammar's #Page directly: `cd cue && cue vet -c -d '#Page' ./grammars:gcp ../fig.json`.
 
@@ -29,8 +31,8 @@ Rules CUE adds beyond stencil vet, under the gcp grammar:
 
 In the g7 view (cue/figures/g7.cue), gutter pipe p leaves item p of the left column; a tint 1 pipe leaves a tint 1 onprem item and lands in the tint 1 region, tint 2 pairs the same way; the gutter has one pipe per item and one half per on-prem Box (_leavesCardInItsMetro, _onePipePerCard, _oneHalfPerMetro, _halfBesideItsMetro).
 
-Two canvases from one source: customer is concrete except canvas and the hidden _workshop labels; internal is customer & {canvas: "internal", _workshop: {...}}. Any change to a pipe, item or legend entry is a unification conflict, so workshop text cannot reach the customer canvas.
+Two canvases from one source, as cue/figures/g7.cue does with its fields customer and internal: the first page field is concrete except canvas and some hidden labels, and the second is the first & {canvas: "internal", <labels>}. Any change to a pipe, item or legend entry is a unification conflict, so internal text cannot reach the customer canvas.
 
 When one node fails, the per-page sets built from it come up empty, so a single error can also report every legend key as unused. The first error on a body path is the cause.
 
-cue/check.sh vets the packages, re-exports both grammars and fails when either differs from crates/stencil-model/grammars, compares the customer export with examples/g7.json, vets every example against the gcp #Page, then runs each negative case. Set CUE to the binary if the shim is not active: `CUE="$(mise which cue)" ./cue/check.sh`.
+cue/check.sh vets the packages, re-exports both grammars and fails when either differs from crates/stencil-model/grammars, compares g7's customer field, exported, with examples/g7.json, vets every example against the gcp #Page, then runs each negative case. Set CUE to the binary if the shim is not active: `CUE="$(mise which cue)" ./cue/check.sh`.

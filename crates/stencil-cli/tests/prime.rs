@@ -678,3 +678,25 @@ fn prime_texts_follow_the_house_style() {
         );
     }
 }
+
+/// A figure's page sits in whatever field its file names, so a `cue export` line teaches a
+/// placeholder and never one figure's field, which a reader copies verbatim.
+#[test]
+fn every_cue_export_line_takes_a_field_placeholder() {
+    let mut texts = all_texts();
+    texts.push((
+        "README.md".to_string(),
+        include_str!("../../../README.md").to_string(),
+    ));
+    let mut examined = 0;
+    for (name, text) in &texts {
+        for line in text.lines().filter(|line| line.contains("cue export ")) {
+            examined += 1;
+            assert!(
+                line.contains("-e <field>"),
+                "{name}: an export names a fixed field: {line}"
+            );
+        }
+    }
+    assert!(examined >= 2, "only {examined} cue export lines found");
+}

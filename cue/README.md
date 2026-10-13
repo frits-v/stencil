@@ -44,6 +44,10 @@ cue export ./grammars:gcp -e grammar --out json -o ../crates/stencil-model/gramm
 stencil render out/g7-customer.json --out-dir out
 ```
 
+`-e` names the field that holds the page. `customer` is g7's own field name; a figure of
+your own exports the field its file binds the page to, for example `-e topology` for
+`topology: gcp.#Page & {...}`.
+
 `-c` reports each non-concrete field by path (for example a figure with no `canvas`); without
 it, vet only says that some instances are incomplete. `stencil render` writes `<stem>.svg`,
 `<stem>.png` and `<stem>.measured.json` in `--out-dir`.
