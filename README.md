@@ -131,11 +131,11 @@ Figures are authored in CUE against a grammar package. `cue/core.cue` holds the 
 ```bash
 cd cue
 cue vet -c ./figures:gcp
-cue export ./figures:gcp -e customer --out json -o ../figure.json
+cue export ./figures:gcp -e <field> --out json -o ../figure.json
 cd .. && stencil render figure.json --out-dir out
 ```
 
-`cue vet` enforces the authoring rules, `cue export` writes the structural JSON, and `stencil render` vets that JSON again before it lays out and renders. Run `stencil check figure.json` between the export and the render to see every check result before any file is written. `cue/README.md` describes the CUE packages; `cue/check.sh` re-exports both grammars and fails when either differs from the JSON the Rust side embeds (`crates/stencil-model/grammars/`), vets every example and runs the negative cases.
+`<field>` is the path of the field the figure file binds its page to, a name the figure chooses: `topology: gcp.#Page & {...}` exports with `-e topology`, and `figures: topology: ...` with `-e figures.topology`. `cue vet` enforces the authoring rules, `cue export` writes the structural JSON, and `stencil render` vets that JSON again before it lays out and renders. Run `stencil check figure.json` between the export and the render to see every check result before any file is written. `cue/README.md` describes the CUE packages; `cue/check.sh` re-exports both grammars and fails when either differs from the JSON the Rust side embeds (`crates/stencil-model/grammars/`), vets every example and runs the negative cases.
 
 ## Fonts and icons
 
