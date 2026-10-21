@@ -350,7 +350,38 @@ pub trait TextMeasurer {
         text: &str,
         style: &TextStyle,
         max_width_px: Option<f32>,
+    ) -> Result<TextMetrics, MeasureError> {
+        self.measure_indented(text, style, max_width_px, 0.0)
+    }
+
+    /// Measures a run whose first line starts `first_line_indent_px` from the left edge and
+    /// whose later lines start at the left edge, all wrapping at `max_width_px` (section 3).
+    /// With an indent above 0, a first word that does not fit after the indent leaves line 0
+    /// empty and starts the text on line 1.
+    fn measure_indented(
+        &mut self,
+        text: &str,
+        style: &TextStyle,
+        max_width_px: Option<f32>,
+        first_line_indent_px: f32,
     ) -> Result<TextMetrics, MeasureError>;
+}
+
+/// The width of an indented run (section 3): the widest line, line 0 counted from the left
+/// edge with its indent when it holds text.
+pub fn indented_run_width(lines: &[TextLine], first_line_indent_px: f32) -> f32 {
+    lines
+        .iter()
+        .enumerate()
+        .fold(0.0_f32, |widest, (line_index, line)| {
+            let starts_after_indent = line_index == 0 && line.byte_start < line.byte_end;
+            let x_px = if starts_after_indent {
+                first_line_indent_px
+            } else {
+                0.0
+            };
+            widest.max(x_px + line.width_px)
+        })
 }
 
 #[derive(Debug, Clone, PartialEq, thiserror::Error)]
@@ -361,6 +392,8 @@ pub enum MeasureError {
     InvalidStyle { reason: &'static str },
     #[error("max width {max_width_px} is negative or not finite")]
     InvalidMaxWidth { max_width_px: f32 },
+    #[error("first-line indent {first_line_indent_px} is negative or not finite")]
+    InvalidIndent { first_line_indent_px: f32 },
     #[error("font {family} has no glyph for {character:?} (U+{codepoint:04X})")]
     MissingGlyph {
         family: &'static str,
@@ -372,11 +405,13 @@ pub enum MeasureError {
 }
 
 /// The boundary assertions every measurer applies before measuring (section 3): empty text,
-/// a style outside the supported ranges, and a negative or non-finite max width.
+/// a style outside the supported ranges, a negative or non-finite max width, and a negative
+/// or non-finite first-line indent.
 pub fn check_measure_input(
     text: &str,
     style: &TextStyle,
     max_width_px: Option<f32>,
+    first_line_indent_px: f32,
 ) -> Result<(), MeasureError> {
     if text.is_empty() {
         return Err(MeasureError::EmptyText);
@@ -405,6 +440,11 @@ pub fn check_measure_input(
         && (!max_width_px.is_finite() || max_width_px < 0.0)
     {
         return Err(MeasureError::InvalidMaxWidth { max_width_px });
+    }
+    if !first_line_indent_px.is_finite() || first_line_indent_px < 0.0 {
+        return Err(MeasureError::InvalidIndent {
+            first_line_indent_px,
+        });
     }
     Ok(())
 }
@@ -492,13 +532,14 @@ impl FixedMetricsMeasurer {
 }
 
 impl TextMeasurer for FixedMetricsMeasurer {
-    fn measure(
+    fn measure_indented(
         &mut self,
         text: &str,
         style: &TextStyle,
         max_width_px: Option<f32>,
+        first_line_indent_px: f32,
     ) -> Result<TextMetrics, MeasureError> {
-        check_measure_input(text, style, max_width_px)?;
+        check_measure_input(text, style, max_width_px, first_line_indent_px)?;
         if let Some(character) = text
             .chars()
             .find(|character| self.missing_glyphs.contains(character))
@@ -513,18 +554,35 @@ impl TextMeasurer for FixedMetricsMeasurer {
         let advance_px = (self.advance_em + style.letter_spacing_em) * style.size_px;
         let words = words(text);
 
+        let first_line_room_px = max_width_px.map(|max_width| max_width - first_line_indent_px);
+        let room_px = |line_ranges: &[(usize, usize)]| {
+            if line_ranges.is_empty() {
+                first_line_room_px
+            } else {
+                max_width_px
+            }
+        };
+
         // Pairs of (byte_start, byte_end). Leading spaces stay on the first line; the spaces
         // at a break are trailing spaces of the earlier line and are dropped.
         let mut line_ranges: Vec<(usize, usize)> = Vec::new();
         let mut current: Option<(usize, usize)> = None;
         for word in &words {
             current = match current {
-                None => Some((0, word.byte_end)),
+                None => {
+                    let first_word_width = Self::line_width(text, 0, word.byte_end, advance_px);
+                    if first_line_indent_px > 0.0
+                        && first_line_room_px.is_some_and(|room| first_word_width > room)
+                    {
+                        line_ranges.push((0, 0));
+                    }
+                    Some((0, word.byte_end))
+                }
                 Some((line_start, line_end)) => {
                     let candidate_width =
                         Self::line_width(text, line_start, word.byte_end, advance_px);
-                    match max_width_px {
-                        Some(max_width) if candidate_width > max_width => {
+                    match room_px(&line_ranges) {
+                        Some(room) if candidate_width > room => {
                             line_ranges.push((line_start, line_end));
                             Some((word.byte_start, word.byte_end))
                         }
@@ -546,9 +604,7 @@ impl TextMeasurer for FixedMetricsMeasurer {
                 baseline_px: line_index as f32 * line_height_px + 0.8 * line_height_px,
             })
             .collect();
-        let width_px = lines
-            .iter()
-            .fold(0.0_f32, |widest, line| widest.max(line.width_px));
+        let width_px = indented_run_width(&lines, first_line_indent_px);
         let line_count = u32::try_from(lines.len()).map_err(|_| MeasureError::Backend {
             message: format!("{} lines do not fit in u32", lines.len()),
         })?;

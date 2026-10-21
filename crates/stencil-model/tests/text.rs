@@ -415,3 +415,125 @@ fn negative_or_nan_max_width_is_rejected() {
         Err(MeasureError::InvalidMaxWidth { .. })
     ));
 }
+
+fn measure_indented(
+    text: &str,
+    max_width_px: Option<f32>,
+    first_line_indent_px: f32,
+) -> Result<stencil_model::text::TextMetrics, MeasureError> {
+    FixedMetricsMeasurer::default().measure_indented(
+        text,
+        &card_function(),
+        max_width_px,
+        first_line_indent_px,
+    )
+}
+
+#[test]
+fn an_indent_of_zero_measures_as_measure_does() {
+    let texts = [
+        "On-prem router 1",
+        "acme-prod.analytics.raw-events",
+        "Interconnect",
+        "  leading spaces",
+    ];
+    let widths = [None, Some(0.0), Some(20.0), Some(50.0), Some(100.0)];
+    for text in texts {
+        for max_width_px in widths {
+            assert_eq!(
+                measure_indented(text, max_width_px, 0.0).unwrap(),
+                measure(text, &card_function(), max_width_px).unwrap(),
+                "{text:?} at {max_width_px:?}"
+            );
+        }
+    }
+}
+
+#[test]
+fn a_first_line_indent_narrows_only_the_first_line() {
+    // 6.5 px per scalar. Unindented at 100 the lines are "On-prem router" and "1". After 13
+    // px the first line has 87: "On-prem router" (91) does not fit, "On-prem" (45.5) does,
+    // and the second line wraps at the full 100.
+    let text = "On-prem router 1";
+    let metrics = measure_indented(text, Some(100.0), 13.0).unwrap();
+    assert_eq!(line_texts(text, &metrics), ["On-prem", "router 1"]);
+    assert_eq!(metrics.lines[0].width_px, 45.5);
+    assert_eq!(metrics.lines[1].width_px, 52.0);
+    assert_eq!(metrics.width_px, 13.0 + 45.5);
+    assert_eq!(metrics.line_count, 2);
+    assert_eq!(metrics.height_px, 2.0 * 15.6);
+    assert_eq!(metrics.lines[0].baseline_px, 0.8 * 15.6);
+    assert_eq!(metrics.lines[1].baseline_px, 15.6 + 0.8 * 15.6);
+}
+
+#[test]
+fn a_body_that_fits_after_the_indent_stays_on_one_line_and_its_width_counts_the_indent() {
+    let text = "On-prem router 1";
+    for max_width_px in [Some(117.0), None] {
+        let metrics = measure_indented(text, max_width_px, 13.0).unwrap();
+        assert_eq!(line_texts(text, &metrics), [text], "{max_width_px:?}");
+        assert_eq!(metrics.lines[0].width_px, 104.0);
+        assert_eq!(metrics.width_px, 117.0);
+    }
+    let one_short = measure_indented(text, Some(116.99), 13.0).unwrap();
+    assert_eq!(line_texts(text, &one_short), ["On-prem router", "1"]);
+}
+
+#[test]
+fn a_first_word_that_does_not_fit_after_the_indent_starts_on_line_1() {
+    // The first word, "On-", is 19.5 px. An indent of 85 leaves 15 on the first line; one of
+    // 120 is wider than the line itself. Either way line 0 is empty, the text wraps at the
+    // full width from line 1, and the width leaves the indent out.
+    let text = "On-prem router 1";
+    let unindented = measure(text, &card_function(), Some(100.0)).unwrap();
+    for first_line_indent_px in [85.0, 100.0, 120.0] {
+        let metrics = measure_indented(text, Some(100.0), first_line_indent_px).unwrap();
+        assert_eq!(
+            line_texts(text, &metrics),
+            ["", "On-prem router", "1"],
+            "{first_line_indent_px}"
+        );
+        assert_eq!(
+            (metrics.lines[0].byte_start, metrics.lines[0].byte_end),
+            (0, 0)
+        );
+        assert_eq!(metrics.lines[0].width_px, 0.0);
+        assert_eq!(metrics.width_px, unindented.width_px);
+        assert_eq!(metrics.line_count, 3);
+        assert_eq!(metrics.height_px, 3.0 * 15.6);
+        assert_eq!(metrics.lines[0].baseline_px, 0.8 * 15.6);
+        assert_eq!(metrics.lines[2].baseline_px, 2.0 * 15.6 + 0.8 * 15.6);
+    }
+    let exact_fit = measure_indented(text, Some(100.0), 80.5).unwrap();
+    assert_eq!(line_texts(text, &exact_fit), ["On-", "prem router 1"]);
+}
+
+#[test]
+fn an_indented_word_wider_than_the_line_overflows_on_line_1() {
+    let metrics = measure_indented("Interconnect", Some(20.0), 4.0).unwrap();
+    assert_eq!(line_texts("Interconnect", &metrics), ["", "Interconnect"]);
+    assert_eq!(metrics.width_px, 12.0 * 6.5);
+    let at_min_content = measure_indented("On-prem router 1", Some(0.0), 4.0).unwrap();
+    assert_eq!(
+        line_texts("On-prem router 1", &at_min_content),
+        ["", "On-", "prem", "router", "1"]
+    );
+}
+
+#[test]
+fn a_negative_or_non_finite_indent_is_rejected() {
+    assert_eq!(
+        measure_indented("a", Some(100.0), -1.0),
+        Err(MeasureError::InvalidIndent {
+            first_line_indent_px: -1.0
+        })
+    );
+    assert!(matches!(
+        measure_indented("a", Some(100.0), f32::NAN),
+        Err(MeasureError::InvalidIndent { first_line_indent_px }) if first_line_indent_px.is_nan()
+    ));
+    assert!(matches!(
+        measure_indented("a", None, f32::INFINITY),
+        Err(MeasureError::InvalidIndent { .. })
+    ));
+}

@@ -696,13 +696,27 @@ pub struct TextMetrics {
 }
 
 pub trait TextMeasurer {
+    /// `measure_indented` with an indent of 0.
     fn measure(
         &mut self,
         text: &str,
         style: &TextStyle,
         max_width_px: Option<f32>,
+    ) -> Result<TextMetrics, MeasureError> {
+        self.measure_indented(text, style, max_width_px, 0.0)
+    }
+
+    fn measure_indented(
+        &mut self,
+        text: &str,
+        style: &TextStyle,
+        max_width_px: Option<f32>,
+        first_line_indent_px: f32,
     ) -> Result<TextMetrics, MeasureError>;
 }
+
+/// The widest line, line 0 counted with its indent when it holds text.
+pub fn indented_run_width(lines: &[TextLine], first_line_indent_px: f32) -> f32;
 
 #[derive(Debug, Clone, PartialEq, thiserror::Error)]
 pub enum MeasureError {
@@ -712,6 +726,8 @@ pub enum MeasureError {
     InvalidStyle { reason: &'static str },
     #[error("max width {max_width_px} is negative or not finite")]
     InvalidMaxWidth { max_width_px: f32 },
+    #[error("first-line indent {first_line_indent_px} is negative or not finite")]
+    InvalidIndent { first_line_indent_px: f32 },
     #[error("font {family} has no glyph for {character:?} (U+{codepoint:04X})")]
     MissingGlyph { family: &'static str, character: char, codepoint: u32 },
     #[error("text backend failed: {message}")]
@@ -726,10 +742,12 @@ Contract, which every implementation and the fake satisfy:
 - `max_width_px: None` means no wrapping, so the result is the max-content size. `Some(w)` wraps at word boundaries. A word wider than `w` stays whole on its own line, and the reported `width_px` then exceeds `w`. `Some(0.0)` gives the min-content width, which is the widest word.
 - A word is an unbreakable segment between two line-break opportunities, and the two implementations find those differently. For `CosmicTextMeasurer` they are the UAX #14 opportunities that cosmic-text's `Wrap::Word` uses, so a hyphen or slash can end a word: `"On-prem router 1"` at `Some(0.0)` gives the lines `On-`, `prem`, `router` and `1`, and `"link-local /29"` gives `link-` and `local /29`. For the fake a word is a run of characters between U+0020 spaces (section 3.1). In both, a line's `width_px` excludes trailing spaces.
 - `line_count == lines.len() as u32`, and `line_count >= 1`.
-- `width_px` is the maximum of `lines[i].width_px`, and `height_px == line_count as f32 * line_height_px`.
+- `width_px` is the maximum of `lines[i].width_px`, and `height_px == line_count as f32 * line_height_px`. An indented run (below) counts its indent in `width_px`.
+- `first_line_indent_px` is measured from the run's left edge. Line 0 starts there and wraps at `max_width_px - first_line_indent_px`; every later line starts at the left edge and wraps at `max_width_px`. Each `lines[i].width_px` is the width of the line's own text, so a drawer places line 0 at the indent and every later line at 0. `width_px` is `indented_run_width(&lines, first_line_indent_px)`: the widest line, line 0 counted as `first_line_indent_px + lines[0].width_px` when it holds text. With `max_width_px: None` the run is one line `first_line_indent_px` wider than its max-content width.
+- With an indent above 0, when the first word is wider than `max_width_px - first_line_indent_px`, including when the indent alone reaches past `max_width_px`, line 0 is empty (`byte_start == byte_end == 0`, width 0, the line 0 baseline) and the text starts on line 1 at the left edge, laid out as `measure` lays it out at `max_width_px`, one line height lower. The empty line counts in `line_count` and `height_px`, and the indent then does not count in `width_px`. At indent 0 a word wider than the line stays on line 0, as above.
 - Letter spacing is added after every shaped glyph, the last one included. cosmic-text adds it per glyph (`x_advance + letter_spacing` in `shape.rs`), while CSS and SVG `letter-spacing` add it per character. The two agree for text with no ligatures and no multi-glyph clusters, and the one-directional parity test in section 10 tolerates the difference. The fake does no shaping, so for it a glyph is a Unicode scalar value.
 - The function has no side effects that change later results. The same input gives bit-identical output.
-- Boundary assertions return errors. Empty text gives `EmptyText`. A size outside 6 to 96, a line height below the size or not finite, or a letter spacing outside -0.2 to 0.5 gives `InvalidStyle`. A negative or non-finite `max_width_px` gives `InvalidMaxWidth`. A character with no glyph in the bundled family gives `MissingGlyph`.
+- Boundary assertions return errors. Empty text gives `EmptyText`. A size outside 6 to 96, a line height below the size or not finite, or a letter spacing outside -0.2 to 0.5 gives `InvalidStyle`. A negative or non-finite `max_width_px` gives `InvalidMaxWidth`. A negative or non-finite `first_line_indent_px` gives `InvalidIndent`. A character with no glyph in the bundled family gives `MissingGlyph`.
 
 How layout calls the measurer: taffy's closure cannot return an error. The closure records the first `MeasureError` together with the node's pointer and returns a zero size. After `compute_layout_with_measure` returns, `layout_page` returns `LayoutError::Measure` if an error was recorded. The closure maps taffy's inputs as follows: a known width becomes `Some(width.max(0.0) + WRAP_EPSILON_PX)`, `AvailableSpace::Definite(w)` becomes `Some(w.max(0.0) + WRAP_EPSILON_PX)`, `MinContent` becomes `Some(0.0)` and `MaxContent` becomes `None`. The epsilon is the one the post-layout re-measure adds, so layout and re-measure agree on the line breaks (section 2.1). The clamp comes first because `taffy::compute_leaf_layout` subtracts margins from the available space, and a negative width would turn an overflow, which is a defect (exit 1), into `InvalidMaxWidth` (exit 2). `f32::max` also maps a NaN width to 0.
 
@@ -759,6 +777,7 @@ impl TextMeasurer for FixedMetricsMeasurer { /* rules below */ }
 
 - Every Unicode scalar value advances `advance_px = (advance_em + letter_spacing_em) * size_px`, computed once in f32. A line of n scalars, interior spaces included and the trailing space excluded, is `n as f32 * advance_px` wide, one multiplication, never a running sum.
 - Line breaks happen only at U+0020. Wrapping is greedy, and a line's width excludes its trailing space.
+- With a first-line indent, the greedy loop compares line 0 against `max_width_px - first_line_indent_px` and every later line against `max_width_px`, and a first word wider than line 0's room puts an empty line 0 before it.
 - Line `i` has `baseline_px = i as f32 * line_height_px + 0.8 * line_height_px`.
 - Worked example: `"On-prem router 1"` in `card_function` (13 px, no spacing) is 16 scalars times 6.5, which is 104.0 px wide and 15.6 px tall, on one line.
 
@@ -775,6 +794,8 @@ Each measurement follows these steps:
 5. Read `layout_runs()`. Each run gives one `TextLine`: `width_px` from `line_w`, `baseline_px` from `line_y`, and the byte range from the first and last glyph clusters, trimmed of trailing spaces.
 
 Any glyph with `glyph_id == 0` produces `MissingGlyph` for the character at that cluster. Results may be cached by `(text, style bits, max width bits)`.
+
+cosmic-text has no first-line indent, so an indent above 0 with a definite `max_width_px` is two measurements of the steps above. The text at `(max_width_px - first_line_indent_px).max(0.0)` gives line 0, or an empty line 0 when that line is wider than the room, which only a lone overflowing word is. The text from the start of that measurement's line 1, or the whole text after an empty line 0, measured at `max_width_px` gives the later lines, their byte ranges offset to the whole string and their baselines one line height lower. Wrapping is greedy, so this is the layout one indented paragraph would get. Indent 0 is the plain measurement and its cache entry.
 
 ## 4. Crate APIs
 
@@ -1174,7 +1195,41 @@ pub fn links_routed(page: &Page, geometry: &PageGeometry) -> CheckReport;
 pub fn links_avoid_boxes(geometry: &PageGeometry) -> CheckReport;
 /// Reads each pipe's `dir` from the page and every box from the geometry.
 pub fn pipes_land(page: &Page, geometry: &PageGeometry) -> CheckReport;
+
+// lead_run.rs
+/// A lead and a body that share the lead's last line (section 3).
+#[derive(Debug, Clone, PartialEq)]
+pub struct LeadRun {
+    pub lead: TextMetrics,
+    /// Measured with `body_indent_px` on line 0; line 0 is empty when the body starts on
+    /// the line after the lead.
+    pub body: TextMetrics,
+    /// The lead's last line plus one space in the body style, from the run's left edge.
+    pub body_indent_px: f32,
+    /// The top of the lead's last line, where the body's line 0 sits.
+    pub body_top_px: f32,
+    pub width_px: f32,
+    pub height_px: f32,
+}
+
+impl LeadRun {
+    /// `body_indent_px` for line 0, 0 for every later line.
+    pub fn body_line_x_px(&self, line_index: usize) -> f32;
+    pub fn body_continues_lead_line(&self) -> bool;
+}
+
+/// `InvalidStyle` when the two styles differ in size or line height.
+pub fn measure_lead_run(
+    measurer: &mut dyn TextMeasurer,
+    lead: &str,
+    lead_style: &TextStyle,
+    body: &str,
+    body_style: &TextStyle,
+    max_width_px: Option<f32>,
+) -> Result<LeadRun, MeasureError>;
 ```
+
+A lead run measures the lead at the run's width, then the body at the same width with a first-line indent of the lead's last line plus one space. The space is the width of U+00A0 in the body style, the advance of an inter-word space with its letter spacing; a lone U+0020 measures 0 as a trailing space. The body's line 0 shares the lead's last line, so `body_top_px` is the lead's height less one line, and `height_px` is `body_top_px + body.height_px`. A lead whose last line overflows the run leaves no room, and its body starts on the next line.
 
 `LayoutError::Taffy` and `LayoutError::NonFinite` carry the pointer of the node whose box failed when there is one: a taffy node not attached to the tree, or a non-finite border or content box, reports its record's pointer. A failure of `compute_layout_with_measure`, which computes the whole tree at once, a failure while walking the tree for absolute origins, and a non-finite canvas size are page-level and carry the root pointer `""`.
 
@@ -1567,7 +1622,7 @@ Every error variant maps to one code. The mapping is an exhaustive `match` with 
 | CLI failures outside the document: an input path with no file stem (`InputStem`), an output path that is the input file (`OutputIsInput`), the second parse of a vetted input into `serde_json::Value` (`DocumentValue`), serializing the measured JSON or the schema (`Serialize`) | 2 |
 | `ModelError::Json`, `ModelError::Invalid`, `LayoutError::Invalid` | 1 |
 | `LayoutError::Measure` with source `MeasureError::MissingGlyph` | 1 |
-| `LayoutError::Measure` with source `EmptyText`, `InvalidStyle`, `InvalidMaxWidth` or `Backend` | 2 |
+| `LayoutError::Measure` with source `EmptyText`, `InvalidStyle`, `InvalidMaxWidth`, `InvalidIndent` or `Backend` | 2 |
 | `LayoutError::Taffy`, `LayoutError::NonFinite` | 2 |
 | `FontError`, any variant, and `RenderError::Fonts` | 2 |
 | `RenderError::ScaleOutOfRange`, `PngWidthOutOfRange`, `GeometryMismatch`, `Svg`, `TextNotRendered`, `TextCountExceeded`, `FontNotResolved`, `PixmapAllocation`, `PngEncode` | 2 |
@@ -1846,7 +1901,7 @@ Each behavior change comes with a test that fails before the change. Each positi
 - `legend-consistency`: a used kind missing from the legend, a legend kind never used, a duplicate legend kind, a Tee spine kind counted, and Tee arm kinds counted. A kind missing from the legend and used by two Pipes yields two defects at the two Pipe pointers, and a duplicate legend kind yields one defect at the later entry. A page with no pipes and an empty legend reports examined 0, and `passed()` is false. A page with one Pipe and a 20-entry legend reports examined 18: one use and the first 17 entries.
 - `TextStyleName`: for every variant, `TEXT_STYLES[v as usize].name == v`, `text_style()` returns that entry, and `as_str()` equals the section 2.9 name.
 - `CheckReport::passed` is false for examined 0 with no defects, and for examined 1 with one defect. `CheckName::unit` returns the singular for 1 and the plural for 0 and 2, for every check.
-- `FixedMetricsMeasurer`: the worked example (104.0 by 15.6), wrapping at a width that splits two words, a word longer than the max width (width exceeds max, one line), `Some(0.0)` giving the widest word, letter spacing adding `n * em * size`, `MissingGlyph` for a configured character, `EmptyText`, `InvalidStyle` for size 5 and 97 and for an infinite line height, and `InvalidMaxWidth` for -1 and NaN.
+- `FixedMetricsMeasurer`: the worked example (104.0 by 15.6), wrapping at a width that splits two words, a word longer than the max width (width exceeds max, one line), `Some(0.0)` giving the widest word, letter spacing adding `n * em * size`, `MissingGlyph` for a configured character, `EmptyText`, `InvalidStyle` for size 5 and 97 and for an infinite line height, and `InvalidMaxWidth` for -1 and NaN. With a first-line indent: indent 0 equal to `measure`, an indent that narrows only line 0, a run that fits after the indent with the indent in its width, a first word past the room giving an empty line 0, and `InvalidIndent` for -1, NaN and infinity.
 
 ### stencil-text
 
@@ -1858,6 +1913,7 @@ Each behavior change comes with a test that fails before the change. Each positi
 - For strings whose only break opportunities are U+0020 (no hyphen, slash or other UAX #14 break class), `Some(0.0)` equals the widest space-separated word measured with `None`. Separately, `"On-prem router 1"` in `card_function` at `Some(0.0)` gives four lines, `On-`, `prem`, `router` and `1`.
 - Letter spacing: a 20-character string with no ligature or contextual-alternate candidates (`ABCDEFGHIJKLMNOPQRST`) at 0.08 em and 11 px is 17.6 px wider (within 0.5 px) than at 0.
 - Determinism: two measurements of the same input are bit-identical.
+- First-line indent: for every style, indent 0 is bit-identical to `measure`; an indent narrows only line 0, and the later lines equal the rest of the text measured at the full width; a first word past the room gives an empty line 0 followed by the unindented lines; at `Some(0.0)` and `None` an indented run breaks as the fake's does.
 
 ### stencil-layout
 
@@ -1866,6 +1922,7 @@ All tests except the wrap-epsilon regression use `FixedMetricsMeasurer::default(
 - Page: the root is 1320 wide. `/title` starts at x = 20. `/kicker` is 6 px above `/title`. The canvas height equals the last root child's bottom plus 20. A kicker longer than the page width wraps and its text part stays inside `/kicker`.
 - Pcard: the icon is 28 by 28. The card is 46 tall with icon and one-line fn and pn, and 44 tall with icon and fn only. It grows by the fact box height plus 4 when `fact` is set. Without an icon the text starts at the left padding. In a card 300 wide with an icon and a fact whose max-content width is 500, the text column is 300 - 3 - 20 - 28 - 10 = 239 wide and the fact wraps to more than one line.
 - Fact: a fact whose max-content width exceeds its parent's content width wraps, and the Fact node stays inside its parent.
+- Lead run: a body that fits continues the lead's line at the indent, a body after a wrapped lead starts on the lead's last line and wraps at the full width, a body whose first word does not fit after the lead and a lead wider than the line both put the body on the next line, and a lead and body of different line heights are `InvalidStyle`.
 - Geometry order: for g7 the pointers of `PageGeometry.nodes` begin `""`, `/kicker`, `/title`, `/lede`, `/body`, `/body/0` and end `/legend`, `/legend/0`, `/legend/1`, `/legend/2`, `/foot`. In a document with a Tee followed by a sibling, the Tee's two arms come directly after the Tee and before the sibling. The body portion equals `body_nodes(page)` pointer for pointer.
 - Parts: for every NodeTag, the part names and their order match section 2.11, and exactly the listed parts carry a `TextRun`. Title, Lede, Foot and Note carry one `Text` part equal to their border box.
 - Zone: the first child's y is zone y + border + padding + label line height + 8, checked for region-a (1.5, 12, 14.4) and perimeter (2.5, 12, 15.6). The gcp bar is 35.6 tall, and children start inside the body padding.

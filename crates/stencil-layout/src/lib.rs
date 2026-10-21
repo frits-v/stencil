@@ -8,6 +8,7 @@ mod build;
 mod compute;
 mod drawn;
 mod lanes;
+mod lead_run;
 mod pipe_ends;
 mod route;
 mod theme_labels;
@@ -22,6 +23,7 @@ use stencil_model::{
 
 pub use build::{container_label_style, fact_presentation};
 pub use drawn::{DrawnLink, Fillet, PathPiece, drawn_link, fillet, push_flattened};
+pub use lead_run::{LeadRun, measure_lead_run};
 pub use route::{
     OBSTACLE_CLEARANCE_PX, longest_segment_midpoint, longest_segment_point, reroute_link,
 };

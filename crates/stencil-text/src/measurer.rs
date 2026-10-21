@@ -5,7 +5,7 @@ use cosmic_text::{
 };
 use stencil_model::text::{
     MeasureError, TextLine, TextMeasurer, TextMetrics, TextStyle, break_opportunities,
-    check_measure_input,
+    check_measure_input, indented_run_width,
 };
 
 use crate::{FontError, bundled_font_database, verify_bundled_fonts};
@@ -344,14 +344,13 @@ fn line_extent(
     })
 }
 
-impl TextMeasurer for CosmicTextMeasurer {
-    fn measure(
+impl CosmicTextMeasurer {
+    fn measure_cached(
         &mut self,
         text: &str,
         style: &TextStyle,
         max_width_px: Option<f32>,
     ) -> Result<TextMetrics, MeasureError> {
-        check_measure_input(text, style, max_width_px)?;
         let key = MeasureKey::new(text, style, max_width_px);
         if let Some(cached) = self.cache.get(&key) {
             return Ok(cached.clone());
@@ -362,6 +361,89 @@ impl TextMeasurer for CosmicTextMeasurer {
         }
         self.cache.insert(key, metrics.clone());
         Ok(metrics)
+    }
+
+    /// An indented run in two measurements (section 3.2): the text at the first line's room
+    /// gives line 0, or an empty line 0 when its first word overflows that room, and the rest
+    /// of the text at the full width gives the later lines.
+    fn measure_after_indent(
+        &mut self,
+        text: &str,
+        style: &TextStyle,
+        max_width_px: f32,
+        first_line_indent_px: f32,
+    ) -> Result<TextMetrics, MeasureError> {
+        let first_line_room_px = max_width_px - first_line_indent_px;
+        let narrow = self.measure_cached(text, style, Some(first_line_room_px.max(0.0)))?;
+        let narrow_first = narrow.lines.first().ok_or_else(|| MeasureError::Backend {
+            message: "cosmic-text produced no first line".to_string(),
+        })?;
+        let (first_line, rest_start) = if narrow_first.width_px > first_line_room_px {
+            let empty_line = TextLine {
+                byte_start: 0,
+                byte_end: 0,
+                width_px: 0.0,
+                baseline_px: narrow_first.baseline_px,
+            };
+            (empty_line, Some(0))
+        } else {
+            let rest_start = narrow.lines.get(1).map(|line| line.byte_start);
+            (narrow_first.clone(), rest_start)
+        };
+
+        let mut lines = vec![first_line];
+        if let Some(rest_start) = rest_start {
+            let rest_text = text
+                .get(rest_start..)
+                .filter(|rest_text| !rest_text.is_empty())
+                .ok_or_else(|| MeasureError::Backend {
+                    message: format!(
+                        "line 1 starts at byte {rest_start}, outside the measured text"
+                    ),
+                })?;
+            let rest = self.measure_cached(rest_text, style, Some(max_width_px))?;
+            lines.extend(rest.lines.into_iter().map(|line| TextLine {
+                byte_start: line.byte_start + rest_start,
+                byte_end: line.byte_end + rest_start,
+                width_px: line.width_px,
+                baseline_px: line.baseline_px + style.line_height_px,
+            }));
+        }
+
+        let line_count = u32::try_from(lines.len()).map_err(|_| MeasureError::Backend {
+            message: format!("{} lines do not fit in u32", lines.len()),
+        })?;
+        Ok(TextMetrics {
+            width_px: indented_run_width(&lines, first_line_indent_px),
+            height_px: line_count as f32 * style.line_height_px,
+            line_count,
+            lines,
+        })
+    }
+}
+
+impl TextMeasurer for CosmicTextMeasurer {
+    fn measure_indented(
+        &mut self,
+        text: &str,
+        style: &TextStyle,
+        max_width_px: Option<f32>,
+        first_line_indent_px: f32,
+    ) -> Result<TextMetrics, MeasureError> {
+        check_measure_input(text, style, max_width_px, first_line_indent_px)?;
+        if first_line_indent_px == 0.0 {
+            return self.measure_cached(text, style, max_width_px);
+        }
+        match max_width_px {
+            None => {
+                let mut metrics = self.measure_cached(text, style, None)?;
+                metrics.width_px = indented_run_width(&metrics.lines, first_line_indent_px);
+                Ok(metrics)
+            }
+            Some(max_width_px) => {
+                self.measure_after_indent(text, style, max_width_px, first_line_indent_px)
+            }
+        }
     }
 }
 
