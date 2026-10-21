@@ -305,18 +305,26 @@ pub fn links_routed(page: &Page, geometry: &PageGeometry) -> CheckReport {
     }
     let links_pointer = NodePointer::root().child("links");
     let mut defects = Vec::new();
+    let flat = page.projection == Projection::Flat;
     for route in &geometry.links {
         if route.status == RouteStatus::Fallback {
+            // A flat arrowed link also falls back when its stub has no room, with nothing
+            // in its way.
+            let clear = if flat && route.arrow != Arrow::None {
+                format!("avoids every obstacle with a {LINK_ARROW_STUB_PX:.2} px arrow stub")
+            } else {
+                "avoids every obstacle".to_string()
+            };
             defects.push(Defect {
                 pointer: links_pointer.index(route.index),
                 message: format!(
-                    "no route from {} to {} avoids every obstacle; drawn as a fallback L",
+                    "no route from {} to {} {clear}; drawn as a fallback L",
                     node_pointer_text(geometry, route.from_node),
                     node_pointer_text(geometry, route.to_node)
                 ),
             });
         }
-        if page.projection == Projection::Flat {
+        if flat {
             for (leg, length) in short_arrow_legs(route) {
                 defects.push(Defect {
                     pointer: links_pointer.index(route.index),

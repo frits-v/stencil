@@ -584,7 +584,12 @@ fn a_blocked_arrow_stub_falls_back_and_links_routed_reports_the_short_leg() {
         .map(|defect| defect.message.as_str())
         .collect();
     assert_eq!(messages.len(), 2, "{messages:?}");
-    assert!(messages[0].contains("fallback L"), "{}", messages[0]);
+    assert!(
+        messages[0]
+            .ends_with("avoids every obstacle with a 22.00 px arrow stub; drawn as a fallback L"),
+        "{}",
+        messages[0]
+    );
     assert_eq!(
         messages[1],
         format!("last leg is {last:.2} px, shorter than the arrowhead and a bend (22.00 px)")
