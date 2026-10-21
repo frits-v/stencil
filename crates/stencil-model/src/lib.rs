@@ -12,6 +12,7 @@ pub mod theme;
 mod vet;
 mod walk;
 
+pub use checks::LegendKey;
 pub use document::*;
 pub use grammar::{
     Grammar, GrammarError, GrammarRule, GrammarViolation, LineKind, builtin_grammar,

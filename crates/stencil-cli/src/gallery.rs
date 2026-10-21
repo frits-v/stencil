@@ -63,6 +63,7 @@ pub struct GalleryFiles {
     pub png: String,
     pub svg: String,
     pub measured: String,
+    pub description: String,
 }
 
 /// The six designed themes in the gallery's order, without the imported tier (section 13.9).
@@ -374,6 +375,7 @@ fn render_theme(
                 png: relative(&names.png),
                 svg: relative(&names.svg),
                 measured: relative(&names.measured),
+                description: relative(&names.description),
             }),
         },
         lines,
@@ -463,9 +465,10 @@ fn example_html(example: &GalleryExample, render: &GalleryRender) -> String {
             escape(&render.theme)
         ));
         html.push_str(&format!(
-            "<p><a href=\"{png}\">PNG</a> | <a href=\"{}\">SVG</a> | <a href=\"{}\">measured JSON</a></p>\n",
+            "<p><a href=\"{png}\">PNG</a> | <a href=\"{}\">SVG</a> | <a href=\"{}\">measured JSON</a> | <a href=\"{}\">description</a></p>\n",
             escape(&href(&files.svg)),
-            escape(&href(&files.measured))
+            escape(&href(&files.measured)),
+            escape(&href(&files.description))
         ));
     }
     let class = if render.passed {

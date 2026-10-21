@@ -15,6 +15,7 @@ stencil-layout = { path = "../stencil-layout" }
 stencil-text = { path = "../stencil-text" }
 
 [dev-dependencies]
+pulldown-cmark.workspace = true
 sha2.workspace = true
 
 [lints]

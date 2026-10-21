@@ -346,13 +346,13 @@ fn help_and_version_go_to_stdout_with_exit_zero() {
         format!("stencil {}\n", env!("CARGO_PKG_VERSION"))
     );
     let help = run_stencil(&["--help"]);
-    for command in ["vet", "render", "check", "schema"] {
+    for command in ["vet", "render", "check", "describe", "schema"] {
         assert!(help.stdout.contains(command), "{}", help.stdout);
     }
 }
 
 #[test]
-fn render_writes_three_files_and_prints_their_absolute_paths() {
+fn render_writes_four_files_and_prints_their_absolute_paths() {
     let directory = scratch_directory("render_writes");
     let out_dir = directory.join("nested").join("out");
 
@@ -360,7 +360,7 @@ fn render_writes_three_files_and_prints_their_absolute_paths() {
 
     assert_eq!(outcome.code, ExitCode::Clean, "{}", outcome.stderr);
     let canonical = fs::canonicalize(&out_dir).unwrap();
-    let expected: Vec<PathBuf> = ["g7.svg", "g7.png", "g7.measured.json"]
+    let expected: Vec<PathBuf> = ["g7.svg", "g7.png", "g7.measured.json", "g7.description.md"]
         .iter()
         .map(|name| canonical.join(name))
         .collect();
@@ -380,6 +380,101 @@ fn render_writes_three_files_and_prints_their_absolute_paths() {
     let measured: Value = serde_json::from_slice(&fs::read(&expected[2]).unwrap()).unwrap();
     assert_eq!(measured["document"], g7_document());
     assert_eq!(measured["canvas"]["width"], json!(1320));
+    let description = fs::read_to_string(&expected[3]).unwrap();
+    assert!(description.starts_with("# Four lines."), "{description}");
+}
+
+#[test]
+fn render_leaves_a_hand_written_markdown_file_with_the_figure_stem_untouched() {
+    let out_dir = scratch_directory("render_hand_written_markdown");
+    let notes = b"# Design notes\n\nWritten by hand beside the figure.\n";
+    fs::write(out_dir.join("g7.md"), notes).unwrap();
+
+    let outcome = run_stencil(&["render", &g7_path(), "--out-dir", out_dir.to_str().unwrap()]);
+
+    assert_eq!(outcome.code, ExitCode::Clean, "{}", outcome.stderr);
+    assert_eq!(fs::read(out_dir.join("g7.md")).unwrap(), notes);
+    assert!(out_dir.join("g7.description.md").is_file());
+}
+
+#[test]
+fn describe_prints_what_render_writes() {
+    let out_dir = scratch_directory("describe_prints_what_render_writes");
+    let rendered = run_stencil(&["render", &g7_path(), "--out-dir", out_dir.to_str().unwrap()]);
+    assert_eq!(rendered.code, ExitCode::Clean, "{}", rendered.stderr);
+
+    let outcome = run_stencil(&["describe", &g7_path()]);
+
+    assert_eq!(outcome.code, ExitCode::Clean, "{}", outcome.stderr);
+    assert_eq!(outcome.stderr, "");
+    assert_eq!(
+        outcome.stdout,
+        fs::read_to_string(out_dir.join("g7.description.md")).unwrap()
+    );
+    assert!(
+        outcome.stdout.contains("projection flat"),
+        "{}",
+        outcome.stdout
+    );
+
+    let iso = run_stencil(&["describe", &g7_path(), "--projection", "iso"]);
+    assert_eq!(iso.code, ExitCode::Clean, "{}", iso.stderr);
+    assert!(iso.stdout.contains("projection iso"), "{}", iso.stdout);
+}
+
+#[test]
+fn describe_exits_1_with_violation_lines_for_an_invalid_page() {
+    let mut document = g7_document();
+    document["title"] = json!(" Four lines.");
+    let path = write_document("describe_violation", "g7-untrimmed.json", &document);
+
+    let outcome = run_stencil(&["describe", &path]);
+
+    assert_eq!(outcome.code, ExitCode::Defects);
+    assert_eq!(
+        outcome.stdout_lines(),
+        vec![
+            "violation text-untrimmed /title: text starts or ends with whitespace",
+            "stencil describe: 1 violation, checks not run",
+        ]
+    );
+    assert_eq!(outcome.stderr, "");
+}
+
+#[test]
+fn describe_exits_1_for_a_missing_glyph() {
+    let path = write_document(
+        "describe_missing_glyph",
+        "g7-cjk.json",
+        &document_with_missing_glyph(),
+    );
+
+    let outcome = run_stencil(&["describe", &path]);
+
+    assert_eq!(outcome.code, ExitCode::Defects);
+    let lines = outcome.stdout_lines();
+    assert_eq!(lines.len(), 2, "{}", outcome.stdout);
+    assert!(lines[0].contains("U+4E00"), "{}", lines[0]);
+    assert_eq!(lines[1], "stencil describe: checks not run");
+    assert_eq!(outcome.stderr, "");
+}
+
+#[test]
+fn describe_exits_2_for_a_missing_file() {
+    let directory = scratch_directory("describe_missing_file");
+    let missing = directory.join("absent.json");
+
+    let outcome = run_stencil(&["describe", missing.to_str().unwrap()]);
+
+    assert_eq!(outcome.code, ExitCode::CouldNotRun);
+    assert_eq!(outcome.stdout, "");
+    assert!(
+        outcome
+            .stderr
+            .starts_with("stencil describe: cannot read input "),
+        "{}",
+        outcome.stderr
+    );
 }
 
 /// The `font-weight` values of every `<text>` element, and of every `@font-face` rule with
@@ -660,11 +755,12 @@ fn render_writes_files_when_the_legend_omits_a_used_kind() {
     let outcome = run_stencil(&["render", &path, "--out-dir", out_dir.to_str().unwrap()]);
 
     assert_eq!(outcome.code, ExitCode::Clean, "{}", outcome.stderr);
-    assert_eq!(outcome.stdout_lines().len(), 3);
+    assert_eq!(outcome.stdout_lines().len(), 4);
     for name in [
         "g7-no-dash.svg",
         "g7-no-dash.png",
         "g7-no-dash.measured.json",
+        "g7-no-dash.description.md",
     ] {
         assert!(out_dir.join(name).is_file(), "{name}");
     }
@@ -691,7 +787,7 @@ fn render_stops_on_a_violation_and_writes_nothing() {
 }
 
 #[test]
-fn check_g7_passes_seven_checks_and_skips_the_link_iso_and_print_checks() {
+fn check_g7_passes_eight_checks_and_skips_the_link_iso_and_print_checks() {
     let outcome = run_stencil(&["check", &g7_path()]);
     assert_eq!(outcome.code, ExitCode::Clean, "{}", outcome.stderr);
     assert_eq!(
@@ -711,7 +807,8 @@ fn check_g7_passes_seven_checks_and_skips_the_link_iso_and_print_checks() {
             "check iso-links-apart: examined 0 link pairs, not applicable: projection is flat",
             "check print-fit: examined 0 text runs, not applicable: no print width",
             "check icon-matches-product: examined 6 items, 0 defects",
-            "stencil check: 14 checks, 7 passed, 0 failed, 7 not applicable",
+            "check description-covers-drawing: examined 26 elements, 0 defects",
+            "stencil check: 15 checks, 8 passed, 0 failed, 7 not applicable",
         ]
     );
     assert_eq!(outcome.stderr, "");
@@ -750,7 +847,7 @@ fn check_reports_overflowing_text_with_its_pointer() {
         .copied()
         .filter(|line| line.starts_with("check "))
         .collect();
-    assert_eq!(check_lines.len(), 14, "{}", outcome.stdout);
+    assert_eq!(check_lines.len(), 15, "{}", outcome.stdout);
     assert!(
         check_lines[0].starts_with("check child-inside-container: examined "),
         "{}",
@@ -798,7 +895,7 @@ fn check_reports_overflowing_text_with_its_pointer() {
     );
     assert_eq!(
         lines.last().copied(),
-        Some("stencil check: 14 checks, 5 passed, 1 failed, 8 not applicable"),
+        Some("stencil check: 15 checks, 6 passed, 1 failed, 8 not applicable"),
         "{}",
         outcome.stdout
     );
@@ -1034,7 +1131,7 @@ fn two_processes_render_byte_identical_outputs() {
             .output()
             .unwrap();
         assert!(status.status.success(), "{:?}", status);
-        let bytes: Vec<Vec<u8>> = ["g7.svg", "g7.png", "g7.measured.json"]
+        let bytes: Vec<Vec<u8>> = ["g7.svg", "g7.png", "g7.measured.json", "g7.description.md"]
             .iter()
             .map(|name| fs::read(out_dir.join(name)).unwrap())
             .collect();
@@ -1061,7 +1158,7 @@ fn check_with_print_width_14_fails_print_fit_once_at_the_badge() {
     assert_eq!(lines[print_fit + 1], G7_BADGE_AT_14_INCHES);
     assert_eq!(
         lines.last().copied(),
-        Some("stencil check: 14 checks, 7 passed, 1 failed, 6 not applicable")
+        Some("stencil check: 15 checks, 8 passed, 1 failed, 6 not applicable")
     );
 }
 
@@ -1098,11 +1195,12 @@ fn render_with_a_failing_print_width_writes_the_files_then_exits_1() {
             canonical.join("g7.svg").to_str().unwrap(),
             canonical.join("g7.png").to_str().unwrap(),
             canonical.join("g7.measured.json").to_str().unwrap(),
+            canonical.join("g7.description.md").to_str().unwrap(),
             "check print-fit: examined 40 text runs, 1 defect",
             G7_BADGE_AT_14_INCHES,
         ]
     );
-    for name in ["g7.svg", "g7.png", "g7.measured.json"] {
+    for name in ["g7.svg", "g7.png", "g7.measured.json", "g7.description.md"] {
         assert!(out_dir.join(name).is_file(), "{name}");
     }
 }
@@ -1120,9 +1218,9 @@ fn render_with_a_passing_print_width_exits_0_after_the_check_line() {
     ]);
     assert_eq!(outcome.code, ExitCode::Clean, "{}", outcome.stderr);
     let lines = outcome.stdout_lines();
-    assert_eq!(lines.len(), 4, "{}", outcome.stdout);
+    assert_eq!(lines.len(), 5, "{}", outcome.stdout);
     assert_eq!(
-        lines[3],
+        lines[4],
         "check print-fit: examined 40 text runs, 0 defects"
     );
 }

@@ -12,4 +12,5 @@ check iso-link-ends: examined 2 link ends, 0 defects
 check iso-links-apart: examined 0 link pairs, not applicable: page has fewer than two links
 check print-fit: examined 0 text runs, not applicable: no print width
 check icon-matches-product: examined 0 items, not applicable: grammar has no icon table
-stencil check: 14 checks, 10 passed, 0 failed, 4 not applicable
+check description-covers-drawing: examined 29 elements, 0 defects
+stencil check: 15 checks, 11 passed, 0 failed, 4 not applicable

@@ -1,6 +1,6 @@
 # Stencil renderer: contract specification
 
-Stencil turns a JSON description of an architecture figure into an SVG, a PNG and a measured JSON. The input describes structure: zones, product cards, facts, notes and the labeled pipes between them. It carries no coordinates. taffy computes every box. cosmic-text measures every string with font files bundled in this repository, and resvg renders with the same files, so a measured width is the rendered width.
+Stencil turns a JSON description of an architecture figure into an SVG, a PNG, a measured JSON and a Markdown description. The input describes structure: zones, product cards, facts, notes and the labeled pipes between them. It carries no coordinates. taffy computes every box. cosmic-text measures every string with font files bundled in this repository, and resvg renders with the same files, so a measured width is the rendered width.
 
 The visual grammar is the Google Cloud Architecture Center stencil used by the drafting-diagrams skill (`drafting-diagrams/stencil/_gcp.css`, the gold figures under `drafting-diagrams/stencil/golds/`). Each tag below corresponds to one component of that stylesheet.
 
@@ -13,7 +13,7 @@ Cargo.toml                      workspace
 crates/stencil-model/           types, serde, JSON Schema, geometry-free checks, TextMeasurer trait
 crates/stencil-text/            TextMeasurer on cosmic-text, bundled font loading
 crates/stencil-layout/          taffy tree from the model, geometry, geometry checks
-crates/stencil-render/          SVG writer, PNG via resvg, measured JSON
+crates/stencil-render/          SVG writer, PNG via resvg, measured JSON, figure description
 crates/stencil-cli/             binary `stencil`
 assets/fonts/                   Inter static TTFs, OFL.txt, FONTS.md (asset pre-step, section 8.3)
 assets/icons/                   23 Google Cloud icons, PROVENANCE.md (asset pre-step, section 8.3)
@@ -1299,7 +1299,7 @@ pub enum RenderError {
 
 `src/lib.rs` exposes `pub fn run(arguments: Vec<std::ffi::OsString>, stdout: &mut dyn Write, stderr: &mut dyn Write) -> ExitCode`, and integration tests call it directly. `src/main.rs` collects `std::env::args_os()`, calls `run` and exits with the returned code. Argument parsing uses clap derive. Section 7 has the commands.
 
-`src/lib.rs` also exposes `pub mod pipeline`, the steps `run` composes, so the section 9.4 golden test drives the same code path without the argument parser: `read_input` (at most `INPUT_BYTES_MAX` bytes), `load_document` (parse, vet, then the input as a `serde_json::Value`), `output_names`, `render_page` (layout with `CosmicTextMeasurer`, SVG, PNG and measured JSON in memory), `model_checks`, `all_checks` (the ten reports in `CheckName` order, section 12.9), `write_outputs`, and the `Failure` enum that section 7 maps to exit codes.
+`src/lib.rs` also exposes `pub mod pipeline`, the steps `run` composes, so the section 9.4 golden test drives the same code path without the argument parser: `read_input` (at most `INPUT_BYTES_MAX` bytes), `load_document` (parse, vet, then the input as a `serde_json::Value`), `output_names`, `render_page` (layout with `CosmicTextMeasurer`, SVG, PNG, measured JSON and description in memory), `model_checks`, `all_checks` (one report per check of section 6, in `CheckName` order), `write_outputs`, and the `Failure` enum that section 7 maps to exit codes.
 
 ```rust
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -1312,7 +1312,7 @@ pub enum ExitCode {
 
 ## 5. Outputs
 
-`stencil render` writes three files named after the input's file stem: `<stem>.svg`, `<stem>.png` and `<stem>.measured.json`.
+`stencil render` writes four files named after the input's file stem: `<stem>.svg`, `<stem>.png`, `<stem>.measured.json` and `<stem>.description.md`, the figure description of section 14.1. It never writes `<stem>.md`, so a hand-written Markdown file beside the document keeps its bytes.
 
 ### 5.1 Numbers
 
@@ -1433,6 +1433,7 @@ Every check returns a `CheckReport` with the number of units it examined. A repo
 | `pipes-land` | layout | each pipe end that faces a neighbor: for every Pipe and Tee arm, one per side (left and right for h, above and below for v) that has a neighbor, as defined below; a side whose Pipe names a `from` or `to` target examines the target instead (section 13.8) | the pipe's center on the cross axis lies outside every box in the neighbor's subtree that is not a Row or Col | 0.01 px |
 | `print-fit` | layout | each text run, as `text-fits-box` counts them, when `--print-width` is set (section 13.10) | the run prints below 8 pt at the print width | 0.01 pt |
 | `icon-matches-product` | model | each Item whose kind has a products table and that has an `icon` or a `subtitle` (section 13.10) | the subtitle names a product whose own icon is another, or a product without one and the item carries a product icon | |
+| `description-covers-drawing` | render | each unit `description_units` returns (section 14.1 rule 5): every geometry node other than the root that draws a part, then every link route; structural pointers are not counted | a unit's pointer is on no line or on two; the line holding it lacks the unit's escaped name; a pointer span names neither a unit nor a structural pointer; a structural pointer is on two lines; a span is neither a pointer nor a grid reference, or a grid reference stands where none belongs; the figure paragraph's count differs from examined | |
 
 `CheckName::unit(count)` returns the noun printed after the examined count:
 
@@ -1450,6 +1451,7 @@ Every check returns a `CheckReport` with the number of units it examined. A repo
 | `iso-links-clear` | link leg | link legs |
 | `print-fit` | text run | text runs |
 | `icon-matches-product` | item | items |
+| `description-covers-drawing` | element | elements |
 
 `text-fits-box` also examines the TagLabel and TagSub runs of every link tag, with `/links/<i>` as the owner and the tag box as the box the run must stay inside.
 
@@ -1478,7 +1480,19 @@ Remembered constants. The literals and reasons match `drafting-diagrams/scripts/
 
 Matching follows the `\b` boundaries used in `cue/stencil.cue`. An occurrence counts only when the character before it and the character after it are not ASCII alphanumeric or `_`. `AS64512` does not match, and neither does `10.8.0.0/280`, while `ASN 64512` does. The check scans the authored text before any uppercase transform and does not use a regex dependency.
 
-print-fit is not applicable without `--print-width` (`no print width`), and icon-matches-product on a page whose items have no products table (`grammar has no icon table`).
+print-fit is not applicable without `--print-width` (`no print width`), and icon-matches-product on a page whose items have no products table (`grammar has no icon table`). description-covers-drawing is never not applicable: a page always draws its body, so examined 0 means the probe failed.
+
+`description-covers-drawing` reads the text `describe` returns, the bytes `render` writes, with the subset of section 14.1 rule 1. It skips fenced blocks. It collects code spans line by line, reading escapes in pairs left to right, so `\\` is one escaped backslash and a backtick that no escape consumes opens or closes a span. A span that starts with `/` is a pointer span; a span of one grid cell (`B3`) or two joined by `-` (`B2-C5`) is a reference span, bound to the pointer span that follows it after one space. It reads the count from the first paragraph after the `## Figure` heading. It reads no words outside spans except to test that the line holding a unit's pointer contains `escape_markdown` of the unit's name. It compares the result with `description_units`, which reads the page and `PageGeometry` and never the writer's state, so a drawn element the writer forgets leaves a unit no line carries. It runs under both projections; under iso it reads the layout geometry. Defects come in unit order, then structural pointers, then line order, then the figure count:
+
+| Defect | Pointer | Message |
+|---|---|---|
+| a unit on no line | the unit | `not described` |
+| a unit or structural pointer on several lines | the pointer | `described on <n> lines` |
+| the line lacks the name | the unit | `line <l> lacks "<name>"` |
+| a pointer span names nothing | `""` | `line <l> names <p>, which draws nothing` |
+| a span is neither a pointer nor a reference, or a reference has no pointer after it | `""` | `line <l> has span <s>, neither a pointer nor a reference` |
+| a reference on a page without a sheet | the pointer, or `""` when it names nothing | `line <l> gives <r> where no reference belongs` |
+| the figure count differs | `""` | `the figure paragraph counts <t>, examined <e>`, or `no figure paragraph` |
 
 Exit codes: `stencil vet` and `stencil check` exit 1 when any report fails, including a failure because nothing was examined. They exit 0 only when every report passes.
 
@@ -1488,6 +1502,7 @@ Exit codes: `stencil vet` and `stencil check` exit 1 when any report fails, incl
 stencil vet <json>
 stencil render <json> --out-dir <dir> [--scale <1-4> | --png-width <px>] [--print-width <inches>]
 stencil check <json> [--print-width <inches>]
+stencil describe <json> [--projection flat|iso]
 stencil schema
 stencil prime [<topic>]
 stencil gallery <out-dir> [--examples <dir>]
@@ -1496,11 +1511,12 @@ stencil gallery <out-dir> [--examples <dir>]
 | Command | Does | Output on stdout |
 |---|---|---|
 | `vet` | parse, `validate_page`, then, only when there is no violation, `remembered-constants`, `legend-consistency` and `icon-matches-product` | one line per violation, or one line per check and one line per defect; one summary line |
-| `render` | parse and `validate_page` only (violations stop the command with exit 1; the model checks do not run, so a legend inconsistency does not stop a render), layout with `CosmicTextMeasurer`, SVG, PNG at `--scale` (default 2) or `--png-width` px wide (0.5 to 4 times the drawn canvas width, the two flags refused together), measured JSON; creates `--out-dir` if missing and overwrites existing outputs | the three written paths, absolute |
-| `check` | everything `render` does, held in memory without writing files, then all fourteen checks | one line per check, one line per defect, one summary line; or an `error` line and the summary line when layout or render fails with exit 1 |
+| `render` | parse and `validate_page` only (violations stop the command with exit 1; the model checks do not run, so a legend inconsistency does not stop a render), layout with `CosmicTextMeasurer`, SVG, PNG at `--scale` (default 2) or `--png-width` px wide (0.5 to 4 times the drawn canvas width, the two flags refused together), measured JSON, description; creates `--out-dir` if missing and overwrites existing outputs | the four written paths, absolute |
+| `check` | everything `render` does, held in memory without writing files, then every check of section 6 | one line per check, one line per defect, one summary line; or an `error` line and the summary line when layout or render fails with exit 1 |
+| `describe` | parse, `validate_page` and the `--projection` override as `check` does, layout with `CosmicTextMeasurer`, then `describe` (section 14.1); renders nothing and runs no checks | the description, byte for byte what `render` writes; a document defect prints the `error` or `violation` lines `check` prints and exits 1 |
 | `schema` | prints `page_schema()` as pretty JSON | the schema |
 | `prime` | prints the authoring briefing for an agent: `crates/stencil-cli/prime/base.md` with the vocabulary table rendered from `page_schema()`, so tag names, field names, bounds and enum values come from the model; at most 6,000 bytes. With a topic (`themes`, `links`, `blocks`, `layout`, `checks`, `cue`, `example`), that topic's text instead, each at most 4,000 bytes except `example`, which is `examples/g7.json` verbatim. An unknown topic writes one line to stderr naming the topics and exits 2 | the briefing or the topic |
-| `gallery` | for every regular `.json` file directly inside `--examples` (default `examples`), in file-name order and at most 256 of them: parse and `validate_page` once, then for every theme in `--theme` order (center, dusk, wire) layout, SVG, PNG at scale 2 and measured JSON written to `<out-dir>/<stem>/<theme>/` as `render` writes them, followed by all twelve checks, print-fit not applicable. Then writes `<out-dir>/index.html` and `<out-dir>/gallery.json` | per render its failing check and defect lines, then `gallery <stem> <theme>: <check counts>`; the two index paths, absolute; one summary line |
+| `gallery` | for every regular `.json` file directly inside `--examples` (default `examples`), in file-name order and at most 256 of them: parse and `validate_page` once, then for every theme in `--theme` order (center, dusk, wire) layout, SVG, PNG at scale 2, measured JSON and description written to `<out-dir>/<stem>/<theme>/` as `render` writes them, followed by every check of section 6, print-fit not applicable. Then writes `<out-dir>/index.html` and `<out-dir>/gallery.json` | per render its failing check and defect lines, then `gallery <stem> <theme>: <check counts>`; the two index paths, absolute; one summary line |
 
 Line formats, stable for scripts:
 
@@ -1510,7 +1526,7 @@ check text-fits-box: examined 40 text runs, 1 defect
 defect text-fits-box /body/0/children/2/children/0/children/0/children/1: fact "BGP peering · link-local /29" measured 571.20x16.20 in box 560.00x16.20
 check legend-consistency: examined 0 relations, FAILED: nothing examined
 check links-routed: examined 0 links, not applicable: page has no links
-stencil check: 14 checks, 3 passed, 2 failed, 9 not applicable
+stencil check: 15 checks, 4 passed, 2 failed, 9 not applicable
 violation gap-out-of-range /body/0/gap: gap 65 is above 64
 violation text-untrimmed /title: text starts or ends with whitespace
 stencil vet: 2 violations, checks not run
@@ -1526,11 +1542,11 @@ stencil vet: document does not parse, checks not run
 - A defect line is `defect <check> <pointer>: <message>`, and a violation line is `violation <rule> <pointer>: <message>`, with the rule in kebab-case as in section 1.3. An empty pointer prints as `""`.
 - The `vet` summary always starts with the violation count, `1 violation` or `<n> violations`, 0 included. A `render` or `check` summary carries a violation count only when violations stopped the run; otherwise `check` prints `stencil check: <n> checks, <p> passed, <f> failed`, followed by `, <a> not applicable` when a report did not apply. A document with violations or a parse failure prints `checks not run` in place of the check counts.
 - `render` and `check` print violations and parse errors in the same formats, followed by the summary line `stencil <command>: …`.
-- `check` prints the fourteen check lines in `CheckName` declaration order (child-inside-container, siblings-do-not-overlap, text-fits-box, remembered-constants, legend-consistency, links-routed, links-avoid-boxes, pipes-land, iso-labels-clear, iso-links-clear, iso-link-ends, iso-links-apart, print-fit, icon-matches-product), and `vet` prints its three in the same relative order.
-- With `--print-width`, `render` prints the print-fit check line and its defect lines after the three paths, once the files are written, and exits 1 when the report fails. Each check's defect lines follow its check line directly, in the order the `CheckReport` lists them.
-- On success `render` prints the three absolute paths, one per line, in the order SVG, PNG, measured JSON, and nothing after them.
-- `gallery` prints, for each render, the check and defect lines of the checks that failed (none when every check passed or did not apply) followed by `gallery <stem> <theme>: <n> checks, <p> passed, <f> failed[, <a> not applicable]`. A document that does not parse or has violations prints its `error` or `violation` lines and `gallery <stem>: not rendered`; a render that fails with exit 1 (`MissingGlyph`) prints its `error` line and `gallery <stem> <theme>: not rendered`. After the renders come the absolute paths of `index.html` and `gallery.json`, then `stencil gallery: <r> renders of <e> examples in <t> themes, <f> failed`, where r counts the renders whose three files were written and f counts the renders that failed a check or were not rendered.
-- `index.html` is a static page with no script: one anchor per theme (`<a href="#center">`) leading to one `<section id="<theme>">` per theme, which lists every example with its kicker and title read from the document, the PNG as a thumbnail linking to the full PNG, links to the SVG and the measured JSON, and the check counts line. Every link is relative to the gallery directory, so the page works from a download, a zip or a static host. `gallery.json` holds the same data: `themes`, `examples` (each with `name`, `source`, `title`, `kicker` and one entry per theme holding `theme`, `passed`, `summary` and, when the render was written, `files` with the relative `png`, `svg` and `measured` paths), `renders` and `failed`. A document that does not load is listed under its file name with every render not rendered. Neither file carries a timestamp, so two runs over the same examples write the same bytes.
+- `check` prints one check line per check of section 6 in `CheckName` declaration order (child-inside-container, siblings-do-not-overlap, text-fits-box, remembered-constants, legend-consistency, links-routed, links-avoid-boxes, pipes-land, iso-labels-clear, iso-links-clear, iso-link-ends, iso-links-apart, print-fit, icon-matches-product, description-covers-drawing), and `vet` prints its model checks in the same relative order.
+- With `--print-width`, `render` prints the print-fit check line and its defect lines after the four paths, once the files are written, and exits 1 when the report fails. Each check's defect lines follow its check line directly, in the order the `CheckReport` lists them.
+- On success `render` prints the four absolute paths, one per line, in the order SVG, PNG, measured JSON, description, and nothing after them.
+- `gallery` prints, for each render, the check and defect lines of the checks that failed (none when every check passed or did not apply) followed by `gallery <stem> <theme>: <n> checks, <p> passed, <f> failed[, <a> not applicable]`. A document that does not parse or has violations prints its `error` or `violation` lines and `gallery <stem>: not rendered`; a render that fails with exit 1 (`MissingGlyph`) prints its `error` line and `gallery <stem> <theme>: not rendered`. After the renders come the absolute paths of `index.html` and `gallery.json`, then `stencil gallery: <r> renders of <e> examples in <t> themes, <f> failed`, where r counts the renders whose four files were written and f counts the renders that failed a check or were not rendered.
+- `index.html` is a static page with no script: one anchor per theme (`<a href="#center">`) leading to one `<section id="<theme>">` per theme, which lists every example with its kicker and title read from the document, the PNG as a thumbnail linking to the full PNG, links to the SVG, the measured JSON and the description, and the check counts line. Every link is relative to the gallery directory, so the page works from a download, a zip or a static host. `gallery.json` holds the same data: `themes`, `examples` (each with `name`, `source`, `title`, `kicker` and one entry per theme holding `theme`, `passed`, `summary` and, when the render was written, `files` with the relative `png`, `svg`, `measured` and `description` paths), `renders` and `failed`. A document that does not load is listed under its file name with every render not rendered. Neither file carries a timestamp, so two runs over the same examples write the same bytes.
 - A `MissingGlyph` layout failure (exit 1) prints `error <LayoutError display>` on stdout, followed by `stencil <command>: checks not run`. `render` writes no files in this case, because layout runs before any write.
 
 Exit codes:
@@ -1560,7 +1576,7 @@ Every error variant maps to one code. The mapping is an exhaustive `match` with 
 
 An input file that reads but is not UTF-8 is a `ModelError::Json` (exit 1) at the line and column of the first invalid byte, with the message `input is not valid UTF-8`, because RFC 8259 requires JSON text to be UTF-8. "Unreadable" means an I/O failure only.
 
-`render` refuses an input whose canonical path equals the canonical path of one of its three outputs (`stencil render d/x.svg --out-dir d`), so a render never overwrites its own input. Before anything is staged, `render` returns `WriteOutput` (exit 2) when one of the three final names is a directory (`fs::symlink_metadata`, so a symlink to a directory is replaced like any other symlink), because a rename onto a directory fails only after the earlier renames have replaced their outputs. The three outputs are then written to temporary files named `.<name>.<process id>.<sequence>.tmp` in the output directory, where the sequence is a process-wide counter, each created new, and renamed over the final names only after all three writes succeed. A failed write removes the temporary files this run created and leaves existing outputs untouched, and a symlink at an output name is replaced, not followed. The three renames are not one atomic step: a rename that still fails after the directory check (for example, because another process created a directory at an output name in between) leaves the outputs renamed before it replaced. A run killed while writing can leave its temporary files behind. They are never deleted by a later run; one whose process id and sequence give the same name fails that write with exit 2 instead of overwriting the file.
+`render` refuses an input whose canonical path equals the canonical path of one of its four outputs (`stencil render d/x.svg --out-dir d`), so a render never overwrites its own input. Before anything is staged, `render` returns `WriteOutput` (exit 2) when one of the four final names is a directory (`fs::symlink_metadata`, so a symlink to a directory is replaced like any other symlink), because a rename onto a directory fails only after the earlier renames have replaced their outputs. The four outputs are then written to temporary files named `.<name>.<process id>.<sequence>.tmp` in the output directory, where the sequence is a process-wide counter, each created new, and renamed over the final names only after all four writes succeed. A failed write removes the temporary files this run created and leaves existing outputs untouched, and a symlink at an output name is replaced, not followed. The four renames are not one atomic step: a rename that still fails after the directory check (for example, because another process created a directory at an output name in between) leaves the outputs renamed before it replaced. A run killed while writing can leave its temporary files behind. They are never deleted by a later run; one whose process id and sequence give the same name fails that write with exit 2 instead of overwriting the file.
 
 `read_input` reads at most `pipeline::INPUT_BYTES_MAX` = 64 MiB (67,108,864 bytes). A longer input, `/dev/zero` included, is an unreadable input file: `ReadInput` with an I/O error of kind `FileTooLarge`, exit 2. A vetted page is far smaller, 4096 nodes holding a few texts of at most 400 scalar values each.
 
@@ -1777,7 +1793,7 @@ The reference is the Chrome headless render of `drafting-diagrams/stencil/golds/
 
 The test lives in `crates/stencil-cli/tests/golden_g7.rs` and runs the library pipeline on `examples/g7.json` with `CosmicTextMeasurer`.
 
-1. Render. Assert that the SVG, PNG and measured JSON are produced. Assert that the PNG width is 2640, equal to the reference width, and that the PNG height is `ceil(h * 2)`, where `h` is the canvas height rounded by section 5.1, the value written as `canvas.height` in the measured JSON (section 5.3, step 5).
+1. Render. Assert that the SVG, PNG, measured JSON and description are produced. Assert that the PNG width is 2640, equal to the reference width, and that the PNG height is `ceil(h * 2)`, where `h` is the canvas height rounded by section 5.1, the value written as `canvas.height` in the measured JSON (section 5.3, step 5).
 2. Checks with exact examined counts, derived by hand from the document above:
 
    | Check | Examined | Derivation |
@@ -1788,6 +1804,7 @@ The test lives in `crates/stencil-cli/tests/golden_g7.rs` and runs the library p
    | remembered-constants | 36 | title, kicker, lede, foot, 3 legend texts, 6 zone labels, 6 fn, 6 pn, 2 facts, 5 pipe labels, 4 pipe subs |
    | legend-consistency | 8 | 5 pipes, 3 legend entries |
    | pipes-land | 8 | four VLAN pipes by two sides, the on-prem Col on the left and the gcp zone on the right; the failover pipe's column container is the VPC Zone, not a Col, so it is not examined |
+   | description-covers-drawing | 26 | 26 nodes that draw a part: 6 zones, 6 cards, 5 pipes, 3 legend entries, 2 facts, the kicker, title, lede and foot; no links |
 
    Every report passes, and the two link checks are not applicable. If one of these counts changes, the test fails, and the new count is updated in the test with its derivation.
 3. Geometry assertions on the measured geometry. These encode the gold's structure, and each one holds in `g7-gold-chrome.png` except the metro zone heights, which the known differences below list:
@@ -1890,22 +1907,22 @@ All tests except the wrap-epsilon regression use `FixedMetricsMeasurer::default(
 
 ### stencil-cli
 
-- `vet examples/g7.json` exits 0 and prints the three model checks with examined 36, 8 and 6.
+- `vet examples/g7.json` exits 0 and prints the model checks with examined 36, 8 and 6.
 - `vet` on a copy containing `64512` in a pipe sub exits 1 and prints the defect with its pointer.
 - `vet` on a document with no pipes and an empty legend exits 1 and prints `FAILED: nothing examined`.
 - `vet` on a document with one vet violation prints its `violation` line and `stencil vet: 1 violation, checks not run`, and exits 1.
 - `vet` on malformed JSON exits 1. `vet`, `check` and `render` on a missing file exit 2 with empty stdout, and `render` creates no out-dir. `vet /dev/zero` exits 2 naming the 67,108,864-byte limit, and an input of exactly that many bytes (g7 padded with spaces) is read and vets clean. `vet` and `check` on a 4097-node document exit 1 with `violation nodes-exceeded /body: more than 4096 nodes`. An unknown subcommand or flag exits 2. `--help` and `--version` exit 0, write the text to stdout and write nothing to stderr.
-- `render` writes the three files to a temporary directory and prints exactly their three absolute paths in the order SVG, PNG, measured JSON. `--scale 5` exits 2. An `--out-dir` under a read-only directory exits 2.
+- `render` writes the four files to a temporary directory and prints exactly their four absolute paths in the order SVG, PNG, measured JSON, description. `--scale 5` exits 2. An `--out-dir` under a read-only directory exits 2.
 - `render --png-width 2034` writes hybrid-ai and hero-iso PNGs 2034 px wide and `ceil(h * 2034 / w)` tall, where `w` and `h` are the measured JSON's `canvas` in flat and `projection.canvas` in iso. On hybrid-ai's 1480 px canvas 740 and 5920 render, and 0, 739 and 5921 exit 2 with `PngWidthOutOfRange` and write nothing; `--scale` with `--png-width` exits 2.
-- `check examples/g7.json` exits 0 and prints the fourteen lines in `CheckName` order: the five with the counts from section 9.4, both link checks as not applicable, pipes-land with 8 pipe ends and no defect, the four iso checks and print-fit as not applicable, icon-matches-product with 6 items, and the summary `14 checks, 7 passed, 0 failed, 7 not applicable`.
-- `check` on a document whose text overflows exits 1 and names the pointer. The document has one Pipe and a matching legend entry, so child-inside-container is the only failing check. The Pipe sits in the body with no Row or Col sibling, so pipes-land is not applicable, and the summary is `12 checks, 5 passed, 1 failed, 6 not applicable`.
+- `check examples/g7.json` exits 0 and prints one line per check in `CheckName` order: the five with the counts from section 9.4, both link checks as not applicable, pipes-land with 8 pipe ends and no defect, the four iso checks and print-fit as not applicable, icon-matches-product with 6 items, description-covers-drawing with 26 elements, and the summary line captured in `crates/stencil-cli/tests/fixtures/g7.check.txt`.
+- `check` on a document whose text overflows exits 1 and names the pointer. The document has one Pipe and a matching legend entry, so child-inside-container is the only failing check. The Pipe sits in the body with no Row or Col sibling, so pipes-land is not applicable, and the summary counts 1 failed and 8 not applicable.
 - `vet` and `check` on a file whose bytes are not UTF-8 exit 1 and print the `error` line with the line and column of the first invalid byte and `document does not parse, checks not run`.
 - `render d/figure.svg --out-dir d` exits 2 and leaves the input unchanged. A symlink planted at `<out-dir>/g7.svg` is replaced by the rendered file, its target keeps its bytes, and no temporary file is left behind. With an old `g7.svg` and a directory at `<out-dir>/g7.png`, `render` exits 2, `g7.svg` keeps its old bytes, no `g7.measured.json` appears and no temporary file is left behind. Two temporary names from one process differ, and a file already at a temporary name fails the write and keeps its bytes.
 - A vetted page of 160 stacked Pcards exits 2 from `render --scale 4` with a `PixmapAllocation` message and writes nothing, and renders at `--scale 1`.
-- Two separate `stencil render` processes on g7 at the default scale write byte-identical SVG, PNG and measured JSON. `check` on a document with U+4E00 in a Pcard `fn` exits 1 (`MissingGlyph` through `LayoutError::Measure`) and prints an `error` line followed by `stencil check: checks not run`.
-- `render` on a document whose legend omits a used kind writes its three files and exits 0, because render runs `validate_page` only.
+- Two separate `stencil render` processes on g7 at the default scale write byte-identical SVG, PNG, measured JSON and description. `check` on a document with U+4E00 in a Pcard `fn` exits 1 (`MissingGlyph` through `LayoutError::Measure`) and prints an `error` line followed by `stencil check: checks not run`.
+- `render` on a document whose legend omits a used kind writes its four files and exits 0, because render runs `validate_page` only.
 - `schema` prints JSON equal to `schema/stencil.schema.json`.
-- `gallery` over `examples/` into a temporary directory exits 0; `index.html` has a tab and a section for every theme and links the PNG, SVG and measured JSON of every example in every theme; `gallery.json` parses, lists every example with its title and kicker, and its render count, like the summary line, equals the number of examples times the number of themes.
+- `gallery` over `examples/` into a temporary directory exits 0; `index.html` has a tab and a section for every theme and links the PNG, SVG, measured JSON and description of every example in every theme, the description byte-identical across the themes; `gallery.json` parses, lists every example with its title and kicker, and its render count, like the summary line, equals the number of examples times the number of themes.
 - `gallery` over a directory holding one document whose text overflows and one clean document exits 1, prints the failing check with its defect, writes all six renders and both index files, and marks the three overflowing renders failed. A document that does not parse is listed as not rendered in every theme and exits 1. A directory with no `.json` file, or no directory at all, exits 2 with empty stdout and creates no output directory.
 - The golden g7 test in section 9.4.
 
@@ -2632,12 +2649,12 @@ The numbers in this example are illustrative.
 | Command | Change |
 |---|---|
 | `render` | accepts `--projection flat` or `--projection iso`, which overrides `Page.projection` as `--theme` overrides `Page.theme` |
-| `check` | accepts the same flag; runs fourteen checks, `iso-labels-clear`, `iso-links-clear`, `iso-link-ends` and `iso-links-apart` before print-fit and icon-matches-product |
+| `check` | accepts the same flag; runs the checks of section 6, `iso-labels-clear`, `iso-links-clear`, `iso-link-ends` and `iso-links-apart` before print-fit and icon-matches-product |
 | `vet` | unchanged; `--projection` is an unknown flag and exits 2 |
 
 - `pipeline::render_page` calls `project_page` once when the effective projection is `Iso` and keeps the result in `RenderedPage.scene: Option<IsoScene>`, which `measured_json` and the check read.
-- `pipeline::all_checks(page, grammar, geometry, scene: Option<&IsoScene>, print_width: Option<PrintWidth>) -> [CheckReport; 14]`, in `CheckName` order.
-- `check` prints fourteen check lines. A flat page prints `check iso-labels-clear: examined 0 pairs, not applicable: projection is flat`, `check iso-links-clear: examined 0 link legs, not applicable: projection is flat`, `check iso-link-ends: examined 0 link ends, not applicable: projection is flat` and `check iso-links-apart: examined 0 link pairs, not applicable: projection is flat`, so the g7 summary is `stencil check: 14 checks, 7 passed, 0 failed, 7 not applicable`. Check stdout changes for every document; render outputs do not.
+- `pipeline::all_checks(page, grammar, geometry, scene: Option<&IsoScene>, print_width: Option<PrintWidth>)` returns one `CheckReport` per `CheckName`, in `CheckName` order.
+- `check` prints one line per check. A flat page prints `check iso-labels-clear: examined 0 pairs, not applicable: projection is flat`, `check iso-links-clear: examined 0 link legs, not applicable: projection is flat`, `check iso-link-ends: examined 0 link ends, not applicable: projection is flat` and `check iso-links-apart: examined 0 link pairs, not applicable: projection is flat`, so the four count among g7's not-applicable reports. Check stdout changes for every document; render outputs do not.
 - `cue/stencil.cue` gains `projection?: "flat" | "iso"`.
 
 ### 12.10 Example and tests
@@ -2868,7 +2885,7 @@ Tests:
 - stencil-render, labels: touching pills are a gap defect and pills 4 px apart pass; a link under another owner's tag is reported and under its own is not; a pipe's surface through floor text, a tag nearer another pipe than its own, and a contained label with no block each produce their message; the hero examines 242 pairs and the platform 237.
 - stencil-render, check: every hero link end lands on its node (`iso-link-ends` examines 8 and passes), hand-built ends off a block's outline, on its corner, outside a zone and without a solid produce their four messages, and a link from the people figure starts on the figure's hull inside its footprint; the hero passes `iso-labels-clear` with 0 defects; hand-built scenes produce each of the five defect kinds of section 12.7 with its message: two labels overlapping, a mark covered by a later block, a slab edge crossing a mark, a link crossing a mark, and a contained label leaving its block.
 - stencil-render, measured JSON: for the hero, `projection.labels` has 14 entries with `id`, `axis`, `corners` and `z` and no `billboards` key, and the whole output is byte-identical under the three themes while the SVG bytes differ.
-- stencil-cli: `check examples/hero-iso.json` under `--theme center`, `dusk` and `wire` exits 0 with the same four iso check lines, the pipes-land and print-fit not-applicable lines and `stencil check: 14 checks, 12 passed, 0 failed, 2 not applicable`; the counts are the captured lines of `crates/stencil-cli/tests/fixtures/hero-iso.check.txt`. With `--projection flat` it prints the four iso not-applicable lines. `render examples/hero-iso.json` under each theme writes three files, and the PNG width is `ceil(projection.canvas.width * 2)`. `render examples/g7.json --projection iso` writes an iso SVG whose measured JSON `nodes` differ from the flat run's (section 12.4 rule 4) on the same canvas width. `vet --projection iso` exits 2.
+- stencil-cli: `check examples/hero-iso.json` under `--theme center`, `dusk` and `wire` exits 0 with the same four iso check lines, the pipes-land and print-fit not-applicable lines and no failure; the counts and the summary are the captured lines of `crates/stencil-cli/tests/fixtures/hero-iso.check.txt`. With `--projection flat` it prints the four iso not-applicable lines. `render examples/hero-iso.json` under each theme writes four files, and the PNG width is `ceil(projection.canvas.width * 2)`. `render examples/g7.json --projection iso` writes an iso SVG whose measured JSON `nodes` differ from the flat run's (section 12.4 rule 4) on the same canvas width. `vet --projection iso` exits 2.
 
 ## 13. Core and grammars
 
@@ -4307,7 +4324,7 @@ The separation failures belong to the source accents: eight terminal colors chos
 
 ### 13.10 Checks
 
-`CheckName` gains `PrintFit` and `IconMatchesProduct`, appended after `IsoLinksClear`, so the CLI prints twelve check lines in this order: child-inside-container, siblings-do-not-overlap, text-fits-box, remembered-constants, legend-consistency, links-routed, links-avoid-boxes, pipes-land, iso-labels-clear, iso-links-clear, print-fit, icon-matches-product. `vet` runs the three model checks, remembered-constants, legend-consistency and icon-matches-product, in that order. Two model checks now read the grammar: `remembered_constants(page, grammar)` scans for the grammar's `remembered` literals (section 13.2), and `icon_matches_product(page, grammar)` reads its products tables. `REMEMBERED_CONSTANTS` moves into the gcp grammar's data, with the same four literals and reasons.
+`CheckName` gains `PrintFit` and `IconMatchesProduct`, appended after the iso checks, so the CLI prints their lines after iso-links-apart, in the order of section 7. `vet` runs the model checks, remembered-constants, legend-consistency and icon-matches-product, in that order. Two model checks now read the grammar: `remembered_constants(page, grammar)` scans for the grammar's `remembered` literals (section 13.2), and `icon_matches_product(page, grammar)` reads its products tables. `REMEMBERED_CONSTANTS` moves into the gcp grammar's data, with the same four literals and reasons.
 
 | Check | Crate | Unit examined | Defect when | Epsilon |
 |---|---|---|---|---|
@@ -4325,7 +4342,7 @@ print-fit:
 2. `--print-width <inches>` takes a decimal from 0.5 to 200 on `render` and `check`. A value outside that range, not finite or not a number is a clap error, exit 2.
 3. `pub fn print_fit(geometry: &PageGeometry, canvas_width_px: f32, print_width: Option<PrintWidth>) -> CheckReport`, where `PrintWidth` is a newtype over f32 whose constructor enforces rule 2. The pipeline passes the drawn canvas width.
 4. Defect pointer: the node that owns the run, or `/links/<i>` for a link tag. Message: `<part> <text> prints at <p> pt, below 8 pt (<s> px on a <c> px canvas at <w> in)`, every number with 2 decimals, for example `print-fit /kicker: badge_text "CUSTOMER" prints at 7.64 pt, below 8 pt (10.00 px on a 1320.00 px canvas at 14.00 in)`.
-5. `render` runs print-fit when `--print-width` is set, after it has written the three files: it prints the three paths, then the print-fit check line and its defect lines, and exits 1 when the report fails. The files stay written, as a gallery render that fails a check stays written.
+5. `render` runs print-fit when `--print-width` is set, after it has written the four files: it prints the four paths, then the print-fit check line and its defect lines, and exits 1 when the report fails. The files stay written, as a gallery render that fails a check stays written.
 
 icon-matches-product:
 
@@ -4363,16 +4380,9 @@ icon-matches-product:
 5. Defect pointer: the item. Messages: `subtitle names Vertex AI, whose icon is vertex-ai; the item carries ai-ml`, with every product icon listed and joined by ` or ` (`cloud-run or cloud-run-flat`), and `subtitle names Cloud Logging, which has no product icon; the item carries the product icon bigquery`.
 6. Run over the examples, the check finds three real mismatches, corrected in step (d): `hybrid-ai.json` `/body/0/children/2/children/0/children/0/children/0/children/0/children/2/children/0` (`Vertex AI Registry` on `ai-ml`, becomes `vertex-ai`) and `/body/0/children/2/children/0/children/1/children/0/children/4` (`Billing export · BigQuery` on `data-analytics`, becomes `bigquery`), and `network-hub-spoke.json` `/body/0/children/2/children/1/children/1/children/0/children/0/children/2/children/1` (`Cloud Run · Direct VPC` on `serverless`, becomes `cloud-run`). Icon boxes keep their size, so the geometry is unchanged; the `hybrid-ai.json` pointers change when step (d) moves those items into an apis Box.
 
-New check lines after section 13 lands, for the examples as corrected in step (d), with no `--print-width`:
+With no `--print-width`, icon-matches-product examines 6 items on g7 and hero-iso and 7 on onepager, and print-fit is not applicable on every example. Each example's check lines and summary are the captured lines of `crates/stencil-cli/tests/fixtures/<stem>.check.txt`.
 
-| Example | Summary |
-|---|---|
-| g7 | `stencil check: 12 checks, 7 passed, 0 failed, 5 not applicable` (icon-matches-product examines 6 items) |
-| hero-iso | `stencil check: 12 checks, 10 passed, 0 failed, 2 not applicable` (4 items; pipes-land and print-fit not applicable) |
-| hybrid-ai, network-hub-spoke, stress-dense | `stencil check: 12 checks, 7 passed, 0 failed, 5 not applicable` |
-| onepager | `stencil check: 12 checks, 8 passed, 0 failed, 4 not applicable` (7 items) |
-
-`vet examples/g7.json` prints three check lines (remembered-constants 36 text fields, legend-consistency 8 relations, icon-matches-product 6 items) and `stencil vet: 0 violations, 3 checks, 3 passed, 0 failed`. `check examples/g7.json --print-width 14` fails print-fit with one defect, the 10 px badge at 7.64 pt (examined 40 text runs; the 11 px kicker and foot print at 8.40 pt), and `--print-width 16` passes, the badge at 8.73 pt.
+`vet examples/g7.json` prints one line per model check (remembered-constants 36 text fields, legend-consistency 8 relations, icon-matches-product 6 items) and a summary with 0 violations and no failure, the captured lines of `crates/stencil-cli/tests/fixtures/g7.vet.txt`. `check examples/g7.json --print-width 14` fails print-fit with one defect, the 10 px badge at 7.64 pt (examined 40 text runs; the 11 px kicker and foot print at 8.40 pt), and `--print-width 16` passes, the badge at 8.73 pt.
 
 ### 13.11 Break opportunities and isometric polish
 
@@ -4397,6 +4407,7 @@ Step (e) changes every iso render: hero-iso in every theme but wire gains block 
 stencil vet <json>
 stencil render <json> --out-dir <dir> [--scale <1-4> | --png-width <px>] [--theme <theme>] [--projection flat|iso] [--print-width <inches>]
 stencil check <json> [--theme <theme>] [--projection flat|iso] [--print-width <inches>]
+stencil describe <json> [--projection flat|iso]
 stencil gallery <out-dir> [--examples <dir>]
 stencil theme show <name>
 stencil theme check <theme>
@@ -4410,9 +4421,9 @@ stencil prime grammar <name>
 
 | Command | Change | Output on stdout |
 |---|---|---|
-| `vet` | parses, resolves and loads the grammar (section 13.2), runs the vet rules with it, then resolves and loads the theme and overrides (section 13.4 rules 1 to 5), then runs the three model checks | as before, three check lines; a grammar or theme failure prints its `error` and `violation` lines and `stencil vet: checks not run` |
-| `render` | `--theme` takes any theme reference; `--print-width` runs print-fit after the files are written (section 13.10) | the three paths, then the print-fit lines when the flag is set |
-| `check` | `--theme` as render; runs twelve checks; `--print-width` makes print-fit applicable | twelve check lines, defects, summary |
+| `vet` | parses, resolves and loads the grammar (section 13.2), runs the vet rules with it, then resolves and loads the theme and overrides (section 13.4 rules 1 to 5), then runs the model checks | as before, one line per model check; a grammar or theme failure prints its `error` and `violation` lines and `stencil vet: checks not run` |
+| `render` | `--theme` takes any theme reference; `--print-width` runs print-fit after the files are written (section 13.10) | the four paths, then the print-fit lines when the flag is set |
+| `check` | `--theme` as render; runs every check of section 6; `--print-width` makes print-fit applicable | one line per check, defects, summary |
 | `gallery` | renders every example under the six designed themes, in the order center, paper, dusk, clear, clear-dark, wire | as before; the summary counts six themes |
 | `theme show` | prints a built-in theme's JSON exactly as embedded, so an author can copy it as the start of a theme file or an override; an unknown name exits 2 | the theme JSON |
 | `theme check` | loads the theme (structural rules exit 1 as in section 13.4 rule 5), runs `theme_quality`, prints one line per row | row lines and a summary |
@@ -4436,7 +4447,7 @@ A theme with zero rows cannot occur (section 13.4 rule 10); if the row builder r
 
 New error mappings for section 7's exhaustive table: `GrammarError` and `ThemeError`, any variant, exit 1; an unreadable grammar or theme file (`ReadGrammar`, `ReadTheme`) exits 2; a base16 scheme that does not read (`Base16`: a missing or repeated key, an oversize file) exits 1; an unreadable scheme exits 2; a failed write of the theme or report file exits 2.
 
-`pipeline::load_document` returns the page with its resolved `Grammar` and `Theme`. `pipeline::all_checks(page, grammar, geometry, scene, print_width) -> [CheckReport; 12]`. `layout_page(page, grammar, measurer)` and `render_svg(page, grammar, theme, geometry)` take the grammar, and the renderer the theme, as arguments.
+`pipeline::load_document` returns the page with its resolved `Grammar` and `Theme`. `pipeline::all_checks(page, grammar, geometry, scene, print_width)` returns one report per `CheckName`. `layout_page(page, grammar, measurer)` and `render_svg(page, grammar, theme, geometry)` take the grammar, and the renderer the theme, as arguments.
 
 CUE. `cue/stencil.cue` splits:
 
@@ -4534,9 +4545,9 @@ stencil-render:
 
 stencil-cli:
 
-- `check` on every example prints twelve lines in `CheckName` order and the summaries of section 13.10; `vet examples/g7.json` prints three check lines and `stencil vet: 0 violations, 3 checks, 3 passed, 0 failed`.
+- `check` on every example prints one line per check in `CheckName` order, the captured lines of `crates/stencil-cli/tests/fixtures/<stem>.check.txt`; `vet examples/g7.json` prints one line per model check, the captured lines of `g7.vet.txt`.
 - `--theme` with each built-in name renders and checks g7; with a theme file path renders; with a missing path exits 2 with empty stdout; with a malformed file exits 1 with `error` and `violation` lines; `Page.theme` and `Page.grammar` resolve a path relative to the document's directory, and `--theme` relative to the current one; a grammar file with an unknown parent exits 1.
-- `--print-width 14` on `check examples/g7.json` exits 1 with the one defect; on `render` writes the three files, prints the paths and the print-fit lines, and exits 1; `--print-width 0.4` and `--print-width nan` exit 2.
+- `--print-width 14` on `check examples/g7.json` exits 1 with the one defect; on `render` writes the four files, prints the paths and the print-fit lines, and exits 1; `--print-width 0.4` and `--print-width nan` exit 2.
 - `theme show center` prints `themes/center.json` byte for byte; `theme check center` prints 223 row lines, the ask failure and `stencil theme check center: 223 rows, 222 passed, 1 failed`, and exits 1; `theme check paper` exits 0; `theme check wire` prints 8 not-applicable rows and exits 0.
 - `theme import`: every pinned scheme in `themes/imported/` re-imports to its committed theme file byte for byte and writes a report equal to the committed one row for row; the command exits 1 for each, as the committed reports say. A scheme missing `base0B` exits 1 and writes nothing; a base24 scheme imports with `base10` to `base17` ignored and gives the same theme as its first sixteen keys alone; a legacy flat-layout file with bare hex values imports.
 - `gallery` writes six themes per example, and `index.html` has a section for each.
@@ -4556,6 +4567,137 @@ b2. The base16 importer and the imported tier: `stencil theme import`, the seven
 c. The plain grammar and Lanes: `plain.cue` and `plain.json`, `prime grammar`, the Lanes node with ordered links, lifelines and lane messages, its vet rules and theme role, and `examples/plain-system.json` with its fixtures and gallery PNGs.
 d. Checks and CLI flags: `print-fit` with `--print-width`, `icon-matches-product` reading the grammar's table, twelve checks, three in `vet`; pipe targets with the slot translation and the pipes-land revision; the gcp CUE rules `_productInsideVpc` and `_apisOutsideGcp` and `check.sh` over every example; the example corrections of section 13.13 with their regenerated fixtures and gallery PNGs; the prime base and checks topics with the raised budgets. Sections 6, 7, 9.4, 10, 12.9 and 12.10 are edited in this step for twelve checks, the three checks of `vet` and the new summary lines.
 e. Layout and render polish: the break opportunities in both measurers, after the U+200B probe; block shadows with the `<defs>` filter; the slab exit with `reroute_link`. Only hero-iso's center fixtures and gallery PNG are regenerated.
+
+## 14. Figure descriptions
+
+Every figure has a text twin: `render` writes `<stem>.description.md` beside the SVG, the PNG and `<stem>.measured.json`, and `stencil describe` prints the same bytes. The description is Markdown that an agent reads without rendering anything: the head, the container nesting with each element's kind, icon, product and facts, every line with what the legend says it means, and the legend, each element with its pointer. It applies to every page in both projections, and `description-covers-drawing` (section 6) holds it to the drawing.
+
+### 14.1 Figure description
+
+```rust
+// crates/stencil-render/src/describe.rs
+pub struct Description {
+    pub text: String,
+}
+
+/// The Markdown description of a laid-out page. Takes no Theme, Palette or IsoScene, so the
+/// text is the same under every theme by construction.
+pub fn describe(page: &Page, grammar: &Grammar, geometry: &PageGeometry) -> Description;
+
+/// Backslash-escapes document text (rule 12).
+pub fn escape_markdown(text: &str) -> String;
+
+/// The legend key the description prints (rule 10).
+pub fn legend_output_key(key: &LegendKey) -> String;
+
+/// Section 6.
+pub fn description_covers_drawing(page: &Page, geometry: &PageGeometry, text: &str) -> CheckReport;
+
+// crates/stencil-layout/src/units.rs, re-exported from stencil-layout
+
+/// What a description must cover, computed from the page and its geometry alone. The writer
+/// looks each unit up by pointer for its name; it never supplies the set.
+pub fn description_units(page: &Page, geometry: &PageGeometry) -> DescriptionUnits;
+
+pub struct DescriptionUnits {
+    /// Nodes in geometry order, then links in index order. Its length is the check's
+    /// examined count.
+    pub units: Vec<DescribedUnit>,
+    /// Pointers of geometry nodes, other than the page root, that draw no part: Body,
+    /// Legend, Row and Col. Each may be written on at most one line.
+    pub structural: Vec<NodePointer>,
+    /// What each untargeted end of a pipe names (rule 11), in body order.
+    pub pipe_landings: Vec<PipeLanding>,
+}
+
+pub struct DescribedUnit {
+    pub kind: UnitKind,
+    /// A pointer that resolves in the input document.
+    pub pointer: NodePointer,
+    /// The text that names the unit; the line holding the pointer contains
+    /// `escape_markdown(name)`.
+    pub name: String,
+}
+
+pub enum UnitKind { Node, Link }
+
+pub struct PipeLanding {
+    /// The Pipe or Tee arm.
+    pub pipe: NodePointer,
+    pub end: PipeEndSide,
+    /// The named node, or None for an open end.
+    pub node: Option<NodePointer>,
+    /// `left neighbour`, `right neighbour`, `neighbour above`, `neighbour below`,
+    /// `sibling above`, `sibling below`, or `hub` for the start of a Tee arm; empty for an
+    /// open end.
+    pub relation: &'static str,
+}
+
+/// The left or top end of a pipe is `Start`, the right or bottom end `End`.
+pub enum PipeEndSide { Start, End }
+```
+
+`LegendKey` (crates/stencil-model/src/checks.rs) is public, with its fields `line`, `tint` (the effective tint of section 13.1 rule 2) and `form` and its constructor `LegendKey::new(line, tint, form)`, and stencil-model re-exports it, so legend-consistency and the description key lines the same way.
+
+1. Format. Markdown in a fixed subset: ATX headings `#` and `##`; paragraphs; `-` lists indented two spaces per level, and `1.` lists for numbered Text bodies; GFM tables; inline code spans for pointers only. No emphasis, no thematic breaks, no emdash, no HTML. UTF-8, LF line ends, blocks separated by one blank line, one trailing newline, no trailing spaces, no tabs.
+2. Why Markdown. The description has two readers, a model and a person, and it is a fixture that changes in review diffs.
+   - A resolved semantic JSON (endpoints and legend meanings as fields) is exact, but it repeats most of the measured JSON, and an agent still has to turn it into sentences before a person can use it.
+   - Mermaid or D2 export draws again what stencil already drew.
+   - Plain text has no tables and no structure that a check can parse back.
+   - Markdown reads as written in both cases, its tables carry lines and the legend, and it diffs line by line.
+
+   A later `--format json` can print the same `DescriptionUnits` with the writer's sentences as fields.
+3. Sources. Text, kinds, icons and legend meaning come from the vetted page after any `--projection` override. Geometry supplies the layout canvas size, the node order and parents, which nodes draw parts, the node an untargeted pipe end lands on (rule 11) and each link's route status. The writer never reads a theme, the palette, the iso scene or the SVG. Under iso the drawn canvas is the projected one, whose size depends on the theme's slab thickness (hero-iso: layout 1640 x 728.74, SVG 1725.38 x 1205.05 in center), so the iso figure paragraph gives the layout size and says the drawing is larger (rule 7).
+4. Outputs and commands.
+   - `render` writes `<stem>.description.md` as its fourth output. `RenderedPage` carries `description: String`, which `render_page_sized` fills with `describe(&loaded.page, &loaded.grammar, &geometry).text` after layout. `OutputNames` and `OutputPaths` carry `description`, and `write_outputs` stages it and renames it with the other three, so nothing is written when any output fails, and it is refused like the others when it resolves to the input or names a directory. The command prints four absolute paths, the description last. Render never writes `<stem>.md`, so a hand-written `design.md` beside `design.json` is never touched.
+   - `stencil describe <page.json> [--projection flat|iso]` loads the page as `check` does with the projection override only, lays it out with `CosmicTextMeasurer`, and prints the bytes `render` would write to stdout. It renders nothing and runs no checks. Exit codes follow section 7: 0 when printed; 1 for a parse error, a vet violation, a grammar or theme defect, or a missing glyph, with the `error` and `violation` lines `check` prints on stdout; 2 when the input cannot be read, the arguments are wrong or the fonts fail, with the error chain on stderr and stdout empty.
+   - `stencil gallery` writes the description through `write_outputs`, so every `<stem>/<theme>/` directory holds `<stem>.description.md`, the same bytes under all six themes. `GalleryFiles` carries `description`, and `index.html` links it beside the SVG and the measured JSON.
+   - `all_checks` appends `description_covers_drawing(page, geometry, &describe(page, grammar, geometry).text)` as its last report. `describe` is a function of the page, the grammar and the geometry alone, so this text and `RenderedPage.description` are the same bytes.
+5. Units. `description_units` enumerates the unit set from geometry and the page, never by the writer's walk, so a drawn surface the writer forgets leaves a unit no line carries.
+   - Node: every `NodeGeometry` other than the page root whose `parts` is not empty: Kicker, Title, Lede, Foot, LegendEntry, Zone, Pcard, Fact, Note, Pipe (Tee arms included), Tee, Text, Callout, Frame and Lanes.
+   - Link: every `LinkRoute`, pointer `/links/<index>`.
+   - Structural: every partless geometry node other than the page root, which is Body, Legend, Row and Col. It is not counted.
+
+   Unit names, from one exhaustive match on `NodeTag`, so a new tag does not compile until it has a name: Kicker the kicker text; Title, Lede and Foot their text; LegendEntry its text; Zone its label; Pcard its title; Fact and Note their text; Pipe its label; Tee its hub; Text its heading, else its first body line; Callout its title, else its text; Frame its label; Lanes the word `Lanes`. A link's name is its label, else its from node's name.
+6. Spans. The writer's code spans are the only spans in the text, because `escape_markdown` escapes every backtick in document text. A pointer span holds one RFC 6901 pointer and starts with `/`. No other span is written.
+7. Section order:
+   1. Head. `# <title> \`/title\``, then `<badge> · <kicker> \`/kicker\`` (the badge and its separator only when set, as the document writes it), then `<lede> \`/lede\``. A head line carries its pointer when geometry has a node there, and none otherwise. Under `chrome: none` the three lines carry no pointer and a fourth reads `The title, kicker and lede caption the figure in its document and are not drawn.`
+   2. `## Figure`, then one paragraph: `Drawn elements: <n> (<a> nodes, <b> links). Canvas <w> x <h> px, projection flat, grammar <g>. Line styles name a tint slot by number; the colour word is the one the center theme draws it in.` Under iso the canvas sentence reads `Laid out at <w> x <h> px, projection iso, grammar <g>; the projected drawing is larger, by an amount that depends on the theme.` Numbers go through `format_number`; a count of one is singular. n is the check's examined count; the check reads it from the paragraph after this heading, since no document string can start a heading line.
+   3. `## Drawing \`/body\``: the outline of rule 8.
+   4. `## Lines`: the table of rule 9, omitted when the page draws no line.
+   5. `## Legend \`/legend\``: the table of rule 10, omitted when the legend is empty, which is when geometry has no Legend node.
+   6. `Foot: <foot> \`/foot\`` when set.
+8. Outline lines. One list line per body node in geometry order (pinned by `crates/stencil-layout/tests/order.rs`), nested by geometry parent; a unit's line ends in its pointer span.
+   - Row and Col: `Row, left to right.` and `Col, top to bottom.` with the structural pointer.
+   - Lanes: `Lanes, heads left to right.`, with the heads nested.
+   - Box: `Box <label>; kind <kind>[, tint <n>].`, where n is the effective tint `NodeGeometry.tint`, so a region without a tint prints its kind's default and a vpc prints none.
+   - Item: `Item <title>[: <subtitle>]; kind <kind>[, icon <icon>][, product <product>][, shape <shape>].` The product is `named_product` (crates/stencil-model/src/products.rs) over the kind's icon table and the subtitle, the function icon-matches-product reads. The shape is printed under iso only, as `item_shape` gives it, card included. Nested under it, with no span: one `Fact, <source>: <text>.` per fact.
+   - Fact, Note, Callout, Frame: `Fact, <source>: <text>.`, `Note, <kind>: <text>.`, `Callout, <kind>: <title>. <text>` (`Callout, <kind>: <text>` without a title), `Frame <label>: <height> px placeholder.`
+   - Text: `Text <name>.`, its unit name, so a Text without a heading names its first body line; its body lines nested as `1.` items when numbered and `-` items otherwise.
+   - Pipe and Tee: `Pipe <label>[ · <sub>].`, `Tee <hub>.` and its arms nested the same way, without spans; the Lines row carries the pointer.
+9. Lines table. Columns `Line | Kind | From | To | Style | Ends | Means | Pointer`. Rows: pipes, tee spines and arms in body order, then links in index order. A row is identified by what the drawing shows: the Line cell is `<label>[ · <sub>]`, the hub for a tee spine, or `unlabelled` for a link without a label; no row carries an invented number.
+   - Kind: `pipe h`, `pipe v`, `tee spine`, `tee arm`, `link`, or `message, order <n>` for a link with an order, each followed by `, band` for a band.
+   - From and To name an endpoint by its unit name and id, `Clip worker (worker)`; a pipe end with a target names the target the same way, and an untargeted pipe end follows rule 11. A tee spine runs from `hub <hub>` to its two arms by label, `VLAN 1 and VLAN 2`.
+   - Style: `<line>[, tint <n>]; <colour> in center`, with n the effective tint, where colour is `TINT_NAMES[n-1]` for solid and dash, `gray` for gray and `red` for deny: `solid, tint 4; amber in center`, `gray; gray in center`. The slot number is the handle; the colour word is a hint, since paper names slot 4 ochre and wire draws every slot in one ink.
+   - Ends: `no arrowheads`, `arrow end`, `arrow start` or `arrows both ends`, then `, fallback route` when the route fell back.
+   - Means: the legend text of the line's key, or `no legend entry`.
+10. Legend table. Columns `Key | Center label | Means | Uses | Pointer`, one row per entry. Key is `legend_output_key` of the entry's `LegendKey`: `line_key` (section 13.1 rule 6, for example `blue`, `dash`, `solid-3`), followed by `-band` for a band entry. `line_key` itself is unchanged, so the measured `kind` of every Pipe and LegendEntry stays as it is. Center label is `legend_label`, the canonical label. Uses counts the lines keyed to the entry.
+11. Pipe ends. An untargeted end of a Pipe v whose parent is a Box names the sibling before it (`sibling above`) or after it (`sibling below`), since a Box stacks its children; the start of a Tee arm leaves the spine and names the Tee (`hub <hub>`). Every other untargeted end names, for the `PipeEnd` that `pipe_ends` (crates/stencil-layout/src/checks.rs) returns on its side, `left neighbour`, `right neighbour`, `neighbour above` or `neighbour below`. Either way the end names the node `landing_box` finds in that sibling's or neighbour's subtree, else the sibling or neighbour itself, and is `open` when there is none. `description_units` resolves every end inside stencil-layout, where `pipe_ends`, `landing_box`, `children_by_parent` and `PipeEnd` are visible, and returns the results as `DescriptionUnits.pipe_landings`; all four stay `pub(crate)`, and the writer in stencil-render reads the landings and never calls them. A Row or Col it lands on is named by its tag.
+12. Escaping. Every document string passes through `escape_markdown`, which puts a backslash before `\`, `` ` ``, `*`, `_`, `[`, `]`, `<`, `>`, `|`, `#`, `!`, `&` and `~`, and, at the start of the string, before `-`, `+`, `=` and the `.` or `)` that follows leading digits. CommonMark accepts a backslash before any ASCII punctuation, so no string can open a heading, setext underline, list, emphasis, strikethrough, tilde fence, entity reference, link, HTML block, table cell or span. Vet rejects control characters, so no string holds a newline or a tab.
+13. Limits. The writer and `description_units` walk what they reuse: `body_nodes` capped at `NODES_MAX + 1` and links at `LINKS_MAX + 1`. The parser of section 6 reads at most one pass over the text. Output size is linear in the document's text, which vet bounds at 400 scalars per field.
+14. Tests, in `crates/stencil-render/tests/describe.rs` unless named otherwise; the unit-set tests read `stencil_layout::description_units`:
+    - `every_example_writes_its_description_byte_for_byte` scans `examples/*.json`, compares each with `crates/stencil-render/tests/fixtures/<stem>.description.md`, fails on an example without a fixture and on a fixture without an example, and asserts it examined as many as the directory holds and at least 13.
+    - `the_description_is_identical_in_every_theme` describes every example under all 13 themes in each projection vet allows and compares bytes.
+    - `the_iso_figure_line_gives_the_layout_size`: hero-iso's paragraph reads `Laid out at 1640 x 728.74 px`.
+    - `every_markdown_hazard_in_every_text_field_reads_back` writes into every text field of every example one string of the hazards `~~~`, `~x~`, `&amp;`, `&#35;`, `&copy;`, `===`, `---`, `- x`, `+ x`, `1. x`, `1) x`, `> x`, `# x`, `` `/links/0` ``, `` `B3` ``, `Marks: x`, `Ref A1`, `a | b`, `x; y`, `[x](y)`, `<div>`, `` \` `` and `` \\` `` (a backslash before a backtick, which a scanner that does not consume escapes in pairs reads as an open span) followed by the 32 ASCII punctuation marks, once for each hazard at the start, under `chrome: full` and `chrome: none`. It parses the text with `pulldown-cmark` (a dev-dependency, tables and strikethrough on), asserts each field reads back unchanged and that no emphasis, link, HTML, strikethrough, thematic break or foreign code span appears, and runs `description_covers_drawing` and asserts no defect at the unchanged examined count.
+    - `the_legend_key_is_the_measured_kind_for_tube_entries` compares every Key cell of every fixture, after dropping a `-band` suffix, with the measured `kind` of each line it counts.
+    - `the_check_passes_on_every_example_and_counts_every_unit`, `a_pointer_to_nothing_drawn_is_a_defect_and_a_row_pointer_is_not`, `a_reference_off_a_sheet_is_a_defect`, `a_unit_on_no_line_or_two_lines_is_a_defect`, `a_line_without_its_units_name_is_a_defect`, `a_figure_count_that_differs_from_examined_is_a_defect`, `an_empty_description_fails_with_every_unit_undescribed`, and `a_writer_that_skips_a_tag_fails_the_check`, which deletes one Item line from g7's description and expects `not described` at that Item.
+    - `description_units_cover_every_node_that_draws_a_part` asserts, on every example, units equal nodes with parts plus links, and structural pointers equal the partless nodes other than the root.
+    - crates/stencil-cli/tests/cli.rs: `render_writes_four_files_and_prints_their_absolute_paths`; `render_leaves_a_hand_written_markdown_file_with_the_figure_stem_untouched` seeds `g7.md` in the out dir and expects its bytes unchanged; `describe_prints_what_render_writes`; `describe_exits_1_with_violation_lines_for_an_invalid_page`; `describe_exits_1_for_a_missing_glyph`; `describe_exits_2_for_a_missing_file`.
+    - crates/stencil-cli/tests/gallery.rs: every `{stem}/{theme}/{stem}.description.md` is linked and written, and the six copies of each example are one byte string.
+    - crates/stencil-cli/tests/example_lines.rs: `the_captured_check_lines_follow_check_name_order` asserts that each `.check.txt` fixture holds one `check` line per report `all_checks` returns, in that order, and a trailer whose count equals them.
+
+    Fixtures are regenerated by hand: `stencil describe examples/<stem>.json >| crates/stencil-render/tests/fixtures/<stem>.description.md`, reviewed in the diff.
 
 ## Conventions
 

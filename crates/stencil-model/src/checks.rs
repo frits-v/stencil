@@ -23,6 +23,7 @@ pub enum CheckName {
     IsoLinksApart,
     PrintFit,
     IconMatchesProduct,
+    DescriptionCoversDrawing,
 }
 
 impl CheckName {
@@ -43,6 +44,7 @@ impl CheckName {
             CheckName::IsoLinksApart => "iso-links-apart",
             CheckName::PrintFit => "print-fit",
             CheckName::IconMatchesProduct => "icon-matches-product",
+            CheckName::DescriptionCoversDrawing => "description-covers-drawing",
         }
     }
 
@@ -80,6 +82,8 @@ impl CheckName {
             (CheckName::IsoLinksApart, false) => "link pairs",
             (CheckName::IconMatchesProduct, true) => "item",
             (CheckName::IconMatchesProduct, false) => "items",
+            (CheckName::DescriptionCoversDrawing, true) => "element",
+            (CheckName::DescriptionCoversDrawing, false) => "elements",
         }
     }
 }
@@ -195,14 +199,15 @@ pub fn remembered_constants(page: &Page, grammar: &Grammar) -> CheckReport {
 /// What legend consistency compares: a line, its effective tint and its form (section 13.1
 /// rule 8). A band and a tube of one line and tint are two looks, so two entries.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-struct LegendKey {
-    line: Line,
-    tint: Option<u8>,
-    form: PipeForm,
+pub struct LegendKey {
+    pub line: Line,
+    /// The effective tint: `line_tint` of the authored one.
+    pub tint: Option<u8>,
+    pub form: PipeForm,
 }
 
 impl LegendKey {
-    fn new(line: Line, tint: Option<u8>, form: PipeForm) -> Self {
+    pub fn new(line: Line, tint: Option<u8>, form: PipeForm) -> Self {
         LegendKey {
             line,
             tint: line_tint(line, tint),

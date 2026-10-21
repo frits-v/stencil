@@ -12,4 +12,5 @@ check iso-link-ends: examined 0 link ends, not applicable: projection is flat
 check iso-links-apart: examined 0 link pairs, not applicable: projection is flat
 check print-fit: examined 0 text runs, not applicable: no print width
 check icon-matches-product: examined 23 items, 0 defects
-stencil check: 14 checks, 7 passed, 0 failed, 7 not applicable
+check description-covers-drawing: examined 63 elements, 0 defects
+stencil check: 15 checks, 8 passed, 0 failed, 7 not applicable

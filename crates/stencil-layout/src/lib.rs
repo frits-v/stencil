@@ -11,6 +11,7 @@ mod lanes;
 mod pipe_ends;
 mod route;
 mod theme_labels;
+mod units;
 
 use stencil_model::grammar::{BorderPattern, LabelStyle, Role, Tone};
 use stencil_model::pointer::NodePointer;
@@ -26,6 +27,9 @@ pub use route::{
 };
 pub use stencil_model::text::WRAP_EPSILON_PX;
 pub use theme_labels::theme_legend_labels;
+pub use units::{
+    DescribedUnit, DescriptionUnits, PipeEndSide, PipeLanding, UnitKind, description_units,
+};
 
 pub const GEOMETRY_EPSILON_PX: f32 = 0.01;
 
