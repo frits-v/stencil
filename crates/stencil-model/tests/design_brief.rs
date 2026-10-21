@@ -7,15 +7,15 @@ use std::collections::BTreeSet;
 use stencil_model::checks::{legend_consistency, remembered_constants};
 use stencil_model::{Line, Node, NodeRef, body_nodes, builtin_grammar, parse_and_vet, text_fields};
 
-const ONEPAGER_JSON: &str = include_str!("../../../examples/onepager.json");
+const DESIGN_BRIEF_JSON: &str = include_str!("../../../examples/design-brief.json");
 
 fn gcp() -> stencil_model::Grammar {
     builtin_grammar("gcp").unwrap().unwrap()
 }
 
 #[test]
-fn onepager_vets_and_passes_both_model_checks() {
-    let page = parse_and_vet(ONEPAGER_JSON, &gcp()).unwrap();
+fn design_brief_vets_and_passes_both_model_checks() {
+    let page = parse_and_vet(DESIGN_BRIEF_JSON, &gcp()).unwrap();
     assert_eq!(page.width, 1440);
     let constants = remembered_constants(&page, &gcp());
     assert_eq!(constants.examined, text_fields(&page).len() as u64);
@@ -26,8 +26,8 @@ fn onepager_vets_and_passes_both_model_checks() {
 }
 
 #[test]
-fn onepager_has_the_section_11_5_shape() {
-    let page = parse_and_vet(ONEPAGER_JSON, &gcp()).unwrap();
+fn design_brief_has_the_section_11_5_shape() {
+    let page = parse_and_vet(DESIGN_BRIEF_JSON, &gcp()).unwrap();
     let entries = body_nodes(&page);
     let count = |tag: &str| {
         entries

@@ -288,7 +288,7 @@ fn every_gcp_example_passes_with_items_examined() {
         "hero-iso",
         "hybrid-ai",
         "network-hub-spoke",
-        "onepager",
+        "design-brief",
         "stress-dense",
     ] {
         let text = fs::read_to_string(repository_path(&format!("examples/{stem}.json"))).unwrap();

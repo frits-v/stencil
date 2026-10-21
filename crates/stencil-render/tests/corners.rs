@@ -196,9 +196,9 @@ struct Example {
 /// their center SVG as drawn before links had rounded bends.
 const SQUARE_EXAMPLES: [Example; 3] = [
     Example {
-        stem: "onepager",
-        document: include_str!("../../../examples/onepager.json"),
-        square_svg: include_str!("fixtures/onepager.square.svg"),
+        stem: "design-brief",
+        document: include_str!("../../../examples/design-brief.json"),
+        square_svg: include_str!("fixtures/design-brief.square.svg"),
     },
     Example {
         stem: "org",

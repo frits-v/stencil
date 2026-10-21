@@ -175,11 +175,11 @@ fn section_11_limits_and_enums_fail_schema_validation() {
 }
 
 #[test]
-fn onepager_validates() {
-    let onepager: serde_json::Value =
-        serde_json::from_str(include_str!("../../../examples/onepager.json")).unwrap();
+fn design_brief_validates() {
+    let design_brief: serde_json::Value =
+        serde_json::from_str(include_str!("../../../examples/design-brief.json")).unwrap();
     let errors: Vec<String> = validator()
-        .iter_errors(&onepager)
+        .iter_errors(&design_brief)
         .map(|error| error.to_string())
         .collect();
     assert_eq!(errors, Vec::<String>::new());

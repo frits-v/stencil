@@ -16,7 +16,7 @@ use stencil_model::PagePoint;
 use stencil_render::palette::Palette;
 use stencil_render::{DeviceScale, measured_json, render_png};
 
-const ONEPAGER_JSON: &str = include_str!("../../../examples/onepager.json");
+const DESIGN_BRIEF_JSON: &str = include_str!("../../../examples/design-brief.json");
 
 fn card(id: &str) -> Value {
     json!({ "tag": "Item", "kind": "product", "id": id, "title": id })
@@ -318,9 +318,9 @@ fn a_page_without_links_writes_no_links_key() {
 }
 
 #[test]
-fn onepager_links_render_to_png_in_every_theme() {
+fn design_brief_links_render_to_png_in_every_theme() {
     for theme in ["center", "dusk", "wire"] {
-        let mut document: Value = serde_json::from_str(ONEPAGER_JSON).unwrap();
+        let mut document: Value = serde_json::from_str(DESIGN_BRIEF_JSON).unwrap();
         document["theme"] = json!(theme);
         let page: stencil_model::Page = serde_json::from_value(document).unwrap();
         let geometry = common::layout_with_cosmic_text(&page);

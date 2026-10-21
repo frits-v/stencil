@@ -16,7 +16,7 @@ const STEMS: [&str; 10] = [
     "hero-iso",
     "hybrid-ai",
     "network-hub-spoke",
-    "onepager",
+    "design-brief",
     "onprem-iso",
     "people-iso",
     "platform-iso",
