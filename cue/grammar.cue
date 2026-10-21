@@ -94,10 +94,10 @@ import (
 	]
 
 	// _tops holds the kinds of the Boxes and Items nearest below a node: Row,
-	// Col and Lanes are transparent, so they pass their children's up.
+	// Col, Lanes and View are transparent, so they pass their children's up.
 	#KindedNode: {
 		tag: string
-		if tag == "Row" || tag == "Col" || tag == "Lanes" {
+		if tag == "Row" || tag == "Col" || tag == "Lanes" || tag == "View" {
 			children: [...#KindedNode]
 			_tops: {for c in children {c._tops}}
 		}
@@ -120,7 +120,7 @@ import (
 			kind: or(_itemNames)
 			_tops: {(kind): true}
 		}
-		if !list.Contains(["Row", "Col", "Lanes", "Box", "Item"], tag) {
+		if !list.Contains(["Row", "Col", "Lanes", "View", "Box", "Item"], tag) {
 			_tops: {}
 		}
 		...

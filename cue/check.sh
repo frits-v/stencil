@@ -1,12 +1,14 @@
 #!/usr/bin/env bash
-# Vets the core package, both grammar packages and the g7 and sequence
-# figures; exports each grammar and compares it byte for byte with
+# Vets the core package, both grammar packages and the g7, sequence, sheet and
+# sheet-small figures; exports each grammar and compares it byte for byte with
 # crates/stencil-model/grammars/; compares the g7 customer export with
-# examples/g7.json and the sequence export with examples/sequence.json; vets
-# every example against the #Page of the grammar it names; vets every built-in
-# theme file against #Theme and rejects the theme negative cases; then runs the
-# negative cases: a copy of the cue tree with one edit to figures/g7.cue or
-# figures/sequence.cue that vet must reject with the named error.
+# examples/g7.json, the sequence export with examples/sequence.json and the
+# sheet export with examples/onepager.json; vets every example against the
+# #Page of the grammar it names; vets every built-in theme file against #Theme
+# and rejects the theme negative cases; then runs the negative cases: a copy of
+# the cue tree with one edit to figures/g7.cue, figures/sequence.cue,
+# figures/sheet.cue or figures/sheet-small.cue that vet must reject with the
+# named error.
 # Exits non-zero if the cue binary is missing, if any positive step fails, or
 # if any negative case passes or fails for a different reason.
 #
@@ -19,6 +21,7 @@ here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 repo="$(cd "$here/.." && pwd)"
 golden="$repo/examples/g7.json"
 sequence_golden="$repo/examples/sequence.json"
+onepager_golden="$repo/examples/onepager.json"
 committed_grammars="$repo/crates/stencil-model/grammars"
 out="$here/out"
 mkdir -p "$out"
@@ -119,6 +122,29 @@ if messages == 0:
 print(f"ok   sequence: equals examples/sequence.json, {messages} ordered links, {len(golden)} canonical lines")
 PY
 
+# sheet.cue is the authored source of examples/onepager.json, compared as g7 is.
+"$CUE" export ./figures:gcp -e onepager --out json -o "$out/onepager.json" --force
+python3 - "$onepager_golden" "$out/onepager.json" <<'PY'
+import difflib, json, sys
+
+def canonical(path):
+    with open(path, encoding="utf-8") as handle:
+        return json.dumps(json.load(handle), indent=2, sort_keys=True, ensure_ascii=False).splitlines()
+
+golden_path, export_path = sys.argv[1], sys.argv[2]
+golden, exported = canonical(golden_path), canonical(export_path)
+if golden != exported:
+    sys.stderr.writelines(line + "\n" for line in difflib.unified_diff(golden, exported, golden_path, export_path, lineterm=""))
+    print("FAIL onepager: export differs from examples/onepager.json", file=sys.stderr)
+    sys.exit(1)
+with open(export_path, encoding="utf-8") as handle:
+    views = [node for node in json.load(handle)["body"] if node.get("tag") == "View"]
+if not views:
+    print("FAIL onepager: export has no View", file=sys.stderr)
+    sys.exit(1)
+print(f"ok   onepager: equals examples/onepager.json, {len(views)} views, {len(golden)} canonical lines")
+PY
+
 # Every example is a JSON document authored without CUE; each vets against
 # the #Page of the grammar it names, gcp when it names none. An example listed here is a known defect, reported on every
 # run: it must fail, and every error vet reports must name the listed rule.
@@ -203,6 +229,7 @@ theme_cases=(
 	'lowercase-hex|t.__setitem__("page", "#ffffff")|page: invalid value "#ffffff"'
 	'width-above-4|t["card"]["border"].__setitem__("width", 5)|card.border.width: invalid value 5'
 	'strong-tone-filled|t["tones"]["strong"].__setitem__("fill", "#000000")|tones.strong.fill: field not allowed'
+	'sheet-unknown-leaf|t["sheet"].__setitem__("glow", "#FFFFFF")|sheet.glow: field not allowed'
 )
 for entry in "${theme_cases[@]}"; do
 	IFS='|' read -r name expression expected <<<"$entry"
@@ -273,8 +300,9 @@ stray_subnet='{tag: "Box", kind: "subnet", label: "stray subnet", children: [{ta
 stray_apis='{tag: "Box", kind: "project", label: "Data project", children: [{tag: "Box", kind: "apis", label: "Stray APIs", children: [{tag: "Fact", text: "no gcp frame around it"}]}]},'
 
 # figure | name | sed expression applied to figures/<figure>.cue | text the
-# vet error must contain [| second text the error must also contain]. A g7
-# case vets ./figures:gcp and a sequence case ./figures:plain.
+# vet error must contain [| second text the error must also contain]. A g7 or
+# sheet case vets ./figures:gcp and a sequence or sheet-small case
+# ./figures:plain.
 g7_cases=(
 	'asn-64512|s/subtitle: "private ASN · RFC 6996"/subtitle: "private ASN 64512"/|.subtitle: invalid value "private ASN 64512"'
 	'legend-unused-line|s/{line: "dash", text: "region failover, not a fifth line"},/&\n\t\t{line: "deny", text: "prohibited path"},/|_legendKeysUnusedInBody.deny'
@@ -330,7 +358,29 @@ sequence_cases=(
 	'ordered-link-to-a-node-that-is-not-a-lane-head|s/label: "Job service"/id: "job-service", &/; s/to: "console", line: "solid", label: "submit job"/to: "job-service", line: "solid", label: "submit job"/|_orderedLinkNotBetweenLaneHeads."0"'
 	'two-ordered-links-with-one-order|s/label: "POST \/jobs", order: 2/label: "POST \/jobs", order: 1/|_linkOrderUsedTwice."1"'
 	'line-kind-corner-above-16|s/^figure: plain.#Page \& {/_house: plain.grammar \& {lines: [{line: "solid", corner: 17}]}\n&/|_house.lines.0.corner: invalid value 17'
+	'needs-sheet-view|s/^\tbody: \[{$/\tbody: [{tag: "View", title: "Extra", children: [{tag: "Item", kind: "service", title: "Aside", subtitle: "in a view"}]}, {/|_needsSheet.view'
 	'line-kind-listed-twice|s/^figure: plain.#Page \& {/_house: plain.grammar \& {lines: [{line: "dash", corner: 4}, {line: "dash", bend: "curve"}]}\n&/|_house._linesAreUnique'
+)
+# A subnet directly in a View sits in the page, since a View is transparent for
+# kind nesting as Row, Col and Lanes are.
+sheet_cases=(
+	'kind-parent-through-view|s/^\t\t\tchildren: \[$/\t\t\tchildren: [{tag: "Box", kind: "subnet", label: "stray subnet", children: [{tag: "Fact", text: "no region around it"}]},/|onepager._kindParentNotAllowed.subnet|cannot sit in page'
+)
+sheet_small_cases=(
+	'sheet-in-iso|s/^\tgrammar: "plain"$/&\n\tprojection: "iso"/|_sheetInIso'
+	'sheet-chrome-none|s/^\tgrammar: "plain"$/&\n\tchrome: "none"/|_sheetChromeNone'
+	'sheet-body-not-view|s/^\t}]$/\t}, {tag: "Row", children: [{tag: "Item", kind: "service", title: "Loose", subtitle: "outside every view"}]}]/|_sheetBodyNotView."1"'
+	'view-not-top-level|s/^\t\t}]$/\t\t}, {tag: "View", title: "Inner", children: [{tag: "Item", kind: "service", title: "Nested", subtitle: "inside another view"}]}]/|_viewNotTopLevel.Inner'
+	'sheet-without-lines|/^\tlinks:/d; /tag: "Tee"/d; s/^\tlegend: .*/\tlegend: []/|_sheetWithoutLines'
+	'list-empty-problem-points|s/points: \[{text: "Calls wait on a slow store."}\]/points: []/|sheet.problem.points: invalid value []|list.MinItems(1)'
+	'list-empty-attention-items|s/items: \[{id: "staleness".*}\]$/items: []/|sheet.attention.items: invalid value []|list.MinItems(1)'
+	'list-too-long-problem-points|s/points: \[{text: "Calls wait on a slow store."}\]/points: [{text: "point 1"}, {text: "point 2"}, {text: "point 3"}, {text: "point 4"}, {text: "point 5"}, {text: "point 6"}, {text: "point 7"}, {text: "point 8"}, {text: "point 9"}]/|list.MaxItems(8)'
+	'list-too-long-answer-paragraphs|s/paragraphs: \[{lead: "Cached reads.", text: "A read never waits on the store."}\]/paragraphs: ["paragraph 1", "paragraph 2", "paragraph 3", "paragraph 4", "paragraph 5"]/|list.MaxItems(4)'
+	'list-too-long-attention-items|s/items: \[{id: "staleness".*}\]$/items: [{id: "item-1", lead: "Item 1.", text: "text"}, {id: "item-2", lead: "Item 2.", text: "text"}, {id: "item-3", lead: "Item 3.", text: "text"}, {id: "item-4", lead: "Item 4.", text: "text"}, {id: "item-5", lead: "Item 5.", text: "text"}, {id: "item-6", lead: "Item 6.", text: "text"}, {id: "item-7", lead: "Item 7.", text: "text"}, {id: "item-8", lead: "Item 8.", text: "text"}, {id: "item-9", lead: "Item 9.", text: "text"}]/|list.MaxItems(8)'
+	'sheet-text-too-long-wordmark|s/wordmark: "relay"/wordmark: "wwwwwwwwwwwwwwwwwwwwwwwww"/|sheet.wordmark: invalid value|strings.MaxRunes(24)'
+	'sheet-text-too-long-caption|s/caption: "Problem"/caption: "ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"/|sheet.problem.caption: invalid value|strings.MaxRunes(60)'
+	'key-duplicate-attention|s/items: \[{id: "staleness", \(.*\)}\]$/items: [{id: "staleness", \1}, {id: "staleness", \1}]/|_keysUsedTwice."attention.staleness"'
+	'link-via-outside-sheet|s/x: 1375/x: 1381/|_viaOutsidePage'
 )
 cases=()
 for entry in "${g7_cases[@]}"; do
@@ -338,6 +388,12 @@ for entry in "${g7_cases[@]}"; do
 done
 for entry in "${sequence_cases[@]}"; do
 	cases+=("sequence|$entry")
+done
+for entry in "${sheet_cases[@]}"; do
+	cases+=("sheet|$entry")
+done
+for entry in "${sheet_small_cases[@]}"; do
+	cases+=("sheet-small|$entry")
 done
 
 work="$(mktemp -d)"
@@ -349,6 +405,8 @@ for entry in "${cases[@]}"; do
 	case "$figure" in
 	g7) package=gcp ;;
 	sequence) package=plain ;;
+	sheet) package=gcp ;;
+	sheet-small) package=plain ;;
 	*)
 		echo "FAIL $name: no package for figure $figure" >&2
 		failed=$((failed + 1))

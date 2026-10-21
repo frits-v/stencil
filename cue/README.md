@@ -9,13 +9,15 @@ its rules; a figure file writes one topology against a grammar's `#Page`.
 | File | Package | Contents |
 |---|---|---|
 | `cue.mod/module.cue` | | the module `github.com/frits-v/stencil/cue@v0`, language v0.17.1 |
-| `core.cue` | `stencil` | `#Page` and the core nodes: `Row`, `Col`, `Lanes`, `Box`, `Item`, `Fact`, `Note`, `Pipe`, `Tee`, `Text`, `Callout`, `Frame`, plus `#LegendEntry`, `#Link`, `#Line`, `#Bend`, `#Corner`, `#TintSlot` and `#FactEntry` |
+| `core.cue` | `stencil` | `#Page` and the core nodes: `Row`, `Col`, `Lanes`, `Box`, `Item`, `Fact`, `Note`, `Pipe`, `Tee`, `Text`, `Callout`, `Frame`, `View`, plus `#Sheet` and its cells, `#SheetSurface`, `#LegendEntry`, `#Link`, `#Line`, `#Bend`, `#Corner`, `#TintSlot` and `#FactEntry` |
 | `grammar.cue` | `stencil` | `#Grammar` and its parts (`#LineKind` among them), and `#GrammarNesting`, the kind and nesting rules every grammar shares |
 | `theme.cue` | `stencil` | `#Theme`, the closed theme definition every theme file vets against: `cue vet -c -d '#Theme' . <file>.json` |
 | `grammars/gcp.cue` | `gcp` | the Google Cloud grammar data and rules, and the gcp `#Page` |
 | `grammars/plain.cue` | `plain` | the domain-neutral grammar data and the plain `#Page` |
 | `figures/g7.cue` | `gcp` | g7, Dedicated Interconnect at 99.99%: `customer` and `internal: customer & {...}` |
 | `figures/sequence.cue` | `plain` | a request flow in five lanes with ten ordered messages: `figure`, exported as `examples/sequence.json` |
+| `figures/sheet.cue` | `gcp` | the trigger evaluation design sheet, a title block and one View: `onepager`, exported as `examples/onepager.json` |
+| `figures/sheet-small.cue` | `plain` | the smallest design sheet, whose link has a via in the sheet's wider margin: `small`, the base of the sheet negative cases |
 | `check.sh` | | the gate, below |
 | `out/` | | exported JSON and renders, not committed |
 
@@ -27,10 +29,10 @@ Layout notes forced by CUE's package rules:
   package name, so its import path carries the package: `github.com/frits-v/stencil/cue:stencil`.
 - `grammars/` holds two packages, `gcp` and `plain`, so every command names one:
   `./grammars:gcp`. A bare `./grammars` is an error.
-- `figures/` holds `g7.cue` (package `gcp`) and `sequence.cue` (package `plain`), so commands
-  name the package: `./figures:gcp`, `./figures:plain`. Each is a separate instance from its
-  grammar and imports it (`github.com/frits-v/stencil/cue/grammars:gcp` or `:plain`) to reach
-  its `#Page`.
+- `figures/` holds `g7.cue` and `sheet.cue` (package `gcp`) and `sequence.cue` and
+  `sheet-small.cue` (package `plain`), so commands name the package: `./figures:gcp`,
+  `./figures:plain`. Each is a separate instance from its grammar and imports it
+  (`github.com/frits-v/stencil/cue/grammars:gcp` or `:plain`) to reach its `#Page`.
 
 ## Vet, export, render
 
@@ -59,14 +61,16 @@ it, vet only says that some instances are incomplete. `stencil render` writes `<
 2. Exports each grammar and compares it byte for byte with
    `crates/stencil-model/grammars/<name>.json`, which the Rust side embeds; a difference prints a
    unified diff and fails. Regenerate the committed file with the export command above.
-3. Exports `customer` and compares it with `examples/g7.json`, and `figure` from
-   `./figures:plain` with `examples/sequence.json`, normalizing key order only.
+3. Exports `customer` and compares it with `examples/g7.json`, `figure` from
+   `./figures:plain` with `examples/sequence.json`, and `onepager` from `./figures:gcp` with
+   `examples/onepager.json`, normalizing key order only.
 4. Vets every `examples/*.json` against the `#Page` of the grammar it names (`gcp` when absent). An example with a standing defect is
    listed in `known_failures` with the rule it breaks: it is printed as `KNOWN` on every run,
    any other error fails, and an entry that starts vetting clean fails as stale.
 5. Vets a one-key `chrome: "none"` document with an empty legend, which must pass.
-6. Runs every negative case: a copy of the cue tree with one edit to `figures/g7.cue` or
-   `figures/sequence.cue` that vet must reject with a named error.
+6. Runs every negative case: a copy of the cue tree with one edit to `figures/g7.cue`,
+   `figures/sequence.cue`, `figures/sheet.cue` or `figures/sheet-small.cue` that vet must
+   reject with a named error.
 
 The script fails if the `cue` binary is missing, if an edit does not apply, if vet passes, or if
 vet fails for a different reason. Set `CUE` to the binary path if the `cue` shim is not active,
@@ -85,6 +89,12 @@ for example `CUE="$(mise which cue)" ./cue/check.sh`.
   system) or `ask` (an open question for the reader).
 - `Pipe`, `Tee` (and each Tee arm), `Link` and legend entries carry `line`: `gray`, `solid`,
   `dash` or `deny`, and an optional `tint`. A solid or dash line without tint is slot 1.
+- A page with `sheet` is a design sheet: a title block (`problem` with 1 to 8 points, `answer`
+  with at most 4 paragraphs, `attention` with 1 to 8 items, captions of at most 60
+  characters, a wordmark of at most 24) and a body of `View`s. On a sheet,
+  `_sheetInIso`, `_sheetChromeNone`, `_sheetBodyNotView.<i>`, `_viewNotTopLevel.<title>`,
+  `_sheetWithoutLines` and `_keysUsedTwice."attention.<id>"` name the offender, and a via may
+  lie up to the width plus 100. Off a sheet, a `View` is `_needsSheet.view`.
 - `Lanes` is a container of 1 to 32 lane heads with an optional `gap` of 0 to 64. A `Link` may
   carry `order`, 1 to 256, which makes it a message of the Lanes node whose heads it joins.
 - `#Page` adds `grammar` (`gcp`, `plain` or a path ending in `.json`) and `chrome` (`full` or
@@ -148,7 +158,7 @@ _nesting: stencil.#GrammarNesting & {#grammar: grammar}
 - Kinds. A Box `kind` is one of the grammar's container kinds and an Item `kind` one of its
   item kinds; anything else is an empty disjunction on `kind`.
 - Nesting. The kind of each Box and Item must list, in its `parents`, the kind of its nearest
-  Box ancestor, or `page` at the top level. Row, Col and Lanes are transparent.
+  Box ancestor, or `page` at the top level. Row, Col, Lanes and View are transparent.
   `_kindParentNotAllowed.<kind>` names the offender: `subnet: cannot sit in page`.
 - Tint without effect. A tint on a Box whose kind is not tintable is reported as
   `_tintWithoutEffect` on the Box.

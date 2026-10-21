@@ -13,11 +13,14 @@ use std::path::Path;
 use serde::Serialize;
 use serde_json::Value;
 use stencil_cli::pipeline::{all_checks, load_document, read_input, render_page};
-use stencil_cli::prime::{BASE_BYTES_MAX, TOPIC_BYTES_MAX, Topic, base_text, field_notes};
+use stencil_cli::prime::{
+    BASE_BYTES_MAX, INLINE_DEFINITIONS, ROW_DEFINITIONS, TOPIC_BYTES_MAX, TOPIC_ROW_DEFINITIONS,
+    Topic, base_text, field_notes,
+};
 use stencil_cli::{ExitCode, run};
 use stencil_model::{
     Arrow, CalloutKind, Chrome, FactSource, IconName, Justify, Line, ListKind, PipeForm, Shape,
-    Side, builtin_grammar, page_schema,
+    SheetSurface, Side, SurfaceVocabulary, builtin_grammar, page_schema,
 };
 use stencil_render::DeviceScale;
 
@@ -67,13 +70,34 @@ fn node_tags() -> BTreeSet<String> {
         .collect()
 }
 
-/// Everything the vocabulary table may name in its first column.
+/// Everything a vocabulary table may name in its first column, in base or in a topic.
 fn table_objects() -> BTreeSet<String> {
     let mut objects = node_tags();
     for name in ["Page", "FactEntry", "LegendEntry", "Link"] {
         objects.insert(name.to_string());
     }
+    for name in TOPIC_ROW_DEFINITIONS {
+        objects.insert(name.to_string());
+    }
     objects
+}
+
+/// The node tags a design sheet surface moves out of the base vocabulary.
+fn sheet_tags() -> BTreeSet<String> {
+    SheetSurface::ALL
+        .iter()
+        .flat_map(|surface| surface.vocabulary().iter())
+        .filter_map(|item| match item {
+            SurfaceVocabulary::Tag(tag) => Some((*tag).to_string()),
+            SurfaceVocabulary::Field { .. }
+            | SurfaceVocabulary::Value { .. }
+            | SurfaceVocabulary::Definition(_) => None,
+        })
+        .collect()
+}
+
+fn topic_text(topic: Topic) -> String {
+    topic.rendered().unwrap()
 }
 
 /// First-column names of the vocabulary table, split at ", ".
@@ -296,6 +320,11 @@ fn every_listed_topic_prints_non_empty_text_within_its_budget() {
                 outcome.stdout.len()
             );
         }
+        assert!(
+            !outcome.stdout.contains("{{"),
+            "{}: an unfilled marker remains",
+            topic.name()
+        );
     }
 }
 
@@ -328,17 +357,98 @@ fn an_unknown_topic_prints_one_line_listing_the_topics_and_exits_2() {
     }
 }
 
+/// Every tag a sheet surface does not name has a base row; every sheet tag has a row in
+/// the sheet topic instead.
 #[test]
 fn the_base_briefing_names_every_node_tag_in_its_vocabulary() {
     let text = base_output();
     let rows: BTreeSet<String> = vocabulary_row_names(&text).into_iter().collect();
-    for tag in node_tags() {
-        assert!(rows.contains(&tag), "vocabulary has no row for {tag}");
+    let sheet = sheet_tags();
+    let base_tags: BTreeSet<String> = node_tags().difference(&sheet).cloned().collect();
+    for tag in &base_tags {
+        assert!(rows.contains(tag), "vocabulary has no row for {tag}");
+    }
+    let topic_rows: BTreeSet<String> = vocabulary_row_names(&topic_text(Topic::Sheet))
+        .into_iter()
+        .collect();
+    for tag in &sheet {
+        assert!(!rows.contains(tag), "base has a row for the sheet tag {tag}");
+        assert!(topic_rows.contains(tag), "the sheet topic has no row for {tag}");
     }
     for object in ["Page", "FactEntry", "LegendEntry", "Link"] {
         assert!(rows.contains(object), "vocabulary has no row for {object}");
     }
-    assert_eq!(node_tags().len(), 12);
+    assert_eq!(base_tags.len(), 12);
+}
+
+/// Section 14.8 rule 3: every name a sheet surface moves is absent from base and present
+/// in the rendered topic the surface names.
+#[test]
+fn every_sheet_surface_is_absent_from_base_and_named_in_its_topic() {
+    let base = base_output();
+    let base_rows: BTreeSet<String> = vocabulary_row_names(&base).into_iter().collect();
+    let mut examined = 0;
+    for surface in SheetSurface::ALL {
+        let topic = Topic::from_name(surface.topic()).unwrap();
+        let text = topic_text(topic);
+        let topic_rows: BTreeSet<String> = vocabulary_row_names(&text).into_iter().collect();
+        for item in surface.vocabulary() {
+            match *item {
+                SurfaceVocabulary::Tag(tag) => {
+                    assert!(!base_rows.contains(tag), "base has a row for {tag}");
+                    assert!(topic_rows.contains(tag), "{} has no row for {tag}", topic.name());
+                }
+                SurfaceVocabulary::Field { object, field } => {
+                    let base_row = base
+                        .lines()
+                        .find(|line| line.starts_with(&format!("| {object} |")))
+                        .unwrap_or_else(|| panic!("base has no {object} row"));
+                    assert!(
+                        !base_row.contains(&format!(" {field} ")),
+                        "base lists {object}.{field}"
+                    );
+                    assert!(
+                        text.lines().any(|line| line.starts_with(&format!("| {object} |"))
+                            && line.contains(&format!(" {field} "))),
+                        "{} does not list {object}.{field}",
+                        topic.name()
+                    );
+                }
+                SurfaceVocabulary::Value { definition, value } => {
+                    let (_, values) = enum_line_values(&base, definition);
+                    assert!(!values.contains(&value.to_string()), "base lists {value}");
+                    assert!(text.contains(value), "{} never names {value}", topic.name());
+                }
+                SurfaceVocabulary::Definition(definition) => {
+                    assert!(!base.contains(&format!("{definition} (")), "{definition}");
+                    assert!(text.contains(definition), "{definition}");
+                }
+            }
+            examined += 1;
+        }
+    }
+    assert!(examined >= SheetSurface::ALL.len(), "examined {examined}");
+}
+
+/// Every `$defs` entry is printed somewhere: an enum line, the node table, a base row, a
+/// topic row, or inline where a field uses it.
+#[test]
+fn every_schema_definition_has_a_row_a_line_or_an_inline_form() {
+    let schema = page_schema();
+    let definitions = schema.as_value()["$defs"].as_object().unwrap();
+    let mut unprinted = Vec::new();
+    for (name, definition) in definitions {
+        let printed = definition.get("enum").is_some()
+            || name == "Node"
+            || ROW_DEFINITIONS.contains(&name.as_str())
+            || TOPIC_ROW_DEFINITIONS.contains(&name.as_str())
+            || INLINE_DEFINITIONS.contains(&name.as_str());
+        if !printed {
+            unprinted.push(name.clone());
+        }
+    }
+    assert_eq!(unprinted, Vec::<String>::new());
+    assert!(definitions.len() > 20, "examined {}", definitions.len());
 }
 
 #[test]
@@ -505,7 +615,8 @@ fn the_base_briefing_lists_every_enum_value_from_the_model() {
 
 #[test]
 fn the_iso_topic_names_every_shape_and_pipe_form() {
-    let text = Topic::Iso.text();
+    let text = topic_text(Topic::Iso);
+    let text = text.as_str();
     assert_enum_listed(text, "Shape", names(&shapes()));
     assert_enum_listed(text, "PipeForm", names(&pipe_forms()));
     for shape in names(&shapes()) {
@@ -525,8 +636,8 @@ fn the_links_field_table_names_only_link_fields() {
     let schema = page_schema();
     let schema = schema.as_value();
     let link = schema["$defs"]["Link"]["properties"].as_object().unwrap();
-    let rows: Vec<&str> = Topic::Links
-        .text()
+    let links = topic_text(Topic::Links);
+    let rows: Vec<&str> = links
         .lines()
         .skip_while(|line| *line != "| Field | Meaning |")
         .skip(2)
@@ -579,7 +690,7 @@ fn the_base_briefing_covers_every_check_the_pipeline_runs() {
             Topic::Checks
         };
         assert!(
-            topic.text().contains(&format!("| {name} |")),
+            topic_text(topic).contains(&format!("| {name} |")),
             "the {} topic has no row for {name}",
             topic.name()
         );
@@ -589,12 +700,12 @@ fn the_base_briefing_covers_every_check_the_pipeline_runs() {
             Topic::Iso
         };
         assert!(
-            !other.text().contains(&format!("| {name} |")),
+            !topic_text(other).contains(&format!("| {name} |")),
             "the {} topic also has a row for {name}",
             other.name()
         );
     }
-    let topic = Topic::Checks.text();
+    let topic = topic_text(Topic::Checks);
     assert!(
         topic.contains("runs remembered-constants, legend-consistency and icon-matches-product"),
         "{topic}"
@@ -612,6 +723,9 @@ fn no_prime_text_names_a_tag_that_does_not_exist() {
     let base = base_output();
     for name in vocabulary_row_names(&base) {
         assert!(objects.contains(&name), "vocabulary names unknown {name}");
+    }
+    for name in vocabulary_row_names(&topic_text(Topic::Sheet)) {
+        assert!(objects.contains(&name), "the sheet topic names unknown {name}");
     }
     for (topic, text) in all_texts() {
         for marker in ["\"tag\": \"", "\"tag\":\""] {

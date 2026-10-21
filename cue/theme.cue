@@ -205,4 +205,18 @@ import "list"
 			gray:      #Width
 		}
 	}
+	// The chrome of a design sheet; absent derives every leaf from the roles
+	// above and draws no grid.
+	sheet?: {
+		paper:     #Color
+		frame:     #Color
+		rule:      #Color
+		label_ink: #Color
+		cell:      #Color
+		// Minor lines every 20 px, major every 100 px.
+		grid?: {
+			minor: #Color
+			major: #Color
+		}
+	}
 }
