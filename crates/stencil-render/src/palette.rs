@@ -618,10 +618,9 @@ pub fn sheet_part_paint(owner: NodeTag, part: PartName) -> Option<PartPaint> {
             stroke: Some((Frame, 2.0)),
             text: None,
         },
-        PartName::Wordmark
-        | PartName::Statement
-        | PartName::ViewNumeral
-        | PartName::ViewTitle => text_paint(Frame),
+        PartName::Wordmark | PartName::Statement | PartName::ViewNumeral | PartName::ViewTitle => {
+            text_paint(Frame)
+        }
         PartName::Lead
         | PartName::ParagraphLead
         | PartName::AttentionLead
@@ -992,4 +991,70 @@ fn hsl_to_rgb(hue: f64, saturation: f64, lightness: f64) -> [f64; 3] {
     };
     let lift = lightness - chroma / 2.0;
     [red + lift, green + lift, blue + lift]
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use stencil_layout::PART_NAMES;
+
+    /// The owners and parts of section 14.5 rule 12 that a sheet draws.
+    const SHEET_PARTS: [(NodeTag, PartName); 29] = [
+        (NodeTag::Page, PartName::Border),
+        (NodeTag::Page, PartName::RefRule),
+        (NodeTag::Page, PartName::RefTick),
+        (NodeTag::Page, PartName::RefColumn),
+        (NodeTag::Page, PartName::RefColumnFoot),
+        (NodeTag::Page, PartName::RefRow),
+        (NodeTag::Page, PartName::RefRowRight),
+        (NodeTag::Page, PartName::Grid),
+        (NodeTag::TitleBlock, PartName::BlockBorder),
+        (NodeTag::TitleBlock, PartName::CellRule),
+        (NodeTag::TitleBlock, PartName::Wordmark),
+        (NodeTag::TitleCell, PartName::Caption),
+        (NodeTag::TitleCell, PartName::Lead),
+        (NodeTag::TitleCell, PartName::Statement),
+        (NodeTag::TitleCell, PartName::ParagraphLead),
+        (NodeTag::TitleCell, PartName::Paragraph),
+        (NodeTag::TitleCell, PartName::AttentionLead),
+        (NodeTag::TitleCell, PartName::AttentionText),
+        (NodeTag::ProblemPoint, PartName::PointRule),
+        (NodeTag::ProblemPoint, PartName::PointLabel),
+        (NodeTag::ProblemPoint, PartName::Text),
+        (NodeTag::Legend, PartName::StripRule),
+        (NodeTag::Legend, PartName::GroupCaption),
+        (NodeTag::View, PartName::ViewNumber),
+        (NodeTag::View, PartName::ViewNumeral),
+        (NodeTag::View, PartName::ViewTitle),
+        (NodeTag::View, PartName::ViewSubtitle),
+        (NodeTag::View, PartName::ViewRule),
+        (NodeTag::View, PartName::ViewNote),
+    ];
+
+    #[test]
+    fn every_sheet_part_has_a_paint_row() {
+        assert_eq!(PartName::ALL.len(), PART_NAMES);
+        for (owner, part) in SHEET_PARTS {
+            assert!(
+                sheet_part_paint(owner, part).is_some(),
+                "{} on {}",
+                part.as_str(),
+                owner.as_str()
+            );
+        }
+        let listed: Vec<PartName> = SHEET_PARTS.iter().map(|(_, part)| *part).collect();
+        for part in PartName::ALL.iter().filter(|part| part.is_sheet()) {
+            assert!(listed.contains(part), "{} has no row", part.as_str());
+        }
+        for part in PartName::ALL.iter().filter(|part| !part.is_sheet()) {
+            for owner in [
+                NodeTag::Zone,
+                NodeTag::Pcard,
+                NodeTag::Pipe,
+                NodeTag::Legend,
+            ] {
+                assert_eq!(sheet_part_paint(owner, *part), None, "{}", part.as_str());
+            }
+        }
+    }
 }

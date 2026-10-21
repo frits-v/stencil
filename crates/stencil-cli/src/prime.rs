@@ -10,8 +10,7 @@ use stencil_model::{
     Arrow, BUILTIN_GRAMMARS, Bend, Chrome, FactSource, GAP_DEFAULT_PX, GRAMMAR_DEFAULT,
     GRAMMAR_REFERENCE_PATTERN, GROW_WEIGHT_MAX, Grammar, GrammarError, ID_PATTERN, Justify,
     KIND_PATTERN, LANE_GAP_DEFAULT_PX, LINK_CORNER_DEFAULT_PX, SheetSurface, SurfaceVocabulary,
-    TEXT_SCALARS_MAX, THEME_DEFAULT, THEME_REFERENCE_PATTERN, VIEW_GAP_DEFAULT_PX,
-    builtin_grammar,
+    TEXT_SCALARS_MAX, THEME_DEFAULT, THEME_REFERENCE_PATTERN, VIEW_GAP_DEFAULT_PX, builtin_grammar,
 };
 
 const BASE_TEXT: &str = include_str!("../prime/base.md");
@@ -107,7 +106,9 @@ impl Topic {
             let Some(start) = rest.find(TOPIC_VOCABULARY_MARKER) else {
                 break;
             };
-            let after = rest.get(start + TOPIC_VOCABULARY_MARKER.len()..).unwrap_or_default();
+            let after = rest
+                .get(start + TOPIC_VOCABULARY_MARKER.len()..)
+                .unwrap_or_default();
             let end = after.find("}}").ok_or(PrimeError::MissingMarker {
                 marker: TOPIC_VOCABULARY_MARKER,
             })?;
@@ -423,9 +424,10 @@ pub fn vocabulary(schema: &Value) -> Result<String, PrimeError> {
     };
     let sheet_value = |definition_name: &str, value: &str| {
         surface_items.iter().any(|item| match item {
-            SurfaceVocabulary::Value { definition, value: listed } => {
-                *definition == definition_name && *listed == value
-            }
+            SurfaceVocabulary::Value {
+                definition,
+                value: listed,
+            } => *definition == definition_name && *listed == value,
             SurfaceVocabulary::Tag(_)
             | SurfaceVocabulary::Field { .. }
             | SurfaceVocabulary::Definition(_) => false,

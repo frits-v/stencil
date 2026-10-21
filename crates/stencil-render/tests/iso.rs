@@ -1426,6 +1426,105 @@ fn every_example_renders_under_iso_in_every_theme() {
     }
 }
 
+/// The smallest sheet: one View holding two items and a link between them.
+fn sheet_document() -> Value {
+    json!({
+        "title": "Title",
+        "kicker": "Kicker",
+        "lede": "Lede",
+        "sheet": {
+            "problem": { "points": [{ "text": "A point." }] },
+            "answer": { "statement": "A statement." },
+            "attention": { "items": [{ "id": "first", "lead": "Lead.", "text": "Text." }] }
+        },
+        "body": [{
+            "tag": "View",
+            "title": "System",
+            "children": [{
+                "tag": "Row",
+                "children": [
+                    { "tag": "Item", "id": "api", "kind": "product", "title": "API" },
+                    { "tag": "Item", "id": "worker", "kind": "product", "title": "Worker" }
+                ]
+            }]
+        }],
+        "legend": [{ "line": "solid", "text": "request path" }],
+        "links": [{ "from": "api", "to": "worker", "line": "solid" }]
+    })
+}
+
+/// (pointer, rule name) of every violation of `document` under gcp.
+fn vet_rules(document: Value) -> Vec<(String, &'static str)> {
+    let page: Page = serde_json::from_value(document).unwrap();
+    stencil_model::validate_page(&page, &common::gcp())
+        .into_iter()
+        .map(|violation| {
+            (
+                violation.pointer.as_str().to_string(),
+                violation.rule.as_str(),
+            )
+        })
+        .collect()
+}
+
+/// The pointer of a `RenderError::SheetSurface`; panics on any other outcome.
+fn refused_at(page: &Page, geometry: &PageGeometry) -> String {
+    match render_svg(page, geometry) {
+        Err(stencil_render::RenderError::SheetSurface { pointer }) => pointer.as_str().to_string(),
+        other => panic!("expected a sheet surface refusal, got {other:?}"),
+    }
+}
+
+/// Section 14.2 rule 11: every sheet surface is refused on a page without a sheet by vet,
+/// under iso by vet, and by the iso writer, which a test reaches without vet by laying a
+/// sheet out flat and flipping it to iso.
+#[test]
+fn every_sheet_surface_is_refused_on_every_path() {
+    let mut examined = 0;
+    for surface in stencil_model::SheetSurface::ALL {
+        let mut iso_document = sheet_document();
+        iso_document["projection"] = json!("iso");
+        assert!(
+            vet_rules(iso_document).contains(&("/sheet".to_string(), "sheet-in-iso")),
+            "{}",
+            surface.as_str()
+        );
+
+        let mut page: Page = serde_json::from_value(sheet_document()).unwrap();
+        let geometry = common::layout_with_fixed_metrics(&page);
+        page.projection = Projection::Iso;
+        assert_eq!(
+            refused_at(&page, &geometry),
+            "/sheet",
+            "{}",
+            surface.as_str()
+        );
+
+        match surface {
+            // The title block is the trace of the sheet itself.
+            stencil_model::SheetSurface::Sheet => {}
+            stencil_model::SheetSurface::View => {
+                let mut without_sheet = sheet_document();
+                without_sheet.as_object_mut().unwrap().remove("sheet");
+                assert_eq!(
+                    vet_rules(without_sheet),
+                    [("/body/0".to_string(), "needs-sheet")]
+                );
+                let mut traced = geometry.clone();
+                traced
+                    .nodes
+                    .retain(|node| !node.pointer.as_str().starts_with("/sheet"));
+                for node in &mut traced.nodes {
+                    node.parts.retain(|part| !part.name.is_sheet());
+                }
+                assert_eq!(refused_at(&page, &traced), "/body/0");
+            }
+        }
+        examined += 1;
+    }
+    assert_eq!(examined, stencil_model::SheetSurface::ALL.len());
+}
+
 /// CIELAB L* of `#RRGGBB`.
 fn lightness(color: &str) -> f64 {
     stencil_model::theme::lightness(&stencil_model::theme::Color(color.to_string())).unwrap()

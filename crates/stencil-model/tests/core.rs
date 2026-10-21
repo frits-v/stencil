@@ -33,10 +33,7 @@ const EXAMPLES: [(&str, &str); 9] = [
         "design-brief",
         include_str!("../../../examples/design-brief.json"),
     ),
-    (
-        "onepager",
-        include_str!("../../../examples/onepager.json"),
-    ),
+    ("onepager", include_str!("../../../examples/onepager.json")),
     (
         "platform-iso",
         include_str!("../../../examples/platform-iso.json"),

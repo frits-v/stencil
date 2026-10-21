@@ -80,13 +80,8 @@ impl Builder<'_> {
             .tree
             .new_with_children(root_style, &[])
             .map_err(Self::taffy_error(&root_pointer))?;
-        let root_index = self.push_record(Self::record(
-            root_pointer,
-            NodeTag::Page,
-            None,
-            None,
-            root,
-        ));
+        let root_index =
+            self.push_record(Self::record(root_pointer, NodeTag::Page, None, None, root));
         self.add_title_block(page, sheet, root, root_index)?;
         self.add_sheet_legend(&page.legend, root, root_index)?;
         self.add_body(page, root, root_index)?;
@@ -113,7 +108,11 @@ impl Builder<'_> {
         }
     }
 
-    fn cell_rule(&mut self, block: NodeId, pointer: &NodePointer) -> Result<PartRecord, LayoutError> {
+    fn cell_rule(
+        &mut self,
+        block: NodeId,
+        pointer: &NodePointer,
+    ) -> Result<PartRecord, LayoutError> {
         let rule = self.plain_leaf(
             Style {
                 size: taffy::Size {
@@ -288,8 +287,12 @@ impl Builder<'_> {
         weight: f32,
     ) -> Result<(), LayoutError> {
         let problem = &sheet.problem;
-        let (cell, pointer, mut parts) =
-            self.title_cell(block, weight, "problem", (problem.caption.as_deref(), "Problem"))?;
+        let (cell, pointer, mut parts) = self.title_cell(
+            block,
+            weight,
+            "problem",
+            (problem.caption.as_deref(), "Problem"),
+        )?;
         let mut gap = CAPTION_GAP_PX;
         if let Some(lead) = &problem.lead {
             parts.push(self.sheet_text(
@@ -431,8 +434,12 @@ impl Builder<'_> {
         weight: f32,
     ) -> Result<(), LayoutError> {
         let answer = &sheet.answer;
-        let (cell, pointer, mut parts) =
-            self.title_cell(block, weight, "answer", (answer.caption.as_deref(), "Answer"))?;
+        let (cell, pointer, mut parts) = self.title_cell(
+            block,
+            weight,
+            "answer",
+            (answer.caption.as_deref(), "Answer"),
+        )?;
         parts.push(self.sheet_text(
             cell,
             PartName::Statement,
@@ -721,12 +728,7 @@ impl Builder<'_> {
         if let Some(subtitle) = &view.subtitle {
             let (leaf, leaf_index) = self.text_leaf(
                 Style {
-                    margin: margins(
-                        0.0,
-                        0.0,
-                        0.0,
-                        VIEW_SUBTITLE_GAP_PX - VIEW_HEADING_GAP_PX,
-                    ),
+                    margin: margins(0.0, 0.0, 0.0, VIEW_SUBTITLE_GAP_PX - VIEW_HEADING_GAP_PX),
                     ..base_style()
                 },
                 Some(heading),

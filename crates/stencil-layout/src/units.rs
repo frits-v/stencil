@@ -233,7 +233,13 @@ pub fn description_units(page: &Page, geometry: &PageGeometry) -> DescriptionUni
         let cell_pointer = NodePointer::root().child("sheet").child("attention");
         let cell = geometry.node(&cell_pointer);
         let list = SheetList::AttentionItems;
-        for (index, item) in sheet.attention.items.iter().enumerate().take(list.max() + 1) {
+        for (index, item) in sheet
+            .attention
+            .items
+            .iter()
+            .enumerate()
+            .take(list.max() + 1)
+        {
             let bounds = cell.and_then(|cell| entry_bounds(cell, list, index));
             units.push(DescribedUnit {
                 kind: UnitKind::Entry,

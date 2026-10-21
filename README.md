@@ -40,6 +40,10 @@ Narrow regions with long product names, a Tee with a band arm and a figure on th
 
 `examples/design-brief.json`: a design one-pager with text blocks, callouts and numbered links tracing one request.
 
+![A design sheet for the trigger evaluation service, with its title block, legend strip and System view](docs/gallery/onepager.png)
+
+`examples/onepager.json`: the same service as a design sheet, one system drawn as an engineering drawing on one page: a frame with grid references 1 to 8 and A to F, a title block holding the problem, the answer and what needs the reader's attention, a legend strip, and the System view numbered 2.
+
 The next three figures use the `plain` grammar.
 
 ![A batch job from submission to completion, drawn as five lanes](docs/gallery/sequence.png)

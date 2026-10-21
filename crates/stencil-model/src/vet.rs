@@ -367,12 +367,7 @@ fn needs_sheet_message(surface: SheetSurface) -> String {
 
 /// The sheet rules at and under `/sheet`, in document order: the projection and chrome the
 /// sheet needs, its lines, then the title block's text, lists and attention item ids.
-fn check_sheet(
-    page: &Page,
-    sheet: &Sheet,
-    entries: &[NodeEntry<'_>],
-    violations: &mut Violations,
-) {
+fn check_sheet(page: &Page, sheet: &Sheet, entries: &[NodeEntry<'_>], violations: &mut Violations) {
     let sheet_pointer = NodePointer::root().child("sheet");
     if page.projection == Projection::Iso {
         violations.push(
@@ -418,9 +413,19 @@ fn check_sheet(
     if let Some(lead) = &sheet.problem.lead {
         check_sheet_text(problem.child("lead"), lead, None, violations);
     }
-    check_list_length(SheetList::ProblemPoints, sheet.problem.points.len(), violations);
+    check_list_length(
+        SheetList::ProblemPoints,
+        sheet.problem.points.len(),
+        violations,
+    );
     let points = SheetList::ProblemPoints;
-    for (index, point) in sheet.problem.points.iter().enumerate().take(points.max() + 1) {
+    for (index, point) in sheet
+        .problem
+        .points
+        .iter()
+        .enumerate()
+        .take(points.max() + 1)
+    {
         check_sheet_text(
             points.pointer().index(index).child("text"),
             &point.text,
@@ -461,7 +466,13 @@ fn check_sheet(
     let items = SheetList::AttentionItems;
     check_list_length(items, sheet.attention.items.len(), violations);
     let mut item_ids: BTreeMap<&str, NodePointer> = BTreeMap::new();
-    for (index, item) in sheet.attention.items.iter().enumerate().take(items.max() + 1) {
+    for (index, item) in sheet
+        .attention
+        .items
+        .iter()
+        .enumerate()
+        .take(items.max() + 1)
+    {
         let pointer = items.pointer().index(index);
         check_key_id(&item.id, &pointer, &mut item_ids, violations);
         check_sheet_text(pointer.child("lead"), &item.lead, None, violations);

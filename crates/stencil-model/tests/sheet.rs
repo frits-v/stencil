@@ -85,7 +85,11 @@ fn a_sheet_under_iso_is_refused() {
     document["projection"] = json!("iso");
     assert_eq!(
         violations(document),
-        one("/sheet", "sheet-in-iso", "a design sheet is drawn flat only")
+        one(
+            "/sheet",
+            "sheet-in-iso",
+            "a design sheet is drawn flat only"
+        )
     );
 }
 
@@ -380,7 +384,11 @@ fn every_section_14_vet_rule_has_a_cue_case() {
             expected.push(format!("list-empty-{}", list.name()));
         }
     }
-    let per_list = [VetRule::NeedsSheet, VetRule::ListEmpty, VetRule::ListTooLong];
+    let per_list = [
+        VetRule::NeedsSheet,
+        VetRule::ListEmpty,
+        VetRule::ListTooLong,
+    ];
     let others: Vec<VetRule> = VetRule::SHEET
         .into_iter()
         .filter(|rule| !per_list.contains(rule))
@@ -420,7 +428,12 @@ fn every_section_14_vet_rule_has_a_cue_case() {
     assert_eq!(stray, Vec::<&String>::new());
     let non_empty = SheetList::ALL.iter().filter(|list| list.min() == 1).count();
     assert_eq!(
-        (SheetSurface::ALL.len() - 1, SheetList::ALL.len(), non_empty, others.len()),
+        (
+            SheetSurface::ALL.len() - 1,
+            SheetList::ALL.len(),
+            non_empty,
+            others.len()
+        ),
         (1, 3, 2, 7),
         "surfaces, lists, non-empty lists and other rules examined"
     );

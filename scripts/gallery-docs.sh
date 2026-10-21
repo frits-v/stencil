@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Writes the PNGs the README embeds into <out-dir>: every example in the center theme and
-# the design brief in dusk and wire, all at scale 1, named <stem>.png and design-brief-<theme>.png.
+# the onepager design sheet in dusk and wire, all at scale 1, named <stem>.png and
+# onepager-<theme>.png.
 # Run from the repository root. The second argument is the stencil binary.
 set -euo pipefail
 
@@ -27,7 +28,7 @@ for example in examples/*.json; do
   count=$((count + 1))
 done
 for theme in dusk wire; do
-  render examples/design-brief.json "$theme" "design-brief-$theme"
+  render examples/onepager.json "$theme" "onepager-$theme"
   count=$((count + 1))
 done
 echo "gallery-docs: wrote $count PNGs to $out_dir"

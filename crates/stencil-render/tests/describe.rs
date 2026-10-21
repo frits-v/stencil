@@ -212,8 +212,20 @@ fn fill_with_hazards(
     // A sheet's wordmark and captions hold at most 24 and 60 characters, shorter than a
     // hazard string, so they keep their text.
     const TEXT_KEYS: [&str; 14] = [
-        "title", "kicker", "lede", "foot", "badge", "label", "sub", "subtitle", "text", "hub",
-        "heading", "lead", "statement", "note",
+        "title",
+        "kicker",
+        "lede",
+        "foot",
+        "badge",
+        "label",
+        "sub",
+        "subtitle",
+        "text",
+        "hub",
+        "heading",
+        "lead",
+        "statement",
+        "note",
     ];
     match value {
         Value::String(text) if key.is_some_and(|key| TEXT_KEYS.contains(&key)) => {
@@ -361,15 +373,24 @@ fn every_markdown_hazard_in_every_text_field_reads_back() {
     assert!(examined >= 26 * HAZARDS.len(), "examined {examined}");
 }
 
-/// The rows of the Legend table: (Key cell, pointer).
+/// The rows of the Legend table: (Key cell, pointer). The table ends at the next heading,
+/// and on a sheet a reference span comes before the pointer span.
 fn legend_rows(text: &str) -> Vec<(String, String)> {
     text.lines()
         .skip_while(|line| !line.starts_with("## Legend"))
+        .skip(1)
+        .take_while(|line| !line.starts_with('#'))
         .filter(|line| line.starts_with("| ") && line.ends_with("` |"))
         .map(|line| {
             let cells: Vec<&str> = line.trim_matches('|').split(" | ").collect();
             let key = cells[0].trim().to_string();
-            let pointer = cells.last().unwrap().trim().trim_matches('`').to_string();
+            let pointer = cells
+                .last()
+                .unwrap()
+                .split('`')
+                .find(|span| span.starts_with('/'))
+                .unwrap()
+                .to_string();
             (key, pointer)
         })
         .collect()
@@ -649,4 +670,146 @@ fn description_units_cover_every_node_that_draws_a_part() {
         examined += 1;
     }
     assert!(examined >= 13);
+}
+
+fn onepager() -> (Page, PageGeometry, String) {
+    let page = example_page("onepager");
+    let (geometry, text) = description_of(&page);
+    (page, geometry, text)
+}
+
+/// The drawn margin labels and the grid references name the same cells: a column number
+/// drawn over a column is the column `sheet_zone_at` gives under it, and a row letter the
+/// row; a box across cells reads first and last cell, letter first.
+#[test]
+fn a_description_reference_names_the_cell_drawn_around_its_point() {
+    use stencil_layout::{BoxRect, PartName, sheet_frame, sheet_zone, sheet_zone_at};
+    use stencil_model::PagePoint;
+    let (_, geometry, _) = onepager();
+    let frame = sheet_frame(&geometry).unwrap();
+    let page = &geometry.nodes[0];
+    let mut examined = 0;
+    for part in &page.parts {
+        let Some(run) = &part.text else {
+            continue;
+        };
+        let center_x = part.bounds.x + part.bounds.width / 2.0;
+        let center_y = part.bounds.y + part.bounds.height / 2.0;
+        let (point, expected) = match part.name {
+            PartName::RefColumn | PartName::RefColumnFoot => (
+                PagePoint {
+                    x: center_x,
+                    y: frame.y + 1.0,
+                },
+                format!("A{}", run.text),
+            ),
+            PartName::RefRow | PartName::RefRowRight => (
+                PagePoint {
+                    x: frame.x + 1.0,
+                    y: center_y,
+                },
+                format!("{}1", run.text),
+            ),
+            _ => continue,
+        };
+        assert_eq!(sheet_zone_at(point, frame).to_string(), expected);
+        examined += 1;
+    }
+    assert_eq!(examined, 2 * 8 + 2 * 6);
+    let cell_width = frame.width / 8.0;
+    let row_height = frame.height / 6.0;
+    let spanning = BoxRect {
+        x: frame.x + cell_width * 1.5,
+        y: frame.y + row_height * 1.5,
+        width: cell_width * 3.0,
+        height: row_height * 1.2,
+    };
+    assert_eq!(sheet_zone(spanning, frame).to_string(), "B2-C5");
+    let edge = BoxRect {
+        x: frame.x,
+        y: frame.y,
+        width: cell_width,
+        height: row_height,
+    };
+    assert_eq!(sheet_zone(edge, frame).to_string(), "A1");
+}
+
+/// Each part `ENTRY_PARTS` names is drawn once per entry on its owner, so the i-th
+/// occurrence of each is the i-th entry's.
+#[test]
+fn every_entry_part_is_drawn_once_per_entry() {
+    use stencil_layout::ENTRY_PARTS;
+    use stencil_model::pointer::NodePointer;
+    let (page, geometry, _) = onepager();
+    let sheet = page.sheet.as_ref().unwrap();
+    let mut examined = 0;
+    for (list, names) in ENTRY_PARTS {
+        let (owner, entries) = match list {
+            stencil_model::SheetList::AttentionItems => (
+                NodePointer::root().child("sheet").child("attention"),
+                sheet.attention.items.len(),
+            ),
+            stencil_model::SheetList::ProblemPoints
+            | stencil_model::SheetList::AnswerParagraphs => {
+                panic!("{} keys no entry parts", list.name())
+            }
+        };
+        let node = geometry.node(&owner).unwrap();
+        for name in names {
+            let drawn = node.parts.iter().filter(|part| part.name == *name).count();
+            assert_eq!(drawn, entries, "{}", name.as_str());
+            examined += 1;
+        }
+    }
+    assert_eq!(examined, 2);
+}
+
+/// A reference that names another cell than the one the element is drawn in, a missing
+/// reference on a sheet, and a reference on a structural pointer are each a defect.
+#[test]
+fn a_wrong_reference_is_a_defect() {
+    let (page, geometry, text) = onepager();
+    let report = description_covers_drawing(&page, &geometry, &text);
+    assert!(report.defects.is_empty(), "{:?}", report.defects);
+
+    let point = "`/sheet/problem/points/0`";
+    let line = text.lines().find(|line| line.contains(point)).unwrap();
+    let number = text
+        .lines()
+        .position(|candidate| candidate == line)
+        .unwrap()
+        + 1;
+    let drawn = line.split('`').nth(1).unwrap().to_string();
+    let wrong = if drawn == "F8" { "A1" } else { "F8" };
+    let moved = text.replace(&format!("`{drawn}` {point}"), &format!("`{wrong}` {point}"));
+    let report = description_covers_drawing(&page, &geometry, &moved);
+    assert_eq!(
+        messages(&report),
+        [(
+            "/sheet/problem/points/0".to_string(),
+            format!("line {number} gives {wrong}, drawn at {drawn}")
+        )]
+    );
+
+    let missing = text.replace(&format!("`{drawn}` {point}"), point);
+    let report = description_covers_drawing(&page, &geometry, &missing);
+    assert_eq!(
+        messages(&report),
+        [(
+            "/sheet/problem/points/0".to_string(),
+            format!("line {number} gives no reference, drawn at {drawn}")
+        )]
+    );
+
+    let row = "Row, left to right. `/body/0/children/0`";
+    let row_number = text.lines().position(|line| line.ends_with(row)).unwrap() + 1;
+    let structural = text.replace(row, "Row, left to right. `C1` `/body/0/children/0`");
+    let report = description_covers_drawing(&page, &geometry, &structural);
+    assert_eq!(
+        messages(&report),
+        [(
+            "/body/0/children/0".to_string(),
+            format!("line {row_number} gives C1 where no reference belongs")
+        )]
+    );
 }

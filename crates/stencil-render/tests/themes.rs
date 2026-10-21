@@ -39,10 +39,7 @@ const EXAMPLES: [(&str, &str); 11] = [
         "design-brief",
         include_str!("../../../examples/design-brief.json"),
     ),
-    (
-        "onepager",
-        include_str!("../../../examples/onepager.json"),
-    ),
+    ("onepager", include_str!("../../../examples/onepager.json")),
     (
         "onprem-iso",
         include_str!("../../../examples/onprem-iso.json"),
@@ -701,27 +698,137 @@ fn a_solid_slot_whose_dot_is_none_draws_no_end_dots() {
     assert_eq!(label.text(), Some("Plain line"));
 }
 
+fn onepager_document() -> Value {
+    serde_json::from_str(include_str!("../../../examples/onepager.json")).unwrap()
+}
+
+/// The palette document and the onepager design sheet under wire.
 #[test]
 fn wire_paints_only_white_fills_and_two_inks() {
-    let rendered = render_themed(palette_document(), "wire");
-    let document = common::parse_xml(&rendered.svg.svg);
-    for name in ["rect", "path", "circle"] {
-        for fill in attribute_values(&document, name, "fill") {
+    const SHAPES: [&str; 6] = ["rect", "path", "circle", "ellipse", "polygon", "polyline"];
+    let mut examined = 0;
+    for (name, source) in [
+        ("palette", palette_document()),
+        ("onepager", onepager_document()),
+    ] {
+        let rendered = render_themed(source, "wire");
+        let document = common::parse_xml(&rendered.svg.svg);
+        for shape in SHAPES {
+            for fill in attribute_values(&document, shape, "fill") {
+                assert!(
+                    ["#FFFFFF", "none", "#222222"].contains(&fill),
+                    "{name}: {shape} fill {fill}"
+                );
+                examined += 1;
+            }
+        }
+        for fill in attribute_values(&document, "text", "fill") {
             assert!(
-                ["#FFFFFF", "none", "#222222"].contains(&fill),
-                "{name} fill {fill}"
+                ["#222222", "#555555"].contains(&fill),
+                "{name}: text fill {fill}"
             );
+            examined += 1;
+        }
+        // The one second stroke ink is wire's placeholder diagonal, the cross of a Frame.
+        for element in document.descendants().filter(|node| {
+            (SHAPES.contains(&node.tag_name().name()) || node.has_tag_name("line"))
+                && node
+                    .attribute("stroke")
+                    .is_some_and(|stroke| stroke != "none")
+        }) {
+            let stroke = element.attribute("stroke").unwrap();
+            let in_frame = element
+                .ancestors()
+                .any(|ancestor| ancestor.attribute("data-tag") == Some("Frame"));
+            if stroke == "#555555" && in_frame && element.has_tag_name("line") {
+                continue;
+            }
+            assert_eq!(stroke, "#222222", "{name}");
+            examined += 1;
         }
     }
-    for fill in attribute_values(&document, "text", "fill") {
-        assert!(["#222222", "#555555"].contains(&fill), "text fill {fill}");
+    assert!(examined > 100, "examined {examined}");
+}
+
+/// Section 14.5 rule 1: each designed theme sets its sheet role to the derivations, with a
+/// grid of `mix(paper, rule, 0.3)` minor and `mix(paper, rule, 0.6)` major except wire.
+#[test]
+fn every_designed_theme_sets_the_sheet_role() {
+    for name in DESIGNED_THEMES {
+        let theme = common::theme(name);
+        let sheet = theme.sheet.as_ref().unwrap_or_else(|| panic!("{name}"));
+        assert_eq!(sheet.paper, theme.page, "{name}");
+        assert_eq!(sheet.frame, theme.ink.primary, "{name}");
+        assert_eq!(sheet.rule, theme.card.border.color, "{name}");
+        assert_eq!(sheet.label_ink, theme.ink.secondary, "{name}");
+        assert_eq!(sheet.cell, theme.card.fill, "{name}");
+        match (name, &sheet.grid) {
+            ("wire", grid) => assert_eq!(*grid, None),
+            (_, Some(grid)) => {
+                let mix = |fraction| {
+                    stencil_render::palette::mix(
+                        sheet.paper.as_str(),
+                        sheet.rule.as_str(),
+                        fraction,
+                    )
+                    .unwrap()
+                };
+                assert_eq!(grid.minor.as_str(), mix(0.3), "{name}");
+                assert_eq!(grid.major.as_str(), mix(0.6), "{name}");
+            }
+            (_, None) => panic!("{name} draws no grid"),
+        }
     }
-    for stroke in ["rect", "path", "line", "circle"]
-        .iter()
-        .flat_map(|name| attribute_values(&document, name, "stroke"))
-    {
-        assert_eq!(stroke, "#222222");
+    for name in IMPORTED_THEMES {
+        assert_eq!(common::theme(name).sheet, None, "{name}");
     }
+}
+
+/// A theme without the sheet role paints the sheet from the roles it derives from and
+/// draws no grid; center with its role draws the grid as two paths.
+#[test]
+fn a_theme_without_sheet_roles_draws_the_derived_colours() {
+    let page: Page = serde_json::from_value(onepager_document()).unwrap();
+    let mut theme = common::theme("center");
+    let with_role = render_svg(&page, &theme, &common::layout_with_fixed_metrics(&page)).unwrap();
+    let with_role = common::parse_xml(&with_role.svg);
+    assert_eq!(
+        common::children_named(common::group(&with_role, ""), "path").len(),
+        2
+    );
+
+    theme.sheet = None;
+    let geometry = common::layout_with_fixed_metrics(&page);
+    let rendered = render_svg(&page, &theme, &geometry).unwrap();
+    let document = common::parse_xml(&rendered.svg);
+    let root = common::group(&document, "");
+    let rects = common::children_named(root, "rect");
+    let border = rects[0];
+    assert_eq!(border.attribute("fill"), Some(theme.page.as_str()));
+    assert_eq!(border.attribute("stroke"), Some(theme.ink.primary.as_str()));
+    let ticks = common::children_named(root, "line");
+    assert!(!ticks.is_empty());
+    for tick in &ticks {
+        assert_eq!(
+            tick.attribute("stroke"),
+            Some(theme.card.border.color.as_str())
+        );
+    }
+    let references = common::children_named(root, "text");
+    assert_eq!(references.len(), 2 * 8 + 2 * 6);
+    for reference in &references {
+        assert_eq!(
+            reference.attribute("fill"),
+            Some(theme.ink.secondary.as_str())
+        );
+    }
+    assert!(common::children_named(root, "path").is_empty(), "a grid");
+    let block = common::group(&document, "/sheet");
+    let block_border = common::children_named(block, "rect")[0];
+    assert_eq!(
+        block_border.attribute("fill"),
+        Some(theme.card.fill.as_str())
+    );
 }
 
 #[test]

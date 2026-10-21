@@ -179,3 +179,53 @@ fn note_kind_selects_its_text_style() {
         assert_eq!(run.color, color, "note {index}");
     }
 }
+
+/// Section 14.4 rules 1 and 3: a sheet pads its root 50 px on every side, so a 1280 px
+/// page has a 1380 px canvas; the frame's border sits 12 px in and its rule 32 px in, and
+/// the title block starts at the padding.
+#[test]
+fn a_sheet_pads_its_root_50_px_and_draws_its_frame_inside_the_padding() {
+    let page = page_from(json!({
+        "title": "Title",
+        "kicker": "Kicker",
+        "lede": "Lede",
+        "sheet": {
+            "problem": { "points": [{ "text": "A point." }] },
+            "answer": { "statement": "A statement." },
+            "attention": { "items": [{ "id": "first", "lead": "Lead.", "text": "Text." }] }
+        },
+        "body": [{
+            "tag": "View",
+            "title": "System",
+            "children": [{ "tag": "Pipe", "dir": "h", "line": "solid", "label": "link" }]
+        }],
+        "legend": [{ "line": "solid", "text": "request path" }]
+    }));
+    let geometry = layout(&page);
+    assert_eq!(geometry.canvas.width, 1380.0);
+    let block = node(&geometry, "/sheet");
+    assert_eq!(block.bounds.x, 50.0);
+    assert_eq!(block.bounds.y, 50.0);
+    assert_eq!(block.bounds.width, 1280.0);
+    let body = node(&geometry, "/body");
+    assert_close(
+        geometry.canvas.height,
+        body.bounds.bottom() + 50.0,
+        "canvas height",
+    );
+    let root = node(&geometry, "");
+    let border = part(root, PartName::Border).bounds;
+    assert_eq!((border.x, border.y), (12.0, 12.0));
+    assert_close(border.right(), 1380.0 - 12.0, "border right");
+    let rule = part(root, PartName::RefRule).bounds;
+    assert_eq!((rule.x, rule.y), (32.0, 32.0));
+    let grid = part(root, PartName::Grid).bounds;
+    assert_eq!((grid.x, grid.y), (33.0, 33.0));
+    assert_close(grid.bottom(), geometry.canvas.height - 33.0, "grid bottom");
+    let ticks = root
+        .parts
+        .iter()
+        .filter(|part| part.name == PartName::RefTick)
+        .count();
+    assert_eq!(ticks, 2 * 7 + 2 * 5);
+}

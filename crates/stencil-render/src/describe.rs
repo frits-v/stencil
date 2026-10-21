@@ -545,10 +545,7 @@ impl<'a> Writer<'a> {
                     rows.push((view, self.pipe_row(&node.pointer, pipe, kind, pointer)));
                 }
                 Some(NodeRef::TeeArm(pipe)) => {
-                    rows.push((
-                        view,
-                        self.pipe_row(&node.pointer, pipe, "tee arm", pointer),
-                    ));
+                    rows.push((view, self.pipe_row(&node.pointer, pipe, "tee arm", pointer)));
                 }
                 Some(NodeRef::Node(Node::Tee(tee))) => {
                     rows.push((view, self.spine_row(tee, pointer)));
@@ -694,7 +691,8 @@ impl<'a> Writer<'a> {
         }
         if let Some(foot) = &self.page.foot {
             let foot_pointer = NodePointer::root().child("foot");
-            blocks.push(self.with_pointer(format!("Foot: {}", escape_markdown(foot)), &foot_pointer));
+            blocks
+                .push(self.with_pointer(format!("Foot: {}", escape_markdown(foot)), &foot_pointer));
         }
     }
 
@@ -1049,7 +1047,12 @@ pub fn description_covers_drawing(page: &Page, geometry: &PageGeometry, text: &s
     let zones: HashMap<&str, Option<String>> = units
         .units
         .iter()
-        .map(|unit| (unit.pointer.as_str(), unit.zone.map(|zone| zone.to_string())))
+        .map(|unit| {
+            (
+                unit.pointer.as_str(),
+                unit.zone.map(|zone| zone.to_string()),
+            )
+        })
         .collect();
     let mut lines_by_pointer: BTreeMap<&str, Vec<usize>> = BTreeMap::new();
     let mut span_defects = Vec::new();
@@ -1095,9 +1098,10 @@ pub fn description_covers_drawing(page: &Page, geometry: &PageGeometry, text: &s
             let drawn = zones.get(current.text).cloned().flatten();
             let message = match (given, drawn) {
                 (Some(given), Some(drawn)) if given == drawn => None,
-                (Some(given), Some(drawn)) => {
-                    Some(format!("line {} gives {given}, drawn at {drawn}", line.number))
-                }
+                (Some(given), Some(drawn)) => Some(format!(
+                    "line {} gives {given}, drawn at {drawn}",
+                    line.number
+                )),
                 (None, Some(drawn)) => Some(format!(
                     "line {} gives no reference, drawn at {drawn}",
                     line.number

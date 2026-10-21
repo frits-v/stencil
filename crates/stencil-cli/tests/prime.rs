@@ -372,8 +372,14 @@ fn the_base_briefing_names_every_node_tag_in_its_vocabulary() {
         .into_iter()
         .collect();
     for tag in &sheet {
-        assert!(!rows.contains(tag), "base has a row for the sheet tag {tag}");
-        assert!(topic_rows.contains(tag), "the sheet topic has no row for {tag}");
+        assert!(
+            !rows.contains(tag),
+            "base has a row for the sheet tag {tag}"
+        );
+        assert!(
+            topic_rows.contains(tag),
+            "the sheet topic has no row for {tag}"
+        );
     }
     for object in ["Page", "FactEntry", "LegendEntry", "Link"] {
         assert!(rows.contains(object), "vocabulary has no row for {object}");
@@ -396,7 +402,11 @@ fn every_sheet_surface_is_absent_from_base_and_named_in_its_topic() {
             match *item {
                 SurfaceVocabulary::Tag(tag) => {
                     assert!(!base_rows.contains(tag), "base has a row for {tag}");
-                    assert!(topic_rows.contains(tag), "{} has no row for {tag}", topic.name());
+                    assert!(
+                        topic_rows.contains(tag),
+                        "{} has no row for {tag}",
+                        topic.name()
+                    );
                 }
                 SurfaceVocabulary::Field { object, field } => {
                     let base_row = base
@@ -408,8 +418,9 @@ fn every_sheet_surface_is_absent_from_base_and_named_in_its_topic() {
                         "base lists {object}.{field}"
                     );
                     assert!(
-                        text.lines().any(|line| line.starts_with(&format!("| {object} |"))
-                            && line.contains(&format!(" {field} "))),
+                        text.lines()
+                            .any(|line| line.starts_with(&format!("| {object} |"))
+                                && line.contains(&format!(" {field} "))),
                         "{} does not list {object}.{field}",
                         topic.name()
                     );
@@ -725,7 +736,10 @@ fn no_prime_text_names_a_tag_that_does_not_exist() {
         assert!(objects.contains(&name), "vocabulary names unknown {name}");
     }
     for name in vocabulary_row_names(&topic_text(Topic::Sheet)) {
-        assert!(objects.contains(&name), "the sheet topic names unknown {name}");
+        assert!(
+            objects.contains(&name),
+            "the sheet topic names unknown {name}"
+        );
     }
     for (topic, text) in all_texts() {
         for marker in ["\"tag\": \"", "\"tag\":\""] {

@@ -1,4 +1,4 @@
-check child-inside-container: examined 40 relations, 0 defects
+check child-inside-container: examined 131 relations, 0 defects
 check siblings-do-not-overlap: examined 46 pairs, 0 defects
 check text-fits-box: examined 95 text runs, 0 defects
 check remembered-constants: examined 56 text fields, 0 defects

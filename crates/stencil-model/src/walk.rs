@@ -186,7 +186,13 @@ pub(crate) fn push_sheet_text_fields<'a>(page: &'a Page, fields: &mut Vec<TextFi
         push(problem.child("lead"), lead);
     }
     let points = SheetList::ProblemPoints;
-    for (index, point) in sheet.problem.points.iter().enumerate().take(points.max() + 1) {
+    for (index, point) in sheet
+        .problem
+        .points
+        .iter()
+        .enumerate()
+        .take(points.max() + 1)
+    {
         push(points.pointer().index(index).child("text"), &point.text);
     }
     let answer = sheet_pointer.child("answer");
@@ -216,7 +222,13 @@ pub(crate) fn push_sheet_text_fields<'a>(page: &'a Page, fields: &mut Vec<TextFi
         push(attention.child("caption"), caption);
     }
     let items = SheetList::AttentionItems;
-    for (index, item) in sheet.attention.items.iter().enumerate().take(items.max() + 1) {
+    for (index, item) in sheet
+        .attention
+        .items
+        .iter()
+        .enumerate()
+        .take(items.max() + 1)
+    {
         let item_pointer = items.pointer().index(index);
         push(item_pointer.child("lead"), &item.lead);
         push(item_pointer.child("text"), &item.text);

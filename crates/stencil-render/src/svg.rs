@@ -5,8 +5,7 @@ mod iso_writer;
 use std::collections::BTreeSet;
 use stencil_layout::{
     BoxRect, ContainerLook, DrawnLink, LinkRoute, NodeGeometry, NodeTag, PageGeometry, Part,
-    PartName, PathPiece, TextAlign, TextRun, container_label_style, drawn_link,
-    fact_presentation,
+    PartName, PathPiece, TextAlign, TextRun, container_label_style, drawn_link, fact_presentation,
 };
 use stencil_model::grammar::Role;
 use stencil_model::pointer::NodePointer;
@@ -164,10 +163,7 @@ fn sheet_surface_in(geometry: &PageGeometry) -> Option<NodePointer> {
     geometry
         .nodes
         .iter()
-        .find(|node| {
-            is_sheet_tag(node.tag)
-                || node.parts.iter().any(|part| part.name.is_sheet())
-        })
+        .find(|node| is_sheet_tag(node.tag) || node.parts.iter().any(|part| part.name.is_sheet()))
         .map(|node| node.pointer.clone())
 }
 
@@ -216,7 +212,11 @@ fn geometry_order(page: &Page) -> Vec<(NodePointer, DocumentNode<'_>)> {
         order.push((problem.clone(), DocumentNode::SheetCell));
         let points = problem.child("points");
         order.extend(
-            (0..sheet.problem.points.len().min(SheetList::ProblemPoints.max() + 1))
+            (0..sheet
+                .problem
+                .points
+                .len()
+                .min(SheetList::ProblemPoints.max() + 1))
                 .map(|index| (points.index(index), DocumentNode::ProblemPoint)),
         );
         order.push((sheet_pointer.child("answer"), DocumentNode::SheetCell));
@@ -600,8 +600,8 @@ impl<'a> SvgWriter<'a> {
             });
         }
         if self.sheet.is_some()
-            && let Some(ink) = palette::sheet_part_paint(node.tag, part.name)
-                .and_then(|paint| paint.text)
+            && let Some(ink) =
+                palette::sheet_part_paint(node.tag, part.name).and_then(|paint| paint.text)
         {
             return Ok(self.palette.sheet_ink(ink));
         }
