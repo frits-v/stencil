@@ -5,7 +5,7 @@
     clippy::indexing_slicing
 )]
 
-//! Section 11.5: `examples/onepager.json` renders under every theme and `check` exits 0 with
+//! Section 11.5: `examples/design-brief.json` renders under every theme and `check` exits 0 with
 //! every check passing, links included, and the same report in each theme.
 
 use std::ffi::OsString;
@@ -36,9 +36,9 @@ fn run_stencil(arguments: &[&str]) -> Outcome {
     }
 }
 
-fn onepager_path() -> String {
+fn design_brief_path() -> String {
     Path::new(env!("CARGO_MANIFEST_DIR"))
-        .join("../../examples/onepager.json")
+        .join("../../examples/design-brief.json")
         .to_str()
         .unwrap()
         .to_string()
@@ -46,7 +46,7 @@ fn onepager_path() -> String {
 
 fn scratch_directory(name: &str) -> PathBuf {
     let directory = Path::new(env!("CARGO_TARGET_TMPDIR"))
-        .join("stencil-cli-onepager")
+        .join("stencil-cli-design-brief")
         .join(name);
     if directory.exists() {
         fs::remove_dir_all(&directory).unwrap();
@@ -59,7 +59,7 @@ fn scratch_directory(name: &str) -> PathBuf {
 fn check_passes_every_check_under_every_theme() {
     let mut reports = Vec::new();
     for theme in THEMES {
-        let outcome = run_stencil(&["check", &onepager_path(), "--theme", theme]);
+        let outcome = run_stencil(&["check", &design_brief_path(), "--theme", theme]);
         assert_eq!(outcome.code, ExitCode::Clean, "{theme}: {}", outcome.stderr);
         assert_eq!(outcome.stderr, "", "{theme}");
         assert!(
@@ -97,17 +97,17 @@ fn render_writes_every_theme_with_identical_measured_json_and_all_links() {
         let out_dir = scratch_directory(theme);
         let outcome = run_stencil(&[
             "render",
-            &onepager_path(),
+            &design_brief_path(),
             "--out-dir",
             out_dir.to_str().unwrap(),
             "--theme",
             theme,
         ]);
         assert_eq!(outcome.code, ExitCode::Clean, "{theme}: {}", outcome.stderr);
-        let png = fs::read(out_dir.join("onepager.png")).unwrap();
+        let png = fs::read(out_dir.join("design-brief.png")).unwrap();
         assert!(png.starts_with(b"\x89PNG"), "{theme}");
-        svg_outputs.push(fs::read_to_string(out_dir.join("onepager.svg")).unwrap());
-        measured_outputs.push(fs::read(out_dir.join("onepager.measured.json")).unwrap());
+        svg_outputs.push(fs::read_to_string(out_dir.join("design-brief.svg")).unwrap());
+        measured_outputs.push(fs::read(out_dir.join("design-brief.measured.json")).unwrap());
     }
     assert_eq!(measured_outputs[0], measured_outputs[1]);
     assert_eq!(measured_outputs[0], measured_outputs[2]);

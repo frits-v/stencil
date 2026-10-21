@@ -39,7 +39,7 @@ The pinned CUE version is 0.17.1. From `cue/`:
 ```bash
 cue vet -c ./figures:gcp
 cue export ./figures:gcp -e customer --out json -o out/g7-customer.json --force
-cue vet -c -d '#Page' ./grammars:gcp ../examples/onepager.json
+cue vet -c -d '#Page' ./grammars:gcp ../examples/design-brief.json
 cue export ./grammars:gcp -e grammar --out json -o ../crates/stencil-model/grammars/gcp.json --force
 stencil render out/g7-customer.json --out-dir out
 ```

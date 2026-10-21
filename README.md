@@ -20,7 +20,7 @@ Build the binary with `cargo build --release`; it lands at `target/release/stenc
 
 `examples/network-hub-spoke.json`: a transit hub with one Shared VPC per environment and every path between them labeled.
 
-![Design one-pager for a trigger evaluation service](docs/gallery/onepager.png)
+![Design one-pager for a trigger evaluation service](docs/gallery/design-brief.png)
 
 Five item shapes on one floor, under the isometric projection:
 
@@ -38,7 +38,7 @@ Narrow regions with long product names, a Tee with a band arm and a figure on th
 
 ![A branch office reaches two regions over one Interconnect through the transit hub](docs/gallery/transit-iso.png)
 
-`examples/onepager.json`: a design one-pager with text blocks, callouts and numbered links tracing one request.
+`examples/design-brief.json`: a design one-pager with text blocks, callouts and numbered links tracing one request.
 
 The next three figures use the `plain` grammar.
 

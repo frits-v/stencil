@@ -35,7 +35,10 @@ const EXAMPLES: [(&str, &str); 10] = [
         "network-hub-spoke",
         include_str!("../../../examples/network-hub-spoke.json"),
     ),
-    ("onepager", include_str!("../../../examples/onepager.json")),
+    (
+        "design-brief",
+        include_str!("../../../examples/design-brief.json"),
+    ),
     (
         "onprem-iso",
         include_str!("../../../examples/onprem-iso.json"),

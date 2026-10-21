@@ -7,17 +7,17 @@ use stencil_layout::{NodeTag, RouteStatus, layout_page};
 use stencil_model::parse_page;
 use stencil_model::text::FixedMetricsMeasurer;
 
-const ONEPAGER_JSON: &str = include_str!("../../../examples/onepager.json");
+const DESIGN_BRIEF_JSON: &str = include_str!("../../../examples/design-brief.json");
 
 #[test]
-fn onepager_lays_out_with_every_link_routed_and_no_geometry_defect() {
-    let page = parse_page(ONEPAGER_JSON).expect("onepager vets");
+fn design_brief_lays_out_with_every_link_routed_and_no_geometry_defect() {
+    let page = parse_page(DESIGN_BRIEF_JSON).expect("design-brief vets");
     let geometry = layout_page(
         &page,
         &stencil_model::builtin_grammar("gcp").unwrap().unwrap(),
         &mut FixedMetricsMeasurer::default(),
     )
-    .expect("onepager lays out");
+    .expect("design-brief lays out");
 
     for tag in [NodeTag::Text, NodeTag::Callout, NodeTag::Frame] {
         assert!(

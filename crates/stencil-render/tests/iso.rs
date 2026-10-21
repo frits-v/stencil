@@ -1407,7 +1407,7 @@ fn a_wire_fact_block_is_outlined_although_its_flat_box_has_no_border() {
 #[test]
 fn every_example_renders_under_iso_in_every_theme() {
     for document in [
-        include_str!("../../../examples/onepager.json"),
+        include_str!("../../../examples/design-brief.json"),
         include_str!("../../../examples/stress-dense.json"),
         include_str!("../../../examples/hybrid-ai.json"),
         include_str!("../../../examples/network-hub-spoke.json"),
