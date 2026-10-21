@@ -357,6 +357,10 @@ pub(crate) fn plane_member(tag: NodeTag, part: PartName) -> bool {
         | NodeTag::Row
         | NodeTag::Col
         | NodeTag::Lanes => false,
+        // render_svg refuses a sheet under iso before any plane is built.
+        NodeTag::TitleBlock | NodeTag::TitleCell | NodeTag::ProblemPoint | NodeTag::View => {
+            false
+        }
     }
 }
 
@@ -539,6 +543,8 @@ fn solid_shape(
         | NodeTag::Row
         | NodeTag::Col
         | NodeTag::Lanes => None,
+        // render_svg refuses a sheet under iso before any solid is built.
+        NodeTag::TitleBlock | NodeTag::TitleCell | NodeTag::ProblemPoint | NodeTag::View => None,
     }
 }
 

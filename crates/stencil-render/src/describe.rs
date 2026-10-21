@@ -6,14 +6,15 @@ use std::collections::{BTreeMap, HashMap, HashSet};
 
 use stencil_layout::{
     DescriptionUnits, NodeTag, PageGeometry, PipeEndSide, RouteStatus, UnitKind, description_units,
+    title_cell_caption,
 };
 use stencil_model::checks::{CheckName, CheckReport, Defect};
 use stencil_model::pointer::NodePointer;
 use stencil_model::products::{item_shape, named_product};
 use stencil_model::{
     Arrow, CalloutKind, Chrome, Grammar, LINKS_MAX, LegendKey, Line, ListKind, Node, NodeRef,
-    NoteKind, Page, Pipe, PipeDir, PipeForm, Projection, TINT_NAMES, Tee, body_nodes, legend_label,
-    line_key,
+    NoteKind, Page, Pipe, PipeDir, PipeForm, Projection, Sheet, SheetList, TINT_NAMES, Tee,
+    body_nodes, legend_label, line_key,
 };
 
 use crate::format_number;
@@ -22,6 +23,9 @@ use crate::format_number;
 pub struct Description {
     pub text: String,
 }
+
+/// The last sentence of a sheet's figure paragraph (section 14.1 rule 13).
+const REFERENCES_SENTENCE: &str = "References: a reference such as B3 or B2-C5 names the grid cells under an element's top-left and bottom-right corners, columns 1 to 8 left to right, rows A to F top to bottom. The reference before a pointer is where that element is drawn.";
 
 /// The sentence a `chrome: none` page writes after its uncaptioned head lines.
 const CAPTIONED_HEAD: &str =
@@ -34,6 +38,12 @@ pub fn describe(page: &Page, grammar: &Grammar, geometry: &PageGeometry) -> Desc
     let writer = Writer::new(page, grammar, geometry, &units);
     let mut blocks: Vec<String> = Vec::new();
     writer.head(&mut blocks);
+    if let Some(sheet) = &page.sheet {
+        writer.sheet(sheet, &mut blocks);
+        let mut text = blocks.join("\n\n");
+        text.push('\n');
+        return Description { text };
+    }
     blocks.push("## Figure".to_string());
     blocks.push(writer.figure_paragraph());
     blocks.push(format!("## Drawing {}", span(&body_pointer())));
@@ -181,12 +191,20 @@ impl<'a> Writer<'a> {
         }
     }
 
-    /// `text` followed by the pointer span when geometry has a node at `pointer`.
+    /// `text` followed by the spans of `pointer` when geometry has a node there.
     fn with_pointer(&self, text: String, pointer: &NodePointer) -> String {
         if self.geometry.node(pointer).is_some() {
-            format!("{text} {}", span(pointer))
+            format!("{text} {}", self.spans(pointer))
         } else {
             text
+        }
+    }
+
+    /// The pointer span, led on a sheet by the reference span of the unit it names.
+    fn spans(&self, pointer: &NodePointer) -> String {
+        match self.units.unit(pointer).and_then(|unit| unit.zone) {
+            Some(zone) => format!("`{zone}` {}", span(pointer)),
+            None => span(pointer),
         }
     }
 
@@ -224,13 +242,16 @@ impl<'a> Writer<'a> {
     }
 
     fn figure_paragraph(&self) -> String {
-        let link_count = self
-            .units
-            .units
-            .iter()
-            .filter(|unit| unit.kind == UnitKind::Link)
-            .count();
-        let node_count = self.units.units.len() - link_count;
+        let count_of = |kind: UnitKind| {
+            self.units
+                .units
+                .iter()
+                .filter(|unit| unit.kind == kind)
+                .count()
+        };
+        let link_count = count_of(UnitKind::Link);
+        let entry_count = count_of(UnitKind::Entry);
+        let node_count = self.units.units.len() - link_count - entry_count;
         let width = format_number(self.geometry.canvas.width);
         let height = format_number(self.geometry.canvas.height);
         let grammar = escape_markdown(&self.grammar.name);
@@ -242,27 +263,48 @@ impl<'a> Writer<'a> {
                 "Laid out at {width} x {height} px, projection iso, grammar {grammar}; the projected drawing is larger, by an amount that depends on the theme."
             ),
         };
-        format!(
-            "Drawn elements: {} ({}, {}). {canvas} Line styles name a tint slot by number; the colour word is the one the center theme draws it in.",
+        let counts = match self.page.sheet {
+            Some(_) => format!(
+                "{}, {}, {}",
+                count_words(node_count, "node", "nodes"),
+                count_words(link_count, "link", "links"),
+                count_words(entry_count, "entry", "entries"),
+            ),
+            None => format!(
+                "{}, {}",
+                count_words(node_count, "node", "nodes"),
+                count_words(link_count, "link", "links"),
+            ),
+        };
+        let mut paragraph = format!(
+            "Drawn elements: {} ({counts}). {canvas} Line styles name a tint slot by number; the colour word is the one the center theme draws it in.",
             self.units.units.len(),
-            count_words(node_count, "node", "nodes"),
-            count_words(link_count, "link", "links"),
-        )
+        );
+        if self.page.sheet.is_some() {
+            paragraph.push(' ');
+            paragraph.push_str(REFERENCES_SENTENCE);
+        }
+        paragraph
     }
 
     /// One list line per body node in geometry order, nested by geometry parent.
     fn outline(&self) -> String {
-        let mut lines = Vec::new();
-        let Some(body) = self
+        match self
             .geometry
             .nodes
             .iter()
             .position(|node| node.pointer == body_pointer())
-        else {
-            return String::new();
-        };
+        {
+            Some(body) => self.outline_under(body),
+            None => String::new(),
+        }
+    }
+
+    /// The outline of the descendants of the node at `root`.
+    fn outline_under(&self, root: usize) -> String {
+        let mut lines = Vec::new();
         let mut pending: Vec<(usize, usize)> = self
-            .children_of(body)
+            .children_of(root)
             .iter()
             .rev()
             .map(|&child| (child, 0))
@@ -292,7 +334,7 @@ impl<'a> Writer<'a> {
         };
         let indent = "  ".repeat(depth);
         let nested = "  ".repeat(depth + 1);
-        let pointer = span(&node.pointer);
+        let pointer = self.spans(&node.pointer);
         let reference = self.nodes.get(node.pointer.as_str()).copied();
         let text = match (node.tag, reference) {
             (NodeTag::Row, _) => format!("Row, left to right. {pointer}"),
@@ -410,6 +452,8 @@ impl<'a> Writer<'a> {
                 node.tag.as_str(),
                 escape_markdown(&self.name_of(&node.pointer))
             ),
+            // A View is a section of its own and the title block's nodes are written by
+            // the title block section.
             (
                 NodeTag::Page
                 | NodeTag::Kicker
@@ -418,7 +462,11 @@ impl<'a> Writer<'a> {
                 | NodeTag::Body
                 | NodeTag::Legend
                 | NodeTag::LegendEntry
-                | NodeTag::Foot,
+                | NodeTag::Foot
+                | NodeTag::TitleBlock
+                | NodeTag::TitleCell
+                | NodeTag::ProblemPoint
+                | NodeTag::View,
                 _,
             ) => return,
         };
@@ -447,7 +495,8 @@ impl<'a> Writer<'a> {
                     | Node::Note(_)
                     | Node::Text(_)
                     | Node::Callout(_)
-                    | Node::Frame(_),
+                    | Node::Frame(_)
+                    | Node::View(_),
                 ))
                 | None => {}
             }
@@ -473,21 +522,37 @@ impl<'a> Writer<'a> {
 
     /// The Lines table rows of section 14.1 rule 9.
     fn lines_rows(&self) -> Vec<Vec<String>> {
+        self.scoped_lines_rows()
+            .into_iter()
+            .map(|(_, row)| row)
+            .collect()
+    }
+
+    /// The Lines table rows, each with the geometry index of the View that holds the line:
+    /// a pipe's View, or the View that holds both ends of a link. None off a sheet and for
+    /// a link between two Views.
+    fn scoped_lines_rows(&self) -> Vec<(Option<usize>, Vec<String>)> {
         let mut rows = Vec::new();
-        for node in &self.geometry.nodes {
-            let pointer = span(&node.pointer);
+        for (index, node) in self.geometry.nodes.iter().enumerate() {
+            let pointer = self.spans(&node.pointer);
+            let view = self.view_of(index);
             match self.nodes.get(node.pointer.as_str()).copied() {
                 Some(NodeRef::Node(Node::Pipe(pipe))) => {
                     let kind = match pipe.dir {
                         PipeDir::Horizontal => "pipe h",
                         PipeDir::Vertical => "pipe v",
                     };
-                    rows.push(self.pipe_row(&node.pointer, pipe, kind, pointer));
+                    rows.push((view, self.pipe_row(&node.pointer, pipe, kind, pointer)));
                 }
                 Some(NodeRef::TeeArm(pipe)) => {
-                    rows.push(self.pipe_row(&node.pointer, pipe, "tee arm", pointer));
+                    rows.push((
+                        view,
+                        self.pipe_row(&node.pointer, pipe, "tee arm", pointer),
+                    ));
                 }
-                Some(NodeRef::Node(Node::Tee(tee))) => rows.push(self.spine_row(tee, pointer)),
+                Some(NodeRef::Node(Node::Tee(tee))) => {
+                    rows.push((view, self.spine_row(tee, pointer)));
+                }
                 Some(NodeRef::Node(
                     Node::Row(_)
                     | Node::Col(_)
@@ -498,7 +563,8 @@ impl<'a> Writer<'a> {
                     | Node::Note(_)
                     | Node::Text(_)
                     | Node::Callout(_)
-                    | Node::Frame(_),
+                    | Node::Frame(_)
+                    | Node::View(_),
                 ))
                 | None => {}
             }
@@ -528,18 +594,181 @@ impl<'a> Writer<'a> {
                 ends.push_str(", fallback route");
             }
             let key = LegendKey::new(link.line, link.tint, PipeForm::Tube);
-            rows.push(vec![
-                line,
-                kind,
-                endpoint(route.from_node, &link.from),
-                endpoint(route.to_node, &link.to),
-                style(&key),
-                ends,
-                self.means(&key),
-                span(&links_pointer().index(route.index)),
-            ]);
+            let from_view = self.view_of(route.from_node);
+            let view = from_view.filter(|_| from_view == self.view_of(route.to_node));
+            rows.push((
+                view,
+                vec![
+                    line,
+                    kind,
+                    endpoint(route.from_node, &link.from),
+                    endpoint(route.to_node, &link.to),
+                    style(&key),
+                    ends,
+                    self.means(&key),
+                    self.spans(&links_pointer().index(route.index)),
+                ],
+            ));
         }
         rows
+    }
+
+    /// The geometry index of the View that holds the node at `index`, if any.
+    fn view_of(&self, index: usize) -> Option<usize> {
+        let mut current = Some(index);
+        for _ in 0..self.geometry.nodes.len() {
+            let node_index = current?;
+            let node = self.geometry.nodes.get(node_index)?;
+            if node.tag == NodeTag::View {
+                return Some(node_index);
+            }
+            current = node.parent;
+        }
+        None
+    }
+
+    /// A design sheet in place of the figure, drawing, lines and legend sections: the
+    /// sheet paragraph, the title block, the legend, then each View with its outline and
+    /// its lines.
+    fn sheet(&self, sheet: &Sheet, blocks: &mut Vec<String>) {
+        blocks.push("## Sheet".to_string());
+        blocks.push(self.figure_paragraph());
+        self.title_block(sheet, blocks);
+        let legend_pointer = NodePointer::root().child("legend");
+        if self.geometry.node(&legend_pointer).is_some() {
+            blocks.push(format!("## Legend {}", self.spans(&legend_pointer)));
+            blocks.push(table(
+                &["Key", "Center label", "Means", "Uses", "Pointer"],
+                &self.legend_rows(),
+            ));
+        }
+        let scoped = self.scoped_lines_rows();
+        let header = [
+            "Line", "Kind", "From", "To", "Style", "Ends", "Means", "Pointer",
+        ];
+        let mut view_number = 1;
+        for (index, node) in self.geometry.nodes.iter().enumerate() {
+            let Some(NodeRef::Node(Node::View(view))) =
+                self.nodes.get(node.pointer.as_str()).copied()
+            else {
+                continue;
+            };
+            view_number += 1;
+            blocks.push(format!(
+                "## View {view_number}: {} {}",
+                escape_markdown(&view.title),
+                self.spans(&node.pointer)
+            ));
+            let mut aside = Vec::new();
+            if let Some(subtitle) = &view.subtitle {
+                aside.push(format!("Subtitle: {}.", escape_markdown(subtitle)));
+            }
+            if let Some(note) = &view.note {
+                aside.push(format!("Note: {}.", escape_markdown(note)));
+            }
+            if !aside.is_empty() {
+                blocks.push(aside.join(" "));
+            }
+            let outline = self.outline_under(index);
+            if !outline.is_empty() {
+                blocks.push(outline);
+            }
+            let rows: Vec<Vec<String>> = scoped
+                .iter()
+                .filter(|(scope, _)| *scope == Some(index))
+                .map(|(_, row)| row.clone())
+                .collect();
+            if !rows.is_empty() {
+                blocks.push(format!("### Lines in view {view_number}"));
+                blocks.push(table(&header, &rows));
+            }
+        }
+        let between: Vec<Vec<String>> = scoped
+            .iter()
+            .filter(|(scope, _)| scope.is_none())
+            .map(|(_, row)| row.clone())
+            .collect();
+        if !between.is_empty() {
+            blocks.push("## Lines between views".to_string());
+            blocks.push(table(&header, &between));
+        }
+        if let Some(foot) = &self.page.foot {
+            let foot_pointer = NodePointer::root().child("foot");
+            blocks.push(self.with_pointer(format!("Foot: {}", escape_markdown(foot)), &foot_pointer));
+        }
+    }
+
+    /// The title block, view 1: the wordmark line, then the problem, answer and attention
+    /// cells, each under its caption.
+    fn title_block(&self, sheet: &Sheet, blocks: &mut Vec<String>) {
+        let sheet_pointer = NodePointer::root().child("sheet");
+        blocks.push("## Title block (view 1)".to_string());
+        let wordmark = sheet.wordmark.as_deref().unwrap_or(&self.page.title);
+        blocks.push(format!(
+            "Wordmark {}. {}",
+            escape_markdown(wordmark),
+            self.spans(&sheet_pointer)
+        ));
+
+        let problem = sheet_pointer.child("problem");
+        blocks.push(self.cell_heading(&problem));
+        if let Some(lead) = &sheet.problem.lead {
+            blocks.push(escape_markdown(lead));
+        }
+        let points: Vec<Vec<String>> = sheet
+            .problem
+            .points
+            .iter()
+            .enumerate()
+            .map(|(index, point)| {
+                vec![
+                    format!("P{}", index + 1),
+                    escape_markdown(&point.text),
+                    self.spans(&SheetList::ProblemPoints.pointer().index(index)),
+                ]
+            })
+            .collect();
+        blocks.push(table(&["Point", "Text", "Pointer"], &points));
+
+        let answer = sheet_pointer.child("answer");
+        blocks.push(self.cell_heading(&answer));
+        blocks.push(escape_markdown(&sheet.answer.statement));
+        for paragraph in &sheet.answer.paragraphs {
+            blocks.push(match paragraph.lead() {
+                Some(lead) => format!(
+                    "{} {}",
+                    escape_markdown(lead),
+                    escape_markdown(paragraph.text())
+                ),
+                None => escape_markdown(paragraph.text()),
+            });
+        }
+
+        let attention = sheet_pointer.child("attention");
+        blocks.push(self.cell_heading(&attention));
+        let items: Vec<Vec<String>> = sheet
+            .attention
+            .items
+            .iter()
+            .enumerate()
+            .map(|(index, item)| {
+                vec![
+                    format!(
+                        "{} {}",
+                        escape_markdown(&item.lead),
+                        escape_markdown(&item.text)
+                    ),
+                    self.spans(&SheetList::AttentionItems.pointer().index(index)),
+                ]
+            })
+            .collect();
+        blocks.push(table(&["Item", "Pointer"], &items));
+    }
+
+    /// `### <caption>` with the cell's spans.
+    fn cell_heading(&self, cell: &NodePointer) -> String {
+        let caption = title_cell_caption(self.page, cell).unwrap_or_default();
+        format!("### {} {}", escape_markdown(&caption), self.spans(cell))
     }
 
     fn pipe_row(
@@ -626,7 +855,7 @@ impl<'a> Writer<'a> {
                     legend_label(entry.line, entry.tint).to_string(),
                     escape_markdown(&entry.text),
                     used.to_string(),
-                    span(&legend_pointer.index(index)),
+                    self.spans(&legend_pointer.index(index)),
                 ]
             })
             .collect()
@@ -817,54 +1046,28 @@ pub fn description_covers_drawing(page: &Page, geometry: &PageGeometry, text: &s
         .map(|unit| unit.pointer.as_str())
         .chain(units.structural.iter().map(NodePointer::as_str))
         .collect();
+    let zones: HashMap<&str, Option<String>> = units
+        .units
+        .iter()
+        .map(|unit| (unit.pointer.as_str(), unit.zone.map(|zone| zone.to_string())))
+        .collect();
     let mut lines_by_pointer: BTreeMap<&str, Vec<usize>> = BTreeMap::new();
     let mut span_defects = Vec::new();
     for line in &lines {
-        let mut bound = HashSet::new();
+        // A reference span binds to the pointer span right after it, one space apart.
+        let mut references: HashMap<usize, &str> = HashMap::new();
         for (position, current) in line.spans.iter().enumerate() {
             if current.closed && current.text.starts_with('/') {
-                let numbers = lines_by_pointer.entry(current.text).or_default();
-                if numbers.last() != Some(&line.number) {
-                    numbers.push(line.number);
-                }
-                if !known.contains(current.text) {
-                    span_defects.push(Defect {
-                        pointer: NodePointer::root(),
-                        message: format!(
-                            "line {} names {}, which draws nothing",
-                            line.number, current.text
-                        ),
-                    });
-                }
                 continue;
             }
-            if bound.contains(&position) {
-                continue;
-            }
-            let next = line.spans.get(position + 1);
-            let pointer_after = next.filter(|next| {
+            let pointer_after = line.spans.get(position + 1).filter(|next| {
                 next.closed
                     && next.text.starts_with('/')
                     && line.text.get(current.end..next.start) == Some(" ")
             });
             match (current.closed && is_reference(current.text), pointer_after) {
-                (true, Some(pointer)) => {
-                    bound.insert(position + 1);
-                    let at = units
-                        .units
-                        .iter()
-                        .map(|unit| &unit.pointer)
-                        .chain(units.structural.iter())
-                        .find(|known| known.as_str() == pointer.text)
-                        .cloned()
-                        .unwrap_or_else(NodePointer::root);
-                    span_defects.push(Defect {
-                        pointer: at,
-                        message: format!(
-                            "line {} gives {} where no reference belongs",
-                            line.number, current.text
-                        ),
-                    });
+                (true, Some(_)) => {
+                    references.insert(position + 1, current.text);
                 }
                 (true, None) | (false, _) => span_defects.push(Defect {
                     pointer: NodePointer::root(),
@@ -873,6 +1076,53 @@ pub fn description_covers_drawing(page: &Page, geometry: &PageGeometry, text: &s
                         line.number, current.text
                     ),
                 }),
+            }
+        }
+        for (position, current) in line.spans.iter().enumerate() {
+            if !(current.closed && current.text.starts_with('/')) {
+                continue;
+            }
+            let numbers = lines_by_pointer.entry(current.text).or_default();
+            if numbers.last() != Some(&line.number) {
+                numbers.push(line.number);
+            }
+            if !known.contains(current.text) {
+                span_defects.push(Defect {
+                    pointer: NodePointer::root(),
+                    message: format!(
+                        "line {} names {}, which draws nothing",
+                        line.number, current.text
+                    ),
+                });
+                continue;
+            }
+            let pointer = units
+                .units
+                .iter()
+                .map(|unit| &unit.pointer)
+                .chain(units.structural.iter())
+                .find(|known| known.as_str() == current.text)
+                .cloned()
+                .unwrap_or_else(NodePointer::root);
+            let given = references.get(&position).copied();
+            let drawn = zones.get(current.text).cloned().flatten();
+            let message = match (given, drawn) {
+                (Some(given), Some(drawn)) if given == drawn => None,
+                (Some(given), Some(drawn)) => {
+                    Some(format!("line {} gives {given}, drawn at {drawn}", line.number))
+                }
+                (None, Some(drawn)) => Some(format!(
+                    "line {} gives no reference, drawn at {drawn}",
+                    line.number
+                )),
+                (Some(given), None) => Some(format!(
+                    "line {} gives {given} where no reference belongs",
+                    line.number
+                )),
+                (None, None) => None,
+            };
+            if let Some(message) = message {
+                span_defects.push(Defect { pointer, message });
             }
         }
     }

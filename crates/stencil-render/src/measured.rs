@@ -1,5 +1,7 @@
 //! The section 5.4 measured JSON.
 
+use std::collections::HashMap;
+
 use serde_json::{Map, Value};
 use stencil_layout::{BoxRect, LinkRoute, NodeGeometry, PageGeometry, Part, PartName, RouteStatus};
 use stencil_model::pointer::NodePointer;
@@ -178,8 +180,10 @@ fn link_json(route: &LinkRoute, geometry: &PageGeometry) -> Value {
 /// Lanes node keys its lifelines `lifeline/<i>` by head index (section 13.6). An
 /// Item's fact parts come in box and run pairs in `facts` order: the first entry of each
 /// source keeps the bare names, and every later one adds `/<i>`, its index in `facts`
-/// (section 13.7).
+/// (section 13.7). A design sheet's repeated parts add `/<i>` by occurrence on their owner,
+/// and a paragraph's lead takes the index of the paragraph it opens (section 14.2 rule 10).
 fn parts_json(parts: &[Part]) -> Map<String, Value> {
+    let mut repeated: HashMap<PartName, usize> = HashMap::new();
     let mut body_lines = 0_usize;
     let mut markers = 0_usize;
     let mut lifelines = 0_usize;
@@ -214,6 +218,24 @@ fn parts_json(parts: &[Part]) -> Map<String, Value> {
             PartName::Lifeline => {
                 lifelines += 1;
                 format!("{}/{}", part.name.as_str(), lifelines - 1)
+            }
+            PartName::ParagraphLead => {
+                let paragraph = repeated.get(&PartName::Paragraph).copied().unwrap_or(0);
+                format!("{}/{paragraph}", part.name.as_str())
+            }
+            PartName::RefTick
+            | PartName::RefColumn
+            | PartName::RefColumnFoot
+            | PartName::RefRow
+            | PartName::RefRowRight
+            | PartName::CellRule
+            | PartName::Paragraph
+            | PartName::AttentionLead
+            | PartName::AttentionText
+            | PartName::GroupCaption => {
+                let count = repeated.entry(part.name).or_insert(0);
+                *count += 1;
+                format!("{}/{}", part.name.as_str(), *count - 1)
             }
             _ => part.name.as_str().to_string(),
         };

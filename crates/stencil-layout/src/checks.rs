@@ -431,6 +431,7 @@ pub fn links_avoid_boxes(geometry: &PageGeometry) -> CheckReport {
                     | NodeTag::Row
                     | NodeTag::Col
                     | NodeTag::Lanes
+                    | NodeTag::View
             ) {
                 continue;
             }
@@ -654,7 +655,8 @@ pub fn pipes_land(page: &Page, geometry: &PageGeometry) -> CheckReport {
                 | Node::Tee(_)
                 | Node::Text(_)
                 | Node::Callout(_)
-                | Node::Frame(_),
+                | Node::Frame(_)
+                | Node::View(_),
             ) => {}
         }
     }
@@ -1029,7 +1031,11 @@ fn pipe_lands_on(tag: NodeTag) -> bool {
         | NodeTag::Body
         | NodeTag::Legend
         | NodeTag::LegendEntry
-        | NodeTag::Foot => false,
+        | NodeTag::Foot
+        | NodeTag::TitleBlock
+        | NodeTag::TitleCell
+        | NodeTag::ProblemPoint
+        | NodeTag::View => false,
     }
 }
 

@@ -139,6 +139,8 @@ pub enum RenderError {
     PngEncode { message: String },
     #[error(transparent)]
     Fonts(#[from] FontError),
+    #[error("{pointer} is a design sheet surface, which is drawn flat only")]
+    SheetSurface { pointer: NodePointer },
 }
 
 #[cfg(test)]

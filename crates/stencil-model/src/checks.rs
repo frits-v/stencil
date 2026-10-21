@@ -270,7 +270,8 @@ pub fn legend_consistency(page: &Page) -> CheckReport {
                 | Node::Note(_)
                 | Node::Text(_)
                 | Node::Callout(_)
-                | Node::Frame(_),
+                | Node::Frame(_)
+                | Node::View(_),
             ) => {}
         }
     }

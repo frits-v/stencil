@@ -25,7 +25,14 @@ pub fn text_color(name: TextStyleName, line: Option<Line>) -> &'static str {
         TextStyleName::Title
         | TextStyleName::CardFunction
         | TextStyleName::LegendLabel
-        | TextStyleName::BlockBody => TEXT_DARK,
+        | TextStyleName::BlockBody
+        | TextStyleName::Wordmark
+        | TextStyleName::Motto
+        | TextStyleName::SheetTitle
+        | TextStyleName::Statement
+        | TextStyleName::ViewNumeral
+        | TextStyleName::ViewTitle
+        | TextStyleName::LeadBody => TEXT_DARK,
         TextStyleName::TagLabel => match line {
             Some(Line::Deny) => TEXT_DENY,
             Some(Line::Gray | Line::Solid | Line::Dash) | None => TEXT_DARK,
@@ -39,14 +46,18 @@ pub fn text_color(name: TextStyleName, line: Option<Line>) -> &'static str {
         | TextStyleName::TagSub
         | TextStyleName::NoteLegend
         | TextStyleName::LegendText
-        | TextStyleName::Foot => TEXT_MUTED,
+        | TextStyleName::Foot
+        | TextStyleName::SheetLabel
+        | TextStyleName::ViewNote
+        | TextStyleName::ViewNoteSmall => TEXT_MUTED,
     }
 }
 
 /// The style a run is measured and drawn in: the named style flat; under iso the body
 /// styles grown by `ISO_TYPE_SCALE`, a zone label by `ISO_ZONE_LABEL_SCALE`, and the frame
 /// bar label by `ISO_FRAME_LABEL_SCALE`, a tier above the zone names.
-/// Chrome and the legend keep their flat size.
+/// Chrome, the legend and the design sheet styles keep their flat size; a sheet is never
+/// laid out under iso.
 pub(crate) fn text_style_for(name: TextStyleName, iso: bool) -> TextStyle {
     let flat = name.text_style().style;
     if !iso {
@@ -60,7 +71,17 @@ pub(crate) fn text_style_for(name: TextStyleName, iso: bool) -> TextStyle {
         | TextStyleName::NoteLegend
         | TextStyleName::LegendLabel
         | TextStyleName::LegendText
-        | TextStyleName::Foot => return flat,
+        | TextStyleName::Foot
+        | TextStyleName::SheetLabel
+        | TextStyleName::Wordmark
+        | TextStyleName::Motto
+        | TextStyleName::SheetTitle
+        | TextStyleName::Statement
+        | TextStyleName::ViewNumeral
+        | TextStyleName::ViewTitle
+        | TextStyleName::ViewNote
+        | TextStyleName::ViewNoteSmall
+        | TextStyleName::LeadBody => return flat,
         TextStyleName::ZoneLabel | TextStyleName::PerimeterLabel => ISO_ZONE_LABEL_SCALE,
         TextStyleName::GcpBar => ISO_FRAME_LABEL_SCALE,
         TextStyleName::CardFunction
@@ -116,10 +137,41 @@ mod tests {
             ("legend_text", "#5F6368"),
             ("foot", "#5F6368"),
             ("block_body", "#202124"),
+            ("sheet_label", "#5F6368"),
+            ("wordmark", "#202124"),
+            ("motto", "#202124"),
+            ("sheet_title", "#202124"),
+            ("statement", "#202124"),
+            ("view_numeral", "#202124"),
+            ("view_title", "#202124"),
+            ("view_note", "#5F6368"),
+            ("view_note_small", "#5F6368"),
+            ("lead_body", "#202124"),
         ];
+        assert_eq!(TEXT_STYLES.len(), expected.len());
         for (named, (name, color)) in TEXT_STYLES.iter().zip(expected) {
             assert_eq!(named.name.as_str(), name);
             assert_eq!(text_color(named.name, None), color, "{name}");
         }
+    }
+
+    /// A lead run sets its body on the lead's last line, so each pair shares size and
+    /// line height (section 14.4 rule 9).
+    #[test]
+    fn every_lead_run_pairs_styles_of_one_line_height() {
+        let pairs = [(TextStyleName::LeadBody, TextStyleName::BlockBody)];
+        for (lead, body) in pairs {
+            let lead_style = lead.text_style().style;
+            let body_style = body.text_style().style;
+            assert_eq!(lead_style.size_px, body_style.size_px, "{}", lead.as_str());
+            assert_eq!(
+                lead_style.line_height_px,
+                body_style.line_height_px,
+                "{}",
+                lead.as_str()
+            );
+            assert_ne!(lead_style.weight, body_style.weight, "{}", lead.as_str());
+        }
+        assert_eq!(pairs.len(), 1, "examined {} lead-run pairs", pairs.len());
     }
 }

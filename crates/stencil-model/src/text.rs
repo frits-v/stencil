@@ -51,7 +51,7 @@ pub const FONT_SIZE_MAX_PX: f32 = 96.0;
 pub const LETTER_SPACING_MIN_EM: f32 = -0.2;
 pub const LETTER_SPACING_MAX_EM: f32 = 0.5;
 
-/// The 18 styles of section 2.9, in table order.
+/// The 28 styles of section 2.9, in table order.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum TextStyleName {
     Badge,
@@ -72,6 +72,16 @@ pub enum TextStyleName {
     LegendText,
     Foot,
     BlockBody,
+    SheetLabel,
+    Wordmark,
+    Motto,
+    SheetTitle,
+    Statement,
+    ViewNumeral,
+    ViewTitle,
+    ViewNote,
+    ViewNoteSmall,
+    LeadBody,
 }
 
 impl TextStyleName {
@@ -96,6 +106,16 @@ impl TextStyleName {
             TextStyleName::LegendText => "legend_text",
             TextStyleName::Foot => "foot",
             TextStyleName::BlockBody => "block_body",
+            TextStyleName::SheetLabel => "sheet_label",
+            TextStyleName::Wordmark => "wordmark",
+            TextStyleName::Motto => "motto",
+            TextStyleName::SheetTitle => "sheet_title",
+            TextStyleName::Statement => "statement",
+            TextStyleName::ViewNumeral => "view_numeral",
+            TextStyleName::ViewTitle => "view_title",
+            TextStyleName::ViewNote => "view_note",
+            TextStyleName::ViewNoteSmall => "view_note_small",
+            TextStyleName::LeadBody => "lead_body",
         }
     }
 
@@ -122,6 +142,16 @@ impl TextStyleName {
             TextStyleName::LegendText => &LEGEND_TEXT,
             TextStyleName::Foot => &FOOT,
             TextStyleName::BlockBody => &BLOCK_BODY,
+            TextStyleName::SheetLabel => &SHEET_LABEL,
+            TextStyleName::Wordmark => &WORDMARK,
+            TextStyleName::Motto => &MOTTO,
+            TextStyleName::SheetTitle => &SHEET_TITLE,
+            TextStyleName::Statement => &STATEMENT,
+            TextStyleName::ViewNumeral => &VIEW_NUMERAL,
+            TextStyleName::ViewTitle => &VIEW_TITLE,
+            TextStyleName::ViewNote => &VIEW_NOTE,
+            TextStyleName::ViewNoteSmall => &VIEW_NOTE_SMALL,
+            TextStyleName::LeadBody => &LEAD_BODY,
         }
     }
 }
@@ -131,7 +161,8 @@ impl TextStyleName {
 pub struct NamedTextStyle {
     pub name: TextStyleName,
     pub style: TextStyle,
-    /// True for `badge` and `kicker`: the string is uppercased before measurement.
+    /// True for `badge`, `kicker`, `sheet_label`, `motto` and `view_title`: the string is
+    /// uppercased before measurement.
     pub uppercase: bool,
 }
 
@@ -303,9 +334,91 @@ const BLOCK_BODY: NamedTextStyle = inter(
     false,
 );
 
-/// The 18 styles of section 2.9, in table order, which is TextStyleName order:
+/// The design sheet styles of section 14.4 rule 28.
+const SHEET_LABEL: NamedTextStyle = inter(
+    TextStyleName::SheetLabel,
+    FontWeight::SemiBold,
+    11.0,
+    13.2,
+    0.12,
+    true,
+);
+const WORDMARK: NamedTextStyle = inter(
+    TextStyleName::Wordmark,
+    FontWeight::ExtraBold,
+    52.0,
+    52.0,
+    -0.02,
+    false,
+);
+const MOTTO: NamedTextStyle = inter(
+    TextStyleName::Motto,
+    FontWeight::Bold,
+    13.0,
+    16.0,
+    0.06,
+    true,
+);
+const SHEET_TITLE: NamedTextStyle = inter(
+    TextStyleName::SheetTitle,
+    FontWeight::ExtraBold,
+    26.0,
+    30.0,
+    0.0,
+    false,
+);
+const STATEMENT: NamedTextStyle = inter(
+    TextStyleName::Statement,
+    FontWeight::Bold,
+    20.0,
+    26.0,
+    0.0,
+    false,
+);
+const VIEW_NUMERAL: NamedTextStyle = inter(
+    TextStyleName::ViewNumeral,
+    FontWeight::Bold,
+    13.0,
+    15.6,
+    0.0,
+    false,
+);
+const VIEW_TITLE: NamedTextStyle = inter(
+    TextStyleName::ViewTitle,
+    FontWeight::Bold,
+    16.0,
+    19.2,
+    0.1,
+    true,
+);
+const VIEW_NOTE: NamedTextStyle = inter(
+    TextStyleName::ViewNote,
+    FontWeight::Regular,
+    14.0,
+    18.0,
+    0.0,
+    false,
+);
+const VIEW_NOTE_SMALL: NamedTextStyle = inter(
+    TextStyleName::ViewNoteSmall,
+    FontWeight::Regular,
+    12.0,
+    15.6,
+    0.0,
+    false,
+);
+const LEAD_BODY: NamedTextStyle = inter(
+    TextStyleName::LeadBody,
+    FontWeight::Bold,
+    12.0,
+    17.4,
+    0.0,
+    false,
+);
+
+/// The 28 styles of section 2.9, in table order, which is TextStyleName order:
 /// TEXT_STYLES[i].name as usize == i.
-pub const TEXT_STYLES: [NamedTextStyle; 18] = [
+pub const TEXT_STYLES: [NamedTextStyle; 28] = [
     BADGE,
     KICKER,
     TITLE,
@@ -324,6 +437,16 @@ pub const TEXT_STYLES: [NamedTextStyle; 18] = [
     LEGEND_TEXT,
     FOOT,
     BLOCK_BODY,
+    SHEET_LABEL,
+    WORDMARK,
+    MOTTO,
+    SHEET_TITLE,
+    STATEMENT,
+    VIEW_NUMERAL,
+    VIEW_TITLE,
+    VIEW_NOTE,
+    VIEW_NOTE_SMALL,
+    LEAD_BODY,
 ];
 
 #[derive(Debug, Clone, PartialEq)]

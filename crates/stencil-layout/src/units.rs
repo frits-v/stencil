@@ -1,20 +1,110 @@
 //! What a figure description must cover (section 14.1 rule 5), computed from the page and
-//! its geometry alone, and what each untargeted pipe end lands on (rule 11).
+//! its geometry alone, what each untargeted pipe end lands on (rule 11), and on a design
+//! sheet the grid reference of every unit (rule 13).
 
 use std::collections::HashMap;
+use std::fmt;
 
 use stencil_model::pointer::NodePointer;
-use stencil_model::{LINKS_MAX, Node, NodeRef, Page, PipeDir, body_nodes};
+use stencil_model::{
+    LINKS_MAX, Node, NodeRef, Page, PagePoint, PipeDir, SHEET_COLUMNS, SHEET_ROW_LETTERS,
+    SHEET_ROWS, SheetList, body_nodes,
+};
 
 use crate::checks::{children_by_parent, landing_box, pipe_ends};
-use crate::{NodeTag, PageGeometry};
+use crate::route::longest_segment_midpoint;
+use crate::{BoxRect, NodeTag, PageGeometry, PartName};
+
+/// The parts each keyed entry draws once per entry, in entry order, on its owner node: an
+/// entry's reference is the union of its parts (section 14.1 rule 13).
+pub const ENTRY_PARTS: [(SheetList, &[PartName]); 1] = [(
+    SheetList::AttentionItems,
+    &[PartName::AttentionLead, PartName::AttentionText],
+)];
+
+/// A grid reference: one cell such as `B3`, or the cells under a box's top-left and
+/// bottom-right corners such as `B2-C5`. Rows are 0 to 5 for A to F, columns 1 to 8.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct SheetZone {
+    pub first: (u8, u8),
+    pub last: (u8, u8),
+}
+
+impl fmt::Display for SheetZone {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let cell = |(row, column): (u8, u8)| {
+            let letter = SHEET_ROW_LETTERS
+                .get(usize::from(row))
+                .copied()
+                .unwrap_or('F');
+            format!("{letter}{column}")
+        };
+        if self.first == self.last {
+            write!(formatter, "{}", cell(self.first))
+        } else {
+            write!(formatter, "{}-{}", cell(self.first), cell(self.last))
+        }
+    }
+}
+
+/// The cell under `point` on the grid inside the sheet's inner rule, clamped to the grid.
+fn cell_at(point: PagePoint, frame: BoxRect) -> (u8, u8) {
+    let index = |offset: f32, extent: f32, count: u8| -> u8 {
+        let cells = f32::from(count);
+        let position = (offset / (extent / cells)).floor();
+        // The clamp keeps the cast in range, so `as` never saturates.
+        position.clamp(0.0, cells - 1.0) as u8
+    };
+    let row = index(point.y - frame.y, frame.height, SHEET_ROWS);
+    let column = index(point.x - frame.x, frame.width, SHEET_COLUMNS) + 1;
+    (row, column)
+}
+
+/// The cell under a point.
+pub fn sheet_zone_at(point: PagePoint, frame: BoxRect) -> SheetZone {
+    let cell = cell_at(point, frame);
+    SheetZone {
+        first: cell,
+        last: cell,
+    }
+}
+
+/// The cells under the bounds' top-left and bottom-right corners, each inset 0.5 px.
+pub fn sheet_zone(bounds: BoxRect, frame: BoxRect) -> SheetZone {
+    let inset = 0.5;
+    let first = cell_at(
+        PagePoint {
+            x: bounds.x + inset,
+            y: bounds.y + inset,
+        },
+        frame,
+    );
+    let last = cell_at(
+        PagePoint {
+            x: bounds.right() - inset,
+            y: bounds.bottom() - inset,
+        },
+        frame,
+    );
+    SheetZone { first, last }
+}
+
+/// The grid the references divide: the `Grid` part of a sheet's page root; None off a sheet.
+pub fn sheet_frame(geometry: &PageGeometry) -> Option<BoxRect> {
+    geometry
+        .nodes
+        .first()
+        .and_then(|page| page.part(PartName::Grid))
+        .map(|grid| grid.bounds)
+}
 
 /// The units of a description, the structural pointers it may carry, and the pipe ends it
 /// names.
 #[derive(Debug, Clone, PartialEq)]
 pub struct DescriptionUnits {
-    /// Nodes in geometry order, then links in index order. Its length is the examined count
-    /// of `description-covers-drawing`.
+    /// Nodes in geometry order, then links in index order, then on a sheet the keyed
+    /// entries in document order. Its length is the examined count of
+    /// `description-covers-drawing`.
     pub units: Vec<DescribedUnit>,
     /// Pointers of geometry nodes, other than the page root, that draw no part: Body,
     /// Legend, Row and Col. Each may be written on at most one line.
@@ -44,12 +134,16 @@ pub struct DescribedUnit {
     pub pointer: NodePointer,
     /// The text that names the unit; the line holding the pointer contains it, escaped.
     pub name: String,
+    /// The reference the line must carry on a sheet; None off a sheet.
+    pub zone: Option<SheetZone>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum UnitKind {
     Node,
     Link,
+    /// A keyed entry that is not a geometry node, such as an attention item.
+    Entry,
 }
 
 /// One untargeted end of a Pipe or Tee arm.
@@ -80,6 +174,8 @@ pub fn description_units(page: &Page, geometry: &PageGeometry) -> DescriptionUni
         .map(|entry| (entry.pointer.as_str(), entry.node))
         .collect();
 
+    let frame = sheet_frame(geometry);
+    let zone_of = |bounds: BoxRect| frame.map(|frame| sheet_zone(bounds, frame));
     let mut units = Vec::new();
     let mut structural = Vec::new();
     for node in geometry.nodes.iter().filter(|node| node.parent.is_some()) {
@@ -95,6 +191,7 @@ pub fn description_units(page: &Page, geometry: &PageGeometry) -> DescriptionUni
                     &node.pointer,
                     references.get(node.pointer.as_str()).copied(),
                 ),
+                zone: zone_of(node.bounds),
             });
         }
     }
@@ -118,11 +215,33 @@ pub fn description_units(page: &Page, geometry: &PageGeometry) -> DescriptionUni
                 })
                 .unwrap_or_default()
         });
+        let anchor = match route.tag {
+            Some(tag) => PagePoint {
+                x: tag.x + tag.width / 2.0,
+                y: tag.y + tag.height / 2.0,
+            },
+            None => longest_segment_midpoint(&route.points).0,
+        };
         units.push(DescribedUnit {
             kind: UnitKind::Link,
             pointer: links_pointer.index(route.index),
             name,
+            zone: frame.map(|frame| sheet_zone_at(anchor, frame)),
         });
+    }
+    if let (Some(sheet), Some(frame)) = (&page.sheet, frame) {
+        let cell_pointer = NodePointer::root().child("sheet").child("attention");
+        let cell = geometry.node(&cell_pointer);
+        let list = SheetList::AttentionItems;
+        for (index, item) in sheet.attention.items.iter().enumerate().take(list.max() + 1) {
+            let bounds = cell.and_then(|cell| entry_bounds(cell, list, index));
+            units.push(DescribedUnit {
+                kind: UnitKind::Entry,
+                pointer: list.pointer().index(index),
+                name: item.lead.clone(),
+                zone: bounds.map(|bounds| sheet_zone(bounds, frame)),
+            });
+        }
     }
 
     DescriptionUnits {
@@ -130,6 +249,37 @@ pub fn description_units(page: &Page, geometry: &PageGeometry) -> DescriptionUni
         structural,
         pipe_landings: pipe_landings(geometry, &references),
     }
+}
+
+/// The union of the parts `ENTRY_PARTS` names for `list`, each the `index`-th of its name
+/// on `owner`; None when one of them is not drawn.
+fn entry_bounds(owner: &crate::NodeGeometry, list: SheetList, index: usize) -> Option<BoxRect> {
+    let names = ENTRY_PARTS
+        .iter()
+        .find(|(entry_list, _)| *entry_list == list)
+        .map(|(_, names)| *names)?;
+    let mut union: Option<BoxRect> = None;
+    for name in names {
+        let part = owner
+            .parts
+            .iter()
+            .filter(|part| part.name == *name)
+            .nth(index)?;
+        union = Some(match union {
+            None => part.bounds,
+            Some(bounds) => {
+                let x = bounds.x.min(part.bounds.x);
+                let y = bounds.y.min(part.bounds.y);
+                BoxRect {
+                    x,
+                    y,
+                    width: bounds.right().max(part.bounds.right()) - x,
+                    height: bounds.bottom().max(part.bounds.bottom()) - y,
+                }
+            }
+        });
+    }
+    union
 }
 
 /// The name a description gives the node at `pointer` drawn as `tag`.
@@ -165,8 +315,38 @@ fn node_name(
         | NodeTag::Tee
         | NodeTag::Text
         | NodeTag::Callout
-        | NodeTag::Frame => node.map(body_node_name).unwrap_or_default(),
+        | NodeTag::Frame
+        | NodeTag::View => node.map(body_node_name).unwrap_or_default(),
+        NodeTag::TitleBlock => page
+            .sheet
+            .as_ref()
+            .and_then(|sheet| sheet.wordmark.clone())
+            .unwrap_or_else(|| page.title.clone()),
+        NodeTag::TitleCell => title_cell_caption(page, pointer).unwrap_or_default(),
+        NodeTag::ProblemPoint => page
+            .sheet
+            .iter()
+            .flat_map(|sheet| sheet.problem.points.iter().enumerate())
+            .find(|(index, _)| SheetList::ProblemPoints.pointer().index(*index) == *pointer)
+            .map(|(_, point)| point.text.clone())
+            .unwrap_or_default(),
     }
+}
+
+/// The caption a title cell opens with: the authored one, or the cell's fixed word.
+pub fn title_cell_caption(page: &Page, pointer: &NodePointer) -> Option<String> {
+    let sheet = page.sheet.as_ref()?;
+    let cell = NodePointer::root().child("sheet");
+    let (caption, fixed) = if *pointer == cell.child("problem") {
+        (&sheet.problem.caption, "Problem")
+    } else if *pointer == cell.child("answer") {
+        (&sheet.answer.caption, "Answer")
+    } else if *pointer == cell.child("attention") {
+        (&sheet.attention.caption, "Attention")
+    } else {
+        return None;
+    };
+    Some(caption.clone().unwrap_or_else(|| fixed.to_string()))
 }
 
 fn body_node_name(node: NodeRef<'_>) -> String {
@@ -187,6 +367,7 @@ fn body_node_name(node: NodeRef<'_>) -> String {
             .clone()
             .unwrap_or_else(|| callout.text.clone()),
         NodeRef::Node(Node::Frame(frame)) => frame.label.clone(),
+        NodeRef::Node(Node::View(view)) => view.title.clone(),
         NodeRef::Node(Node::Row(_)) => "Row".to_string(),
         NodeRef::Node(Node::Col(_)) => "Col".to_string(),
         NodeRef::Node(Node::Lanes(_)) => "Lanes".to_string(),
@@ -218,7 +399,8 @@ fn pipe_landings(
                 | Node::Tee(_)
                 | Node::Text(_)
                 | Node::Callout(_)
-                | Node::Frame(_),
+                | Node::Frame(_)
+                | Node::View(_),
             ))
             | None => continue,
         };

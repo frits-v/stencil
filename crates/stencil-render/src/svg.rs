@@ -4,8 +4,9 @@ mod iso_writer;
 
 use std::collections::BTreeSet;
 use stencil_layout::{
-    BoxRect, ContainerLook, DrawnLink, LinkRoute, NodeGeometry, PageGeometry, Part, PartName,
-    PathPiece, TextAlign, TextRun, container_label_style, drawn_link, fact_presentation,
+    BoxRect, ContainerLook, DrawnLink, LinkRoute, NodeGeometry, NodeTag, PageGeometry, Part,
+    PartName, PathPiece, TextAlign, TextRun, container_label_style, drawn_link,
+    fact_presentation,
 };
 use stencil_model::grammar::Role;
 use stencil_model::pointer::NodePointer;
@@ -15,12 +16,15 @@ use base64::Engine as _;
 use stencil_model::text::TextMeasurer;
 use stencil_model::{
     Arrow, Chrome, FactSource, IconName, LEGEND_ENTRIES_MAX, LINKS_MAX, LegendEntry, Link, Node,
-    NodeRef, NoteKind, Page, PagePoint, Pipe, PipeDir, PipeForm, Projection, Theme, body_nodes,
+    NodeRef, NoteKind, Page, PagePoint, Pipe, PipeDir, PipeForm, Projection, SheetList, Theme,
+    body_nodes,
 };
 use stencil_text::{CosmicTextMeasurer, bundled_font};
 
 use crate::icons::icon_data_uri;
-use crate::palette::{self, BoxPaint, DotStyle, LineStyle, LineUse, Palette, Stroke};
+use crate::palette::{
+    self, BoxPaint, DotStyle, LineStyle, LineUse, Palette, PartShape, SheetInk, Stroke,
+};
 use crate::{RenderError, SvgDocument, format_number};
 
 const SVG_NAMESPACE: &str = "http://www.w3.org/2000/svg";
@@ -46,6 +50,11 @@ const BULLET_RADIUS_PX: f32 = 2.0;
 const BULLET_CENTER_INSET_PX: f32 = 5.0;
 /// Corner radii of the gcp frame in CSS order: top-left, top-right, bottom-right, bottom-left.
 const GCP_RADII_PX: [f32; 4] = [4.0, 4.0, 10.0, 10.0];
+/// The drafting grid's pitch, and how many minor lines lie between two major ones.
+const SHEET_GRID_STEP_PX: f32 = 20.0;
+const SHEET_GRID_MAJOR_EVERY: usize = 5;
+/// More grid lines than a 2660 px canvas could hold on either axis.
+const SHEET_GRID_LINES_MAX: usize = 256;
 
 /// The document side of one geometry node, in section 4.4 geometry order.
 #[derive(Debug, Clone, Copy)]
@@ -59,6 +68,12 @@ enum DocumentNode<'a> {
     Legend,
     LegendEntry(&'a LegendEntry),
     Foot,
+    /// A design sheet's title block, `/sheet`.
+    Sheet,
+    /// The problem, answer or attention cell of the title block.
+    SheetCell,
+    /// A point of the problem cell.
+    ProblemPoint,
 }
 
 /// Walks page and geometry in the section 4.4 geometry order and asserts the pointers match,
@@ -68,6 +83,11 @@ pub fn render_svg(
     theme: &Theme,
     geometry: &PageGeometry,
 ) -> Result<SvgDocument, RenderError> {
+    if page.projection == Projection::Iso
+        && let Some(pointer) = sheet_surface_in(geometry)
+    {
+        return Err(RenderError::SheetSurface { pointer });
+    }
     let expected = geometry_order(page);
     if let Some(mismatch) = first_mismatch(&expected, geometry) {
         return Err(mismatch);
@@ -77,6 +97,9 @@ pub fn render_svg(
     }
 
     let mut writer = SvgWriter::new(Palette::new(theme, Projection::Flat));
+    writer.sheet = page.sheet.as_ref().map(|sheet| SheetLook {
+        wordmark: sheet.wordmark.is_some(),
+    });
     let mut relabeler = Relabeler::default();
     let width = format_number(geometry.canvas.width);
     let height = format_number(geometry.canvas.height);
@@ -127,12 +150,92 @@ pub fn render_svg(
     Ok(writer.into_document())
 }
 
+/// Where a geometry holds a design sheet surface, which the iso writer refuses (section 14.2
+/// rule 11): `/sheet` when it holds a title block, else the first node in geometry order
+/// with a sheet tag or a sheet part.
+fn sheet_surface_in(geometry: &PageGeometry) -> Option<NodePointer> {
+    if geometry
+        .nodes
+        .iter()
+        .any(|node| node.tag == NodeTag::TitleBlock)
+    {
+        return Some(NodePointer::root().child("sheet"));
+    }
+    geometry
+        .nodes
+        .iter()
+        .find(|node| {
+            is_sheet_tag(node.tag)
+                || node
+                    .parts
+                    .iter()
+                    .any(|part| palette::sheet_part_paint(node.tag, part.name).is_some())
+        })
+        .map(|node| node.pointer.clone())
+}
+
+/// True for the node tags a design sheet adds.
+pub(crate) fn is_sheet_tag(tag: NodeTag) -> bool {
+    match tag {
+        NodeTag::TitleBlock | NodeTag::TitleCell | NodeTag::ProblemPoint | NodeTag::View => true,
+        NodeTag::Page
+        | NodeTag::Kicker
+        | NodeTag::Title
+        | NodeTag::Lede
+        | NodeTag::Body
+        | NodeTag::Legend
+        | NodeTag::LegendEntry
+        | NodeTag::Foot
+        | NodeTag::Row
+        | NodeTag::Col
+        | NodeTag::Lanes
+        | NodeTag::Zone
+        | NodeTag::Pcard
+        | NodeTag::Fact
+        | NodeTag::Note
+        | NodeTag::Pipe
+        | NodeTag::Tee
+        | NodeTag::Text
+        | NodeTag::Callout
+        | NodeTag::Frame => false,
+    }
+}
+
 /// Pointers and document nodes in section 4.4 geometry order. The body portion is
 /// `body_nodes`, which is bounded by NODES_MAX + 1, and the legend portion stops after
 /// LEGEND_ENTRIES_MAX + 1 entries; a longer geometry then fails as a mismatch.
 fn geometry_order(page: &Page) -> Vec<(NodePointer, DocumentNode<'_>)> {
     let root = NodePointer::root();
     let mut order = vec![(root.clone(), DocumentNode::Page)];
+    if let Some(sheet) = &page.sheet {
+        let sheet_pointer = root.child("sheet");
+        order.push((sheet_pointer.clone(), DocumentNode::Sheet));
+        order.extend([
+            (root.child("kicker"), DocumentNode::Kicker),
+            (root.child("title"), DocumentNode::Title),
+            (root.child("lede"), DocumentNode::Lede),
+        ]);
+        let problem = sheet_pointer.child("problem");
+        order.push((problem.clone(), DocumentNode::SheetCell));
+        let points = problem.child("points");
+        order.extend(
+            (0..sheet.problem.points.len().min(SheetList::ProblemPoints.max() + 1))
+                .map(|index| (points.index(index), DocumentNode::ProblemPoint)),
+        );
+        order.push((sheet_pointer.child("answer"), DocumentNode::SheetCell));
+        order.push((sheet_pointer.child("attention"), DocumentNode::SheetCell));
+        push_legend_order(page, &mut order);
+        order.push((root.child("body"), DocumentNode::Body));
+        order.extend(
+            body_nodes(page)
+                .into_iter()
+                .map(|entry| (entry.pointer, DocumentNode::Content(entry.node))),
+        );
+        if page.foot.is_some() {
+            order.push((root.child("foot"), DocumentNode::Foot));
+        }
+        return order;
+    }
     // A captioned figure lays out no badge, kicker, title or lede (section 13.7).
     if page.chrome == Chrome::Full {
         order.extend([
@@ -147,26 +250,31 @@ fn geometry_order(page: &Page) -> Vec<(NodePointer, DocumentNode<'_>)> {
             .into_iter()
             .map(|entry| (entry.pointer, DocumentNode::Content(entry.node))),
     );
-    if !page.legend.is_empty() {
-        let legend_pointer = root.child("legend");
-        order.push((legend_pointer.clone(), DocumentNode::Legend));
-        order.extend(
-            page.legend
-                .iter()
-                .enumerate()
-                .take(LEGEND_ENTRIES_MAX + 1)
-                .map(|(index, entry)| {
-                    (
-                        legend_pointer.index(index),
-                        DocumentNode::LegendEntry(entry),
-                    )
-                }),
-        );
-    }
+    push_legend_order(page, &mut order);
     if page.foot.is_some() {
         order.push((root.child("foot"), DocumentNode::Foot));
     }
     order
+}
+
+fn push_legend_order<'a>(page: &'a Page, order: &mut Vec<(NodePointer, DocumentNode<'a>)>) {
+    if page.legend.is_empty() {
+        return;
+    }
+    let legend_pointer = NodePointer::root().child("legend");
+    order.push((legend_pointer.clone(), DocumentNode::Legend));
+    order.extend(
+        page.legend
+            .iter()
+            .enumerate()
+            .take(LEGEND_ENTRIES_MAX + 1)
+            .map(|(index, entry)| {
+                (
+                    legend_pointer.index(index),
+                    DocumentNode::LegendEntry(entry),
+                )
+            }),
+    );
 }
 
 /// Lines of the Pipes, Tee arms and links that draw an arrowhead, one marker each.
@@ -408,6 +516,15 @@ struct SvgWriter<'a> {
     palette: Palette<'a>,
     /// Section 12.2 rule 7: the zoom of an iso scene, which tube radii follow; 1 in flat.
     iso_zoom: f32,
+    /// Set on a design sheet, whose chrome and Boxes paint from the sheet role.
+    sheet: Option<SheetLook>,
+}
+
+/// What the writer reads of a page's sheet.
+#[derive(Debug, Clone, Copy)]
+struct SheetLook {
+    /// A wordmark sets the title in `motto`; without one the title is `sheet_title`.
+    wordmark: bool,
 }
 
 impl<'a> SvgWriter<'a> {
@@ -418,6 +535,7 @@ impl<'a> SvgWriter<'a> {
             font_faces: Vec::new(),
             palette,
             iso_zoom: 1.0,
+            sheet: None,
         }
     }
 
@@ -479,10 +597,29 @@ impl<'a> SvgWriter<'a> {
             && part.name == PartName::Label
         {
             let look = node.container.ok_or_else(|| container_mismatch(node))?;
-            return Ok(self.palette.container_label_ink(look, node.tint));
+            return Ok(match self.sheet {
+                Some(_) => self.palette.sheet_container_label_ink(look, node.tint),
+                None => self.palette.container_label_ink(look, node.tint),
+            });
         }
-        let style_name = text_style_name(document_node, node.container, part.name)
-            .ok_or_else(|| part_mismatch(node, part))?;
+        if self.sheet.is_some()
+            && let Some(ink) = palette::sheet_part_paint(node.tag, part.name)
+                .and_then(|paint| paint.text)
+        {
+            return Ok(self.palette.sheet_ink(ink));
+        }
+        let style_name = match (self.sheet, document_node, part.name) {
+            (Some(sheet), DocumentNode::Title, PartName::Text) => {
+                if sheet.wordmark {
+                    TextStyleName::Motto
+                } else {
+                    TextStyleName::SheetTitle
+                }
+            }
+            (Some(_), DocumentNode::Lede, PartName::Text) => TextStyleName::BlockBody,
+            _ => text_style_name(document_node, node.container, part.name)
+                .ok_or_else(|| part_mismatch(node, part))?,
+        };
         Ok(self
             .palette
             .text_ink(style_name, context.line.map(|line_use| line_use.line)))
@@ -516,6 +653,7 @@ impl<'a> SvgWriter<'a> {
                     let look = node.container.ok_or_else(|| container_mismatch(node))?;
                     self.write_zone_box(depth, node.bounds, look, node.tint);
                 }
+                Node::View(_) => {}
                 Node::Item(_) => {
                     let card_paint = self.palette.card();
                     self.write_box(depth, node.bounds, CARD_RADIUS_PX, card_paint);
@@ -545,7 +683,10 @@ impl<'a> SvgWriter<'a> {
             | DocumentNode::Lede
             | DocumentNode::Body
             | DocumentNode::Legend
-            | DocumentNode::Foot => PartContext::default(),
+            | DocumentNode::Foot
+            | DocumentNode::Sheet
+            | DocumentNode::SheetCell
+            | DocumentNode::ProblemPoint => PartContext::default(),
             DocumentNode::LegendEntry(entry) => PartContext {
                 line: Some(LineUse::new(entry.line, entry.tint)),
                 pipe_form: Some(entry.form),
@@ -566,7 +707,8 @@ impl<'a> SvgWriter<'a> {
                 | Node::Text(_)
                 | Node::Frame(_)
                 | Node::Box(_)
-                | Node::Fact(_) => PartContext::default(),
+                | Node::Fact(_)
+                | Node::View(_) => PartContext::default(),
                 Node::Callout(callout) => PartContext {
                     accent: Some(self.palette.callout(callout.kind).accent),
                     ..PartContext::default()
@@ -607,7 +749,7 @@ impl<'a> SvgWriter<'a> {
         look: ContainerLook,
         tint: Option<u8>,
     ) {
-        let style = self.palette.zone_style(look, tint);
+        let style = self.zone_style(look, tint);
         if look.role == Role::Frame {
             let fill = style.fill.unwrap_or("none");
             let path = rounded_path(bounds, GCP_RADII_PX);
@@ -659,7 +801,7 @@ impl<'a> SvgWriter<'a> {
         look: ContainerLook,
         tint: Option<u8>,
     ) {
-        let Some(border) = self.palette.zone_style(look, tint).border else {
+        let Some(border) = self.zone_style(look, tint).border else {
             return;
         };
         let inset = border.width_px / 2.0;
@@ -675,6 +817,14 @@ impl<'a> SvgWriter<'a> {
         );
     }
 
+    /// The paint of a Box: from the sheet role on a design sheet (section 14.5 rule 3).
+    fn zone_style(&self, look: ContainerLook, tint: Option<u8>) -> palette::ZoneStyle<'a> {
+        match self.sheet {
+            Some(_) => self.palette.sheet_zone_style(look, tint),
+            None => self.palette.zone_style(look, tint),
+        }
+    }
+
     fn write_part_shape(
         &mut self,
         depth: usize,
@@ -683,6 +833,12 @@ impl<'a> SvgWriter<'a> {
         context: PartContext<'a>,
     ) -> Result<(), RenderError> {
         let bounds = part.bounds;
+        if self.sheet.is_some()
+            && let Some(paint) = palette::sheet_part_paint(node.tag, part.name)
+        {
+            self.write_sheet_part(depth, bounds, paint);
+            return Ok(());
+        }
         match part.name {
             // The solid draws the footprint under iso; it has no flat drawing.
             PartName::Footprint => {}
@@ -690,6 +846,17 @@ impl<'a> SvgWriter<'a> {
                 let badge_paint = self.palette.badge();
                 self.write_box(depth, bounds, BADGE_RADIUS_PX, badge_paint);
             }
+            // On a sheet a frame-role Box leaves its bar and body unfilled and rules the bar
+            // off in the sheet's hairline.
+            PartName::Bar if self.sheet.is_some() => {
+                let rule = Stroke {
+                    width_px: 1.0,
+                    line: LineStyle::Solid,
+                    color: self.palette.sheet_ink(SheetInk::Rule),
+                };
+                self.write_bottom_rule(depth, bounds, rule);
+            }
+            PartName::Body if self.sheet.is_some() => {}
             PartName::Bar => {
                 let fill = self.palette.frame_bar_fill();
                 self.write_rect(depth, bounds, 0.0, Some(fill), None);
@@ -814,8 +981,168 @@ impl<'a> SvgWriter<'a> {
             | PartName::Heading
             | PartName::Marker
             | PartName::BodyLine => {}
+            // A sheet part reaches here only off a sheet, which never lays one out.
+            PartName::Border
+            | PartName::RefRule
+            | PartName::Grid
+            | PartName::RefTick
+            | PartName::RefColumn
+            | PartName::RefColumnFoot
+            | PartName::RefRow
+            | PartName::RefRowRight
+            | PartName::BlockBorder
+            | PartName::Wordmark
+            | PartName::CellRule
+            | PartName::Caption
+            | PartName::Lead
+            | PartName::Statement
+            | PartName::ParagraphLead
+            | PartName::Paragraph
+            | PartName::AttentionLead
+            | PartName::AttentionText
+            | PartName::PointRule
+            | PartName::PointLabel
+            | PartName::StripRule
+            | PartName::GroupCaption
+            | PartName::ViewNumber
+            | PartName::ViewNumeral
+            | PartName::ViewTitle
+            | PartName::ViewSubtitle
+            | PartName::ViewRule
+            | PartName::ViewNote => return Err(part_mismatch(node, part)),
         }
         Ok(())
+    }
+
+    /// One sheet part by its paint row: a rect, a line along its long axis, a circle, or
+    /// the drafting grid. A text part draws nothing here.
+    fn write_sheet_part(&mut self, depth: usize, bounds: BoxRect, paint: palette::PartPaint) {
+        let fill = paint.fill.map(|ink| self.palette.sheet_ink(ink));
+        let stroke = paint.stroke.map(|(ink, width_px)| Stroke {
+            width_px,
+            line: LineStyle::Solid,
+            color: self.palette.sheet_ink(ink),
+        });
+        match paint.shape {
+            PartShape::Rect => self.write_rect(depth, bounds, 0.0, fill, stroke),
+            PartShape::Line => {
+                if let Some(stroke) = stroke {
+                    self.write_axis_line(depth, bounds, stroke, None);
+                }
+            }
+            PartShape::DashedLine(dash) => {
+                if let Some(stroke) = stroke {
+                    self.write_axis_line(depth, bounds, stroke, Some(dash));
+                }
+            }
+            PartShape::Circle => {
+                let inset = stroke.map_or(0.0, |stroke| stroke.width_px / 2.0);
+                let radius = bounds.width.min(bounds.height) / 2.0 - inset;
+                let stroke_part = stroke.map(stroke_attributes).unwrap_or_default();
+                self.line(
+                    depth,
+                    &format!(
+                        r#"<circle cx="{}" cy="{}" r="{}" fill="{}"{stroke_part}/>"#,
+                        format_number(bounds.x + bounds.width / 2.0),
+                        format_number(bounds.y + bounds.height / 2.0),
+                        format_number(radius.max(0.0)),
+                        fill.unwrap_or("none"),
+                    ),
+                );
+            }
+            PartShape::Grid => self.write_sheet_grid(depth, bounds),
+            PartShape::Text => {}
+        }
+    }
+
+    /// A line through the middle of `bounds` along its longer side.
+    fn write_axis_line(
+        &mut self,
+        depth: usize,
+        bounds: BoxRect,
+        stroke: Stroke<'_>,
+        dash: Option<&str>,
+    ) {
+        let (x1, y1, x2, y2) = if bounds.width < bounds.height {
+            let center_x = bounds.x + bounds.width / 2.0;
+            (center_x, bounds.y, center_x, bounds.bottom())
+        } else {
+            let center_y = bounds.y + bounds.height / 2.0;
+            (bounds.x, center_y, bounds.right(), center_y)
+        };
+        let dash = dash.map_or(String::new(), |dash| {
+            format!(r#" stroke-dasharray="{dash}""#)
+        });
+        self.line(
+            depth,
+            &format!(
+                r#"<line x1="{}" y1="{}" x2="{}" y2="{}"{}{dash}/>"#,
+                format_number(x1),
+                format_number(y1),
+                format_number(x2),
+                format_number(y2),
+                stroke_attributes(stroke)
+            ),
+        );
+    }
+
+    /// The drafting grid (section 14.5 rule 10): a 1 px line every 20 px from the grid's
+    /// top-left corner, every fifth in the major color, drawn as one path per color. A
+    /// theme without a grid draws nothing.
+    fn write_sheet_grid(&mut self, depth: usize, bounds: BoxRect) {
+        let Some((minor, major)) = self.palette.sheet_grid() else {
+            return;
+        };
+        let mut minor_path = String::new();
+        let mut major_path = String::new();
+        let columns = (bounds.width / SHEET_GRID_STEP_PX).ceil() as usize;
+        let rows = (bounds.height / SHEET_GRID_STEP_PX).ceil() as usize;
+        for step in 1..columns.min(SHEET_GRID_LINES_MAX) {
+            let x = bounds.x + step as f32 * SHEET_GRID_STEP_PX;
+            if x >= bounds.right() {
+                break;
+            }
+            let path = if step % SHEET_GRID_MAJOR_EVERY == 0 {
+                &mut major_path
+            } else {
+                &mut minor_path
+            };
+            path.push_str(&format!(
+                "M {} {} V {} ",
+                format_number(x),
+                format_number(bounds.y),
+                format_number(bounds.bottom())
+            ));
+        }
+        for step in 1..rows.min(SHEET_GRID_LINES_MAX) {
+            let y = bounds.y + step as f32 * SHEET_GRID_STEP_PX;
+            if y >= bounds.bottom() {
+                break;
+            }
+            let path = if step % SHEET_GRID_MAJOR_EVERY == 0 {
+                &mut major_path
+            } else {
+                &mut minor_path
+            };
+            path.push_str(&format!(
+                "M {} {} H {} ",
+                format_number(bounds.x),
+                format_number(y),
+                format_number(bounds.right())
+            ));
+        }
+        for (path, color) in [(minor_path, minor), (major_path, major)] {
+            if path.is_empty() {
+                continue;
+            }
+            self.line(
+                depth,
+                &format!(
+                    r#"<path d="{}" fill="none" stroke="{color}" stroke-width="1"/>"#,
+                    path.trim_end()
+                ),
+            );
+        }
     }
 
     /// A lifeline down its lane, from the head's bottom to the band's bottom. One of length
@@ -1162,7 +1489,7 @@ impl<'a> SvgWriter<'a> {
         } else {
             format!(r#" letter-spacing="{}""#, format_number(letter_spacing_px))
         };
-        for line in &run.metrics.lines {
+        for (line_index, line) in run.metrics.lines.iter().enumerate() {
             let Some(content) = run.text.get(line.byte_start..line.byte_end) else {
                 return Err(RenderError::Svg {
                     message: format!(
@@ -1173,8 +1500,14 @@ impl<'a> SvgWriter<'a> {
                     ),
                 });
             };
+            // The first line of a lead run's body continues on its lead's last line.
+            let indent = if line_index == 0 {
+                run.first_line_indent_px
+            } else {
+                0.0
+            };
             let x = match run.align {
-                TextAlign::Start => bounds.x,
+                TextAlign::Start => bounds.x + indent,
                 TextAlign::Center => bounds.x + (bounds.width - line.width_px) / 2.0,
             };
             let y = bounds.y + line.baseline_px;

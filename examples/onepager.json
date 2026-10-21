@@ -1,0 +1,320 @@
+{
+  "title": "Plain-language event triggers, evaluated over video clips",
+  "kicker": "Premise · trigger evaluation",
+  "lede": "An operator describes an event in their own words. The service turns the description into an evaluation plan, runs the plan over each new clip, and stores a verdict with the frames that support it.",
+  "foot": "Every verdict keeps the frames that support it and the plan version that produced it.",
+  "width": 1500,
+  "badge": "Internal",
+  "grammar": "gcp",
+  "sheet": {
+    "wordmark": "trig",
+    "problem": {
+      "caption": "Problem · rules written as code",
+      "lead": "Operators review long stretches of video to find a few events.",
+      "points": [
+        {
+          "text": "A rule written as code needs an engineer for every change."
+        },
+        {
+          "text": "A reviewer watches hours of footage to confirm a few seconds of it."
+        },
+        {
+          "text": "A verdict without its frames cannot be checked a month later."
+        },
+        {
+          "text": "A model update can quietly change what a trigger means."
+        }
+      ]
+    },
+    "answer": {
+      "caption": "Answer · triggers in plain language",
+      "statement": "The operator writes the event; the service plans it, runs it on every clip, and keeps the frames that decide it.",
+      "paragraphs": [
+        {
+          "lead": "Versioned plans.",
+          "text": "Each trigger compiles to an evaluation plan with a version. A verdict records that version, so a changed plan shows in the history and is never applied silently."
+        },
+        {
+          "lead": "Asynchronous evaluation.",
+          "text": "The API returns once a job is queued, and a slow clip never holds an operator request open."
+        }
+      ]
+    },
+    "attention": {
+      "caption": "Your attention goes here, and only here",
+      "items": [
+        {
+          "id": "plan-approval",
+          "lead": "Plan approval.",
+          "text": "You confirm each new or changed plan before it runs."
+        },
+        {
+          "id": "disputed-verdicts",
+          "lead": "Disputed verdicts.",
+          "text": "A verdict you mark wrong comes back with its frames and plan version."
+        },
+        {
+          "id": "model-updates",
+          "lead": "Model updates.",
+          "text": "A new evaluator version re-plans every active trigger and waits for your approval."
+        }
+      ]
+    }
+  },
+  "body": [
+    {
+      "tag": "View",
+      "id": "system",
+      "title": "System",
+      "subtitle": "the pieces, and why each exists",
+      "note": "one request, from the console to a stored verdict",
+      "children": [
+        {
+          "tag": "Row",
+          "gap": 32,
+          "grow": [
+            0,
+            1
+          ],
+          "children": [
+            {
+              "tag": "Col",
+              "justify": "center",
+              "children": [
+                {
+                  "tag": "Item",
+                  "id": "console",
+                  "kind": "product",
+                  "icon": "devops",
+                  "title": "Operator console",
+                  "subtitle": "web client"
+                }
+              ]
+            },
+            {
+              "tag": "Box",
+              "id": "cloud",
+              "kind": "gcp",
+              "label": "Google Cloud",
+              "children": [
+                {
+                  "tag": "Col",
+                  "gap": 64,
+                  "children": [
+                    {
+                      "tag": "Row",
+                      "grow": [
+                        1,
+                        1
+                      ],
+                      "children": [
+                        {
+                          "tag": "Row",
+                          "justify": "center",
+                          "grow": [
+                            0
+                          ],
+                          "children": [
+                            {
+                              "tag": "Item",
+                              "id": "gateway",
+                              "kind": "product",
+                              "icon": "networking",
+                              "title": "Gateway",
+                              "subtitle": "API Gateway"
+                            }
+                          ]
+                        },
+                        {
+                          "tag": "Row",
+                          "justify": "center",
+                          "grow": [
+                            0
+                          ],
+                          "children": [
+                            {
+                              "tag": "Item",
+                              "id": "api",
+                              "kind": "product",
+                              "icon": "cloud-run",
+                              "title": "Trigger API",
+                              "subtitle": "Cloud Run"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "tag": "Row",
+                      "grow": [
+                        1,
+                        1,
+                        1
+                      ],
+                      "children": [
+                        {
+                          "tag": "Row",
+                          "justify": "center",
+                          "grow": [
+                            0
+                          ],
+                          "children": [
+                            {
+                              "tag": "Item",
+                              "id": "queue",
+                              "kind": "product",
+                              "icon": "integration",
+                              "title": "Evaluation queue",
+                              "subtitle": "Pub/Sub"
+                            }
+                          ]
+                        },
+                        {
+                          "tag": "Row",
+                          "justify": "center",
+                          "grow": [
+                            0
+                          ],
+                          "children": [
+                            {
+                              "tag": "Item",
+                              "id": "worker",
+                              "kind": "product",
+                              "icon": "cloud-run",
+                              "title": "Clip worker",
+                              "subtitle": "Cloud Run job"
+                            }
+                          ]
+                        },
+                        {
+                          "tag": "Row",
+                          "justify": "center",
+                          "grow": [
+                            0
+                          ],
+                          "children": [
+                            {
+                              "tag": "Item",
+                              "id": "evaluator",
+                              "kind": "product",
+                              "icon": "vertex-ai",
+                              "title": "Clip evaluator",
+                              "subtitle": "Vertex AI endpoint"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "tag": "Row",
+                      "justify": "center",
+                      "grow": [
+                        0
+                      ],
+                      "children": [
+                        {
+                          "tag": "Item",
+                          "id": "verdict-store",
+                          "kind": "product",
+                          "icon": "cloud-sql",
+                          "title": "Verdict store",
+                          "subtitle": "Cloud SQL"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "tag": "Frame",
+          "id": "screen-review",
+          "label": "Verdict review in the console: clip, evidence frames, verdict and plan version",
+          "height": 120
+        }
+      ]
+    }
+  ],
+  "legend": [
+    {
+      "line": "solid",
+      "tint": 4,
+      "text": "the operator's request"
+    },
+    {
+      "line": "solid",
+      "tint": 1,
+      "text": "the API plans and queues the job"
+    },
+    {
+      "line": "solid",
+      "tint": 6,
+      "text": "the clip worker runs one job per clip"
+    },
+    {
+      "line": "dash",
+      "tint": 6,
+      "text": "writes the verdict store"
+    },
+    {
+      "line": "deny",
+      "text": "blocked path"
+    }
+  ],
+  "links": [
+    {
+      "from": "console",
+      "to": "gateway",
+      "line": "solid",
+      "tint": 4,
+      "label": "submit trigger"
+    },
+    {
+      "from": "gateway",
+      "to": "api",
+      "line": "solid",
+      "tint": 1,
+      "label": "authorized call"
+    },
+    {
+      "from": "api",
+      "to": "queue",
+      "line": "solid",
+      "tint": 1,
+      "label": "queue job",
+      "from_side": "bottom",
+      "to_side": "top"
+    },
+    {
+      "from": "queue",
+      "to": "worker",
+      "line": "solid",
+      "tint": 6,
+      "label": "deliver job"
+    },
+    {
+      "from": "worker",
+      "to": "evaluator",
+      "line": "solid",
+      "tint": 6,
+      "label": "evaluate clip"
+    },
+    {
+      "from": "worker",
+      "to": "verdict-store",
+      "line": "dash",
+      "tint": 6,
+      "label": "write verdict"
+    },
+    {
+      "from": "evaluator",
+      "to": "verdict-store",
+      "line": "deny",
+      "label": "no direct write",
+      "from_side": "bottom",
+      "to_side": "right"
+    }
+  ]
+}
