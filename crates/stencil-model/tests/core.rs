@@ -18,7 +18,7 @@ use stencil_model::{
     validate_page,
 };
 
-const EXAMPLES: [(&str, &str); 8] = [
+const EXAMPLES: [(&str, &str); 9] = [
     ("g7", include_str!("../../../examples/g7.json")),
     ("hero-iso", include_str!("../../../examples/hero-iso.json")),
     (
@@ -32,6 +32,10 @@ const EXAMPLES: [(&str, &str); 8] = [
     (
         "design-brief",
         include_str!("../../../examples/design-brief.json"),
+    ),
+    (
+        "onepager",
+        include_str!("../../../examples/onepager.json"),
     ),
     (
         "platform-iso",

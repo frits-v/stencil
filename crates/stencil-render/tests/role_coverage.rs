@@ -117,15 +117,16 @@ fn every_role_document(projection: &str) -> Value {
 }
 
 /// The figures the coverage renders, each with the grammar it is laid out under: the gcp
-/// figure flat and in iso, the plain sequence example for the lanes, and a
-/// soft-tone Box under a grammar that gives that tone a solid border, which no built-in
-/// grammar does.
+/// figure flat and in iso, the plain sequence example for the lanes, the onepager design
+/// sheet, which is flat only, for the sheet role, and a soft-tone Box under a grammar that
+/// gives that tone a solid border, which no built-in grammar does.
 fn figures() -> Vec<(Page, Grammar)> {
     let page = |document: Value| -> Page { serde_json::from_value(document).unwrap() };
     let mut figures: Vec<(Page, Grammar)> = [
         every_role_document("flat"),
         every_role_document("iso"),
         serde_json::from_str(include_str!("../../../examples/sequence.json")).unwrap(),
+        serde_json::from_str(include_str!("../../../examples/onepager.json")).unwrap(),
     ]
     .into_iter()
     .map(|document| {

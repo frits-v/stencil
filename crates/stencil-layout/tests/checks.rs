@@ -70,6 +70,7 @@ fn run_of_width(width_px: f32, height_px: f32) -> TextRun {
                 baseline_px: 12.48,
             }],
         },
+        first_line_indent_px: 0.0,
     }
 }
 

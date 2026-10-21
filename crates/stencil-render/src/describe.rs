@@ -1055,47 +1055,35 @@ pub fn description_covers_drawing(page: &Page, geometry: &PageGeometry, text: &s
     let mut span_defects = Vec::new();
     for line in &lines {
         // A reference span binds to the pointer span right after it, one space apart.
-        let mut references: HashMap<usize, &str> = HashMap::new();
-        for (position, current) in line.spans.iter().enumerate() {
-            if current.closed && current.text.starts_with('/') {
-                continue;
-            }
-            let pointer_after = line.spans.get(position + 1).filter(|next| {
-                next.closed
-                    && next.text.starts_with('/')
-                    && line.text.get(current.end..next.start) == Some(" ")
-            });
-            match (current.closed && is_reference(current.text), pointer_after) {
-                (true, Some(_)) => {
-                    references.insert(position + 1, current.text);
-                }
-                (true, None) | (false, _) => span_defects.push(Defect {
-                    pointer: NodePointer::root(),
-                    message: format!(
-                        "line {} has span {}, neither a pointer nor a reference",
-                        line.number, current.text
-                    ),
-                }),
-            }
-        }
+        let bound_to_next = |position: usize| {
+            line.spans.get(position).is_some_and(|current| {
+                current.closed
+                    && is_reference(current.text)
+                    && line.spans.get(position + 1).is_some_and(|next| {
+                        next.closed
+                            && next.text.starts_with('/')
+                            && line.text.get(current.end..next.start) == Some(" ")
+                    })
+            })
+        };
         for (position, current) in line.spans.iter().enumerate() {
             if !(current.closed && current.text.starts_with('/')) {
+                if !bound_to_next(position) {
+                    span_defects.push(Defect {
+                        pointer: NodePointer::root(),
+                        message: format!(
+                            "line {} has span {}, neither a pointer nor a reference",
+                            line.number, current.text
+                        ),
+                    });
+                }
                 continue;
             }
-            let numbers = lines_by_pointer.entry(current.text).or_default();
-            if numbers.last() != Some(&line.number) {
-                numbers.push(line.number);
-            }
-            if !known.contains(current.text) {
-                span_defects.push(Defect {
-                    pointer: NodePointer::root(),
-                    message: format!(
-                        "line {} names {}, which draws nothing",
-                        line.number, current.text
-                    ),
-                });
-                continue;
-            }
+            let given = position
+                .checked_sub(1)
+                .filter(|&before| bound_to_next(before))
+                .and_then(|before| line.spans.get(before))
+                .map(|reference| reference.text);
             let pointer = units
                 .units
                 .iter()
@@ -1104,7 +1092,6 @@ pub fn description_covers_drawing(page: &Page, geometry: &PageGeometry, text: &s
                 .find(|known| known.as_str() == current.text)
                 .cloned()
                 .unwrap_or_else(NodePointer::root);
-            let given = references.get(&position).copied();
             let drawn = zones.get(current.text).cloned().flatten();
             let message = match (given, drawn) {
                 (Some(given), Some(drawn)) if given == drawn => None,
@@ -1123,6 +1110,19 @@ pub fn description_covers_drawing(page: &Page, geometry: &PageGeometry, text: &s
             };
             if let Some(message) = message {
                 span_defects.push(Defect { pointer, message });
+            }
+            let numbers = lines_by_pointer.entry(current.text).or_default();
+            if numbers.last() != Some(&line.number) {
+                numbers.push(line.number);
+            }
+            if !known.contains(current.text) {
+                span_defects.push(Defect {
+                    pointer: NodePointer::root(),
+                    message: format!(
+                        "line {} names {}, which draws nothing",
+                        line.number, current.text
+                    ),
+                });
             }
         }
     }

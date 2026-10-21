@@ -166,10 +166,7 @@ fn sheet_surface_in(geometry: &PageGeometry) -> Option<NodePointer> {
         .iter()
         .find(|node| {
             is_sheet_tag(node.tag)
-                || node
-                    .parts
-                    .iter()
-                    .any(|part| palette::sheet_part_paint(node.tag, part.name).is_some())
+                || node.parts.iter().any(|part| part.name.is_sheet())
         })
         .map(|node| node.pointer.clone())
 }

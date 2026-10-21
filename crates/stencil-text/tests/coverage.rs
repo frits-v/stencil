@@ -92,6 +92,8 @@ fn drawn_texts(page: &Page) -> (Vec<DrawnText>, usize) {
             // Section 11.3 blocks have no TextStyleName yet; the authored-count assertion
             // below fails if g7 ever holds one.
             NodeRef::Node(Node::Text(_) | Node::Callout(_) | Node::Frame(_)) => {}
+            // A View draws only on a design sheet, which g7 is not.
+            NodeRef::Node(Node::View(_)) => {}
         }
     }
     for entry in &page.legend {
@@ -153,6 +155,22 @@ fn the_built_fact_bullet_has_a_glyph_in_the_fact_face() {
     let metrics = measurer.measure("\u{2022} acme-raw", &style, None).unwrap();
     assert!(metrics.width_px > 0.0);
     measurer.measure("\u{2022}", &style, None).unwrap();
+}
+
+/// Section 14.4 rule 29: a design sheet prefixes its kicker with `1 · ` in the kicker face,
+/// and its captions set authored middle dots in `sheet_label`.
+#[test]
+fn the_middle_dot_has_a_glyph_in_the_kicker_and_sheet_label_faces() {
+    let mut measurer = CosmicTextMeasurer::new().unwrap();
+    let mut examined = 0;
+    for style_name in [TextStyleName::Kicker, TextStyleName::SheetLabel] {
+        let style = style_name.text_style().style;
+        let metrics = measurer.measure("1 \u{b7} premise", &style, None).unwrap();
+        assert!(metrics.width_px > 0.0, "{}", style_name.as_str());
+        measurer.measure("\u{b7}", &style, None).unwrap();
+        examined += 1;
+    }
+    assert_eq!(examined, 2);
 }
 
 /// Section 13.11: the measurer breaks after a dot by shaping U+200B ZERO WIDTH SPACE after

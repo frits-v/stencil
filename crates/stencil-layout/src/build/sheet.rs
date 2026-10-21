@@ -27,14 +27,20 @@ const CELL_RULE_PX: f32 = 1.0;
 const CELL_PADDING_PX: (f32, f32, f32) = (11.0, 14.0, 12.0);
 /// Grow weights of the head, problem, answer and attention cells.
 const CELL_WEIGHTS: [f32; 4] = [25.0, 47.0, 41.0, 37.0];
-const WORDMARK_GAP_PX: f32 = 8.0;
-const TITLE_GAP_PX: f32 = 4.0;
+/// The wordmark's 62 px line holds 5 px above and below its 52 px type, so its gaps are the
+/// sheet's 8 and 4 less that.
+const WORDMARK_GAP_PX: f32 = 3.0;
+const TITLE_GAP_PX: f32 = 0.0;
+/// The gap above the title when no wordmark stands over it.
+const HEAD_TITLE_GAP_PX: f32 = 8.0;
 const LEDE_GAP_PX: f32 = 6.0;
 const CAPTION_GAP_PX: f32 = 8.0;
 const CELL_ITEM_GAP_PX: f32 = 6.0;
 const POINT_LABEL_PX: f32 = 24.0;
 const POINT_RULE_PX: f32 = 1.0;
 const POINT_TEXT_GAP_PX: f32 = 5.0;
+/// Drops `P<n>` in `sheet_label` onto the baseline of its `block_body` text.
+const POINT_LABEL_DROP_PX: f32 = 2.5;
 const STRIP_RULE_PX: f32 = 2.0;
 const STRIP_PADDING_PX: (f32, f32) = (7.0, 14.0);
 const STRIP_GAP_PX: f32 = 9.0;
@@ -212,7 +218,7 @@ impl Builder<'_> {
         let title_gap = if sheet.wordmark.is_some() {
             TITLE_GAP_PX
         } else {
-            WORDMARK_GAP_PX
+            HEAD_TITLE_GAP_PX
         };
         self.add_page_text(
             head,
@@ -362,6 +368,7 @@ impl Builder<'_> {
                     width: length(POINT_LABEL_PX),
                     height: auto(),
                 },
+                margin: top_margin(POINT_LABEL_DROP_PX),
                 ..base_style()
             },
             Some(row),

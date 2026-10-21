@@ -527,6 +527,78 @@ impl PartName {
         PartName::ViewNote,
     ];
 
+    /// True for the parts a design sheet adds (section 14.2 rule 10); only a sheet draws
+    /// them.
+    pub fn is_sheet(self) -> bool {
+        match self {
+            PartName::Border
+            | PartName::RefRule
+            | PartName::Grid
+            | PartName::RefTick
+            | PartName::RefColumn
+            | PartName::RefColumnFoot
+            | PartName::RefRow
+            | PartName::RefRowRight
+            | PartName::BlockBorder
+            | PartName::Wordmark
+            | PartName::CellRule
+            | PartName::Caption
+            | PartName::Lead
+            | PartName::Statement
+            | PartName::ParagraphLead
+            | PartName::Paragraph
+            | PartName::AttentionLead
+            | PartName::AttentionText
+            | PartName::PointRule
+            | PartName::PointLabel
+            | PartName::StripRule
+            | PartName::GroupCaption
+            | PartName::ViewNumber
+            | PartName::ViewNumeral
+            | PartName::ViewTitle
+            | PartName::ViewSubtitle
+            | PartName::ViewRule
+            | PartName::ViewNote => true,
+            PartName::Badge
+            | PartName::BadgeText
+            | PartName::Text
+            | PartName::Label
+            | PartName::Bar
+            | PartName::Body
+            | PartName::Icon
+            | PartName::FunctionName
+            | PartName::ProductName
+            | PartName::FactBox
+            | PartName::Fact
+            | PartName::BuiltBox
+            | PartName::Built
+            | PartName::AskBox
+            | PartName::Ask
+            | PartName::DotStart
+            | PartName::WireStart
+            | PartName::Tag
+            | PartName::TagLabel
+            | PartName::TagSub
+            | PartName::WireEnd
+            | PartName::DotEnd
+            | PartName::Spine
+            | PartName::Hub
+            | PartName::HubText
+            | PartName::Swatch
+            | PartName::LegendLabel
+            | PartName::LegendText
+            | PartName::Heading
+            | PartName::Marker
+            | PartName::BodyLine
+            | PartName::Accent
+            | PartName::LabelChip
+            | PartName::Heads
+            | PartName::Band
+            | PartName::Lifeline
+            | PartName::Footprint => false,
+        }
+    }
+
     /// The snake_case name used as a measured JSON key and in check messages.
     pub fn as_str(self) -> &'static str {
         match self {

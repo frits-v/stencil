@@ -220,4 +220,13 @@ row separation fills normal: 3.69 between red and brown, at least 8.00, FAILED
 row separation fills deuteranopia: 1.17 between blue and pink, at least 5.00, FAILED
 row separation fills protanopia: 0.82 between yellow and green, at least 5.00, FAILED
 row separation fills tritanopia: 3.49 between blue and cyan, at least 5.00, FAILED
-stencil theme check gruvbox-dark: 222 rows, 114 passed, 108 failed
+row contrast sheet.label_ink on sheet.cell: 6.77, at least 4.50, passed
+row contrast sheet.label_ink on sheet.paper: 10.75, at least 4.50, passed
+row contrast ink.primary on sheet.cell: 8.43, at least 4.50, passed
+row contrast ink.primary on sheet.paper: 13.39, at least 4.50, passed
+row contrast ink.secondary on sheet.cell: 6.77, at least 4.50, passed
+row contrast ink.secondary on sheet.paper: 10.75, at least 4.50, passed
+row contrast sheet.frame on sheet.cell: 8.43, at least 4.50, passed
+row contrast sheet.frame on sheet.paper: 13.39, at least 4.50, passed
+row contrast sheet.frame on sheet.paper: 13.39, at least 3.00, passed
+stencil theme check gruvbox-dark: 231 rows, 123 passed, 108 failed

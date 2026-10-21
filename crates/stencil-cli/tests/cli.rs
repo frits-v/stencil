@@ -519,8 +519,8 @@ fn text_weights_and_font_faces(svg: &str) -> (BTreeSet<u16>, BTreeMap<u16, Vec<u
     (text_weights, faces)
 }
 
-/// hybrid-ai sets text in all four weights, and design-brief and the iso hero in 400, 700 and 800
-/// only.
+/// hybrid-ai and the onepager sheet set text in all four weights (the sheet's captions and
+/// grid references are SemiBold), and design-brief and the iso hero in 400, 700 and 800 only.
 #[test]
 fn the_svg_embeds_a_font_face_for_each_weight_its_text_uses_and_no_other() {
     let out_dir = scratch_directory("render_embeds_fonts");
@@ -528,6 +528,7 @@ fn the_svg_embeds_a_font_face_for_each_weight_its_text_uses_and_no_other() {
     for (stem, expected_weights) in [
         ("hybrid-ai", vec![400, 600, 700, 800]),
         ("design-brief", vec![400, 700, 800]),
+        ("onepager", vec![400, 600, 700, 800]),
         ("hero-iso", vec![400, 700, 800]),
     ] {
         let input = repository_path(&format!("examples/{stem}.json"));
@@ -560,7 +561,7 @@ fn the_svg_embeds_a_font_face_for_each_weight_its_text_uses_and_no_other() {
         }
         examined += 1;
     }
-    assert_eq!(examined, 3);
+    assert_eq!(examined, 4);
 }
 
 #[test]

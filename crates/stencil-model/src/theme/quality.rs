@@ -252,6 +252,7 @@ pub fn theme_quality(theme: &Theme) -> ThemeReport {
     text_rows(theme, &mut rows);
     non_text_rows(theme, &mut rows);
     separation_rows(theme, &mut rows);
+    sheet_rows(theme, &mut rows);
     ThemeReport {
         theme: theme.name.clone(),
         rows: rows.rows,
@@ -377,6 +378,25 @@ fn non_text_rows(theme: &Theme, rows: &mut Rows) {
             (&format!("callout.{name}.fill"), &accent.fill),
         );
     }
+}
+
+/// The design sheet's rows (section 14.5 rule 1), on the resolved sheet role: the label,
+/// body and heading inks on the title block's cells and on the paper, then the frame as a
+/// stroke on the paper.
+fn sheet_rows(theme: &Theme, rows: &mut Rows) {
+    let sheet = theme.sheet_colors();
+    let grounds = [("sheet.cell", sheet.cell), ("sheet.paper", sheet.paper)];
+    for ink in [
+        ("sheet.label_ink", sheet.label_ink),
+        ("ink.primary", &theme.ink.primary),
+        ("ink.secondary", &theme.ink.secondary),
+        ("sheet.frame", sheet.frame),
+    ] {
+        for ground in grounds {
+            rows.text(ink, ground);
+        }
+    }
+    rows.non_text(("sheet.frame", sheet.frame), ("sheet.paper", sheet.paper));
 }
 
 fn separation_rows(theme: &Theme, rows: &mut Rows) {

@@ -289,6 +289,7 @@ fn every_gcp_example_passes_with_items_examined() {
         "hybrid-ai",
         "network-hub-spoke",
         "design-brief",
+        "onepager",
         "stress-dense",
     ] {
         let text = fs::read_to_string(repository_path(&format!("examples/{stem}.json"))).unwrap();
@@ -297,5 +298,5 @@ fn every_gcp_example_passes_with_items_examined() {
         assert!(report.passed(), "{stem}: {:?}", report.defects);
         examined += 1;
     }
-    assert_eq!(examined, 6);
+    assert_eq!(examined, 7);
 }

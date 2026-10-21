@@ -343,11 +343,12 @@ const SHEET_LABEL: NamedTextStyle = inter(
     0.12,
     true,
 );
+/// A 52 px line would let descenders hang 5 px below the measured box; 62 holds them.
 const WORDMARK: NamedTextStyle = inter(
     TextStyleName::Wordmark,
     FontWeight::ExtraBold,
     52.0,
-    52.0,
+    62.0,
     -0.02,
     false,
 );

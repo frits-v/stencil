@@ -209,9 +209,11 @@ fn fill_with_hazards(
     written: &mut Vec<String>,
     key: Option<&str>,
 ) {
-    const TEXT_KEYS: [&str; 11] = [
+    // A sheet's wordmark and captions hold at most 24 and 60 characters, shorter than a
+    // hazard string, so they keep their text.
+    const TEXT_KEYS: [&str; 14] = [
         "title", "kicker", "lede", "foot", "badge", "label", "sub", "subtitle", "text", "hub",
-        "heading",
+        "heading", "lead", "statement", "note",
     ];
     match value {
         Value::String(text) if key.is_some_and(|key| TEXT_KEYS.contains(&key)) => {
@@ -257,7 +259,7 @@ fn blocks_and_stray_inlines(text: &str) -> (Vec<String>, Vec<String>) {
         match event {
             Event::Text(text) => current.push_str(&text),
             Event::Code(code) => {
-                if !code.starts_with('/') {
+                if !code.starts_with('/') && !is_reference(&code) {
                     stray.push(format!("code span {code}"));
                 }
                 current.push('`');
@@ -287,13 +289,31 @@ fn blocks_and_stray_inlines(text: &str) -> (Vec<String>, Vec<String>) {
     (blocks, stray)
 }
 
-/// Every hazard opens every text field once over the offsets, under both chromes.
+/// A grid reference the writer puts before a pointer on a sheet: `B3` or `B2-C5`.
+fn is_reference(text: &str) -> bool {
+    let cell = |cell: &str| {
+        let mut characters = cell.chars();
+        matches!(
+            (characters.next(), characters.next(), characters.next()),
+            (Some('A'..='F'), Some('1'..='8'), None)
+        )
+    };
+    match text.split_once('-') {
+        Some((first, last)) => cell(first) && cell(last),
+        None => cell(text),
+    }
+}
+
+/// Every hazard opens every text field once over the offsets, under both chromes; a design
+/// sheet draws its head in the title block, so it is examined under `chrome: full` only.
 #[test]
 fn every_markdown_hazard_in_every_text_field_reads_back() {
     let mut examined = 0;
     for stem in example_stems() {
+        let is_sheet = example_page(&stem).sheet.is_some();
         for (chrome, offset) in ["full", "none"]
             .into_iter()
+            .filter(|chrome| !(is_sheet && *chrome == "none"))
             .flat_map(|chrome| (0..HAZARDS.len()).map(move |offset| (chrome, offset)))
         {
             let mut document: Value = serde_json::to_value(example_page(&stem)).unwrap();
@@ -315,7 +335,9 @@ fn every_markdown_hazard_in_every_text_field_reads_back() {
             let headings = text.lines().filter(|line| line.starts_with('#')).count();
             let writer_headings = text
                 .lines()
-                .filter(|line| line.starts_with("# ") || line.starts_with("## "))
+                .filter(|line| {
+                    line.starts_with("# ") || line.starts_with("## ") || line.starts_with("### ")
+                })
                 .count();
             assert_eq!(headings, writer_headings, "{stem} {chrome}");
             for field in &written {

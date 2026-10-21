@@ -87,6 +87,17 @@
     "projection": {
       "$ref": "#/$defs/Projection"
     },
+    "sheet": {
+      "description": "Draws the page as a design sheet (section 14): a frame with grid references, a title\nblock and numbered Views. Flat only.",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Sheet"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
     "theme": {
       "description": "A built-in theme name or a path ending in `.json`; absent means center.",
       "type": [
@@ -125,6 +136,49 @@
     "legend"
   ],
   "$defs": {
+    "Answer": {
+      "type": "object",
+      "properties": {
+        "caption": {
+          "description": "The cell caption; absent prints `Answer`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 60,
+          "minLength": 1
+        },
+        "paragraphs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/AnswerParagraph"
+          },
+          "maxItems": 4
+        },
+        "statement": {
+          "type": "string",
+          "maxLength": 400,
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "statement"
+      ]
+    },
+    "AnswerParagraph": {
+      "description": "A paragraph: a string, or `{\"lead\": ..., \"text\": ...}`, drawn as a bold lead with its\ntext continuing on the lead's last line.",
+      "anyOf": [
+        {
+          "type": "string",
+          "maxLength": 400,
+          "minLength": 1
+        },
+        {
+          "$ref": "#/$defs/LedParagraph"
+        }
+      ]
+    },
     "Arrow": {
       "type": "string",
       "enum": [
@@ -132,6 +186,60 @@
         "end",
         "start",
         "both"
+      ]
+    },
+    "Attention": {
+      "description": "What the reader is asked to attend to. A sheet always draws this cell, so it holds at\nleast one item.",
+      "type": "object",
+      "properties": {
+        "caption": {
+          "description": "The cell caption; absent prints `Attention`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 60,
+          "minLength": 1
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/AttentionItem"
+          },
+          "maxItems": 8,
+          "minItems": 1
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "items"
+      ]
+    },
+    "AttentionItem": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "description": "Unique among the attention items.",
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9-]{0,63}$"
+        },
+        "lead": {
+          "description": "Drawn bold before `text` with one space between, so the lead carries its own\npunctuation.",
+          "type": "string",
+          "maxLength": 400,
+          "minLength": 1
+        },
+        "text": {
+          "type": "string",
+          "maxLength": 400,
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "lead",
+        "text"
       ]
     },
     "Axis": {
@@ -230,6 +338,26 @@
         "center",
         "end",
         "space-between"
+      ]
+    },
+    "LedParagraph": {
+      "type": "object",
+      "properties": {
+        "lead": {
+          "type": "string",
+          "maxLength": 400,
+          "minLength": 1
+        },
+        "text": {
+          "type": "string",
+          "maxLength": 400,
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "lead",
+        "text"
       ]
     },
     "LegendEntry": {
@@ -963,6 +1091,69 @@
             "tag",
             "label"
           ]
+        },
+        {
+          "description": "A numbered view of a design sheet: a heading with its number, title, subtitle and note,\nthen its children in a column. The title block is view 1, so the first View is view 2.",
+          "type": "object",
+          "properties": {
+            "children": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Node"
+              },
+              "maxItems": 256,
+              "minItems": 1
+            },
+            "gap": {
+              "description": "The gap between children; absent is 16.",
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "uint16",
+              "maximum": 64,
+              "minimum": 0
+            },
+            "id": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "pattern": "^[a-z0-9][a-z0-9-]{0,63}$"
+            },
+            "note": {
+              "description": "Right-aligned on the heading rule.",
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 400,
+              "minLength": 1
+            },
+            "subtitle": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 400,
+              "minLength": 1
+            },
+            "tag": {
+              "type": "string",
+              "const": "View"
+            },
+            "title": {
+              "type": "string",
+              "maxLength": 400,
+              "minLength": 1
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "tag",
+            "title",
+            "children"
+          ]
         }
       ]
     },
@@ -1009,6 +1200,55 @@
         "band"
       ]
     },
+    "Problem": {
+      "type": "object",
+      "properties": {
+        "caption": {
+          "description": "The cell caption; absent prints `Problem`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 60,
+          "minLength": 1
+        },
+        "lead": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 400,
+          "minLength": 1
+        },
+        "points": {
+          "description": "Numbered P1, P2 in order.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProblemPoint"
+          },
+          "maxItems": 8,
+          "minItems": 1
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "points"
+      ]
+    },
+    "ProblemPoint": {
+      "type": "object",
+      "properties": {
+        "text": {
+          "type": "string",
+          "maxLength": 400,
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "text"
+      ]
+    },
     "Projection": {
       "type": "string",
       "enum": [
@@ -1029,6 +1269,36 @@
         "figure",
         "laptop",
         "phone"
+      ]
+    },
+    "Sheet": {
+      "description": "The title block of a design sheet. Its first cell is the page head: the badge and kicker,\nthe wordmark when set, the title and the lede; the other three cells follow.",
+      "type": "object",
+      "properties": {
+        "answer": {
+          "$ref": "#/$defs/Answer"
+        },
+        "attention": {
+          "$ref": "#/$defs/Attention"
+        },
+        "problem": {
+          "$ref": "#/$defs/Problem"
+        },
+        "wordmark": {
+          "description": "The product name set large in the first cell; absent draws the title in its place.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 24,
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "problem",
+        "answer",
+        "attention"
       ]
     },
     "Side": {
