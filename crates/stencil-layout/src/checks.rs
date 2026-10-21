@@ -5,14 +5,15 @@ use std::collections::HashMap;
 
 use stencil_model::checks::{CheckName, CheckReport, Defect};
 use stencil_model::pointer::NodePointer;
-use stencil_model::{Node, NodeRef, Page, PipeDir, Projection, body_nodes};
+use stencil_model::{Arrow, Node, NodeRef, Page, PipeDir, Projection, body_nodes};
 
 use crate::compute::{PipeTarget, move_extent, targeted_pipes};
 use crate::drawn::{chain_enters, drawn_link, push_flattened};
 use crate::route::attach_box;
 use crate::route::link_obstacles;
 use crate::{
-    BoxRect, GEOMETRY_EPSILON_PX, LinkRoute, NodeTag, PageGeometry, Part, PartName, RouteStatus,
+    BoxRect, GEOMETRY_EPSILON_PX, LINK_ARROW_STUB_PX, LinkRoute, NodeTag, PageGeometry, Part,
+    PartName, RouteStatus,
 };
 use stencil_model::PagePoint;
 
@@ -296,8 +297,9 @@ fn examine_text_parts(
 }
 
 /// One link examined per route; a route that fell back to the L shape is a defect at
-/// `/links/<i>`. Not applicable on a page without links.
-pub fn links_routed(geometry: &PageGeometry) -> CheckReport {
+/// `/links/<i>`, and so on a flat page is each arrowed end whose leg is shorter than the
+/// arrow stub (section 11.2). Not applicable on a page without links.
+pub fn links_routed(page: &Page, geometry: &PageGeometry) -> CheckReport {
     if geometry.links.is_empty() {
         return CheckReport::not_applicable(CheckName::LinksRouted, NO_LINKS);
     }
@@ -314,6 +316,16 @@ pub fn links_routed(geometry: &PageGeometry) -> CheckReport {
                 ),
             });
         }
+        if page.projection == Projection::Flat {
+            for (leg, length) in short_arrow_legs(route) {
+                defects.push(Defect {
+                    pointer: links_pointer.index(route.index),
+                    message: format!(
+                        "{leg} leg is {length:.2} px, shorter than the arrowhead and a bend ({LINK_ARROW_STUB_PX:.2} px)"
+                    ),
+                });
+            }
+        }
     }
     CheckReport {
         check: CheckName::LinksRouted,
@@ -321,6 +333,38 @@ pub fn links_routed(geometry: &PageGeometry) -> CheckReport {
         defects,
         not_applicable: None,
     }
+}
+
+/// The leg at each arrowed end of `route` that is shorter than the arrow stub, named first
+/// or last, with its length.
+fn short_arrow_legs(route: &LinkRoute) -> Vec<(&'static str, f32)> {
+    let length = |pair: &[PagePoint]| match pair {
+        [from, to] => (to.x - from.x).hypot(to.y - from.y),
+        _ => 0.0,
+    };
+    let count = route.points.len();
+    let first = route.points.get(..2.min(count)).map(length);
+    let last = route.points.get(count.saturating_sub(2)..).map(length);
+    let ends = [
+        (
+            matches!(route.arrow, Arrow::Start | Arrow::Both),
+            "first",
+            first,
+        ),
+        (
+            matches!(route.arrow, Arrow::End | Arrow::Both),
+            "last",
+            last,
+        ),
+    ];
+    ends.into_iter()
+        .filter_map(|(arrowed, leg, length)| match (arrowed, length) {
+            (true, Some(length)) if length < LINK_ARROW_STUB_PX - GEOMETRY_EPSILON_PX => {
+                Some((leg, length))
+            }
+            _ => None,
+        })
+        .collect()
 }
 
 /// Each (segment, obstacle) pair of every link, with the obstacles the router avoided for

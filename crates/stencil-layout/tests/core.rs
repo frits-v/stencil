@@ -335,7 +335,7 @@ fn lanes_draw_messages_in_order_across_a_band_of_rows_with_lifelines() {
         assert_close(lifeline.bounds.bottom(), band.bottom(), "lifeline bottom");
     }
 
-    let routed = stencil_layout::checks::links_routed(&geometry);
+    let routed = stencil_layout::checks::links_routed(&page, &geometry);
     assert!(routed.passed());
     assert_eq!(routed.examined, 4);
     let avoid = stencil_layout::checks::links_avoid_boxes(&geometry);
