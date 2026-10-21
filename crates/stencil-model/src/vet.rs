@@ -281,8 +281,20 @@ pub fn validate_page(page: &Page, grammar: &Grammar) -> Vec<Violation> {
         .filter_map(|entry| entry.node.id())
         .filter(|id| is_valid_id(id))
         .collect();
+    // Off a sheet, every sheet surface but the sheet itself is `needs-sheet` where it occurs.
+    let mut surfaces: BTreeMap<NodePointer, SheetSurface> = BTreeMap::new();
+    if page.sheet.is_none() {
+        for surface in SheetSurface::ALL {
+            if surface == SheetSurface::Sheet {
+                continue;
+            }
+            for pointer in surface.occurrences(page, grammar) {
+                surfaces.entry(pointer).or_insert(surface);
+            }
+        }
+    }
     for entry in &entries {
-        check_sheet_placement(page, entry, &mut violations);
+        check_sheet_placement(page, entry, &surfaces, &mut violations);
         let context = enclosing_box_kind(entry, &box_context);
         check_entry(entry, context, grammar, &mut ids, &mut violations);
         check_pipe_targets(entry, &all_ids, &mut violations);
@@ -330,17 +342,25 @@ pub fn validate_page(page: &Page, grammar: &Grammar) -> Vec<Violation> {
     violations.0
 }
 
-/// `needs-sheet` for a sheet surface in the body of a page without `sheet`; on a sheet,
+/// `needs-sheet` at a sheet surface in the body of a page without `sheet`, one of
+/// `surfaces`, which `SheetSurface::occurrences` lists; on a sheet,
 /// `sheet-body-not-view` for a body child that is not a View and `view-not-top-level` for a
 /// View below the body.
-fn check_sheet_placement(page: &Page, entry: &NodeEntry<'_>, violations: &mut Violations) {
-    let is_view = matches!(entry.node, NodeRef::Node(Node::View(_)));
-    match (&page.sheet, is_view, entry.depth == 1) {
-        (None, true, _) => violations.push(
+fn check_sheet_placement(
+    page: &Page,
+    entry: &NodeEntry<'_>,
+    surfaces: &BTreeMap<NodePointer, SheetSurface>,
+    violations: &mut Violations,
+) {
+    if let Some(surface) = surfaces.get(&entry.pointer) {
+        violations.push(
             entry.pointer.clone(),
             VetRule::NeedsSheet,
-            needs_sheet_message(SheetSurface::View),
-        ),
+            needs_sheet_message(*surface),
+        );
+    }
+    let is_view = matches!(entry.node, NodeRef::Node(Node::View(_)));
+    match (&page.sheet, is_view, entry.depth == 1) {
         (Some(_), false, true) => violations.push(
             entry.pointer.clone(),
             VetRule::SheetBodyNotView,
@@ -354,7 +374,7 @@ fn check_sheet_placement(page: &Page, entry: &NodeEntry<'_>, violations: &mut Vi
             VetRule::ViewNotTopLevel,
             "a View is a body child of a sheet".to_string(),
         ),
-        (None, false, _) | (Some(_), true, true) | (Some(_), false, false) => {}
+        (None, _, _) | (Some(_), true, true) | (Some(_), false, false) => {}
     }
 }
 
