@@ -90,11 +90,12 @@ fn golden_g7() {
     let (loaded, rendered) = render_g7();
     let geometry = &rendered.geometry;
 
-    // Step 1: all three outputs exist, and the PNG matches the reference width and the
+    // Step 1: all four outputs exist, and the PNG matches the reference width and the
     // rounded canvas height.
     assert!(rendered.svg.svg.starts_with("<svg "));
     assert!(rendered.svg.text_elements > 0);
     assert!(rendered.measured.is_object());
+    assert!(rendered.description.starts_with("# "));
     let rendered_png = Pixmap::decode_png(&rendered.png).unwrap();
     let reference_png =
         Pixmap::load_png(repository_path("examples/golden/g7-gold-chrome.png")).unwrap();
@@ -136,6 +137,7 @@ fn golden_g7() {
             (CheckName::IsoLinksApart, 0),
             (CheckName::PrintFit, 0),
             (CheckName::IconMatchesProduct, 6),
+            (CheckName::DescriptionCoversDrawing, 26),
         ]
     );
     for report in &reports {
@@ -153,7 +155,8 @@ fn golden_g7() {
             | CheckName::RememberedConstants
             | CheckName::LegendConsistency
             | CheckName::PipesLand
-            | CheckName::IconMatchesProduct => CheckOutcome::Passed,
+            | CheckName::IconMatchesProduct
+            | CheckName::DescriptionCoversDrawing => CheckOutcome::Passed,
         };
         assert_eq!(report.outcome(), expected, "{report:?}");
     }

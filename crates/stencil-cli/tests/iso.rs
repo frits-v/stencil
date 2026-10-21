@@ -91,7 +91,7 @@ fn check_hero_passes_every_applicable_check_in_every_theme() {
         );
         assert_eq!(
             lines.last().copied(),
-            Some("stencil check: 14 checks, 12 passed, 0 failed, 2 not applicable"),
+            Some("stencil check: 15 checks, 13 passed, 0 failed, 2 not applicable"),
             "{theme}"
         );
         assert_eq!(outcome.stderr, "");
@@ -124,7 +124,7 @@ fn check_hero_with_projection_flat_skips_the_iso_checks() {
     ));
     assert_eq!(
         lines.last().copied(),
-        Some("stencil check: 14 checks, 8 passed, 0 failed, 6 not applicable")
+        Some("stencil check: 15 checks, 9 passed, 0 failed, 6 not applicable")
     );
 }
 
@@ -136,13 +136,14 @@ fn check_prints_the_four_iso_checks_before_print_fit_and_icon_matches_product() 
         .into_iter()
         .filter(|line| line.starts_with("check "))
         .collect();
-    assert_eq!(check_lines.len(), 14);
+    assert_eq!(check_lines.len(), 15);
     assert!(check_lines[8].starts_with("check iso-labels-clear: "));
     assert!(check_lines[9].starts_with("check iso-links-clear: "));
     assert!(check_lines[10].starts_with("check iso-link-ends: "));
     assert!(check_lines[11].starts_with("check iso-links-apart: "));
     assert!(check_lines[12].starts_with("check print-fit: "));
     assert!(check_lines[13].starts_with("check icon-matches-product: "));
+    assert!(check_lines[14].starts_with("check description-covers-drawing: "));
 }
 
 #[test]
@@ -198,7 +199,7 @@ fn render_hero_writes_a_png_as_wide_as_the_drawn_canvas() {
             theme,
         ]);
         assert_eq!(outcome.code, ExitCode::Clean, "{}", outcome.stderr);
-        assert_eq!(outcome.stdout_lines().len(), 3);
+        assert_eq!(outcome.stdout_lines().len(), 4);
         let measured: Value =
             serde_json::from_slice(&fs::read(out_dir.join("hero-iso.measured.json")).unwrap())
                 .unwrap();

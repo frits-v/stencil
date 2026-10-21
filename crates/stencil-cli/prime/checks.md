@@ -16,7 +16,7 @@ Line formats, stable for scripts:
 
 A pointer is an RFC 6901 JSON pointer into your document, such as /body/0/children/2 or /links/3; the page root prints as "". Violations stop vet, check and render before any check runs; fix them first.
 
-Examined counts: each check reports how many units it looked at, and a check that examined 0 fails, because a pass over nothing proves nothing. A page with no Pipe, Tee or Link fails legend-consistency this way: every figure has at least one hop. The link checks on a page without links are not applicable and neither pass nor fail. Exit 0 needs at least one pass and no failure. Under iso, check adds iso-labels-clear, iso-links-clear, iso-link-ends and iso-links-apart: stencil prime iso.
+Examined counts: each check reports how many units it looked at, and a check that examined 0 fails, because a pass over nothing proves nothing. A page with no Pipe, Tee or Link fails legend-consistency this way: every figure has at least one hop. The link checks on a page without links are not applicable and neither pass nor fail. Exit 0 needs at least one pass and no failure. Under iso, check adds four iso- checks: stencil prime iso.
 
 | Check | Unit | Defect at | Message |
 |---|---|---|---|
@@ -30,8 +30,9 @@ Examined counts: each check reports how many units it looked at, and a check tha
 | pipes-land | each pipe end with a neighbor or a from or to target | /body/... (the pipe) | SIDE neighbor NODE has no box across the pipe's center Y; or from (to) target NODE has none, or lies on the other side; iso: SIDE end stops D px short of NODE; or lands on the edge of zone NODE and names no target |
 | print-fit | text run (with --print-width) | the run's node, or /links/i | PART "TEXT" prints at P pt, below 8 pt (S px on a C px canvas at W in) |
 | icon-matches-product | item with an icon or subtitle, kind with an icon table | the item | subtitle names P, whose icon is I; the item carries O; or subtitle names P, which has no product icon; the item carries the product icon I |
+| description-covers-drawing | element | the unit, or "" | not described; on N lines; line lacks NAME; names P, not drawn; says T, examined E |
 
-Numbers carry 2 decimals; the tolerance is 0.01 px, and touching edges pass, except two iso labels, which keep 4 px of air. text-fits-box also checks the tag of every labeled link. PART is a snake_case part name: function_name (an Item's title), product_name (its subtitle), fact, built, ask, tag_label, tag_sub, hub_text, label, text, badge_text, legend_label, legend_text, heading, marker, body_line.
+Numbers carry 2 decimals; the tolerance is 0.01 px, and touching edges pass. text-fits-box also checks the tag of every labeled link. PART is a snake_case part name: function_name (an Item's title), product_name (its subtitle), fact, built, ask, tag_label, tag_sub, hub_text, label, text, badge_text, legend_label, legend_text, heading, marker, body_line.
 
 Reading defects:
 

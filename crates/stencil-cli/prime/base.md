@@ -4,7 +4,7 @@ stencil turns structural JSON (boxes, items, facts, pipes, links; no coordinates
 
 # Loop
 
-Write fig.json, `stencil vet fig.json`, `stencil check fig.json`, `stencil render fig.json --out-dir out --scale 2`, Read out/fig.png, fix, repeat until check shows 0 failed and the PNG reads right. Exit 0 clean; 1 defect in the document (fix the JSON at the pointer); 2 could not run (arguments, paths, fonts).
+Write fig.json, `stencil vet fig.json`, `stencil check fig.json`, `stencil render fig.json --out-dir out --scale 2`, Read out/fig.png, fix, repeat until check shows 0 failed and the PNG reads right. `render` also writes out/fig.description.md, the figure in words; `stencil describe fig.json` prints it. Exit 0 clean; 1 defect in the document (fix the JSON at the pointer); 2 could not run (arguments, paths, fonts).
 
 # Grammars
 
@@ -27,24 +27,25 @@ Every node object carries "tag"; the Page does not. * required, =default. A fiel
 
 # Checks
 
-`check` prints one line per check with its examined count, then `defect <check> <pointer>: <message>` lines. Examined 0 fails. Checks with no surface are not applicable.
+`check` prints one line per check with its examined count, then `defect <check> <pointer>: <message>` lines. Examined 0 fails. Checks with no surface are not applicable; the iso- checks run under iso only.
 
-| Check | Examines | Defect | Fix |
-|---|---|---|---|
-| child-inside-container | each parent-child pair | child box leaves the parent's content box | raise the column's weight, shorten the longest word, or widen the page |
-| siblings-do-not-overlap | each sibling pair | two sibling boxes intersect | fix the overflow reported with it |
-| text-fits-box | each text run | text larger than its box | shorten the text or widen its container |
-| remembered-constants | each text field | holds a literal the grammar lists (a doc example) | write the value from the live doc, or an ask |
-| legend-consistency | each line use and legend entry | a use without an entry, an unused entry, or one listed twice | add or drop the entry |
-| links-routed | each link | no clear route; drawn as a fallback L; an arrowed leg under 22 px | set from_side and to_side, add via, or move an endpoint |
-| links-avoid-boxes | each segment-obstacle and tag-node pair | the line crosses a box or its tag covers one | as links-routed; raise gap where links run |
-| pipes-land | each pipe end facing a Row or Col sibling or a from or to target | the pipe's center misses every box there | name its Boxes in from and to, or match the gutter's grow list |
-| iso-labels-clear | iso only: labels, solids, wires | overlap, crowding, a wire in text | open floor |
-| iso-links-clear | iso only: link legs | leg by a Box edge, reversed, short, a detour, a jog, over a block | wider gap, via |
-| iso-link-ends | iso only: link ends | end off its node or on a corner | move the end |
-| iso-links-apart | iso only: link pairs | two links share a stretch or an end | opposite sides |
-| print-fit | each text run, only with --print-width | prints below 8 pt at that width | widen the print or shorten the figure |
-| icon-matches-product | each item with an icon or subtitle whose kind has an icon table | the subtitle names a product whose own icon is another, or a product icon on a product without one | use the product's icon or a category icon |
+| Check | Defect | Fix |
+|---|---|---|
+| child-inside-container | child box leaves the parent's content box | raise the column's weight, shorten the longest word, or widen the page |
+| siblings-do-not-overlap | two sibling boxes intersect | fix the overflow reported with it |
+| text-fits-box | text larger than its box | shorten the text or widen its container |
+| remembered-constants | holds a literal the grammar lists (a doc example) | write the value from the live doc, or an ask |
+| legend-consistency | a use without an entry, an unused entry, or one listed twice | add or drop the entry |
+| links-routed | no clear route; drawn as a fallback L; an arrowed leg under 22 px | set from_side and to_side, add via, or move an endpoint |
+| links-avoid-boxes | the line crosses a box or its tag covers one | as links-routed; raise gap where links run |
+| pipes-land | the pipe's center misses every box there | name its Boxes in from and to, or match the gutter's grow list |
+| iso-labels-clear | overlap, crowding, a wire in text | open floor |
+| iso-links-clear | leg by a Box edge, reversed, short, a detour, a jog, over a block | wider gap, via |
+| iso-link-ends | end off its node or on a corner | move the end |
+| iso-links-apart | two links share a stretch or an end | opposite sides |
+| print-fit | with --print-width: prints below 8 pt at that width | widen the print or shorten the figure |
+| icon-matches-product | the subtitle names a product whose own icon is another, or a product icon on a product without one | use the product's icon or a category icon |
+| description-covers-drawing | fig.description.md misses or misnames a drawn unit | a stencil bug: report it |
 
 # Rules no check enforces
 

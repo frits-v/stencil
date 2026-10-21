@@ -129,11 +129,25 @@ fn gallery_renders_every_example_under_every_theme() {
             for other in [
                 format!("{stem}/{theme}/{stem}.svg"),
                 format!("{stem}/{theme}/{stem}.measured.json"),
+                format!("{stem}/{theme}/{stem}.description.md"),
             ] {
                 assert!(index.contains(&format!("href=\"{other}\"")), "{other}");
                 assert!(out_dir.join(&other).is_file(), "{other}");
             }
         }
+    }
+    for stem in &stems {
+        let descriptions: Vec<Vec<u8>> = THEMES
+            .iter()
+            .map(|theme| {
+                fs::read(out_dir.join(format!("{stem}/{theme}/{stem}.description.md"))).unwrap()
+            })
+            .collect();
+        assert_eq!(descriptions.len(), THEMES.len());
+        assert!(
+            descriptions.iter().all(|bytes| *bytes == descriptions[0]),
+            "{stem}: the description differs between themes"
+        );
     }
 
     let manifest: Value =

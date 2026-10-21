@@ -1,6 +1,6 @@
 # stencil
 
-Stencil turns a JSON description of an architecture figure into an SVG, a PNG and a measured JSON. The document describes structure only: boxes, items, facts, notes and the labeled pipes and links between them. It carries no coordinates. taffy computes every box, cosmic-text measures every string with the Inter font files bundled in this repository, and resvg renders with the same files, so a measured width is the rendered width. The contract is `docs/SPEC.md`.
+Stencil turns a JSON description of an architecture figure into an SVG, a PNG, a measured JSON and a Markdown description. The document describes structure only: boxes, items, facts, notes and the labeled pipes and links between them. It carries no coordinates. taffy computes every box, cosmic-text measures every string with the Inter font files bundled in this repository, and resvg renders with the same files, so a measured width is the rendered width. The contract is `docs/SPEC.md`.
 
 The vocabulary splits into a core and grammars (`docs/SPEC.md` section 13). The core is what every figure shares: `Row`, `Col`, `Lanes`, a generic container `Box`, a generic named leaf `Item` with facts whose `source` is `doc`, `built` or `ask`, notes and text blocks, and pipes, tees and links drawn with a `line` (`gray`, `solid`, `dash`, `deny`) and an optional `tint` slot 1 to 8. A grammar is a data module that gives a domain its kinds: which container kinds a `Box` may take, how each is drawn, where each may sit, which item kinds exist and which icons they carry. Two grammars ship. `gcp`, the default, is the Google Cloud Architecture Center vocabulary (`gcp`, `vpc`, `region`, `subnet`, `onprem`, `project`, `optional`, `k8s`, `perimeter`, `apis`, and the `product` item). `plain` is domain-neutral (`system`, `boundary`, `group`, `tile`, and the items `service`, `store`, `external`, `person`). A `Lanes` node lays its children out as lane heads, and a link with `order` between two of them is a message drawn across the band below, in order, with a lifeline under each head. A page names its grammar with `"grammar"`, a built-in name or a path to a grammar `.json` file beside the document.
 
@@ -72,13 +72,19 @@ stencil prime grammar gcp
 stencil vet examples/g7.json
 ```
 
-`stencil render <json> --out-dir <dir> [--scale <1-4> | --png-width <px>] [--print-width <inches>]` lays out the page and writes `<stem>.svg`, `<stem>.png` and `<stem>.measured.json` into the output directory, creating it when missing. It prints the three absolute paths. The SVG embeds the Inter faces its text uses, so it renders the same as the PNG where Inter is not installed. The PNG scale defaults to 2; `--png-width` renders the PNG at an exact width instead, 0.5 to 4 times the canvas width, with the height following the canvas. With `--print-width` it then runs print fit, prints its lines and exits 1 when a text run would print below 8 pt; the files stay written.
+`stencil render <json> --out-dir <dir> [--scale <1-4> | --png-width <px>] [--print-width <inches>]` lays out the page and writes `<stem>.svg`, `<stem>.png`, `<stem>.measured.json` and `<stem>.description.md` into the output directory, creating it when missing. It prints the four absolute paths. The SVG embeds the Inter faces its text uses, so it renders the same as the PNG where Inter is not installed. The PNG scale defaults to 2; `--png-width` renders the PNG at an exact width instead, 0.5 to 4 times the canvas width, with the height following the canvas. With `--print-width` it then runs print fit, prints its lines and exits 1 when a text run would print below 8 pt; the files stay written.
 
 ```bash
 stencil render examples/g7.json --out-dir out
 ```
 
-`stencil check <json>` does everything `render` does in memory, writes nothing, and runs all fourteen checks: child inside container, siblings do not overlap, text fits box, remembered constants, legend consistency, links routed, links avoid boxes, pipes land, under the isometric projection iso labels clear, iso links clear, iso link ends and iso links apart, print fit when `--print-width <inches>` is given (every text run prints at 8 pt or more at that width), and icon matches product.
+`<stem>.description.md` is the figure in words, for an agent that reads the figure without rendering it: the head, the nesting of boxes and items with their kinds, icons, products and facts, a table of every pipe and link with its ends, style and legend meaning, and the legend, each element with its JSON pointer. It is the same under every theme. `stencil describe <json> [--projection flat|iso]` lays the page out and prints the same bytes without rendering anything.
+
+```bash
+stencil describe examples/g7.json
+```
+
+`stencil check <json>` does everything `render` does in memory, writes nothing, and runs every check: child inside container, siblings do not overlap, text fits box, remembered constants, legend consistency, links routed, links avoid boxes, pipes land, under the isometric projection iso labels clear, iso links clear, iso link ends and iso links apart, print fit when `--print-width <inches>` is given (every text run prints at 8 pt or more at that width), icon matches product, and description covers drawing (every drawn element is on exactly one line of the description, with its name).
 
 ```bash
 stencil check examples/g7.json

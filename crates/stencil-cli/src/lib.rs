@@ -1,5 +1,5 @@
-//! The `stencil` command line (SPEC sections 4.6, 7 and 13.12): `vet`, `render`, `check`,
-//! `schema`, `prime`, `gallery` and `theme`. `run` holds the whole program so integration tests call it directly.
+//! The `stencil` command line (SPEC sections 4.6, 7, 13.12 and 14.1): `vet`, `render`,
+//! `check`, `describe`, `schema`, `prime`, `gallery` and `theme`. `run` holds the whole program so integration tests call it directly.
 
 pub mod pipeline;
 pub mod prime;
@@ -14,11 +14,12 @@ use std::io::{self, Write};
 use std::path::{Path, PathBuf};
 
 use clap::{Parser, Subcommand, ValueEnum};
-use stencil_layout::LayoutError;
 use stencil_layout::checks::PrintWidth;
+use stencil_layout::{LayoutError, layout_page};
 use stencil_model::checks::CheckReport;
 use stencil_model::{ModelError, Projection};
 use stencil_render::{DeviceScale, PngSize, RenderError};
+use stencil_text::CosmicTextMeasurer;
 
 pub use exit::ExitCode;
 
@@ -52,16 +53,16 @@ struct Arguments {
 
 #[derive(Debug, Subcommand)]
 enum Command {
-    /// Parse and vet a document, then run the three model checks
+    /// Parse and vet a document, then run the model checks
     Vet {
         /// Document to vet
         json: PathBuf,
     },
-    /// Write <stem>.svg, <stem>.png and <stem>.measured.json
+    /// Write <stem>.svg, <stem>.png, <stem>.measured.json and <stem>.description.md
     Render {
         /// Document to render
         json: PathBuf,
-        /// Directory for the three outputs, created when missing
+        /// Directory for the four outputs, created when missing
         #[arg(long, value_name = "DIR")]
         out_dir: PathBuf,
         /// PNG device scale, 1 to 4
@@ -82,7 +83,7 @@ enum Command {
         #[arg(long, value_name = "INCHES", value_parser = parse_print_width)]
         print_width: Option<PrintWidth>,
     },
-    /// Lay out and render in memory, then run all twelve checks
+    /// Lay out and render in memory, then run every check
     Check {
         /// Document to check
         json: PathBuf,
@@ -96,6 +97,14 @@ enum Command {
         /// Print width in inches, 0.5 to 200; makes print-fit applicable
         #[arg(long, value_name = "INCHES", value_parser = parse_print_width)]
         print_width: Option<PrintWidth>,
+    },
+    /// Lay out a document and print the Markdown description render writes
+    Describe {
+        /// Document to describe
+        json: PathBuf,
+        /// Projection, overriding the document's `projection`
+        #[arg(long, value_enum)]
+        projection: Option<ProjectionArgument>,
     },
     /// Print the document JSON Schema
     Schema,
@@ -295,6 +304,15 @@ fn run_command(
             stdout,
             stderr,
         ),
+        Command::Describe { json, projection } => describe(
+            &json,
+            &Overrides {
+                theme: None,
+                projection,
+            },
+            stdout,
+            stderr,
+        ),
         Command::Schema => schema(stdout, stderr),
         Command::Prime { topic, name } => prime(topic.as_deref(), name.as_deref(), stdout, stderr),
         Command::Gallery { out_dir, examples } => {
@@ -347,7 +365,7 @@ fn vet(path: &Path, stdout: &mut dyn Write, stderr: &mut dyn Write) -> io::Resul
     Ok(reports_exit_code(&reports))
 }
 
-/// Writes the three outputs and prints their paths. With a print width, print-fit runs
+/// Writes the four outputs and prints their paths. With a print width, print-fit runs
 /// after the files are written: its check and defect lines follow the paths, and a failing
 /// report exits 1 with the files kept (section 13.10).
 fn render(
@@ -361,7 +379,7 @@ fn render(
 ) -> io::Result<ExitCode> {
     match render_to_disk(path, out_dir, png, overrides, print_width) {
         Ok((paths, print_report)) => {
-            for written in [&paths.svg, &paths.png, &paths.measured] {
+            for written in [&paths.svg, &paths.png, &paths.measured, &paths.description] {
                 writeln!(stdout, "{}", written.display())?;
             }
             let Some(report) = print_report else {
@@ -417,7 +435,7 @@ fn check_in_memory(
     path: &Path,
     overrides: &Overrides,
     print_width: Option<PrintWidth>,
-) -> Result<[CheckReport; 14], Failure> {
+) -> Result<[CheckReport; 15], Failure> {
     let loaded = load_overridden_document(path, overrides)?;
     let rendered = render_page(&loaded, DeviceScale::DEFAULT)?;
     Ok(all_checks(
@@ -427,6 +445,30 @@ fn check_in_memory(
         rendered.scene.as_ref(),
         print_width,
     ))
+}
+
+/// Prints the description `render` would write. Lays out and describes only: renders
+/// nothing and runs no checks.
+fn describe(
+    path: &Path,
+    overrides: &Overrides,
+    stdout: &mut dyn Write,
+    stderr: &mut dyn Write,
+) -> io::Result<ExitCode> {
+    match describe_in_memory(path, overrides) {
+        Ok(text) => {
+            write!(stdout, "{text}")?;
+            Ok(ExitCode::Clean)
+        }
+        Err(failure) => report_failure("describe", &failure, stdout, stderr),
+    }
+}
+
+fn describe_in_memory(path: &Path, overrides: &Overrides) -> Result<String, Failure> {
+    let loaded = load_overridden_document(path, overrides)?;
+    let mut measurer = CosmicTextMeasurer::new()?;
+    let geometry = layout_page(&loaded.page, &loaded.grammar, &mut measurer)?;
+    Ok(stencil_render::describe(&loaded.page, &loaded.grammar, &geometry).text)
 }
 
 fn schema(stdout: &mut dyn Write, stderr: &mut dyn Write) -> io::Result<ExitCode> {

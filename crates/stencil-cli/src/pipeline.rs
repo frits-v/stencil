@@ -1,5 +1,6 @@
-//! The steps behind `vet`, `render` and `check`: read, parse and vet, lay out with
-//! cosmic-text, render SVG, PNG and measured JSON, run the checks, write the outputs.
+//! The steps behind `vet`, `render`, `check` and `describe`: read, parse and vet, lay out
+//! with cosmic-text, render SVG, PNG, measured JSON and the description, run the checks,
+//! write the outputs.
 
 use std::ffi::OsString;
 use std::fs;
@@ -27,8 +28,8 @@ use stencil_render::iso::{
     project_page,
 };
 use stencil_render::{
-    DeviceScale, PngSize, RenderError, SvgDocument, builtin_theme, measured_json, render_png_sized,
-    render_svg,
+    DeviceScale, PngSize, RenderError, SvgDocument, builtin_theme, describe,
+    description_covers_drawing, measured_json, render_png_sized, render_svg,
 };
 use stencil_text::{CosmicTextMeasurer, FontError};
 
@@ -133,14 +134,17 @@ pub struct RenderedPage {
     pub svg: SvgDocument,
     pub png: Vec<u8>,
     pub measured: Value,
+    /// The figure description (section 14.1).
+    pub description: String,
 }
 
-/// The three file names `render` writes, derived from the input's file stem.
+/// The file names `render` writes, derived from the input's file stem.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct OutputNames {
     pub svg: OsString,
     pub png: OsString,
     pub measured: OsString,
+    pub description: OsString,
 }
 
 /// Absolute paths of the written files, in the order `render` prints them.
@@ -149,6 +153,7 @@ pub struct OutputPaths {
     pub svg: PathBuf,
     pub png: PathBuf,
     pub measured: PathBuf,
+    pub description: PathBuf,
 }
 
 /// Largest input `read_input` accepts, in bytes (section 7). A vetted page holds at most
@@ -357,11 +362,12 @@ pub fn output_names(input: &Path) -> Result<OutputNames, Failure> {
         svg: with_suffix(".svg"),
         png: with_suffix(".png"),
         measured: with_suffix(".measured.json"),
+        description: with_suffix(".description.md"),
     })
 }
 
 /// Lays out with `CosmicTextMeasurer`, projects the page once when its projection is iso,
-/// and renders all three outputs in memory.
+/// and renders every output in memory.
 pub fn render_page(loaded: &LoadedDocument, scale: DeviceScale) -> Result<RenderedPage, Failure> {
     render_page_sized(loaded, PngSize::Scale(scale))
 }
@@ -384,12 +390,14 @@ pub fn render_page_sized(loaded: &LoadedDocument, png: PngSize) -> Result<Render
     let svg = render_svg(&loaded.page, &loaded.theme, &geometry)?;
     let png = render_png_sized(&svg.svg, svg.text_elements, png)?;
     let measured = measured_json(&loaded.document, &geometry, scene.as_ref());
+    let description = describe(&loaded.page, &loaded.grammar, &geometry).text;
     Ok(RenderedPage {
         geometry,
         scene,
         svg,
         png,
         measured,
+        description,
     })
 }
 
@@ -413,16 +421,19 @@ pub fn print_fit_report(
     print_fit(geometry, canvas_width, print_width)
 }
 
-/// All fourteen checks, in `CheckName` order. The four iso checks read the scene and are
-/// not applicable without one; print-fit is not applicable without a print width.
+/// Every check, in `CheckName` order. The four iso checks read the scene and are not
+/// applicable without one; print-fit is not applicable without a print width.
+/// description-covers-drawing reads the description `render` writes, which depends on the
+/// page, the grammar and the geometry alone.
 pub fn all_checks(
     page: &Page,
     grammar: &Grammar,
     geometry: &PageGeometry,
     scene: Option<&IsoScene>,
     print_width: Option<PrintWidth>,
-) -> [CheckReport; 14] {
+) -> [CheckReport; 15] {
     let [remembered, legend, icons] = model_checks(page, grammar);
+    let description = describe(page, grammar, geometry);
     [
         child_inside_container(geometry),
         siblings_do_not_overlap(geometry),
@@ -438,14 +449,15 @@ pub fn all_checks(
         iso_links_apart(geometry, scene),
         print_fit_report(geometry, scene, print_width),
         icons,
+        description_covers_drawing(page, geometry, &description.text),
     ]
 }
 
-/// Creates `out_dir` when missing and writes SVG, PNG and measured JSON, replacing existing
-/// files. The measured JSON is serialized before anything touches the disk, an output that
-/// resolves to `input` or an output name that is a directory is refused, and the three files
-/// are staged under temporary names and renamed only after every write succeeded
-/// (section 7).
+/// Creates `out_dir` when missing and writes SVG, PNG, measured JSON and the description,
+/// replacing existing files. The measured JSON is serialized before anything touches the
+/// disk, an output that resolves to `input` or an output name that is a directory is
+/// refused, and the files are staged under temporary names and renamed only after every
+/// write succeeded (section 7).
 pub fn write_outputs(
     out_dir: &Path,
     names: &OutputNames,
@@ -470,12 +482,18 @@ pub fn write_outputs(
         svg: directory.join(&names.svg),
         png: directory.join(&names.png),
         measured: directory.join(&names.measured),
+        description: directory.join(&names.description),
     };
     let svg = rendered.svg.self_contained()?;
     let outputs = [
         (&names.svg, &paths.svg, svg.as_bytes()),
         (&names.png, &paths.png, rendered.png.as_slice()),
         (&names.measured, &paths.measured, measured_bytes.as_slice()),
+        (
+            &names.description,
+            &paths.description,
+            rendered.description.as_bytes(),
+        ),
     ];
 
     let input = fs::canonicalize(input).map_err(|source| Failure::ReadInput {

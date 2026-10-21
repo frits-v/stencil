@@ -1,5 +1,6 @@
 //! SVG writer, PNG through resvg, and the measured JSON (SPEC sections 4.5 and 5).
 
+pub mod describe;
 pub mod iso;
 pub mod palette;
 pub mod themes;
@@ -15,6 +16,9 @@ use stencil_model::pointer::NodePointer;
 use stencil_model::text::{FontFamily, FontWeight};
 use stencil_text::FontError;
 
+pub use describe::{
+    Description, describe, description_covers_drawing, escape_markdown, legend_output_key,
+};
 pub use icons::{icon_data_uri, icon_svg_bytes};
 pub use measured::measured_json;
 pub use png::{PNG_PIXELS_MAX, PNG_WIDTH_SCALE_MIN, render_png, render_png_sized};
