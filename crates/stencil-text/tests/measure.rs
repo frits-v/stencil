@@ -445,3 +445,218 @@ fn a_dotted_name_keeps_its_max_content_width_and_one_line() {
         .unwrap();
     assert_eq!(metric_bits(&at_width), metric_bits(&whole));
 }
+
+fn width_of(measurer: &mut CosmicTextMeasurer, text: &str) -> f32 {
+    measurer
+        .measure(text, &card_function(), None)
+        .unwrap()
+        .width_px
+}
+
+fn assert_baselines_one_line_apart(text: &str, metrics: &TextMetrics) {
+    let line_height_px = card_function().line_height_px;
+    for (line, next_line) in metrics.lines.iter().zip(metrics.lines.iter().skip(1)) {
+        let step_px = next_line.baseline_px - line.baseline_px;
+        assert!(
+            (step_px - line_height_px).abs() < 0.001,
+            "{text:?}: baselines {} apart",
+            step_px
+        );
+    }
+}
+
+#[test]
+fn an_indent_of_zero_measures_as_measure_does() {
+    let mut measurer = measurer();
+    let widths = [None, Some(0.0), Some(80.0), Some(200.0)];
+    for named in &TEXT_STYLES {
+        for sample in SAMPLE_STRINGS {
+            let text = drawn_text(named.name, sample);
+            for max_width_px in widths {
+                let indented = measurer
+                    .measure_indented(&text, &named.style, max_width_px, 0.0)
+                    .unwrap();
+                let plain = measurer.measure(&text, &named.style, max_width_px).unwrap();
+                assert_eq!(
+                    metric_bits(&indented),
+                    metric_bits(&plain),
+                    "{}: {text:?} at {max_width_px:?}",
+                    named.name.as_str()
+                );
+            }
+        }
+    }
+}
+
+#[test]
+fn a_first_line_indent_narrows_only_the_first_line() {
+    let text = "Dedicated Interconnect attachment";
+    let mut measurer = measurer();
+    let max_width_px = width_of(&mut measurer, "Dedicated Interconnect") + WRAP_EPSILON_PX;
+    let unindented = measurer
+        .measure(text, &card_function(), Some(max_width_px))
+        .unwrap();
+    assert_eq!(
+        line_texts(text, &unindented),
+        ["Dedicated Interconnect", "attachment"]
+    );
+
+    let first_word_px = width_of(&mut measurer, "Dedicated");
+    let first_line_indent_px = max_width_px - first_word_px - 1.0;
+    let indented = measurer
+        .measure_indented(
+            text,
+            &card_function(),
+            Some(max_width_px),
+            first_line_indent_px,
+        )
+        .unwrap();
+    let rest_start = "Dedicated ".len();
+    let rest = measurer
+        .measure(&text[rest_start..], &card_function(), Some(max_width_px))
+        .unwrap();
+    let indented_texts = line_texts(text, &indented);
+    assert_eq!(indented_texts[0], "Dedicated");
+    assert_eq!(
+        indented_texts[1..],
+        line_texts(&text[rest_start..], &rest)[..]
+    );
+    assert_eq!(indented.lines[0].width_px, first_word_px);
+    for (indented_line, rest_line) in indented.lines[1..].iter().zip(&rest.lines) {
+        assert_eq!(indented_line.width_px, rest_line.width_px);
+        assert!(indented_line.width_px <= max_width_px);
+    }
+    assert_eq!(indented.line_count, 1 + rest.line_count);
+    assert_eq!(
+        indented.height_px,
+        indented.line_count as f32 * card_function().line_height_px
+    );
+    assert_eq!(
+        indented.width_px,
+        (first_line_indent_px + first_word_px).max(rest.width_px)
+    );
+    assert_eq!(
+        indented.lines[0].baseline_px,
+        unindented.lines[0].baseline_px
+    );
+    assert_baselines_one_line_apart(text, &indented);
+}
+
+#[test]
+fn a_body_that_fits_after_the_indent_stays_on_one_line_and_its_width_counts_the_indent() {
+    let text = "Metro 1 Region A";
+    let mut measurer = measurer();
+    let natural = measurer.measure(text, &card_function(), None).unwrap();
+    for max_width_px in [Some(natural.width_px + 40.0 + WRAP_EPSILON_PX), None] {
+        let indented = measurer
+            .measure_indented(text, &card_function(), max_width_px, 40.0)
+            .unwrap();
+        assert_eq!(line_texts(text, &indented), [text], "{max_width_px:?}");
+        assert_eq!(indented.lines, natural.lines);
+        assert_eq!(indented.width_px, 40.0 + natural.width_px);
+    }
+    let one_short = measurer
+        .measure_indented(
+            text,
+            &card_function(),
+            Some(natural.width_px + 40.0 - 1.0),
+            40.0,
+        )
+        .unwrap();
+    assert_eq!(one_short.line_count, 2);
+}
+
+#[test]
+fn a_first_word_that_does_not_fit_after_the_indent_starts_on_line_1() {
+    let text = "Dedicated Interconnect";
+    let mut measurer = measurer();
+    let max_width_px = width_of(&mut measurer, text) - 1.0;
+    let unindented = measurer
+        .measure(text, &card_function(), Some(max_width_px))
+        .unwrap();
+    assert_eq!(line_texts(text, &unindented), ["Dedicated", "Interconnect"]);
+    let first_word_px = width_of(&mut measurer, "Dedicated");
+    for first_line_indent_px in [
+        max_width_px - first_word_px + 1.0,
+        max_width_px,
+        max_width_px + 30.0,
+    ] {
+        let indented = measurer
+            .measure_indented(
+                text,
+                &card_function(),
+                Some(max_width_px),
+                first_line_indent_px,
+            )
+            .unwrap();
+        assert_eq!(
+            line_texts(text, &indented),
+            ["", "Dedicated", "Interconnect"],
+            "{first_line_indent_px}"
+        );
+        assert_eq!(
+            (indented.lines[0].byte_start, indented.lines[0].byte_end),
+            (0, 0)
+        );
+        assert_eq!(indented.lines[0].width_px, 0.0);
+        for (indented_line, unindented_line) in indented.lines[1..].iter().zip(&unindented.lines) {
+            assert_eq!(indented_line.width_px, unindented_line.width_px);
+        }
+        assert_eq!(indented.width_px, unindented.width_px);
+        assert_eq!(indented.line_count, 3);
+        assert_eq!(
+            indented.lines[0].baseline_px,
+            unindented.lines[0].baseline_px
+        );
+        assert_baselines_one_line_apart(text, &indented);
+    }
+}
+
+#[test]
+fn an_indented_run_breaks_as_the_fake_does() {
+    use stencil_model::text::FixedMetricsMeasurer;
+    let cases: [(&str, &[&str]); 3] = [
+        (
+            "acme-prod.analytics.raw-events",
+            &["", "acme-", "prod.", "analytics.", "raw-", "events"],
+        ),
+        ("10.8.0.0/28", &["", "10.8.0.0/28"]),
+        ("On-prem router 1", &["", "On-", "prem", "router", "1"]),
+    ];
+    let mut cosmic = measurer();
+    let mut fake = FixedMetricsMeasurer::default();
+    for (text, expected) in cases {
+        let indented = cosmic
+            .measure_indented(text, &card_function(), Some(0.0), 4.0)
+            .unwrap();
+        assert_eq!(line_texts(text, &indented), expected, "{text}");
+        let faked = fake
+            .measure_indented(text, &card_function(), Some(0.0), 4.0)
+            .unwrap();
+        assert_eq!(line_texts(text, &faked), expected, "fake {text}");
+
+        let unwrapped = cosmic
+            .measure_indented(text, &card_function(), None, 4.0)
+            .unwrap();
+        assert_eq!(line_texts(text, &unwrapped), [text]);
+        assert_eq!(unwrapped.width_px, 4.0 + width_of(&mut cosmic, text));
+        let faked_unwrapped = fake
+            .measure_indented(text, &card_function(), None, 4.0)
+            .unwrap();
+        assert_eq!(line_texts(text, &faked_unwrapped), [text], "fake {text}");
+    }
+}
+
+#[test]
+fn a_negative_or_non_finite_indent_is_rejected() {
+    let mut measurer = measurer();
+    for first_line_indent_px in [-1.0, f32::NAN, f32::INFINITY] {
+        let error = measurer
+            .measure_indented("Metro", &card_function(), Some(100.0), first_line_indent_px)
+            .unwrap_err();
+        assert!(
+            matches!(error, MeasureError::InvalidIndent { .. }),
+            "{first_line_indent_px}: {error:?}"
+        );
+    }
+}

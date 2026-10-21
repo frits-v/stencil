@@ -79,6 +79,7 @@ pub fn measure_exit_code(error: &MeasureError) -> ExitCode {
         MeasureError::EmptyText
         | MeasureError::InvalidStyle { .. }
         | MeasureError::InvalidMaxWidth { .. }
+        | MeasureError::InvalidIndent { .. }
         | MeasureError::Backend { .. } => ExitCode::CouldNotRun,
     }
 }
@@ -191,6 +192,9 @@ mod tests {
             MeasureError::EmptyText,
             MeasureError::InvalidStyle { reason: "size" },
             MeasureError::InvalidMaxWidth { max_width_px: -1.0 },
+            MeasureError::InvalidIndent {
+                first_line_indent_px: -1.0,
+            },
             MeasureError::Backend {
                 message: "shaping failed".to_string(),
             },
