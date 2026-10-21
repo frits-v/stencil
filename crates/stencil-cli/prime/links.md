@@ -25,6 +25,7 @@ Router (every link but a Lanes message, which runs straight across its row):
 
 - Obstacles are every leaf box (Item, Fact, Note, Text, Callout, Frame, each Pipe and Tee tag, each whole Tee), every Box label, and the page kicker, title, lede, legend entries and foot, except the two endpoints and whatever contains them. Box borders are not obstacles: a line entering a Box is how a path reaches it. Running along an edge is allowed.
 - A* over a grid built from obstacle edges pushed out 8 px, costing 1 per px plus 40 per turn. The first move leaves through the from side and the last enters through the to side. With via, each leg is routed in turn. The same geometry always gives the same route.
+- Flat: an arrowed end keeps a straight leg of 22 px (the 10 px arrowhead and two default corners), so the line meets the arrowhead's base, not its side. A stub that would reach into a box, or two facing stubs with less than 44 px between the ends, has no route and the link falls back.
 - Fallback: no route, more than 512 grid lines, or more than 12 segments gives an L from attach point to attach point, horizontal leg first. It is still drawn, and links-routed reports it.
 - The tag is a pipe tag centered on the longest segment, sized to its text, never wrapped. links-avoid-boxes checks it against every node that draws a box, except the endpoints' ancestors; a Row or Col draws none, so a tag inside a gutter column passes.
 
@@ -32,7 +33,7 @@ What makes lines and tags collide:
 
 - Two links whose longest segments share a lane: their tags stack. Set sides or via so each runs in its own lane.
 - A long label on a short route: the tag covers the endpoint items. Shorten the label or move the items apart.
-- Items at the default gap 8: no lane between them. Set gap 32 to 64 on the Col or Row the links run through.
+- Items at the default gap 8: no lane between them, and no room for an arrow stub. Set gap 32 to 64 on the Col or Row the links run through.
 - An endpoint boxed in by items on every side: no route exists and the link falls back.
 - A route whose longest segment crosses a Box label: its tag lands on the label. Pick sides so the longest segment runs through open Box body.
 

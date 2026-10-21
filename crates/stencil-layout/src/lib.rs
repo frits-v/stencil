@@ -33,6 +33,10 @@ pub const GEOMETRY_EPSILON_PX: f32 = 0.01;
 pub const ARROWHEAD_LENGTH_PX: f32 = 10.0;
 /// Width of an arrowhead across its line, at the base.
 pub const ARROWHEAD_WIDTH_PX: f32 = 8.0;
+/// The straight a link keeps at an arrowed end (section 11.2): the arrowhead and a default
+/// corner on each side of the bend before it, so the stroke meets the arrowhead's base.
+pub const LINK_ARROW_STUB_PX: f32 =
+    ARROWHEAD_LENGTH_PX + 2.0 * stencil_model::LINK_CORNER_DEFAULT_PX;
 /// Height of a leaf block under iso (section 12.3): a Pcard, Fact, Note, Text, Callout or
 /// Frame. Layout reserves this much floor behind a zone's label, because a block covers
 /// the strip of floor its height spans on screen.

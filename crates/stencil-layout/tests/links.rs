@@ -11,7 +11,8 @@ use common::{assert_close, layout, node, page_from};
 use serde_json::{Value, json};
 use stencil_layout::checks::{links_avoid_boxes, links_routed, text_fits_box};
 use stencil_layout::{
-    BoxRect, LinkRoute, OBSTACLE_CLEARANCE_PX, PageGeometry, PartName, RouteStatus, shape_height_px,
+    BoxRect, LINK_ARROW_STUB_PX, LinkRoute, OBSTACLE_CLEARANCE_PX, PageGeometry, PartName,
+    RouteStatus, shape_height_px,
 };
 use stencil_model::checks::{CheckName, CheckOutcome};
 use stencil_model::{LINK_SEGMENTS_MAX, PagePoint, Shape};
@@ -75,9 +76,10 @@ fn row_with_obstacle(links: Value) -> Value {
 
 #[test]
 fn a_link_routed_around_one_obstacle_never_enters_it() {
-    let geometry = layout(&page_from(row_with_obstacle(
+    let page = page_from(row_with_obstacle(
         json!([{ "from": "a", "to": "c", "line": "solid", "tint": 1 }]),
-    )));
+    ));
+    let geometry = layout(&page);
     let route = route_of(&geometry, 0);
     assert_eq!(route.status, RouteStatus::Routed);
     assert_orthogonal(&route.points);
@@ -104,7 +106,7 @@ fn a_link_routed_around_one_obstacle_never_enters_it() {
 
     let report = links_avoid_boxes(&geometry);
     assert!(report.passed(), "{report:?}");
-    assert!(links_routed(&geometry).passed());
+    assert!(links_routed(&page, &geometry).passed());
 }
 
 #[test]
@@ -148,10 +150,11 @@ fn an_enclosed_endpoint_falls_back_and_fails_links_routed() {
         ]},
         card("target")
     ]}]);
-    let geometry = layout(&page_from(linked_page(
+    let page = page_from(linked_page(
         body,
         json!([{ "from": "center", "to": "target", "line": "solid", "tint": 1 }]),
-    )));
+    ));
+    let geometry = layout(&page);
     let route = route_of(&geometry, 0);
     assert_eq!(route.status, RouteStatus::Fallback);
 
@@ -172,7 +175,7 @@ fn an_enclosed_endpoint_falls_back_and_fails_links_routed() {
             });
     assert_eq!(route.points, expected, "an L, horizontal leg first");
 
-    let report = links_routed(&geometry);
+    let report = links_routed(&page, &geometry);
     assert_eq!(report.examined, 1);
     assert_eq!(report.outcome(), CheckOutcome::Failed);
     assert_eq!(report.defects.len(), 1);
@@ -181,15 +184,16 @@ fn an_enclosed_endpoint_falls_back_and_fails_links_routed() {
 
 #[test]
 fn link_checks_do_not_apply_to_a_page_without_links() {
-    let geometry = layout(&page_from(row_with_obstacle(json!([]))));
+    let page = page_from(row_with_obstacle(json!([])));
+    let geometry = layout(&page);
     assert!(geometry.links.is_empty());
-    for report in [links_routed(&geometry), links_avoid_boxes(&geometry)] {
+    for report in [links_routed(&page, &geometry), links_avoid_boxes(&geometry)] {
         assert_eq!(report.examined, 0);
         assert!(report.defects.is_empty());
         assert_eq!(report.outcome(), CheckOutcome::NotApplicable, "{report:?}");
         assert!(!report.passed());
     }
-    assert_eq!(links_routed(&geometry).check, CheckName::LinksRouted);
+    assert_eq!(links_routed(&page, &geometry).check, CheckName::LinksRouted);
     assert_eq!(
         links_avoid_boxes(&geometry).check,
         CheckName::LinksAvoidBoxes
@@ -198,11 +202,12 @@ fn link_checks_do_not_apply_to_a_page_without_links() {
 
 #[test]
 fn link_checks_count_links_and_segment_obstacle_pairs() {
-    let geometry = layout(&page_from(row_with_obstacle(json!([
+    let page = page_from(row_with_obstacle(json!([
         { "from": "a", "to": "b", "line": "solid", "tint": 1 },
         { "from": "a", "to": "c", "line": "solid", "tint": 1 }
-    ]))));
-    let routed = links_routed(&geometry);
+    ])));
+    let geometry = layout(&page);
+    let routed = links_routed(&page, &geometry);
     assert_eq!(routed.examined, 2);
     assert!(routed.passed());
     // Obstacles outside the endpoints: /kicker, /title, /lede, the legend entry and the
@@ -293,7 +298,8 @@ fn a_tag_is_sized_like_a_pipe_tag_and_centered_on_the_longest_segment() {
 #[test]
 fn a_forced_side_leaves_through_that_side() {
     let geometry = layout(&page_from(row_with_obstacle(json!([
-        { "from": "a", "to": "b", "line": "solid", "tint": 1, "from_side": "top", "to_side": "top" }
+        { "from": "a", "to": "b", "line": "solid", "tint": 1, "arrow": "none",
+          "from_side": "top", "to_side": "top" }
     ]))));
     let route = route_of(&geometry, 0);
     assert_eq!(route.status, RouteStatus::Routed);
@@ -492,4 +498,143 @@ fn links_avoid_boxes_reads_the_rounded_bend_not_the_polyline() {
         "{}",
         rounded.defects[0].message
     );
+}
+
+fn leg_length(from: PagePoint, to: PagePoint) -> f32 {
+    (to.x - from.x).abs() + (to.y - from.y).abs()
+}
+
+/// A card beside a card nested in a region and a subnet, whose center line lies below the
+/// first card's by the two labels: the route steps down beside the target.
+fn nested_target_page(gap: u32, arrow: &str) -> Value {
+    linked_page(
+        json!([{ "tag": "Row", "gap": gap, "children": [
+            card("a"),
+            { "tag": "Box", "kind": "region", "label": "Region", "children": [
+                { "tag": "Box", "kind": "subnet", "label": "Subnet", "children": [card("b")] } ] } ] }]),
+        json!([{ "from": "a", "to": "b", "line": "solid", "tint": 1, "arrow": arrow }]),
+    )
+}
+
+/// Section 11.2: the router searches to a point LINK_ARROW_STUB_PX out from an arrowed
+/// end, so the stroke runs straight into the arrowhead's base instead of into its flank.
+/// The obstacle clearance alone left a last leg of 8 px, under the 10 px arrowhead.
+#[test]
+fn an_arrowed_end_arrives_on_a_straight_of_the_arrow_stub() {
+    let mut examined = 0;
+    for (arrow, gaps) in [("end", &[8, 16, 32, 64][..]), ("both", &[32, 64][..])] {
+        for &gap in gaps {
+            let page = page_from(nested_target_page(gap, arrow));
+            let geometry = layout(&page);
+            let route = route_of(&geometry, 0);
+            assert_eq!(route.status, RouteStatus::Routed, "{arrow} gap {gap}");
+            assert_orthogonal(&route.points);
+            let count = route.points.len();
+            assert!(
+                count > 2,
+                "{arrow} gap {gap}: the route steps to the lower center line"
+            );
+            let first = leg_length(route.points[0], route.points[1]);
+            let last = leg_length(route.points[count - 2], route.points[count - 1]);
+            assert!(
+                last >= LINK_ARROW_STUB_PX - 0.01,
+                "{arrow} gap {gap}: last leg {last:.2} in {:?}",
+                route.points
+            );
+            if arrow == "both" {
+                assert!(
+                    first >= LINK_ARROW_STUB_PX - 0.01,
+                    "gap {gap}: first leg {first:.2} in {:?}",
+                    route.points
+                );
+            }
+            let checked = links_routed(&page, &geometry);
+            assert!(checked.passed(), "{arrow} gap {gap}: {checked:?}");
+            assert_eq!(checked.examined, 1);
+            examined += 1;
+        }
+    }
+    assert_eq!(examined, 6);
+}
+
+/// A stub with no room falls back to the L of section 11.2. links-routed reports the
+/// fallback, and an arrowed end of the L on a leg shorter than the stub as well.
+#[test]
+fn a_blocked_arrow_stub_falls_back_and_links_routed_reports_the_short_leg() {
+    // A card in a region 8 px from the source: the target's left side lies 21.5 px from
+    // the source's right side, so its stub reaches into the source card.
+    let page = page_from(linked_page(
+        json!([{ "tag": "Row", "gap": 8, "children": [
+            card("a"),
+            { "tag": "Box", "kind": "region", "label": "Region", "children": [card("b")] } ] }]),
+        json!([{ "from": "a", "to": "b", "line": "solid", "tint": 1 }]),
+    ));
+    let geometry = layout(&page);
+    let route = route_of(&geometry, 0);
+    assert_eq!(route.status, RouteStatus::Fallback, "{:?}", route.points);
+    let count = route.points.len();
+    let last = leg_length(route.points[count - 2], route.points[count - 1]);
+    assert!(last < LINK_ARROW_STUB_PX, "{:?}", route.points);
+    let report = links_routed(&page, &geometry);
+    assert_eq!(report.examined, 1);
+    assert_eq!(report.outcome(), CheckOutcome::Failed);
+    let messages: Vec<&str> = report
+        .defects
+        .iter()
+        .map(|defect| defect.message.as_str())
+        .collect();
+    assert_eq!(messages.len(), 2, "{messages:?}");
+    assert!(
+        messages[0]
+            .ends_with("avoids every obstacle with a 22.00 px arrow stub; drawn as a fallback L"),
+        "{}",
+        messages[0]
+    );
+    assert_eq!(
+        messages[1],
+        format!("last leg is {last:.2} px, shorter than the arrowhead and a bend (22.00 px)")
+    );
+    assert!(
+        report
+            .defects
+            .iter()
+            .all(|defect| defect.pointer.as_str() == "/links/0")
+    );
+
+    // The same pair at gap 32 routes, and the report counts the link with no defect.
+    let page = page_from(linked_page(
+        json!([{ "tag": "Row", "gap": 32, "children": [
+            card("a"),
+            { "tag": "Box", "kind": "region", "label": "Region", "children": [card("b")] } ] }]),
+        json!([{ "from": "a", "to": "b", "line": "solid", "tint": 1 }]),
+    ));
+    let geometry = layout(&page);
+    let report = links_routed(&page, &geometry);
+    assert_eq!(report.examined, 1);
+    assert!(report.defects.is_empty(), "{:?}", report.defects);
+    assert_eq!(report.outcome(), CheckOutcome::Passed);
+}
+
+/// The lede lies 16 px above the row, so a stub up from a card reaches into it, and two
+/// facing stubs closer than twice the stub pass each other: neither has a route.
+#[test]
+fn an_arrow_stub_into_an_obstacle_or_past_the_other_stub_falls_back() {
+    let page = page_from(row_with_obstacle(json!([
+        { "from": "a", "to": "b", "line": "solid", "tint": 1, "from_side": "top", "to_side": "top" },
+        { "from": "a", "to": "b", "line": "solid", "tint": 1, "arrow": "none",
+          "from_side": "top", "to_side": "top" }
+    ])));
+    let geometry = layout(&page);
+    assert_eq!(route_of(&geometry, 0).status, RouteStatus::Fallback);
+    assert_eq!(route_of(&geometry, 1).status, RouteStatus::Routed);
+
+    let both = |gap: u32| {
+        let page = page_from(linked_page(
+            json!([{ "tag": "Row", "gap": gap, "children": [card("a"), card("b")] }]),
+            json!([{ "from": "a", "to": "b", "line": "solid", "tint": 1, "arrow": "both" }]),
+        ));
+        route_of(&layout(&page), 0).status
+    };
+    assert_eq!(both(40), RouteStatus::Fallback);
+    assert_eq!(both(44), RouteStatus::Routed);
 }

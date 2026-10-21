@@ -33,7 +33,7 @@ fn onepager_lays_out_with_every_link_routed_and_no_geometry_defect() {
         child_inside_container(&geometry),
         siblings_do_not_overlap(&geometry),
         text_fits_box(&geometry),
-        links_routed(&geometry),
+        links_routed(&page, &geometry),
         links_avoid_boxes(&geometry),
     ] {
         assert!(report.passed(), "{report:?}");

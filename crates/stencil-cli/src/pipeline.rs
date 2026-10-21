@@ -429,7 +429,7 @@ pub fn all_checks(
         text_fits_box(geometry),
         remembered,
         legend,
-        links_routed(geometry),
+        links_routed(page, geometry),
         links_avoid_boxes(geometry),
         pipes_land(page, geometry),
         iso_labels_clear(scene),

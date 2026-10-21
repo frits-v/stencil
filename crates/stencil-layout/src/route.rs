@@ -9,7 +9,7 @@ use stencil_model::Projection;
 use stencil_model::pointer::NodePointer;
 use stencil_model::text::{TextMeasurer, TextMetrics, TextStyleName};
 use stencil_model::{
-    Bend, Grammar, LINK_CORNER_DEFAULT_PX, LINK_SEGMENTS_MAX, LINKS_MAX, Line, Link, Page,
+    Arrow, Bend, Grammar, LINK_CORNER_DEFAULT_PX, LINK_SEGMENTS_MAX, LINKS_MAX, Line, Link, Page,
     PagePoint, ROUTER_GRID_LINES_MAX, Side, VetRule, Violation, body_nodes, line_tint,
 };
 
@@ -17,8 +17,8 @@ use crate::lanes::{LanesPlan, MessageRow};
 use crate::styles::{text_color, text_style_for};
 use crate::{Axis, ISO_APPROACH_PX, ISO_BLOCK_HEIGHT_PX, shape_height_px, turned_box};
 use crate::{
-    BoxRect, GEOMETRY_EPSILON_PX, LayoutError, LinkRoute, NodeGeometry, NodeTag, PageGeometry,
-    Part, PartName, RouteStatus, TextAlign, TextRun,
+    BoxRect, GEOMETRY_EPSILON_PX, LINK_ARROW_STUB_PX, LayoutError, LinkRoute, NodeGeometry,
+    NodeTag, PageGeometry, Part, PartName, RouteStatus, TextAlign, TextRun,
 };
 
 /// Distance kept between a route and an obstacle: grid lines sit this far outside each edge.
@@ -117,8 +117,9 @@ fn link_bend(page: &Page, grammar: &Grammar, line: Line) -> (f32, Bend) {
     (corner, bend)
 }
 
-/// The A* route of section 11.2, or the fallback L when there is none. Under iso an end
-/// on a block is reached through an approach stub (section 12.4).
+/// The A* route of section 11.2, or the fallback L when there is none. An arrowed end of a
+/// flat link is reached through the arrow stub of section 11.2, and under iso an end on a
+/// block through an approach stub (section 12.4).
 fn searched_route(
     geometry: &PageGeometry,
     link: &Link,
@@ -131,8 +132,28 @@ fn searched_route(
         (&attach_box(from.1), allowed_sides(from.1)),
         (&attach_box(to.1), allowed_sides(to.1)),
     );
-    let stubs = (iso && is_block(from.1), iso && is_block(to.1));
-    route_between(geometry, from, to, sides, &link.via, stubs, iso)
+    route_between(
+        geometry,
+        from,
+        to,
+        sides,
+        &link.via,
+        stubs(link.arrow, (from.1, to.1), iso),
+        iso,
+    )
+}
+
+/// Which ends of a link are reached through a stub: the arrowed ends of a flat link, the
+/// block ends under iso.
+fn stubs(arrow: Arrow, (from, to): (&NodeGeometry, &NodeGeometry), iso: bool) -> (bool, bool) {
+    if iso {
+        (is_block(from), is_block(to))
+    } else {
+        (
+            matches!(arrow, Arrow::Start | Arrow::Both),
+            matches!(arrow, Arrow::End | Arrow::Both),
+        )
+    }
 }
 
 /// The box a link attaches to: an item's Footprint part under iso when its shape is not a
@@ -179,7 +200,8 @@ fn is_block(node: &NodeGeometry) -> bool {
 }
 
 /// The section 11.2 route from the `from_side` midpoint of `from` through `via` to the
-/// `to_side` midpoint of `to`, or the fallback L when the grid has none.
+/// `to_side` midpoint of `to`, or the fallback L when the grid has none or a flat arrow
+/// stub is blocked.
 fn route_between(
     geometry: &PageGeometry,
     (from_node, from): (usize, &NodeGeometry),
@@ -218,16 +240,46 @@ fn route_between(
             y: point.y + dy * length,
         }
     };
-    let search_start = if from_stub {
-        outward(start, from_side, (from, to_box))
-    } else {
-        start
+    // A flat arrow stub has its full length or no route at all: a shorter one is the leg
+    // that ran into the arrowhead's flank.
+    let arrow_stub = |point: PagePoint, side: Side| {
+        let (dx, dy) = Direction::outward(side).unit();
+        PagePoint {
+            x: point.x + dx * LINK_ARROW_STUB_PX,
+            y: point.y + dy * LINK_ARROW_STUB_PX,
+        }
     };
-    let search_end = if to_stub {
-        outward(end, to_side, (to, from_box))
-    } else {
-        end
+    let search_start = match (from_stub, iso) {
+        (false, _) => start,
+        (true, true) => outward(start, from_side, (from, to_box)),
+        (true, false) => arrow_stub(start, from_side),
     };
+    let search_end = match (to_stub, iso) {
+        (false, _) => end,
+        (true, true) => outward(end, to_side, (to, from_box)),
+        (true, false) => arrow_stub(end, to_side),
+    };
+    if !iso {
+        let blocked = |stub: bool, attach: PagePoint, stub_point: PagePoint, other: &BoxRect| {
+            stub && (segment_enters(attach, stub_point, other)
+                || obstacles
+                    .iter()
+                    .any(|obstacle| segment_enters(attach, stub_point, &obstacle.bounds)))
+        };
+        let (normal_x, normal_y) = Direction::outward(from_side).unit();
+        let passing = from_stub
+            && to_stub
+            && to_side == facing_side(from_side)
+            && (search_end.x - search_start.x) * normal_x
+                + (search_end.y - search_start.y) * normal_y
+                < -GEOMETRY_EPSILON_PX;
+        if passing
+            || blocked(from_stub, start, search_start, &to_box)
+            || blocked(to_stub, end, search_end, &from_box)
+        {
+            return (fallback_route(start, end), RouteStatus::Fallback);
+        }
+    }
     // The search runs between the stub ends, outside the blocks, so a stubbed block is an
     // obstacle like any other: the route may not cut through it to reach its stub.
     for (stub, node, bounds) in [(from_stub, from_node, from_box), (to_stub, to_node, to_box)] {
@@ -241,8 +293,11 @@ fn route_between(
         start: search_start,
         end: search_end,
         from_side,
-        to_side,
-        to_stub,
+        arrival: match (to_stub, iso) {
+            (false, _) => Arrival::Moving(Direction::outward(to_side).opposite()),
+            (true, true) => Arrival::Any,
+            (true, false) => Arrival::NotMoving(Direction::outward(to_side)),
+        },
     };
     let with_stubs = |mut points: Vec<PagePoint>| {
         if from_stub {
@@ -260,10 +315,11 @@ fn route_between(
         {
             (with_stubs(points), RouteStatus::Routed)
         }
-        Some(_) | None => (
+        Some(_) | None if iso => (
             with_stubs(fallback_route(search_start, search_end)),
             RouteStatus::Fallback,
         ),
+        Some(_) | None => (fallback_route(start, end), RouteStatus::Fallback),
     }
 }
 
@@ -302,8 +358,8 @@ fn free_run(point: PagePoint, direction: (f32, f32), obstacles: &[Obstacle]) -> 
 }
 
 /// Section 13.11 rule 3: the route of the link at `index` in `geometry.links`, searched again
-/// with `from_side` and `via` in place of the authored ones; under iso a block end keeps
-/// its approach stub. The to end keeps the side its
+/// with `from_side` and `via` in place of the authored ones; an end keeps its arrow stub, or
+/// under iso its approach stub. The to end keeps the side its
 /// routed polyline ends on, and the tag keeps its size and moves with the midpoint of the
 /// longest segment. Pure: the geometry is read, never changed. None when no routed link has
 /// that index or an endpoint is not a geometry node.
@@ -328,7 +384,7 @@ pub fn reroute_link(
         (route.to_node, to),
         (from_side, to_side),
         via,
-        (iso && is_block(from), iso && is_block(to)),
+        stubs(route.arrow, (from, to), iso),
         iso,
     );
     let (old_center, _) = longest_segment_midpoint(&route.points);
@@ -735,10 +791,28 @@ struct Endpoints {
     start: PagePoint,
     end: PagePoint,
     from_side: Side,
-    to_side: Side,
-    /// True at an end reached through an approach stub (section 12.4). The to stub is the
-    /// straight approach, so the search may meet its end from any direction.
-    to_stub: bool,
+    /// How the last leg meets `end`: through the to side at a plain end, from any direction
+    /// at an iso approach stub (section 12.4), which is the straight approach itself, and
+    /// anyhow but back over the stub at a flat arrow stub (section 11.2).
+    arrival: Arrival,
+}
+
+/// The moves a search may reach its goal with.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Arrival {
+    Any,
+    Moving(Direction),
+    NotMoving(Direction),
+}
+
+impl Arrival {
+    fn admits(self, direction: Direction) -> bool {
+        match self {
+            Arrival::Any => true,
+            Arrival::Moving(required) => direction == required,
+            Arrival::NotMoving(refused) => direction != refused,
+        }
+    }
 }
 
 /// The routing grid: sorted line coordinates and which intersections and unit moves are
@@ -948,14 +1022,14 @@ impl Ord for Frontier {
 const FROM_START: usize = usize::MAX;
 
 /// A* from `start` to `goal` with Manhattan moves, cost 1 per px plus TURN_COST_PX per
-/// turn. `leave` forces the first move's direction and `arrive` the last one's. Returns the
-/// grid points of the cheapest path, or None when no path exists.
+/// turn. `leave` forces the first move's direction and `arrive` admits the last one's.
+/// Returns the grid points of the cheapest path, or None when no path exists.
 fn search_leg(
     grid: &Grid,
     start: GridPoint,
     goal: GridPoint,
     leave: Option<Direction>,
-    arrive: Option<Direction>,
+    arrive: Arrival,
 ) -> Option<Vec<GridPoint>> {
     if !grid.node_open(start) || !grid.node_open(goal) {
         return None;
@@ -1008,7 +1082,7 @@ fn search_leg(
         if current.cost > best_cost.get(state).copied().unwrap_or(f64::NEG_INFINITY) {
             continue;
         }
-        if current.point == goal && arrive.is_none_or(|direction| direction == current.direction) {
+        if current.point == goal && arrive.admits(current.direction) {
             return Some(reconstruct(
                 start,
                 current.point,
@@ -1097,11 +1171,13 @@ fn grid_route(
             return None;
         };
         // A from stub keeps the first leg leaving outward, so the route never doubles back
-        // over its stub; a to stub is met from any direction, the stub itself being the
-        // straight approach.
+        // over its stub.
         let leave = (leg_index == 0).then(|| Direction::outward(endpoints.from_side));
-        let arrive = (leg_index + 1 == leg_count && !endpoints.to_stub)
-            .then(|| Direction::outward(endpoints.to_side).opposite());
+        let arrive = if leg_index + 1 == leg_count {
+            endpoints.arrival
+        } else {
+            Arrival::Any
+        };
         let leg_path = search_leg(
             &grid,
             grid.locate(leg_start)?,
