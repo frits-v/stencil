@@ -186,6 +186,17 @@ fn design_brief_validates() {
 }
 
 #[test]
+fn onepager_validates() {
+    let onepager: serde_json::Value =
+        serde_json::from_str(include_str!("../../../examples/onepager.json")).unwrap();
+    let errors: Vec<String> = validator()
+        .iter_errors(&onepager)
+        .map(|error| error.to_string())
+        .collect();
+    assert_eq!(errors, Vec::<String>::new());
+}
+
+#[test]
 fn every_builtin_theme_name_and_a_json_path_pass_the_theme_pattern() {
     let validator = validator();
     for name in stencil_model::BUILTIN_THEMES

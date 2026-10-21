@@ -345,7 +345,7 @@ Two serde behaviors are load-bearing and each has a test (section 10). First, `d
 
 ### 1.3 Validation (vet rules)
 
-Section 13.1 adds the grammar-aware rules (`tint-out-of-range`, `grammar-unknown`, `kind-unknown`, `kind-parent-not-allowed`, `icon-outside-pack`, `facts-too-many`, `lanes-too-many`, `lanes-in-iso`) and makes `validate_page` take the resolved grammar. Pointers below that name `fn` or `pn` read `title` and `subtitle` on an Item.
+Section 13.1 adds the grammar-aware rules (`tint-out-of-range`, `grammar-unknown`, `kind-unknown`, `kind-parent-not-allowed`, `icon-outside-pack`, `facts-too-many`, `lanes-too-many`, `lanes-in-iso`) and makes `validate_page` take the resolved grammar. Section 14.3 adds the design sheet rules; on a page without `sheet` only `needs-sheet` of them runs. Pointers below that name `fn` or `pn` read `title` and `subtitle` on an Item.
 
 serde handles types and required fields. `validate_page` then enforces the rules below and returns every violation it finds, not only the first. Each violation carries the JSON Pointer and the message listed for its rule. Pointers use the serialized field names (`fn`, `pn`, `dir`), and `…` stands for the pointer of the node that holds the field. In a message, `<n>`, `<g>`, `<c>` and `<w>` are decimal integers and `<XXXX>` is four uppercase hex digits. `VetRule::as_str(self) -> &'static str` returns the rule name in kebab-case as in the first column, so the CLI does not carry a second copy of the names.
 
@@ -375,7 +375,7 @@ A Page with no Pipe and no Tee passes vet but fails the legend check with zero e
 
 ### 1.4 Node identity
 
-The input has no id fields. A node's id is the RFC 6901 JSON Pointer of its object in the input document, for example `/body/0/children/2/children/0`. The page root is the empty pointer `""`. The layout also creates page-level nodes for the page's own fields, and their pointers resolve to those fields: `/kicker`, `/title`, `/lede`, `/body` (the array), `/legend` (the array), `/legend/0` and so on, and `/foot`. Tee arms are nodes at `/…/arms/0` and `/…/arms/1`.
+The input has no id fields. A node's id is the RFC 6901 JSON Pointer of its object in the input document, for example `/body/0/children/2/children/0`. The page root is the empty pointer `""`. The layout also creates page-level nodes for the page's own fields, and their pointers resolve to those fields: `/kicker`, `/title`, `/lede`, `/body` (the array), `/legend` (the array), `/legend/0` and so on, and `/foot`. Tee arms are nodes at `/…/arms/0` and `/…/arms/1`. On a design sheet the page-level nodes add `/sheet`, `/sheet/problem`, `/sheet/problem/points/<i>`, `/sheet/answer` and `/sheet/attention` (section 14.4 rule 2).
 
 The same pointers appear as `data-id` in the SVG, as keys in the measured JSON and in every check message. Each pointer resolves with `serde_json::Value::pointer` against the input document.
 
@@ -394,7 +394,7 @@ The same pointers appear as `data-id` in the SVG, as keys in the measured JSON a
 
 ### 2.2 Page
 
-The root is a flex column with `align_items` set to `AlignItems::STRETCH`, so `/title`, `/lede`, `/legend` and `/foot` take the full content width (1280 px at the default width). taffy's `None` also behaves as stretch, but the root sets it explicitly. Its `size.width` is definite at `width + 40`, so the default canvas is 1320 px wide. Padding is 20 on every side. The root style carries the definite width because percentage and stretch sizing resolve against the root's own style, not against the `available_space` argument (see `docs/api-notes/taffy.md`). The layout is computed with `Definite(width + 40)` by `MaxContent`. The canvas height is the root's computed height.
+The root is a flex column with `align_items` set to `AlignItems::STRETCH`, so `/title`, `/lede`, `/legend` and `/foot` take the full content width (1280 px at the default width). taffy's `None` also behaves as stretch, but the root sets it explicitly. Its `size.width` is definite at `width + 40`, so the default canvas is 1320 px wide. Padding is 20 on every side. The root style carries the definite width because percentage and stretch sizing resolve against the root's own style, not against the `available_space` argument (see `docs/api-notes/taffy.md`). The layout is computed with `Definite(width + 40)` by `MaxContent`. The canvas height is the root's computed height. On a design sheet the padding is 50 on every side and the canvas is `width + 100` wide (section 14.4 rule 1); `canvas_width(page)` in stencil-model gives the canvas width either way, and vet, layout and the via bound read it.
 
 Root children, top to bottom:
 
@@ -543,8 +543,18 @@ Every string on the canvas uses one of these styles. Family, weight, size, line 
 | legend_text | 400 | 12 | 14.4 | 0 | #5F6368 | |
 | foot | 400 | 11 | 13.2 | 0 | #5F6368 | |
 | block_body | 400 | 12 | 17.4 | 0 | #202124 | |
+| sheet_label | 600 | 11 | 13.2 | 0.12 | #5F6368 | uppercase |
+| wordmark | 800 | 52 | 62.0 | -0.02 | #202124 | |
+| motto | 700 | 13 | 16.0 | 0.06 | #202124 | uppercase |
+| sheet_title | 800 | 26 | 30.0 | 0 | #202124 | |
+| statement | 700 | 20 | 26.0 | 0 | #202124 | |
+| view_numeral | 700 | 13 | 15.6 | 0 | #202124 | |
+| view_title | 700 | 16 | 19.2 | 0.1 | #202124 | uppercase |
+| view_note | 400 | 14 | 18.0 | 0 | #5F6368 | |
+| view_note_small | 400 | 12 | 15.6 | 0 | #5F6368 | |
+| lead_body | 700 | 12 | 17.4 | 0 | #202124 | |
 
-The section 11.3 blocks reuse three of these: the Text heading and the Callout title are `card_function`, the Frame label is `zone_label`, and the Text body lines, numbered list markers and Callout text are `block_body`.
+The last ten draw a design sheet (section 14.4 rule 28) and keep their size under iso, which a sheet never takes. The wordmark's line is 62 px so the descenders of its 52 px type stay inside its measured box. The section 11.3 blocks reuse three of these: the Text heading and the Callout title are `card_function`, the Frame label is `zone_label`, and the Text body lines, numbered list markers and Callout text are `block_body`.
 
 All styles use family Inter. Uppercasing uses `str::to_uppercase` and runs before measurement, so the measured string is the rendered string. The remembered-constants check reads the untransformed input.
 
@@ -1170,6 +1180,9 @@ pub struct TextRun {
     pub color: &'static str,
     pub align: TextAlign,
     pub metrics: TextMetrics,
+    /// Where line 0 starts after the part's left edge: the body of a lead run continues on
+    /// its lead's last line (section 14.4 rule 9); 0 for every other run.
+    pub first_line_indent_px: f32,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -1347,6 +1360,9 @@ pub enum RenderError {
     PngEncode { message: String },
     #[error(transparent)]
     Fonts(#[from] FontError),
+    /// Section 14.2 rule 11: a design sheet surface under iso.
+    #[error("{pointer} is a design sheet surface, which is drawn flat only")]
+    SheetSurface { pointer: NodePointer },
 }
 ```
 
@@ -1625,7 +1641,7 @@ Every error variant maps to one code. The mapping is an exhaustive `match` with 
 | `LayoutError::Measure` with source `EmptyText`, `InvalidStyle`, `InvalidMaxWidth`, `InvalidIndent` or `Backend` | 2 |
 | `LayoutError::Taffy`, `LayoutError::NonFinite` | 2 |
 | `FontError`, any variant, and `RenderError::Fonts` | 2 |
-| `RenderError::ScaleOutOfRange`, `PngWidthOutOfRange`, `GeometryMismatch`, `Svg`, `TextNotRendered`, `TextCountExceeded`, `FontNotResolved`, `PixmapAllocation`, `PngEncode` | 2 |
+| `RenderError::ScaleOutOfRange`, `PngWidthOutOfRange`, `GeometryMismatch`, `Svg`, `TextNotRendered`, `TextCountExceeded`, `FontNotResolved`, `PixmapAllocation`, `PngEncode`, `SheetSurface` | 2 |
 | `PrimeError`, any variant: the briefing is built from the binary's own schema and texts, so a failure is an internal fault | 2 |
 | a failing `CheckReport`, zero examined included; a not-applicable report does not fail, and a run is clean only when at least one report passed | 1 |
 
@@ -4122,6 +4138,8 @@ Rules:
     | contrast | non-text on its ground: the gray wire, the deny wire and each of the eight tint wires against `page`, `frame.body_fill`, every tone fill the theme sets and every tint fill; `frame.border` against `page`; each callout accent against its fill | 3.0 |
     | separation | minimum pairwise CIE76 delta E over the eight tint wires, under normal vision and under deuteranopia, protanopia and tritanopia (Machado, Oliveira and Fernandes 2009, severity 1.0, applied in linear sRGB, clipped to 0 to 1, then CIELAB D65) | 20 normal, 12 each dichromacy |
     | separation | the same over the eight tint fills | 8 normal, 5 each dichromacy |
+    | contrast | the design sheet (section 14.5 rule 1), on the resolved sheet role: `sheet.label_ink`, `ink.primary`, `ink.secondary` and `sheet.frame` each on `sheet.cell` and on `sheet.paper` | 4.5 |
+    | contrast | non-text: `sheet.frame` on `sheet.paper` | 3.0 |
 
     The separation rows are not applicable under `tint_cue: line` (reason `tints are told apart by line`): that theme draws every slot in one ink by design, and its slots differ by end dot. A theme that sets no tone fill still examines its page, card and tint rows, so no theme examines zero rows. The checker of the palette research (`accessible/scripts/palette-check.py`) is the reference for the numbers; a test compares `theme_quality` with recorded values from it for center and dusk to 2 decimals.
 11. Rendering reads the theme through `Palette`, which holds the resolved `Theme` and the projection: `Palette::new(theme: &Theme, projection: Projection) -> Palette<'_>`. Every method returns colors borrowed from the theme. `shade`, `mix`, `Face` and `FacePaint` keep their section 12.6 definitions; `face_lightness_step` reads `iso.faces`, `slab_faces` and `block_faces` follow section 12.6 with every constant replaced by its role (`iso.frame_sides`, `iso.frame_outline`, `iso.solid_edges` and `iso.edge_width`, `iso.ring`, `iso.block_outline`) and every gcp rule applied to the frame role; `slab_faces` takes the container's resolved paint (fill, border color, the grammar's pattern) instead of a `ZoneKind`, and `iso_wire_width` gives `iso.widths.primary` for solid slot 1, `iso.widths.gray` for gray and `iso.widths.secondary` for everything else. The constants of section 12.6 (`ISO_PRIMARY_WIRE_PX` and the rest) are removed from `palette.rs`; their values live in the theme files.
@@ -4204,7 +4222,7 @@ Center. Every value of today's center palette carries over unchanged: the colors
 | `lanes.lifeline` | `#9AA0A6`, 1 px, dashed | the frame and subnet gray |
 | `iso.shadow` | `#202124` at 0.2, blur 2.5, dy 3 | added in step (e) |
 
-With these, center examines 223 quality rows and passes 222. The one failing row is `ask.ink on ask.fill`, `#B06000` on `#FEF7E0` at 4.34:1. Changing either color would change center output, which section 13.14 holds byte-identical, so the row stays failed and the center test names it as the only expected failure. The separation minima are wires 29.55 normal and 13.16 worst case (deuteranopia), fills 8.53 and 5.38.
+With these, center examines 231 quality rows and passes 230. The one failing row is `ask.ink on ask.fill`, `#B06000` on `#FEF7E0` at 4.34:1. Changing either color would change center output, which section 13.14 holds byte-identical, so the row stays failed and the center test names it as the only expected failure. The separation minima are wires 29.55 normal and 13.16 worst case (deuteranopia), fills 8.53 and 5.38.
 
 Paper takes editorial-light as mapped, with tint names `blue`, `rose`, `teal`, `ochre`, `violet`, `green`, `clay`, `petrol`. Its page is `#FCFBF8`, frame body `#F7F6F2`, card `#FFFFFF`.
 
@@ -4218,11 +4236,11 @@ Dusk takes dusk-deep as mapped, with the surface ladder widened. The research la
 | card | `card.fill`, `tag.fill` | `#1B2031`, `#191E2F` | `#272B3D` | 17.9 |
 | fact box | `fact.fill` | `#1F2640` | `#2E3450` | 22.4 |
 
-The fact box moves with the card so it stays above the card it sits in. The tint fills (L* 17 to 25) are governed by the separation rows, not the ladder. With the widened ladder dusk passes all 223 rows; its lowest non-text contrast is 3.16 (the gray wire on the slot 1 fill). The face steps shade every surface darker than its own top, and the ladder keeps each top lighter than the one it stands on, which section 12.6 rule 4 achieved by mixing toward a blue gray; the mix, the lifts and the rim are no longer needed.
+The fact box moves with the card so it stays above the card it sits in. The tint fills (L* 17 to 25) are governed by the separation rows, not the ladder. With the widened ladder dusk passes all 231 rows; its lowest non-text contrast is 3.16 (the gray wire on the slot 1 fill). The face steps shade every surface darker than its own top, and the ladder keeps each top lighter than the one it stands on, which section 12.6 rule 4 achieved by mixing toward a blue gray; the mix, the lifts and the rim are no longer needed.
 
-Clear and clear-dark take the accessible palettes, with the slots reordered so each slot keeps its hue family across themes: blue, pink, teal, ochre, indigo, green, vermillion, olive (the research order was blue, pink, teal, vermillion, indigo, ochre, olive, green). Separation is a minimum over all pairs, so the order does not change any row. The vermillion slot is named `orange`, because `Solid vermillion` would exceed the relabel slack of section 13.4 rule 4. Both pass all 223 rows.
+Clear and clear-dark take the accessible palettes, with the slots reordered so each slot keeps its hue family across themes: blue, pink, teal, ochre, indigo, green, vermillion, olive (the research order was blue, pink, teal, vermillion, indigo, ochre, olive, green). Separation is a minimum over all pairs, so the order does not change any row. The vermillion slot is named `orange`, because `Solid vermillion` would exceed the relabel slack of section 13.4 rule 4. Both pass all 231 rows.
 
-Wire carries today's values: page and every fill `#FFFFFF`, ink `#222222`, secondary ink `#555555`; `containers.draw_width` 1.25 and `frame_draw_width` 2, with a 2 px bar rule; every tone border `#222222`, every tone fill `#FFFFFF` where center's tone has one; `borderless_outline` `#222222` at 1.25 solid, so a k8s box keeps the outline wire draws today; gray 1.25 solid, every other line 2 px, dash dashed, deny dotted; `tint_cue: line`; every tint slot fill `#FFFFFF`, border and wire `#222222`, ink `#555555`, with the canonical names; solid dots by slot filled, hollow, none, filled, hollow, none, filled, hollow, so slot 1 draws as today's blue and slot 2 as today's pink, and wire tells at most three solid slots apart; lifeline `#555555` 1 px dashed; iso faces 0, 0, 0 (every face takes its flat fill, which is the page white), solid edges `outline` at 1.5, ring dotted `#999999` at 1.5, block outline `#222222` at 1.25, tabs `#222222` with white ink, chip white ringed `#222222`, widths 3.75, 2.5 and 1.25, no shadow. Wire passes its 215 contrast rows, and its 8 separation rows are not applicable. Two wire outputs change. Its flat legend labels read `Solid line` and so on in place of `Solid blue` (section 13.4 rule 9), which closes the first open item of section 11.1. Its subnet border is dashed like every other dashed container, because the pattern now comes from the grammar; today's wire drew subnet dotted.
+Wire carries today's values: page and every fill `#FFFFFF`, ink `#222222`, secondary ink `#555555`; `containers.draw_width` 1.25 and `frame_draw_width` 2, with a 2 px bar rule; every tone border `#222222`, every tone fill `#FFFFFF` where center's tone has one; `borderless_outline` `#222222` at 1.25 solid, so a k8s box keeps the outline wire draws today; gray 1.25 solid, every other line 2 px, dash dashed, deny dotted; `tint_cue: line`; every tint slot fill `#FFFFFF`, border and wire `#222222`, ink `#555555`, with the canonical names; solid dots by slot filled, hollow, none, filled, hollow, none, filled, hollow, so slot 1 draws as today's blue and slot 2 as today's pink, and wire tells at most three solid slots apart; lifeline `#555555` 1 px dashed; iso faces 0, 0, 0 (every face takes its flat fill, which is the page white), solid edges `outline` at 1.5, ring dotted `#999999` at 1.5, block outline `#222222` at 1.25, tabs `#222222` with white ink, chip white ringed `#222222`, widths 3.75, 2.5 and 1.25, no shadow. Wire passes its 223 contrast rows, and its 8 separation rows are not applicable. Two wire outputs change. Its flat legend labels read `Solid line` and so on in place of `Solid blue` (section 13.4 rule 9), which closes the first open item of section 11.1. Its subnet border is dashed like every other dashed container, because the pattern now comes from the grammar; today's wire drew subnet dotted.
 
 ### 13.6 Lanes
 
@@ -4496,8 +4514,8 @@ row contrast ink.primary on page: 16.10, at least 4.50, passed
 row contrast ask.ink on ask.fill: 4.34, at least 4.50, FAILED
 row separation wires deuteranopia: 13.16 between pink and green, at least 12.00, passed
 row separation fills normal: not applicable: tints are told apart by line
-stencil theme check center: 223 rows, 222 passed, 1 failed
-stencil theme check wire: 223 rows, 215 passed, 0 failed, 8 not applicable
+stencil theme check center: 231 rows, 230 passed, 1 failed
+stencil theme check wire: 231 rows, 223 passed, 0 failed, 8 not applicable
 ```
 
 A theme with zero rows cannot occur (section 13.4 rule 10); if the row builder returned none, the summary would print `FAILED: nothing examined` and exit 1. Exit codes for `theme check`: 0 when every applicable row passed, 1 when a row failed or the theme is structurally invalid, 2 when the file cannot be read.
@@ -4568,7 +4586,7 @@ stencil-model:
 - Legend consistency: solid tint 2 used with only a solid tint 1 entry gives one defect at the pipe and one at the entry; a tint on a deny pipe and on its entry are the same key; an entry for solid with no tint matches a pipe with tint 1; a dash tint 2 needs its own entry. Under `chrome: none`, one key in use with an empty legend passes with examined equal to the uses; two keys with an empty legend fail; one key with a legend entry follows the normal rule.
 - Facts: an Item's fact entries appear in `text_fields` after title and subtitle at `/…/facts/<i>/text`; remembered constants are found in a built fact; a Fact node without `source` serializes without it.
 - Themes: every built-in parses and passes `validate_theme`; a copy of center with each structural fault (lowercase hex, width 5, step 41, opacity 1.5, slab thickness 1, blur 0, an uppercase tint name, two equal tint names, seven tints, a fill on the strong tone, an unknown key at the top and inside `iso`) is rejected with the named rule and pointer, all faults of one document reported together in field order. `apply_overrides`: one wire through the `tints` slot form changes that slot only; a nested object merges; an unknown key reports `/theme_overrides/...`; a string where the base holds an object is `theme-override-not-object`. `theme_schema()` equals `schema/theme.schema.json`.
-- `theme_quality`: center gives 223 rows, 222 passed, and exactly one failure, `ask.ink on ask.fill` at 4.34; paper, dusk, clear and clear-dark give 223 rows and no failure; wire gives 215 passed and 8 not applicable; the center and dusk values match the research checker to 2 decimals (recorded in the test, with the checker's file named as the source). A hand-built theme with eight equal wires fails the four wire separation rows, and the same theme with `tint_cue: line` reports them not applicable. Center's inks equal `stencil_layout::styles`, and `TINT_NAMES` equals center's slot names.
+- `theme_quality`: center gives 231 rows, 230 passed, and exactly one failure, `ask.ink on ask.fill` at 4.34; paper, dusk, clear and clear-dark give 231 rows and no failure; wire gives 223 passed and 8 not applicable; the center and dusk values match the research checker to 2 decimals (recorded in the test, with the checker's file named as the source). A hand-built theme with eight equal wires fails the four wire separation rows, and the same theme with `tint_cue: line` reports them not applicable. Center's inks equal `stencil_layout::styles`, and `TINT_NAMES` equals center's slot names.
 - icon-matches-product: gcp's table has every icon once in `IconName::ALL` order, with the class of its section 8.2 archive path; `named_product` picks the longest match (`Vertex AI Agent Engine`, `Cloud Run functions`), respects word boundaries (`BigQueryX` names nothing) and ignores ASCII case; each defect kind fires once and its clean neighbor does not (subtitle BigQuery with icon bigquery, with no icon, with data-analytics; subtitle Pub/Sub with integration, with cloud-run); g7 examines 6 items clean; a plain page is not applicable; the three example mismatches of section 13.10 are found at their pointers before step (d) corrects them.
 - Lanes and ordered links: `link-order-outside-lanes` for an ordered link between a head and a node outside the Lanes, `link-order-duplicate` for two messages with one order, `lanes-in-iso` for a Lanes page with `projection: iso`.
 
@@ -4605,7 +4623,7 @@ stencil-cli:
 - `check` on every example prints one line per check in `CheckName` order, the captured lines of `crates/stencil-cli/tests/fixtures/<stem>.check.txt`; `vet examples/g7.json` prints one line per model check, the captured lines of `g7.vet.txt`.
 - `--theme` with each built-in name renders and checks g7; with a theme file path renders; with a missing path exits 2 with empty stdout; with a malformed file exits 1 with `error` and `violation` lines; `Page.theme` and `Page.grammar` resolve a path relative to the document's directory, and `--theme` relative to the current one; a grammar file with an unknown parent exits 1.
 - `--print-width 14` on `check examples/g7.json` exits 1 with the one defect; on `render` writes the four files, prints the paths and the print-fit lines, and exits 1; `--print-width 0.4` and `--print-width nan` exit 2.
-- `theme show center` prints `themes/center.json` byte for byte; `theme check center` prints 223 row lines, the ask failure and `stencil theme check center: 223 rows, 222 passed, 1 failed`, and exits 1; `theme check paper` exits 0; `theme check wire` prints 8 not-applicable rows and exits 0.
+- `theme show center` prints `themes/center.json` byte for byte; `theme check center` prints 231 row lines, the ask failure and `stencil theme check center: 231 rows, 230 passed, 1 failed`, and exits 1; `theme check paper` exits 0; `theme check wire` prints 8 not-applicable rows and exits 0.
 - `theme import`: every pinned scheme in `themes/imported/` re-imports to its committed theme file byte for byte and writes a report equal to the committed one row for row; the command exits 1 for each, as the committed reports say. A scheme missing `base0B` exits 1 and writes nothing; a base24 scheme imports with `base10` to `base17` ignored and gives the same theme as its first sixteen keys alone; a legacy flat-layout file with bare hex values imports.
 - `gallery` writes six themes per example, and `index.html` has a section for each.
 - `prime` is at most 7,000 bytes and each topic and grammar briefing at most 5,000; the base text contains "the Page does not" and one line pointing sequence and timeline figures at Lanes and `stencil prime grammar plain`; the vocabulary lists `Box`, `Item`, `Lanes`, `facts`, `source`, `line`, `tint`, `chrome` and `grammar`; the checks table lists `print-fit` and `icon-matches-product`; `prime grammar gcp` lists every gcp kind and `apis`; `prime grammar nope` exits 2.
@@ -4625,9 +4643,11 @@ c. The plain grammar and Lanes: `plain.cue` and `plain.json`, `prime grammar`, t
 d. Checks and CLI flags: `print-fit` with `--print-width`, `icon-matches-product` reading the grammar's table, twelve checks, three in `vet`; pipe targets with the slot translation and the pipes-land revision; the gcp CUE rules `_productInsideVpc` and `_apisOutsideGcp` and `check.sh` over every example; the example corrections of section 13.13 with their regenerated fixtures and gallery PNGs; the prime base and checks topics with the raised budgets. Sections 6, 7, 9.4, 10, 12.9 and 12.10 are edited in this step for twelve checks, the three checks of `vet` and the new summary lines.
 e. Layout and render polish: the break opportunities in both measurers, after the U+200B probe; block shadows with the `<defs>` filter; the slab exit with `reroute_link`. Only hero-iso's center fixtures and gallery PNG are regenerated.
 
-## 14. Figure descriptions
+## 14. Figure descriptions and design sheets
 
 Every figure has a text twin: `render` writes `<stem>.description.md` beside the SVG, the PNG and `<stem>.measured.json`, and `stencil describe` prints the same bytes. The description is Markdown that an agent reads without rendering anything: the head, the container nesting with each element's kind, icon, product and facts, every line with what the legend says it means, and the legend, each element with its pointer. It applies to every page in both projections, and `description-covers-drawing` (section 6) holds it to the drawing.
+
+A page that carries `sheet` is a design sheet: an engineering-drawing page with a frame and 1 to 8, A to F grid references, a title block, a legend strip and numbered Views. A sheet is flat only. Every surface sections 14.2 to 14.8 add is valid on a sheet only, and one table of surfaces drives the vet rules, the iso writer refusal and the prime vocabulary split for all of them (section 14.2 rule 11). A page without `sheet` renders exactly as before: its SVG, PNG, measured JSON, description, check and vet output are unchanged.
 
 ### 14.1 Figure description
 
@@ -4674,9 +4694,18 @@ pub struct DescribedUnit {
     /// The text that names the unit; the line holding the pointer contains
     /// `escape_markdown(name)`.
     pub name: String,
+    /// The reference the line must carry on a sheet (rule 15); None off a sheet.
+    pub zone: Option<SheetZone>,
 }
 
-pub enum UnitKind { Node, Link }
+/// A keyed entry that is not a geometry node, such as an attention item, is `Entry`.
+pub enum UnitKind { Node, Link, Entry }
+
+/// Section 14.1 rule 15: the cells under a box's corners, or under a point.
+pub fn sheet_zone(bounds: BoxRect, frame: BoxRect) -> SheetZone;
+pub fn sheet_zone_at(point: PagePoint, frame: BoxRect) -> SheetZone;
+/// The grid the references divide, the `Grid` part of a sheet's page root.
+pub fn sheet_frame(geometry: &PageGeometry) -> Option<BoxRect>;
 
 pub struct PipeLanding {
     /// The Pipe or Tee arm.
@@ -4696,7 +4725,7 @@ pub enum PipeEndSide { Start, End }
 
 `LegendKey` (crates/stencil-model/src/checks.rs) is public, with its fields `line`, `tint` (the effective tint of section 13.1 rule 2) and `form` and its constructor `LegendKey::new(line, tint, form)`, and stencil-model re-exports it, so legend-consistency and the description key lines the same way.
 
-1. Format. Markdown in a fixed subset: ATX headings `#` and `##`; paragraphs; `-` lists indented two spaces per level, and `1.` lists for numbered Text bodies; GFM tables; inline code spans for pointers only. No emphasis, no thematic breaks, no emdash, no HTML. UTF-8, LF line ends, blocks separated by one blank line, one trailing newline, no trailing spaces, no tabs.
+1. Format. Markdown in a fixed subset: ATX headings `#` and `##`, and `###` on a sheet; paragraphs; `-` lists indented two spaces per level, and `1.` lists for numbered Text bodies; GFM tables; inline code spans for pointers, and on a sheet for grid references. No emphasis, no thematic breaks, no emdash, no HTML. UTF-8, LF line ends, blocks separated by one blank line, one trailing newline, no trailing spaces, no tabs.
 2. Why Markdown. The description has two readers, a model and a person, and it is a fixture that changes in review diffs.
    - A resolved semantic JSON (endpoints and legend meanings as fields) is exact, but it repeats most of the measured JSON, and an agent still has to turn it into sentences before a person can use it.
    - Mermaid or D2 export draws again what stencil already drew.
@@ -4713,10 +4742,13 @@ pub enum PipeEndSide { Start, End }
 5. Units. `description_units` enumerates the unit set from geometry and the page, never by the writer's walk, so a drawn surface the writer forgets leaves a unit no line carries.
    - Node: every `NodeGeometry` other than the page root whose `parts` is not empty: Kicker, Title, Lede, Foot, LegendEntry, Zone, Pcard, Fact, Note, Pipe (Tee arms included), Tee, Text, Callout, Frame and Lanes.
    - Link: every `LinkRoute`, pointer `/links/<index>`.
+   - Entry, on a sheet: every attention item, pointer `/sheet/attention/items/<i>`, named by its lead.
    - Structural: every partless geometry node other than the page root, which is Body, Legend, Row and Col. It is not counted.
 
+   On a sheet the node units include TitleBlock, TitleCell, ProblemPoint and View, and the Legend, whose strip draws parts. Their names: TitleBlock the wordmark, else the title; TitleCell its caption, the authored one or `Problem`, `Answer` or `Attention`; ProblemPoint its text; View its title.
+
    Unit names, from one exhaustive match on `NodeTag`, so a new tag does not compile until it has a name: Kicker the kicker text; Title, Lede and Foot their text; LegendEntry its text; Zone its label; Pcard its title; Fact and Note their text; Pipe its label; Tee its hub; Text its heading, else its first body line; Callout its title, else its text; Frame its label; Lanes the word `Lanes`. A link's name is its label, else its from node's name.
-6. Spans. The writer's code spans are the only spans in the text, because `escape_markdown` escapes every backtick in document text. A pointer span holds one RFC 6901 pointer and starts with `/`. No other span is written.
+6. Spans. The writer's code spans are the only spans in the text, because `escape_markdown` escapes every backtick in document text. A pointer span holds one RFC 6901 pointer and starts with `/`. On a sheet a reference span holding a zone (`B3`, `B2-C5`) comes immediately before the pointer span of the unit it belongs to, separated by one space: `` `A2-A4` `/sheet/problem/points/0` ``. Structural pointers carry no reference. No other span is written.
 7. Section order:
    1. Head. `# <title> \`/title\``, then `<badge> · <kicker> \`/kicker\`` (the badge and its separator only when set, as the document writes it), then `<lede> \`/lede\``. A head line carries its pointer when geometry has a node there, and none otherwise. Under `chrome: none` the three lines carry no pointer and a fourth reads `The title, kicker and lede caption the figure in its document and are not drawn.`
    2. `## Figure`, then one paragraph: `Drawn elements: <n> (<a> nodes, <b> links). Canvas <w> x <h> px, projection flat, grammar <g>. Line styles name a tint slot by number; the colour word is the one the center theme draws it in.` Under iso the canvas sentence reads `Laid out at <w> x <h> px, projection iso, grammar <g>; the projected drawing is larger, by an amount that depends on the theme.` Numbers go through `format_number`; a count of one is singular. n is the check's examined count; the check reads it from the paragraph after this heading, since no document string can start a heading line.
@@ -4724,6 +4756,12 @@ pub enum PipeEndSide { Start, End }
    4. `## Lines`: the table of rule 9, omitted when the page draws no line.
    5. `## Legend \`/legend\``: the table of rule 10, omitted when the legend is empty, which is when geometry has no Legend node.
    6. `Foot: <foot> \`/foot\`` when set.
+
+   On a sheet the figure heading is `## Sheet`, its count adds `<e> entries`, and its paragraph ends `References: a reference such as B3 or B2-C5 names the grid cells under an element's top-left and bottom-right corners, columns 1 to 8 left to right, rows A to F top to bottom. The reference before a pointer is where that element is drawn.` Sections 3 to 5 are replaced by:
+   - `## Title block (view 1)`, then `Wordmark <wordmark>.` (the title without one) with the TitleBlock's spans; then `### <caption>` with each cell's spans: the problem's lead and a table `Point | Text | Pointer` (`P1`, the point's text, its spans); the answer's statement and each paragraph, a led one written `<lead> <text>`; the attention table `Item | Pointer`, whose Item cell is `<lead> <text>`.
+   - `## Legend` with the Legend's spans and the table of rule 10.
+   - One `## View <n>: <title>` with the View's spans per View, then `Subtitle: <subtitle>. Note: <note>.` for the parts it has, the outline of rule 8 under the View, and `### Lines in view <n>` with the rows of rule 9 whose pipe lies in the View or whose link has both ends in it.
+   - `## Lines between views` for the links whose ends lie in two Views, then the foot.
 8. Outline lines. One list line per body node in geometry order (pinned by `crates/stencil-layout/tests/order.rs`), nested by geometry parent; a unit's line ends in its pointer span.
    - Row and Col: `Row, left to right.` and `Col, top to bottom.` with the structural pointer.
    - Lanes: `Lanes, heads left to right.`, with the heads nested.
@@ -4741,7 +4779,7 @@ pub enum PipeEndSide { Start, End }
 10. Legend table. Columns `Key | Center label | Means | Uses | Pointer`, one row per entry. Key is `legend_output_key` of the entry's `LegendKey`: `line_key` (section 13.1 rule 6, for example `blue`, `dash`, `solid-3`), followed by `-band` for a band entry. `line_key` itself is unchanged, so the measured `kind` of every Pipe and LegendEntry stays as it is. Center label is `legend_label`, the canonical label. Uses counts the lines keyed to the entry.
 11. Pipe ends. An untargeted end of a Pipe v whose parent is a Box names the sibling before it (`sibling above`) or after it (`sibling below`), since a Box stacks its children; the start of a Tee arm leaves the spine and names the Tee (`hub <hub>`). Every other untargeted end names, for the `PipeEnd` that `pipe_ends` (crates/stencil-layout/src/checks.rs) returns on its side, `left neighbour`, `right neighbour`, `neighbour above` or `neighbour below`. Either way the end names the node `landing_box` finds in that sibling's or neighbour's subtree, else the sibling or neighbour itself, and is `open` when there is none. `description_units` resolves every end inside stencil-layout, where `pipe_ends`, `landing_box`, `children_by_parent` and `PipeEnd` are visible, and returns the results as `DescriptionUnits.pipe_landings`; all four stay `pub(crate)`, and the writer in stencil-render reads the landings and never calls them. A Row or Col it lands on is named by its tag.
 12. Escaping. Every document string passes through `escape_markdown`, which puts a backslash before `\`, `` ` ``, `*`, `_`, `[`, `]`, `<`, `>`, `|`, `#`, `!`, `&` and `~`, and, at the start of the string, before `-`, `+`, `=` and the `.` or `)` that follows leading digits. CommonMark accepts a backslash before any ASCII punctuation, so no string can open a heading, setext underline, list, emphasis, strikethrough, tilde fence, entity reference, link, HTML block, table cell or span. Vet rejects control characters, so no string holds a newline or a tab.
-13. Limits. The writer and `description_units` walk what they reuse: `body_nodes` capped at `NODES_MAX + 1` and links at `LINKS_MAX + 1`. The parser of section 6 reads at most one pass over the text. Output size is linear in the document's text, which vet bounds at 400 scalars per field.
+13. Limits. The writer and `description_units` walk what they reuse, and the attention items at most their maximum plus one: `body_nodes` capped at `NODES_MAX + 1` and links at `LINKS_MAX + 1`. The parser of section 6 reads at most one pass over the text. Output size is linear in the document's text, which vet bounds at 400 scalars per field.
 14. Tests, in `crates/stencil-render/tests/describe.rs` unless named otherwise; the unit-set tests read `stencil_layout::description_units`:
     - `every_example_writes_its_description_byte_for_byte` scans `examples/*.json`, compares each with `crates/stencil-render/tests/fixtures/<stem>.description.md`, fails on an example without a fixture and on a fixture without an example, and asserts it examined as many as the directory holds and at least 13.
     - `the_description_is_identical_in_every_theme` describes every example under all 13 themes in each projection vet allows and compares bytes.
@@ -4754,7 +4792,175 @@ pub enum PipeEndSide { Start, End }
     - crates/stencil-cli/tests/gallery.rs: every `{stem}/{theme}/{stem}.description.md` is linked and written, and the six copies of each example are one byte string.
     - crates/stencil-cli/tests/example_lines.rs: `the_captured_check_lines_follow_check_name_order` asserts that each `.check.txt` fixture holds one `check` line per report `all_checks` returns, in that order, and a trailer whose count equals them.
 
+    - On a sheet: `a_description_reference_names_the_cell_drawn_around_its_point` holds `sheet_zone_at` to the drawn margin labels and `sheet_zone` to the corner rule; `every_entry_part_is_drawn_once_per_entry` holds `ENTRY_PARTS` to onepager's geometry; `a_wrong_reference_is_a_defect` moves, drops and misplaces a reference.
+
     Fixtures are regenerated by hand: `stencil describe examples/<stem>.json >| crates/stencil-render/tests/fixtures/<stem>.description.md`, reviewed in the diff.
+15. Sheet references. Grid columns are 1 to 8 left to right and rows A to F top to bottom, over the `Grid` part of the page root, the rectangle inside the frame's inner rule (section 14.4 rule 3). `sheet_zone(bounds, frame)` takes the cell under the bounds' top-left corner and the cell under the bottom-right corner, each inset 0.5 px, and writes `B3` when they agree and `B2-C5` otherwise, letter first; `sheet_zone_at(point, frame)` is the cell under a point. A node's zone is `sheet_zone` of its bounds; a link's is `sheet_zone_at` of its tag's centre, else of the midpoint of its longest segment; an entry's is `sheet_zone` of the union of its parts, the i-th occurrence on its owner of each part `ENTRY_PARTS` names (an attention item: `AttentionLead` and `AttentionText`). The check compares each pointer span's reference with its unit's zone: `line <l> gives <r>, drawn at <z>`, `line <l> gives no reference, drawn at <z>`, and off a sheet or on a structural pointer `line <l> gives <r> where no reference belongs`.
+
+### 14.2 Sheet model
+
+The types live in `crates/stencil-model/src/document.rs`, and `SheetList`, `SheetSurface` and `SurfaceVocabulary` in `crates/stencil-model/src/sheet.rs`; stencil-model re-exports them. Every new field has a default and is skipped when it holds it, so every existing document round-trips byte for byte and `schema/stencil.schema.json` only gains definitions and optional properties.
+
+```rust
+pub const SHEET_COLUMNS: u8 = 8;
+pub const SHEET_ROWS: u8 = 6;
+pub const SHEET_ROW_LETTERS: [char; 6] = ['A', 'B', 'C', 'D', 'E', 'F'];
+pub const ROOT_PADDING_PX: f32 = 20.0;
+pub const SHEET_ROOT_PADDING_PX: f32 = 50.0;
+pub const WORDMARK_SCALARS_MAX: usize = 24;
+pub const CAPTION_SCALARS_MAX: usize = 60;
+pub const VIEW_GAP_DEFAULT_PX: u16 = 16;
+
+/// The page width plus the root padding on both sides.
+pub fn canvas_width(page: &Page) -> f32;
+
+pub struct Page { /* ... after bend, before body: */ pub sheet: Option<Sheet>, /* ... */ }
+
+pub struct Sheet {
+    pub wordmark: Option<String>,      // 1..=24 scalars; absent sets the title large instead
+    pub problem: Problem,
+    pub answer: Answer,
+    pub attention: Attention,
+}
+pub struct Problem { pub caption: Option<String>, pub lead: Option<String>, pub points: Vec<ProblemPoint> }
+pub struct ProblemPoint { pub text: String }
+pub struct Answer { pub caption: Option<String>, pub statement: String, pub paragraphs: Vec<AnswerParagraph> }
+#[serde(untagged)]
+pub enum AnswerParagraph { Plain(String), Led(LedParagraph) }
+pub struct LedParagraph { pub lead: String, pub text: String }
+pub struct Attention { pub caption: Option<String>, pub items: Vec<AttentionItem> }
+pub struct AttentionItem { pub id: String, pub lead: String, pub text: String }
+
+pub struct View {
+    pub id: Option<String>,
+    pub title: String,
+    pub subtitle: Option<String>,
+    pub note: Option<String>,          // right-aligned on the heading rule
+    pub gap: Option<u16>,              // 0..=64, absent is 16
+    pub children: Vec<Node>,           // 1..=256
+}
+```
+
+| SheetList | Field | Min | Max |
+|---|---|---|---|
+| `problem-points` | `Problem.points` | 1 | 8 |
+| `answer-paragraphs` | `Answer.paragraphs` | 0 | 4 |
+| `attention-items` | `Attention.items` | 1 | 8 |
+
+1. A caption is the cell's authored `caption`, else the fixed word `Problem`, `Answer` or `Attention`, at most 60 characters; the wordmark holds at most 24. `chrome: none` is rejected on a sheet: the first cell of the title block is the page head.
+2. `View` is the thirteenth `Node` tag. It is transparent for grammar nesting, as Row, Col and Lanes are: `validate_page` passes its parent's Box kind through, and so do `#KindedNode` and the gcp walk in CUE.
+3. Walk and text. `push_children_reversed` walks a View's children. `text_fields` reads, after the page head, the wordmark, the problem caption, lead and points, the answer caption, statement and paragraphs (a led one as its lead, then its text), and the attention caption and each item's lead and text, then the body, where a View gives its title, subtitle and note. Each list stops one entry past its maximum. `remembered-constants` therefore covers every sheet string.
+4. Sheet surfaces. One closed enum lists every surface a sheet adds; `SheetSurface::ALL` holds `Sheet` (`/sheet`, traced by the `TitleBlock` node) and `View` (a View node, traced by its `View` node). `as_str` gives `sheet` and `view`, `occurrences(page, grammar)` the pointers of every occurrence in document order, `vocabulary()` the names the prime vocabulary moves out of base (section 14.8), and `topic()` the topic that names them. It drives:
+   - the vet rule `needs-sheet` for every occurrence on a page without `sheet`, `Sheet` excluded, and `sheet-in-iso`;
+   - the iso writer refusal: `render_svg` under iso returns `RenderError::SheetSurface { pointer }` at `/sheet` when the geometry holds a `TitleBlock`, and otherwise at the first node in geometry order with a sheet tag or a sheet part, before it compares the geometry with the document. `render_exit_code` maps it to exit 2. A test that lays a page out and calls `render_svg` never runs vet, and this closes that path; `layout_page` re-runs `validate_page`, which closes `--projection iso`;
+   - the prime vocabulary split of section 14.8.
+
+### 14.3 Vet rules
+
+Each rule is a `VetRule` variant with an `as_str` arm, listed in table order in `VetRule::SHEET`. On a page without `sheet` only `needs-sheet` runs. The sheet rules fire in document order: the projection, chrome and line rules at `/sheet` and `/chrome`, then the title block's text, lists and attention ids, then per body node.
+
+| Rule | Condition | Pointer | Message |
+|---|---|---|---|
+| `needs-sheet` | a sheet surface on a page without `sheet` | the surface | `<surface> is drawn on a design sheet only; add sheet or remove it` |
+| `sheet-in-iso` | `sheet` and an effective projection of iso | `/sheet` | `a design sheet is drawn flat only` |
+| `sheet-chrome-none` | `sheet` with `chrome: none` | `/chrome` | `a design sheet draws its head in the title block, so chrome cannot be none` |
+| `sheet-body-not-view` | a body child that is not a View | `/body/<i>` | `a design sheet holds Views; wrap <tag> in a View` |
+| `view-not-top-level` | a View that is not a body child | the View | `a View is a body child of a sheet` |
+| `sheet-without-lines` | no Pipe, Tee or Link on the sheet | `/sheet` | `a design sheet draws at least one Pipe, Tee or Link, which its legend strip keys` |
+| `list-empty` | problem points or attention items empty | the list | `<list name> is empty` |
+| `list-too-long` | a `SheetList` above its maximum | the list | `<n> <list name>, above <max>` |
+| `sheet-text-too-long` | a wordmark above 24 scalars, or a caption above 60 | the field | `<field> of <n> characters, above <max>` |
+| `key-duplicate` | two attention items share an id | the later `/…/id` | `"<id>" is already used by /…/<i>` |
+
+Existing rules extended: `id-malformed` covers attention item ids; `children-empty`, `children-too-many` and `gap-out-of-range` cover a View; the text rules cover every sheet string; `link-via-outside` bounds x by `canvas_width(page)`, which is `width + 100` on a sheet and `width + 40` elsewhere, and its message names the bound. Tests are in `crates/stencil-model/tests/sheet.rs`, one per rule, with `a_via_in_the_sheet_margin_vets` and `every_section_14_vet_rule_has_a_cue_case`.
+
+### 14.4 Layout
+
+Flat only. Sizes are named constants in `crates/stencil-layout/src/build/sheet.rs` and `sheet_frame.rs`. A page without `sheet` lays out exactly as before.
+
+1. Root. A sheet's root padding is 50 on every side: a 12 px margin, a 2 px frame, an 18 px reference band, a 1 px inner rule and 17 px of padding.
+2. Geometry order: `""`, `/sheet`, `/kicker`, `/title`, `/lede`, `/sheet/problem`, `/sheet/problem/points/<i>`..., `/sheet/answer`, `/sheet/attention`, `/legend`, `/legend/<i>`..., `/body`, the body nodes in `body_nodes` order, `/foot`. The SVG writer's `geometry_order` follows it with the document nodes `Sheet`, `SheetCell` and `ProblemPoint`. `crates/stencil-layout/tests/order.rs` pins it.
+3. Frame. After `compute_geometry`, `add_sheet_frame` appends to the page root `Border` (inset 12), `RefRule` (inset 32), `Grid` (the rectangle inside `RefRule`), a 1 px `RefTick/<i>` across the band at each inner cell edge (7 column edges top and bottom, 5 row edges left and right), and the labels `RefColumn/<i>` and `RefColumnFoot/<i>` (the column numbers, top and bottom) and `RefRow/<i>` and `RefRowRight/<i>` (the row letters, left and right), centred in their cells in `sheet_label`. The grid has 8 equal columns and 6 equal rows over `Grid`, so a row's height follows the content. `Grid` is present on every sheet; whether lines are drawn in it is paint.
+4. Title block. `/sheet` is a `TitleBlock` row as wide as the content with a 2 px border (`BlockBorder`, the node box), four cells at grow weights 25 : 47 : 41 : 37 with a 1 px `CellRule/<i>` between them, cell padding 11 top, 14 sides, 12 bottom, stretched to the tallest cell. The first cell holds the badge and `/kicker` reading `1 · <kicker>`, then the `Wordmark` part when set (3 below, its 62 px line holding 5 px of air over its 52 px type), then `/title` in `motto` right under it (`sheet_title` 8 below the kicker without a wordmark), then `/lede` in `block_body` 6 below. Kicker, title and lede are children of `/sheet`. The other cells are the `TitleCell` nodes `/sheet/problem`, `/sheet/answer` and `/sheet/attention`, each opening with a `Caption` part in `sheet_label` 8 above its content.
+5. Problem cell: a `Lead` part in `block_body`, then one `ProblemPoint` node per point, 6 apart: a 1 px dashed `PointRule` along its top, then 5 below a row of `PointLabel` (`P<n>`, `sheet_label`, a 24 px column, dropped 2.5 px onto the text's baseline) and `Text` (`block_body`).
+6. Answer cell: `Statement` in `statement`, then one paragraph per entry, 6 apart: `Paragraph/<i>` in `block_body`, led by `ParagraphLead/<i>` in `lead_body` as a lead run (rule 9) when it has a lead.
+7. Attention cell: per item a lead run of `AttentionLead/<i>` (`lead_body`) and `AttentionText/<i>` (`block_body`), items 6 apart.
+8. Legend strip. On a sheet `/legend` sits under the title block as wide as it: a 2 px `StripRule` on top, then a wrapping row, padding 7 by 14, gap 9 and 6 between wrapped rows, holding `GroupCaption/0` (`Lines`, `sheet_label`) and the `/legend/<i>` entries as section 2.2 lays them out. The strip replaces the bottom legend, and the Legend node is a unit because it draws parts.
+9. Lead runs. A lead run is one taffy leaf drawn as two text parts: a lead in a bold style and a body in a regular style of the same size and line height (`lead_body` with `block_body`; `every_lead_run_pairs_styles_of_one_line_height` holds the pair). The leaf is measured with `measure_lead_run` at the width layout offers, and again at its final width: the lead part takes the top of the leaf, the body part starts at the top of the lead's last line with `TextRun.first_line_indent_px` set to the lead's last line plus one space, so its first line continues after the lead and its measured width includes the indent. When the body's first word does not fit after the indent, the body part starts under the lead with no indent and no empty first line.
+10. Views. The body has no gap on a sheet and sits 14 below the strip. A `View` node is a column, 13 below the View before it, holding a heading row (gap 12, centred, 8 above the children) and its children with gap `gap`, default 16; its content box is the children's column. Heading parts: `ViewNumber`, a 28 px circle, with `ViewNumeral` (`view_numeral`) centred; `ViewTitle` (`view_title`); `ViewSubtitle` (`view_note`) 8 after the title; `ViewRule`, a 1 px rule that grows to the end of the row; `ViewNote` (`view_note_small`) at the right end. The title block is view 1, so a View's number is its position among the Views plus 2.
+11. Label obstacles. `label_boxes(node)`, matched exhaustively on `NodeTag`, returns a View's `ViewNumber`, `ViewTitle`, `ViewSubtitle` and `ViewNote`, and nothing for any other tag. `link_obstacles` adds the label boxes of every node, whether or not it is an ancestor of an endpoint, so no link runs through a View's heading. `obstacle_box` returns a `TitleCell`'s bounds and None for `TitleBlock`, `ProblemPoint` and `View`; `links-avoid-boxes` skips a View as a container.
+
+### 14.5 Paint
+
+Colour comes from theme roles only. `Theme` gains `sheet: Option<SheetRole>`; `Theme::sheet_colors` resolves it, each absent leaf to its derivation:
+
+```rust
+pub struct SheetRole {
+    pub paper: Color,      // inside the frame; derived: page
+    pub frame: Color,      // frame, title block border, view circle, headings; derived: ink.primary
+    pub rule: Color,       // hairlines; derived: card.border.color
+    pub label_ink: Color,  // captions, references, notes; derived: ink.secondary
+    pub cell: Color,       // title block cells; derived: card.fill
+    pub grid: Option<SheetGrid>, // absent draws no grid, and is the derivation
+}
+pub struct SheetGrid { pub minor: Color, pub major: Color }
+```
+
+1. The six designed themes set the role to its derivations, with a grid of `mix(paper, rule, 0.3)` minor and `mix(paper, rule, 0.6)` major, except wire, which sets none. The imported themes carry no sheet role and draw the derivations. `validate_theme` checks the colour format of every leaf; `cue/theme.cue` mirrors the role.
+2. Quality rows (section 13.4 rule 10), computed on the resolved role and appended after the separation rows: `sheet.label_ink`, `ink.primary`, `ink.secondary` and `sheet.frame` on `sheet.cell` and on `sheet.paper` as text, and `sheet.frame` on `sheet.paper` as non-text, 9 rows. Every designed theme passes them.
+3. Parts. `sheet_part_paint(owner: NodeTag, part: PartName) -> Option<PartPaint>` in `crates/stencil-render/src/palette.rs` matches `PartName` exhaustively and returns None for every part that existed before the sheet on its existing owner. `PartName::ALL` lists every part, its length checked against `PART_NAMES`, and `PartName::is_sheet` is true for the parts below.
+
+| Owner | Part | Shape | Fill | Stroke | Text |
+|---|---|---|---|---|---|
+| Page | `Border` | rect | `sheet.paper` | `sheet.frame` 2 | - |
+| Page | `RefRule` | rect | - | `sheet.frame` 1 | - |
+| Page | `RefTick/<i>` | line | - | `sheet.rule` 1 | - |
+| Page | `RefColumn`, `RefColumnFoot`, `RefRow`, `RefRowRight` | text | - | - | `sheet.label_ink` |
+| Page | `Grid` | grid lines | - | `grid.minor`, `grid.major` 1 | - |
+| TitleBlock | `BlockBorder` | rect | `sheet.cell` | `sheet.frame` 2 | - |
+| TitleBlock | `CellRule/<i>` | line | - | `sheet.rule` 1 | - |
+| TitleBlock | `Wordmark` | text | - | - | `sheet.frame` |
+| TitleCell | `Caption` | text | - | - | `sheet.label_ink` |
+| TitleCell | `Lead`, `ParagraphLead/<i>`, `AttentionLead/<i>`, `AttentionText/<i>` | text | - | - | `ink.primary` |
+| TitleCell | `Statement` | text | - | - | `sheet.frame` |
+| TitleCell | `Paragraph/<i>` | text | - | - | `ink.secondary` |
+| ProblemPoint | `PointRule` | line, dash 3 3 | - | `sheet.rule` 1 | - |
+| ProblemPoint | `PointLabel` | text | - | - | `sheet.label_ink` |
+| ProblemPoint | `Text` | text | - | - | `ink.primary` |
+| Legend | `StripRule` | line | - | `sheet.frame` 2 | - |
+| Legend | `GroupCaption/<g>` | text | - | - | `sheet.label_ink` |
+| View | `ViewNumber` | circle | `sheet.paper` | `sheet.frame` 2 | - |
+| View | `ViewNumeral`, `ViewTitle` | text | - | - | `sheet.frame` |
+| View | `ViewSubtitle` | text | - | - | `ink.secondary` |
+| View | `ViewRule` | line | - | `sheet.rule` 1 | - |
+| View | `ViewNote` | text | - | - | `sheet.label_ink` |
+
+4. On a sheet the title takes `motto` or `sheet_title` and the lede `block_body`, each in its style's default ink. A frame-role Box (gcp's `gcp`) strokes `sheet.frame` at the grammar's width and pattern, leaves its body and bar unfilled, draws a 1 px `sheet.rule` line along the bar's bottom and sets its label in `sheet.frame`; a boundary-role Box strokes `sheet.rule` with no fill, its label in `sheet.label_ink`; group and tile Boxes keep their tone paint.
+5. Grid. When the role sets a grid, the writer draws 1 px lines inside `Grid` every 20 px from its top-left corner, every fifth in `grid.major`, as one path per colour, right after `Border`, under every other sheet surface.
+6. Every new shape is a `rect`, `circle`, `line` or `path`. `no_renderer_source_names_a_color_literal` holds. Tests: `every_designed_theme_sets_the_sheet_role`, `a_theme_without_sheet_roles_draws_the_derived_colours`, `every_sheet_part_has_a_paint_row`, `wire_paints_only_white_fills_and_two_inks` with onepager under wire (every fill white or the ink, every stroke the ink except a Frame's placeholder diagonal, every text one of the two inks), `measured_json_is_identical_and_svg_differs_across_themes` over onepager, and role coverage with onepager among its figures, so every `sheet.*` leaf changes the drawing.
+
+### 14.6 Checks
+
+`child-inside-container` gains a part relation on sheets: every part `PartName::is_sheet` names must lie inside its node's border box (`part <name> box ... extends outside the node box ...`). Pages without a sheet have no such part, so their examined counts do not move. The other checks read the new nodes and text parts unchanged; `text-fits-box` reads a lead run's body with its indent included in its width.
+
+### 14.7 CUE
+
+`cue/core.cue` gains `#SheetSurface` on one line, `#Caption`, `#Sheet`, `#Problem`, `#ProblemPoint`, `#AnswerParagraph`, `#Answer`, `#Attention`, `#AttentionItem` and the `View` tag with the collectors `_surfaces` and `_viewTitles`. `#Page` gains `sheet?`, `_rootPadding` (50 on a sheet, 20 elsewhere) and a `_canvasWidth` that reads it. Under `if sheet == _|_` the page reports `_needsSheet.<surface>`; under `if sheet != _|_` it reports `_sheetInIso`, `_sheetChromeNone`, `_sheetBodyNotView."<i>"`, `_viewNotTopLevel.<title>`, `_sheetWithoutLines` and `_keysUsedTwice."attention.<id>"`; the list bounds and the wordmark and caption bounds are schema shapes. `cue/figures/sheet.cue` binds `onepager`, which `cue/check.sh` exports and compares with `examples/onepager.json` after key-order normalization; `cue/figures/sheet-small.cue` binds `small`, the smallest sheet, with a via at x 1375 that vets only because a sheet's canvas is `width + 100`. `check.sh` runs `sheet_cases` and `sheet_small_cases`, each named after its rule, surface or list, and `every_section_14_vet_rule_has_a_cue_case` reads both files as text and holds every rule to a case.
+
+### 14.8 Prime
+
+The base vocabulary is generated from the schema, so every new field, tag, value or definition would land in base. `SheetSurface::vocabulary` names what moves to the `sheet` topic:
+
+```rust
+pub enum SurfaceVocabulary {
+    Tag(&'static str),                                           // no base row
+    Field { object: &'static str, field: &'static str },         // left out of that base row
+    Value { definition: &'static str, value: &'static str },     // left out of the enum line
+    Definition(&'static str),                                    // no enum line in base
+}
+```
+
+`Sheet` names `Field { Page, sheet }` and `View` names `Tag("View")`. `vocabulary()` skips them before rows merge. A topic carries the marker `{{vocabulary:<Name>,...}}`, which `topic_vocabulary` fills with a `| Tag | Fields |` table for each sheet tag or `TOPIC_ROW_DEFINITIONS` entry (`Sheet`, `Problem`, `ProblemPoint`, `Answer`, `Attention`, `AttentionItem`), a `| Tag | Sheet fields |` table with the sheet fields of each base row named, and an enum line per definition named; an unknown name is `PrimeError::SchemaShape`. `Topic::rendered` fills the markers and `prime` prints it. `INLINE_DEFINITIONS` (`PagePoint`, `TeeArm`, `AnswerParagraph`, `LedParagraph`) are written where a field uses them: an `anyOf` of a string and an object is `text or {lead,text}`. A short text field reads `text 1-<n>`, and a required keyed-entry id stays in its row. Base gains the bullet `- Design sheets, flat only: \`stencil prime sheet\`.` and `sheet` in its topic list, 6871 bytes; the sheet topic is held to 5000 printed bytes. Tests: `every_sheet_surface_is_absent_from_base_and_named_in_its_topic`, `every_schema_definition_has_a_row_a_line_or_an_inline_form`, and `the_base_briefing_names_every_node_tag_in_its_vocabulary`, which asserts a base row for each of the 12 tags no surface names and a sheet topic row for View. `crates/stencil-cli/tests/example_copy.rs` scans `wordmark`, `statement`, `lead`, `caption`, `note` and the `paragraphs` strings for fixture words.
 
 ## Conventions
 

@@ -22,6 +22,18 @@ pub const TEXT_BODY_LINES_MAX: usize = 64;
 pub const FRAME_HEIGHT_DEFAULT: u16 = 200;
 pub const FRAME_HEIGHT_MIN: u16 = 40;
 pub const FRAME_HEIGHT_MAX: u16 = 1200;
+/// Grid reference columns of a design sheet, numbered 1 to 8 left to right (section 14.1).
+pub const SHEET_COLUMNS: u8 = 8;
+/// Grid reference rows of a design sheet, lettered A to F top to bottom.
+pub const SHEET_ROWS: u8 = 6;
+pub const SHEET_ROW_LETTERS: [char; 6] = ['A', 'B', 'C', 'D', 'E', 'F'];
+/// Root padding on every side: section 2.2, and section 14.4 rule 1 on a sheet.
+pub const ROOT_PADDING_PX: f32 = 20.0;
+pub const SHEET_ROOT_PADDING_PX: f32 = 50.0;
+pub const WORDMARK_SCALARS_MAX: usize = 24;
+pub const CAPTION_SCALARS_MAX: usize = 60;
+/// A View's gap between its children when it names none.
+pub const VIEW_GAP_DEFAULT_PX: u16 = 16;
 /// Scalar values in an `id`, the `{0,63}` repetition plus the first character.
 pub const ID_SCALARS_MAX: usize = 64;
 /// The JSON Schema and CUE pattern for `id`. `is_valid_id` is its Rust twin.
@@ -82,6 +94,21 @@ pub const DATA_FILE_BYTES_MAX: usize = 65_536;
 
 fn page_width_default() -> u32 {
     PAGE_WIDTH_DEFAULT
+}
+
+/// The canvas width layout computes and `link-via-outside` bounds: the page width plus the
+/// root padding on both sides, which is wider on a design sheet (section 14.4 rule 1).
+pub fn canvas_width(page: &Page) -> f32 {
+    page.width as f32 + 2.0 * root_padding(page)
+}
+
+/// The root padding on every side of the page.
+pub fn root_padding(page: &Page) -> f32 {
+    if page.sheet.is_some() {
+        SHEET_ROOT_PADDING_PX
+    } else {
+        ROOT_PADDING_PX
+    }
 }
 
 fn frame_height_default() -> u16 {
@@ -166,6 +193,10 @@ pub struct Page {
     /// How a routed link draws its bends; absent is arc. A line kind's bend wins.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub bend: Option<Bend>,
+    /// Draws the page as a design sheet (section 14): a frame with grid references, a title
+    /// block and numbered Views. Flat only.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub sheet: Option<Sheet>,
     #[schemars(length(min = 1, max = 256))]
     pub body: Vec<Node>,
     #[schemars(length(max = 16))]
@@ -173,6 +204,119 @@ pub struct Page {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[schemars(length(max = 256))]
     pub links: Vec<Link>,
+}
+
+/// The title block of a design sheet. Its first cell is the page head: the badge and kicker,
+/// the wordmark when set, the title and the lede; the other three cells follow.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct Sheet {
+    /// The product name set large in the first cell; absent draws the title in its place.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(length(min = 1, max = 24))]
+    pub wordmark: Option<String>,
+    pub problem: Problem,
+    pub answer: Answer,
+    pub attention: Attention,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct Problem {
+    /// The cell caption; absent prints `Problem`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(length(min = 1, max = 60))]
+    pub caption: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(length(min = 1, max = 400))]
+    pub lead: Option<String>,
+    /// Numbered P1, P2 in order.
+    #[schemars(length(min = 1, max = 8))]
+    pub points: Vec<ProblemPoint>,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct ProblemPoint {
+    #[schemars(length(min = 1, max = 400))]
+    pub text: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct Answer {
+    /// The cell caption; absent prints `Answer`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(length(min = 1, max = 60))]
+    pub caption: Option<String>,
+    #[schemars(length(min = 1, max = 400))]
+    pub statement: String,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[schemars(length(max = 4))]
+    pub paragraphs: Vec<AnswerParagraph>,
+}
+
+/// A paragraph: a string, or `{"lead": ..., "text": ...}`, drawn as a bold lead with its
+/// text continuing on the lead's last line.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(untagged)]
+pub enum AnswerParagraph {
+    Plain(#[schemars(length(min = 1, max = 400))] String),
+    Led(LedParagraph),
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct LedParagraph {
+    #[schemars(length(min = 1, max = 400))]
+    pub lead: String,
+    #[schemars(length(min = 1, max = 400))]
+    pub text: String,
+}
+
+impl AnswerParagraph {
+    /// The bold lead, when the paragraph has one.
+    pub fn lead(&self) -> Option<&str> {
+        match self {
+            AnswerParagraph::Plain(_) => None,
+            AnswerParagraph::Led(led) => Some(&led.lead),
+        }
+    }
+
+    /// The paragraph text after its lead.
+    pub fn text(&self) -> &str {
+        match self {
+            AnswerParagraph::Plain(text) => text,
+            AnswerParagraph::Led(led) => &led.text,
+        }
+    }
+}
+
+/// What the reader is asked to attend to. A sheet always draws this cell, so it holds at
+/// least one item.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct Attention {
+    /// The cell caption; absent prints `Attention`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(length(min = 1, max = 60))]
+    pub caption: Option<String>,
+    #[schemars(length(min = 1, max = 8))]
+    pub items: Vec<AttentionItem>,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct AttentionItem {
+    /// Unique among the attention items.
+    #[schemars(regex(pattern = ID_PATTERN))]
+    pub id: String,
+    /// Drawn bold before `text` with one space between, so the lead carries its own
+    /// punctuation.
+    #[schemars(length(min = 1, max = 400))]
+    pub lead: String,
+    #[schemars(length(min = 1, max = 400))]
+    pub text: String,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema, Default)]
@@ -222,6 +366,32 @@ pub enum Node {
     Text(Text),
     Callout(Callout),
     Frame(Frame),
+    View(View),
+}
+
+/// A numbered view of a design sheet: a heading with its number, title, subtitle and note,
+/// then its children in a column. The title block is view 1, so the first View is view 2.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct View {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(regex(pattern = ID_PATTERN))]
+    pub id: Option<String>,
+    #[schemars(length(min = 1, max = 400))]
+    pub title: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(length(min = 1, max = 400))]
+    pub subtitle: Option<String>,
+    /// Right-aligned on the heading rule.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(length(min = 1, max = 400))]
+    pub note: Option<String>,
+    /// The gap between children; absent is 16.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(range(max = 64))]
+    pub gap: Option<u16>,
+    #[schemars(length(min = 1, max = 256))]
+    pub children: Vec<Node>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
@@ -713,6 +883,7 @@ impl Node {
             Node::Text(_) => "Text",
             Node::Callout(_) => "Callout",
             Node::Frame(_) => "Frame",
+            Node::View(_) => "View",
         }
     }
 
@@ -731,6 +902,7 @@ impl Node {
             Node::Text(text) => &text.id,
             Node::Callout(callout) => &callout.id,
             Node::Frame(frame) => &frame.id,
+            Node::View(view) => &view.id,
         };
         id.as_deref()
     }

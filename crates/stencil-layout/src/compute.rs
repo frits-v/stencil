@@ -11,7 +11,8 @@ use taffy::prelude::{AvailableSpace, NodeId};
 use taffy::{LayoutInput, LayoutOutput};
 
 use crate::Axis;
-use crate::build::{ArrowEnds, BuiltPage, LayoutTree, TextLeaf};
+use crate::build::{ArrowEnds, BuiltPage, LayoutTree, LeadRunLeaf, RunPiece, TextLeaf};
+use crate::lead_run::{LeadRun, measure_lead_run};
 use crate::{
     ARROWHEAD_LENGTH_PX, BoxRect, LayoutError, NodeGeometry, NodeTag, PageGeometry, Part, PartName,
     Size, TextRun,
@@ -22,7 +23,7 @@ const PIPE_DOT_PX: f32 = 8.0;
 
 pub(crate) fn compute_geometry(
     built: BuiltPage,
-    page_width: u32,
+    canvas_width: f32,
     measurer: &mut dyn TextMeasurer,
 ) -> Result<PageGeometry, LayoutError> {
     let BuiltPage {
@@ -31,7 +32,6 @@ pub(crate) fn compute_geometry(
         records,
         text_leaves,
     } = built;
-    let canvas_width = page_width as f32 + 40.0;
     let mut first_error: Option<(NodePointer, MeasureError)> = None;
 
     tree.compute_layout_with_measure(
@@ -83,10 +83,14 @@ pub(crate) fn compute_geometry(
         }
         let mut parts = Vec::with_capacity(record.parts.len());
         for part in &record.parts {
-            let part_bounds = absolute_box(&tree, &origins, part.taffy_node, &record.pointer)?;
-            let text = match part.text_leaf.and_then(|index| text_leaves.get(index)) {
-                Some(leaf) => Some(remeasure(leaf, part_bounds, measurer)?),
-                None => None,
+            let leaf_bounds = absolute_box(&tree, &origins, part.taffy_node, &record.pointer)?;
+            let (part_bounds, text) = match part.text_leaf.and_then(|index| text_leaves.get(index))
+            {
+                Some(leaf) => {
+                    let (bounds, run) = remeasure(leaf, leaf_bounds, measurer)?;
+                    (bounds, Some(run))
+                }
+                None => (leaf_bounds, None),
             };
             parts.push(Part {
                 name: part.name,
@@ -190,6 +194,20 @@ fn measure_in_layout(
         },
         (None, AvailableSpace::MaxContent) => None,
     };
+    if let Some(run) = &leaf.lead_run {
+        return match measure_run(run, max_width_px, measurer) {
+            Ok(measured) => taffy::Size {
+                width: known.width.unwrap_or(measured.width_px),
+                height: known.height.unwrap_or(measured.height_px),
+            },
+            Err(error) => {
+                if first_error.is_none() {
+                    *first_error = Some((leaf.source.clone(), error));
+                }
+                taffy::Size::ZERO
+            }
+        };
+    }
     match measurer.measure(&leaf.text, &leaf.style, max_width_px) {
         Ok(metrics) => {
             let along = known_along.unwrap_or(metrics.width_px);
@@ -214,7 +232,85 @@ fn measure_in_layout(
     }
 }
 
+fn measure_run(
+    run: &LeadRunLeaf,
+    max_width_px: Option<f32>,
+    measurer: &mut dyn TextMeasurer,
+) -> Result<LeadRun, MeasureError> {
+    measure_lead_run(
+        measurer,
+        &run.lead,
+        &run.lead_style,
+        &run.body,
+        &run.body_style,
+        max_width_px,
+    )
+}
+
+/// The final run of a text part and the box it is drawn in. A part of a lead run measures
+/// the whole run at the leaf's width: the lead takes the top of the leaf, and the body
+/// starts at the top of the lead's last line with its first line indented past the lead,
+/// or on the next line when its first word does not fit there.
 fn remeasure(
+    leaf: &TextLeaf,
+    final_box: BoxRect,
+    measurer: &mut dyn TextMeasurer,
+) -> Result<(BoxRect, TextRun), LayoutError> {
+    let Some(run) = &leaf.lead_run else {
+        return Ok((final_box, remeasure_whole(leaf, final_box, measurer)?));
+    };
+    let measured = measure_run(
+        run,
+        Some(final_box.width.max(0.0) + WRAP_EPSILON_PX),
+        measurer,
+    )
+    .map_err(|source| LayoutError::Measure {
+        pointer: leaf.source.clone(),
+        source,
+    })?;
+    let line_height = run.body_style.line_height_px;
+    let (top, metrics, indent) = match run.piece {
+        RunPiece::Lead => (0.0, measured.lead.clone(), 0.0),
+        RunPiece::Body if measured.body_continues_lead_line() => (
+            measured.body_top_px,
+            measured.body.clone(),
+            measured.body_indent_px,
+        ),
+        RunPiece::Body => {
+            let mut body = measured.body.clone();
+            body.lines = body
+                .lines
+                .iter()
+                .skip(1)
+                .map(|line| stencil_model::text::TextLine {
+                    baseline_px: line.baseline_px - line_height,
+                    ..line.clone()
+                })
+                .collect();
+            body.line_count = body.line_count.saturating_sub(1);
+            body.height_px -= line_height;
+            (measured.lead.height_px, body, 0.0)
+        }
+    };
+    let bounds = BoxRect {
+        y: final_box.y + top,
+        height: metrics.height_px,
+        ..final_box
+    };
+    Ok((
+        bounds,
+        TextRun {
+            text: leaf.text.clone(),
+            style: leaf.style,
+            color: leaf.color,
+            align: leaf.align,
+            metrics,
+            first_line_indent_px: indent,
+        },
+    ))
+}
+
+fn remeasure_whole(
     leaf: &TextLeaf,
     final_box: BoxRect,
     measurer: &mut dyn TextMeasurer,
@@ -240,6 +336,7 @@ fn remeasure(
         color: leaf.color,
         align: leaf.align,
         metrics,
+        first_line_indent_px: 0.0,
     })
 }
 

@@ -522,6 +522,13 @@ pub(crate) fn link_obstacles(geometry: &PageGeometry, from: usize, to: usize) ->
             })
         })
         .collect();
+    // A View contains every link inside it, so its heading is never excluded with it.
+    for (index, node) in geometry.nodes.iter().enumerate() {
+        obstacles.extend(label_boxes(node).into_iter().map(|bounds| Obstacle {
+            node: index,
+            bounds,
+        }));
+    }
     // An endpoint standing on a footprint keeps its own floor text clear of its links.
     for index in [from, to] {
         let Some(node) = geometry.nodes.get(index) else {
@@ -572,6 +579,50 @@ pub(crate) fn block_shadows(geometry: &PageGeometry, obstacles: &[Obstacle]) -> 
         .collect()
 }
 
+/// The heading parts of a node that contains the links it labels (section 14.4 rule 15):
+/// for a View its number, title, subtitle and note; nothing for every other tag.
+pub(crate) fn label_boxes(node: &NodeGeometry) -> Vec<BoxRect> {
+    match node.tag {
+        NodeTag::View => node
+            .parts
+            .iter()
+            .filter(|part| {
+                matches!(
+                    part.name,
+                    PartName::ViewNumber
+                        | PartName::ViewTitle
+                        | PartName::ViewSubtitle
+                        | PartName::ViewNote
+                )
+            })
+            .map(|part| part.bounds)
+            .collect(),
+        NodeTag::Page
+        | NodeTag::Kicker
+        | NodeTag::Title
+        | NodeTag::Lede
+        | NodeTag::Body
+        | NodeTag::Legend
+        | NodeTag::LegendEntry
+        | NodeTag::Foot
+        | NodeTag::Row
+        | NodeTag::Col
+        | NodeTag::Lanes
+        | NodeTag::Zone
+        | NodeTag::Pcard
+        | NodeTag::Fact
+        | NodeTag::Note
+        | NodeTag::Pipe
+        | NodeTag::Tee
+        | NodeTag::Text
+        | NodeTag::Callout
+        | NodeTag::Frame
+        | NodeTag::TitleBlock
+        | NodeTag::TitleCell
+        | NodeTag::ProblemPoint => Vec::new(),
+    }
+}
+
 fn obstacle_box(node: &NodeGeometry) -> Option<BoxRect> {
     match node.tag {
         NodeTag::Pcard
@@ -585,15 +636,21 @@ fn obstacle_box(node: &NodeGeometry) -> Option<BoxRect> {
         | NodeTag::Title
         | NodeTag::Lede
         | NodeTag::LegendEntry
-        | NodeTag::Foot => Some(node.bounds),
+        | NodeTag::Foot
+        | NodeTag::TitleCell => Some(node.bounds),
         NodeTag::Pipe => node.part(PartName::Tag).map(|part| part.bounds),
         NodeTag::Zone => node.part(PartName::Label).map(|part| part.bounds),
+        // An enclosing node already blocks a title block's points and the block itself
+        // holds nothing a link reaches; a View's heading is a label obstacle.
         NodeTag::Page
         | NodeTag::Body
         | NodeTag::Legend
         | NodeTag::Row
         | NodeTag::Col
-        | NodeTag::Lanes => None,
+        | NodeTag::Lanes
+        | NodeTag::TitleBlock
+        | NodeTag::ProblemPoint
+        | NodeTag::View => None,
     }
 }
 
@@ -1387,6 +1444,7 @@ fn tag_run(
         color: text_color(style_name, Some(line)),
         align: TextAlign::Center,
         metrics,
+        first_line_indent_px: 0.0,
     })
 }
 

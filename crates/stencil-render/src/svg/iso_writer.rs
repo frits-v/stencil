@@ -270,6 +270,11 @@ impl<'a> SvgWriter<'a> {
             | Node::Tee(_) => {
                 return Ok(None);
             }
+            Node::View(_) => {
+                return Err(RenderError::SheetSurface {
+                    pointer: node.pointer.clone(),
+                });
+            }
         };
         paint.map(Some).ok_or_else(|| RenderError::Svg {
             message: format!("a face color of {} is not a #RRGGBB color", solid.pointer),
@@ -690,7 +695,8 @@ impl<'a> SvgWriter<'a> {
             | Node::Note(_)
             | Node::Pipe(_)
             | Node::Tee(_)
-            | Node::Text(_) => {}
+            | Node::Text(_)
+            | Node::View(_) => {}
         }
     }
 

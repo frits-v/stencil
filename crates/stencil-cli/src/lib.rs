@@ -110,7 +110,7 @@ enum Command {
     Schema,
     /// Print the authoring briefing for an agent, or one deeper topic
     Prime {
-        /// themes, links, blocks, layout, checks, cue, example, or grammar
+        /// themes, links, blocks, layout, iso, checks, cue, sheet, example, or grammar
         topic: Option<String>,
         /// The grammar to brief on, after `grammar`: gcp or plain
         name: Option<String>,
@@ -521,10 +521,16 @@ fn prime(
         };
     };
     match prime::Topic::from_name(topic_name) {
-        Some(topic) => {
-            write!(stdout, "{}", topic.text())?;
-            Ok(ExitCode::Clean)
-        }
+        Some(topic) => match topic.rendered() {
+            Ok(text) => {
+                write!(stdout, "{text}")?;
+                Ok(ExitCode::Clean)
+            }
+            Err(error) => {
+                writeln!(stderr, "stencil prime: {error}")?;
+                Ok(prime_exit_code(&error))
+            }
+        },
         None => {
             writeln!(
                 stderr,

@@ -1,5 +1,6 @@
-use crate::document::{Link, Node, Page, Pipe, TeeArm};
+use crate::document::{AnswerParagraph, Link, Node, Page, Pipe, TeeArm};
 use crate::pointer::NodePointer;
+use crate::sheet::SheetList;
 use crate::{FACTS_MAX, LEGEND_ENTRIES_MAX, LINKS_MAX, NODES_MAX, TEXT_BODY_LINES_MAX};
 
 #[derive(Debug, Clone, PartialEq)]
@@ -96,6 +97,7 @@ fn push_children_reversed<'a>(entry: &NodeEntry<'a>, pending: &mut Vec<NodeEntry
         NodeRef::Node(Node::Col(col)) => push_nodes(pending, &col.children),
         NodeRef::Node(Node::Lanes(lanes)) => push_nodes(pending, &lanes.children),
         NodeRef::Node(Node::Box(box_node)) => push_nodes(pending, &box_node.children),
+        NodeRef::Node(Node::View(view)) => push_nodes(pending, &view.children),
         NodeRef::Node(Node::Tee(tee)) => {
             let arms_pointer = entry.pointer.child("arms");
             for (index, arm) in tee.arms.iter().enumerate().rev() {
@@ -125,6 +127,7 @@ fn push_children_reversed<'a>(entry: &NodeEntry<'a>, pending: &mut Vec<NodeEntry
 pub fn text_fields(page: &Page) -> Vec<TextField<'_>> {
     let mut fields = Vec::new();
     push_page_head_text_fields(page, &mut fields);
+    push_sheet_text_fields(page, &mut fields);
     for entry in body_nodes(page) {
         push_node_text_fields(&entry, &mut fields);
     }
@@ -159,6 +162,76 @@ pub(crate) fn push_page_head_text_fields<'a>(page: &'a Page, fields: &mut Vec<Te
             pointer: root.child("badge"),
             text: badge,
         });
+    }
+}
+
+/// The text of a design sheet's title block in document order: the wordmark, the problem
+/// caption, lead and points, the answer caption, statement and paragraphs, and the attention
+/// caption and items. Each list stops one entry past its maximum, enough for vet to report
+/// `list-too-long`.
+pub(crate) fn push_sheet_text_fields<'a>(page: &'a Page, fields: &mut Vec<TextField<'a>>) {
+    let Some(sheet) = &page.sheet else {
+        return;
+    };
+    let mut push = |pointer: NodePointer, text: &'a str| fields.push(TextField { pointer, text });
+    let sheet_pointer = NodePointer::root().child("sheet");
+    if let Some(wordmark) = &sheet.wordmark {
+        push(sheet_pointer.child("wordmark"), wordmark);
+    }
+    let problem = sheet_pointer.child("problem");
+    if let Some(caption) = &sheet.problem.caption {
+        push(problem.child("caption"), caption);
+    }
+    if let Some(lead) = &sheet.problem.lead {
+        push(problem.child("lead"), lead);
+    }
+    let points = SheetList::ProblemPoints;
+    for (index, point) in sheet
+        .problem
+        .points
+        .iter()
+        .enumerate()
+        .take(points.max() + 1)
+    {
+        push(points.pointer().index(index).child("text"), &point.text);
+    }
+    let answer = sheet_pointer.child("answer");
+    if let Some(caption) = &sheet.answer.caption {
+        push(answer.child("caption"), caption);
+    }
+    push(answer.child("statement"), &sheet.answer.statement);
+    let paragraphs = SheetList::AnswerParagraphs;
+    for (index, paragraph) in sheet
+        .answer
+        .paragraphs
+        .iter()
+        .enumerate()
+        .take(paragraphs.max() + 1)
+    {
+        let paragraph_pointer = paragraphs.pointer().index(index);
+        match paragraph {
+            AnswerParagraph::Plain(text) => push(paragraph_pointer, text),
+            AnswerParagraph::Led(led) => {
+                push(paragraph_pointer.child("lead"), &led.lead);
+                push(paragraph_pointer.child("text"), &led.text);
+            }
+        }
+    }
+    let attention = sheet_pointer.child("attention");
+    if let Some(caption) = &sheet.attention.caption {
+        push(attention.child("caption"), caption);
+    }
+    let items = SheetList::AttentionItems;
+    for (index, item) in sheet
+        .attention
+        .items
+        .iter()
+        .enumerate()
+        .take(items.max() + 1)
+    {
+        let item_pointer = items.pointer().index(index);
+        push(item_pointer.child("lead"), &item.lead);
+        push(item_pointer.child("text"), &item.text);
     }
 }
 
@@ -257,5 +330,14 @@ pub(crate) fn push_node_text_fields<'a>(entry: &NodeEntry<'a>, fields: &mut Vec<
             push("text", &callout.text);
         }
         NodeRef::Node(Node::Frame(frame)) => push("label", &frame.label),
+        NodeRef::Node(Node::View(view)) => {
+            push("title", &view.title);
+            if let Some(subtitle) = &view.subtitle {
+                push("subtitle", subtitle);
+            }
+            if let Some(note) = &view.note {
+                push("note", note);
+            }
+        }
     }
 }

@@ -256,5 +256,12 @@
       "secondary": 2.5,
       "gray": 1.25
     }
+  },
+  "sheet": {
+    "paper": "#FFFFFF",
+    "frame": "#222222",
+    "rule": "#222222",
+    "label_ink": "#555555",
+    "cell": "#FFFFFF"
   }
 }

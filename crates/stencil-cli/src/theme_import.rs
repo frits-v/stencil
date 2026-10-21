@@ -535,6 +535,7 @@ pub fn base16_theme(
                 gray: 2.0,
             },
         },
+        sheet: None,
     })
 }
 

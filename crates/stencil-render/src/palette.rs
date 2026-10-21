@@ -3,7 +3,7 @@
 //! kind names. No color is named here: every method returns a value borrowed from the
 //! theme, or derived from one by `shade`.
 
-use stencil_layout::ContainerLook;
+use stencil_layout::{ContainerLook, NodeTag, PartName};
 use stencil_model::grammar::{BorderPattern, Role};
 use stencil_model::text::TextStyleName;
 use stencil_model::theme::{SolidEdges, ThemeStroke, Tint, solid_dot};
@@ -448,9 +448,234 @@ impl<'a> Palette<'a> {
             TextStyleName::TagSub => &theme.tag.sub_ink,
             TextStyleName::NoteLegend | TextStyleName::LegendText => &theme.legend.text_ink,
             TextStyleName::Foot => &theme.foot,
+            TextStyleName::SheetLabel | TextStyleName::ViewNoteSmall => {
+                theme.sheet_colors().label_ink
+            }
+            TextStyleName::Wordmark
+            | TextStyleName::Motto
+            | TextStyleName::SheetTitle
+            | TextStyleName::Statement
+            | TextStyleName::ViewNumeral
+            | TextStyleName::ViewTitle => theme.sheet_colors().frame,
+            TextStyleName::ViewNote => &theme.ink.secondary,
+            TextStyleName::LeadBody => &theme.ink.primary,
         };
         color.as_str()
     }
+
+    /// The color of a sheet role (section 14.5 rule 1), resolved to its derivation when the
+    /// theme leaves the sheet role out.
+    pub fn sheet_ink(self, ink: SheetInk) -> &'a str {
+        let theme = self.theme;
+        let sheet = theme.sheet_colors();
+        let color = match ink {
+            SheetInk::Paper => sheet.paper,
+            SheetInk::Frame => sheet.frame,
+            SheetInk::Rule => sheet.rule,
+            SheetInk::LabelInk => sheet.label_ink,
+            SheetInk::Cell => sheet.cell,
+            SheetInk::InkPrimary => &theme.ink.primary,
+            SheetInk::InkSecondary => &theme.ink.secondary,
+        };
+        color.as_str()
+    }
+
+    /// The minor and major grid colors, when the theme draws a grid.
+    pub fn sheet_grid(self) -> Option<(&'a str, &'a str)> {
+        self.theme
+            .sheet_colors()
+            .grid
+            .map(|grid| (grid.minor.as_str(), grid.major.as_str()))
+    }
+
+    /// A Box on a design sheet (section 14.5 rule 3): a frame-role Box strokes the sheet
+    /// frame with no fill, a boundary-role Box the sheet rule with no fill; group and tile
+    /// Boxes keep their tone paint.
+    pub fn sheet_zone_style(self, look: ContainerLook, tint: Option<u8>) -> ZoneStyle<'a> {
+        let flat = self.zone_style(look, tint);
+        let ink = match look.role {
+            Role::Frame => SheetInk::Frame,
+            Role::Boundary => SheetInk::Rule,
+            Role::Group | Role::Tile => return flat,
+        };
+        let line = match look.pattern {
+            BorderPattern::Solid => Some(LineStyle::Solid),
+            BorderPattern::Dashed => Some(LineStyle::Dashed),
+            BorderPattern::Dotted => Some(LineStyle::Dotted),
+            BorderPattern::None => None,
+        };
+        ZoneStyle {
+            border: line.map(|line| Stroke {
+                width_px: look.border_width,
+                line,
+                color: self.sheet_ink(ink),
+            }),
+            fill: None,
+            radius_px: look.radius,
+        }
+    }
+
+    /// The label ink of a Box on a design sheet: the sheet frame for a frame-role Box, the
+    /// sheet label ink for a boundary, the tone's ink for every other Box.
+    pub fn sheet_container_label_ink(self, look: ContainerLook, tint: Option<u8>) -> &'a str {
+        match look.role {
+            Role::Frame => self.sheet_ink(SheetInk::Frame),
+            Role::Boundary => self.sheet_ink(SheetInk::LabelInk),
+            Role::Group | Role::Tile => self.container_label_ink(look, tint),
+        }
+    }
+}
+
+/// A role a design sheet part paints with (section 14.5 rule 12).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum SheetInk {
+    Paper,
+    Frame,
+    Rule,
+    LabelInk,
+    Cell,
+    InkPrimary,
+    InkSecondary,
+}
+
+/// The shape a sheet part draws.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum PartShape {
+    Rect,
+    /// A line along the part's long axis, through its middle.
+    Line,
+    /// A line drawn with this dash array.
+    DashedLine(&'static str),
+    Circle,
+    /// The drafting grid inside the part (section 14.5 rule 10).
+    Grid,
+    Text,
+}
+
+/// The paint of one sheet part: its shape, fill, stroke and width, and text ink.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct PartPaint {
+    pub shape: PartShape,
+    pub fill: Option<SheetInk>,
+    pub stroke: Option<(SheetInk, f32)>,
+    pub text: Option<SheetInk>,
+}
+
+const fn text_paint(ink: SheetInk) -> PartPaint {
+    PartPaint {
+        shape: PartShape::Text,
+        fill: None,
+        stroke: None,
+        text: Some(ink),
+    }
+}
+
+const fn stroke_paint(shape: PartShape, ink: SheetInk, width: f32) -> PartPaint {
+    PartPaint {
+        shape,
+        fill: None,
+        stroke: Some((ink, width)),
+        text: None,
+    }
+}
+
+/// `stroke-dasharray` of a problem point's rule.
+pub const POINT_RULE_DASH: &str = "3 3";
+
+/// The paint row of every part a design sheet adds (section 14.5 rule 12), matched on the
+/// part name with no wildcard so a new part has to choose its row. None for the parts that
+/// existed before the sheet, on their existing owners.
+pub fn sheet_part_paint(owner: NodeTag, part: PartName) -> Option<PartPaint> {
+    use SheetInk::{Cell, Frame, InkPrimary, InkSecondary, LabelInk, Paper, Rule};
+    let paint = match part {
+        PartName::Border => PartPaint {
+            shape: PartShape::Rect,
+            fill: Some(Paper),
+            stroke: Some((Frame, 2.0)),
+            text: None,
+        },
+        PartName::RefRule => stroke_paint(PartShape::Rect, Frame, 1.0),
+        PartName::RefTick | PartName::CellRule | PartName::ViewRule => {
+            stroke_paint(PartShape::Line, Rule, 1.0)
+        }
+        PartName::Grid => PartPaint {
+            shape: PartShape::Grid,
+            fill: None,
+            stroke: None,
+            text: None,
+        },
+        PartName::RefColumn
+        | PartName::RefColumnFoot
+        | PartName::RefRow
+        | PartName::RefRowRight
+        | PartName::Caption
+        | PartName::PointLabel
+        | PartName::GroupCaption
+        | PartName::ViewNote => text_paint(LabelInk),
+        PartName::BlockBorder => PartPaint {
+            shape: PartShape::Rect,
+            fill: Some(Cell),
+            stroke: Some((Frame, 2.0)),
+            text: None,
+        },
+        PartName::Wordmark | PartName::Statement | PartName::ViewNumeral | PartName::ViewTitle => {
+            text_paint(Frame)
+        }
+        PartName::Lead
+        | PartName::ParagraphLead
+        | PartName::AttentionLead
+        | PartName::AttentionText => text_paint(InkPrimary),
+        PartName::Paragraph | PartName::ViewSubtitle => text_paint(InkSecondary),
+        PartName::PointRule => stroke_paint(PartShape::DashedLine(POINT_RULE_DASH), Rule, 1.0),
+        PartName::StripRule => stroke_paint(PartShape::Line, Frame, 2.0),
+        PartName::ViewNumber => PartPaint {
+            shape: PartShape::Circle,
+            fill: Some(Paper),
+            stroke: Some((Frame, 2.0)),
+            text: None,
+        },
+        PartName::Text => match owner {
+            NodeTag::ProblemPoint => text_paint(InkPrimary),
+            _ => return None,
+        },
+        PartName::Badge
+        | PartName::BadgeText
+        | PartName::Label
+        | PartName::Bar
+        | PartName::Body
+        | PartName::Icon
+        | PartName::FunctionName
+        | PartName::ProductName
+        | PartName::FactBox
+        | PartName::Fact
+        | PartName::BuiltBox
+        | PartName::Built
+        | PartName::AskBox
+        | PartName::Ask
+        | PartName::DotStart
+        | PartName::WireStart
+        | PartName::Tag
+        | PartName::TagLabel
+        | PartName::TagSub
+        | PartName::WireEnd
+        | PartName::DotEnd
+        | PartName::Spine
+        | PartName::Hub
+        | PartName::HubText
+        | PartName::Swatch
+        | PartName::LegendLabel
+        | PartName::LegendText
+        | PartName::Heading
+        | PartName::Marker
+        | PartName::BodyLine
+        | PartName::Accent
+        | PartName::LabelChip
+        | PartName::Heads
+        | PartName::Band
+        | PartName::Lifeline
+        | PartName::Footprint => return None,
+    };
+    Some(paint)
 }
 
 /// A visible face of an isometric slab or block (section 12.3).
@@ -766,4 +991,70 @@ fn hsl_to_rgb(hue: f64, saturation: f64, lightness: f64) -> [f64; 3] {
     };
     let lift = lightness - chroma / 2.0;
     [red + lift, green + lift, blue + lift]
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use stencil_layout::PART_NAMES;
+
+    /// The owners and parts of section 14.5 rule 12 that a sheet draws.
+    const SHEET_PARTS: [(NodeTag, PartName); 29] = [
+        (NodeTag::Page, PartName::Border),
+        (NodeTag::Page, PartName::RefRule),
+        (NodeTag::Page, PartName::RefTick),
+        (NodeTag::Page, PartName::RefColumn),
+        (NodeTag::Page, PartName::RefColumnFoot),
+        (NodeTag::Page, PartName::RefRow),
+        (NodeTag::Page, PartName::RefRowRight),
+        (NodeTag::Page, PartName::Grid),
+        (NodeTag::TitleBlock, PartName::BlockBorder),
+        (NodeTag::TitleBlock, PartName::CellRule),
+        (NodeTag::TitleBlock, PartName::Wordmark),
+        (NodeTag::TitleCell, PartName::Caption),
+        (NodeTag::TitleCell, PartName::Lead),
+        (NodeTag::TitleCell, PartName::Statement),
+        (NodeTag::TitleCell, PartName::ParagraphLead),
+        (NodeTag::TitleCell, PartName::Paragraph),
+        (NodeTag::TitleCell, PartName::AttentionLead),
+        (NodeTag::TitleCell, PartName::AttentionText),
+        (NodeTag::ProblemPoint, PartName::PointRule),
+        (NodeTag::ProblemPoint, PartName::PointLabel),
+        (NodeTag::ProblemPoint, PartName::Text),
+        (NodeTag::Legend, PartName::StripRule),
+        (NodeTag::Legend, PartName::GroupCaption),
+        (NodeTag::View, PartName::ViewNumber),
+        (NodeTag::View, PartName::ViewNumeral),
+        (NodeTag::View, PartName::ViewTitle),
+        (NodeTag::View, PartName::ViewSubtitle),
+        (NodeTag::View, PartName::ViewRule),
+        (NodeTag::View, PartName::ViewNote),
+    ];
+
+    #[test]
+    fn every_sheet_part_has_a_paint_row() {
+        assert_eq!(PartName::ALL.len(), PART_NAMES);
+        for (owner, part) in SHEET_PARTS {
+            assert!(
+                sheet_part_paint(owner, part).is_some(),
+                "{} on {}",
+                part.as_str(),
+                owner.as_str()
+            );
+        }
+        let listed: Vec<PartName> = SHEET_PARTS.iter().map(|(_, part)| *part).collect();
+        for part in PartName::ALL.iter().filter(|part| part.is_sheet()) {
+            assert!(listed.contains(part), "{} has no row", part.as_str());
+        }
+        for part in PartName::ALL.iter().filter(|part| !part.is_sheet()) {
+            for owner in [
+                NodeTag::Zone,
+                NodeTag::Pcard,
+                NodeTag::Pipe,
+                NodeTag::Legend,
+            ] {
+                assert_eq!(sheet_part_paint(owner, *part), None, "{}", part.as_str());
+            }
+        }
+    }
 }

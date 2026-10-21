@@ -220,4 +220,13 @@ row separation fills normal: 5.75 between yellow and green, at least 8.00, FAILE
 row separation fills deuteranopia: 0.34 between yellow and green, at least 5.00, FAILED
 row separation fills protanopia: 0.94 between blue and pink, at least 5.00, FAILED
 row separation fills tritanopia: 1.80 between blue and cyan, at least 5.00, FAILED
-stencil theme check solarized-light: 222 rows, 127 passed, 95 failed
+row contrast sheet.label_ink on sheet.cell: 3.47, at least 4.50, FAILED
+row contrast sheet.label_ink on sheet.paper: 4.99, at least 4.50, passed
+row contrast ink.primary on sheet.cell: 9.69, at least 4.50, passed
+row contrast ink.primary on sheet.paper: 13.92, at least 4.50, passed
+row contrast ink.secondary on sheet.cell: 3.47, at least 4.50, FAILED
+row contrast ink.secondary on sheet.paper: 4.99, at least 4.50, passed
+row contrast sheet.frame on sheet.cell: 9.69, at least 4.50, passed
+row contrast sheet.frame on sheet.paper: 13.92, at least 4.50, passed
+row contrast sheet.frame on sheet.paper: 13.92, at least 3.00, passed
+stencil theme check solarized-light: 231 rows, 134 passed, 97 failed

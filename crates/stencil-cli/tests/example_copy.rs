@@ -21,10 +21,28 @@ fn copy_fields(node: &Value, out: &mut Vec<(String, String)>) {
     match node {
         Value::Object(map) => {
             for field in [
-                "title", "kicker", "lede", "subtitle", "label", "hub", "text",
+                "title",
+                "kicker",
+                "lede",
+                "subtitle",
+                "label",
+                "hub",
+                "text",
+                "wordmark",
+                "statement",
+                "lead",
+                "caption",
+                "note",
             ] {
                 if let Some(Value::String(text)) = map.get(field) {
                     out.push((field.to_string(), text.clone()));
+                }
+            }
+            for field in ["paragraphs"] {
+                if let Some(Value::Array(items)) = map.get(field) {
+                    for text in items.iter().filter_map(Value::as_str) {
+                        out.push((field.to_string(), text.to_string()));
+                    }
                 }
             }
             for value in map.values() {

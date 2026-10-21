@@ -1,6 +1,8 @@
 //! Builds the taffy tree for a vetted page (sections 2.2 to 2.8) and records, per geometry
 //! node, the taffy nodes its bounds, content box and parts are read from.
 
+mod sheet;
+
 use stencil_model::grammar::{LabelStyle, Role};
 use stencil_model::pointer::NodePointer;
 use stencil_model::products::item_shape;
@@ -9,7 +11,7 @@ use stencil_model::{
     Arrow, BoxNode, Callout, Chrome, DEPTH_MAX, Fact, FactSource, Frame, GAP_DEFAULT_PX, Grammar,
     Item, Justify, LANE_GAP_DEFAULT_PX, Lanes, LegendEntry, ListKind, Node, Note, NoteKind, Page,
     Pipe, PipeDir, PipeForm, Projection, Shape, Tee, TeeArm, Text, VetRule, Violation, box_key,
-    box_tint, legend_label, line_key, line_tint,
+    box_tint, canvas_width, legend_label, line_key, line_tint,
 };
 use taffy::prelude::{
     AlignItems, AlignSelf, Dimension, Display, FlexDirection, FlexWrap, JustifyContent,
@@ -41,6 +43,26 @@ pub(crate) struct TextLeaf {
     pub min_line_px: Option<f32>,
     /// The field the string comes from; a measure error is reported at this pointer.
     pub source: NodePointer,
+    /// For one piece of a lead run, the whole run: the leaf of the lead piece is the taffy
+    /// leaf and measures both pieces together (section 14.4 rule 9).
+    pub lead_run: Option<LeadRunLeaf>,
+}
+
+/// A bold lead and its body sharing one line, laid out as one taffy leaf and drawn as two
+/// parts.
+#[derive(Clone)]
+pub(crate) struct LeadRunLeaf {
+    pub lead: String,
+    pub lead_style: TextStyle,
+    pub body: String,
+    pub body_style: TextStyle,
+    pub piece: RunPiece,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum RunPiece {
+    Lead,
+    Body,
 }
 
 pub(crate) struct PartRecord {
@@ -259,7 +281,8 @@ fn default_weight(container: NodeTag, child: &Node) -> u16 {
         | Node::Note(_)
         | Node::Text(_)
         | Node::Callout(_)
-        | Node::Frame(_) => 1,
+        | Node::Frame(_)
+        | Node::View(_) => 1,
     };
     match container {
         NodeTag::Row => row_weight,
@@ -280,7 +303,11 @@ fn default_weight(container: NodeTag, child: &Node) -> u16 {
         | NodeTag::Fact
         | NodeTag::Note
         | NodeTag::Pipe
-        | NodeTag::Tee => 0,
+        | NodeTag::Tee
+        | NodeTag::TitleBlock
+        | NodeTag::TitleCell
+        | NodeTag::ProblemPoint
+        | NodeTag::View => 0,
     }
 }
 
@@ -435,6 +462,7 @@ impl Builder<'_> {
             axis,
             min_line_px,
             source: spec.source,
+            lead_run: None,
         });
         Ok((node, index))
     }
@@ -468,8 +496,11 @@ impl Builder<'_> {
     }
 
     fn add_page(&mut self, page: &Page) -> Result<NodeId, LayoutError> {
+        if let Some(sheet) = &page.sheet {
+            return self.add_sheet_page(page, sheet);
+        }
         let root_pointer = NodePointer::root();
-        let canvas_width = page.width as f32 + 40.0;
+        let canvas_width = canvas_width(page);
         let root_style = Style {
             size: taffy::Size {
                 width: length(canvas_width),
@@ -492,7 +523,7 @@ impl Builder<'_> {
 
         // A captioned figure draws no badge, kicker, title or lede (section 13.7).
         if page.chrome == Chrome::Full {
-            self.add_kicker(page, root, root_index)?;
+            self.add_kicker(page, root, root_index, None)?;
             self.add_page_text(
                 root,
                 root_index,
@@ -525,21 +556,26 @@ impl Builder<'_> {
         Ok(root)
     }
 
+    /// The badge and kicker in a row under `parent`. On a design sheet the kicker reads
+    /// `prefix` first, the number of the view the title block is.
     fn add_kicker(
         &mut self,
         page: &Page,
         root: NodeId,
         root_index: usize,
+        prefix: Option<&str>,
     ) -> Result<(), LayoutError> {
         let pointer = NodePointer::root().child("kicker");
+        let bottom = if prefix.is_some() { 0.0 } else { 6.0 };
         let style = Style {
             gap: taffy::Size {
                 width: length(6.0),
                 height: length(0.0),
             },
-            margin: margins(0.0, 0.0, 6.0, 0.0),
+            margin: margins(0.0, 0.0, bottom, 0.0),
             ..flex_row(AlignItems::CENTER)
         };
+        let kicker_text = format!("{}{}", prefix.unwrap_or_default(), page.kicker);
         let kicker = self.container(style, root, &pointer)?;
         let badge_parts = match &page.badge {
             Some(text) => {
@@ -583,7 +619,7 @@ impl Builder<'_> {
             kicker_text_style,
             Some(kicker),
             TextSpec {
-                text: &page.kicker,
+                text: &kicker_text,
                 style_name: TextStyleName::Kicker,
                 line: None,
                 align: TextAlign::Start,
@@ -647,12 +683,18 @@ impl Builder<'_> {
         // Under iso a link may dip an approach stub below the lowest block and carry its
         // tag there (section 12.4), so the body keeps room above the legend.
         let stub_room = if self.iso { 2.0 * ISO_APPROACH_PX } else { 0.0 };
+        // On a sheet each View keeps its own margin, and the body clears the legend strip.
+        let (gap, top) = if page.sheet.is_some() {
+            (0.0, sheet::BODY_MARGIN_TOP_PX)
+        } else {
+            (8.0, 0.0)
+        };
         let style = Style {
             gap: taffy::Size {
                 width: length(0.0),
-                height: length(8.0),
+                height: length(gap),
             },
-            margin: margins(0.0, 0.0, stub_room, 0.0),
+            margin: margins(top, 0.0, stub_room, 0.0),
             ..flex_column(AlignItems::STRETCH)
         };
         let body = self.container(style, root, &pointer)?;
@@ -676,7 +718,7 @@ impl Builder<'_> {
         Ok(())
     }
 
-    fn add_legend(
+    pub(super) fn add_legend(
         &mut self,
         legend: &[LegendEntry],
         root: NodeId,
@@ -709,7 +751,7 @@ impl Builder<'_> {
         Ok(())
     }
 
-    fn add_legend_entry(
+    pub(super) fn add_legend_entry(
         &mut self,
         entry: &LegendEntry,
         pointer: NodePointer,
@@ -868,6 +910,14 @@ impl Builder<'_> {
             Node::Frame(frame) => {
                 self.add_frame(frame, pointer, parent_index, parent_container, placement)
             }
+            Node::View(view) => self.add_view(
+                view,
+                pointer,
+                parent_index,
+                parent_container,
+                placement,
+                depth,
+            ),
         }
     }
 

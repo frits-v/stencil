@@ -58,6 +58,52 @@ import (
 #ListKind:    "plain" | "numbered" | "bulleted"
 #CalloutKind: "note" | "risk" | "decision" | "open"
 
+// Every surface valid on a design sheet only; a page without sheet that draws
+// one fails _needsSheet. The Rust twin is SheetSurface::as_str.
+#SheetSurface: "sheet" | "view"
+
+// A title block cell caption: 1 to 60 characters.
+#Caption: #Text & strings.MaxRunes(60)
+
+// A design sheet's title block. The first cell is the page head; the other
+// three are the problem, the answer and what the reader attends to.
+#Sheet: {
+	wordmark?: #Text & strings.MaxRunes(24)
+	problem:   #Problem
+	answer:    #Answer
+	attention: #Attention
+}
+
+#Problem: {
+	caption?: #Caption
+	lead?:    #Text
+	points: [...#ProblemPoint] & list.MinItems(1) & list.MaxItems(8)
+}
+
+#ProblemPoint: {
+	text: #Text
+}
+
+// A paragraph is a string, or a bold lead with its text after it.
+#AnswerParagraph: #Text | {lead: #Text, text: #Text}
+
+#Answer: {
+	caption?:  #Caption
+	statement: #Text
+	paragraphs?: [...#AnswerParagraph] & list.MaxItems(4)
+}
+
+#Attention: {
+	caption?: #Caption
+	items: [...#AttentionItem] & list.MinItems(1) & list.MaxItems(8)
+}
+
+#AttentionItem: {
+	id:   #Id
+	lead: #Text
+	text: #Text
+}
+
 // A built-in theme name or a path to a theme file, the THEME_REFERENCE_PATTERN
 // of the Rust model.
 #ThemeReference: =~"^(center|paper|dusk|clear|clear-dark|wire|tokyo-night|solarized-light|solarized-dark|material-dark|gruvbox-dark|dracula|nord|[^\\x00-\\x1F]{1,395}\\.json)$"
@@ -117,13 +163,18 @@ import (
 	// Absent is 6 and arc; a line kind of the grammar that sets its own wins.
 	corner?: #Corner
 	bend?:   #Bend
-	body:    #Children
+	// Draws the page as a design sheet: a frame, a title block and numbered
+	// Views. Flat only.
+	sheet?: #Sheet
+	body:   #Children
 	legend: [...#LegendEntry] & list.MaxItems(16)
 	links?: [...#Link] & list.MaxItems(256)
 
-	// The canvas is the page width plus 20 px padding on each side; a via
-	// point must lie inside it. Its height is known only after layout.
-	_canvasWidth: [if width != _|_ {width + 40}, 1320][0]
+	// The canvas is the page width plus the root padding on each side, 20 px
+	// and 50 on a design sheet; a via point must lie inside it. Its height is
+	// known only after layout.
+	_rootPadding: [if sheet != _|_ {50}, 20][0]
+	_canvasWidth: [if width != _|_ {width + 2*_rootPadding}, 1280 + 2*_rootPadding][0]
 	_chrome: [if chrome != _|_ {chrome}, "full"][0]
 	_links: [if links != _|_ for l in links {l}]
 
@@ -182,6 +233,34 @@ import (
 	_viaOutsidePage: {
 		for i, l in _links if l.via != _|_ for j, p in l.via if p.x > _canvasWidth {"\(i).\(j)": "via x" & "beyond the canvas width"}
 	}
+
+	_surfaces: list.Concat([for n in body {n._surfaces}])
+	if sheet == _|_ {
+		_needsSheet: {
+			for s in _surfaces {(s): "\(s) is drawn on a design sheet only" & "add sheet or remove it"}
+		}
+	}
+	if sheet != _|_ {
+		if projection != _|_ if projection == "iso" {
+			_sheetInIso: "a design sheet" & "is drawn flat only"
+		}
+		if _chrome == "none" {
+			_sheetChromeNone: "a design sheet draws its head in the title block" & "chrome cannot be none"
+		}
+		_sheetBodyNotView: {
+			for i, n in body if n.tag != "View" {"\(i)": "\(n.tag) in the body of a design sheet" & "wrap it in a View"}
+		}
+		_viewNotTopLevel: {
+			for n in body for t in n._viewTitles {(t): "View" & "a body child of a sheet"}
+		}
+		if len(_usedKeys) == 0 {
+			_sheetWithoutLines: "a design sheet" & "draws at least one Pipe, Tee or Link"
+		}
+		_attentionIds: list.SortStrings([for item in sheet.attention.items {item.id}])
+		_keysUsedTwice: {
+			for i, a in _attentionIds if i > 0 if _attentionIds[i-1] == a {"attention.\(a)": "key" & "used by two entries of one list"}
+		}
+	}
 }
 
 #LegendEntry: {
@@ -216,12 +295,12 @@ import (
 	y: number & >=0
 }
 
-// A node is one of twelve tags. Switching on tag, rather than a disjunction of
+// A node is one of thirteen tags. Switching on tag, rather than a disjunction of
 // definitions, keeps vet errors pointed at the offending field. Every node may
 // carry an id; _ids lists the ids in its subtree and _keys the legend keys of
 // the pipes and tees in it.
 #Node: {
-	tag: "Row" | "Col" | "Lanes" | "Box" | "Item" | "Fact" | "Note" | "Pipe" | "Tee" | "Text" | "Callout" | "Frame"
+	tag: "Row" | "Col" | "Lanes" | "Box" | "Item" | "Fact" | "Note" | "Pipe" | "Tee" | "Text" | "Callout" | "Frame" | "View"
 	if tag == "Row" {#Row}
 	if tag == "Col" {#Col}
 	if tag == "Lanes" {#Lanes}
@@ -234,12 +313,45 @@ import (
 	if tag == "Text" {#TextBlock}
 	if tag == "Callout" {#Callout}
 	if tag == "Frame" {#Frame}
+	if tag == "View" {#View}
 
 	// The ids a Pipe names in from and to, gathered up the tree. A Tee's arms
 	// cannot name one, so a Tee gathers none.
-	if !list.Contains(["Row", "Col", "Lanes", "Box", "Pipe"], tag) {
+	if !list.Contains(["Row", "Col", "Lanes", "Box", "Pipe", "View"], tag) {
 		_pipeTargets: []
 	}
+
+	// The sheet surfaces in the subtree and the titles of the Views strictly
+	// below the node.
+	if !list.Contains(["Row", "Col", "Lanes", "Box", "View"], tag) {
+		_surfaces: []
+		_viewTitles: []
+	}
+}
+
+// The surfaces and nested View titles a container passes up from children.
+#SheetCollectors: {
+	children: [...]
+	_surfaces: list.Concat([for c in children {c._surfaces}])
+	_viewTitles: list.Concat([for c in children if c.tag == "View" {[c.title]}, for c in children {c._viewTitles}])
+}
+
+// A numbered view of a design sheet: a heading, then its children in a
+// column. Transparent for kind nesting, as Row, Col and Lanes are.
+#View: {
+	id?:       #Id
+	tag:       "View"
+	title:     #Text
+	subtitle?: #Text
+	note?:     #Text
+	gap?:      int & >=0 & <=64
+	children:  #Children
+	_keys: {for c in children {c._keys}}
+	_ids: list.Concat([[if id != _|_ {id}], for c in children {c._ids}])
+	_laneSets: list.Concat([for c in children {c._laneSets}])
+	_pipeTargets: list.Concat([for c in children {c._pipeTargets}])
+	_surfaces: list.Concat([["view"], for c in children {c._surfaces}])
+	_viewTitles: list.Concat([for c in children if c.tag == "View" {[c.title]}, for c in children {c._viewTitles}])
 }
 
 // Shared by Row and Col. grow carries one weight per child.
@@ -256,6 +368,7 @@ import (
 	_ids: list.Concat([[if id != _|_ {id}], for c in children {c._ids}])
 	_laneSets: list.Concat([for c in children {c._laneSets}])
 	_pipeTargets: list.Concat([for c in children {c._pipeTargets}])
+	#SheetCollectors
 }
 
 #Row: {
@@ -279,6 +392,7 @@ import (
 	// The ids of this node's lane heads, then the sets of any Lanes below them.
 	_laneSets: list.Concat([[[for c in children if c.id != _|_ {c.id}]], for c in children {c._laneSets}])
 	_pipeTargets: list.Concat([for c in children {c._pipeTargets}])
+	#SheetCollectors
 }
 
 // Any container. The grammar's container kind decides how it is drawn and
@@ -294,6 +408,7 @@ import (
 	_ids: list.Concat([[if id != _|_ {id}], for c in children {c._ids}])
 	_laneSets: list.Concat([for c in children {c._laneSets}])
 	_pipeTargets: list.Concat([for c in children {c._pipeTargets}])
+	#SheetCollectors
 }
 
 // Any named leaf, drawn with its facts in list order under title and subtitle.

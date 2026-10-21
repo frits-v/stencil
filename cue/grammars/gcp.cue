@@ -258,7 +258,7 @@ _nesting: stencil.#GrammarNesting & {#grammar: grammar}
 // slots; dash, gray and deny lines and untinted Boxes are outside it.
 #Node: {
 	tag: string
-	if tag == "Row" || tag == "Col" || tag == "Lanes" {
+	if tag == "Row" || tag == "Col" || tag == "Lanes" || tag == "View" {
 		children: [...#Node]
 		_tinted: {for c in children {c._tinted}}
 		_nameless: {for c in children {c._nameless}}
@@ -389,7 +389,7 @@ _nesting: stencil.#GrammarNesting & {#grammar: grammar}
 		_globalProducts: {}
 		_apisLabels: {}
 	}
-	if !list.Contains(["Row", "Col", "Lanes", "Box", "Item", "Pipe", "Tee"], tag) {
+	if !list.Contains(["Row", "Col", "Lanes", "View", "Box", "Item", "Pipe", "Tee"], tag) {
 		_tinted: {}
 		_nameless: {}
 		_apiProducts: {}
@@ -402,7 +402,7 @@ _nesting: stencil.#GrammarNesting & {#grammar: grammar}
 }
 
 // A solid pipe that sits between two sibling Boxes must not touch a tinted
-// Box of another slot. Row, Col, Lanes and Box embed this, so the check holds
+// Box of another slot. Row, Col, Lanes, View and Box embed this, so the check holds
 // wherever siblings sit.
 #SiblingTint: {
 	children: [...]

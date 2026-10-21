@@ -11,6 +11,7 @@ mod lanes;
 mod lead_run;
 mod pipe_ends;
 mod route;
+mod sheet_frame;
 mod theme_labels;
 mod units;
 
@@ -18,7 +19,8 @@ use stencil_model::grammar::{BorderPattern, LabelStyle, Role, Tone};
 use stencil_model::pointer::NodePointer;
 use stencil_model::text::{MeasureError, TextMeasurer, TextMetrics, TextStyle};
 use stencil_model::{
-    Arrow, Bend, Grammar, Line, Page, PagePoint, PipeForm, Violation, line_key, validate_page,
+    Arrow, Bend, Grammar, Line, Page, PagePoint, PipeForm, Violation, canvas_width, line_key,
+    validate_page,
 };
 
 pub use build::{container_label_style, fact_presentation};
@@ -30,7 +32,8 @@ pub use route::{
 pub use stencil_model::text::WRAP_EPSILON_PX;
 pub use theme_labels::theme_legend_labels;
 pub use units::{
-    DescribedUnit, DescriptionUnits, PipeEndSide, PipeLanding, UnitKind, description_units,
+    DescribedUnit, DescriptionUnits, ENTRY_PARTS, PipeEndSide, PipeLanding, SheetZone, UnitKind,
+    description_units, sheet_frame, sheet_zone, sheet_zone_at, title_cell_caption,
 };
 
 pub const GEOMETRY_EPSILON_PX: f32 = 0.01;
@@ -149,10 +152,13 @@ pub fn layout_page(
     }
     let lanes_plan = lanes::plan_lanes(page, measurer)?;
     let built = build::build_page(page, grammar, &lanes_plan)?;
-    let mut geometry = compute::compute_geometry(built, page.width, measurer)?;
+    let mut geometry = compute::compute_geometry(built, canvas_width(page), measurer)?;
     compute::translate_pipe_slots(page, &mut geometry);
     pipe_ends::extend_pipe_ends(page, &mut geometry);
     lanes::add_lifelines(&mut geometry);
+    if page.sheet.is_some() {
+        sheet_frame::add_sheet_frame(&mut geometry, measurer)?;
+    }
     geometry.links = route::route_links(page, grammar, &geometry, &lanes_plan, measurer)?;
     Ok(geometry)
 }
@@ -301,6 +307,14 @@ pub enum NodeTag {
     Text,
     Callout,
     Frame,
+    /// A design sheet's title block, `/sheet` (section 14.4 rule 4).
+    TitleBlock,
+    /// One of the problem, answer and attention cells of the title block.
+    TitleCell,
+    /// A numbered point of the problem cell.
+    ProblemPoint,
+    /// A numbered view of a design sheet.
+    View,
 }
 
 impl NodeTag {
@@ -327,6 +341,10 @@ impl NodeTag {
             NodeTag::Text => "Text",
             NodeTag::Callout => "Callout",
             NodeTag::Frame => "Frame",
+            NodeTag::TitleBlock => "TitleBlock",
+            NodeTag::TitleCell => "TitleCell",
+            NodeTag::ProblemPoint => "ProblemPoint",
+            NodeTag::View => "View",
         }
     }
 }
@@ -362,7 +380,7 @@ pub struct Part {
     pub text: Option<TextRun>,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum PartName {
     Badge,
     BadgeText,
@@ -403,9 +421,184 @@ pub enum PartName {
     /// The box an item's solid rises from under iso when its shape is not a card
     /// (section 12.3); the icon sits in it and the text lies beside it.
     Footprint,
+    /// The design sheet frame, 12 px in from the canvas edge.
+    Border,
+    /// The inner rule of the reference band.
+    RefRule,
+    /// The rectangle inside the inner rule: the drafting grid and the reference cells.
+    Grid,
+    RefTick,
+    RefColumn,
+    RefColumnFoot,
+    RefRow,
+    RefRowRight,
+    BlockBorder,
+    Wordmark,
+    CellRule,
+    Caption,
+    Lead,
+    Statement,
+    ParagraphLead,
+    Paragraph,
+    AttentionLead,
+    AttentionText,
+    PointRule,
+    PointLabel,
+    StripRule,
+    GroupCaption,
+    ViewNumber,
+    ViewNumeral,
+    ViewTitle,
+    ViewSubtitle,
+    ViewRule,
+    ViewNote,
 }
 
+/// The number of part names, so a new name has to join `PartName::ALL`.
+pub const PART_NAMES: usize = 65;
+
 impl PartName {
+    /// Every part name, in declaration order.
+    pub const ALL: [PartName; PART_NAMES] = [
+        PartName::Badge,
+        PartName::BadgeText,
+        PartName::Text,
+        PartName::Label,
+        PartName::Bar,
+        PartName::Body,
+        PartName::Icon,
+        PartName::FunctionName,
+        PartName::ProductName,
+        PartName::FactBox,
+        PartName::Fact,
+        PartName::BuiltBox,
+        PartName::Built,
+        PartName::AskBox,
+        PartName::Ask,
+        PartName::DotStart,
+        PartName::WireStart,
+        PartName::Tag,
+        PartName::TagLabel,
+        PartName::TagSub,
+        PartName::WireEnd,
+        PartName::DotEnd,
+        PartName::Spine,
+        PartName::Hub,
+        PartName::HubText,
+        PartName::Swatch,
+        PartName::LegendLabel,
+        PartName::LegendText,
+        PartName::Heading,
+        PartName::Marker,
+        PartName::BodyLine,
+        PartName::Accent,
+        PartName::LabelChip,
+        PartName::Heads,
+        PartName::Band,
+        PartName::Lifeline,
+        PartName::Footprint,
+        PartName::Border,
+        PartName::RefRule,
+        PartName::Grid,
+        PartName::RefTick,
+        PartName::RefColumn,
+        PartName::RefColumnFoot,
+        PartName::RefRow,
+        PartName::RefRowRight,
+        PartName::BlockBorder,
+        PartName::Wordmark,
+        PartName::CellRule,
+        PartName::Caption,
+        PartName::Lead,
+        PartName::Statement,
+        PartName::ParagraphLead,
+        PartName::Paragraph,
+        PartName::AttentionLead,
+        PartName::AttentionText,
+        PartName::PointRule,
+        PartName::PointLabel,
+        PartName::StripRule,
+        PartName::GroupCaption,
+        PartName::ViewNumber,
+        PartName::ViewNumeral,
+        PartName::ViewTitle,
+        PartName::ViewSubtitle,
+        PartName::ViewRule,
+        PartName::ViewNote,
+    ];
+
+    /// True for the parts a design sheet adds (section 14.2 rule 10); only a sheet draws
+    /// them.
+    pub fn is_sheet(self) -> bool {
+        match self {
+            PartName::Border
+            | PartName::RefRule
+            | PartName::Grid
+            | PartName::RefTick
+            | PartName::RefColumn
+            | PartName::RefColumnFoot
+            | PartName::RefRow
+            | PartName::RefRowRight
+            | PartName::BlockBorder
+            | PartName::Wordmark
+            | PartName::CellRule
+            | PartName::Caption
+            | PartName::Lead
+            | PartName::Statement
+            | PartName::ParagraphLead
+            | PartName::Paragraph
+            | PartName::AttentionLead
+            | PartName::AttentionText
+            | PartName::PointRule
+            | PartName::PointLabel
+            | PartName::StripRule
+            | PartName::GroupCaption
+            | PartName::ViewNumber
+            | PartName::ViewNumeral
+            | PartName::ViewTitle
+            | PartName::ViewSubtitle
+            | PartName::ViewRule
+            | PartName::ViewNote => true,
+            PartName::Badge
+            | PartName::BadgeText
+            | PartName::Text
+            | PartName::Label
+            | PartName::Bar
+            | PartName::Body
+            | PartName::Icon
+            | PartName::FunctionName
+            | PartName::ProductName
+            | PartName::FactBox
+            | PartName::Fact
+            | PartName::BuiltBox
+            | PartName::Built
+            | PartName::AskBox
+            | PartName::Ask
+            | PartName::DotStart
+            | PartName::WireStart
+            | PartName::Tag
+            | PartName::TagLabel
+            | PartName::TagSub
+            | PartName::WireEnd
+            | PartName::DotEnd
+            | PartName::Spine
+            | PartName::Hub
+            | PartName::HubText
+            | PartName::Swatch
+            | PartName::LegendLabel
+            | PartName::LegendText
+            | PartName::Heading
+            | PartName::Marker
+            | PartName::BodyLine
+            | PartName::Accent
+            | PartName::LabelChip
+            | PartName::Heads
+            | PartName::Band
+            | PartName::Lifeline
+            | PartName::Footprint => false,
+        }
+    }
+
     /// The snake_case name used as a measured JSON key and in check messages.
     pub fn as_str(self) -> &'static str {
         match self {
@@ -446,6 +639,34 @@ impl PartName {
             PartName::Heads => "heads",
             PartName::Band => "band",
             PartName::Lifeline => "lifeline",
+            PartName::Border => "border",
+            PartName::RefRule => "ref_rule",
+            PartName::Grid => "grid",
+            PartName::RefTick => "ref_tick",
+            PartName::RefColumn => "ref_column",
+            PartName::RefColumnFoot => "ref_column_foot",
+            PartName::RefRow => "ref_row",
+            PartName::RefRowRight => "ref_row_right",
+            PartName::BlockBorder => "block_border",
+            PartName::Wordmark => "wordmark",
+            PartName::CellRule => "cell_rule",
+            PartName::Caption => "caption",
+            PartName::Lead => "lead",
+            PartName::Statement => "statement",
+            PartName::ParagraphLead => "paragraph_lead",
+            PartName::Paragraph => "paragraph",
+            PartName::AttentionLead => "attention_lead",
+            PartName::AttentionText => "attention_text",
+            PartName::PointRule => "point_rule",
+            PartName::PointLabel => "point_label",
+            PartName::StripRule => "strip_rule",
+            PartName::GroupCaption => "group_caption",
+            PartName::ViewNumber => "view_number",
+            PartName::ViewNumeral => "view_numeral",
+            PartName::ViewTitle => "view_title",
+            PartName::ViewSubtitle => "view_subtitle",
+            PartName::ViewRule => "view_rule",
+            PartName::ViewNote => "view_note",
         }
     }
 }
@@ -458,6 +679,9 @@ pub struct TextRun {
     pub color: &'static str,
     pub align: TextAlign,
     pub metrics: TextMetrics,
+    /// Where line 0 starts after the part's left edge: the body of a lead run continues on
+    /// its lead's last line (section 14.4 rule 9); 0 for every other run.
+    pub first_line_indent_px: f32,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

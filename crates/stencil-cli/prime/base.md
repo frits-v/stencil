@@ -51,6 +51,7 @@ Every node object carries "tag"; the Page does not. * required, =default. A fiel
 
 - One figure, one story: what the reader should take away fits the title.
 - Sequence and timeline figures: Lanes with ordered links, see `stencil prime grammar plain`.
+- Design sheets, flat only: `stencil prime sheet`.
 
 # Themes
 

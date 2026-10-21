@@ -474,9 +474,74 @@ pub struct Theme {
     pub deny: DenyRole,
     pub tints: [Tint; 8],
     pub iso: IsoRole,
+    /// The chrome of a design sheet (section 14.5 rule 1); absent derives every leaf from
+    /// the roles above and draws no grid.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub sheet: Option<SheetRole>,
+}
+
+/// The paint of a design sheet's frame, title block, Views and legend strip.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct SheetRole {
+    /// Inside the frame. Derived: page.
+    pub paper: Color,
+    /// The frame, the title block border, view circles and headings. Derived: ink.primary.
+    pub frame: Color,
+    /// Hairlines: reference ticks, cell rules, point rules, view rules. Derived:
+    /// card.border.color.
+    pub rule: Color,
+    /// Captions, references, view notes. Derived: ink.secondary.
+    pub label_ink: Color,
+    /// The title block's cells. Derived: card.fill.
+    pub cell: Color,
+    /// The drafting grid, minor lines every 20 px and major every 100 px. Absent draws none
+    /// and is the derivation.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub grid: Option<SheetGrid>,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct SheetGrid {
+    pub minor: Color,
+    pub major: Color,
+}
+
+/// The sheet role of a theme with every absent leaf resolved to its derivation.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct SheetColors<'a> {
+    pub paper: &'a Color,
+    pub frame: &'a Color,
+    pub rule: &'a Color,
+    pub label_ink: &'a Color,
+    pub cell: &'a Color,
+    pub grid: Option<&'a SheetGrid>,
 }
 
 impl Theme {
+    /// The sheet role, or its derivation from the page, inks and card when absent.
+    pub fn sheet_colors(&self) -> SheetColors<'_> {
+        match &self.sheet {
+            Some(sheet) => SheetColors {
+                paper: &sheet.paper,
+                frame: &sheet.frame,
+                rule: &sheet.rule,
+                label_ink: &sheet.label_ink,
+                cell: &sheet.cell,
+                grid: sheet.grid.as_ref(),
+            },
+            None => SheetColors {
+                paper: &self.page,
+                frame: &self.ink.primary,
+                rule: &self.card.border.color,
+                label_ink: &self.ink.secondary,
+                cell: &self.card.fill,
+                grid: None,
+            },
+        }
+    }
+
     /// The tint of slot `slot` (1 to 8); slot 1 for any other value.
     pub fn tint(&self, slot: u8) -> &Tint {
         let index = usize::from(slot.saturating_sub(1));
@@ -836,6 +901,19 @@ pub fn validate_theme(theme: &Theme) -> Vec<ThemeViolation> {
     checker.color(deny.child("tag_ink"), &theme.deny.tag_ink);
     check_tints(&mut checker, &root.child("tints"), &theme.tints);
     check_iso(&mut checker, &root.child("iso"), &theme.iso);
+    if let Some(sheet) = &theme.sheet {
+        let pointer = root.child("sheet");
+        checker.color(pointer.child("paper"), &sheet.paper);
+        checker.color(pointer.child("frame"), &sheet.frame);
+        checker.color(pointer.child("rule"), &sheet.rule);
+        checker.color(pointer.child("label_ink"), &sheet.label_ink);
+        checker.color(pointer.child("cell"), &sheet.cell);
+        if let Some(grid) = &sheet.grid {
+            let grid_pointer = pointer.child("grid");
+            checker.color(grid_pointer.child("minor"), &grid.minor);
+            checker.color(grid_pointer.child("major"), &grid.major);
+        }
+    }
     checker.violations
 }
 

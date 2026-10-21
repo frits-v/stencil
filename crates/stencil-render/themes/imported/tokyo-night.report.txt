@@ -220,4 +220,13 @@ row separation fills normal: 1.35 between blue and yellow, at least 8.00, FAILED
 row separation fills deuteranopia: 1.43 between blue and yellow, at least 5.00, FAILED
 row separation fills protanopia: 0.36 between blue and orange, at least 5.00, FAILED
 row separation fills tritanopia: 0.80 between blue and yellow, at least 5.00, FAILED
-stencil theme check tokyo-night: 222 rows, 205 passed, 17 failed
+row contrast sheet.label_ink on sheet.cell: 5.76, at least 4.50, passed
+row contrast sheet.label_ink on sheet.paper: 8.10, at least 4.50, passed
+row contrast ink.primary on sheet.cell: 8.38, at least 4.50, passed
+row contrast ink.primary on sheet.paper: 11.78, at least 4.50, passed
+row contrast ink.secondary on sheet.cell: 5.76, at least 4.50, passed
+row contrast ink.secondary on sheet.paper: 8.10, at least 4.50, passed
+row contrast sheet.frame on sheet.cell: 8.38, at least 4.50, passed
+row contrast sheet.frame on sheet.paper: 11.78, at least 4.50, passed
+row contrast sheet.frame on sheet.paper: 11.78, at least 3.00, passed
+stencil theme check tokyo-night: 231 rows, 214 passed, 17 failed

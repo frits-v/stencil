@@ -6,6 +6,7 @@ pub mod document;
 pub mod grammar;
 pub mod pointer;
 pub mod products;
+pub mod sheet;
 pub mod text;
 pub mod theme;
 
@@ -19,6 +20,7 @@ pub use grammar::{
     grammar_schema, parse_grammar, validate_grammar,
 };
 pub use pointer::NodePointer;
+pub use sheet::{SheetList, SheetSurface, SurfaceVocabulary};
 pub use theme::{
     Theme, ThemeError, ThemeRule, ThemeViolation, apply_overrides, drawn_legend_label, parse_theme,
     theme_quality, theme_schema, validate_theme,

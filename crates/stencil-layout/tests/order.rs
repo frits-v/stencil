@@ -93,3 +93,57 @@ fn every_pointer_resolves_in_the_input_document() {
         );
     }
 }
+
+/// Section 14.4 rule 2: a sheet's root, title block and head, cells and points, then the
+/// legend strip, the body and the foot.
+#[test]
+fn a_sheet_orders_its_title_block_and_strip_before_the_body() {
+    let page = common::page_from(json!({
+        "title": "Title",
+        "kicker": "Kicker",
+        "lede": "Lede",
+        "foot": "Foot",
+        "sheet": {
+            "problem": { "points": [{ "text": "One." }, { "text": "Two." }] },
+            "answer": { "statement": "A statement." },
+            "attention": { "items": [{ "id": "first", "lead": "Lead.", "text": "Text." }] }
+        },
+        "body": [{
+            "tag": "View",
+            "title": "System",
+            "children": [{
+                "tag": "Row",
+                "children": [
+                    { "tag": "Item", "id": "api", "kind": "product", "title": "API" },
+                    { "tag": "Item", "id": "worker", "kind": "product", "title": "Worker" }
+                ]
+            }]
+        }],
+        "legend": [{ "line": "solid", "text": "request path" }],
+        "links": [{ "from": "api", "to": "worker", "line": "solid" }]
+    }));
+    let geometry = layout(&page);
+    assert_eq!(
+        pointers(&geometry),
+        [
+            "",
+            "/sheet",
+            "/kicker",
+            "/title",
+            "/lede",
+            "/sheet/problem",
+            "/sheet/problem/points/0",
+            "/sheet/problem/points/1",
+            "/sheet/answer",
+            "/sheet/attention",
+            "/legend",
+            "/legend/0",
+            "/body",
+            "/body/0",
+            "/body/0/children/0",
+            "/body/0/children/0/children/0",
+            "/body/0/children/0/children/1",
+            "/foot",
+        ]
+    );
+}

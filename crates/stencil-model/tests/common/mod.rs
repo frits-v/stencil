@@ -134,6 +134,7 @@ pub fn page_with_body(body: Vec<Node>) -> Page {
         chrome: Chrome::Full,
         corner: None,
         bend: None,
+        sheet: None,
         body,
         legend: vec![legend_entry(Line::Solid, Some(1), "request path")],
         links: Vec::new(),

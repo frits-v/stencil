@@ -115,7 +115,8 @@ const NO_PIPES: &str = "page has no pipes";
 const NO_PIPE_NEIGHBORS: &str = "no pipe has a neighbor";
 
 /// Each (parent, child) pair, the root excluded as a child: the child's border box must stay
-/// inside the parent's content box.
+/// inside the parent's content box. On a design sheet each part the sheet adds must also
+/// stay inside its node's border box (section 14.6 rule 4).
 pub fn child_inside_container(geometry: &PageGeometry) -> CheckReport {
     let mut examined: u64 = 0;
     let mut defects = Vec::new();
@@ -141,6 +142,22 @@ pub fn child_inside_container(geometry: &PageGeometry) -> CheckReport {
                     parent.pointer
                 ),
             });
+        }
+    }
+    for node in &geometry.nodes {
+        for part in node.parts.iter().filter(|part| part.name.is_sheet()) {
+            examined += 1;
+            if extends_outside(&part.bounds, &node.bounds) {
+                defects.push(Defect {
+                    pointer: node.pointer.clone(),
+                    message: format!(
+                        "part {} box {} extends outside the node box {}",
+                        part.name.as_str(),
+                        describe(&part.bounds),
+                        describe(&node.bounds)
+                    ),
+                });
+            }
         }
     }
     CheckReport {
@@ -431,6 +448,7 @@ pub fn links_avoid_boxes(geometry: &PageGeometry) -> CheckReport {
                     | NodeTag::Row
                     | NodeTag::Col
                     | NodeTag::Lanes
+                    | NodeTag::View
             ) {
                 continue;
             }
@@ -654,7 +672,8 @@ pub fn pipes_land(page: &Page, geometry: &PageGeometry) -> CheckReport {
                 | Node::Tee(_)
                 | Node::Text(_)
                 | Node::Callout(_)
-                | Node::Frame(_),
+                | Node::Frame(_)
+                | Node::View(_),
             ) => {}
         }
     }
@@ -1029,7 +1048,11 @@ fn pipe_lands_on(tag: NodeTag) -> bool {
         | NodeTag::Body
         | NodeTag::Legend
         | NodeTag::LegendEntry
-        | NodeTag::Foot => false,
+        | NodeTag::Foot
+        | NodeTag::TitleBlock
+        | NodeTag::TitleCell
+        | NodeTag::ProblemPoint
+        | NodeTag::View => false,
     }
 }
 

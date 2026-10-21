@@ -242,5 +242,16 @@
       "secondary": 2.5,
       "gray": 2.0
     }
+  },
+  "sheet": {
+    "paper": "#FCFBF8",
+    "frame": "#1F1E1B",
+    "rule": "#DDD8CF",
+    "label_ink": "#58554F",
+    "cell": "#FFFFFF",
+    "grid": {
+      "minor": "#F3F1EC",
+      "major": "#E9E6DF"
+    }
   }
 }

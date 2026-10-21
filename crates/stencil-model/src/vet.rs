@@ -1,11 +1,13 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use crate::document::{
-    BUILTIN_GRAMMARS, BUILTIN_THEMES, FACTS_MAX, LANES_MAX, Link, Node, Page, PipeDir, Projection,
-    TINT_SLOTS, Text, is_valid_id,
+    AnswerParagraph, BUILTIN_GRAMMARS, BUILTIN_THEMES, CAPTION_SCALARS_MAX, Chrome, FACTS_MAX,
+    LANES_MAX, Link, Node, Page, PipeDir, Projection, Sheet, TINT_SLOTS, Text,
+    WORDMARK_SCALARS_MAX, canvas_width, is_valid_id,
 };
 use crate::grammar::{Grammar, IconPack, PAGE_PARENT};
 use crate::pointer::NodePointer;
+use crate::sheet::{SheetList, SheetSurface};
 use crate::walk::{
     NodeEntry, NodeRef, TextField, body_nodes, push_node_text_fields, push_one_link_text_fields,
     push_page_head_text_fields,
@@ -15,10 +17,6 @@ use crate::{
     ID_PATTERN, LEGEND_ENTRIES_MAX, LINK_CORNER_MAX_PX, LINK_VIA_MAX, LINKS_MAX, NODES_MAX,
     PAGE_WIDTH_MAX, PAGE_WIDTH_MIN, TEXT_BODY_LINES_MAX, TEXT_SCALARS_MAX,
 };
-
-/// Horizontal padding of the page root on both sides (section 2.2): the canvas is
-/// `width + 40` wide.
-const CANVAS_PADDING_TOTAL_PX: f32 = 40.0;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Violation {
@@ -69,9 +67,33 @@ pub enum VetRule {
     LinkOrderDuplicate,
     LanesInIso,
     CornerOutOfRange,
+    NeedsSheet,
+    SheetInIso,
+    SheetChromeNone,
+    SheetBodyNotView,
+    ViewNotTopLevel,
+    SheetWithoutLines,
+    ListEmpty,
+    ListTooLong,
+    SheetTextTooLong,
+    KeyDuplicate,
 }
 
 impl VetRule {
+    /// The rules of section 14.3, in table order.
+    pub const SHEET: [VetRule; 10] = [
+        VetRule::NeedsSheet,
+        VetRule::SheetInIso,
+        VetRule::SheetChromeNone,
+        VetRule::SheetBodyNotView,
+        VetRule::ViewNotTopLevel,
+        VetRule::SheetWithoutLines,
+        VetRule::ListEmpty,
+        VetRule::ListTooLong,
+        VetRule::SheetTextTooLong,
+        VetRule::KeyDuplicate,
+    ];
+
     /// Kebab-case name used on the CLI, as in section 1.3.
     pub fn as_str(self) -> &'static str {
         match self {
@@ -115,6 +137,16 @@ impl VetRule {
             VetRule::LinkOrderDuplicate => "link-order-duplicate",
             VetRule::LanesInIso => "lanes-in-iso",
             VetRule::CornerOutOfRange => "corner-out-of-range",
+            VetRule::NeedsSheet => "needs-sheet",
+            VetRule::SheetInIso => "sheet-in-iso",
+            VetRule::SheetChromeNone => "sheet-chrome-none",
+            VetRule::SheetBodyNotView => "sheet-body-not-view",
+            VetRule::ViewNotTopLevel => "view-not-top-level",
+            VetRule::SheetWithoutLines => "sheet-without-lines",
+            VetRule::ListEmpty => "list-empty",
+            VetRule::ListTooLong => "list-too-long",
+            VetRule::SheetTextTooLong => "sheet-text-too-long",
+            VetRule::KeyDuplicate => "key-duplicate",
         }
     }
 }
@@ -211,6 +243,10 @@ pub fn validate_page(page: &Page, grammar: &Grammar) -> Vec<Violation> {
         );
     }
 
+    if let Some(sheet) = &page.sheet {
+        check_sheet(page, sheet, &entries, &mut violations);
+    }
+
     let body_pointer = root.child("body");
     if page.body.is_empty() {
         violations.push(
@@ -245,7 +281,20 @@ pub fn validate_page(page: &Page, grammar: &Grammar) -> Vec<Violation> {
         .filter_map(|entry| entry.node.id())
         .filter(|id| is_valid_id(id))
         .collect();
+    // Off a sheet, every sheet surface but the sheet itself is `needs-sheet` where it occurs.
+    let mut surfaces: BTreeMap<NodePointer, SheetSurface> = BTreeMap::new();
+    if page.sheet.is_none() {
+        for surface in SheetSurface::ALL {
+            if surface == SheetSurface::Sheet {
+                continue;
+            }
+            for pointer in surface.occurrences(page, grammar) {
+                surfaces.entry(pointer).or_insert(surface);
+            }
+        }
+    }
     for entry in &entries {
+        check_sheet_placement(page, entry, &surfaces, &mut violations);
         let context = enclosing_box_kind(entry, &box_context);
         check_entry(entry, context, grammar, &mut ids, &mut violations);
         check_pipe_targets(entry, &all_ids, &mut violations);
@@ -258,7 +307,7 @@ pub fn validate_page(page: &Page, grammar: &Grammar) -> Vec<Violation> {
             NodeRef::Node(Node::Box(_)) => {
                 box_context.insert(entry.pointer.clone(), context);
             }
-            NodeRef::Node(Node::Row(_) | Node::Col(_) | Node::Lanes(_)) => {
+            NodeRef::Node(Node::Row(_) | Node::Col(_) | Node::Lanes(_) | Node::View(_)) => {
                 box_context.insert(entry.pointer.clone(), context);
             }
             _ => {}
@@ -291,6 +340,246 @@ pub fn validate_page(page: &Page, grammar: &Grammar) -> Vec<Violation> {
     check_links(page, &ids, &lane_heads, &mut violations);
 
     violations.0
+}
+
+/// `needs-sheet` at a sheet surface in the body of a page without `sheet`, one of
+/// `surfaces`, which `SheetSurface::occurrences` lists; on a sheet,
+/// `sheet-body-not-view` for a body child that is not a View and `view-not-top-level` for a
+/// View below the body.
+fn check_sheet_placement(
+    page: &Page,
+    entry: &NodeEntry<'_>,
+    surfaces: &BTreeMap<NodePointer, SheetSurface>,
+    violations: &mut Violations,
+) {
+    if let Some(surface) = surfaces.get(&entry.pointer) {
+        violations.push(
+            entry.pointer.clone(),
+            VetRule::NeedsSheet,
+            needs_sheet_message(*surface),
+        );
+    }
+    let is_view = matches!(entry.node, NodeRef::Node(Node::View(_)));
+    match (&page.sheet, is_view, entry.depth == 1) {
+        (Some(_), false, true) => violations.push(
+            entry.pointer.clone(),
+            VetRule::SheetBodyNotView,
+            format!(
+                "a design sheet holds Views; wrap {} in a View",
+                entry.node.tag_name()
+            ),
+        ),
+        (Some(_), true, false) => violations.push(
+            entry.pointer.clone(),
+            VetRule::ViewNotTopLevel,
+            "a View is a body child of a sheet".to_string(),
+        ),
+        (None, _, _) | (Some(_), true, true) | (Some(_), false, false) => {}
+    }
+}
+
+fn needs_sheet_message(surface: SheetSurface) -> String {
+    format!(
+        "{} is drawn on a design sheet only; add sheet or remove it",
+        surface.as_str()
+    )
+}
+
+/// The sheet rules at and under `/sheet`, in document order: the projection and chrome the
+/// sheet needs, its lines, then the title block's text, lists and attention item ids.
+fn check_sheet(page: &Page, sheet: &Sheet, entries: &[NodeEntry<'_>], violations: &mut Violations) {
+    let sheet_pointer = NodePointer::root().child("sheet");
+    if page.projection == Projection::Iso {
+        violations.push(
+            sheet_pointer.clone(),
+            VetRule::SheetInIso,
+            "a design sheet is drawn flat only".to_string(),
+        );
+    }
+    if page.chrome == Chrome::None {
+        violations.push(
+            NodePointer::root().child("chrome"),
+            VetRule::SheetChromeNone,
+            "a design sheet draws its head in the title block, so chrome cannot be none"
+                .to_string(),
+        );
+    }
+    let draws_a_line = !page.links.is_empty()
+        || entries.iter().any(|entry| {
+            matches!(
+                entry.node,
+                NodeRef::Node(Node::Pipe(_) | Node::Tee(_)) | NodeRef::TeeArm(_)
+            )
+        });
+    if !draws_a_line {
+        violations.push(
+            sheet_pointer.clone(),
+            VetRule::SheetWithoutLines,
+            "a design sheet draws at least one Pipe, Tee or Link, which its legend strip keys"
+                .to_string(),
+        );
+    }
+
+    if let Some(wordmark) = &sheet.wordmark {
+        check_sheet_text(
+            sheet_pointer.child("wordmark"),
+            wordmark,
+            Some(("wordmark", WORDMARK_SCALARS_MAX)),
+            violations,
+        );
+    }
+    let problem = sheet_pointer.child("problem");
+    check_caption(&problem, sheet.problem.caption.as_deref(), violations);
+    if let Some(lead) = &sheet.problem.lead {
+        check_sheet_text(problem.child("lead"), lead, None, violations);
+    }
+    check_list_length(
+        SheetList::ProblemPoints,
+        sheet.problem.points.len(),
+        violations,
+    );
+    let points = SheetList::ProblemPoints;
+    for (index, point) in sheet
+        .problem
+        .points
+        .iter()
+        .enumerate()
+        .take(points.max() + 1)
+    {
+        check_sheet_text(
+            points.pointer().index(index).child("text"),
+            &point.text,
+            None,
+            violations,
+        );
+    }
+
+    let answer = sheet_pointer.child("answer");
+    check_caption(&answer, sheet.answer.caption.as_deref(), violations);
+    check_sheet_text(
+        answer.child("statement"),
+        &sheet.answer.statement,
+        None,
+        violations,
+    );
+    let paragraphs = SheetList::AnswerParagraphs;
+    check_list_length(paragraphs, sheet.answer.paragraphs.len(), violations);
+    for (index, paragraph) in sheet
+        .answer
+        .paragraphs
+        .iter()
+        .enumerate()
+        .take(paragraphs.max() + 1)
+    {
+        let pointer = paragraphs.pointer().index(index);
+        match paragraph {
+            AnswerParagraph::Plain(text) => check_sheet_text(pointer, text, None, violations),
+            AnswerParagraph::Led(led) => {
+                check_sheet_text(pointer.child("lead"), &led.lead, None, violations);
+                check_sheet_text(pointer.child("text"), &led.text, None, violations);
+            }
+        }
+    }
+
+    let attention = sheet_pointer.child("attention");
+    check_caption(&attention, sheet.attention.caption.as_deref(), violations);
+    let items = SheetList::AttentionItems;
+    check_list_length(items, sheet.attention.items.len(), violations);
+    let mut item_ids: BTreeMap<&str, NodePointer> = BTreeMap::new();
+    for (index, item) in sheet
+        .attention
+        .items
+        .iter()
+        .enumerate()
+        .take(items.max() + 1)
+    {
+        let pointer = items.pointer().index(index);
+        check_key_id(&item.id, &pointer, &mut item_ids, violations);
+        check_sheet_text(pointer.child("lead"), &item.lead, None, violations);
+        check_sheet_text(pointer.child("text"), &item.text, None, violations);
+    }
+}
+
+/// `id-malformed` and `key-duplicate` for the id of one keyed entry at `entry`.
+fn check_key_id<'a>(
+    id: &'a str,
+    entry: &NodePointer,
+    seen: &mut BTreeMap<&'a str, NodePointer>,
+    violations: &mut Violations,
+) {
+    let id_pointer = entry.child("id");
+    if !is_valid_id(id) {
+        violations.push(
+            id_pointer,
+            VetRule::IdMalformed,
+            format!("id does not match {ID_PATTERN}"),
+        );
+        return;
+    }
+    match seen.get(id) {
+        Some(first) => violations.push(
+            id_pointer,
+            VetRule::KeyDuplicate,
+            format!("\"{id}\" is already used by {first}"),
+        ),
+        None => {
+            seen.insert(id, entry.clone());
+        }
+    }
+}
+
+fn check_caption(cell: &NodePointer, caption: Option<&str>, violations: &mut Violations) {
+    if let Some(caption) = caption {
+        check_sheet_text(
+            cell.child("caption"),
+            caption,
+            Some(("caption", CAPTION_SCALARS_MAX)),
+            violations,
+        );
+    }
+}
+
+/// The text rules of one sheet field, then `sheet-text-too-long` against `limit`, the
+/// field's name and its largest scalar count, when it has one.
+fn check_sheet_text(
+    pointer: NodePointer,
+    text: &str,
+    limit: Option<(&str, usize)>,
+    violations: &mut Violations,
+) {
+    let field = TextField {
+        pointer: pointer.clone(),
+        text,
+    };
+    check_text(&field, violations);
+    if let Some((name, max)) = limit {
+        let scalar_count = text.chars().count();
+        if scalar_count > max {
+            violations.push(
+                pointer,
+                VetRule::SheetTextTooLong,
+                format!("{name} of {scalar_count} characters, above {max}"),
+            );
+        }
+    }
+}
+
+/// `list-empty` for a list with minimum 1 that holds nothing, `list-too-long` above its
+/// maximum.
+fn check_list_length(list: SheetList, length: usize, violations: &mut Violations) {
+    if length < list.min() {
+        violations.push(
+            list.pointer(),
+            VetRule::ListEmpty,
+            format!("{} is empty", list.name()),
+        );
+    } else if length > list.max() {
+        violations.push(
+            list.pointer(),
+            VetRule::ListTooLong,
+            format!("{length} {}, above {}", list.name(), list.max()),
+        );
+    }
 }
 
 /// `pipe-target-on-tee-arm` for a Tee arm with `from` or `to`; for a Pipe node,
@@ -418,7 +707,7 @@ fn check_links(
             format!("links has {} entries, above {LINKS_MAX}", page.links.len()),
         );
     }
-    let canvas_width = page.width as f32 + CANVAS_PADDING_TOTAL_PX;
+    let canvas_width = canvas_width(page);
     let mut orders = BTreeMap::new();
     for (index, link) in page.links.iter().enumerate().take(LINKS_MAX + 1) {
         let link_pointer = links_pointer.index(index);
@@ -592,6 +881,10 @@ fn check_entry<'a>(
         NodeRef::Node(Node::Box(box_node)) => {
             check_children_count(entry, box_node.children.len(), violations);
         }
+        NodeRef::Node(Node::View(view)) => {
+            check_gap_and_grow(entry, view.gap, None, view.children.len(), violations);
+            check_children_count(entry, view.children.len(), violations);
+        }
         NodeRef::Node(Node::Frame(frame)) => {
             if !(FRAME_HEIGHT_MIN..=FRAME_HEIGHT_MAX).contains(&frame.height) {
                 violations.push(
@@ -699,7 +992,8 @@ fn check_kind_and_tint(
             | Node::Note(_)
             | Node::Text(_)
             | Node::Callout(_)
-            | Node::Frame(_),
+            | Node::Frame(_)
+            | Node::View(_),
         ) => {}
     }
 }
