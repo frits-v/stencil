@@ -5,15 +5,28 @@ use stencil_model::pointer::NodePointer;
 use stencil_model::text::{MeasureError, TextMeasurer, TextStyleName};
 use stencil_model::theme::{LEGEND_RELABEL_SLACK_PX, TintCue};
 use stencil_model::{
-    Line, TINT_SLOTS, Theme, ThemeRule, ThemeViolation, drawn_legend_label, legend_label,
+    LegendEntry, Line, PipeForm, TINT_SLOTS, Theme, ThemeRule, ThemeViolation,
+    canonical_legend_label, drawn_legend_entry_label, entry_key,
 };
 
-/// Every (line, tint) a legend entry can name: gray, deny, and solid and dash in each slot.
-fn line_uses() -> Vec<(Line, Option<u8>)> {
-    let mut uses = vec![(Line::Gray, None), (Line::Deny, None)];
+/// Every legend entry a page can hold, by its line and colour: gray, deny, solid and dash
+/// in each slot, then solid and dash by actor.
+fn line_uses() -> Vec<LegendEntry> {
+    let entry = |line, tint, by_actor| LegendEntry {
+        line,
+        tint,
+        form: PipeForm::Tube,
+        by_actor,
+        text: String::new(),
+    };
+    let mut uses = vec![
+        entry(Line::Gray, None, false),
+        entry(Line::Deny, None, false),
+    ];
     for line in [Line::Solid, Line::Dash] {
-        uses.extend((1..=TINT_SLOTS).map(|slot| (line, Some(slot))));
+        uses.extend((1..=TINT_SLOTS).map(|slot| entry(line, Some(slot), false)));
     }
+    uses.extend([Line::Solid, Line::Dash].map(|line| entry(line, None, true)));
     uses
 }
 
@@ -27,9 +40,10 @@ pub fn theme_legend_labels(
 ) -> Result<Vec<ThemeViolation>, MeasureError> {
     let style = TextStyleName::LegendLabel.text_style().style;
     let mut violations = Vec::new();
-    for (line, tint) in line_uses() {
-        let drawn = drawn_legend_label(theme, line, tint);
-        let canonical = legend_label(line, tint);
+    for entry in line_uses() {
+        let (line, tint) = (entry.line, entry.tint);
+        let drawn = drawn_legend_entry_label(theme, &entry_key(&entry));
+        let canonical = canonical_legend_label(&entry);
         if drawn == canonical {
             continue;
         }
@@ -39,8 +53,9 @@ pub fn theme_legend_labels(
         if excess <= LEGEND_RELABEL_SLACK_PX {
             continue;
         }
-        let named_by_slot =
-            theme.tint_cue == TintCue::Color && matches!(line, Line::Solid | Line::Dash);
+        let named_by_slot = theme.tint_cue == TintCue::Color
+            && !entry.by_actor
+            && matches!(line, Line::Solid | Line::Dash);
         let pointer = match (named_by_slot, tint) {
             (true, Some(slot)) => NodePointer::root()
                 .child("tints")

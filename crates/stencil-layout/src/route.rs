@@ -55,6 +55,7 @@ pub(crate) fn route_links(
     measurer: &mut dyn TextMeasurer,
 ) -> Result<Vec<LinkRoute>, LayoutError> {
     let nodes_by_id = nodes_by_id(page, geometry);
+    let actors = stencil_model::PageActors::of(page);
     let links_pointer = NodePointer::root().child("links");
     let mut routes = Vec::with_capacity(page.links.len().min(LINKS_MAX));
     for (index, link) in page.links.iter().enumerate().take(LINKS_MAX) {
@@ -81,13 +82,19 @@ pub(crate) fn route_links(
                 page.projection == Projection::Iso,
             ),
         };
-        let parts = tag_parts(page, link, &link_pointer, &points, measurer)?;
+        let mut parts = tag_parts(page, link, &link_pointer, &points, measurer)?;
+        if page.sheet.is_some() {
+            clear_box_edges(geometry, &points, &mut parts);
+        }
         let tag = parts.first().map(|part| part.bounds);
         let (corner, bend) = link_bend(page, grammar, link.line);
         routes.push(LinkRoute {
             index,
             line: link.line,
-            tint: line_tint(link.line, link.tint),
+            tint: line_tint(
+                link.line,
+                actors.slot(actors.link_actor(link)).or(link.tint),
+            ),
             from_node,
             to_node,
             points,
@@ -580,9 +587,24 @@ pub(crate) fn block_shadows(geometry: &PageGeometry, obstacles: &[Obstacle]) -> 
 }
 
 /// The heading parts of a node that contains the links it labels (section 14.4 rule 15):
-/// for a View its number, title, subtitle and note; nothing for every other tag.
+/// for a View its number, title, subtitle and note; for a Phases node its lane names and
+/// captions and its phase heads and titles; nothing for every other tag.
 pub(crate) fn label_boxes(node: &NodeGeometry) -> Vec<BoxRect> {
     match node.tag {
+        NodeTag::Phases => node
+            .parts
+            .iter()
+            .filter(|part| {
+                matches!(
+                    part.name,
+                    PartName::LaneName
+                        | PartName::LaneText
+                        | PartName::PhaseHead
+                        | PartName::PhaseTitle
+                )
+            })
+            .map(|part| part.bounds)
+            .collect(),
         NodeTag::View => node
             .parts
             .iter()
@@ -619,7 +641,9 @@ pub(crate) fn label_boxes(node: &NodeGeometry) -> Vec<BoxRect> {
         | NodeTag::Frame
         | NodeTag::TitleBlock
         | NodeTag::TitleCell
-        | NodeTag::ProblemPoint => Vec::new(),
+        | NodeTag::ProblemPoint
+        | NodeTag::ActorChip
+        | NodeTag::Step => Vec::new(),
     }
 }
 
@@ -637,7 +661,9 @@ fn obstacle_box(node: &NodeGeometry) -> Option<BoxRect> {
         | NodeTag::Lede
         | NodeTag::LegendEntry
         | NodeTag::Foot
-        | NodeTag::TitleCell => Some(node.bounds),
+        | NodeTag::TitleCell
+        | NodeTag::ActorChip
+        | NodeTag::Step => Some(node.bounds),
         NodeTag::Pipe => node.part(PartName::Tag).map(|part| part.bounds),
         NodeTag::Zone => node.part(PartName::Label).map(|part| part.bounds),
         // An enclosing node already blocks a title block's points and the block itself
@@ -650,7 +676,8 @@ fn obstacle_box(node: &NodeGeometry) -> Option<BoxRect> {
         | NodeTag::Lanes
         | NodeTag::TitleBlock
         | NodeTag::ProblemPoint
-        | NodeTag::View => None,
+        | NodeTag::View
+        | NodeTag::Phases => None,
     }
 }
 
@@ -1352,6 +1379,100 @@ pub(crate) fn measure_tag(
 
 /// The tag of a labeled link: sized like a pipe tag from the label and sub measured at
 /// max-content, centered on the midpoint of the longest segment (the first one on a tie).
+/// The air a tag keeps from a Box edge it is slid off.
+const TAG_EDGE_CLEARANCE_PX: f32 = 6.0;
+
+/// True when the border of `zone` runs through the interior of `tag`: the two overlap and
+/// the tag does not lie inside the zone.
+fn straddles(tag: &BoxRect, zone: &BoxRect) -> bool {
+    let overlaps = tag.x < zone.right()
+        && zone.x < tag.right()
+        && tag.y < zone.bottom()
+        && zone.y < tag.bottom();
+    let inside = tag.x >= zone.x
+        && tag.right() <= zone.right()
+        && tag.y >= zone.y
+        && tag.bottom() <= zone.bottom();
+    overlaps && !inside
+}
+
+/// On a design sheet a tag never straddles a Box edge (section 14.4 rule 15): a tag whose
+/// box a Box border runs through slides along its leg, the shortest distance that clears
+/// every Box border by `TAG_EDGE_CLEARANCE_PX` and keeps it on the leg. A tag no slide
+/// clears stays where it is.
+fn clear_box_edges(geometry: &PageGeometry, points: &[PagePoint], parts: &mut [Part]) {
+    let Some(tag) = parts.first().map(|part| part.bounds) else {
+        return;
+    };
+    let zones: Vec<BoxRect> = geometry
+        .nodes
+        .iter()
+        .filter(|node| node.tag == NodeTag::Zone)
+        .map(|node| node.bounds)
+        .collect();
+    if !zones.iter().any(|zone| straddles(&tag, zone)) {
+        return;
+    }
+    let mut longest: Option<(f32, PagePoint, PagePoint)> = None;
+    for segment in points.windows(2) {
+        let (Some(&a), Some(&b)) = (segment.first(), segment.get(1)) else {
+            continue;
+        };
+        let length = (b.x - a.x).abs() + (b.y - a.y).abs();
+        if longest.is_none_or(|(best, _, _)| length > best) {
+            longest = Some((length, a, b));
+        }
+    }
+    let Some((_, a, b)) = longest else {
+        return;
+    };
+    let along_x = (b.x - a.x).abs() >= (b.y - a.y).abs();
+    let (low, high, start, size) = if along_x {
+        (a.x.min(b.x), a.x.max(b.x), tag.x, tag.width)
+    } else {
+        (a.y.min(b.y), a.y.max(b.y), tag.y, tag.height)
+    };
+    let shifted = |offset: f32| {
+        if along_x {
+            BoxRect {
+                x: tag.x + offset,
+                ..tag
+            }
+        } else {
+            BoxRect {
+                y: tag.y + offset,
+                ..tag
+            }
+        }
+    };
+    let mut candidates: Vec<f32> = Vec::new();
+    for zone in &zones {
+        let edges = if along_x {
+            [zone.x, zone.right()]
+        } else {
+            [zone.y, zone.bottom()]
+        };
+        for edge in edges {
+            candidates.push(edge + TAG_EDGE_CLEARANCE_PX - start);
+            candidates.push(edge - TAG_EDGE_CLEARANCE_PX - (start + size));
+        }
+    }
+    let best = candidates
+        .into_iter()
+        .filter(|offset| start + offset >= low && start + offset + size <= high)
+        .filter(|offset| !zones.iter().any(|zone| straddles(&shifted(*offset), zone)))
+        .min_by(|first, second| first.abs().total_cmp(&second.abs()));
+    if let Some(offset) = best {
+        for part in parts.iter_mut() {
+            if along_x {
+                part.bounds.x += offset;
+            } else {
+                part.bounds.y += offset;
+            }
+        }
+    }
+}
+
 fn tag_parts(
     page: &Page,
     link: &Link,

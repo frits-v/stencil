@@ -207,6 +207,12 @@ pub fn channel_lightness(channels: [u8; 3]) -> f64 {
     lab(channel_rgb(channels))[0]
 }
 
+/// The CIE76 delta E between two colours, the distance the separation rows read; None when
+/// either is malformed.
+pub fn color_delta_e(first: &Color, second: &Color) -> Option<f64> {
+    Some(delta_e(rgb(first)?, rgb(second)?))
+}
+
 fn delta_e(first: Rgb, second: Rgb) -> f64 {
     let first = lab(first);
     let second = lab(second);
@@ -397,6 +403,38 @@ fn sheet_rows(theme: &Theme, rows: &mut Rows) {
         }
     }
     rows.non_text(("sheet.frame", sheet.frame), ("sheet.paper", sheet.paper));
+    actor_rows(theme, rows);
+}
+
+/// The actor rows (section 14.5 rule 1), per tint slot: the actor's ink, which its lane
+/// name, step titles and node headings take, on a step's `sheet.cell` and on its lane band,
+/// then its wire, which its strokes and lines take, on `sheet.paper`.
+fn actor_rows(theme: &Theme, rows: &mut Rows) {
+    let sheet = theme.sheet_colors();
+    for (index, tint) in theme.tints.iter().enumerate() {
+        let slot = index + 1;
+        let ink = (format!("tints.{slot}.ink"), &tint.ink);
+        rows.text((&ink.0, ink.1), ("sheet.cell", sheet.cell));
+        let band_name = format!("lane band {slot}");
+        let band = u8::try_from(slot)
+            .ok()
+            .and_then(|slot| theme.lane_band(slot));
+        match &band {
+            Some(band) => rows.text((&ink.0, ink.1), (&band_name, band)),
+            None => rows.rows.push(QualityRow {
+                class: QualityClass::Contrast,
+                subject: format!("{} on {band_name}", ink.0),
+                value: None,
+                threshold: TEXT_CONTRAST_MIN,
+                closest: None,
+                not_applicable: Some(MALFORMED_COLOR),
+            }),
+        }
+        rows.non_text(
+            (&format!("tints.{slot}.wire"), &tint.wire),
+            ("sheet.paper", sheet.paper),
+        );
+    }
 }
 
 fn separation_rows(theme: &Theme, rows: &mut Rows) {

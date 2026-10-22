@@ -10,11 +10,11 @@ use std::sync::atomic::{AtomicU64, Ordering};
 
 use serde_json::Value;
 use stencil_layout::checks::{
-    PrintWidth, child_inside_container, links_avoid_boxes, links_routed, pipes_land, print_fit,
+    PrintWidth, child_inside_container_on, links_avoid_boxes, links_routed, pipes_land, print_fit,
     siblings_do_not_overlap, text_fits_box,
 };
 use stencil_layout::{LayoutError, PageGeometry, layout_page, theme_legend_labels};
-use stencil_model::checks::{CheckReport, legend_consistency, remembered_constants};
+use stencil_model::checks::{CheckReport, keys_used, legend_consistency, remembered_constants};
 use stencil_model::grammar::GrammarViolation;
 use stencil_model::products::icon_matches_product;
 use stencil_model::text::MeasureError;
@@ -401,12 +401,13 @@ pub fn render_page_sized(loaded: &LoadedDocument, png: PngSize) -> Result<Render
     })
 }
 
-/// The three geometry-free checks, in `CheckName` order.
-pub fn model_checks(page: &Page, grammar: &Grammar) -> [CheckReport; 3] {
+/// The four geometry-free checks, in `CheckName` order.
+pub fn model_checks(page: &Page, grammar: &Grammar) -> [CheckReport; 4] {
     [
         remembered_constants(page, grammar),
         legend_consistency(page),
         icon_matches_product(page, grammar),
+        keys_used(page),
     ]
 }
 
@@ -431,11 +432,11 @@ pub fn all_checks(
     geometry: &PageGeometry,
     scene: Option<&IsoScene>,
     print_width: Option<PrintWidth>,
-) -> [CheckReport; 15] {
-    let [remembered, legend, icons] = model_checks(page, grammar);
+) -> [CheckReport; 16] {
+    let [remembered, legend, icons, keys] = model_checks(page, grammar);
     let description = describe(page, grammar, geometry);
     [
-        child_inside_container(geometry),
+        child_inside_container_on(page, geometry),
         siblings_do_not_overlap(geometry),
         text_fits_box(geometry),
         remembered,
@@ -450,6 +451,7 @@ pub fn all_checks(
         print_fit_report(geometry, scene, print_width),
         icons,
         description_covers_drawing(page, geometry, &description.text),
+        keys,
     ]
 }
 

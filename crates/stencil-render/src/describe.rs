@@ -12,9 +12,10 @@ use stencil_model::checks::{CheckName, CheckReport, Defect};
 use stencil_model::pointer::NodePointer;
 use stencil_model::products::{item_shape, named_product};
 use stencil_model::{
-    Arrow, CalloutKind, Chrome, Grammar, LINKS_MAX, LegendKey, Line, ListKind, Node, NodeRef,
-    NoteKind, Page, Pipe, PipeDir, PipeForm, Projection, Sheet, SheetList, TINT_NAMES, Tee,
-    body_nodes, legend_label, line_key,
+    Arrow, CalloutKind, Chrome, Grammar, KeyColour, LINKS_MAX, LegendKey, Line, ListKind, Node,
+    NodeRef, NoteKind, Page, PageActors, Phases, Pipe, PipeDir, PipeForm, Projection, Sheet,
+    SheetList, Step, StepLook, TINT_NAMES, Tee, body_nodes, canonical_legend_label, entry_key,
+    line_key,
 };
 
 use crate::format_number;
@@ -105,14 +106,23 @@ pub fn escape_markdown(text: &str) -> String {
     escaped
 }
 
-/// The legend key the description prints: the line's output key, followed by `-band` for a
-/// band entry.
+/// The legend key the description prints: the line's output key, or `<line>-by-actor` for
+/// a by-actor key, followed by `-band` for a band entry.
 pub fn legend_output_key(key: &LegendKey) -> String {
-    let line = line_key(key.line, key.tint);
+    let line = match key.colour {
+        KeyColour::Slot(tint) => line_key(key.line, tint).to_string(),
+        KeyColour::ByActor => format!("{}-by-actor", key.line.as_str()),
+    };
     match key.form {
-        PipeForm::Tube => line.to_string(),
+        PipeForm::Tube => line,
         PipeForm::Band => format!("{line}-band"),
     }
+}
+
+/// A value inside a list-valued table cell: escaped, and escaped again before `;`, which
+/// joins the cell's values (section 14.1 rule 12).
+fn cell_value(text: &str) -> String {
+    escape_markdown(text).replace(';', "\\;")
 }
 
 fn body_pointer() -> NodePointer {
@@ -155,6 +165,7 @@ struct Writer<'a> {
     nodes: HashMap<&'a str, NodeRef<'a>>,
     ids: HashMap<&'a str, NodePointer>,
     children: Vec<Vec<usize>>,
+    actors: PageActors<'a>,
 }
 
 impl<'a> Writer<'a> {
@@ -188,6 +199,63 @@ impl<'a> Writer<'a> {
             nodes,
             ids,
             children,
+            actors: PageActors::of(page),
+        }
+    }
+
+    /// An actor's name, or its id when the page does not declare it.
+    fn actor_name(&self, id: &str) -> String {
+        self.page
+            .actors
+            .iter()
+            .find(|actor| actor.id == id)
+            .map_or_else(|| id.to_string(), |actor| actor.name.clone())
+    }
+
+    /// The effective actor of the line drawn by the geometry node `node`: a Pipe, a Tee
+    /// spine or a Tee arm.
+    fn node_line_actor(&self, node: &stencil_layout::NodeGeometry) -> Option<&'a str> {
+        match self.nodes.get(node.pointer.as_str()).copied()? {
+            NodeRef::Node(Node::Pipe(pipe)) => self.actors.pipe_actor(pipe),
+            NodeRef::Node(Node::Tee(tee)) => self.actors.tee_actor(tee),
+            NodeRef::TeeArm(arm) => {
+                let parent = self.geometry.nodes.get(node.parent?)?;
+                match self.nodes.get(parent.pointer.as_str()).copied()? {
+                    NodeRef::Node(Node::Tee(tee)) => self.actors.arm_actor(tee, arm),
+                    _ => None,
+                }
+            }
+            NodeRef::Node(_) => None,
+        }
+    }
+
+    /// The legend key of a use: by actor when its effective actor is declared.
+    fn use_key(
+        &self,
+        (line, tint, form): (Line, Option<u8>, PipeForm),
+        actor: Option<&str>,
+    ) -> LegendKey {
+        match self.actors.slot(actor) {
+            Some(_) => LegendKey::by_actor(line, form),
+            None => LegendKey::new(line, tint, form),
+        }
+    }
+
+    /// The Style cell of a use: its slot and actor name when it acts for an actor.
+    fn use_style(&self, key: &LegendKey, actor: Option<&str>) -> String {
+        match (actor, self.actors.slot(actor)) {
+            (Some(actor), Some(slot)) => {
+                actor_style(key.line, slot, &escape_markdown(&self.actor_name(actor)))
+            }
+            _ => style(key),
+        }
+    }
+
+    /// The Actor cell of a line on a sheet.
+    fn actor_cell(&self, actor: Option<&str>) -> String {
+        match actor.filter(|actor| self.actors.tint(actor).is_some()) {
+            Some(actor) => escape_markdown(&self.actor_name(actor)),
+            None => "none".to_string(),
         }
     }
 
@@ -301,8 +369,11 @@ impl<'a> Writer<'a> {
     }
 
     /// The outline of the descendants of the node at `root`.
+    /// A Phases node's lane-by-phase table follows the whole list, so no list item after it
+    /// can read as an indented code block.
     fn outline_under(&self, root: usize) -> String {
         let mut lines = Vec::new();
+        let mut tables = Vec::new();
         let mut pending: Vec<(usize, usize)> = self
             .children_of(root)
             .iter()
@@ -314,11 +385,23 @@ impl<'a> Writer<'a> {
                 break;
             };
             self.outline_node(index, depth, &mut lines);
+            if let (Some(node), Some(NodeRef::Node(Node::Phases(phases)))) = (
+                self.geometry.nodes.get(index),
+                self.geometry
+                    .nodes
+                    .get(index)
+                    .and_then(|node| self.nodes.get(node.pointer.as_str()).copied()),
+            ) {
+                tables.push(self.phases_table(node, phases));
+            }
             for &child in self.children_of(index).iter().rev() {
                 pending.push((child, depth + 1));
             }
         }
-        lines.join("\n")
+        let mut blocks = vec![lines.join("\n")];
+        blocks.extend(tables);
+        blocks.retain(|block| !block.is_empty());
+        blocks.join("\n\n")
     }
 
     fn children_of(&self, index: usize) -> &[usize] {
@@ -349,6 +432,12 @@ impl<'a> Writer<'a> {
                 if let Some(tint) = node.tint {
                     text.push_str(&format!(", tint {tint}"));
                 }
+                if let Some(actor) = &box_node.actor {
+                    text.push_str(&format!(
+                        ", actor {}",
+                        escape_markdown(&self.actor_name(actor))
+                    ));
+                }
                 format!("{text}. {pointer}")
             }
             (NodeTag::Pcard, Some(NodeRef::Node(Node::Item(item)))) => {
@@ -373,6 +462,12 @@ impl<'a> Writer<'a> {
                 }
                 if self.page.projection == Projection::Iso {
                     text.push_str(&format!(", shape {}", item_shape(kind, item).as_str()));
+                }
+                if let Some(actor) = &item.actor {
+                    text.push_str(&format!(
+                        ", actor {}",
+                        escape_markdown(&self.actor_name(actor))
+                    ));
                 }
                 lines.push(format!("{indent}- {text}. {pointer}"));
                 for fact in &item.facts {
@@ -436,6 +531,17 @@ impl<'a> Writer<'a> {
             (NodeTag::Tee, Some(NodeRef::Node(Node::Tee(tee)))) => {
                 format!("Tee {}.", escape_markdown(&tee.hub))
             }
+            (NodeTag::Phases, Some(NodeRef::Node(Node::Phases(phases)))) => {
+                self.phases_outline(node, phases, depth, lines);
+                return;
+            }
+            (NodeTag::Step, Some(NodeRef::Node(Node::Step(step)))) => {
+                lines.push(format!("{indent}- {} {pointer}", self.step_line(step)));
+                for line in &step.lines {
+                    lines.push(format!("{nested}- Line {}.", escape_markdown(line)));
+                }
+                return;
+            }
             (
                 NodeTag::Zone
                 | NodeTag::Pcard
@@ -445,7 +551,9 @@ impl<'a> Writer<'a> {
                 | NodeTag::Callout
                 | NodeTag::Frame
                 | NodeTag::Pipe
-                | NodeTag::Tee,
+                | NodeTag::Tee
+                | NodeTag::Phases
+                | NodeTag::Step,
                 _,
             ) => format!(
                 "{} {}. {pointer}",
@@ -466,11 +574,129 @@ impl<'a> Writer<'a> {
                 | NodeTag::TitleBlock
                 | NodeTag::TitleCell
                 | NodeTag::ProblemPoint
-                | NodeTag::View,
+                | NodeTag::View
+                | NodeTag::ActorChip,
                 _,
             ) => return,
         };
         lines.push(format!("{indent}- {text}"));
+    }
+
+    /// A Step's outline line: `Step <title>. Lane <actor>, phase <n> <title>, column <c>[ to
+    /// <d>][, look <look>].`
+    fn step_line(&self, step: &Step) -> String {
+        let phases = self.phases_of(step);
+        let phase = phases.and_then(|phases| {
+            phases
+                .phases
+                .iter()
+                .position(|phase| phase.id == step.phase)
+                .and_then(|index| Some((index + 1, phases.phases.get(index)?)))
+        });
+        let phase_text = match phase {
+            Some((number, phase)) => format!("phase {number} {}", escape_markdown(&phase.title)),
+            None => format!("phase {}", escape_markdown(&step.phase)),
+        };
+        let last = u16::from(step.col) + u16::from(step.span) - 1;
+        let columns = if step.span > 1 {
+            format!("column {} to {last}", step.col)
+        } else {
+            format!("column {}", step.col)
+        };
+        let look = match step.look {
+            StepLook::Box => String::new(),
+            other => format!(", look {}", other.as_str()),
+        };
+        format!(
+            "Step {}. Lane {}, {phase_text}, {columns}{look}.",
+            escape_markdown(&step.title),
+            escape_markdown(&self.actor_name(&step.lane))
+        )
+    }
+
+    /// The Phases node that holds a Step.
+    fn phases_of(&self, step: &Step) -> Option<&'a Phases> {
+        self.nodes.values().copied().find_map(|node| match node {
+            NodeRef::Node(Node::Phases(phases))
+                if phases.children.iter().any(|child| match child {
+                    Node::Step(candidate) => std::ptr::eq(candidate, step),
+                    _ => false,
+                }) =>
+            {
+                Some(phases)
+            }
+            _ => None,
+        })
+    }
+
+    /// The Phases node line, its Steps nested under it, then a table of lanes by phases
+    /// whose cells list each lane's Steps in that phase in column order. The outline goes
+    /// on in a new list after the table.
+    fn phases_outline(
+        &self,
+        node: &stencil_layout::NodeGeometry,
+        phases: &Phases,
+        depth: usize,
+        lines: &mut Vec<String>,
+    ) {
+        let indent = "  ".repeat(depth);
+        let lanes: Vec<String> = phases
+            .lanes
+            .iter()
+            .map(|lane| escape_markdown(&self.actor_name(lane)))
+            .collect();
+        lines.push(format!(
+            "{indent}- Phases: lanes {}; phases {}. {}",
+            lanes.join(", "),
+            phase_titles(phases).join(", "),
+            self.spans(&node.pointer)
+        ));
+    }
+
+    /// A table with one row per lane and one column per phase, whose header cells carry
+    /// the phase spans and lane cells the lane spans, each cell listing that lane's Steps
+    /// in the phase in column order.
+    fn phases_table(&self, node: &stencil_layout::NodeGeometry, phases: &Phases) -> String {
+        let lanes_pointer = SheetList::Lanes.pointer_in(&node.pointer);
+        let phases_pointer = SheetList::Phases.pointer_in(&node.pointer);
+        let mut header = vec!["Lane".to_string()];
+        for (index, title) in phase_titles(phases).iter().enumerate() {
+            header.push(format!(
+                "{title} {}",
+                self.spans(&phases_pointer.index(index))
+            ));
+        }
+        let mut rows = Vec::new();
+        for (lane_index, lane) in phases.lanes.iter().enumerate() {
+            let mut row = vec![format!(
+                "{} {}",
+                escape_markdown(&self.actor_name(lane)),
+                self.spans(&lanes_pointer.index(lane_index))
+            )];
+            for phase in &phases.phases {
+                let mut steps: Vec<&Step> = phases
+                    .children
+                    .iter()
+                    .filter_map(|child| match child {
+                        Node::Step(step) if &step.lane == lane && step.phase == phase.id => {
+                            Some(step)
+                        }
+                        _ => None,
+                    })
+                    .collect();
+                steps.sort_by_key(|step| step.col);
+                let titles: Vec<String> =
+                    steps.iter().map(|step| cell_value(&step.title)).collect();
+                row.push(if titles.is_empty() {
+                    "none".to_string()
+                } else {
+                    titles.join("; ")
+                });
+            }
+            rows.push(row);
+        }
+        let header: Vec<&str> = header.iter().map(String::as_str).collect();
+        table(&header, &rows)
     }
 
     /// The legend key of every line use: pipes, Tee spines and arms in body order, then
@@ -478,12 +704,13 @@ impl<'a> Writer<'a> {
     fn line_uses(&self) -> Vec<LegendKey> {
         let mut uses = Vec::new();
         for node in &self.geometry.nodes {
+            let actor = self.node_line_actor(node);
             match self.nodes.get(node.pointer.as_str()).copied() {
                 Some(NodeRef::Node(Node::Pipe(pipe)) | NodeRef::TeeArm(pipe)) => {
-                    uses.push(LegendKey::new(pipe.line, pipe.tint, pipe.form));
+                    uses.push(self.use_key((pipe.line, pipe.tint, pipe.form), actor));
                 }
                 Some(NodeRef::Node(Node::Tee(tee))) => {
-                    uses.push(LegendKey::new(tee.line, tee.tint, PipeForm::Tube));
+                    uses.push(self.use_key((tee.line, tee.tint, PipeForm::Tube), actor));
                 }
                 Some(NodeRef::Node(
                     Node::Row(_)
@@ -496,14 +723,17 @@ impl<'a> Writer<'a> {
                     | Node::Text(_)
                     | Node::Callout(_)
                     | Node::Frame(_)
-                    | Node::View(_),
+                    | Node::View(_)
+                    | Node::Phases(_)
+                    | Node::Step(_),
                 ))
                 | None => {}
             }
         }
         for route in self.geometry.links.iter().take(LINKS_MAX + 1) {
             if let Some(link) = self.page.links.get(route.index) {
-                uses.push(LegendKey::new(link.line, link.tint, PipeForm::Tube));
+                let actor = self.actors.link_actor(link);
+                uses.push(self.use_key((link.line, link.tint, PipeForm::Tube), actor));
             }
         }
         uses
@@ -513,7 +743,7 @@ impl<'a> Writer<'a> {
         self.page
             .legend
             .iter()
-            .find(|entry| LegendKey::new(entry.line, entry.tint, entry.form) == *key)
+            .find(|entry| entry_key(entry) == *key)
             .map_or_else(
                 || "no legend entry".to_string(),
                 |entry| escape_markdown(&entry.text),
@@ -542,13 +772,22 @@ impl<'a> Writer<'a> {
                         PipeDir::Horizontal => "pipe h",
                         PipeDir::Vertical => "pipe v",
                     };
-                    rows.push((view, self.pipe_row(&node.pointer, pipe, kind, pointer)));
+                    let actor = self.node_line_actor(node);
+                    rows.push((
+                        view,
+                        self.pipe_row(&node.pointer, (pipe, actor), kind, pointer),
+                    ));
                 }
                 Some(NodeRef::TeeArm(pipe)) => {
-                    rows.push((view, self.pipe_row(&node.pointer, pipe, "tee arm", pointer)));
+                    let actor = self.node_line_actor(node);
+                    rows.push((
+                        view,
+                        self.pipe_row(&node.pointer, (pipe, actor), "tee arm", pointer),
+                    ));
                 }
                 Some(NodeRef::Node(Node::Tee(tee))) => {
-                    rows.push((view, self.spine_row(tee, pointer)));
+                    let actor = self.node_line_actor(node);
+                    rows.push((view, self.spine_row((tee, actor), pointer)));
                 }
                 Some(NodeRef::Node(
                     Node::Row(_)
@@ -561,7 +800,9 @@ impl<'a> Writer<'a> {
                     | Node::Text(_)
                     | Node::Callout(_)
                     | Node::Frame(_)
-                    | Node::View(_),
+                    | Node::View(_)
+                    | Node::Phases(_)
+                    | Node::Step(_),
                 ))
                 | None => {}
             }
@@ -590,24 +831,42 @@ impl<'a> Writer<'a> {
             if route.status == RouteStatus::Fallback {
                 ends.push_str(", fallback route");
             }
-            let key = LegendKey::new(link.line, link.tint, PipeForm::Tube);
+            let actor = self.actors.link_actor(link);
+            let key = self.use_key((link.line, link.tint, PipeForm::Tube), actor);
             let from_view = self.view_of(route.from_node);
             let view = from_view.filter(|_| from_view == self.view_of(route.to_node));
             rows.push((
                 view,
-                vec![
-                    line,
-                    kind,
-                    endpoint(route.from_node, &link.from),
-                    endpoint(route.to_node, &link.to),
-                    style(&key),
-                    ends,
-                    self.means(&key),
+                self.line_row(
+                    vec![
+                        line,
+                        kind,
+                        endpoint(route.from_node, &link.from),
+                        endpoint(route.to_node, &link.to),
+                        self.use_style(&key, actor),
+                        ends,
+                        self.means(&key),
+                    ],
+                    actor,
                     self.spans(&links_pointer().index(route.index)),
-                ],
+                ),
             ));
         }
         rows
+    }
+
+    /// A Lines row: its cells, then on a sheet the Actor cell, then the pointer.
+    fn line_row(
+        &self,
+        mut cells: Vec<String>,
+        actor: Option<&str>,
+        pointer: String,
+    ) -> Vec<String> {
+        if self.page.sheet.is_some() {
+            cells.push(self.actor_cell(actor));
+        }
+        cells.push(pointer);
+        cells
     }
 
     /// The geometry index of the View that holds the node at `index`, if any.
@@ -631,6 +890,7 @@ impl<'a> Writer<'a> {
         blocks.push("## Sheet".to_string());
         blocks.push(self.figure_paragraph());
         self.title_block(sheet, blocks);
+        self.who_acts(blocks);
         let legend_pointer = NodePointer::root().child("legend");
         if self.geometry.node(&legend_pointer).is_some() {
             blocks.push(format!("## Legend {}", self.spans(&legend_pointer)));
@@ -641,7 +901,7 @@ impl<'a> Writer<'a> {
         }
         let scoped = self.scoped_lines_rows();
         let header = [
-            "Line", "Kind", "From", "To", "Style", "Ends", "Means", "Pointer",
+            "Line", "Kind", "From", "To", "Style", "Ends", "Means", "Actor", "Pointer",
         ];
         let mut view_number = 1;
         for (index, node) in self.geometry.nodes.iter().enumerate() {
@@ -763,6 +1023,38 @@ impl<'a> Writer<'a> {
         blocks.push(table(&["Item", "Pointer"], &items));
     }
 
+    /// `## Who acts`: one row per actor, its pointer the chip's in the legend strip.
+    fn who_acts(&self, blocks: &mut Vec<String>) {
+        if self.page.actors.is_empty() {
+            return;
+        }
+        blocks.push("## Who acts".to_string());
+        let rows: Vec<Vec<String>> = self
+            .page
+            .actors
+            .iter()
+            .enumerate()
+            .take(SheetList::Actors.max() + 1)
+            .map(|(index, actor)| {
+                let colour = TINT_NAMES
+                    .get(usize::from(actor.tint).wrapping_sub(1))
+                    .copied()
+                    .unwrap_or("blue");
+                vec![
+                    escape_markdown(&actor.name),
+                    escape_markdown(&actor.id),
+                    format!("tint {}; {colour} in center", actor.tint),
+                    actor
+                        .text
+                        .as_deref()
+                        .map_or_else(|| "none".to_string(), escape_markdown),
+                    self.spans(&SheetList::Actors.pointer().index(index)),
+                ]
+            })
+            .collect();
+        blocks.push(table(&["Actor", "Id", "Colour", "Text", "Pointer"], &rows));
+    }
+
     /// `### <caption>` with the cell's spans.
     fn cell_heading(&self, cell: &NodePointer) -> String {
         let caption = title_cell_caption(self.page, cell).unwrap_or_default();
@@ -772,7 +1064,7 @@ impl<'a> Writer<'a> {
     fn pipe_row(
         &self,
         pointer: &NodePointer,
-        pipe: &Pipe,
+        (pipe, actor): (&Pipe, Option<&str>),
         kind: &str,
         pointer_span: String,
     ) -> Vec<String> {
@@ -780,20 +1072,23 @@ impl<'a> Writer<'a> {
             PipeForm::Tube => kind.to_string(),
             PipeForm::Band => format!("{kind}, band"),
         };
-        let key = LegendKey::new(pipe.line, pipe.tint, pipe.form);
-        vec![
-            pipe_line_name(pipe),
-            kind,
-            self.pipe_end(pointer, PipeEndSide::Start, pipe.from.as_deref()),
-            self.pipe_end(pointer, PipeEndSide::End, pipe.to.as_deref()),
-            style(&key),
-            arrow_ends(pipe.arrow).to_string(),
-            self.means(&key),
+        let key = self.use_key((pipe.line, pipe.tint, pipe.form), actor);
+        self.line_row(
+            vec![
+                pipe_line_name(pipe),
+                kind,
+                self.pipe_end(pointer, PipeEndSide::Start, pipe.from.as_deref()),
+                self.pipe_end(pointer, PipeEndSide::End, pipe.to.as_deref()),
+                self.use_style(&key, actor),
+                arrow_ends(pipe.arrow).to_string(),
+                self.means(&key),
+            ],
+            actor,
             pointer_span,
-        ]
+        )
     }
 
-    fn spine_row(&self, tee: &Tee, pointer_span: String) -> Vec<String> {
+    fn spine_row(&self, (tee, actor): (&Tee, Option<&str>), pointer_span: String) -> Vec<String> {
         let arms: Vec<String> = tee
             .arms
             .iter()
@@ -802,17 +1097,20 @@ impl<'a> Writer<'a> {
                 escape_markdown(&pipe.label)
             })
             .collect();
-        let key = LegendKey::new(tee.line, tee.tint, PipeForm::Tube);
-        vec![
-            escape_markdown(&tee.hub),
-            "tee spine".to_string(),
-            format!("hub {}", escape_markdown(&tee.hub)),
-            arms.join(" and "),
-            style(&key),
-            arrow_ends(Arrow::None).to_string(),
-            self.means(&key),
+        let key = self.use_key((tee.line, tee.tint, PipeForm::Tube), actor);
+        self.line_row(
+            vec![
+                escape_markdown(&tee.hub),
+                "tee spine".to_string(),
+                format!("hub {}", escape_markdown(&tee.hub)),
+                arms.join(" and "),
+                self.use_style(&key, actor),
+                arrow_ends(Arrow::None).to_string(),
+                self.means(&key),
+            ],
+            actor,
             pointer_span,
-        ]
+        )
     }
 
     /// One end of a pipe: its target by name and id, else what rule 11 lands it on.
@@ -846,11 +1144,11 @@ impl<'a> Writer<'a> {
             .iter()
             .enumerate()
             .map(|(index, entry)| {
-                let key = LegendKey::new(entry.line, entry.tint, entry.form);
+                let key = entry_key(entry);
                 let used = uses.iter().filter(|used_key| **used_key == key).count();
                 vec![
                     legend_output_key(&key),
-                    legend_label(entry.line, entry.tint).to_string(),
+                    canonical_legend_label(entry).to_string(),
                     escape_markdown(&entry.text),
                     used.to_string(),
                     self.spans(&legend_pointer.index(index)),
@@ -871,9 +1169,31 @@ fn pipe_line_name(pipe: &Pipe) -> String {
     labelled(&pipe.label, pipe.sub.as_deref())
 }
 
+/// `<n> <title>` for each phase of a Phases node, numbered from 1.
+fn phase_titles(phases: &Phases) -> Vec<String> {
+    phases
+        .phases
+        .iter()
+        .enumerate()
+        .map(|(index, phase)| format!("{} {}", index + 1, escape_markdown(&phase.title)))
+        .collect()
+}
+
+/// `<line>, tint <n>, <actor>; <colour> in center` for a use an actor's slot colours.
+fn actor_style(line: Line, slot: u8, actor: &str) -> String {
+    let colour = TINT_NAMES
+        .get(usize::from(slot).wrapping_sub(1))
+        .copied()
+        .unwrap_or("blue");
+    format!(
+        "{}, tint {slot}, {actor}; {colour} in center",
+        line.as_str()
+    )
+}
+
 /// `<line>[, tint <n>]; <colour> in center`.
 fn style(key: &LegendKey) -> String {
-    let colour = match (key.line, key.tint) {
+    let colour = match (key.line, key.tint()) {
         (Line::Gray, _) => "gray",
         (Line::Deny, _) => "red",
         (Line::Solid | Line::Dash, tint) => tint
@@ -881,7 +1201,7 @@ fn style(key: &LegendKey) -> String {
             .copied()
             .unwrap_or("blue"),
     };
-    match key.tint {
+    match key.tint() {
         Some(tint) => format!("{}, tint {tint}; {colour} in center", key.line.as_str()),
         None => format!("{}; {colour} in center", key.line.as_str()),
     }

@@ -10,7 +10,8 @@ use stencil_model::grammar::{BorderPattern, Role};
 use stencil_model::text::TextStyleName;
 use stencil_model::theme::{SolidEdges, ThemeStroke, Tint, solid_dot};
 use stencil_model::{
-    CalloutKind, Line, Projection, Theme, drawn_legend_label, legend_label, line_key, line_tint,
+    CalloutKind, LegendEntry, Line, Projection, Theme, canonical_legend_label,
+    drawn_legend_entry_label, drawn_legend_label, entry_key, legend_label, line_key, line_tint,
 };
 
 pub use stencil_model::theme::{DotStyle, LinePattern as LineStyle};
@@ -351,6 +352,26 @@ impl<'a> Palette<'a> {
         (drawn != legend_label(line_use.line, line_use.tint)).then_some(drawn)
     }
 
+    /// The label drawn for a legend entry when it differs from its canonical label
+    /// (section 14.5 rule 7); None when they are equal.
+    pub fn legend_entry_relabel(self, entry: &LegendEntry) -> Option<String> {
+        let drawn = drawn_legend_entry_label(self.theme, &entry_key(entry));
+        (drawn != canonical_legend_label(entry)).then_some(drawn)
+    }
+
+    /// The sample of a `by_actor` legend entry (section 14.5 rule 7): its line's pattern and
+    /// width in the sheet frame ink, with no end dot, since an end dot names a slot.
+    pub fn by_actor_sample(self, line: Line) -> WireStyle<'a> {
+        let flat = self.flat_wire_style(LineUse::new(line, None));
+        WireStyle {
+            stroke: Stroke {
+                color: self.sheet_ink(SheetInk::Frame),
+                ..flat.stroke
+            },
+            dot: DotStyle::None,
+        }
+    }
+
     /// A Text block: card fill and card border color at the 1.25 px block border.
     pub fn block(self) -> BoxPaint<'a> {
         let card = self.card();
@@ -459,8 +480,9 @@ impl<'a> Palette<'a> {
             | TextStyleName::Statement
             | TextStyleName::ViewNumeral
             | TextStyleName::ViewTitle => theme.sheet_colors().frame,
-            TextStyleName::ViewNote => &theme.ink.secondary,
-            TextStyleName::LeadBody => &theme.ink.primary,
+            TextStyleName::ViewNote | TextStyleName::StepText => &theme.ink.secondary,
+            TextStyleName::LeadBody | TextStyleName::StepTitle => &theme.ink.primary,
+            TextStyleName::ActorName | TextStyleName::LaneName => theme.sheet_colors().frame,
         };
         color.as_str()
     }
@@ -478,8 +500,38 @@ impl<'a> Palette<'a> {
             SheetInk::Cell => sheet.cell,
             SheetInk::InkPrimary => &theme.ink.primary,
             SheetInk::InkSecondary => &theme.ink.secondary,
+            SheetInk::LegendText => &theme.legend.text_ink,
+            SheetInk::TintFill => &theme.tint(1).fill,
+            SheetInk::TintWire | SheetInk::LaneBand => &theme.tint(1).wire,
+            SheetInk::TintInk => &theme.tint(1).ink,
         };
         color.as_str()
+    }
+
+    /// The color of a sheet role for a part an actor owns: the actor's tint for the tint
+    /// roles and the lane band (section 14.5 rule 2); without an actor a tint role reads as
+    /// the paint the part has with no one acting, the cell, the rule and the primary ink.
+    pub fn sheet_color(self, ink: SheetInk, slot: Option<u8>) -> String {
+        let theme = self.theme;
+        let fallback = match ink {
+            SheetInk::TintFill | SheetInk::LaneBand => SheetInk::Cell,
+            SheetInk::TintWire => SheetInk::Rule,
+            SheetInk::TintInk => SheetInk::InkPrimary,
+            other => other,
+        };
+        let Some(slot) = slot else {
+            return self.sheet_ink(fallback).to_string();
+        };
+        let tint = theme.tint(slot);
+        match ink {
+            SheetInk::TintFill => tint.fill.as_str().to_string(),
+            SheetInk::TintWire => tint.wire.as_str().to_string(),
+            SheetInk::TintInk => tint.ink.as_str().to_string(),
+            SheetInk::LaneBand => theme
+                .lane_band(slot)
+                .map_or_else(|| tint.fill.as_str().to_string(), |band| band.0),
+            other => self.sheet_ink(other).to_string(),
+        }
     }
 
     /// The minor and major grid colors, when the theme draws a grid.
@@ -538,6 +590,14 @@ pub enum SheetInk {
     Cell,
     InkPrimary,
     InkSecondary,
+    /// The legend's description ink.
+    LegendText,
+    /// The fill, wire and ink of the actor that owns the part (section 14.5 rule 2).
+    TintFill,
+    TintWire,
+    TintInk,
+    /// The actor's fill mixed halfway toward the sheet paper.
+    LaneBand,
 }
 
 /// The shape a sheet part draws.
@@ -589,13 +649,24 @@ pub const REF_TICK_PX: f32 = 0.8;
 pub const VIEW_NUMBER_STROKE_PX: f32 = 1.5;
 /// The border of a frame-role or boundary-role Box on a sheet, whatever the grammar's width.
 pub const SHEET_BOX_BORDER_PX: f32 = 1.25;
+/// The outline of a Step and of an actor's Item on a sheet, and of a phase head's circle.
+pub const STEP_BORDER_PX: f32 = 1.25;
+pub const PHASE_HEAD_STROKE_PX: f32 = 1.0;
+/// The border of an actor chip's swatch in the legend strip.
+pub const ACTOR_SWATCH_BORDER_PX: f32 = 1.0;
+/// `stroke-dasharray` of a phase separator, and of a planned Step's outline.
+pub const PHASE_SEPARATOR_DASH: &str = "4 4";
+pub const PLANNED_DASH: &str = "7 4";
 
 /// The paint row of every part a design sheet adds (section 14.5 rule 12), matched on the
 /// part name with no wildcard so a new part has to choose its row. None for the parts that
 /// existed before the sheet, on their existing owners, except the kicker's and the lede's
 /// text, which a sheet sets in its label and secondary inks.
 pub fn sheet_part_paint(owner: NodeTag, part: PartName) -> Option<PartPaint> {
-    use SheetInk::{Cell, Frame, InkPrimary, InkSecondary, LabelInk, Paper, Rule};
+    use SheetInk::{
+        Cell, Frame, InkPrimary, InkSecondary, LabelInk, LaneBand, LegendText, Paper, Rule,
+        TintFill, TintInk, TintWire,
+    };
     let paint = match part {
         PartName::Border => PartPaint {
             shape: PartShape::Rect,
@@ -647,7 +718,50 @@ pub fn sheet_part_paint(owner: NodeTag, part: PartName) -> Option<PartPaint> {
             NodeTag::ProblemPoint => text_paint(InkPrimary),
             NodeTag::Kicker => text_paint(LabelInk),
             NodeTag::Lede => text_paint(InkSecondary),
+            NodeTag::Step => text_paint(TintInk),
             _ => return None,
+        },
+        PartName::Swatch => match owner {
+            NodeTag::ActorChip => PartPaint {
+                shape: PartShape::Rect,
+                fill: Some(TintFill),
+                stroke: Some((TintWire, ACTOR_SWATCH_BORDER_PX)),
+                text: None,
+            },
+            _ => return None,
+        },
+        PartName::ActorName | PartName::LaneName => text_paint(TintInk),
+        PartName::ActorText => text_paint(LegendText),
+        PartName::LaneText | PartName::StepLine => text_paint(InkSecondary),
+        PartName::LaneBand => PartPaint {
+            shape: PartShape::Rect,
+            fill: Some(LaneBand),
+            stroke: None,
+            text: None,
+        },
+        PartName::LaneBar => PartPaint {
+            shape: PartShape::Rect,
+            fill: Some(TintWire),
+            stroke: None,
+            text: None,
+        },
+        PartName::LaneRule => stroke_paint(PartShape::Line, Rule, 1.0),
+        PartName::PhaseHead => PartPaint {
+            shape: PartShape::Circle,
+            fill: Some(Cell),
+            stroke: Some((Frame, PHASE_HEAD_STROKE_PX)),
+            text: None,
+        },
+        PartName::PhaseNumeral => text_paint(Frame),
+        PartName::PhaseTitle => text_paint(LabelInk),
+        PartName::PhaseSeparator => {
+            stroke_paint(PartShape::DashedLine(PHASE_SEPARATOR_DASH), Rule, 1.0)
+        }
+        PartName::Front | PartName::StackBack => PartPaint {
+            shape: PartShape::Rect,
+            fill: Some(Cell),
+            stroke: Some((TintWire, STEP_BORDER_PX)),
+            text: None,
         },
         PartName::Badge
         | PartName::BadgeText
@@ -673,7 +787,6 @@ pub fn sheet_part_paint(owner: NodeTag, part: PartName) -> Option<PartPaint> {
         | PartName::Spine
         | PartName::Hub
         | PartName::HubText
-        | PartName::Swatch
         | PartName::LegendLabel
         | PartName::LegendText
         | PartName::Heading
@@ -1010,7 +1123,7 @@ mod tests {
     use stencil_layout::PART_NAMES;
 
     /// The owners and parts of section 14.5 rule 12 that a sheet draws.
-    const SHEET_PARTS: [(NodeTag, PartName); 29] = [
+    const SHEET_PARTS: [(NodeTag, PartName); 45] = [
         (NodeTag::Page, PartName::Border),
         (NodeTag::Page, PartName::RefRule),
         (NodeTag::Page, PartName::RefTick),
@@ -1040,6 +1153,22 @@ mod tests {
         (NodeTag::View, PartName::ViewSubtitle),
         (NodeTag::View, PartName::ViewRule),
         (NodeTag::View, PartName::ViewNote),
+        (NodeTag::ActorChip, PartName::Swatch),
+        (NodeTag::ActorChip, PartName::ActorName),
+        (NodeTag::ActorChip, PartName::ActorText),
+        (NodeTag::Phases, PartName::LaneBand),
+        (NodeTag::Phases, PartName::LaneBar),
+        (NodeTag::Phases, PartName::LaneName),
+        (NodeTag::Phases, PartName::LaneText),
+        (NodeTag::Phases, PartName::LaneRule),
+        (NodeTag::Phases, PartName::PhaseHead),
+        (NodeTag::Phases, PartName::PhaseNumeral),
+        (NodeTag::Phases, PartName::PhaseTitle),
+        (NodeTag::Phases, PartName::PhaseSeparator),
+        (NodeTag::Step, PartName::Front),
+        (NodeTag::Step, PartName::StackBack),
+        (NodeTag::Step, PartName::Text),
+        (NodeTag::Step, PartName::StepLine),
     ];
 
     #[test]

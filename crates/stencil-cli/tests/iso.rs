@@ -91,7 +91,7 @@ fn check_hero_passes_every_applicable_check_in_every_theme() {
         );
         assert_eq!(
             lines.last().copied(),
-            Some("stencil check: 15 checks, 13 passed, 0 failed, 2 not applicable"),
+            Some("stencil check: 16 checks, 13 passed, 0 failed, 3 not applicable"),
             "{theme}"
         );
         assert_eq!(outcome.stderr, "");
@@ -124,7 +124,7 @@ fn check_hero_with_projection_flat_skips_the_iso_checks() {
     ));
     assert_eq!(
         lines.last().copied(),
-        Some("stencil check: 15 checks, 9 passed, 0 failed, 6 not applicable")
+        Some("stencil check: 16 checks, 9 passed, 0 failed, 7 not applicable")
     );
 }
 
@@ -136,7 +136,7 @@ fn check_prints_the_four_iso_checks_before_print_fit_and_icon_matches_product() 
         .into_iter()
         .filter(|line| line.starts_with("check "))
         .collect();
-    assert_eq!(check_lines.len(), 15);
+    assert_eq!(check_lines.len(), 16);
     assert!(check_lines[8].starts_with("check iso-labels-clear: "));
     assert!(check_lines[9].starts_with("check iso-links-clear: "));
     assert!(check_lines[10].starts_with("check iso-link-ends: "));

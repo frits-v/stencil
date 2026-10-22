@@ -1453,6 +1453,54 @@ fn sheet_document() -> Value {
     })
 }
 
+/// The smallest sheet with an actor: its two items act for it, and a Phases node holds one
+/// lane, one phase and one Step after them.
+fn actor_document() -> Value {
+    let mut document = sheet_document();
+    document["actors"] = json!([{ "id": "crew", "name": "Crew", "tint": 2 }]);
+    let view = &mut document["body"][0];
+    for item in view["children"][0]["children"].as_array_mut().unwrap() {
+        item["actor"] = json!("crew");
+    }
+    view["children"].as_array_mut().unwrap().push(json!({
+        "tag": "Phases",
+        "lanes": ["crew"],
+        "phases": [{ "id": "run", "title": "Run" }],
+        "children": [{ "tag": "Step", "lane": "crew", "phase": "run", "title": "Work" }]
+    }));
+    document
+}
+
+/// `document` laid out flat with fixed metrics, flipped to iso, and with every node and
+/// part a sheet draws above `keep` removed, so the writer meets `keep` first.
+fn traced_at(document: Value, keep: &str) -> String {
+    let mut page: Page = serde_json::from_value(document).unwrap();
+    let mut geometry = common::layout_with_fixed_metrics(&page);
+    page.projection = Projection::Iso;
+    let first = geometry
+        .nodes
+        .iter()
+        .position(|node| node.pointer.as_str() == keep)
+        .unwrap();
+    let mut index = 0;
+    geometry.nodes.retain(|node| {
+        index += 1;
+        index > first
+            || !node.parts.iter().any(|part| part.name.is_sheet()) && {
+                matches!(
+                    node.tag,
+                    stencil_layout::NodeTag::Page | stencil_layout::NodeTag::Body
+                )
+            }
+    });
+    for node in &mut geometry.nodes {
+        if node.pointer.as_str() != keep {
+            node.parts.retain(|part| !part.name.is_sheet());
+        }
+    }
+    refused_at(&page, &geometry)
+}
+
 /// (pointer, rule name) of every violation of `document` under gcp.
 fn vet_rules(document: Value) -> Vec<(String, &'static str)> {
     let page: Page = serde_json::from_value(document).unwrap();
@@ -1518,6 +1566,51 @@ fn every_sheet_surface_is_refused_on_every_path() {
                     node.parts.retain(|part| !part.name.is_sheet());
                 }
                 assert_eq!(refused_at(&page, &traced), "/body/0");
+            }
+            stencil_model::SheetSurface::Actors => {
+                let mut without_sheet = actor_document();
+                without_sheet.as_object_mut().unwrap().remove("sheet");
+                assert!(vet_rules(without_sheet).contains(&("/actors".to_string(), "needs-sheet")));
+                assert_eq!(traced_at(actor_document(), "/actors/0"), "/actors/0");
+            }
+            stencil_model::SheetSurface::Phases | stencil_model::SheetSurface::Step => {
+                let pointer = match surface {
+                    stencil_model::SheetSurface::Phases => "/body/0/children/1",
+                    _ => "/body/0/children/1/children/0",
+                };
+                let mut without_sheet = actor_document();
+                without_sheet.as_object_mut().unwrap().remove("sheet");
+                assert!(vet_rules(without_sheet).contains(&(pointer.to_string(), "needs-sheet")));
+                assert_eq!(traced_at(actor_document(), pointer), pointer);
+            }
+            // An actor field and a by-actor legend entry leave no trace that is not also
+            // legal on another page, so vet alone holds them.
+            stencil_model::SheetSurface::Actor => {
+                let mut without_sheet = sheet_document();
+                without_sheet.as_object_mut().unwrap().remove("sheet");
+                without_sheet["body"][0]["children"][0]["children"][0]["actor"] = json!("crew");
+                assert_eq!(
+                    vet_rules(without_sheet),
+                    [
+                        ("/body/0".to_string(), "needs-sheet"),
+                        (
+                            "/body/0/children/0/children/0/actor".to_string(),
+                            "needs-sheet"
+                        )
+                    ]
+                );
+            }
+            stencil_model::SheetSurface::LegendByActor => {
+                let mut without_sheet = sheet_document();
+                without_sheet.as_object_mut().unwrap().remove("sheet");
+                without_sheet["legend"][0]["by_actor"] = json!(true);
+                assert_eq!(
+                    vet_rules(without_sheet),
+                    [
+                        ("/body/0".to_string(), "needs-sheet"),
+                        ("/legend/0/by_actor".to_string(), "needs-sheet")
+                    ]
+                );
             }
         }
         examined += 1;

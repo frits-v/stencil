@@ -98,6 +98,7 @@ fn push_children_reversed<'a>(entry: &NodeEntry<'a>, pending: &mut Vec<NodeEntry
         NodeRef::Node(Node::Lanes(lanes)) => push_nodes(pending, &lanes.children),
         NodeRef::Node(Node::Box(box_node)) => push_nodes(pending, &box_node.children),
         NodeRef::Node(Node::View(view)) => push_nodes(pending, &view.children),
+        NodeRef::Node(Node::Phases(phases)) => push_nodes(pending, &phases.children),
         NodeRef::Node(Node::Tee(tee)) => {
             let arms_pointer = entry.pointer.child("arms");
             for (index, arm) in tee.arms.iter().enumerate().rev() {
@@ -117,7 +118,8 @@ fn push_children_reversed<'a>(entry: &NodeEntry<'a>, pending: &mut Vec<NodeEntry
             | Node::Pipe(_)
             | Node::Text(_)
             | Node::Callout(_)
-            | Node::Frame(_),
+            | Node::Frame(_)
+            | Node::Step(_),
         )
         | NodeRef::TeeArm(_) => {}
     }
@@ -128,6 +130,7 @@ pub fn text_fields(page: &Page) -> Vec<TextField<'_>> {
     let mut fields = Vec::new();
     push_page_head_text_fields(page, &mut fields);
     push_sheet_text_fields(page, &mut fields);
+    push_actor_text_fields(page, &mut fields);
     for entry in body_nodes(page) {
         push_node_text_fields(&entry, &mut fields);
     }
@@ -235,6 +238,24 @@ pub(crate) fn push_sheet_text_fields<'a>(page: &'a Page, fields: &mut Vec<TextFi
     }
 }
 
+/// Each actor's name and text, in list order, one actor past the maximum.
+pub(crate) fn push_actor_text_fields<'a>(page: &'a Page, fields: &mut Vec<TextField<'a>>) {
+    let actors = SheetList::Actors;
+    for (index, actor) in page.actors.iter().enumerate().take(actors.max() + 1) {
+        let actor_pointer = actors.pointer().index(index);
+        fields.push(TextField {
+            pointer: actor_pointer.child("name"),
+            text: &actor.name,
+        });
+        if let Some(text) = &actor.text {
+            fields.push(TextField {
+                pointer: actor_pointer.child("text"),
+                text,
+            });
+        }
+    }
+}
+
 /// The first LEGEND_ENTRIES_MAX + 1 legend texts: one past the limit is enough for vet to
 /// report `legend-too-long` (section 1.3).
 pub(crate) fn push_legend_text_fields<'a>(page: &'a Page, fields: &mut Vec<TextField<'a>>) {
@@ -337,6 +358,27 @@ pub(crate) fn push_node_text_fields<'a>(entry: &NodeEntry<'a>, fields: &mut Vec<
             }
             if let Some(note) = &view.note {
                 push("note", note);
+            }
+        }
+        NodeRef::Node(Node::Phases(phases)) => {
+            let phases_pointer = entry.pointer.child("phases");
+            let list = SheetList::Phases;
+            for (index, phase) in phases.phases.iter().enumerate().take(list.max() + 1) {
+                fields.push(TextField {
+                    pointer: phases_pointer.index(index).child("title"),
+                    text: &phase.title,
+                });
+            }
+        }
+        NodeRef::Node(Node::Step(step)) => {
+            push("title", &step.title);
+            let lines_pointer = entry.pointer.child("lines");
+            let list = SheetList::StepLines;
+            for (index, line) in step.lines.iter().enumerate().take(list.max() + 1) {
+                fields.push(TextField {
+                    pointer: lines_pointer.index(index),
+                    text: line,
+                });
             }
         }
     }

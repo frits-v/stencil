@@ -13,17 +13,17 @@ pub mod theme;
 mod vet;
 mod walk;
 
-pub use checks::LegendKey;
+pub use checks::{KeyColour, LegendKey, entry_key};
 pub use document::*;
 pub use grammar::{
     Grammar, GrammarError, GrammarRule, GrammarViolation, LineKind, builtin_grammar,
     grammar_schema, parse_grammar, validate_grammar,
 };
 pub use pointer::NodePointer;
-pub use sheet::{SheetList, SheetSurface, SurfaceVocabulary};
+pub use sheet::{PageActors, SheetList, SheetSurface, SurfaceVocabulary};
 pub use theme::{
-    Theme, ThemeError, ThemeRule, ThemeViolation, apply_overrides, drawn_legend_label, parse_theme,
-    theme_quality, theme_schema, validate_theme,
+    Theme, ThemeError, ThemeRule, ThemeViolation, apply_overrides, drawn_legend_entry_label,
+    drawn_legend_label, parse_theme, theme_quality, theme_schema, validate_theme,
 };
 pub use vet::{VetRule, Violation, is_grammar_reference, is_theme_reference, validate_page};
 pub use walk::{NodeEntry, NodeRef, TextField, body_nodes, text_fields};

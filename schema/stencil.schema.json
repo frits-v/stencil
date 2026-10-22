@@ -3,6 +3,14 @@
   "title": "Page",
   "type": "object",
   "properties": {
+    "actors": {
+      "description": "Who acts on a design sheet. Each actor owns one tint slot, and everything it does\nis drawn in that slot's colours.",
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Actor"
+      },
+      "maxItems": 8
+    },
     "badge": {
       "description": "The pill before the kicker, printed uppercase, for example Draft; absent draws none.",
       "type": [
@@ -136,6 +144,45 @@
     "legend"
   ],
   "$defs": {
+    "Actor": {
+      "description": "Who acts on a design sheet: a lane of a Phases node, a chip in the legend strip, and\nthe colour of every node and line it owns.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "description": "Unique among the actors.",
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9-]{0,63}$"
+        },
+        "name": {
+          "description": "Printed upper case in lane names and the legend strip.",
+          "type": "string",
+          "maxLength": 400,
+          "minLength": 1
+        },
+        "text": {
+          "description": "The line under the name: what the actor does.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 400,
+          "minLength": 1
+        },
+        "tint": {
+          "description": "The tint slot the actor is drawn in; unique on the page.",
+          "type": "integer",
+          "format": "uint8",
+          "maximum": 8,
+          "minimum": 1
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "tint"
+      ]
+    },
     "Answer": {
       "type": "object",
       "properties": {
@@ -218,6 +265,14 @@
     "AttentionItem": {
       "type": "object",
       "properties": {
+        "actor": {
+          "description": "The actor who attends to the item.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[a-z0-9][a-z0-9-]{0,63}$"
+        },
         "id": {
           "description": "Unique among the attention items.",
           "type": "string",
@@ -363,6 +418,10 @@
     "LegendEntry": {
       "type": "object",
       "properties": {
+        "by_actor": {
+          "description": "On a page with actors, the entry names every use of its line and form that has an\neffective actor; each is drawn in its actor's colour.",
+          "type": "boolean"
+        },
         "form": {
           "description": "The form of the pipes this entry names: a tube (the default) or a band. A band and\na tube of one line and tint are two legend entries, and the swatch draws the form.",
           "$ref": "#/$defs/PipeForm"
@@ -403,6 +462,14 @@
     "Link": {
       "type": "object",
       "properties": {
+        "actor": {
+          "description": "On a design sheet, the actor whose colour the link takes; absent takes the actor of\nthe node it leaves.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[a-z0-9][a-z0-9-]{0,63}$"
+        },
         "arrow": {
           "$ref": "#/$defs/Arrow",
           "default": "end"
@@ -671,6 +738,14 @@
           "description": "Any container. `kind` names one of the grammar's container kinds.",
           "type": "object",
           "properties": {
+            "actor": {
+              "description": "On a design sheet, the actor whose colour the Box takes.",
+              "type": [
+                "string",
+                "null"
+              ],
+              "pattern": "^[a-z0-9][a-z0-9-]{0,63}$"
+            },
             "children": {
               "type": "array",
               "items": {
@@ -721,6 +796,14 @@
           "description": "Any named leaf. `kind` names one of the grammar's item kinds.",
           "type": "object",
           "properties": {
+            "actor": {
+              "description": "On a design sheet, the actor whose colour the Item takes.",
+              "type": [
+                "string",
+                "null"
+              ],
+              "pattern": "^[a-z0-9][a-z0-9-]{0,63}$"
+            },
             "facts": {
               "type": "array",
               "items": {
@@ -848,6 +931,14 @@
         {
           "type": "object",
           "properties": {
+            "actor": {
+              "description": "On a design sheet, the actor whose colour the pipe takes; absent takes the actor of\nits `from` node.",
+              "type": [
+                "string",
+                "null"
+              ],
+              "pattern": "^[a-z0-9][a-z0-9-]{0,63}$"
+            },
             "arrow": {
               "$ref": "#/$defs/Arrow"
             },
@@ -933,6 +1024,14 @@
         {
           "type": "object",
           "properties": {
+            "actor": {
+              "description": "On a design sheet, the actor whose colour the Tee and its arms take.",
+              "type": [
+                "string",
+                "null"
+              ],
+              "pattern": "^[a-z0-9][a-z0-9-]{0,63}$"
+            },
             "arms": {
               "type": "array",
               "items": {
@@ -1154,6 +1253,123 @@
             "title",
             "children"
           ]
+        },
+        {
+          "description": "A swimlane of a design sheet: a lane per actor top to bottom, phases left to right, and\nSteps placed by lane, phase and column. Lanes (section 13.6) is a sequence diagram on a\ntime axis and is unrelated.",
+          "type": "object",
+          "properties": {
+            "children": {
+              "description": "Steps only.",
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Node"
+              },
+              "maxItems": 64,
+              "minItems": 1
+            },
+            "id": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "pattern": "^[a-z0-9][a-z0-9-]{0,63}$"
+            },
+            "lanes": {
+              "description": "Actor ids, one lane each, top to bottom.",
+              "type": "array",
+              "items": {
+                "type": "string",
+                "pattern": "^[a-z0-9][a-z0-9-]{0,63}$"
+              },
+              "maxItems": 8,
+              "minItems": 1
+            },
+            "phases": {
+              "description": "Left to right, numbered from 1.",
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Phase"
+              },
+              "maxItems": 8,
+              "minItems": 1
+            },
+            "tag": {
+              "type": "string",
+              "const": "Phases"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "tag",
+            "lanes",
+            "phases",
+            "children"
+          ]
+        },
+        {
+          "description": "One piece of work in a Phases node: who does it (its lane), when (its phase) and where\nin the phase (its columns).",
+          "type": "object",
+          "properties": {
+            "col": {
+              "description": "The first column of the phase the Step covers, from 1.",
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 6,
+              "minimum": 1
+            },
+            "id": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "pattern": "^[a-z0-9][a-z0-9-]{0,63}$"
+            },
+            "lane": {
+              "description": "An actor id among the parent's lanes.",
+              "type": "string",
+              "pattern": "^[a-z0-9][a-z0-9-]{0,63}$"
+            },
+            "lines": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "maxLength": 400,
+                "minLength": 1
+              },
+              "maxItems": 6
+            },
+            "look": {
+              "$ref": "#/$defs/StepLook"
+            },
+            "phase": {
+              "description": "A phase id of the parent.",
+              "type": "string",
+              "pattern": "^[a-z0-9][a-z0-9-]{0,63}$"
+            },
+            "span": {
+              "description": "How many columns the Step covers.",
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 6,
+              "minimum": 1
+            },
+            "tag": {
+              "type": "string",
+              "const": "Step"
+            },
+            "title": {
+              "type": "string",
+              "maxLength": 400,
+              "minLength": 1
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "tag",
+            "lane",
+            "phase",
+            "title"
+          ]
         }
       ]
     },
@@ -1183,6 +1399,26 @@
       "required": [
         "x",
         "y"
+      ]
+    },
+    "Phase": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "description": "Unique among the phases of its Phases node.",
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9-]{0,63}$"
+        },
+        "title": {
+          "type": "string",
+          "maxLength": 400,
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "title"
       ]
     },
     "PipeDir": {
@@ -1310,12 +1546,32 @@
         "left"
       ]
     },
+    "StepLook": {
+      "description": "How a Step is drawn. box: an outlined box. chip: a rounded tinted pill, one stored\nthing. note: no outline, an aside. stack: three offset boxes, many of one thing.\nplanned: dashed, not built yet. text: no box.",
+      "type": "string",
+      "enum": [
+        "box",
+        "chip",
+        "note",
+        "stack",
+        "planned",
+        "text"
+      ]
+    },
     "TeeArm": {
       "description": "A Tee arm is written with `\"tag\": \"Pipe\"`, the same object shape as a Pipe node.",
       "oneOf": [
         {
           "type": "object",
           "properties": {
+            "actor": {
+              "description": "On a design sheet, the actor whose colour the pipe takes; absent takes the actor of\nits `from` node.",
+              "type": [
+                "string",
+                "null"
+              ],
+              "pattern": "^[a-z0-9][a-z0-9-]{0,63}$"
+            },
             "arrow": {
               "$ref": "#/$defs/Arrow"
             },

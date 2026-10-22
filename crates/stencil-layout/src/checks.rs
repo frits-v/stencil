@@ -168,6 +168,88 @@ pub fn child_inside_container(geometry: &PageGeometry) -> CheckReport {
     }
 }
 
+/// `child_inside_container` with the placement relations of a design sheet (section 14.6):
+/// each Step against its lane, whose `LaneBand` must hold the Step's y extent, and against
+/// its phase, which runs from its head to the next phase's, so must hold its x extent.
+pub fn child_inside_container_on(page: &Page, geometry: &PageGeometry) -> CheckReport {
+    let mut report = child_inside_container(geometry);
+    for entry in body_nodes(page) {
+        let NodeRef::Node(Node::Phases(phases)) = entry.node else {
+            continue;
+        };
+        let Some(owner) = geometry.node(&entry.pointer) else {
+            continue;
+        };
+        let bands: Vec<&BoxRect> = owner
+            .parts
+            .iter()
+            .filter(|part| part.name == PartName::LaneBand)
+            .map(|part| &part.bounds)
+            .collect();
+        let heads: Vec<f32> = owner
+            .parts
+            .iter()
+            .filter(|part| part.name == PartName::PhaseHead)
+            .map(|part| part.bounds.x - PHASE_HEAD_INSET_PX)
+            .collect();
+        let children = entry.pointer.child("children");
+        for (index, child) in phases.children.iter().enumerate() {
+            let Node::Step(step) = child else {
+                continue;
+            };
+            let pointer = children.index(index);
+            let Some(node) = geometry.node(&pointer) else {
+                continue;
+            };
+            report.examined += 2;
+            let lane = phases.lanes.iter().position(|lane| *lane == step.lane);
+            let band = lane.and_then(|lane| bands.get(lane));
+            let inside_lane = band.is_some_and(|band| {
+                node.bounds.y >= band.y - GEOMETRY_EPSILON_PX
+                    && node.bounds.bottom() <= band.bottom() + GEOMETRY_EPSILON_PX
+            });
+            if !inside_lane {
+                report.defects.push(Defect {
+                    pointer: pointer.clone(),
+                    message: format!(
+                        "step box {} leaves lane {}",
+                        describe(&node.bounds),
+                        step.lane
+                    ),
+                });
+            }
+            let phase = phases
+                .phases
+                .iter()
+                .position(|phase| phase.id == step.phase);
+            let start = phase.and_then(|phase| heads.get(phase).copied());
+            let end = phase.map(|phase| {
+                heads
+                    .get(phase + 1)
+                    .copied()
+                    .unwrap_or_else(|| owner.bounds.right())
+            });
+            let inside_phase = matches!((start, end), (Some(start), Some(end))
+                if node.bounds.x >= start - GEOMETRY_EPSILON_PX
+                    && node.bounds.right() <= end + GEOMETRY_EPSILON_PX);
+            if !inside_phase {
+                let title = phase
+                    .and_then(|phase| phases.phases.get(phase))
+                    .map_or(step.phase.as_str(), |phase| phase.title.as_str());
+                report.defects.push(Defect {
+                    pointer,
+                    message: format!("step box {} leaves phase {title}", describe(&node.bounds)),
+                });
+            }
+        }
+    }
+    report
+}
+
+/// A phase head's box starts this far after its phase's start (section 14.4 rule 13).
+const PHASE_HEAD_INSET_PX: f32 =
+    crate::phases::PHASE_HEAD_CENTER_PX.0 - crate::phases::PHASE_HEAD_RADIUS_PX;
+
 /// Each unordered pair of nodes with the same parent: the border boxes may touch but not
 /// overlap by more than the epsilon in both axes. The defect sits on the later sibling. A node
 /// whose parent index is not a geometry node is examined and reported, as in
@@ -673,7 +755,9 @@ pub fn pipes_land(page: &Page, geometry: &PageGeometry) -> CheckReport {
                 | Node::Text(_)
                 | Node::Callout(_)
                 | Node::Frame(_)
-                | Node::View(_),
+                | Node::View(_)
+                | Node::Phases(_)
+                | Node::Step(_),
             ) => {}
         }
     }
@@ -1037,7 +1121,8 @@ fn pipe_lands_on(tag: NodeTag) -> bool {
         | NodeTag::Tee
         | NodeTag::Text
         | NodeTag::Callout
-        | NodeTag::Frame => true,
+        | NodeTag::Frame
+        | NodeTag::Step => true,
         NodeTag::Row
         | NodeTag::Col
         | NodeTag::Lanes
@@ -1052,7 +1137,9 @@ fn pipe_lands_on(tag: NodeTag) -> bool {
         | NodeTag::TitleBlock
         | NodeTag::TitleCell
         | NodeTag::ProblemPoint
-        | NodeTag::View => false,
+        | NodeTag::View
+        | NodeTag::ActorChip
+        | NodeTag::Phases => false,
     }
 }
 

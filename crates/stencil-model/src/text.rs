@@ -51,7 +51,7 @@ pub const FONT_SIZE_MAX_PX: f32 = 96.0;
 pub const LETTER_SPACING_MIN_EM: f32 = -0.2;
 pub const LETTER_SPACING_MAX_EM: f32 = 0.5;
 
-/// The 29 styles of section 2.9, in table order.
+/// The 33 styles of section 2.9, in table order.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum TextStyleName {
     Badge,
@@ -83,6 +83,10 @@ pub enum TextStyleName {
     ViewNote,
     ViewNoteSmall,
     LeadBody,
+    ActorName,
+    LaneName,
+    StepTitle,
+    StepText,
 }
 
 impl TextStyleName {
@@ -118,6 +122,10 @@ impl TextStyleName {
             TextStyleName::ViewNote => "view_note",
             TextStyleName::ViewNoteSmall => "view_note_small",
             TextStyleName::LeadBody => "lead_body",
+            TextStyleName::ActorName => "actor_name",
+            TextStyleName::LaneName => "lane_name",
+            TextStyleName::StepTitle => "step_title",
+            TextStyleName::StepText => "step_text",
         }
     }
 
@@ -155,6 +163,10 @@ impl TextStyleName {
             TextStyleName::ViewNote => &VIEW_NOTE,
             TextStyleName::ViewNoteSmall => &VIEW_NOTE_SMALL,
             TextStyleName::LeadBody => &LEAD_BODY,
+            TextStyleName::ActorName => &ACTOR_NAME,
+            TextStyleName::LaneName => &LANE_NAME,
+            TextStyleName::StepTitle => &STEP_TITLE,
+            TextStyleName::StepText => &STEP_TEXT,
         }
     }
 }
@@ -429,9 +441,45 @@ const LEAD_BODY: NamedTextStyle = inter(
     false,
 );
 
-/// The 29 styles of section 2.9, in table order, which is TextStyleName order:
+/// An actor's name in the legend strip's Who acts group.
+const ACTOR_NAME: NamedTextStyle = inter(
+    TextStyleName::ActorName,
+    FontWeight::Bold,
+    11.0,
+    13.2,
+    0.08,
+    true,
+);
+/// An actor's name at the head of its lane in a Phases node.
+const LANE_NAME: NamedTextStyle = inter(
+    TextStyleName::LaneName,
+    FontWeight::Bold,
+    13.0,
+    15.6,
+    0.1,
+    true,
+);
+const STEP_TITLE: NamedTextStyle = inter(
+    TextStyleName::StepTitle,
+    FontWeight::Bold,
+    12.0,
+    15.0,
+    0.0,
+    false,
+);
+/// Step lines, lane captions and the title of a text-look Step.
+const STEP_TEXT: NamedTextStyle = inter(
+    TextStyleName::StepText,
+    FontWeight::Regular,
+    11.5,
+    15.0,
+    0.0,
+    false,
+);
+
+/// The 33 styles of section 2.9, in table order, which is TextStyleName order:
 /// TEXT_STYLES[i].name as usize == i.
-pub const TEXT_STYLES: [NamedTextStyle; 29] = [
+pub const TEXT_STYLES: [NamedTextStyle; 33] = [
     BADGE,
     KICKER,
     TITLE,
@@ -461,6 +509,10 @@ pub const TEXT_STYLES: [NamedTextStyle; 29] = [
     VIEW_NOTE,
     VIEW_NOTE_SMALL,
     LEAD_BODY,
+    ACTOR_NAME,
+    LANE_NAME,
+    STEP_TITLE,
+    STEP_TEXT,
 ];
 
 #[derive(Debug, Clone, PartialEq)]

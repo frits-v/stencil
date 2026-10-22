@@ -24,11 +24,13 @@ fn page_with_field(field: &str, text: &str) -> (Page, &'static str) {
     };
     let mut page = page_with_body(vec![
         Node::Box(BoxNode {
+            actor: None,
             id: None,
             kind: "region".to_string(),
             tint: None,
             label: pick("zone label"),
             children: vec![Node::Item(Item {
+                actor: None,
                 id: None,
                 kind: "product".to_string(),
                 icon: None,
@@ -57,6 +59,7 @@ fn page_with_field(field: &str, text: &str) -> (Page, &'static str) {
             text: pick("note"),
         }),
         Node::Pipe(Pipe {
+            actor: None,
             id: None,
             arrow: stencil_model::Arrow::None,
             axis: None,
@@ -70,6 +73,7 @@ fn page_with_field(field: &str, text: &str) -> (Page, &'static str) {
             to: None,
         }),
         Node::Tee(Tee {
+            actor: None,
             id: None,
             line: Line::Solid,
             tint: Some(1),
@@ -112,6 +116,7 @@ fn page_with_field(field: &str, text: &str) -> (Page, &'static str) {
     page.foot = Some(pick("foot"));
     page.legend = vec![legend_entry(Line::Solid, Some(1), &pick("legend text"))];
     page.links = vec![Link {
+        actor: None,
         from: "text".to_string(),
         to: "frame".to_string(),
         line: Line::Solid,

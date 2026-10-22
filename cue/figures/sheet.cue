@@ -1,5 +1,6 @@
-// onepager: the design sheet of the trigger evaluation service, a title block
-// and one View. examples/onepager.json is this figure exported.
+// onepager: the design sheet of the trigger evaluation service: a title block,
+// its actors, a Workflow view of who does what in which phase, and a System
+// view. examples/onepager.json is this figure exported.
 package gcp
 
 import (
@@ -44,24 +45,157 @@ onepager: gcp.#Page & {
 			caption: "Your attention goes here, and only here"
 			items: [
 				{
-					id:   "plan-approval"
-					lead: "Plan approval."
-					text: "You confirm each new or changed plan before it runs."
+					id:    "plan-approval"
+					lead:  "Plan approval."
+					text:  "You confirm each new or changed plan before it runs."
+					actor: "operator"
 				},
 				{
-					id:   "disputed-verdicts"
-					lead: "Disputed verdicts."
-					text: "A verdict you mark wrong comes back with its frames and plan version."
+					id:    "disputed-verdicts"
+					lead:  "Disputed verdicts."
+					text:  "A verdict you mark wrong comes back with its frames and plan version."
+					actor: "operator"
 				},
 				{
-					id:   "model-updates"
-					lead: "Model updates."
-					text: "A new evaluator version re-plans every active trigger and waits for your approval."
+					id:    "model-updates"
+					lead:  "Model updates."
+					text:  "A new evaluator version re-plans every active trigger and waits for your approval."
+					actor: "operator"
 				},
 			]
 		}
 	}
+	actors: [
+		{id: "operator", name: "Operator", text: "writes triggers, reviews verdicts", tint: 4},
+		{id: "api", name: "Trigger API", text: "plans, versions, queues", tint: 1},
+		{id: "worker", name: "Clip worker", text: "one job per clip", tint: 6},
+		{id: "model", name: "Evaluator", text: "reads frames against a plan", tint: 5},
+	]
 	body: [
+		{
+			tag:      "View"
+			id:       "workflow"
+			title:    "Workflow"
+			subtitle: "one trigger, from description to stored verdict"
+			note:     "a lane for each actor; time runs left to right"
+			children: [
+				{
+					tag: "Phases"
+					id:  "trigger-life"
+					lanes: ["operator", "api", "worker", "model"]
+					phases: [
+						{id: "describe", title: "Describe"},
+						{id: "plan", title: "Plan and approve"},
+						{id: "evaluate", title: "Evaluate each clip"},
+						{id: "review", title: "Review"},
+					]
+					children: [
+						{
+							tag:   "Step"
+							id:    "s-describe"
+							lane:  "operator"
+							phase: "describe"
+							title: "Describe the event"
+							lines: ["in plain language", "camera and hours"]
+						},
+						{
+							tag:   "Step"
+							id:    "s-idle"
+							lane:  "api"
+							phase: "describe"
+							title: "nothing runs yet"
+							look:  "text"
+						},
+						{
+							tag:   "Step"
+							id:    "s-compile"
+							lane:  "api"
+							phase: "plan"
+							title: "Compile a plan"
+							lines: ["objects, conditions, frame rate", "plan version 1"]
+						},
+						{
+							tag:   "Step"
+							id:    "s-approve"
+							lane:  "operator"
+							phase: "plan"
+							col:   2
+							title: "Approve the plan"
+							lines: ["reads the plan, not the prompt"]
+						},
+						{
+							tag:   "Step"
+							id:    "s-store-plan"
+							lane:  "api"
+							phase: "plan"
+							col:   2
+							title: "Store plan version"
+							look:  "chip"
+						},
+						{
+							tag:   "Step"
+							id:    "s-arrive"
+							lane:  "worker"
+							phase: "evaluate"
+							title: "Clip arrives"
+							lines: ["the arrival event names a finished clip"]
+						},
+						{
+							tag:   "Step"
+							id:    "s-evaluate"
+							lane:  "worker"
+							phase: "evaluate"
+							col:   2
+							title: "One job per clip"
+							look:  "stack"
+							lines: ["fetch frames", "call the evaluator"]
+						},
+						{
+							tag:   "Step"
+							id:    "s-judge"
+							lane:  "model"
+							phase: "evaluate"
+							col:   2
+							title: "Judge the frames"
+							lines: ["against the approved plan"]
+						},
+						{
+							tag:   "Step"
+							id:    "s-write"
+							lane:  "worker"
+							phase: "evaluate"
+							col:   3
+							title: "Write the verdict"
+							lines: ["verdict, frames, plan version"]
+						},
+						{
+							tag:   "Step"
+							id:    "s-review"
+							lane:  "operator"
+							phase: "review"
+							title: "Review verdicts"
+							lines: ["filter by trigger and time"]
+						},
+						{
+							tag:   "Step"
+							id:    "s-replay"
+							lane:  "api"
+							phase: "review"
+							title: "Replay over earlier clips"
+							look:  "planned"
+						},
+						{
+							tag:   "Step"
+							id:    "s-model-update"
+							lane:  "model"
+							phase: "review"
+							title: "A new model version re-plans every trigger"
+							look:  "note"
+						},
+					]
+				},
+			]
+		},
 		{
 			tag:      "View"
 			id:       "system"
@@ -90,10 +224,18 @@ onepager: gcp.#Page & {
 											icon:     "devops"
 											title:    "Operator console"
 											subtitle: "web client"
+											actor:    "operator"
 										},
 									]
 								},
+								{
+									tag:    "Frame"
+									id:     "screen-review"
+									label:  "Verdict review in the console: clip, evidence frames, verdict and plan version"
+									height: 135
+								},
 							]
+							gap: 24
 						},
 						{
 							tag:   "Box"
@@ -121,6 +263,7 @@ onepager: gcp.#Page & {
 															icon:     "networking"
 															title:    "Gateway"
 															subtitle: "API Gateway"
+															actor:    "api"
 														},
 													]
 												},
@@ -136,6 +279,7 @@ onepager: gcp.#Page & {
 															icon:     "cloud-run"
 															title:    "Trigger API"
 															subtitle: "Cloud Run"
+															actor:    "api"
 														},
 													]
 												},
@@ -157,6 +301,7 @@ onepager: gcp.#Page & {
 															icon:     "integration"
 															title:    "Evaluation queue"
 															subtitle: "Pub/Sub"
+															actor:    "api"
 														},
 													]
 												},
@@ -172,6 +317,7 @@ onepager: gcp.#Page & {
 															icon:     "cloud-run"
 															title:    "Clip worker"
 															subtitle: "Cloud Run job"
+															actor:    "worker"
 														},
 													]
 												},
@@ -187,6 +333,7 @@ onepager: gcp.#Page & {
 															icon:     "vertex-ai"
 															title:    "Clip evaluator"
 															subtitle: "Vertex AI endpoint"
+															actor:    "model"
 														},
 													]
 												},
@@ -213,37 +360,50 @@ onepager: gcp.#Page & {
 						},
 					]
 				},
-				{
-					tag:    "Frame"
-					id:     "screen-review"
-					label:  "Verdict review in the console: clip, evidence frames, verdict and plan version"
-					height: 72
-				},
 			]
 		},
 	]
 	legend: [
-		{line: "solid", tint: 4, text: "the operator's request"},
-		{line: "solid", tint: 1, text: "the API plans and queues the job"},
-		{line: "solid", tint: 6, text: "the clip worker runs one job per clip"},
-		{line: "dash", tint: 6, text: "writes the verdict store"},
+		{line: "solid", by_actor: true, text: "work moves, in the colour of the actor that sends it"},
+		{line: "dash", by_actor: true, text: "reads or writes the verdict store"},
 		{line: "deny", text: "blocked path"},
 	]
 	links: [
-		{from: "console", to: "gateway", line: "solid", tint: 4, label: "submit trigger"},
-		{from: "gateway", to: "api", line: "solid", tint: 1, label: "authorized call"},
+		{from: "s-describe", to: "s-compile", line: "solid"},
+		{
+			from:      "s-compile"
+			to:        "s-approve"
+			line:      "solid"
+			label:     "plan"
+			from_side: "top"
+			to_side:   "left"
+		},
+		{from: "s-approve", to: "s-store-plan", line: "solid"},
+		{
+			from:    "s-store-plan"
+			to:      "s-evaluate"
+			line:    "dash"
+			actor:   "worker"
+			label:   "reads approved version"
+			to_side: "top"
+		},
+		{from: "s-arrive", to: "s-evaluate", line: "solid"},
+		{from: "s-evaluate", to: "s-judge", line: "solid"},
+		{from: "s-judge", to: "s-write", line: "solid"},
+		{from: "s-write", to: "s-review", line: "solid"},
+		{from: "console", to: "gateway", line: "solid", label: "submit trigger"},
+		{from: "gateway", to: "api", line: "solid", label: "authorized call"},
 		{
 			from:      "api"
 			to:        "queue"
 			line:      "solid"
-			tint:      1
 			label:     "queue job"
 			from_side: "bottom"
 			to_side:   "top"
 		},
-		{from: "queue", to: "worker", line: "solid", tint: 6, label: "deliver job"},
-		{from: "worker", to: "evaluator", line: "solid", tint: 6, label: "evaluate clip"},
-		{from: "worker", to: "verdict-store", line: "dash", tint: 6, label: "write verdict"},
+		{from: "queue", to: "worker", line: "solid", label: "deliver job"},
+		{from: "worker", to: "evaluator", line: "solid", label: "evaluate clip"},
+		{from: "worker", to: "verdict-store", line: "dash", label: "write verdict"},
 		{
 			from:      "evaluator"
 			to:        "verdict-store"

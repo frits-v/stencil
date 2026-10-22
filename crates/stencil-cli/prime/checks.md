@@ -1,6 +1,6 @@
 # Checks
 
-`stencil vet` parses, applies the vet rules and runs remembered-constants, legend-consistency and icon-matches-product. `stencil check` lays out and renders in memory, runs every check and writes nothing. `stencil render` applies the vet rules only, so a legend defect does not stop it: run check before render. `--print-width <inches>` (0.5 to 200) runs print-fit; render prints its lines after the paths and exits 1 on failure, files kept.
+`stencil vet` parses, applies the vet rules and runs remembered-constants, legend-consistency, icon-matches-product and keys-used. `stencil check` lays out and renders in memory, runs every check and writes nothing. `stencil render` applies the vet rules only, so a legend defect does not stop it: run check before render. `--print-width <inches>` (0.5 to 200) runs print-fit; render prints its lines after the paths and exits 1 on failure, files kept.
 
 Line formats, stable for scripts:
 

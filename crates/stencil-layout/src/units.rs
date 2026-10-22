@@ -17,10 +17,14 @@ use crate::{BoxRect, NodeTag, PageGeometry, PartName};
 
 /// The parts each keyed entry draws once per entry, in entry order, on its owner node: an
 /// entry's reference is the union of its parts (section 14.1 rule 13).
-pub const ENTRY_PARTS: [(SheetList, &[PartName]); 1] = [(
-    SheetList::AttentionItems,
-    &[PartName::AttentionLead, PartName::AttentionText],
-)];
+pub const ENTRY_PARTS: [(SheetList, &[PartName]); 3] = [
+    (
+        SheetList::AttentionItems,
+        &[PartName::AttentionLead, PartName::AttentionText],
+    ),
+    (SheetList::Lanes, &[PartName::LaneBand]),
+    (SheetList::Phases, &[PartName::PhaseHead]),
+];
 
 /// A grid reference: one cell such as `B3`, or the cells under a box's top-left and
 /// bottom-right corners such as `B2-C5`. Rows are 0 to 5 for A to F, columns 1 to 8.
@@ -248,6 +252,37 @@ pub fn description_units(page: &Page, geometry: &PageGeometry) -> DescriptionUni
                 zone: bounds.map(|bounds| sheet_zone(bounds, frame)),
             });
         }
+        for entry in &entries {
+            let NodeRef::Node(Node::Phases(phases)) = entry.node else {
+                continue;
+            };
+            let owner = geometry.node(&entry.pointer);
+            let lanes = SheetList::Lanes;
+            for (index, lane) in phases.lanes.iter().enumerate().take(lanes.max() + 1) {
+                let name = page
+                    .actors
+                    .iter()
+                    .find(|actor| &actor.id == lane)
+                    .map_or_else(|| lane.clone(), |actor| actor.name.clone());
+                let bounds = owner.and_then(|owner| entry_bounds(owner, lanes, index));
+                units.push(DescribedUnit {
+                    kind: UnitKind::Entry,
+                    pointer: lanes.pointer_in(&entry.pointer).index(index),
+                    name,
+                    zone: bounds.map(|bounds| sheet_zone(bounds, frame)),
+                });
+            }
+            let list = SheetList::Phases;
+            for (index, phase) in phases.phases.iter().enumerate().take(list.max() + 1) {
+                let bounds = owner.and_then(|owner| entry_bounds(owner, list, index));
+                units.push(DescribedUnit {
+                    kind: UnitKind::Entry,
+                    pointer: list.pointer_in(&entry.pointer).index(index),
+                    name: phase.title.clone(),
+                    zone: bounds.map(|bounds| sheet_zone(bounds, frame)),
+                });
+            }
+        }
     }
 
     DescriptionUnits {
@@ -322,7 +357,16 @@ fn node_name(
         | NodeTag::Text
         | NodeTag::Callout
         | NodeTag::Frame
-        | NodeTag::View => node.map(body_node_name).unwrap_or_default(),
+        | NodeTag::View
+        | NodeTag::Step => node.map(body_node_name).unwrap_or_default(),
+        NodeTag::Phases => "Phases".to_string(),
+        NodeTag::ActorChip => page
+            .actors
+            .iter()
+            .enumerate()
+            .find(|(index, _)| SheetList::Actors.pointer().index(*index) == *pointer)
+            .map(|(_, actor)| actor.name.clone())
+            .unwrap_or_default(),
         NodeTag::TitleBlock => page
             .sheet
             .as_ref()
@@ -374,6 +418,8 @@ fn body_node_name(node: NodeRef<'_>) -> String {
             .unwrap_or_else(|| callout.text.clone()),
         NodeRef::Node(Node::Frame(frame)) => frame.label.clone(),
         NodeRef::Node(Node::View(view)) => view.title.clone(),
+        NodeRef::Node(Node::Step(step)) => step.title.clone(),
+        NodeRef::Node(Node::Phases(_)) => "Phases".to_string(),
         NodeRef::Node(Node::Row(_)) => "Row".to_string(),
         NodeRef::Node(Node::Col(_)) => "Col".to_string(),
         NodeRef::Node(Node::Lanes(_)) => "Lanes".to_string(),
@@ -406,7 +452,9 @@ fn pipe_landings(
                 | Node::Text(_)
                 | Node::Callout(_)
                 | Node::Frame(_)
-                | Node::View(_),
+                | Node::View(_)
+                | Node::Phases(_)
+                | Node::Step(_),
             ))
             | None => continue,
         };

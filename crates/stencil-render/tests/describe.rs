@@ -16,8 +16,8 @@ use stencil_layout::{NodeTag, PageGeometry, UnitKind, description_units, layout_
 use stencil_model::checks::{CheckName, CheckOutcome, CheckReport};
 use stencil_model::text::FixedMetricsMeasurer;
 use stencil_model::{
-    BUILTIN_THEMES, Grammar, LegendKey, Node, NodeRef, Page, PipeForm, Projection, body_nodes,
-    builtin_grammar, grammar_reference, validate_page,
+    BUILTIN_THEMES, Grammar, KeyColour, LegendKey, Node, NodeRef, Page, PageActors, PipeForm,
+    Projection, body_nodes, builtin_grammar, entry_key, grammar_reference, line_key, validate_page,
 };
 use stencil_render::{describe, description_covers_drawing};
 use stencil_text::CosmicTextMeasurer;
@@ -409,12 +409,27 @@ fn the_legend_key_is_the_measured_kind_for_tube_entries() {
             .into_iter()
             .map(|entry| (entry.pointer.as_str().to_string(), entry.node))
             .collect();
+        let actors = PageActors::of(&page);
         for (key_cell, pointer) in rows {
             let index: usize = pointer.strip_prefix("/legend/").unwrap().parse().unwrap();
             let entry = &page.legend[index];
-            let key = LegendKey::new(entry.line, entry.tint, entry.form);
+            let key = entry_key(entry);
             let slot_key = key_cell.strip_suffix("-band").unwrap_or(&key_cell);
+            // A by-actor Key names a line and no slot; each use it counts is measured with
+            // its own actor's slot.
+            if key.colour == KeyColour::ByActor {
+                assert_eq!(
+                    slot_key,
+                    format!("{}-by-actor", entry.line.as_str()),
+                    "{stem}"
+                );
+            }
+            let use_key = |line, tint, form, actor: Option<&str>| match actors.slot(actor) {
+                Some(_) => LegendKey::by_actor(line, form),
+                None => LegendKey::new(line, tint, form),
+            };
             let mut uses = 0;
+            let mut tee = None;
             for node in &geometry.nodes {
                 let Some((_, reference)) = references
                     .iter()
@@ -423,23 +438,49 @@ fn the_legend_key_is_the_measured_kind_for_tube_entries() {
                     continue;
                 };
                 let used_key = match *reference {
-                    NodeRef::Node(Node::Pipe(pipe)) | NodeRef::TeeArm(pipe) => {
-                        LegendKey::new(pipe.line, pipe.tint, pipe.form)
+                    NodeRef::Node(Node::Pipe(pipe)) => {
+                        use_key(pipe.line, pipe.tint, pipe.form, actors.pipe_actor(pipe))
                     }
-                    NodeRef::Node(Node::Tee(tee)) => {
-                        LegendKey::new(tee.line, tee.tint, PipeForm::Tube)
+                    NodeRef::TeeArm(pipe) => use_key(
+                        pipe.line,
+                        pipe.tint,
+                        pipe.form,
+                        tee.and_then(|tee| actors.arm_actor(tee, pipe)),
+                    ),
+                    NodeRef::Node(Node::Tee(tee_node)) => {
+                        tee = Some(tee_node);
+                        use_key(
+                            tee_node.line,
+                            tee_node.tint,
+                            PipeForm::Tube,
+                            actors.tee_actor(tee_node),
+                        )
                     }
                     _ => continue,
                 };
                 if used_key == key {
-                    assert_eq!(node.kind.as_deref(), Some(slot_key), "{stem} {pointer}");
+                    let measured = match key.colour {
+                        KeyColour::ByActor => line_key(used_key.line, node.tint),
+                        KeyColour::Slot(_) => slot_key,
+                    };
+                    assert_eq!(node.kind.as_deref(), Some(measured), "{stem} {pointer}");
                     uses += 1;
                 }
             }
             for route in &geometry.links {
                 let link = &page.links[route.index];
-                if LegendKey::new(link.line, link.tint, PipeForm::Tube) == key {
-                    assert_eq!(route.key(), slot_key, "{stem} {pointer}");
+                if use_key(
+                    link.line,
+                    link.tint,
+                    PipeForm::Tube,
+                    actors.link_actor(link),
+                ) == key
+                {
+                    let measured = match key.colour {
+                        KeyColour::ByActor => line_key(link.line, route.tint),
+                        KeyColour::Slot(_) => slot_key,
+                    };
+                    assert_eq!(route.key(), measured, "{stem} {pointer}");
                     uses += 1;
                 }
             }
@@ -743,14 +784,30 @@ fn every_entry_part_is_drawn_once_per_entry() {
     let (page, geometry, _) = onepager();
     let sheet = page.sheet.as_ref().unwrap();
     let mut examined = 0;
+    let phases_pointer = NodePointer::root()
+        .child("body")
+        .index(0)
+        .child("children")
+        .index(0);
+    let Some(stencil_model::Node::View(view)) = page.body.first() else {
+        panic!("onepager opens with a View");
+    };
+    let Some(stencil_model::Node::Phases(phases)) = view.children.first() else {
+        panic!("the Workflow view opens with a Phases node");
+    };
     for (list, names) in ENTRY_PARTS {
         let (owner, entries) = match list {
             stencil_model::SheetList::AttentionItems => (
                 NodePointer::root().child("sheet").child("attention"),
                 sheet.attention.items.len(),
             ),
+            stencil_model::SheetList::Lanes => (phases_pointer.clone(), phases.lanes.len()),
+            stencil_model::SheetList::Phases => (phases_pointer.clone(), phases.phases.len()),
             stencil_model::SheetList::ProblemPoints
-            | stencil_model::SheetList::AnswerParagraphs => {
+            | stencil_model::SheetList::AnswerParagraphs
+            | stencil_model::SheetList::Actors
+            | stencil_model::SheetList::Steps
+            | stencil_model::SheetList::StepLines => {
                 panic!("{} keys no entry parts", list.name())
             }
         };
@@ -761,7 +818,7 @@ fn every_entry_part_is_drawn_once_per_entry() {
             examined += 1;
         }
     }
-    assert_eq!(examined, 2);
+    assert_eq!(examined, 4);
 }
 
 /// A reference that names another cell than the one the element is drawn in, a missing
@@ -801,14 +858,14 @@ fn a_wrong_reference_is_a_defect() {
         )]
     );
 
-    let row = "Row, left to right. `/body/0/children/0`";
+    let row = "Row, left to right. `/body/1/children/0`";
     let row_number = text.lines().position(|line| line.ends_with(row)).unwrap() + 1;
-    let structural = text.replace(row, "Row, left to right. `C1` `/body/0/children/0`");
+    let structural = text.replace(row, "Row, left to right. `C1` `/body/1/children/0`");
     let report = description_covers_drawing(&page, &geometry, &structural);
     assert_eq!(
         messages(&report),
         [(
-            "/body/0/children/0".to_string(),
+            "/body/1/children/0".to_string(),
             format!("line {row_number} gives C1 where no reference belongs")
         )]
     );

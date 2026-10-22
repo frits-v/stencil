@@ -2,12 +2,12 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use crate::document::{
     AnswerParagraph, BUILTIN_GRAMMARS, BUILTIN_THEMES, CAPTION_SCALARS_MAX, Chrome, FACTS_MAX,
-    LANES_MAX, Link, Node, Page, PipeDir, Projection, Sheet, TINT_SLOTS, Text,
-    WORDMARK_SCALARS_MAX, canvas_width, is_valid_id,
+    LANES_MAX, Line, Link, Node, PHASE_COLUMNS_MAX, Page, Phases, PipeDir, Projection, Sheet, Step,
+    TINT_SLOTS, Tee, Text, WORDMARK_SCALARS_MAX, canvas_width, is_valid_id,
 };
 use crate::grammar::{Grammar, IconPack, PAGE_PARENT};
 use crate::pointer::NodePointer;
-use crate::sheet::{SheetList, SheetSurface};
+use crate::sheet::{PageActors, SheetList, SheetSurface};
 use crate::walk::{
     NodeEntry, NodeRef, TextField, body_nodes, push_node_text_fields, push_one_link_text_fields,
     push_page_head_text_fields,
@@ -77,11 +77,26 @@ pub enum VetRule {
     ListTooLong,
     SheetTextTooLong,
     KeyDuplicate,
+    ActorTintDuplicate,
+    ActorUnknown,
+    TintOnActorPage,
+    KindTintWithoutActor,
+    LineWithoutActor,
+    ActorOnNeutralLine,
+    ActorOnUntintableKind,
+    TeeArmActorDiffers,
+    LegendByActorMisused,
+    PhasesChildNotStep,
+    StepOutsidePhases,
+    PhaseLaneTwice,
+    StepLaneUnknown,
+    StepPhaseUnknown,
+    StepSpanOutOfRange,
 }
 
 impl VetRule {
     /// The rules of section 14.3, in table order.
-    pub const SHEET: [VetRule; 10] = [
+    pub const SHEET: [VetRule; 25] = [
         VetRule::NeedsSheet,
         VetRule::SheetInIso,
         VetRule::SheetChromeNone,
@@ -92,6 +107,21 @@ impl VetRule {
         VetRule::ListTooLong,
         VetRule::SheetTextTooLong,
         VetRule::KeyDuplicate,
+        VetRule::ActorTintDuplicate,
+        VetRule::ActorUnknown,
+        VetRule::TintOnActorPage,
+        VetRule::KindTintWithoutActor,
+        VetRule::LineWithoutActor,
+        VetRule::ActorOnNeutralLine,
+        VetRule::ActorOnUntintableKind,
+        VetRule::TeeArmActorDiffers,
+        VetRule::LegendByActorMisused,
+        VetRule::PhasesChildNotStep,
+        VetRule::StepOutsidePhases,
+        VetRule::PhaseLaneTwice,
+        VetRule::StepLaneUnknown,
+        VetRule::StepPhaseUnknown,
+        VetRule::StepSpanOutOfRange,
     ];
 
     /// Kebab-case name used on the CLI, as in section 1.3.
@@ -147,6 +177,21 @@ impl VetRule {
             VetRule::ListTooLong => "list-too-long",
             VetRule::SheetTextTooLong => "sheet-text-too-long",
             VetRule::KeyDuplicate => "key-duplicate",
+            VetRule::ActorTintDuplicate => "actor-tint-duplicate",
+            VetRule::ActorUnknown => "actor-unknown",
+            VetRule::TintOnActorPage => "tint-on-actor-page",
+            VetRule::KindTintWithoutActor => "kind-tint-without-actor",
+            VetRule::LineWithoutActor => "line-without-actor",
+            VetRule::ActorOnNeutralLine => "actor-on-neutral-line",
+            VetRule::ActorOnUntintableKind => "actor-on-untintable-kind",
+            VetRule::TeeArmActorDiffers => "tee-arm-actor-differs",
+            VetRule::LegendByActorMisused => "legend-by-actor-misused",
+            VetRule::PhasesChildNotStep => "phases-child-not-step",
+            VetRule::StepOutsidePhases => "step-outside-phases",
+            VetRule::PhaseLaneTwice => "phase-lane-twice",
+            VetRule::StepLaneUnknown => "step-lane-unknown",
+            VetRule::StepPhaseUnknown => "step-phase-unknown",
+            VetRule::StepSpanOutOfRange => "step-span-out-of-range",
         }
     }
 }
@@ -281,23 +326,42 @@ pub fn validate_page(page: &Page, grammar: &Grammar) -> Vec<Violation> {
         .filter_map(|entry| entry.node.id())
         .filter(|id| is_valid_id(id))
         .collect();
-    // Off a sheet, every sheet surface but the sheet itself is `needs-sheet` where it occurs.
-    let mut surfaces: BTreeMap<NodePointer, SheetSurface> = BTreeMap::new();
+    // Off a sheet, every sheet surface but the sheet itself is `needs-sheet` where it occurs:
+    // `/actors` before the body, a node or its `actor` field with the node, and a legend or
+    // link field after the body.
+    let mut surfaces: Vec<(NodePointer, SheetSurface)> = Vec::new();
     if page.sheet.is_none() {
         for surface in SheetSurface::ALL {
             if surface == SheetSurface::Sheet {
                 continue;
             }
             for pointer in surface.occurrences(page, grammar) {
-                surfaces.entry(pointer).or_insert(surface);
+                surfaces.push((pointer, surface));
             }
         }
     }
+    let mut reported: BTreeSet<NodePointer> = BTreeSet::new();
+    let actors_pointer = SheetList::Actors.pointer();
+    report_needs_sheet(&surfaces, &mut reported, &mut violations, |pointer| {
+        *pointer == actors_pointer
+    });
+    let mut sheet_nodes = SheetNodes {
+        actors: PageActors::of(page),
+        phases: BTreeMap::new(),
+        on_sheet: page.sheet.is_some(),
+    };
     for entry in &entries {
-        check_sheet_placement(page, entry, &surfaces, &mut violations);
+        let actor_field = entry.pointer.child("actor");
+        report_needs_sheet(&surfaces, &mut reported, &mut violations, |pointer| {
+            *pointer == entry.pointer || *pointer == actor_field
+        });
+        check_sheet_placement(page, entry, &mut violations);
         let context = enclosing_box_kind(entry, &box_context);
         check_entry(entry, context, grammar, &mut ids, &mut violations);
         check_pipe_targets(entry, &all_ids, &mut violations);
+        if sheet_nodes.on_sheet {
+            check_sheet_node(page, entry, grammar, &mut sheet_nodes, &mut violations);
+        }
         match entry.node {
             // A Box of an unknown kind is reported once and is transparent for its
             // children, so they are not reported again against a kind that does not exist.
@@ -307,12 +371,15 @@ pub fn validate_page(page: &Page, grammar: &Grammar) -> Vec<Violation> {
             NodeRef::Node(Node::Box(_)) => {
                 box_context.insert(entry.pointer.clone(), context);
             }
-            NodeRef::Node(Node::Row(_) | Node::Col(_) | Node::Lanes(_) | Node::View(_)) => {
+            NodeRef::Node(
+                Node::Row(_) | Node::Col(_) | Node::Lanes(_) | Node::View(_) | Node::Phases(_),
+            ) => {
                 box_context.insert(entry.pointer.clone(), context);
             }
             _ => {}
         }
     }
+    report_needs_sheet(&surfaces, &mut reported, &mut violations, |_| true);
 
     if page.legend.len() > LEGEND_ENTRIES_MAX {
         violations.push(
@@ -327,6 +394,9 @@ pub fn validate_page(page: &Page, grammar: &Grammar) -> Vec<Violation> {
     let legend_pointer = root.child("legend");
     for (index, entry) in page.legend.iter().enumerate().take(LEGEND_ENTRIES_MAX + 1) {
         check_tint(entry.tint, &legend_pointer.index(index), &mut violations);
+        if sheet_nodes.on_sheet {
+            check_legend_actor(page, entry, &legend_pointer.index(index), &mut violations);
+        }
         check_text(
             &TextField {
                 pointer: legend_pointer.index(index).child("text"),
@@ -337,28 +407,403 @@ pub fn validate_page(page: &Page, grammar: &Grammar) -> Vec<Violation> {
     }
 
     let lane_heads = lane_heads(&entries);
-    check_links(page, &ids, &lane_heads, &mut violations);
+    check_links(page, &ids, &lane_heads, &sheet_nodes, &mut violations);
 
     violations.0
 }
 
-/// `needs-sheet` at a sheet surface in the body of a page without `sheet`, one of
-/// `surfaces`, which `SheetSurface::occurrences` lists; on a sheet,
-/// `sheet-body-not-view` for a body child that is not a View and `view-not-top-level` for a
-/// View below the body.
-fn check_sheet_placement(
+/// `needs-sheet` for each surface `select` picks that has not been reported yet.
+fn report_needs_sheet(
+    surfaces: &[(NodePointer, SheetSurface)],
+    reported: &mut BTreeSet<NodePointer>,
+    violations: &mut Violations,
+    select: impl Fn(&NodePointer) -> bool,
+) {
+    for (pointer, surface) in surfaces {
+        if select(pointer) && !reported.contains(pointer) {
+            reported.insert(pointer.clone());
+            violations.push(
+                pointer.clone(),
+                VetRule::NeedsSheet,
+                needs_sheet_message(*surface),
+            );
+        }
+    }
+}
+
+/// What the actor and Phases rules read while the body is walked on a sheet.
+struct SheetNodes<'a> {
+    actors: PageActors<'a>,
+    /// Every Phases node walked so far, by pointer; a Step reads its parent here.
+    phases: BTreeMap<NodePointer, &'a Phases>,
+    on_sheet: bool,
+}
+
+/// The declared actor ids, for the `actor-unknown` message.
+fn declared_actors(page: &Page) -> String {
+    let ids: Vec<&str> = page
+        .actors
+        .iter()
+        .take(SheetList::Actors.max() + 1)
+        .map(|actor| actor.id.as_str())
+        .collect();
+    if ids.is_empty() {
+        "none".to_string()
+    } else {
+        ids.join(", ")
+    }
+}
+
+/// `actor-unknown` at `pointer` when `actor` names no declared actor.
+fn check_actor_known(
     page: &Page,
-    entry: &NodeEntry<'_>,
-    surfaces: &BTreeMap<NodePointer, SheetSurface>,
+    actors: &PageActors<'_>,
+    actor: &str,
+    pointer: NodePointer,
     violations: &mut Violations,
 ) {
-    if let Some(surface) = surfaces.get(&entry.pointer) {
+    if actors.tint(actor).is_none() {
         violations.push(
-            entry.pointer.clone(),
-            VetRule::NeedsSheet,
-            needs_sheet_message(*surface),
+            pointer,
+            VetRule::ActorUnknown,
+            format!(
+                "actor \"{actor}\" is not declared; declared: {}",
+                declared_actors(page)
+            ),
         );
     }
+}
+
+/// The actor rules of a line (a Pipe, a Tee spine or arm, or a Link) in field order:
+/// `tint-on-actor-page` at its tint, then `actor-on-neutral-line` and `actor-unknown` at its
+/// actor, then `line-without-actor` at its line.
+fn check_line_actor(
+    page: &Page,
+    actors: &PageActors<'_>,
+    (line, tint, actor): (Line, Option<u8>, Option<&str>),
+    (effective, from): (Option<&str>, String),
+    holder: &NodePointer,
+    violations: &mut Violations,
+) {
+    if actors.any() && tint.is_some() {
+        violations.push(
+            holder.child("tint"),
+            VetRule::TintOnActorPage,
+            "a page with actors colours by actor; remove tint".to_string(),
+        );
+    }
+    if let Some(actor) = actor {
+        if line.takes_tint() {
+            check_actor_known(page, actors, actor, holder.child("actor"), violations);
+        } else {
+            violations.push(
+                holder.child("actor"),
+                VetRule::ActorOnNeutralLine,
+                "a gray or deny line takes no actor".to_string(),
+            );
+        }
+    }
+    if actors.any() && line.takes_tint() && effective.is_none() {
+        violations.push(
+            holder.child("line"),
+            VetRule::LineWithoutActor,
+            format!(
+                "{} line {from} has no actor; set actor or leave from an actor's node",
+                line.as_str()
+            ),
+        );
+    }
+}
+
+/// How a line names its start in `line-without-actor`: the node it leaves, else its label.
+fn line_origin(from: Option<&str>, label: &str) -> String {
+    match from {
+        Some(from) => format!("from \"{from}\""),
+        None => format!("\"{label}\""),
+    }
+}
+
+/// The actor and Phases rules of one body node on a sheet.
+fn check_sheet_node<'a>(
+    page: &'a Page,
+    entry: &NodeEntry<'a>,
+    grammar: &Grammar,
+    sheet_nodes: &mut SheetNodes<'a>,
+    violations: &mut Violations,
+) {
+    let actors = &sheet_nodes.actors;
+    match entry.node {
+        NodeRef::Node(Node::Item(item)) => {
+            if let Some(actor) = &item.actor {
+                check_actor_known(
+                    page,
+                    actors,
+                    actor,
+                    entry.pointer.child("actor"),
+                    violations,
+                );
+            }
+        }
+        NodeRef::Node(Node::Box(box_node)) => {
+            let kind = grammar.container(&box_node.kind);
+            if actors.any() && box_node.tint.is_some() {
+                violations.push(
+                    entry.pointer.child("tint"),
+                    VetRule::TintOnActorPage,
+                    "a page with actors colours by actor; remove tint".to_string(),
+                );
+            }
+            match (&box_node.actor, kind) {
+                (Some(_), Some(kind)) if !kind.tintable => violations.push(
+                    entry.pointer.child("actor"),
+                    VetRule::ActorOnUntintableKind,
+                    format!(
+                        "{} takes no colour, so it cannot name an actor",
+                        box_node.kind
+                    ),
+                ),
+                (Some(actor), _) => {
+                    check_actor_known(
+                        page,
+                        actors,
+                        actor,
+                        entry.pointer.child("actor"),
+                        violations,
+                    );
+                }
+                (None, Some(kind)) if actors.any() && kind.tintable => {
+                    if let Some(slot) = kind.default_tint {
+                        violations.push(
+                            entry.pointer.clone(),
+                            VetRule::KindTintWithoutActor,
+                            format!(
+                                "{} paints tint {slot} by default, which reads as an actor; name its actor",
+                                box_node.kind
+                            ),
+                        );
+                    }
+                }
+                (None, _) => {}
+            }
+        }
+        NodeRef::Node(Node::Pipe(pipe)) => check_line_actor(
+            page,
+            actors,
+            (pipe.line, pipe.tint, pipe.actor.as_deref()),
+            (
+                actors.pipe_actor(pipe),
+                line_origin(pipe.from.as_deref(), &pipe.label),
+            ),
+            &entry.pointer,
+            violations,
+        ),
+        NodeRef::Node(Node::Tee(tee)) => check_line_actor(
+            page,
+            actors,
+            (tee.line, tee.tint, tee.actor.as_deref()),
+            (actors.tee_actor(tee), line_origin(None, &tee.hub)),
+            &entry.pointer,
+            violations,
+        ),
+        NodeRef::TeeArm(arm) => {
+            let tee = tee_of(page, entry);
+            check_line_actor(
+                page,
+                actors,
+                (arm.line, arm.tint, arm.actor.as_deref()),
+                (
+                    tee.and_then(|tee| actors.arm_actor(tee, arm)),
+                    line_origin(None, &arm.label),
+                ),
+                &entry.pointer,
+                violations,
+            );
+            if let (Some(tee), Some(actor)) = (tee, &arm.actor)
+                && tee.actor.as_deref() != Some(actor.as_str())
+            {
+                violations.push(
+                    entry.pointer.child("actor"),
+                    VetRule::TeeArmActorDiffers,
+                    "a Tee arm acts for its Tee's actor".to_string(),
+                );
+            }
+        }
+        NodeRef::Node(Node::Phases(phases)) => {
+            check_phases(page, entry, phases, actors, violations);
+            sheet_nodes.phases.insert(entry.pointer.clone(), phases);
+        }
+        NodeRef::Node(Node::Step(step)) => {
+            let parent = entry
+                .parent
+                .as_ref()
+                .and_then(|parent| sheet_nodes.phases.get(parent).copied());
+            check_step(page, entry, step, parent, actors, violations);
+        }
+        NodeRef::Node(
+            Node::Row(_)
+            | Node::Col(_)
+            | Node::Lanes(_)
+            | Node::Fact(_)
+            | Node::Note(_)
+            | Node::Text(_)
+            | Node::Callout(_)
+            | Node::Frame(_)
+            | Node::View(_),
+        ) => {}
+    }
+    if let Some(parent) = &entry.parent
+        && sheet_nodes.phases.contains_key(parent)
+        && !matches!(entry.node, NodeRef::Node(Node::Step(_)))
+    {
+        violations.push(
+            entry.pointer.clone(),
+            VetRule::PhasesChildNotStep,
+            "a Phases node holds Steps only".to_string(),
+        );
+    }
+}
+
+/// The Tee a Tee arm entry belongs to.
+fn tee_of<'a>(page: &'a Page, entry: &NodeEntry<'a>) -> Option<&'a Tee> {
+    let parent = entry.parent.as_ref()?;
+    body_nodes(page)
+        .into_iter()
+        .find(|candidate| &candidate.pointer == parent)
+        .and_then(|candidate| match candidate.node {
+            NodeRef::Node(Node::Tee(tee)) => Some(tee),
+            _ => None,
+        })
+}
+
+/// A Phases node's own rules: its lanes (each a declared actor, none twice), its phases
+/// (well-formed ids, none twice) and the list bounds.
+fn check_phases(
+    page: &Page,
+    entry: &NodeEntry<'_>,
+    phases: &Phases,
+    actors: &PageActors<'_>,
+    violations: &mut Violations,
+) {
+    let lanes = SheetList::Lanes;
+    check_list_length_in(lanes, &entry.pointer, phases.lanes.len(), violations);
+    let lanes_pointer = lanes.pointer_in(&entry.pointer);
+    let mut seen: BTreeSet<&str> = BTreeSet::new();
+    for (index, lane) in phases.lanes.iter().enumerate().take(lanes.max() + 1) {
+        let pointer = lanes_pointer.index(index);
+        if !seen.insert(lane.as_str()) {
+            violations.push(
+                pointer,
+                VetRule::PhaseLaneTwice,
+                format!("actor \"{lane}\" already has a lane"),
+            );
+        } else {
+            check_actor_known(page, actors, lane, pointer, violations);
+        }
+    }
+    let list = SheetList::Phases;
+    check_list_length_in(list, &entry.pointer, phases.phases.len(), violations);
+    let phases_pointer = list.pointer_in(&entry.pointer);
+    let mut phase_ids: BTreeMap<&str, NodePointer> = BTreeMap::new();
+    for (index, phase) in phases.phases.iter().enumerate().take(list.max() + 1) {
+        check_key_id(
+            &phase.id,
+            &phases_pointer.index(index),
+            &mut phase_ids,
+            violations,
+        );
+    }
+    let steps = SheetList::Steps;
+    if phases.children.len() > steps.max() {
+        check_list_length_in(steps, &entry.pointer, phases.children.len(), violations);
+    }
+}
+
+/// A Step's rules: it sits in a Phases node, in one of its lanes and phases, and its
+/// columns stay inside the phase.
+fn check_step(
+    page: &Page,
+    entry: &NodeEntry<'_>,
+    step: &Step,
+    parent: Option<&Phases>,
+    actors: &PageActors<'_>,
+    violations: &mut Violations,
+) {
+    let Some(phases) = parent else {
+        violations.push(
+            entry.pointer.clone(),
+            VetRule::StepOutsidePhases,
+            "a Step sits directly in a Phases node".to_string(),
+        );
+        return;
+    };
+    let lane_pointer = entry.pointer.child("lane");
+    if actors.tint(&step.lane).is_none() {
+        check_actor_known(page, actors, &step.lane, lane_pointer, violations);
+    } else if !phases.lanes.contains(&step.lane) {
+        violations.push(
+            lane_pointer,
+            VetRule::StepLaneUnknown,
+            format!("lane \"{}\" is not a lane of this Phases node", step.lane),
+        );
+    }
+    if !phases.phases.iter().any(|phase| phase.id == step.phase) {
+        violations.push(
+            entry.pointer.child("phase"),
+            VetRule::StepPhaseUnknown,
+            format!(
+                "phase \"{}\" is not a phase of this Phases node",
+                step.phase
+            ),
+        );
+    }
+    let end = u16::from(step.col) + u16::from(step.span);
+    let in_range = |value: u8| (1..=PHASE_COLUMNS_MAX).contains(&value);
+    if !in_range(step.col) || !in_range(step.span) || end > u16::from(PHASE_COLUMNS_MAX) + 1 {
+        let field = if in_range(step.col) { "span" } else { "col" };
+        violations.push(
+            entry.pointer.child(field),
+            VetRule::StepSpanOutOfRange,
+            format!(
+                "columns {} to {} run past column {PHASE_COLUMNS_MAX}",
+                step.col,
+                end.saturating_sub(1)
+            ),
+        );
+    }
+    check_list_length_in(
+        SheetList::StepLines,
+        &entry.pointer,
+        step.lines.len(),
+        violations,
+    );
+}
+
+/// `tint-on-actor-page` and `legend-by-actor-misused` for one legend entry on a sheet.
+fn check_legend_actor(
+    page: &Page,
+    entry: &crate::document::LegendEntry,
+    pointer: &NodePointer,
+    violations: &mut Violations,
+) {
+    if !page.actors.is_empty() && entry.tint.is_some() {
+        violations.push(
+            pointer.child("tint"),
+            VetRule::TintOnActorPage,
+            "a page with actors colours by actor; remove tint".to_string(),
+        );
+    }
+    if entry.by_actor && (page.actors.is_empty() || !entry.line.takes_tint()) {
+        violations.push(
+            pointer.child("by_actor"),
+            VetRule::LegendByActorMisused,
+            "by_actor names solid or dashed lines on a page with actors".to_string(),
+        );
+    }
+}
+
+/// On a sheet, `sheet-body-not-view` for a body child that is not a View and `view-not-top-level` for a
+/// View below the body.
+fn check_sheet_placement(page: &Page, entry: &NodeEntry<'_>, violations: &mut Violations) {
     let is_view = matches!(entry.node, NodeRef::Node(Node::View(_)));
     match (&page.sheet, is_view, entry.depth == 1) {
         (Some(_), false, true) => violations.push(
@@ -497,6 +942,45 @@ fn check_sheet(page: &Page, sheet: &Sheet, entries: &[NodeEntry<'_>], violations
         check_key_id(&item.id, &pointer, &mut item_ids, violations);
         check_sheet_text(pointer.child("lead"), &item.lead, None, violations);
         check_sheet_text(pointer.child("text"), &item.text, None, violations);
+        if let Some(actor) = &item.actor {
+            check_actor_known(
+                page,
+                &PageActors::of(page),
+                actor,
+                pointer.child("actor"),
+                violations,
+            );
+        }
+    }
+
+    check_actors(page, violations);
+}
+
+/// The actors list: its length, then per actor its id, name, text and tint, and
+/// `actor-tint-duplicate` for a slot an earlier actor holds.
+fn check_actors(page: &Page, violations: &mut Violations) {
+    let list = SheetList::Actors;
+    check_list_length(list, page.actors.len(), violations);
+    let mut ids: BTreeMap<&str, NodePointer> = BTreeMap::new();
+    let mut slots: BTreeMap<u8, &str> = BTreeMap::new();
+    for (index, actor) in page.actors.iter().enumerate().take(list.max() + 1) {
+        let pointer = list.pointer().index(index);
+        check_key_id(&actor.id, &pointer, &mut ids, violations);
+        check_sheet_text(pointer.child("name"), &actor.name, None, violations);
+        if let Some(text) = &actor.text {
+            check_sheet_text(pointer.child("text"), text, None, violations);
+        }
+        check_tint(Some(actor.tint), &pointer, violations);
+        match slots.get(&actor.tint) {
+            Some(first) => violations.push(
+                pointer.child("tint"),
+                VetRule::ActorTintDuplicate,
+                format!("tint {} is already used by actor \"{first}\"", actor.tint),
+            ),
+            None => {
+                slots.insert(actor.tint, actor.id.as_str());
+            }
+        }
     }
 }
 
@@ -567,15 +1051,25 @@ fn check_sheet_text(
 /// `list-empty` for a list with minimum 1 that holds nothing, `list-too-long` above its
 /// maximum.
 fn check_list_length(list: SheetList, length: usize, violations: &mut Violations) {
+    check_list_length_in(list, &NodePointer::root(), length, violations);
+}
+
+/// `check_list_length` for a list of the node at `owner`.
+fn check_list_length_in(
+    list: SheetList,
+    owner: &NodePointer,
+    length: usize,
+    violations: &mut Violations,
+) {
     if length < list.min() {
         violations.push(
-            list.pointer(),
+            list.pointer_in(owner),
             VetRule::ListEmpty,
             format!("{} is empty", list.name()),
         );
     } else if length > list.max() {
         violations.push(
-            list.pointer(),
+            list.pointer_in(owner),
             VetRule::ListTooLong,
             format!("{length} {}, above {}", list.name(), list.max()),
         );
@@ -697,6 +1191,7 @@ fn check_links(
     page: &Page,
     ids: &BTreeMap<&str, NodePointer>,
     lane_heads: &BTreeMap<&str, NodePointer>,
+    sheet_nodes: &SheetNodes<'_>,
     violations: &mut Violations,
 ) {
     let links_pointer = NodePointer::root().child("links");
@@ -728,6 +1223,20 @@ fn check_links(
             }
         }
         check_tint(link.tint, &link_pointer, violations);
+        if sheet_nodes.on_sheet {
+            let actors = &sheet_nodes.actors;
+            check_line_actor(
+                page,
+                actors,
+                (link.line, link.tint, link.actor.as_deref()),
+                (
+                    actors.link_actor(link),
+                    line_origin(Some(&link.from), &link.from),
+                ),
+                &link_pointer,
+                violations,
+            );
+        }
         let mut text_fields = Vec::new();
         push_one_link_text_fields(link, &link_pointer, &mut text_fields);
         check_text_fields(&text_fields, violations);
@@ -885,6 +1394,11 @@ fn check_entry<'a>(
             check_gap_and_grow(entry, view.gap, None, view.children.len(), violations);
             check_children_count(entry, view.children.len(), violations);
         }
+        NodeRef::Node(Node::Phases(phases)) => {
+            if phases.children.is_empty() {
+                check_children_count(entry, 0, violations);
+            }
+        }
         NodeRef::Node(Node::Frame(frame)) => {
             if !(FRAME_HEIGHT_MIN..=FRAME_HEIGHT_MAX).contains(&frame.height) {
                 violations.push(
@@ -904,7 +1418,8 @@ fn check_entry<'a>(
             | Node::Pipe(_)
             | Node::Tee(_)
             | Node::Text(_)
-            | Node::Callout(_),
+            | Node::Callout(_)
+            | Node::Step(_),
         )
         | NodeRef::TeeArm(_) => {}
     }
@@ -993,7 +1508,9 @@ fn check_kind_and_tint(
             | Node::Text(_)
             | Node::Callout(_)
             | Node::Frame(_)
-            | Node::View(_),
+            | Node::View(_)
+            | Node::Phases(_)
+            | Node::Step(_),
         ) => {}
     }
 }

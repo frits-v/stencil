@@ -270,7 +270,7 @@ impl<'a> SvgWriter<'a> {
             | Node::Tee(_) => {
                 return Ok(None);
             }
-            Node::View(_) => {
+            Node::View(_) | Node::Phases(_) | Node::Step(_) => {
                 return Err(RenderError::SheetSurface {
                     pointer: node.pointer.clone(),
                 });
@@ -291,7 +291,7 @@ impl<'a> SvgWriter<'a> {
         solid: &Solid,
         offset: ScreenPoint,
     ) -> Result<Option<String>, RenderError> {
-        let context = self.part_context(document_node);
+        let context = self.part_context(node, document_node);
         if solid.shape == SolidShape::Surface {
             let kind = context.line.ok_or_else(|| surface_mismatch(node))?;
             if let Some(spine) = node.part(PartName::Spine) {
@@ -696,7 +696,9 @@ impl<'a> SvgWriter<'a> {
             | Node::Pipe(_)
             | Node::Tee(_)
             | Node::Text(_)
-            | Node::View(_) => {}
+            | Node::View(_)
+            | Node::Phases(_)
+            | Node::Step(_) => {}
         }
     }
 
@@ -1352,7 +1354,7 @@ impl<'a> SvgWriter<'a> {
         document_node: DocumentNode<'_>,
         label: &Label,
     ) -> Result<(), RenderError> {
-        let context = self.part_context(document_node);
+        let context = self.part_context(node, document_node);
         let zone_ink = match document_node {
             DocumentNode::Content(NodeRef::Node(Node::Box(_))) => {
                 let look = node.container.ok_or_else(|| surface_mismatch(node))?;
@@ -1372,7 +1374,7 @@ impl<'a> SvgWriter<'a> {
             .map(|part| local_part(part, axis, pivot))
             .collect();
         for part in &members {
-            self.write_part_shape(depth + 1, node, part, context)?;
+            self.write_part_shape(depth + 1, node, part, (context, node.tint))?;
         }
         for part in &members {
             if let Some(run) = &part.text {

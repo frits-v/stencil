@@ -229,4 +229,28 @@ row contrast ink.secondary on sheet.paper: 13.36, at least 4.50, passed
 row contrast sheet.frame on sheet.cell: 9.15, at least 4.50, passed
 row contrast sheet.frame on sheet.paper: 14.24, at least 4.50, passed
 row contrast sheet.frame on sheet.paper: 14.24, at least 3.00, passed
-stencil theme check dracula: 231 rows, 197 passed, 34 failed
+row contrast tints.1.ink on sheet.cell: 9.15, at least 4.50, passed
+row contrast tints.1.ink on lane band 1: 12.06, at least 4.50, passed
+row contrast tints.1.wire on sheet.paper: 5.90, at least 3.00, passed
+row contrast tints.2.ink on sheet.cell: 9.15, at least 4.50, passed
+row contrast tints.2.ink on lane band 2: 12.26, at least 4.50, passed
+row contrast tints.2.wire on sheet.paper: 5.97, at least 3.00, passed
+row contrast tints.3.ink on sheet.cell: 9.15, at least 4.50, passed
+row contrast tints.3.ink on lane band 3: 11.35, at least 4.50, passed
+row contrast tints.3.wire on sheet.paper: 10.29, at least 3.00, passed
+row contrast tints.4.ink on sheet.cell: 9.15, at least 4.50, passed
+row contrast tints.4.ink on lane band 4: 10.95, at least 4.50, passed
+row contrast tints.4.wire on sheet.paper: 12.74, at least 3.00, passed
+row contrast tints.5.ink on sheet.cell: 9.15, at least 4.50, passed
+row contrast tints.5.ink on lane band 5: 12.79, at least 4.50, passed
+row contrast tints.5.wire on sheet.paper: 4.53, at least 3.00, passed
+row contrast tints.6.ink on sheet.cell: 9.15, at least 4.50, passed
+row contrast tints.6.ink on lane band 6: 11.41, at least 4.50, passed
+row contrast tints.6.wire on sheet.paper: 10.38, at least 3.00, passed
+row contrast tints.7.ink on sheet.cell: 9.15, at least 4.50, passed
+row contrast tints.7.ink on lane band 7: 11.66, at least 4.50, passed
+row contrast tints.7.wire on sheet.paper: 8.36, at least 3.00, passed
+row contrast tints.8.ink on sheet.cell: 9.15, at least 4.50, passed
+row contrast tints.8.ink on lane band 8: 13.69, at least 4.50, passed
+row contrast tints.8.wire on sheet.paper: 1.95, at least 3.00, FAILED
+stencil theme check dracula: 255 rows, 220 passed, 35 failed

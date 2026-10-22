@@ -285,16 +285,16 @@ fn override_faults_point_into_theme_overrides() {
 #[test]
 fn quality_counts_match_section_13_5_for_every_builtin() {
     let expected = [
-        ("center", 230, 1, 0),
-        ("paper", 231, 0, 0),
-        ("dusk", 231, 0, 0),
-        ("clear", 231, 0, 0),
-        ("clear-dark", 231, 0, 0),
-        ("wire", 223, 0, 8),
+        ("center", 254, 1, 0),
+        ("paper", 255, 0, 0),
+        ("dusk", 255, 0, 0),
+        ("clear", 255, 0, 0),
+        ("clear-dark", 255, 0, 0),
+        ("wire", 247, 0, 8),
     ];
     for (name, passed, failed, not_applicable) in expected {
         let report = theme_quality(&builtin(name));
-        assert_eq!(report.rows.len(), 231, "{name}");
+        assert_eq!(report.rows.len(), 255, "{name}");
         assert_eq!(report.counts(), (passed, failed, not_applicable), "{name}");
     }
     let center = theme_quality(&builtin("center"));
@@ -447,4 +447,35 @@ fn drawn_legend_labels_follow_rule_9() {
             );
         }
     }
+}
+
+/// Section 14.5 rule 3: in every designed theme with a colour cue each actor wire stands a
+/// delta E of at least 20 from the deny colour and the sheet's frame and rule inks, so an
+/// actor's line never reads as a blocked path or as chrome. Wire draws every ink in one.
+#[test]
+fn actor_wires_stand_apart_from_deny_and_sheet_chrome() {
+    let mut examined = 0;
+    for name in stencil_model::DESIGNED_THEMES {
+        let theme = builtin(name);
+        if theme.tint_cue == stencil_model::theme::TintCue::Line {
+            continue;
+        }
+        let sheet = theme.sheet_colors();
+        for tint in &theme.tints {
+            for (role, color) in [
+                ("deny.color", &theme.deny.color),
+                ("sheet.frame", sheet.frame),
+                ("sheet.rule", sheet.rule),
+            ] {
+                let distance = stencil_model::theme::color_delta_e(&tint.wire, color).unwrap();
+                assert!(
+                    distance >= 20.0,
+                    "{name}: {} wire is {distance:.1} from {role}",
+                    tint.name
+                );
+                examined += 1;
+            }
+        }
+    }
+    assert_eq!(examined, 5 * 8 * 3);
 }

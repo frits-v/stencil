@@ -229,4 +229,28 @@ row contrast ink.secondary on sheet.paper: 10.26, at least 4.50, passed
 row contrast sheet.frame on sheet.cell: 7.49, at least 4.50, passed
 row contrast sheet.frame on sheet.paper: 10.84, at least 4.50, passed
 row contrast sheet.frame on sheet.paper: 10.84, at least 3.00, passed
-stencil theme check nord: 231 rows, 172 passed, 59 failed
+row contrast tints.1.ink on sheet.cell: 7.49, at least 4.50, passed
+row contrast tints.1.ink on lane band 1: 9.34, at least 4.50, passed
+row contrast tints.1.wire on sheet.paper: 4.64, at least 3.00, passed
+row contrast tints.2.ink on sheet.cell: 7.49, at least 4.50, passed
+row contrast tints.2.ink on lane band 2: 9.46, at least 4.50, passed
+row contrast tints.2.wire on sheet.paper: 4.41, at least 3.00, passed
+row contrast tints.3.ink on sheet.cell: 7.49, at least 4.50, passed
+row contrast tints.3.ink on lane band 3: 9.02, at least 4.50, passed
+row contrast tints.3.wire on sheet.paper: 6.24, at least 3.00, passed
+row contrast tints.4.ink on sheet.cell: 7.49, at least 4.50, passed
+row contrast tints.4.ink on lane band 4: 8.75, at least 4.50, passed
+row contrast tints.4.wire on sheet.paper: 8.00, at least 3.00, passed
+row contrast tints.5.ink on sheet.cell: 7.49, at least 4.50, passed
+row contrast tints.5.ink on lane band 5: 9.93, at least 4.50, passed
+row contrast tints.5.wire on sheet.paper: 3.05, at least 3.00, passed
+row contrast tints.6.ink on sheet.cell: 7.49, at least 4.50, passed
+row contrast tints.6.ink on lane band 6: 9.01, at least 4.50, passed
+row contrast tints.6.wire on sheet.paper: 6.13, at least 3.00, passed
+row contrast tints.7.ink on sheet.cell: 7.49, at least 4.50, passed
+row contrast tints.7.ink on lane band 7: 9.44, at least 4.50, passed
+row contrast tints.7.wire on sheet.paper: 4.39, at least 3.00, passed
+row contrast tints.8.ink on sheet.cell: 7.49, at least 4.50, passed
+row contrast tints.8.ink on lane band 8: 9.77, at least 4.50, passed
+row contrast tints.8.wire on sheet.paper: 3.10, at least 3.00, passed
+stencil theme check nord: 255 rows, 196 passed, 59 failed

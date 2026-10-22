@@ -298,6 +298,13 @@ long_text="$(printf 'x%.0s' {1..401})"
 many_facts="$(printf '{tag: "Fact", text: "filler"},%.0s' {1..255})"
 stray_subnet='{tag: "Box", kind: "subnet", label: "stray subnet", children: [{tag: "Fact", text: "no region around it"}]},'
 stray_apis='{tag: "Box", kind: "project", label: "Data project", children: [{tag: "Box", kind: "apis", label: "Stray APIs", children: [{tag: "Fact", text: "no gcp frame around it"}]}]},'
+# Fillers for the sheet list bounds: nine actors, lanes and phases, 65 Steps and
+# seven Step lines, each one past its list's maximum.
+nine_actors="$(printf '{id: "actor-%s", name: "Actor", tint: 1},' 1 2 3 4 5 6 7 8 9)"
+nine_lanes="$(printf '"lane-%s",' 1 2 3 4 5 6 7 8 9)"
+nine_phases="$(printf '{id: "phase-%s", title: "Phase"},' 1 2 3 4 5 6 7 8 9)"
+many_steps="$(printf '{tag: "Step", lane: "operator", phase: "describe", title: "Filler step"},%.0s' {1..65})"
+seven_lines="$(printf '"line %s",' 1 2 3 4 5 6 7)"
 
 # figure | name | sed expression applied to figures/<figure>.cue | text the
 # vet error must contain [| second text the error must also contain]. A g7 or
@@ -359,12 +366,41 @@ sequence_cases=(
 	'two-ordered-links-with-one-order|s/label: "POST \/jobs", order: 2/label: "POST \/jobs", order: 1/|_linkOrderUsedTwice."1"'
 	'line-kind-corner-above-16|s/^figure: plain.#Page \& {/_house: plain.grammar \& {lines: [{line: "solid", corner: 17}]}\n&/|_house.lines.0.corner: invalid value 17'
 	'needs-sheet-view|s/^\tbody: \[{$/\tbody: [{tag: "View", title: "Extra", children: [{tag: "Item", kind: "service", title: "Aside", subtitle: "in a view"}]}, {/|_needsSheet.view'
+	'needs-sheet-actors|s/^\tgrammar: "plain"$/&\n\tactors: [{id: "crew", name: "Crew", tint: 2}]/|_needsSheet.actors'
+	'needs-sheet-actor|s/title: "Operator", subtitle: "submits and cancels jobs"/actor: "crew", &/|_needsSheet.actor'
+	'needs-sheet-legend-by-actor|s/{line: "solid", text: "call"}/{line: "solid", by_actor: true, text: "call"}/|_needsSheet."legend-by-actor"'
+	'needs-sheet-phases|s/^\tbody: \[{$/\tbody: [{tag: "Phases", lanes: ["crew"], phases: [{id: "run", title: "Run"}], children: [{tag: "Step", lane: "crew", phase: "run", title: "Work"}]}, {/|_needsSheet.phases'
+	'needs-sheet-step|s/^\tbody: \[{$/\tbody: [{tag: "Phases", lanes: ["crew"], phases: [{id: "run", title: "Run"}], children: [{tag: "Step", lane: "crew", phase: "run", title: "Work"}]}, {/|_needsSheet.step'
 	'line-kind-listed-twice|s/^figure: plain.#Page \& {/_house: plain.grammar \& {lines: [{line: "dash", corner: 4}, {line: "dash", bend: "curve"}]}\n&/|_house._linesAreUnique'
 )
 # A subnet directly in a View sits in the page, since a View is transparent for
 # kind nesting as Row, Col and Lanes are.
 sheet_cases=(
 	'kind-parent-through-view|s/^\t\t\tchildren: \[$/\t\t\tchildren: [{tag: "Box", kind: "subnet", label: "stray subnet", children: [{tag: "Fact", text: "no region around it"}]},/|onepager._kindParentNotAllowed.subnet|cannot sit in page'
+	'actor-tint-duplicate|s/text: "one job per clip", tint: 6/text: "one job per clip", tint: 4/|_actorTintsTwice."4"'
+	'actor-unknown|s/actor:    "api"/actor:    "apis"/|_actorsUnknown.apis'
+	'tint-on-actor-page|s/{from: "s-describe", to: "s-compile", line: "solid"}/{from: "s-describe", to: "s-compile", line: "solid", tint: 2}/|_tintOnActorPage'
+	'kind-tint-without-actor|s/^\t\t\tchildren: \[$/\t\t\tchildren: [{tag: "Box", kind: "gcp", label: "Edge", children: [{tag: "Box", kind: "region", label: "Edge region", children: [{tag: "Fact", text: "no actor"}]}]},/|_kindTintWithoutActor."Edge region"'
+	'line-without-actor|s/^\tlinks: \[$/&\n\t\t{from: "verdict-store", to: "worker", line: "solid"},/|_lineWithoutActor'
+	'actor-on-neutral-line|s/line:      "deny"/&\n\t\t\tactor:     "api"/|_actorOnNeutralLine'
+	'actor-on-untintable-kind|s/label: "Google Cloud"/&\n\t\t\t\t\t\t\tactor: "api"/|_actorOnUntintableKind'
+	'legend-by-actor-misused|s/{line: "deny", text: "blocked path"}/{line: "deny", by_actor: true, text: "blocked path"}/|_legendByActorMisused'
+	'key-duplicate-actor|s/{id: "model", name: "Evaluator"/{id: "worker", name: "Evaluator"/|_keysUsedTwice."actor.worker"'
+	'key-duplicate-phase|s/{id: "review", title: "Review"}/{id: "plan", title: "Review"}/|_phaseIdsUsedTwice.plan'
+	'phases-child-not-step|s/^\t\t\t\t\tchildren: \[$/&\n\t\t\t\t\t\t{tag: "Fact", text: "loose"},/|children.0.tag: conflicting values'
+	'step-outside-phases|s/^\t\t\tchildren: \[$/&\n\t\t\t\t{tag: "Step", lane: "api", phase: "plan", title: "Loose step"},/|_stepOutsidePhases."Loose step"'
+	'phase-lane-twice|s/lanes: \["operator", "api", "worker", "model"\]/lanes: ["operator", "api", "worker", "model", "api"]/|_lanesUsedTwice.api'
+	'step-lane-unknown|s/lanes: \["operator", "api", "worker", "model"\]/lanes: ["operator", "api", "worker"]/|_stepLanesUnknown'
+	'step-phase-unknown|s/{id: "review", title: "Review"},//|_stepPhasesUnknown'
+	'step-span-out-of-range|s/phase: "describe"/&, col: 5, span: 3/|_stepSpanOutOfRange'
+	'list-empty-lanes|s/lanes: \["operator", "api", "worker", "model"\]/lanes: []/|lanes: invalid value []|list.MinItems(1)'
+	'list-empty-phases|/^\t\t\t\t\tphases: \[$/,/^\t\t\t\t\t\]$/d; s/^\t\t\t\t\tlanes: .*/&\n\t\t\t\t\tphases: []/|phases: invalid value []|list.MinItems(1)'
+	'keys-used-actor|s/^\tactors: \[$/&\n\t\t{id: "auditor", name: "Auditor", tint: 7},/|_actorsUnused.auditor'
+	"list-too-long-actors|s/^\tactors: \[$/&\n\t\t$nine_actors/|actors: invalid value|list.MaxItems(8)"
+	"list-too-long-lanes|s/lanes: \[\"operator\"/lanes: [$nine_lanes \"operator\"/|lanes: invalid value|list.MaxItems(8)"
+	"list-too-long-phases|s/^\t\t\t\t\tphases: \[$/&\n\t\t\t\t\t\t$nine_phases/|phases: invalid value|list.MaxItems(8)"
+	"list-too-long-steps|s/^\t\t\t\t\tchildren: \[$/&\n\t\t\t\t\t\t$many_steps/|children: invalid value|list.MaxItems(64)"
+	"list-too-long-step-lines|s/lines: \[\"in plain language\", \"camera and hours\"\]/lines: [$seven_lines]/|lines: invalid value|list.MaxItems(6)"
 )
 sheet_small_cases=(
 	'sheet-in-iso|s/^\tgrammar: "plain"$/&\n\tprojection: "iso"/|_sheetInIso'
@@ -379,6 +415,7 @@ sheet_small_cases=(
 	'list-too-long-attention-items|s/items: \[{id: "staleness".*}\]$/items: [{id: "item-1", lead: "Item 1.", text: "text"}, {id: "item-2", lead: "Item 2.", text: "text"}, {id: "item-3", lead: "Item 3.", text: "text"}, {id: "item-4", lead: "Item 4.", text: "text"}, {id: "item-5", lead: "Item 5.", text: "text"}, {id: "item-6", lead: "Item 6.", text: "text"}, {id: "item-7", lead: "Item 7.", text: "text"}, {id: "item-8", lead: "Item 8.", text: "text"}, {id: "item-9", lead: "Item 9.", text: "text"}]/|list.MaxItems(8)'
 	'sheet-text-too-long-wordmark|s/wordmark: "relay"/wordmark: "wwwwwwwwwwwwwwwwwwwwwwwww"/|sheet.wordmark: invalid value|strings.MaxRunes(24)'
 	'sheet-text-too-long-caption|s/caption: "Problem"/caption: "ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"/|sheet.problem.caption: invalid value|strings.MaxRunes(60)'
+	'tee-arm-actor-differs|s/^\tgrammar: "plain"$/&\n\tactors: [{id: "crew", name: "Crew", tint: 2}, {id: "ops", name: "Ops", tint: 3}]/; s/{tag: "Tee", line: "solid", hub: "fan out", arms: \[{tag: "Pipe", dir: "h", line: "solid", label: "read"}/{tag: "Tee", line: "solid", actor: "crew", hub: "fan out", arms: [{tag: "Pipe", dir: "h", line: "solid", actor: "ops", label: "read"}/; s/id: "client", kind: "service"/&, actor: "crew"/|_teeArmActorDiffers."0"'
 	'key-duplicate-attention|s/items: \[{id: "staleness", \(.*\)}\]$/items: [{id: "staleness", \1}, {id: "staleness", \1}]/|_keysUsedTwice."attention.staleness"'
 	'link-via-outside-sheet|s/x: 1375/x: 1381/|_viaOutsidePage'
 )

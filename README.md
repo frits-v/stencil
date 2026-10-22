@@ -40,9 +40,9 @@ Narrow regions with long product names, a Tee with a band arm and a figure on th
 
 `examples/design-brief.json`: a design one-pager with text blocks, callouts and numbered links tracing one request.
 
-![A design sheet for the trigger evaluation service, with its title block, legend strip and System view](docs/gallery/onepager.png)
+![A design sheet for the trigger evaluation service, with its title block, legend strip, Workflow swimlane and System view](docs/gallery/onepager.png)
 
-`examples/onepager.json`: the same service as a design sheet, one system drawn as an engineering drawing on one page: a frame with grid references 1 to 8 and A to F, a title block holding the problem, the answer and what needs the reader's attention, a legend strip, and the System view numbered 2.
+`examples/onepager.json`: the same service as a design sheet, one system drawn as an engineering drawing on one page: a frame with grid references 1 to 8 and A to F, a title block holding the problem, the answer and what needs the reader's attention, a legend strip naming who acts, the Workflow view numbered 2, a lane per actor across four phases, and the System view numbered 3, each piece in the colour of the actor that runs it.
 
 The next three figures use the `plain` grammar.
 
@@ -70,7 +70,7 @@ stencil prime links
 stencil prime grammar gcp
 ```
 
-`stencil vet <json>` parses the document, loads its grammar, applies the vet rules (field types, text limits, container sizes, nesting depth, the grammar's kinds and where each may sit) and then runs the three checks that need no layout: remembered constants (the literals the grammar lists), legend consistency (every line and tint in use has one legend entry) and icon matches product (an item's icon is the product its subtitle names, or a category icon for a product without its own).
+`stencil vet <json>` parses the document, loads its grammar, applies the vet rules (field types, text limits, container sizes, nesting depth, the grammar's kinds and where each may sit) and then runs the four checks that need no layout: remembered constants (the literals the grammar lists), legend consistency (every line and tint in use has one legend entry), icon matches product (an item's icon is the product its subtitle names, or a category icon for a product without its own) and keys used (on a design sheet, every actor is named by a lane, a node, a line or an attention item).
 
 ```bash
 stencil vet examples/g7.json
