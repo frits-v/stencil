@@ -73,11 +73,12 @@ pub enum Topic {
     Sheet,
     Phases,
     Marks,
+    Assembly,
     Example,
 }
 
 impl Topic {
-    pub const ALL: [Topic; 11] = [
+    pub const ALL: [Topic; 12] = [
         Topic::Themes,
         Topic::Links,
         Topic::Blocks,
@@ -88,6 +89,7 @@ impl Topic {
         Topic::Sheet,
         Topic::Phases,
         Topic::Marks,
+        Topic::Assembly,
         Topic::Example,
     ];
 
@@ -103,6 +105,7 @@ impl Topic {
             Topic::Sheet => "sheet",
             Topic::Phases => "phases",
             Topic::Marks => "marks",
+            Topic::Assembly => "assembly",
             Topic::Example => "example",
         }
     }
@@ -156,6 +159,7 @@ impl Topic {
             Topic::Sheet => include_str!("../prime/sheet.md"),
             Topic::Phases => include_str!("../prime/phases.md"),
             Topic::Marks => include_str!("../prime/marks.md"),
+            Topic::Assembly => include_str!("../prime/assembly.md"),
             Topic::Example => include_str!("../../../examples/g7.json"),
         }
     }
@@ -172,7 +176,8 @@ impl Topic {
             | Topic::Cue
             | Topic::Sheet
             | Topic::Phases
-            | Topic::Marks => true,
+            | Topic::Marks
+            | Topic::Assembly => true,
             Topic::Example => false,
         }
     }
@@ -276,6 +281,7 @@ fn pattern_name(pattern: BorderPattern) -> &'static str {
         BorderPattern::Solid => "solid",
         BorderPattern::Dashed => "dashed",
         BorderPattern::Dotted => "dotted",
+        BorderPattern::DashDot => "dash-dot",
         BorderPattern::None => "none",
     }
 }
@@ -285,6 +291,7 @@ fn label_name(label: LabelStyle) -> &'static str {
         LabelStyle::Plain => "plain",
         LabelStyle::Accent => "accent",
         LabelStyle::Bar => "bar",
+        LabelStyle::Tab => "tab",
     }
 }
 

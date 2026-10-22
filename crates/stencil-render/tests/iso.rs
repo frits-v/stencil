@@ -1492,6 +1492,33 @@ fn marks_document() -> Value {
     document
 }
 
+/// The smallest sheet with the assembly surfaces: `api` a store with a compartment, `worker`
+/// a stack inside an assembly Box, a rail between them, and a link that carries a step badge
+/// and a valve into the rail.
+fn assembly_document() -> Value {
+    let mut document = sheet_document();
+    document["actors"] = json!([{ "id": "crew", "name": "Crew", "tint": 2 }]);
+    document["legend"] = json!([
+        { "line": "solid", "by_actor": true, "text": "request path" },
+        { "line": "solid", "by_actor": true, "form": "rail", "text": "the queue" }
+    ]);
+    document["body"][0]["children"][0]["children"] = json!([
+        { "tag": "Item", "id": "api", "kind": "product", "title": "API", "actor": "crew",
+          "outline": "store", "compartments": ["Jobs"] },
+        { "tag": "Pipe", "id": "queue", "dir": "v", "form": "rail", "line": "solid",
+          "actor": "crew", "label": "Queue", "step": 9 },
+        { "tag": "Box", "id": "path", "kind": "assembly", "label": "Path", "actor": "crew",
+          "children": [{ "tag": "Item", "id": "worker", "kind": "product", "title": "Worker",
+                         "outline": "stack", "actor": "crew" }] }
+    ]);
+    document["links"] = json!([
+        { "from": "api", "to": "queue", "line": "solid", "step": 1, "valve": true,
+          "label": "send" },
+        { "from": "queue", "to": "worker", "line": "solid", "label": "deliver" }
+    ]);
+    document
+}
+
 /// `document` laid out flat with fixed metrics, flipped to iso, and with every node and
 /// part a sheet draws above `keep` removed, so the writer meets `keep` first.
 fn traced_at(document: Value, keep: &str) -> String {
@@ -1637,6 +1664,81 @@ fn every_sheet_surface_is_refused_on_every_path() {
                             "/body/0/children/0/children/0/actor".to_string(),
                             "needs-sheet"
                         )
+                    ]
+                );
+            }
+            stencil_model::SheetSurface::ItemOutline
+            | stencil_model::SheetSurface::Compartments
+            | stencil_model::SheetSurface::SheetLook
+            | stencil_model::SheetSurface::RailForm
+            | stencil_model::SheetSurface::PipeStep => {
+                let (pointer, field) = match surface {
+                    stencil_model::SheetSurface::ItemOutline => {
+                        ("/body/0/children/0/children/0", "outline")
+                    }
+                    stencil_model::SheetSurface::Compartments => {
+                        ("/body/0/children/0/children/0", "compartments")
+                    }
+                    stencil_model::SheetSurface::SheetLook => {
+                        ("/body/0/children/0/children/2", "kind")
+                    }
+                    stencil_model::SheetSurface::RailForm => {
+                        ("/body/0/children/0/children/1", "form")
+                    }
+                    _ => ("/body/0/children/0/children/1", "step"),
+                };
+                let mut without_sheet = assembly_document();
+                without_sheet.as_object_mut().unwrap().remove("sheet");
+                assert!(
+                    vet_rules(without_sheet)
+                        .contains(&(format!("{pointer}/{field}"), "needs-sheet")),
+                    "{}",
+                    surface.as_str()
+                );
+                assert_eq!(traced_at(assembly_document(), pointer), pointer);
+            }
+            // A link's badge and valve are parts of its route, which the writer refuses at
+            // the link once no node draws a sheet part.
+            stencil_model::SheetSurface::LinkStep | stencil_model::SheetSurface::Valve => {
+                let field = match surface {
+                    stencil_model::SheetSurface::LinkStep => "step",
+                    _ => "valve",
+                };
+                let mut without_sheet = assembly_document();
+                without_sheet.as_object_mut().unwrap().remove("sheet");
+                assert!(
+                    vet_rules(without_sheet)
+                        .contains(&(format!("/links/0/{field}"), "needs-sheet")),
+                    "{}",
+                    surface.as_str()
+                );
+                let mut page: Page = serde_json::from_value(assembly_document()).unwrap();
+                let mut geometry = common::layout_with_fixed_metrics(&page);
+                page.projection = Projection::Iso;
+                geometry.nodes.retain(|node| {
+                    !node.parts.iter().any(|part| part.name.is_sheet())
+                        && !matches!(
+                            node.tag,
+                            stencil_layout::NodeTag::TitleBlock
+                                | stencil_layout::NodeTag::TitleCell
+                                | stencil_layout::NodeTag::ProblemPoint
+                                | stencil_layout::NodeTag::View
+                                | stencil_layout::NodeTag::ActorChip
+                        )
+                });
+                assert_eq!(refused_at(&page, &geometry), "/links/0");
+            }
+            // A planned line or node draws only paint a page without a sheet could draw, so
+            // vet alone holds it.
+            stencil_model::SheetSurface::Planned => {
+                let mut without_sheet = sheet_document();
+                without_sheet.as_object_mut().unwrap().remove("sheet");
+                without_sheet["links"][0]["planned"] = json!(true);
+                assert_eq!(
+                    vet_rules(without_sheet),
+                    [
+                        ("/body/0".to_string(), "needs-sheet"),
+                        ("/links/0/planned".to_string(), "needs-sheet")
                     ]
                 );
             }

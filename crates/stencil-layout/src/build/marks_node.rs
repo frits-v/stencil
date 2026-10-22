@@ -389,7 +389,7 @@ impl Builder<'_> {
                     what_source,
                 )?);
             }
-            if part.planned {
+            if self.page_marks.part_planned(part) {
                 parts.push(self.list_text(
                     name_cell,
                     PartName::PartPlanned,

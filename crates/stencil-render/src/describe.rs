@@ -113,9 +113,15 @@ pub fn legend_output_key(key: &LegendKey) -> String {
         KeyColour::Slot(tint) => line_key(key.line, tint).to_string(),
         KeyColour::ByActor => format!("{}-by-actor", key.line.as_str()),
     };
-    match key.form {
+    let form = match key.form {
         PipeForm::Tube => line,
         PipeForm::Band => format!("{line}-band"),
+        PipeForm::Rail => format!("{line}-rail"),
+    };
+    if key.planned {
+        format!("{form}-planned")
+    } else {
+        form
     }
 }
 
@@ -245,11 +251,17 @@ impl<'a> Writer<'a> {
 
     /// The Style cell of a use: its slot and actor name when it acts for an actor.
     fn use_style(&self, key: &LegendKey, actor: Option<&str>) -> String {
-        match (actor, self.actors.slot(actor)) {
+        let style = match (actor, self.actors.slot(actor)) {
             (Some(actor), Some(slot)) => {
                 actor_style(key.line, slot, &escape_markdown(&self.actor_name(actor)))
             }
             _ => style(key),
+        };
+        // A planned line names itself so before its colour word.
+        if key.planned {
+            style.replacen("; ", ", planned; ", 1)
+        } else {
+            style
         }
     }
 
@@ -517,6 +529,9 @@ impl<'a> Writer<'a> {
                         escape_markdown(&self.actor_name(actor))
                     ));
                 }
+                if box_node.planned {
+                    text.push_str(", planned");
+                }
                 lines.push(format!("{indent}- {text}. {pointer}"));
                 self.mark_lines(&self.node_marks(&node.pointer), |_| true, &nested, lines);
                 return;
@@ -544,20 +559,45 @@ impl<'a> Writer<'a> {
                 if self.page.projection == Projection::Iso {
                     text.push_str(&format!(", shape {}", item_shape(kind, item).as_str()));
                 }
+                if item.outline != stencil_model::Outline::Card {
+                    text.push_str(&format!(", outline {}", item.outline.as_str()));
+                }
                 if let Some(actor) = &item.actor {
                     text.push_str(&format!(
                         ", actor {}",
                         escape_markdown(&self.actor_name(actor))
                     ));
                 }
+                if item.planned {
+                    text.push_str(", planned");
+                }
                 lines.push(format!("{indent}- {text}. {pointer}"));
-                self.mark_lines(&self.node_marks(&node.pointer), |_| true, &nested, lines);
+                let marks = self.node_marks(&node.pointer);
+                self.mark_lines(
+                    &marks,
+                    |place| !matches!(place, stencil_model::MarkPlace::Compartment(_)),
+                    &nested,
+                    lines,
+                );
                 for fact in &item.facts {
                     lines.push(format!(
                         "{nested}- Fact, {}: {}.",
                         fact.source.as_str(),
                         escape_markdown(&fact.text)
                     ));
+                }
+                let deeper = "  ".repeat(depth + 2);
+                for (index, compartment) in item.compartments.iter().enumerate() {
+                    lines.push(format!(
+                        "{nested}- Compartment {}.",
+                        escape_markdown(compartment.text())
+                    ));
+                    self.mark_lines(
+                        &marks,
+                        |place| place == stencil_model::MarkPlace::Compartment(index),
+                        &deeper,
+                        lines,
+                    );
                 }
                 return;
             }
@@ -862,7 +902,7 @@ impl<'a> Writer<'a> {
             .map(|(index, part)| {
                 let pointer = parts_pointer.index(index);
                 let mut name = escape_markdown(&self.page_marks.part_name(part));
-                if part.planned {
+                if self.page_marks.part_planned(part) {
                     name.push_str(", planned");
                 }
                 vec![
@@ -896,7 +936,10 @@ impl<'a> Writer<'a> {
             let actor = self.node_line_actor(node);
             match self.nodes.get(node.pointer.as_str()).copied() {
                 Some(NodeRef::Node(Node::Pipe(pipe)) | NodeRef::TeeArm(pipe)) => {
-                    uses.push(self.use_key((pipe.line, pipe.tint, pipe.form), actor));
+                    uses.push(
+                        self.use_key((pipe.line, pipe.tint, pipe.form), actor)
+                            .with_planned(pipe.planned),
+                    );
                 }
                 Some(NodeRef::Node(Node::Tee(tee))) => {
                     uses.push(self.use_key((tee.line, tee.tint, PipeForm::Tube), actor));
@@ -924,7 +967,10 @@ impl<'a> Writer<'a> {
         for route in self.geometry.links.iter().take(LINKS_MAX + 1) {
             if let Some(link) = self.page.links.get(route.index) {
                 let actor = self.actors.link_actor(link);
-                uses.push(self.use_key((link.line, link.tint, PipeForm::Tube), actor));
+                uses.push(
+                    self.use_key((link.line, link.tint, PipeForm::Tube), actor)
+                        .with_planned(link.planned),
+                );
             }
         }
         uses
@@ -1004,10 +1050,13 @@ impl<'a> Writer<'a> {
             let Some(link) = self.page.links.get(route.index) else {
                 continue;
             };
-            let line = match &link.label {
+            let mut line = match &link.label {
                 Some(label) => labelled(label, link.sub.as_deref()),
                 None => "unlabelled".to_string(),
             };
+            if let Some(step) = link.step.filter(|_| self.page.sheet.is_some()) {
+                line = format!("step {step}: {line}");
+            }
             let kind = match link.order {
                 Some(order) => format!("message, order {order}"),
                 None => "link".to_string(),
@@ -1020,12 +1069,17 @@ impl<'a> Writer<'a> {
                 ),
                 None => format!("({})", escape_markdown(id)),
             };
-            let mut ends = arrow_ends(link.arrow).to_string();
+            let mut ends = self.link_ends(route);
+            if link.valve && self.page.sheet.is_some() {
+                ends.push_str(", valve before the end");
+            }
             if route.status == RouteStatus::Fallback {
                 ends.push_str(", fallback route");
             }
             let actor = self.actors.link_actor(link);
-            let key = self.use_key((link.line, link.tint, PipeForm::Tube), actor);
+            let key = self
+                .use_key((link.line, link.tint, PipeForm::Tube), actor)
+                .with_planned(link.planned);
             let from_view = self.view_of(route.from_node);
             let view = from_view.filter(|_| from_view == self.view_of(route.to_node));
             rows.push((
@@ -1046,6 +1100,65 @@ impl<'a> Writer<'a> {
             ));
         }
         rows
+    }
+
+    /// The Ends cell of a link: its drawn arrowheads, with `dot start` or `dot end` for an
+    /// end on a rail, which draws a dot in place of an arrowhead.
+    fn link_ends(&self, route: &stencil_layout::LinkRoute) -> String {
+        let on_rail = |index: usize| {
+            self.geometry
+                .nodes
+                .get(index)
+                .and_then(stencil_layout::rail_bar)
+                .is_some()
+        };
+        let (start_dot, end_dot) = (on_rail(route.from_node), on_rail(route.to_node));
+        if !start_dot && !end_dot {
+            return arrow_ends(route.arrow).to_string();
+        }
+        let mut ends = Vec::new();
+        if start_dot {
+            ends.push("dot start");
+        }
+        match route.arrow {
+            Arrow::None => {}
+            arrow => ends.push(arrow_ends(arrow)),
+        }
+        if end_dot {
+            ends.push("dot end");
+        }
+        ends.join(", ")
+    }
+
+    /// The From or To cell of a rail: `rail`, then each link that ends on it (`in from`) or
+    /// starts on it (`out to`), in link order.
+    fn rail_cell(&self, rail: &NodePointer, incoming: bool) -> String {
+        let mut cell = "rail".to_string();
+        for route in self.geometry.links.iter().take(LINKS_MAX + 1) {
+            let Some(link) = self.page.links.get(route.index) else {
+                continue;
+            };
+            let (here, there, there_id, word) = if incoming {
+                (route.to_node, route.from_node, &link.from, "in from")
+            } else {
+                (route.from_node, route.to_node, &link.to, "out to")
+            };
+            if self.geometry.nodes.get(here).map(|node| &node.pointer) != Some(rail) {
+                continue;
+            }
+            let name = self
+                .geometry
+                .nodes
+                .get(there)
+                .map(|node| self.name_of(&node.pointer))
+                .unwrap_or_default();
+            cell.push_str(&format!(
+                "; {word} {} ({})",
+                cell_value(&name),
+                cell_value(there_id)
+            ));
+        }
+        cell
     }
 
     /// A Lines row: its cells, then on a sheet the Actor and Marks cells, then the pointer.
@@ -1094,8 +1207,9 @@ impl<'a> Writer<'a> {
             ));
         }
         let kinds = stencil_layout::marks::sampled_kinds(self.page);
-        if !kinds.is_empty() {
-            let kinds: Vec<String> = kinds
+        let draws_steps = stencil_layout::marks::draws_step_badges(self.page);
+        if !kinds.is_empty() || draws_steps {
+            let mut kinds: Vec<String> = kinds
                 .into_iter()
                 .map(|kind| {
                     let text = sheet
@@ -1110,6 +1224,17 @@ impl<'a> Writer<'a> {
                     )
                 })
                 .collect();
+            if draws_steps {
+                let text = sheet
+                    .marks
+                    .step
+                    .as_deref()
+                    .unwrap_or(stencil_layout::marks::STEP_SAMPLE_TEXT);
+                kinds.push(format!(
+                    "{} (step badge, numbered lines)",
+                    escape_markdown(text)
+                ));
+            }
             blocks.push(format!("Mark kinds: {}.", kinds.join("; ")));
         }
         let scoped = self.scoped_lines_rows();
@@ -1292,16 +1417,37 @@ impl<'a> Writer<'a> {
         let kind = match pipe.form {
             PipeForm::Tube => kind.to_string(),
             PipeForm::Band => format!("{kind}, band"),
+            PipeForm::Rail => format!("{kind}, rail"),
         };
-        let key = self.use_key((pipe.line, pipe.tint, pipe.form), actor);
-        self.line_row(
-            vec![
-                pipe_line_name(pipe),
-                kind,
+        let key = self
+            .use_key((pipe.line, pipe.tint, pipe.form), actor)
+            .with_planned(pipe.planned);
+        let (from, to) = match pipe.form {
+            PipeForm::Rail => (
+                self.rail_cell(pointer, true),
+                self.rail_cell(pointer, false),
+            ),
+            PipeForm::Tube | PipeForm::Band => (
                 self.pipe_end(pointer, PipeEndSide::Start, pipe.from.as_deref()),
                 self.pipe_end(pointer, PipeEndSide::End, pipe.to.as_deref()),
+            ),
+        };
+        let ends = match pipe.form {
+            PipeForm::Rail => "no arrowheads".to_string(),
+            PipeForm::Tube | PipeForm::Band => arrow_ends(pipe.arrow).to_string(),
+        };
+        let mut name = pipe_line_name(pipe);
+        if let Some(step) = pipe.step.filter(|_| self.page.sheet.is_some()) {
+            name = format!("step {step}: {name}");
+        }
+        self.line_row(
+            vec![
+                name,
+                kind,
+                from,
+                to,
                 self.use_style(&key, actor),
-                arrow_ends(pipe.arrow).to_string(),
+                ends,
                 self.means(&key),
             ],
             (actor, &self.node_marks(pointer)),

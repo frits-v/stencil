@@ -9,14 +9,14 @@ its rules; a figure file writes one topology against a grammar's `#Page`.
 | File | Package | Contents |
 |---|---|---|
 | `cue.mod/module.cue` | | the module `github.com/frits-v/stencil/cue@v0`, language v0.17.1 |
-| `core.cue` | `stencil` | `#Page` and the core nodes: `Row`, `Col`, `Lanes`, `Box`, `Item`, `Fact`, `Note`, `Pipe`, `Tee`, `Text`, `Callout`, `Frame`, `View`, `Phases`, `Step`, `PartsList`, `GeneralNotes`, plus `#Sheet` and its cells, `#Mark`, `#MarkedText`, `#MarkLegend`, `#PartEntry`, `#GeneralNote`, `#Actor`, `#Phase`, `#SheetSurface`, `#LegendEntry`, `#Link`, `#Line`, `#Bend`, `#Corner`, `#TintSlot` and `#FactEntry` |
+| `core.cue` | `stencil` | `#Page` and the core nodes: `Row`, `Col`, `Lanes`, `Box`, `Item`, `Fact`, `Note`, `Pipe`, `Tee`, `Text`, `Callout`, `Frame`, `View`, `Phases`, `Step`, `PartsList`, `GeneralNotes`, plus `#Sheet` and its cells, `#Mark`, `#MarkedText`, `#MarkLegend`, `#PartEntry`, `#GeneralNote`, `#Actor`, `#Phase`, `#SheetSurface`, `#Outline`, `#LineStep`, `#LegendEntry`, `#Link`, `#Line`, `#Bend`, `#Corner`, `#TintSlot` and `#FactEntry` |
 | `grammar.cue` | `stencil` | `#Grammar` and its parts (`#LineKind` among them), and `#GrammarNesting`, the kind and nesting rules every grammar shares |
 | `theme.cue` | `stencil` | `#Theme`, the closed theme definition every theme file vets against: `cue vet -c -d '#Theme' . <file>.json` |
 | `grammars/gcp.cue` | `gcp` | the Google Cloud grammar data and rules, and the gcp `#Page` |
 | `grammars/plain.cue` | `plain` | the domain-neutral grammar data and the plain `#Page` |
 | `figures/g7.cue` | `gcp` | g7, Dedicated Interconnect at 99.99%: `customer` and `internal: customer & {...}` |
 | `figures/sequence.cue` | `plain` | a request flow in five lanes with ten ordered messages: `figure`, exported as `examples/sequence.json` |
-| `figures/sheet.cue` | `gcp` | the trigger evaluation design sheet, a title block, four actors, a Workflow view and a System view with its parts list, general notes and a console screen: `onepager`, exported as `examples/onepager.json` |
+| `figures/sheet.cue` | `gcp` | the trigger evaluation design sheet, a title block, four actors, a Workflow view and a System view (an assembly, a rail, a store with compartments, step badges, a valve and planned work) with its parts list, general notes and a console screen: `onepager`, exported as `examples/onepager.json` |
 | `figures/sheet-small.cue` | `plain` | the smallest design sheet, with a parts list and general notes whose every key is marked once, and a link whose via lies in the sheet's wider margin: `small`, the base of the sheet negative cases |
 | `check.sh` | | the gate, below |
 | `out/` | | exported JSON and renders, not committed |
@@ -120,6 +120,17 @@ for example `CUE="$(mise which cue)" ./cue/check.sh`.
   `_notesUnflagged` and `_attentionUnmarked` name a key no mark uses. Off a sheet marks,
   a parts list and general notes are `_needsSheet.marks`, `."parts-list"` and
   `."general-notes"`.
+- An Item's `outline` is `card`, `store`, `person` or `stack`; a store holds up to 6
+  `compartments`, each a string or `{text, marks}`. An Item or Box may be `planned`, and a
+  solid Link or Pipe `planned` too, keying `<key>-planned`. A Pipe with `form: "rail"` keys
+  `<key>-rail`. A Link or Pipe carries a step badge `step` (1 to 64) and a Link a `valve`;
+  `sheet.marks.step` is the step badge's legend text. A Box kind with a `dash-dot` border or a
+  `tab` label (the `assembly` kind of both grammars) draws on a sheet only. On a sheet
+  `_plannedNotSolid`, `_lineIntoPlanned`, `_compartmentsWithoutStore`,
+  `_outlinePersonWithIcon`, `_railNotVertical`, `_railOutsideRow`, `_railWithTargets`,
+  `_linkStepUsedTwice`, `_valveWithoutArrow` and `_markLegendUnused.step` name the offender.
+  Off a sheet these are `_needsSheet."item-outline"`, `.compartments`, `.planned`,
+  `."sheet-look"`, `."rail-form"`, `."link-step"`, `."pipe-step"` and `.valve`.
 - `Lanes` is a container of 1 to 32 lane heads with an optional `gap` of 0 to 64. A `Link` may
   carry `order`, 1 to 256, which makes it a message of the Lanes node whose heads it joins.
 - `#Page` adds `grammar` (`gcp`, `plain` or a path ending in `.json`) and `chrome` (`full` or

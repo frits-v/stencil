@@ -110,7 +110,8 @@ enum Command {
     Schema,
     /// Print the authoring briefing for an agent, or one deeper topic
     Prime {
-        /// themes, links, blocks, layout, iso, checks, cue, sheet, phases, marks, example, or grammar
+        /// themes, links, blocks, layout, iso, checks, cue, sheet, phases, marks, assembly, example, or
+        /// grammar
         topic: Option<String>,
         /// The grammar to brief on, after `grammar`: gcp or plain
         name: Option<String>,

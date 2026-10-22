@@ -122,6 +122,19 @@ grammar: stencil.#Grammar & {
 			label:   "plain"
 			parents: ["gcp", "project", "perimeter"]
 		},
+		{
+			// The parts one actor runs, on a design sheet only: a dash-dot outline
+			// with its name on a tab.
+			name:     "assembly"
+			role:     "group"
+			tone:     "neutral"
+			tintable: true
+			border: {pattern: "dash-dot", width: 1.1}
+			padding: 14
+			radius:  0
+			label:   "tab"
+			parents: ["page", "gcp", "vpc", "region", "subnet", "onprem", "project", "optional", "k8s", "perimeter", "apis"]
+		},
 	]
 	items: [{
 		name:  "product"

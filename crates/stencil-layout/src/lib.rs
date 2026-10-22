@@ -14,7 +14,9 @@ mod marks_clear;
 mod phases;
 mod pipe_ends;
 mod route;
+pub mod sheet_checks;
 mod sheet_frame;
+pub mod sheet_lines;
 mod theme_labels;
 mod units;
 
@@ -26,11 +28,18 @@ use stencil_model::{
     validate_page,
 };
 
-pub use build::{SHEET_BLOCK_BORDER_PX, container_label_style, fact_presentation};
-pub use drawn::{DrawnLink, Fillet, PathPiece, drawn_link, fillet, push_flattened};
+pub use build::{
+    SHEET_BLOCK_BORDER_PX, STEP_BADGE_PX, STEP_BADGE_RADIUS_PX, STORE_LID_RY_PX, compartment_rows,
+    container_label_style, fact_presentation,
+};
+pub use drawn::{
+    DashRun, DrawnLink, Fillet, JOINT_REACH_PX, PathPiece, dash_runs, drawn_link, fillet,
+    joint_intervals, piece_length, push_flattened, stroke_on_at, turn_positions,
+};
 pub use lead_run::{LeadRun, measure_lead_run};
 pub use route::{
-    OBSTACLE_CLEARANCE_PX, longest_segment_midpoint, longest_segment_point, reroute_link,
+    OBSTACLE_CLEARANCE_PX, RAIL_BAR_PX, RAIL_DOT_RADIUS_PX, RAIL_END_CLEARANCE_PX,
+    longest_segment_midpoint, longest_segment_point, rail_bar, reroute_link,
 };
 pub use sheet_frame::{SHEET_BORDER_PX, SHEET_RULE_PX};
 pub use stencil_model::text::WRAP_EPSILON_PX;
@@ -262,6 +271,9 @@ pub struct NodeGeometry {
     pub shape: Option<Shape>,
     /// How a Pipe is drawn under iso (section 12.3 rule 5); None for every other tag.
     pub pipe_form: Option<PipeForm>,
+    /// The flat outline of an Item on a design sheet (section 14.4 rule 25); None for every
+    /// other tag and for a card. The measured JSON does not write it.
+    pub outline: Option<stencil_model::Outline>,
     pub parent: Option<usize>,
     /// Border box.
     pub bounds: BoxRect,
@@ -343,6 +355,22 @@ pub enum NodeTag {
 }
 
 impl NodeTag {
+    /// True for a container that draws no box of its own, so a link's tag may lie on it:
+    /// a tag inside a gutter column lies on open floor unless it meets one of the column's
+    /// children.
+    pub fn is_container_for_tags(self) -> bool {
+        matches!(
+            self,
+            NodeTag::Page
+                | NodeTag::Body
+                | NodeTag::Legend
+                | NodeTag::Row
+                | NodeTag::Col
+                | NodeTag::Lanes
+                | NodeTag::View
+        )
+    }
+
     /// The `data-tag` name, identical to the variant name.
     pub fn as_str(self) -> &'static str {
         match self {
@@ -526,10 +554,34 @@ pub enum PartName {
     NoteZones,
     FootRule,
     Foot,
+    /// The head of a person outline (section 14.4 rule 25).
+    Head,
+    /// The shoulders of a person outline.
+    Shoulders,
+    /// One compartment of a store outline.
+    Compartment,
+    CompartmentText,
+    /// The dash-dot outline of an assembly Box, under its tab label (section 14.4 rule 26).
+    TabBorder,
+    /// The box of an assembly's tab, straddling the top of its outline; its `Label` sits in
+    /// it.
+    Tab,
+    /// The bar of a rail: a heavy vertical bus links attach to (section 14.4 rule 27).
+    Rail,
+    /// A numbered step badge at the left of a link or pipe tag (section 14.4 rule 23).
+    StepBadge,
+    StepNumeral,
+    /// The two triangles of a valve on a link's last leg, nearer and farther from its end.
+    ValveNear,
+    ValveFar,
+    /// The dot a link draws where it ends on a rail, in place of an arrowhead.
+    RailDot,
+    /// A semicircle where a link hops over another link of another actor (section 14.4 rule 24).
+    Hop,
 }
 
 /// The number of part names, so a new name has to join `PartName::ALL`.
-pub const PART_NAMES: usize = 109;
+pub const PART_NAMES: usize = 122;
 
 impl PartName {
     /// Every part name, in declaration order.
@@ -643,6 +695,19 @@ impl PartName {
         PartName::NoteZones,
         PartName::FootRule,
         PartName::Foot,
+        PartName::Head,
+        PartName::Shoulders,
+        PartName::Compartment,
+        PartName::CompartmentText,
+        PartName::TabBorder,
+        PartName::Tab,
+        PartName::Rail,
+        PartName::StepBadge,
+        PartName::StepNumeral,
+        PartName::ValveNear,
+        PartName::ValveFar,
+        PartName::RailDot,
+        PartName::Hop,
     ];
 
     /// True for the parts a design sheet adds (section 14.2 rule 10); only a sheet draws
@@ -720,7 +785,20 @@ impl PartName {
             | PartName::NoteDetail
             | PartName::NoteZones
             | PartName::FootRule
-            | PartName::Foot => true,
+            | PartName::Foot
+            | PartName::Head
+            | PartName::Shoulders
+            | PartName::Compartment
+            | PartName::CompartmentText
+            | PartName::TabBorder
+            | PartName::Tab
+            | PartName::Rail
+            | PartName::StepBadge
+            | PartName::StepNumeral
+            | PartName::ValveNear
+            | PartName::ValveFar
+            | PartName::RailDot
+            | PartName::Hop => true,
             PartName::Badge
             | PartName::BadgeText
             | PartName::Text
@@ -878,6 +956,19 @@ impl PartName {
             PartName::NoteZones => "note_zones",
             PartName::FootRule => "foot_rule",
             PartName::Foot => "foot",
+            PartName::Head => "head",
+            PartName::Shoulders => "shoulders",
+            PartName::Compartment => "compartment",
+            PartName::CompartmentText => "compartment_text",
+            PartName::TabBorder => "tab_border",
+            PartName::Tab => "tab",
+            PartName::Rail => "rail",
+            PartName::StepBadge => "step_badge",
+            PartName::StepNumeral => "step_numeral",
+            PartName::ValveNear => "valve_near",
+            PartName::ValveFar => "valve_far",
+            PartName::RailDot => "rail_dot",
+            PartName::Hop => "hop",
         }
     }
 }

@@ -240,6 +240,8 @@ pub struct LegendKey {
     pub line: Line,
     pub colour: KeyColour,
     pub form: PipeForm,
+    /// A planned use or entry (section 14.5 rule 8) keys apart from a built one.
+    pub planned: bool,
 }
 
 /// How a legend key names a line's colour: by its effective tint slot, or by the actor of
@@ -257,6 +259,7 @@ impl LegendKey {
             line,
             colour: KeyColour::Slot(line_tint(line, tint)),
             form,
+            planned: false,
         }
     }
 
@@ -266,7 +269,13 @@ impl LegendKey {
             line,
             colour: KeyColour::ByActor,
             form,
+            planned: false,
         }
+    }
+
+    /// The same key for a planned use or entry when `planned` is set.
+    pub fn with_planned(self, planned: bool) -> Self {
+        LegendKey { planned, ..self }
     }
 
     /// The effective tint of a slot key; None for a by-actor key and for gray and deny.
@@ -288,6 +297,10 @@ impl LegendKey {
         match self.form {
             PipeForm::Tube => {}
             PipeForm::Band => key.push_str(" form band"),
+            PipeForm::Rail => key.push_str(" form rail"),
+        }
+        if self.planned {
+            key.push_str(" planned");
         }
         key
     }
@@ -304,11 +317,12 @@ fn use_key(line: Line, tint: Option<u8>, form: PipeForm, actor: Option<u8>) -> L
 
 /// The legend key of an entry.
 pub fn entry_key(entry: &crate::document::LegendEntry) -> LegendKey {
-    if entry.by_actor {
+    let key = if entry.by_actor {
         LegendKey::by_actor(entry.line, entry.form)
     } else {
         LegendKey::new(entry.line, entry.tint, entry.form)
-    }
+    };
+    key.with_planned(entry.planned)
 }
 
 /// Each line use (every Pipe, Tee arm and Tee spine, and each of the first LINKS_MAX + 1
@@ -327,7 +341,7 @@ pub fn legend_consistency(page: &Page) -> CheckReport {
                 let actor = actors.slot(actors.pipe_actor(pipe));
                 uses.push((
                     entry.pointer,
-                    use_key(pipe.line, pipe.tint, pipe.form, actor),
+                    use_key(pipe.line, pipe.tint, pipe.form, actor).with_planned(pipe.planned),
                     "Pipe",
                 ));
             }
@@ -335,7 +349,7 @@ pub fn legend_consistency(page: &Page) -> CheckReport {
                 let actor = tee.and_then(|tee| actors.slot(actors.arm_actor(tee, arm)));
                 uses.push((
                     entry.pointer,
-                    use_key(arm.line, arm.tint, arm.form, actor),
+                    use_key(arm.line, arm.tint, arm.form, actor).with_planned(arm.planned),
                     "Tee arm",
                 ));
             }
@@ -372,7 +386,7 @@ pub fn legend_consistency(page: &Page) -> CheckReport {
         let actor = actors.slot(actors.link_actor(link));
         uses.push((
             links_pointer.index(index),
-            use_key(link.line, link.tint, PipeForm::Tube, actor),
+            use_key(link.line, link.tint, PipeForm::Tube, actor).with_planned(link.planned),
             "Link",
         ));
     }

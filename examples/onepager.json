@@ -95,7 +95,8 @@
     "marks": {
       "part": "a piece of the service",
       "note": "asked of an operator",
-      "attention": "your attention"
+      "attention": "your attention",
+      "step": "a numbered request step"
     }
   },
   "actors": [
@@ -367,8 +368,8 @@
           "tag": "Row",
           "gap": 20,
           "grow": [
-            2,
-            1
+            5,
+            2
           ],
           "children": [
             {
@@ -377,7 +378,7 @@
               "children": [
                 {
                   "tag": "Row",
-                  "gap": 24,
+                  "gap": 64,
                   "grow": [
                     0,
                     1
@@ -385,8 +386,27 @@
                   "children": [
                     {
                       "tag": "Col",
+                      "gap": 64,
                       "justify": "center",
                       "children": [
+                        {
+                          "tag": "Row",
+                          "justify": "center",
+                          "grow": [
+                            0
+                          ],
+                          "children": [
+                            {
+                              "tag": "Item",
+                              "id": "operator-person",
+                              "kind": "person",
+                              "outline": "person",
+                              "title": "Operator",
+                              "subtitle": "one per site",
+                              "actor": "operator"
+                            }
+                          ]
+                        },
                         {
                           "tag": "Row",
                           "justify": "center",
@@ -405,8 +425,7 @@
                             }
                           ]
                         }
-                      ],
-                      "gap": 24
+                      ]
                     },
                     {
                       "tag": "Box",
@@ -416,13 +435,13 @@
                       "children": [
                         {
                           "tag": "Col",
-                          "gap": 56,
+                          "gap": 64,
                           "children": [
                             {
                               "tag": "Row",
                               "grow": [
-                                1,
-                                1
+                                3,
+                                2
                               ],
                               "children": [
                                 {
@@ -465,28 +484,22 @@
                             },
                             {
                               "tag": "Row",
+                              "gap": 32,
+                              "justify": "center",
                               "grow": [
-                                1,
+                                0,
                                 1
                               ],
                               "children": [
                                 {
-                                  "tag": "Row",
-                                  "justify": "center",
-                                  "grow": [
-                                    0
-                                  ],
-                                  "children": [
-                                    {
-                                      "tag": "Item",
-                                      "id": "queue",
-                                      "kind": "product",
-                                      "icon": "integration",
-                                      "title": "Evaluation queue",
-                                      "subtitle": "Pub/Sub",
-                                      "actor": "api"
-                                    }
-                                  ]
+                                  "tag": "Pipe",
+                                  "id": "queue",
+                                  "dir": "v",
+                                  "form": "rail",
+                                  "line": "solid",
+                                  "actor": "api",
+                                  "label": "Evaluation queue",
+                                  "sub": "Pub/Sub"
                                 },
                                 {
                                   "tag": "Row",
@@ -496,13 +509,56 @@
                                   ],
                                   "children": [
                                     {
-                                      "tag": "Item",
-                                      "id": "worker",
-                                      "kind": "product",
-                                      "icon": "cloud-run",
-                                      "title": "Clip worker",
-                                      "subtitle": "Cloud Run job",
-                                      "actor": "worker"
+                                      "tag": "Box",
+                                      "id": "evaluation-path",
+                                      "kind": "assembly",
+                                      "label": "Evaluation path · one job per clip",
+                                      "actor": "worker",
+                                      "children": [
+                                        {
+                                          "tag": "Col",
+                                          "gap": 64,
+                                          "children": [
+                                            {
+                                              "tag": "Row",
+                                              "justify": "center",
+                                              "grow": [
+                                                0
+                                              ],
+                                              "children": [
+                                                {
+                                                  "tag": "Item",
+                                                  "id": "worker",
+                                                  "kind": "product",
+                                                  "icon": "cloud-run",
+                                                  "outline": "stack",
+                                                  "title": "Clip worker",
+                                                  "subtitle": "Cloud Run job",
+                                                  "actor": "worker"
+                                                }
+                                              ]
+                                            },
+                                            {
+                                              "tag": "Row",
+                                              "justify": "center",
+                                              "grow": [
+                                                0
+                                              ],
+                                              "children": [
+                                                {
+                                                  "tag": "Item",
+                                                  "id": "evaluator",
+                                                  "kind": "product",
+                                                  "icon": "vertex-ai",
+                                                  "title": "Clip evaluator",
+                                                  "subtitle": "Vertex AI endpoint",
+                                                  "actor": "model"
+                                                }
+                                              ]
+                                            }
+                                          ]
+                                        }
+                                      ]
                                     }
                                   ]
                                 }
@@ -511,18 +567,14 @@
                             {
                               "tag": "Row",
                               "grow": [
-                                1,
-                                1
+                                2,
+                                3,
+                                2
                               ],
                               "children": [
                                 {
-                                  "tag": "Row",
-                                  "gap": 32,
-                                  "justify": "start",
-                                  "grow": [
-                                    0,
-                                    0
-                                  ],
+                                  "tag": "Col",
+                                  "justify": "center",
                                   "children": [
                                     {
                                       "tag": "Row",
@@ -540,23 +592,44 @@
                                           "subtitle": "Cloud Storage"
                                         }
                                       ]
-                                    },
-                                    {
-                                      "tag": "Item",
-                                      "id": "verdict-store",
-                                      "kind": "product",
-                                      "icon": "cloud-sql",
-                                      "title": "Verdict store",
-                                      "subtitle": "Cloud SQL"
                                     }
                                   ]
                                 },
                                 {
                                   "tag": "Row",
-                                  "justify": "end",
+                                  "justify": "center",
                                   "grow": [
                                     0
                                   ],
+                                  "children": [
+                                    {
+                                      "tag": "Item",
+                                      "id": "verdict-store",
+                                      "kind": "product",
+                                      "icon": "cloud-sql",
+                                      "outline": "store",
+                                      "title": "Verdict store",
+                                      "subtitle": "Cloud SQL",
+                                      "compartments": [
+                                        "Triggers",
+                                        "Plan versions",
+                                        "Verdicts",
+                                        {
+                                          "text": "Evidence refs",
+                                          "marks": [
+                                            {
+                                              "note": "evidence-by-reference"
+                                            }
+                                          ]
+                                        }
+                                      ],
+                                      "actor": "worker"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "tag": "Col",
+                                  "justify": "center",
                                   "children": [
                                     {
                                       "tag": "Row",
@@ -567,12 +640,13 @@
                                       "children": [
                                         {
                                           "tag": "Item",
-                                          "id": "evaluator",
+                                          "id": "replay",
                                           "kind": "product",
-                                          "icon": "vertex-ai",
-                                          "title": "Clip evaluator",
-                                          "subtitle": "Vertex AI endpoint",
-                                          "actor": "model"
+                                          "icon": "integration",
+                                          "title": "Replay scheduler",
+                                          "subtitle": "Cloud Scheduler",
+                                          "planned": true,
+                                          "actor": "api"
                                         }
                                       ]
                                     }
@@ -666,6 +740,11 @@
                       "id": "verdict-store",
                       "node": "verdict-store",
                       "why": "Every verdict keeps its evidence frames and the plan version that produced it."
+                    },
+                    {
+                      "id": "replay",
+                      "node": "replay",
+                      "why": "Runs a trigger over earlier clips on a schedule, so the operator does not wait on a replay."
                     }
                   ]
                 },
@@ -673,7 +752,7 @@
                   "tag": "Frame",
                   "id": "screen-review",
                   "label": "Verdict review in the console: clip, evidence frames, verdict and plan version",
-                  "height": 151
+                  "height": 240
                 }
               ]
             }
@@ -692,6 +771,18 @@
       "line": "dash",
       "by_actor": true,
       "text": "reads or writes the verdict store"
+    },
+    {
+      "line": "solid",
+      "by_actor": true,
+      "form": "rail",
+      "text": "one topic that every job passes through"
+    },
+    {
+      "line": "solid",
+      "by_actor": true,
+      "planned": true,
+      "text": "planned, not built yet"
     },
     {
       "line": "gray",
@@ -750,51 +841,68 @@
       "line": "solid"
     },
     {
+      "from": "operator-person",
+      "to": "console",
+      "line": "solid",
+      "label": "writes, reviews"
+    },
+    {
       "from": "console",
       "to": "gateway",
       "line": "solid",
-      "label": "submit trigger",
-      "from_side": "top"
+      "step": 1,
+      "label": "submit trigger"
     },
     {
       "from": "gateway",
       "to": "api",
       "line": "solid",
+      "step": 2,
       "label": "authorized call"
     },
     {
       "from": "api",
       "to": "queue",
       "line": "solid",
+      "step": 3,
       "label": "queue job",
-      "from_side": "bottom",
-      "to_side": "top",
       "sub": "approved plans only",
+      "valve": true,
       "marks": [
         {
           "note": "approved-plans-only"
         }
-      ]
+      ],
+      "from_side": "bottom",
+      "to_side": "right"
     },
     {
       "from": "queue",
       "to": "worker",
       "line": "solid",
+      "step": 4,
       "label": "deliver job"
     },
     {
       "from": "worker",
       "to": "evaluator",
       "line": "solid",
-      "label": "evaluate clip",
-      "from_side": "bottom",
-      "to_side": "top"
+      "step": 5,
+      "label": "evaluate clip"
     },
     {
       "from": "worker",
       "to": "verdict-store",
       "line": "dash",
-      "label": "write verdict",
+      "step": 6,
+      "label": "write verdict"
+    },
+    {
+      "from": "api",
+      "to": "replay",
+      "line": "solid",
+      "planned": true,
+      "label": "schedule replays",
       "from_side": "bottom",
       "to_side": "top"
     },
@@ -813,9 +921,7 @@
         {
           "note": "no-store-credentials"
         }
-      ],
-      "from_side": "left",
-      "to_side": "right"
+      ]
     }
   ]
 }

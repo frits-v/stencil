@@ -38,6 +38,8 @@ pub const VIEW_GAP_DEFAULT_PX: u16 = 16;
 pub const PHASE_COLUMNS_MAX: u8 = 6;
 /// The marks one carrier, line or compartment holds (section 14.2 rule 4).
 pub const MARKS_MAX: usize = 4;
+/// The largest step badge a Link or Pipe draws (section 14.4 rule 23).
+pub const LINE_STEP_MAX: u16 = 64;
 /// Scalar values in an `id`, the `{0,63}` repetition plus the first character.
 pub const ID_SCALARS_MAX: usize = 64;
 /// The JSON Schema and CUE pattern for `id`. `is_valid_id` is its Rust twin.
@@ -398,6 +400,10 @@ pub struct LegendEntry {
     /// effective actor; each is drawn in its actor's colour.
     #[serde(default, skip_serializing_if = "is_false")]
     pub by_actor: bool,
+    /// The entry names the planned uses of its line, form and colour: lines not built yet,
+    /// drawn hollow (section 14.5 rule 8).
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub planned: bool,
     #[schemars(length(min = 1, max = 400))]
     pub text: String,
 }
@@ -684,11 +690,18 @@ pub struct MarkLegend {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[schemars(length(min = 1, max = 400))]
     pub attention: Option<String>,
+    /// The text of the strip's step badge sample; absent prints `step`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(length(min = 1, max = 400))]
+    pub step: Option<String>,
 }
 
 impl MarkLegend {
     fn is_empty(legend: &MarkLegend) -> bool {
-        legend.part.is_none() && legend.note.is_none() && legend.attention.is_none()
+        legend.part.is_none()
+            && legend.note.is_none()
+            && legend.attention.is_none()
+            && legend.step.is_none()
     }
 
     /// The authored text of a kind, when there is one.
@@ -978,6 +991,9 @@ pub struct BoxNode {
     pub label: String,
     #[schemars(length(min = 1, max = 256))]
     pub children: Vec<Node>,
+    /// On a design sheet, not built yet: the border is drawn dashed with no fill.
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub planned: bool,
     /// Balloons, flags and diamonds keyed to the parts list, the general notes and the
     /// attention items (section 14.2 rule 4).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -1011,6 +1027,18 @@ pub struct Item {
     /// in the kind's product table, or card.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub shape: Option<Shape>,
+    /// On a design sheet, the flat outline the Item is drawn as: a card (the default), a
+    /// store cylinder, a person, or a stack of three cards. Under iso the solid still
+    /// comes from `shape`.
+    #[serde(default, skip_serializing_if = "Outline::is_card")]
+    pub outline: Outline,
+    /// The compartments of a store outline, each a string or `{"text": ..., "marks": [...]}`.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[schemars(length(max = 6))]
+    pub compartments: Vec<MarkedText>,
+    /// On a design sheet, not built yet: the outline is drawn dashed with no fill.
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub planned: bool,
     /// On a design sheet, the actor whose colour the Item takes.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[schemars(regex(pattern = ID_PATTERN))]
@@ -1023,6 +1051,43 @@ pub struct Item {
     /// One mark centred on the top-right corner, half outside it.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub corner_mark: Option<Mark>,
+}
+
+/// The flat outline of an Item on a design sheet (section 14.4 rule 25): the card of
+/// section 2.5, a store (a cylinder with a lid, holding up to six compartments), a person (a
+/// head and shoulders with the title and subtitle under them; no icon), or a stack (three
+/// offset cards: many of one thing).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema, Default)]
+#[serde(rename_all = "lowercase")]
+pub enum Outline {
+    #[default]
+    Card,
+    Store,
+    Person,
+    Stack,
+}
+
+impl Outline {
+    pub const ALL: [Outline; 4] = [
+        Outline::Card,
+        Outline::Store,
+        Outline::Person,
+        Outline::Stack,
+    ];
+
+    #[allow(clippy::trivially_copy_pass_by_ref)]
+    fn is_card(outline: &Outline) -> bool {
+        *outline == Outline::Card
+    }
+
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Outline::Card => "card",
+            Outline::Store => "store",
+            Outline::Person => "person",
+            Outline::Stack => "stack",
+        }
+    }
 }
 
 /// Where a fact comes from (section 13.7): `doc` is read from the live documentation when
@@ -1198,28 +1263,51 @@ pub struct Pipe {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[schemars(regex(pattern = ID_PATTERN))]
     pub to: Option<String>,
+    /// On a design sheet, a numbered step badge at the left of the tag, 1 to 64, unique
+    /// across links and pipes.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(range(min = 1, max = 64))]
+    pub step: Option<u16>,
+    /// On a design sheet, not built yet: a solid line drawn hollow (section 14.5 rule 8).
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub planned: bool,
     /// On a design sheet, marks set in the tag after the label and sub.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[schemars(length(max = 4))]
     pub marks: Vec<Mark>,
 }
 
-/// How a Pipe is drawn under iso: a round tube on its plane, or a band, a flat wide arrow
-/// lying on it. Flat draws both as the wire of section 2.7.
+/// How a Pipe is drawn: under iso a round tube on its plane, or a band, a flat wide arrow
+/// lying on it; flat draws both as the wire of section 2.7. A rail is a heavy vertical bus
+/// in a Row that links attach to, on a design sheet and flat only.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema, Default)]
 #[serde(rename_all = "lowercase")]
 pub enum PipeForm {
     #[default]
     Tube,
     Band,
+    Rail,
 }
 
 impl PipeForm {
+    /// Every form, in declaration order.
+    pub const ALL: [PipeForm; 3] = [PipeForm::Tube, PipeForm::Band, PipeForm::Rail];
+    /// The forms the iso projection draws (section 12.3 rule 5).
+    pub const ISO: [PipeForm; 2] = [PipeForm::Tube, PipeForm::Band];
+
     #[allow(clippy::trivially_copy_pass_by_ref)]
     fn is_tube(form: &PipeForm) -> bool {
         match form {
             PipeForm::Tube => true,
-            PipeForm::Band => false,
+            PipeForm::Band | PipeForm::Rail => false,
+        }
+    }
+
+    pub fn as_str(self) -> &'static str {
+        match self {
+            PipeForm::Tube => "tube",
+            PipeForm::Band => "band",
+            PipeForm::Rail => "rail",
         }
     }
 }
@@ -1347,8 +1435,20 @@ pub struct Link {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[schemars(range(min = 1, max = 256))]
     pub order: Option<u16>,
-    /// On a design sheet, marks set in the tag after the label and sub; a link with marks
-    /// has a label.
+    /// On a design sheet, a numbered step badge at the left of the tag, 1 to 64, unique
+    /// across links and pipes; distinct from `order`, which places Lanes messages.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(range(min = 1, max = 64))]
+    pub step: Option<u16>,
+    /// On a design sheet, a valve on the last leg before the arrowhead: a gate the work
+    /// passes through.
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub valve: bool,
+    /// On a design sheet, not built yet: a solid line drawn hollow (section 14.5 rule 8).
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub planned: bool,
+    /// On a design sheet, marks set in the tag after the label and sub, or under the valve;
+    /// a link with marks has a label, a step or a valve.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[schemars(length(max = 4))]
     pub marks: Vec<Mark>,
@@ -1664,12 +1764,29 @@ pub fn legend_label(line: Line, tint: Option<u8>) -> &'static str {
 
 /// The canonical label layout measures for a legend entry (section 13.1 rule 7 and section
 /// 14.2 rule 7): `legend_label`, or for a `by_actor` entry `Solid, actor colour` or
-/// `Dashed, actor colour`, since its uses are drawn in several actors' colours.
-pub fn canonical_legend_label(entry: &LegendEntry) -> &'static str {
-    match (entry.by_actor, entry.line) {
+/// `Dashed, actor colour`, since its uses are drawn in several actors' colours, followed by
+/// `legend_label_suffix`.
+pub fn canonical_legend_label(entry: &LegendEntry) -> String {
+    let base = match (entry.by_actor, entry.line) {
         (true, Line::Solid) => "Solid, actor colour",
         (true, Line::Dash) => "Dashed, actor colour",
         (true, Line::Gray | Line::Deny) | (false, _) => legend_label(entry.line, entry.tint),
+    };
+    format!("{base}{}", legend_label_suffix(entry.form, entry.planned))
+}
+
+/// What a legend label adds for a rail and for a planned entry (section 14.2 rule 7): `,
+/// rail` and `, planned`. A band and a tube add nothing.
+pub fn legend_label_suffix(form: PipeForm, planned: bool) -> &'static str {
+    let rail = match form {
+        PipeForm::Rail => true,
+        PipeForm::Tube | PipeForm::Band => false,
+    };
+    match (rail, planned) {
+        (false, false) => "",
+        (true, false) => ", rail",
+        (false, true) => ", planned",
+        (true, true) => ", rail, planned",
     }
 }
 

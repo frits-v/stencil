@@ -10,13 +10,22 @@ use crate::sheet::{PageActors, SheetList};
 use crate::walk::{NodeEntry, NodeRef, body_nodes};
 use crate::{LINKS_MAX, MARKS_MAX};
 
-/// A carrier's id, its own marks, its corner mark and the marks of each of its lines.
+/// A carrier's id, its own marks, its corner mark and the marks of each of its lines or
+/// compartments.
 type CarrierFields<'a> = (
     Option<&'a str>,
     &'a [Mark],
     Option<&'a Mark>,
     Vec<&'a [Mark]>,
 );
+
+/// Which entries of a carrier hold their own marks: a Step's `lines` or a store's
+/// `compartments`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum EntryField {
+    Lines,
+    Compartments,
+}
 
 /// Where on its carrier a mark is drawn.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -27,6 +36,8 @@ pub enum MarkPlace {
     Corner,
     /// Right-aligned on the carrier's `lines` entry of this index.
     Line(usize),
+    /// Right-aligned inside the store's compartment of this index.
+    Compartment(usize),
 }
 
 /// One mark a carrier draws, in drawn order: a part's balloon on its `node` first, then
@@ -54,6 +65,8 @@ pub struct PageMarks<'a> {
     node_names: BTreeMap<&'a str, (&'a str, Option<&'a str>)>,
     /// Node id to its own `actor`, else the actor its line takes.
     node_actors: BTreeMap<&'a str, &'a str>,
+    /// The ids of planned Items, Boxes and Pipes.
+    planned_nodes: std::collections::BTreeSet<&'a str>,
     attention: Vec<&'a crate::document::AttentionItem>,
 }
 
@@ -78,6 +91,9 @@ impl<'a> PageMarks<'a> {
                         if let Some(actor) = item.actor.as_deref() {
                             marks.node_actors.entry(id).or_insert(actor);
                         }
+                        if item.planned {
+                            marks.planned_nodes.insert(id);
+                        }
                     }
                 }
                 NodeRef::Node(Node::Box(box_node)) => {
@@ -89,6 +105,9 @@ impl<'a> PageMarks<'a> {
                         if let Some(actor) = box_node.actor.as_deref() {
                             marks.node_actors.entry(id).or_insert(actor);
                         }
+                        if box_node.planned {
+                            marks.planned_nodes.insert(id);
+                        }
                     }
                 }
                 NodeRef::Node(Node::Pipe(pipe)) => {
@@ -99,6 +118,9 @@ impl<'a> PageMarks<'a> {
                             .or_insert((pipe.label.as_str(), pipe.sub.as_deref()));
                         if let Some(actor) = actors.pipe_actor(pipe) {
                             marks.node_actors.entry(id).or_insert(actor);
+                        }
+                        if pipe.planned {
+                            marks.planned_nodes.insert(id);
                         }
                     }
                 }
@@ -218,6 +240,15 @@ impl<'a> PageMarks<'a> {
         }
     }
 
+    /// True for a planned part: its node's `planned` when it is keyed by `node`, else its
+    /// own.
+    pub fn part_planned(&self, part: &PartEntry) -> bool {
+        match part.node.as_deref() {
+            Some(node) => self.planned_nodes.contains(node),
+            None => part.planned,
+        }
+    }
+
     /// The id of the general note at `position`.
     pub fn note_id(&self, position: usize) -> Option<String> {
         self.notes.get(position).map(|note| note.id.clone())
@@ -278,13 +309,21 @@ impl<'a> PageMarks<'a> {
 
     /// The marks of the body node `node` at `pointer`, in drawn order.
     pub fn marks_at(&self, pointer: &NodePointer, node: NodeRef<'_>) -> Vec<CarrierMark> {
+        let mut field = EntryField::Lines;
         let (id, marks, corner, lines): CarrierFields<'_> = match node {
-            NodeRef::Node(Node::Item(item)) => (
-                item.id.as_deref(),
-                &item.marks,
-                item.corner_mark.as_ref(),
-                Vec::new(),
-            ),
+            NodeRef::Node(Node::Item(item)) => {
+                field = EntryField::Compartments;
+                (
+                    item.id.as_deref(),
+                    &item.marks,
+                    item.corner_mark.as_ref(),
+                    item.compartments
+                        .iter()
+                        .take(SheetList::Compartments.max() + 1)
+                        .map(crate::document::MarkedText::marks)
+                        .collect(),
+                )
+            }
             NodeRef::Node(Node::Box(box_node)) => (
                 box_node.id.as_deref(),
                 &box_node.marks,
@@ -325,9 +364,16 @@ impl<'a> PageMarks<'a> {
                 place: MarkPlace::Corner,
             });
         }
-        let lines_pointer = pointer.child("lines");
+        let lines_pointer = pointer.child(match field {
+            EntryField::Lines => "lines",
+            EntryField::Compartments => "compartments",
+        });
         for (line, line_marks) in lines.into_iter().enumerate() {
             let line_pointer = lines_pointer.index(line).child("marks");
+            let place = match field {
+                EntryField::Lines => MarkPlace::Line(line),
+                EntryField::Compartments => MarkPlace::Compartment(line),
+            };
             drawn.extend(
                 line_marks
                     .iter()
@@ -336,7 +382,7 @@ impl<'a> PageMarks<'a> {
                     .map(|(index, mark)| CarrierMark {
                         pointer: line_pointer.index(index),
                         mark: mark.clone(),
-                        place: MarkPlace::Line(line),
+                        place,
                     }),
             );
         }

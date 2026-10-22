@@ -188,6 +188,32 @@
                 "project",
                 "perimeter"
             ]
+        },
+        {
+            "name": "assembly",
+            "role": "group",
+            "tone": "neutral",
+            "tintable": true,
+            "border": {
+                "pattern": "dash-dot",
+                "width": 1.1
+            },
+            "padding": 14,
+            "radius": 0,
+            "label": "tab",
+            "parents": [
+                "page",
+                "gcp",
+                "vpc",
+                "region",
+                "subnet",
+                "onprem",
+                "project",
+                "optional",
+                "k8s",
+                "perimeter",
+                "apis"
+            ]
         }
     ],
     "items": [
@@ -467,6 +493,7 @@
                 "k8s",
                 "perimeter",
                 "apis",
+                "assembly",
                 "page"
             ],
             "shape": "block"
@@ -486,6 +513,7 @@
                 "k8s",
                 "perimeter",
                 "apis",
+                "assembly",
                 "page"
             ],
             "shape": "figure"
@@ -505,6 +533,7 @@
                 "k8s",
                 "perimeter",
                 "apis",
+                "assembly",
                 "page"
             ],
             "shape": "laptop"

@@ -306,13 +306,15 @@ fn expected_zone_rect(
             .border
             .as_ref()
             .or(slot.map(|slot| &slot.border))
-            .map(|color| {
+            .and_then(|color| {
                 let line = match pattern {
                     BorderPattern::Dashed => LinePattern::Dashed,
                     BorderPattern::Dotted => LinePattern::Dotted,
                     BorderPattern::Solid | BorderPattern::None => LinePattern::Solid,
+                    // An assembly draws its outline as a part on a sheet, never as its box.
+                    BorderPattern::DashDot => return None,
                 };
-                (color.as_str().to_string(), width, line)
+                Some((color.as_str().to_string(), width, line))
             }),
     };
     let dash = stroke.as_ref().and_then(|(_, _, line)| match line {
@@ -790,6 +792,18 @@ fn wire_paints_only_white_fills_and_two_inks() {
                 .ancestors()
                 .any(|ancestor| ancestor.attribute("data-tag") == Some("Frame"));
             if stroke == "#555555" && in_frame && element.has_tag_name("line") {
+                continue;
+            }
+            // A planned line's paper core runs inside the casing drawn just before it on
+            // the same path, so it reads as the white of a hollow line.
+            let casing = element
+                .prev_sibling_element()
+                .filter(|previous| previous.attribute("d") == element.attribute("d"));
+            if stroke == "#FFFFFF"
+                && element.has_tag_name("path")
+                && casing.is_some_and(|casing| casing.attribute("stroke") == Some("#222222"))
+            {
+                examined += 1;
                 continue;
             }
             assert_eq!(stroke, "#222222", "{name}");
@@ -1461,7 +1475,8 @@ fn actor_strokes_are_told_apart_by_colour_or_by_text() {
 }
 
 /// Section 14.5 rule 7: a by-actor legend sample draws its line in the sheet frame ink,
-/// with no end dot, so it names no actor's colour.
+/// with no end dot, so it names no actor's colour. A rail sample is one heavy line; a
+/// planned sample is a casing in the frame ink over a paper core.
 #[test]
 fn a_by_actor_sample_draws_in_the_frame_ink() {
     let document = onepager_document();
@@ -1469,6 +1484,7 @@ fn a_by_actor_sample_draws_in_the_frame_ink() {
     for theme_name in DESIGNED_THEMES {
         let theme = common::theme(theme_name);
         let frame = theme.sheet_colors().frame.as_str().to_string();
+        let paper = theme.sheet_colors().paper.as_str().to_string();
         let rendered = render_themed(document.clone(), theme_name);
         let svg = common::parse_xml(&rendered.svg.svg);
         for (index, entry) in document["legend"].as_array().unwrap().iter().enumerate() {
@@ -1476,10 +1492,21 @@ fn a_by_actor_sample_draws_in_the_frame_ink() {
                 continue;
             }
             let group = common::group(&svg, &format!("/legend/{index}"));
-            let lines = common::children_named(group, "line");
-            assert_eq!(lines.len(), 1, "{theme_name}");
             assert!(common::children_named(group, "circle").is_empty());
-            let stroke = lines[0].attribute("stroke").unwrap();
+            let stroke = if entry["planned"] == json!(true) {
+                let paths = common::children_named(group, "path");
+                assert_eq!(paths.len(), 2, "{theme_name}");
+                assert_eq!(
+                    paths[1].attribute("stroke"),
+                    Some(paper.as_str()),
+                    "{theme_name}"
+                );
+                paths[0].attribute("stroke").unwrap()
+            } else {
+                let lines = common::children_named(group, "line");
+                assert_eq!(lines.len(), 1, "{theme_name}");
+                lines[0].attribute("stroke").unwrap()
+            };
             assert_eq!(stroke, frame, "{theme_name}");
             if theme.tint_cue == TintCue::Color {
                 assert!(
@@ -1490,7 +1517,7 @@ fn a_by_actor_sample_draws_in_the_frame_ink() {
             examined += 1;
         }
     }
-    assert_eq!(examined, DESIGNED_THEMES.len() * 2);
+    assert_eq!(examined, DESIGNED_THEMES.len() * 4);
 }
 
 /// Section 14.5 rule 7: under wire a by-actor entry reads by its line, so each strip entry
@@ -1499,7 +1526,7 @@ fn a_by_actor_sample_draws_in_the_frame_ink() {
 fn wire_labels_a_by_actor_entry_by_line() {
     let rendered = render_themed(onepager_document(), "wire");
     let svg = common::parse_xml(&rendered.svg.svg);
-    let labels: Vec<String> = [0, 1, 3]
+    let labels: Vec<String> = [0, 1, 2, 3, 4, 5]
         .into_iter()
         .map(|index| {
             let group = common::group(&svg, &format!("/legend/{index}"));
@@ -1514,6 +1541,9 @@ fn wire_labels_a_by_actor_entry_by_line() {
         [
             "Solid line, by actor",
             "Dashed line, by actor",
+            "Solid line, by actor, rail",
+            "Solid line, by actor, planned",
+            "Thin line",
             "Dotted line"
         ]
     );

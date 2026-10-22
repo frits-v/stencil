@@ -16,6 +16,7 @@ The Google Cloud vocabulary: the default grammar, so a page without "grammar" is
 | k8s | a cluster or namespace: pink, no border; never tinted |
 | perimeter | a VPC Service Controls perimeter: dashed orange, orange label |
 | apis | Google APIs reached over Private Google Access, inside the gcp frame and outside every vpc |
+| assembly | the parts one actor runs, on a design sheet only: a dash-dot outline with a tab label |
 
 Nesting inside Google Cloud: gcp, then vpc, then region, then subnet. project, perimeter and k8s wrap whatever they scope. onprem sites and other clouds sit outside gcp, usually in the producer column. A Box whose parent is not in its kind's list fails vet with kind-parent-not-allowed; Row, Col and Lanes are transparent.
 

@@ -466,6 +466,10 @@
         "line": {
           "$ref": "#/$defs/Line"
         },
+        "planned": {
+          "description": "The entry names the planned uses of its line, form and colour: lines not built yet,\ndrawn hollow (section 14.5 rule 8).",
+          "type": "boolean"
+        },
         "text": {
           "type": "string",
           "maxLength": 400,
@@ -547,7 +551,7 @@
           "$ref": "#/$defs/Line"
         },
         "marks": {
-          "description": "On a design sheet, marks set in the tag after the label and sub; a link with marks\nhas a label.",
+          "description": "On a design sheet, marks set in the tag after the label and sub, or under the valve;\na link with marks has a label, a step or a valve.",
           "type": "array",
           "items": {
             "$ref": "#/$defs/Mark"
@@ -562,6 +566,20 @@
           ],
           "format": "uint16",
           "maximum": 256,
+          "minimum": 1
+        },
+        "planned": {
+          "description": "On a design sheet, not built yet: a solid line drawn hollow (section 14.5 rule 8).",
+          "type": "boolean"
+        },
+        "step": {
+          "description": "On a design sheet, a numbered step badge at the left of the tag, 1 to 64, unique\nacross links and pipes; distinct from `order`, which places Lanes messages.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint16",
+          "maximum": 64,
           "minimum": 1
         },
         "sub": {
@@ -593,6 +611,10 @@
               "type": "null"
             }
           ]
+        },
+        "valve": {
+          "description": "On a design sheet, a valve on the last leg before the arrowhead: a gate the work\npasses through.",
+          "type": "boolean"
         },
         "via": {
           "type": "array",
@@ -685,6 +707,15 @@
           "minLength": 1
         },
         "part": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 400,
+          "minLength": 1
+        },
+        "step": {
+          "description": "The text of the strip's step badge sample; absent prints `step`.",
           "type": [
             "string",
             "null"
@@ -946,6 +977,10 @@
               },
               "maxItems": 4
             },
+            "planned": {
+              "description": "On a design sheet, not built yet: the border is drawn dashed with no fill.",
+              "type": "boolean"
+            },
             "tag": {
               "type": "string",
               "const": "Box"
@@ -979,6 +1014,14 @@
                 "null"
               ],
               "pattern": "^[a-z0-9][a-z0-9-]{0,63}$"
+            },
+            "compartments": {
+              "description": "The compartments of a store outline, each a string or `{\"text\": ..., \"marks\": [...]}`.",
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/MarkedText"
+              },
+              "maxItems": 6
             },
             "corner_mark": {
               "description": "One mark centred on the top-right corner, half outside it.",
@@ -1026,6 +1069,14 @@
                 "$ref": "#/$defs/Mark"
               },
               "maxItems": 4
+            },
+            "outline": {
+              "description": "On a design sheet, the flat outline the Item is drawn as: a card (the default), a\nstore cylinder, a person, or a stack of three cards. Under iso the solid still\ncomes from `shape`.",
+              "$ref": "#/$defs/Outline"
+            },
+            "planned": {
+              "description": "On a design sheet, not built yet: the outline is drawn dashed with no fill.",
+              "type": "boolean"
             },
             "shape": {
               "description": "Under iso, the solid the item stands as; absent takes the shape of its icon's row\nin the kind's product table, or card.",
@@ -1185,6 +1236,20 @@
                 "$ref": "#/$defs/Mark"
               },
               "maxItems": 4
+            },
+            "planned": {
+              "description": "On a design sheet, not built yet: a solid line drawn hollow (section 14.5 rule 8).",
+              "type": "boolean"
+            },
+            "step": {
+              "description": "On a design sheet, a numbered step badge at the left of the tag, 1 to 64, unique\nacross links and pipes.",
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "uint16",
+              "maximum": 64,
+              "minimum": 1
             },
             "sub": {
               "type": [
@@ -1728,6 +1793,16 @@
         "foot"
       ]
     },
+    "Outline": {
+      "description": "The flat outline of an Item on a design sheet (section 14.4 rule 25): the card of\nsection 2.5, a store (a cylinder with a lid, holding up to six compartments), a person (a\nhead and shoulders with the title and subtitle under them; no icon), or a stack (three\noffset cards: many of one thing).",
+      "type": "string",
+      "enum": [
+        "card",
+        "store",
+        "person",
+        "stack"
+      ]
+    },
     "PagePoint": {
       "type": "object",
       "properties": {
@@ -1833,11 +1908,12 @@
       ]
     },
     "PipeForm": {
-      "description": "How a Pipe is drawn under iso: a round tube on its plane, or a band, a flat wide arrow\nlying on it. Flat draws both as the wire of section 2.7.",
+      "description": "How a Pipe is drawn: under iso a round tube on its plane, or a band, a flat wide arrow\nlying on it; flat draws both as the wire of section 2.7. A rail is a heavy vertical bus\nin a Row that links attach to, on a design sheet and flat only.",
       "type": "string",
       "enum": [
         "tube",
-        "band"
+        "band",
+        "rail"
       ]
     },
     "Problem": {
@@ -2048,6 +2124,20 @@
                 "$ref": "#/$defs/Mark"
               },
               "maxItems": 4
+            },
+            "planned": {
+              "description": "On a design sheet, not built yet: a solid line drawn hollow (section 14.5 rule 8).",
+              "type": "boolean"
+            },
+            "step": {
+              "description": "On a design sheet, a numbered step badge at the left of the tag, 1 to 64, unique\nacross links and pipes.",
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "uint16",
+              "maximum": 64,
+              "minimum": 1
             },
             "sub": {
               "type": [

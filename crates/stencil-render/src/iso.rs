@@ -537,6 +537,8 @@ fn solid_shape(
                 slab_top,
                 2.0 * tube::ISO_TUBE_RADIUS_PX,
             )),
+            // render_svg refuses a rail under iso before any solid is built.
+            Some(PipeForm::Rail) => None,
         },
         NodeTag::Tee => Some((
             SolidShape::Surface,
@@ -746,6 +748,8 @@ fn surface_outline(node: &NodeGeometry, base_z: f32, zoom: f32) -> Option<Vec<Sc
             let is_band = match node.pipe_form {
                 Some(PipeForm::Band) => true,
                 Some(PipeForm::Tube) | None => false,
+                // render_svg refuses a rail under iso before any outline is read.
+                Some(PipeForm::Rail) => return None,
             };
             if is_band {
                 let (dx, dy) = (end.0 - start.0, end.1 - start.1);

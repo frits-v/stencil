@@ -148,12 +148,322 @@ pub fn drawn_link(geometry: &PageGeometry, route: &LinkRoute) -> DrawnLink {
         at = leg.last().map_or(at, |piece| piece.to());
         legs.push(leg);
     }
+    let hops: Vec<PagePoint> = route
+        .parts
+        .iter()
+        .filter(|part| part.name == crate::PartName::Hop)
+        .map(crate::sheet_lines::hop_point)
+        .collect();
+    if !hops.is_empty() {
+        insert_hops(start, &mut legs, &hops);
+    }
     DrawnLink {
         start,
         legs,
         start_arrow,
         end_arrow,
     }
+}
+
+/// Replaces the stretch of a straight piece around each hop point with a semicircle of
+/// `HOP_RADIUS_PX` drawn as two quarter arcs, bulging toward -y on a horizontal piece and
+/// toward -x on a vertical one (section 14.5 rule 9).
+fn insert_hops(start: PagePoint, legs: &mut [Vec<PathPiece>], hops: &[PagePoint]) {
+    let radius = crate::sheet_lines::HOP_RADIUS_PX;
+    let mut at = start;
+    for leg in legs.iter_mut() {
+        let mut pieces = Vec::with_capacity(leg.len());
+        for piece in leg.iter() {
+            let PathPiece::Line(to) = *piece else {
+                at = piece.to();
+                pieces.push(*piece);
+                continue;
+            };
+            let horizontal = (to.y - at.y).abs() < GEOMETRY_EPSILON_PX;
+            let vertical = (to.x - at.x).abs() < GEOMETRY_EPSILON_PX;
+            let length = (to.x - at.x).abs() + (to.y - at.y).abs();
+            let mut on_piece: Vec<(f32, PagePoint)> = hops
+                .iter()
+                .filter(|hop| {
+                    (horizontal
+                        && (hop.y - at.y).abs() < GEOMETRY_EPSILON_PX
+                        && hop.x > at.x.min(to.x)
+                        && hop.x < at.x.max(to.x))
+                        || (vertical
+                            && (hop.x - at.x).abs() < GEOMETRY_EPSILON_PX
+                            && hop.y > at.y.min(to.y)
+                            && hop.y < at.y.max(to.y))
+                })
+                .map(|hop| ((hop.x - at.x).abs() + (hop.y - at.y).abs(), *hop))
+                .collect();
+            on_piece.sort_by(|first, second| first.0.total_cmp(&second.0));
+            if length <= GEOMETRY_EPSILON_PX || on_piece.is_empty() {
+                pieces.push(*piece);
+                at = to;
+                continue;
+            }
+            let unit = ((to.x - at.x) / length, (to.y - at.y) / length);
+            // The bulge: -y across a horizontal piece, -x across a vertical one.
+            let bulge = if horizontal { (0.0, -1.0) } else { (-1.0, 0.0) };
+            for (_, hop) in on_piece {
+                let before = PagePoint {
+                    x: hop.x - unit.0 * radius,
+                    y: hop.y - unit.1 * radius,
+                };
+                let after = PagePoint {
+                    x: hop.x + unit.0 * radius,
+                    y: hop.y + unit.1 * radius,
+                };
+                let apex = PagePoint {
+                    x: hop.x + bulge.0 * radius,
+                    y: hop.y + bulge.1 * radius,
+                };
+                let first_corner = PagePoint {
+                    x: before.x + bulge.0 * radius,
+                    y: before.y + bulge.1 * radius,
+                };
+                let second_corner = PagePoint {
+                    x: after.x + bulge.0 * radius,
+                    y: after.y + bulge.1 * radius,
+                };
+                let turn = |from: PagePoint, corner: PagePoint, to: PagePoint| {
+                    let incoming = (corner.x - from.x, corner.y - from.y);
+                    let outgoing = (to.x - corner.x, to.y - corner.y);
+                    incoming.0 * outgoing.1 - incoming.1 * outgoing.0 > 0.0
+                };
+                pieces.push(PathPiece::Line(before));
+                pieces.push(PathPiece::Arc {
+                    radius,
+                    clockwise: turn(before, first_corner, apex),
+                    corner: first_corner,
+                    to: apex,
+                });
+                pieces.push(PathPiece::Arc {
+                    radius,
+                    clockwise: turn(apex, second_corner, after),
+                    corner: second_corner,
+                    to: after,
+                });
+            }
+            pieces.push(PathPiece::Line(to));
+            at = to;
+        }
+        *leg = pieces;
+    }
+}
+
+/// One stretch of a drawn line on a design sheet (section 14.5 rule 1 of the bends): a
+/// joint is drawn solid around a bend or a hop, so the turn always shows; a run between
+/// joints carries the line's pattern, starting in a gap after a joint.
+#[derive(Debug, Clone, PartialEq)]
+pub struct DashRun {
+    pub start: PagePoint,
+    pub pieces: Vec<PathPiece>,
+    pub joint: bool,
+    /// Where the run starts along the whole line, in px.
+    pub from_px: f32,
+    pub length_px: f32,
+}
+
+/// How far a joint reaches along the straight on each side of a bend or hop: half the
+/// longest dash, so the joint reads as one dash turning the corner.
+pub const JOINT_REACH_PX: f32 = 3.5;
+
+/// The length of a piece that starts at `from`.
+pub fn piece_length(from: PagePoint, piece: PathPiece) -> f32 {
+    let mut chain = vec![from];
+    push_flattened(&mut chain, from, piece);
+    chain
+        .windows(2)
+        .filter_map(|pair| Some((*pair.first()?, *pair.get(1)?)))
+        .map(|(a, b)| (b.x - a.x).hypot(b.y - a.y))
+        .sum()
+}
+
+/// The pieces of a drawn link in order, each with its start point.
+fn flat_pieces(drawn: &DrawnLink) -> Vec<(PagePoint, PathPiece)> {
+    let mut pieces = Vec::new();
+    let mut at = drawn.start;
+    for piece in drawn.legs.iter().flatten() {
+        pieces.push((at, *piece));
+        at = piece.to();
+    }
+    pieces
+}
+
+/// The point `distance` along the straight from `from` to `to`.
+fn along(from: PagePoint, to: PagePoint, distance: f32) -> PagePoint {
+    let length = (to.x - from.x).hypot(to.y - from.y);
+    if length <= GEOMETRY_EPSILON_PX {
+        return from;
+    }
+    PagePoint {
+        x: from.x + (to.x - from.x) * distance / length,
+        y: from.y + (to.y - from.y) * distance / length,
+    }
+}
+
+/// The intervals, in px along the line, that a sheet draws solid: each curved piece (a
+/// rounded bend or a hop arc) and each square corner, reaching `JOINT_REACH_PX` along the
+/// straight on both sides, merged where they meet and clamped to the line.
+pub fn joint_intervals(drawn: &DrawnLink) -> Vec<(f32, f32)> {
+    let pieces = flat_pieces(drawn);
+    let mut intervals: Vec<(f32, f32)> = Vec::new();
+    let mut travelled = 0.0;
+    let mut previous_direction: Option<(f32, f32)> = None;
+    for (from, piece) in &pieces {
+        let length = piece_length(*from, *piece);
+        match piece {
+            PathPiece::Line(to) => {
+                if length > GEOMETRY_EPSILON_PX {
+                    let direction = ((to.x - from.x) / length, (to.y - from.y) / length);
+                    // Two straights meeting at an angle: a square corner.
+                    if let Some(before) = previous_direction {
+                        let cos = before.0 * direction.0 + before.1 * direction.1;
+                        if cos < 1.0 - 1e-3 {
+                            intervals
+                                .push((travelled - JOINT_REACH_PX, travelled + JOINT_REACH_PX));
+                        }
+                    }
+                    previous_direction = Some(direction);
+                }
+            }
+            PathPiece::Arc { .. } | PathPiece::Cubic { .. } | PathPiece::Quad { .. } => {
+                intervals.push((
+                    travelled - JOINT_REACH_PX,
+                    travelled + length + JOINT_REACH_PX,
+                ));
+                previous_direction = None;
+            }
+        }
+        travelled += length;
+    }
+    let total = travelled;
+    let mut merged: Vec<(f32, f32)> = Vec::new();
+    for (low, high) in intervals {
+        let (low, high) = (low.max(0.0), high.min(total));
+        match merged.last_mut() {
+            Some(last) if low <= last.1 => last.1 = last.1.max(high),
+            _ => merged.push((low, high)),
+        }
+    }
+    merged
+}
+
+/// The drawn link cut into runs at the joint intervals (section 14.5 rule 1 of the bends).
+/// A boundary always falls on a straight piece, since every curve lies inside a joint.
+pub fn dash_runs(drawn: &DrawnLink) -> Vec<DashRun> {
+    let joints = joint_intervals(drawn);
+    let pieces = flat_pieces(drawn);
+    let mut cuts: Vec<(f32, bool)> = Vec::new();
+    for (low, high) in &joints {
+        cuts.push((*low, true));
+        cuts.push((*high, false));
+    }
+    let mut runs: Vec<DashRun> = Vec::new();
+    let mut current = DashRun {
+        start: drawn.start,
+        pieces: Vec::new(),
+        joint: joints
+            .first()
+            .is_some_and(|(low, _)| *low <= GEOMETRY_EPSILON_PX),
+        from_px: 0.0,
+        length_px: 0.0,
+    };
+    let mut cut_index = usize::from(current.joint);
+    let mut travelled = 0.0;
+    for (from, piece) in pieces {
+        let length = piece_length(from, piece);
+        let mut done = 0.0;
+        if let PathPiece::Line(to) = piece {
+            while let Some((cut, opens)) = cuts.get(cut_index).copied() {
+                if cut >= travelled + length - GEOMETRY_EPSILON_PX {
+                    break;
+                }
+                let point = along(from, to, cut - travelled);
+                if cut - travelled > done + GEOMETRY_EPSILON_PX {
+                    current.pieces.push(PathPiece::Line(point));
+                    current.length_px += cut - travelled - done;
+                }
+                done = cut - travelled;
+                let next = DashRun {
+                    start: point,
+                    pieces: Vec::new(),
+                    joint: opens,
+                    from_px: cut,
+                    length_px: 0.0,
+                };
+                if !current.pieces.is_empty() {
+                    runs.push(std::mem::replace(&mut current, next));
+                } else {
+                    current = next;
+                }
+                cut_index += 1;
+            }
+            if length - done > GEOMETRY_EPSILON_PX {
+                current.pieces.push(PathPiece::Line(to));
+                current.length_px += length - done;
+            }
+        } else {
+            current.pieces.push(piece);
+            current.length_px += length;
+        }
+        travelled += length;
+    }
+    if !current.pieces.is_empty() {
+        runs.push(current);
+    }
+    runs
+}
+
+/// Where each bend and hop of a drawn link lies along it, in px: the middle of each curved
+/// piece and each square corner.
+pub fn turn_positions(drawn: &DrawnLink) -> Vec<f32> {
+    let mut positions = Vec::new();
+    let mut travelled = 0.0;
+    let mut previous_direction: Option<(f32, f32)> = None;
+    for (from, piece) in flat_pieces(drawn) {
+        let length = piece_length(from, piece);
+        match piece {
+            PathPiece::Line(to) => {
+                if length > GEOMETRY_EPSILON_PX {
+                    let direction = ((to.x - from.x) / length, (to.y - from.y) / length);
+                    if let Some(before) = previous_direction
+                        && before.0 * direction.0 + before.1 * direction.1 < 1.0 - 1e-3
+                    {
+                        positions.push(travelled);
+                    }
+                    previous_direction = Some(direction);
+                }
+            }
+            PathPiece::Arc { .. } | PathPiece::Cubic { .. } | PathPiece::Quad { .. } => {
+                positions.push(travelled + length / 2.0);
+                previous_direction = None;
+            }
+        }
+        travelled += length;
+    }
+    positions
+}
+
+/// True when the stroke a pattern of `dash` on and `gap` off draws over `runs` is on at
+/// `position`: a joint is on throughout; a patterned run starts on at the line's start and
+/// in a gap after a joint (section 14.5 rule 1 of the bends).
+pub fn stroke_on_at(runs: &[DashRun], (dash, gap): (f32, f32), position: f32) -> bool {
+    let period = dash + gap;
+    for (index, run) in runs.iter().enumerate() {
+        let end = run.from_px + run.length_px;
+        if position < run.from_px - GEOMETRY_EPSILON_PX || position > end + GEOMETRY_EPSILON_PX {
+            continue;
+        }
+        if run.joint || period <= GEOMETRY_EPSILON_PX {
+            return true;
+        }
+        let phase = if index == 0 { 0.0 } else { dash };
+        let into = (position - run.from_px + phase).rem_euclid(period);
+        return into < dash;
+    }
+    false
 }
 
 /// The bend at `corner`: where it leaves the incoming leg and the piece that turns it.

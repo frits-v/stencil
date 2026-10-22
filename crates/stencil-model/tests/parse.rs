@@ -186,6 +186,9 @@ fn null_optional_fields_parse_as_absent() {
     assert_eq!(
         row.children.first(),
         Some(&Node::Item(Item {
+            compartments: Default::default(),
+            outline: Default::default(),
+            planned: Default::default(),
             corner_mark: None,
             marks: Vec::new(),
             actor: None,

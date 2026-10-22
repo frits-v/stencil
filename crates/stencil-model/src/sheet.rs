@@ -4,8 +4,8 @@
 
 use std::collections::BTreeMap;
 
-use crate::document::{Line, Link, Node, Page, Pipe, Tee};
-use crate::grammar::Grammar;
+use crate::document::{Line, Link, Node, Outline, Page, Pipe, PipeForm, Tee};
+use crate::grammar::{BorderPattern, Grammar, LabelStyle};
 use crate::pointer::NodePointer;
 use crate::walk::{NodeRef, body_nodes};
 use crate::{LEGEND_ENTRIES_MAX, LINKS_MAX};
@@ -25,10 +25,11 @@ pub enum SheetList {
     Marks,
     Parts,
     GeneralNotes,
+    Compartments,
 }
 
 impl SheetList {
-    pub const ALL: [SheetList; 11] = [
+    pub const ALL: [SheetList; 12] = [
         SheetList::ProblemPoints,
         SheetList::AnswerParagraphs,
         SheetList::AttentionItems,
@@ -40,6 +41,7 @@ impl SheetList {
         SheetList::Marks,
         SheetList::Parts,
         SheetList::GeneralNotes,
+        SheetList::Compartments,
     ];
 
     /// The list's name in messages and in CUE case names, for example "problem-points".
@@ -56,6 +58,7 @@ impl SheetList {
             SheetList::Marks => "marks",
             SheetList::Parts => "parts",
             SheetList::GeneralNotes => "general-notes",
+            SheetList::Compartments => "compartments",
         }
     }
 
@@ -73,7 +76,8 @@ impl SheetList {
             | SheetList::Actors
             | SheetList::Steps
             | SheetList::StepLines
-            | SheetList::Marks => 0,
+            | SheetList::Marks
+            | SheetList::Compartments => 0,
         }
     }
 
@@ -86,7 +90,7 @@ impl SheetList {
             | SheetList::Phases => 8,
             SheetList::AnswerParagraphs | SheetList::Marks => 4,
             SheetList::Steps => 64,
-            SheetList::StepLines => 6,
+            SheetList::StepLines | SheetList::Compartments => 6,
             SheetList::Parts => 48,
             SheetList::GeneralNotes => 16,
         }
@@ -113,6 +117,7 @@ impl SheetList {
             SheetList::Marks => owner.child("marks"),
             SheetList::Parts => owner.child("parts"),
             SheetList::GeneralNotes => owner.child("notes"),
+            SheetList::Compartments => owner.child("compartments"),
         }
     }
 }
@@ -257,6 +262,14 @@ pub enum SheetSurface {
     Marks,
     PartsList,
     GeneralNotes,
+    ItemOutline,
+    Compartments,
+    Planned,
+    SheetLook,
+    RailForm,
+    LinkStep,
+    PipeStep,
+    Valve,
 }
 
 const SHEET_VOCABULARY: [SurfaceVocabulary; 1] = [SurfaceVocabulary::Field {
@@ -333,9 +346,58 @@ const MARKS_VOCABULARY: [SurfaceVocabulary; 7] = [
 ];
 const PARTS_LIST_VOCABULARY: [SurfaceVocabulary; 1] = [SurfaceVocabulary::Tag("PartsList")];
 const GENERAL_NOTES_VOCABULARY: [SurfaceVocabulary; 1] = [SurfaceVocabulary::Tag("GeneralNotes")];
+const ITEM_OUTLINE_VOCABULARY: [SurfaceVocabulary; 2] = [
+    SurfaceVocabulary::Field {
+        object: "Item",
+        field: "outline",
+    },
+    SurfaceVocabulary::Definition("Outline"),
+];
+const COMPARTMENTS_VOCABULARY: [SurfaceVocabulary; 1] = [SurfaceVocabulary::Field {
+    object: "Item",
+    field: "compartments",
+}];
+const PLANNED_VOCABULARY: [SurfaceVocabulary; 5] = [
+    SurfaceVocabulary::Field {
+        object: "Item",
+        field: "planned",
+    },
+    SurfaceVocabulary::Field {
+        object: "Box",
+        field: "planned",
+    },
+    SurfaceVocabulary::Field {
+        object: "Pipe",
+        field: "planned",
+    },
+    SurfaceVocabulary::Field {
+        object: "Link",
+        field: "planned",
+    },
+    SurfaceVocabulary::Field {
+        object: "LegendEntry",
+        field: "planned",
+    },
+];
+const RAIL_FORM_VOCABULARY: [SurfaceVocabulary; 1] = [SurfaceVocabulary::Value {
+    definition: "PipeForm",
+    value: "rail",
+}];
+const LINK_STEP_VOCABULARY: [SurfaceVocabulary; 1] = [SurfaceVocabulary::Field {
+    object: "Link",
+    field: "step",
+}];
+const PIPE_STEP_VOCABULARY: [SurfaceVocabulary; 1] = [SurfaceVocabulary::Field {
+    object: "Pipe",
+    field: "step",
+}];
+const VALVE_VOCABULARY: [SurfaceVocabulary; 1] = [SurfaceVocabulary::Field {
+    object: "Link",
+    field: "valve",
+}];
 
 impl SheetSurface {
-    pub const ALL: [SheetSurface; 10] = [
+    pub const ALL: [SheetSurface; 18] = [
         SheetSurface::Sheet,
         SheetSurface::Actors,
         SheetSurface::View,
@@ -346,6 +408,14 @@ impl SheetSurface {
         SheetSurface::Marks,
         SheetSurface::PartsList,
         SheetSurface::GeneralNotes,
+        SheetSurface::ItemOutline,
+        SheetSurface::Compartments,
+        SheetSurface::Planned,
+        SheetSurface::SheetLook,
+        SheetSurface::RailForm,
+        SheetSurface::LinkStep,
+        SheetSurface::PipeStep,
+        SheetSurface::Valve,
     ];
 
     /// The kebab-case name in messages, in CUE's `#SheetSurface` and in check.sh case names.
@@ -361,11 +431,19 @@ impl SheetSurface {
             SheetSurface::Marks => "marks",
             SheetSurface::PartsList => "parts-list",
             SheetSurface::GeneralNotes => "general-notes",
+            SheetSurface::ItemOutline => "item-outline",
+            SheetSurface::Compartments => "compartments",
+            SheetSurface::Planned => "planned",
+            SheetSurface::SheetLook => "sheet-look",
+            SheetSurface::RailForm => "rail-form",
+            SheetSurface::LinkStep => "link-step",
+            SheetSurface::PipeStep => "pipe-step",
+            SheetSurface::Valve => "valve",
         }
     }
 
     /// The surface's pointer on a page, for every occurrence, in document order.
-    pub fn occurrences(self, page: &Page, _grammar: &Grammar) -> Vec<NodePointer> {
+    pub fn occurrences(self, page: &Page, grammar: &Grammar) -> Vec<NodePointer> {
         let tagged = |matches: fn(&Node) -> bool| -> Vec<NodePointer> {
             body_nodes(page)
                 .into_iter()
@@ -403,6 +481,50 @@ impl SheetSurface {
             SheetSurface::Marks => mark_fields(page),
             SheetSurface::PartsList => tagged(|node| matches!(node, Node::PartsList(_))),
             SheetSurface::GeneralNotes => tagged(|node| matches!(node, Node::GeneralNotes(_))),
+            SheetSurface::ItemOutline => body_fields(
+                page,
+                "outline",
+                |node| matches!(node, NodeRef::Node(Node::Item(item)) if item.outline != Outline::Card),
+            ),
+            SheetSurface::Compartments => body_fields(
+                page,
+                "compartments",
+                |node| matches!(node, NodeRef::Node(Node::Item(item)) if !item.compartments.is_empty()),
+            ),
+            SheetSurface::Planned => planned_fields(page),
+            SheetSurface::SheetLook => body_fields_with(page, "kind", |node| match node {
+                NodeRef::Node(Node::Box(box_node)) => {
+                    grammar.container(&box_node.kind).is_some_and(|kind| {
+                        kind.border.pattern == BorderPattern::DashDot
+                            || kind.label == LabelStyle::Tab
+                    })
+                }
+                _ => false,
+            }),
+            SheetSurface::RailForm => {
+                let mut pointers = body_fields(page, "form", |node| match node {
+                    NodeRef::Node(Node::Pipe(pipe)) | NodeRef::TeeArm(pipe) => {
+                        pipe.form == PipeForm::Rail
+                    }
+                    NodeRef::Node(_) => false,
+                });
+                let legend = NodePointer::root().child("legend");
+                pointers.extend(
+                    page.legend
+                        .iter()
+                        .enumerate()
+                        .take(LEGEND_ENTRIES_MAX + 1)
+                        .filter(|(_, entry)| entry.form == PipeForm::Rail)
+                        .map(|(index, _)| legend.index(index).child("form")),
+                );
+                pointers
+            }
+            SheetSurface::LinkStep => link_fields(page, "step", |link| link.step.is_some()),
+            SheetSurface::PipeStep => body_fields(page, "step", |node| match node {
+                NodeRef::Node(Node::Pipe(pipe)) | NodeRef::TeeArm(pipe) => pipe.step.is_some(),
+                NodeRef::Node(_) => false,
+            }),
+            SheetSurface::Valve => link_fields(page, "valve", |link| link.valve),
         }
     }
 
@@ -419,6 +541,15 @@ impl SheetSurface {
             SheetSurface::Marks => &MARKS_VOCABULARY,
             SheetSurface::PartsList => &PARTS_LIST_VOCABULARY,
             SheetSurface::GeneralNotes => &GENERAL_NOTES_VOCABULARY,
+            SheetSurface::ItemOutline => &ITEM_OUTLINE_VOCABULARY,
+            SheetSurface::Compartments => &COMPARTMENTS_VOCABULARY,
+            SheetSurface::Planned => &PLANNED_VOCABULARY,
+            // The look lives in the grammar's kinds, which the page schema does not hold.
+            SheetSurface::SheetLook => &[],
+            SheetSurface::RailForm => &RAIL_FORM_VOCABULARY,
+            SheetSurface::LinkStep => &LINK_STEP_VOCABULARY,
+            SheetSurface::PipeStep => &PIPE_STEP_VOCABULARY,
+            SheetSurface::Valve => &VALVE_VOCABULARY,
         }
     }
 
@@ -432,8 +563,68 @@ impl SheetSurface {
             | SheetSurface::LegendByActor => "sheet",
             SheetSurface::Phases | SheetSurface::Step => "phases",
             SheetSurface::Marks | SheetSurface::PartsList | SheetSurface::GeneralNotes => "marks",
+            SheetSurface::ItemOutline
+            | SheetSurface::Compartments
+            | SheetSurface::Planned
+            | SheetSurface::SheetLook
+            | SheetSurface::RailForm
+            | SheetSurface::LinkStep
+            | SheetSurface::PipeStep
+            | SheetSurface::Valve => "assembly",
         }
     }
+}
+
+/// `/…/<field>` of every body node `holds` accepts, in document order.
+fn body_fields(page: &Page, field: &str, holds: fn(NodeRef<'_>) -> bool) -> Vec<NodePointer> {
+    body_fields_with(page, field, holds)
+}
+
+/// `/…/<field>` of every body node `holds` accepts, in document order.
+fn body_fields_with(
+    page: &Page,
+    field: &str,
+    holds: impl Fn(NodeRef<'_>) -> bool,
+) -> Vec<NodePointer> {
+    body_nodes(page)
+        .into_iter()
+        .filter(|entry| holds(entry.node))
+        .map(|entry| entry.pointer.child(field))
+        .collect()
+}
+
+/// `/links/<i>/<field>` of every link `holds` accepts.
+fn link_fields(page: &Page, field: &str, holds: fn(&Link) -> bool) -> Vec<NodePointer> {
+    let links = NodePointer::root().child("links");
+    page.links
+        .iter()
+        .enumerate()
+        .take(LINKS_MAX + 1)
+        .filter(|(_, link)| holds(link))
+        .map(|(index, _)| links.index(index).child(field))
+        .collect()
+}
+
+/// `/…/planned` of every planned Item, Box, Pipe and Tee arm, then of every planned link,
+/// then of every planned legend entry.
+fn planned_fields(page: &Page) -> Vec<NodePointer> {
+    let mut pointers = body_fields(page, "planned", |node| match node {
+        NodeRef::Node(Node::Item(item)) => item.planned,
+        NodeRef::Node(Node::Box(box_node)) => box_node.planned,
+        NodeRef::Node(Node::Pipe(pipe)) | NodeRef::TeeArm(pipe) => pipe.planned,
+        NodeRef::Node(_) => false,
+    });
+    pointers.extend(link_fields(page, "planned", |link| link.planned));
+    let legend = NodePointer::root().child("legend");
+    pointers.extend(
+        page.legend
+            .iter()
+            .enumerate()
+            .take(LEGEND_ENTRIES_MAX + 1)
+            .filter(|(_, entry)| entry.planned)
+            .map(|(index, _)| legend.index(index).child("planned")),
+    );
+    pointers
 }
 
 /// `/…/actor` of every Item, Box, Pipe, Tee arm, Tee and Link that names an actor, body

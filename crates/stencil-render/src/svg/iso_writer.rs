@@ -802,6 +802,12 @@ impl<'a> SvgWriter<'a> {
         let is_band = match context.pipe_form {
             Some(PipeForm::Band) => true,
             Some(PipeForm::Tube) | None => false,
+            // A rail is a design sheet surface, drawn flat only (section 14.2 rule 11).
+            Some(PipeForm::Rail) => {
+                return Err(RenderError::SheetSurface {
+                    pointer: node.pointer.clone(),
+                });
+            }
         };
         if is_band {
             self.write_band(

@@ -1,10 +1,10 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use crate::document::{
-    AnswerParagraph, BUILTIN_GRAMMARS, BUILTIN_THEMES, CAPTION_SCALARS_MAX, Chrome, FACTS_MAX,
-    GeneralNotes, LANES_MAX, Line, Link, MarkKind, Node, PHASE_COLUMNS_MAX, Page, PartsList,
-    Phases, PipeDir, Projection, Sheet, Step, StepLook, TINT_SLOTS, Tee, Text,
-    WORDMARK_SCALARS_MAX, canvas_width, is_valid_id,
+    AnswerParagraph, Arrow, BUILTIN_GRAMMARS, BUILTIN_THEMES, CAPTION_SCALARS_MAX, Chrome,
+    FACTS_MAX, GeneralNotes, LANES_MAX, LINE_STEP_MAX, Line, Link, MarkKind, Node, Outline,
+    PHASE_COLUMNS_MAX, Page, PartsList, Phases, PipeDir, PipeForm, Projection, Sheet, Step,
+    StepLook, TINT_SLOTS, Tee, Text, WORDMARK_SCALARS_MAX, canvas_width, is_valid_id,
 };
 use crate::grammar::{Grammar, IconPack, PAGE_PARENT};
 use crate::marks::{CarrierMark, PageMarks};
@@ -104,11 +104,21 @@ pub enum VetRule {
     PartNodeTwice,
     PartFieldFromNode,
     PartNameMissing,
+    PlannedNotSolid,
+    LineIntoPlanned,
+    CompartmentsWithoutStore,
+    OutlinePersonWithIcon,
+    RailNotVertical,
+    RailOutsideRow,
+    RailWithTargets,
+    StepOutOfRange,
+    LinkStepDuplicate,
+    ValveWithoutArrow,
 }
 
 impl VetRule {
     /// The rules of section 14.3, in table order.
-    pub const SHEET: [VetRule; 35] = [
+    pub const SHEET: [VetRule; 45] = [
         VetRule::NeedsSheet,
         VetRule::SheetInIso,
         VetRule::SheetChromeNone,
@@ -144,6 +154,16 @@ impl VetRule {
         VetRule::PartNodeTwice,
         VetRule::PartFieldFromNode,
         VetRule::PartNameMissing,
+        VetRule::PlannedNotSolid,
+        VetRule::LineIntoPlanned,
+        VetRule::CompartmentsWithoutStore,
+        VetRule::OutlinePersonWithIcon,
+        VetRule::RailNotVertical,
+        VetRule::RailOutsideRow,
+        VetRule::RailWithTargets,
+        VetRule::StepOutOfRange,
+        VetRule::LinkStepDuplicate,
+        VetRule::ValveWithoutArrow,
     ];
 
     /// Kebab-case name used on the CLI, as in section 1.3.
@@ -224,6 +244,16 @@ impl VetRule {
             VetRule::PartNodeTwice => "part-node-twice",
             VetRule::PartFieldFromNode => "part-field-from-node",
             VetRule::PartNameMissing => "part-name-missing",
+            VetRule::PlannedNotSolid => "planned-not-solid",
+            VetRule::LineIntoPlanned => "line-into-planned",
+            VetRule::CompartmentsWithoutStore => "compartments-without-store",
+            VetRule::OutlinePersonWithIcon => "outline-person-with-icon",
+            VetRule::RailNotVertical => "rail-not-vertical",
+            VetRule::RailOutsideRow => "rail-outside-row",
+            VetRule::RailWithTargets => "rail-with-targets",
+            VetRule::StepOutOfRange => "step-out-of-range",
+            VetRule::LinkStepDuplicate => "link-step-duplicate",
+            VetRule::ValveWithoutArrow => "valve-without-arrow",
         }
     }
 }
@@ -387,12 +417,21 @@ pub fn validate_page(page: &Page, grammar: &Grammar) -> Vec<Violation> {
         keyed_lists: BTreeMap::new(),
         phases: BTreeMap::new(),
         on_sheet: page.sheet.is_some(),
+        planned_ids: planned_ids(&entries),
+        rows: BTreeSet::new(),
+        steps: BTreeMap::new(),
     };
     for entry in &entries {
         let own_fields = [
             entry.pointer.child("actor"),
             entry.pointer.child("marks"),
             entry.pointer.child("corner_mark"),
+            entry.pointer.child("outline"),
+            entry.pointer.child("compartments"),
+            entry.pointer.child("planned"),
+            entry.pointer.child("kind"),
+            entry.pointer.child("form"),
+            entry.pointer.child("step"),
         ];
         let lines_prefix = format!("{}/", entry.pointer.child("lines").as_str());
         report_needs_sheet(&surfaces, &mut reported, &mut violations, |pointer| {
@@ -441,6 +480,12 @@ pub fn validate_page(page: &Page, grammar: &Grammar) -> Vec<Violation> {
         check_tint(entry.tint, &legend_pointer.index(index), &mut violations);
         if sheet_nodes.on_sheet {
             check_legend_actor(page, entry, &legend_pointer.index(index), &mut violations);
+            check_planned_solid(
+                entry.line,
+                entry.planned,
+                &legend_pointer.index(index),
+                &mut violations,
+            );
         }
         check_text(
             &TextField {
@@ -488,6 +533,144 @@ struct SheetNodes<'a> {
     /// Every Phases node walked so far, by pointer; a Step reads its parent here.
     phases: BTreeMap<NodePointer, &'a Phases>,
     on_sheet: bool,
+    /// The ids of planned work: an Item or Box with `planned`, a Step with look planned.
+    planned_ids: BTreeSet<&'a str>,
+    /// Every Row walked so far, so a rail reads its parent's tag.
+    rows: BTreeSet<NodePointer>,
+    /// Each step badge number with the pointer of the first pipe or link that draws it.
+    steps: BTreeMap<u16, NodePointer>,
+}
+
+/// The ids of planned work on a page: an Item or Box with `planned`, a Step with look
+/// planned (section 14.3, `line-into-planned`).
+fn planned_ids<'a>(entries: &[NodeEntry<'a>]) -> BTreeSet<&'a str> {
+    entries
+        .iter()
+        .filter(|entry| match entry.node {
+            NodeRef::Node(Node::Item(item)) => item.planned,
+            NodeRef::Node(Node::Box(box_node)) => box_node.planned,
+            NodeRef::Node(Node::Step(step)) => step.look == crate::document::StepLook::Planned,
+            NodeRef::Node(_) | NodeRef::TeeArm(_) => false,
+        })
+        .filter_map(|entry| entry.node.id())
+        .collect()
+}
+
+/// `planned-not-solid` for a planned line that is not solid.
+fn check_planned_solid(
+    line: Line,
+    planned: bool,
+    holder: &NodePointer,
+    violations: &mut Violations,
+) {
+    if planned && line != Line::Solid {
+        violations.push(
+            holder.child("planned"),
+            VetRule::PlannedNotSolid,
+            "a planned line is a solid line drawn hollow; set line solid".to_string(),
+        );
+    }
+}
+
+/// `line-into-planned` for a built solid or dash line whose end names planned work: the
+/// `to` end first, then the `from` end.
+fn check_line_into_planned(
+    (line, planned): (Line, bool),
+    (from, to): (Option<&str>, Option<&str>),
+    planned_ids: &BTreeSet<&str>,
+    holder: &NodePointer,
+    violations: &mut Violations,
+) {
+    if planned || !line.takes_tint() {
+        return;
+    }
+    for (field, end) in [("to", to), ("from", from)] {
+        let Some(id) = end.filter(|id| planned_ids.contains(id)) else {
+            continue;
+        };
+        let message = match line {
+            Line::Dash => format!(
+                "\"{id}\" is planned, and a dash line cannot be planned; draw it solid and planned, or remove it"
+            ),
+            Line::Solid | Line::Gray | Line::Deny => {
+                format!("\"{id}\" is planned, so a line to it is planned too; set planned")
+            }
+        };
+        violations.push(holder.child(field), VetRule::LineIntoPlanned, message);
+        return;
+    }
+}
+
+/// `step-out-of-range` and `link-step-duplicate` for a pipe's or link's step badge.
+fn check_line_step(
+    step: Option<u16>,
+    holder: &NodePointer,
+    steps: &mut BTreeMap<u16, NodePointer>,
+    violations: &mut Violations,
+) {
+    let Some(step) = step else {
+        return;
+    };
+    let pointer = holder.child("step");
+    if !(1..=LINE_STEP_MAX).contains(&step) {
+        violations.push(
+            pointer,
+            VetRule::StepOutOfRange,
+            format!("step {step} is outside 1 to {LINE_STEP_MAX}"),
+        );
+        return;
+    }
+    match steps.get(&step) {
+        Some(first) => violations.push(
+            pointer,
+            VetRule::LinkStepDuplicate,
+            format!("step {step} is already used by {}", first.as_str()),
+        ),
+        None => {
+            steps.insert(step, holder.clone());
+        }
+    }
+}
+
+/// The rail rules of a Pipe or Tee arm with form rail: it stands vertical, as a direct
+/// child of a Row, and names no targets.
+fn check_rail(
+    pipe: &crate::document::Pipe,
+    entry: &NodeEntry<'_>,
+    rows: &BTreeSet<NodePointer>,
+    violations: &mut Violations,
+) {
+    if pipe.form != PipeForm::Rail {
+        return;
+    }
+    if pipe.dir != PipeDir::Vertical {
+        violations.push(
+            entry.pointer.child("dir"),
+            VetRule::RailNotVertical,
+            "a rail stands vertical".to_string(),
+        );
+    }
+    let in_row = matches!(entry.node, NodeRef::Node(Node::Pipe(_)))
+        && entry
+            .parent
+            .as_ref()
+            .is_some_and(|parent| rows.contains(parent));
+    if !in_row {
+        violations.push(
+            entry.pointer.clone(),
+            VetRule::RailOutsideRow,
+            "a rail is a column of a Row".to_string(),
+        );
+    }
+    for (field, target) in [("from", &pipe.from), ("to", &pipe.to)] {
+        if target.is_some() {
+            violations.push(
+                entry.pointer.child(field),
+                VetRule::RailWithTargets,
+                "a rail is attached by links, not targets".to_string(),
+            );
+        }
+    }
 }
 
 /// The declared actor ids, for the `actor-unknown` message.
@@ -609,6 +792,26 @@ fn check_sheet_node<'a>(
                     violations,
                 );
             }
+            check_list_length_in(
+                SheetList::Compartments,
+                &entry.pointer,
+                item.compartments.len(),
+                violations,
+            );
+            if !item.compartments.is_empty() && item.outline != Outline::Store {
+                violations.push(
+                    entry.pointer.child("compartments"),
+                    VetRule::CompartmentsWithoutStore,
+                    "compartments are drawn in a store".to_string(),
+                );
+            }
+            if item.outline == Outline::Person && item.icon.is_some() {
+                violations.push(
+                    entry.pointer.child("icon"),
+                    VetRule::OutlinePersonWithIcon,
+                    "a person outline draws no icon".to_string(),
+                );
+            }
         }
         NodeRef::Node(Node::Box(box_node)) => {
             let kind = grammar.container(&box_node.kind);
@@ -652,17 +855,20 @@ fn check_sheet_node<'a>(
                 (None, _) => {}
             }
         }
-        NodeRef::Node(Node::Pipe(pipe)) => check_line_actor(
-            page,
-            actors,
-            (pipe.line, pipe.tint, pipe.actor.as_deref()),
-            (
-                actors.pipe_actor(pipe),
-                line_origin(pipe.from.as_deref(), &pipe.label),
-            ),
-            &entry.pointer,
-            violations,
-        ),
+        NodeRef::Node(Node::Pipe(pipe)) => {
+            check_line_actor(
+                page,
+                actors,
+                (pipe.line, pipe.tint, pipe.actor.as_deref()),
+                (
+                    actors.pipe_actor(pipe),
+                    line_origin(pipe.from.as_deref(), &pipe.label),
+                ),
+                &entry.pointer,
+                violations,
+            );
+            check_pipe_sheet_fields(pipe, entry, sheet_nodes, violations);
+        }
         NodeRef::Node(Node::Tee(tee)) => check_line_actor(
             page,
             actors,
@@ -693,6 +899,7 @@ fn check_sheet_node<'a>(
                     "a Tee arm acts for its Tee's actor".to_string(),
                 );
             }
+            check_pipe_sheet_fields(arm, entry, sheet_nodes, violations);
         }
         NodeRef::Node(Node::Phases(phases)) => {
             check_phases(page, entry, phases, actors, violations);
@@ -705,9 +912,11 @@ fn check_sheet_node<'a>(
                 .and_then(|parent| sheet_nodes.phases.get(parent).copied());
             check_step(page, entry, step, parent, actors, violations);
         }
+        NodeRef::Node(Node::Row(_)) => {
+            sheet_nodes.rows.insert(entry.pointer.clone());
+        }
         NodeRef::Node(
-            Node::Row(_)
-            | Node::Col(_)
+            Node::Col(_)
             | Node::Lanes(_)
             | Node::Fact(_)
             | Node::Note(_)
@@ -727,6 +936,30 @@ fn check_sheet_node<'a>(
             "a Phases node holds Steps only".to_string(),
         );
     }
+}
+
+/// The planned, rail and step rules of a Pipe or Tee arm on a sheet.
+fn check_pipe_sheet_fields<'a>(
+    pipe: &'a crate::document::Pipe,
+    entry: &NodeEntry<'a>,
+    sheet_nodes: &mut SheetNodes<'a>,
+    violations: &mut Violations,
+) {
+    check_planned_solid(pipe.line, pipe.planned, &entry.pointer, violations);
+    check_line_into_planned(
+        (pipe.line, pipe.planned),
+        (pipe.from.as_deref(), pipe.to.as_deref()),
+        &sheet_nodes.planned_ids,
+        &entry.pointer,
+        violations,
+    );
+    check_rail(pipe, entry, &sheet_nodes.rows, violations);
+    check_line_step(
+        pipe.step,
+        &entry.pointer,
+        &mut sheet_nodes.steps,
+        violations,
+    );
 }
 
 /// The Tee a Tee arm entry belongs to.
@@ -1034,14 +1267,19 @@ fn check_sheet(page: &Page, sheet: &Sheet, entries: &[NodeEntry<'_>], violations
             violations,
         );
     }
-    check_mark_legend(sheet, entries, violations);
+    check_mark_legend(page, sheet, entries, violations);
 
     check_actors(page, violations);
 }
 
 /// The text of each mark kind in `sheet.marks`, then `mark-legend-unused` for the text of a
 /// kind whose list the sheet does not draw. Attention items always exist.
-fn check_mark_legend(sheet: &Sheet, entries: &[NodeEntry<'_>], violations: &mut Violations) {
+fn check_mark_legend(
+    page: &Page,
+    sheet: &Sheet,
+    entries: &[NodeEntry<'_>],
+    violations: &mut Violations,
+) {
     let pointer = NodePointer::root().child("sheet").child("marks");
     for kind in MarkKind::ALL {
         let Some(text) = sheet.marks.text(kind) else {
@@ -1062,6 +1300,23 @@ fn check_mark_legend(sheet: &Sheet, entries: &[NodeEntry<'_>], violations: &mut 
                 pointer.child(kind.as_str()),
                 VetRule::MarkLegendUnused,
                 format!("no {} key on this sheet; remove the text", kind.as_str()),
+            );
+        }
+    }
+    if let Some(text) = &sheet.marks.step {
+        check_sheet_text(pointer.child("step"), text, None, violations);
+        let draws_a_step = page.links.iter().any(|link| link.step.is_some())
+            || entries.iter().any(|entry| {
+                matches!(
+                    entry.node,
+                    NodeRef::Node(Node::Pipe(pipe)) | NodeRef::TeeArm(pipe) if pipe.step.is_some()
+                )
+            });
+        if !draws_a_step {
+            violations.push(
+                pointer.child("step"),
+                VetRule::MarkLegendUnused,
+                "no step key on this sheet; remove the text".to_string(),
             );
         }
     }
@@ -1488,6 +1743,7 @@ fn check_links(
     }
     let canvas_width = canvas_width(page);
     let mut orders = BTreeMap::new();
+    let mut steps = sheet_nodes.steps.clone();
     for (index, link) in page.links.iter().enumerate().take(LINKS_MAX + 1) {
         let link_pointer = links_pointer.index(index);
         if link.from == link.to {
@@ -1533,11 +1789,28 @@ fn check_links(
             violations,
         );
         if sheet_nodes.on_sheet {
-            if !link.marks.is_empty() && link.label.is_none() {
+            check_planned_solid(link.line, link.planned, &link_pointer, violations);
+            check_line_into_planned(
+                (link.line, link.planned),
+                (Some(&link.from), Some(&link.to)),
+                &sheet_nodes.planned_ids,
+                &link_pointer,
+                violations,
+            );
+            check_line_step(link.step, &link_pointer, &mut steps, violations);
+            if link.valve && link.arrow == Arrow::None {
+                violations.push(
+                    link_pointer.child("valve"),
+                    VetRule::ValveWithoutArrow,
+                    "a valve sits before an arrowhead".to_string(),
+                );
+            }
+            if !link.marks.is_empty() && link.label.is_none() && link.step.is_none() && !link.valve
+            {
                 violations.push(
                     link_pointer.child("marks"),
                     VetRule::LinkMarksWithoutTag,
-                    "a link's marks sit in its tag; give it a label".to_string(),
+                    "a link's marks sit in its tag or under its valve; give it a label".to_string(),
                 );
             }
             check_carrier_marks(

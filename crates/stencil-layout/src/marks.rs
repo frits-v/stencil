@@ -107,6 +107,22 @@ pub fn sampled_kinds(page: &Page) -> Vec<MarkKind> {
         .collect()
 }
 
+/// True when a Link or Pipe of the page draws a step badge, so the legend strip samples one.
+pub fn draws_step_badges(page: &Page) -> bool {
+    page.sheet.is_some()
+        && (page.links.iter().any(|link| link.step.is_some())
+            || stencil_model::body_nodes(page).iter().any(|entry| {
+                matches!(
+                    entry.node,
+                    stencil_model::NodeRef::Node(stencil_model::Node::Pipe(pipe))
+                        | stencil_model::NodeRef::TeeArm(pipe) if pipe.step.is_some()
+                )
+            }))
+}
+
+/// The strip's step sample text when `sheet.marks` sets none.
+pub const STEP_SAMPLE_TEXT: &str = "step";
+
 /// Every cell name a reference can print, `A1` to `F8`.
 fn cell_names() -> Vec<String> {
     SHEET_ROW_LETTERS

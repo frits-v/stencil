@@ -491,6 +491,9 @@ fn every_text_field_is_vetted() {
             Some(1),
             untrimmed,
             vec![Node::Item(Item {
+                compartments: Default::default(),
+                outline: Default::default(),
+                planned: Default::default(),
                 corner_mark: None,
                 marks: Vec::new(),
                 actor: None,
@@ -518,6 +521,8 @@ fn every_text_field_is_vetted() {
             text: untrimmed.to_string(),
         }),
         Node::Pipe(stencil_model::Pipe {
+            planned: Default::default(),
+            step: Default::default(),
             marks: Vec::new(),
             actor: None,
             id: None,
@@ -546,6 +551,8 @@ fn every_text_field_is_vetted() {
                     untrimmed,
                 )),
                 stencil_model::TeeArm::Pipe(stencil_model::Pipe {
+                    planned: Default::default(),
+                    step: Default::default(),
                     marks: Vec::new(),
                     actor: None,
                     id: None,

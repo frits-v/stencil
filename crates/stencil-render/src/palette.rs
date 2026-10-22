@@ -6,7 +6,7 @@
 use stencil_layout::{
     ContainerLook, NodeTag, PartName, SHEET_BLOCK_BORDER_PX, SHEET_BORDER_PX, SHEET_RULE_PX,
 };
-use stencil_model::grammar::{BorderPattern, Role};
+use stencil_model::grammar::{BorderPattern, LabelStyle, Role};
 use stencil_model::text::TextStyleName;
 use stencil_model::theme::{SolidEdges, ThemeStroke, Tint, solid_dot};
 use stencil_model::{
@@ -194,6 +194,15 @@ impl<'a> Palette<'a> {
             BorderPattern::Solid => Some(LineStyle::Solid),
             BorderPattern::Dashed => Some(LineStyle::Dashed),
             BorderPattern::Dotted => Some(LineStyle::Dotted),
+            // A dash-dot outline is a design sheet's assembly, drawn as its `TabBorder` part
+            // and never off a sheet; the Box draws no border of its own.
+            BorderPattern::DashDot => {
+                return ZoneStyle {
+                    border: None,
+                    fill: None,
+                    radius_px: look.radius,
+                };
+            }
             BorderPattern::None => None,
         };
         let border = match line {
@@ -510,6 +519,8 @@ impl<'a> Palette<'a> {
             SheetInk::TintFill => &theme.tint(1).fill,
             SheetInk::TintWire | SheetInk::LaneBand => &theme.tint(1).wire,
             SheetInk::TintInk => &theme.tint(1).ink,
+            SheetInk::TagFill => &theme.tag.fill,
+            SheetInk::TagInk => &theme.tag.ink,
         };
         color.as_str()
     }
@@ -555,6 +566,14 @@ impl<'a> Palette<'a> {
     /// `SHEET_BOX_BORDER_PX`; group and tile Boxes keep their tone paint.
     pub fn sheet_zone_style(self, look: ContainerLook, tint: Option<u8>) -> ZoneStyle<'a> {
         let flat = self.zone_style(look, tint);
+        // An assembly draws its outline and tab as parts and has no fill (section 14.5 rule 6).
+        if look.pattern == BorderPattern::DashDot || look.label == LabelStyle::Tab {
+            return ZoneStyle {
+                border: None,
+                fill: None,
+                radius_px: look.radius,
+            };
+        }
         let ink = match look.role {
             Role::Frame => SheetInk::Frame,
             Role::Boundary => SheetInk::Rule,
@@ -564,7 +583,7 @@ impl<'a> Palette<'a> {
             BorderPattern::Solid => Some(LineStyle::Solid),
             BorderPattern::Dashed => Some(LineStyle::Dashed),
             BorderPattern::Dotted => Some(LineStyle::Dotted),
-            BorderPattern::None => None,
+            BorderPattern::DashDot | BorderPattern::None => None,
         };
         ZoneStyle {
             border: line.map(|line| Stroke {
@@ -612,6 +631,9 @@ pub enum SheetInk {
     KeyWire,
     /// A diamond's fill: its key's actor's fill, else the cell.
     KeyFill,
+    /// A tag's fill and ink: a step badge stands on the tag's fill.
+    TagFill,
+    TagInk,
 }
 
 /// The shape a sheet part draws.
@@ -629,6 +651,16 @@ pub enum PartShape {
     Diamond,
     /// The drafting grid inside the part (section 14.5 rule 10).
     Grid,
+    /// A rect with this dash array: an assembly's dash-dot outline.
+    DashedRect(&'static str),
+    /// A rect with rounded corners of `STEP_BADGE_RADIUS_PX`: a step badge.
+    RoundedRect,
+    /// A person's shoulders: a dome over a flat base.
+    Shoulders,
+    /// One triangle of a valve, its tip at the valve's centre.
+    Valve,
+    /// Drawn as part of the link's own path: a hop.
+    OnPath,
     Text,
 }
 
@@ -684,6 +716,15 @@ pub const PARTS_LIST_BORDER_PX: f32 = 1.5;
 pub const GENERAL_NOTES_BORDER_PX: f32 = 1.0;
 /// `stroke-dasharray` of the rule above the general notes' foot.
 pub const FOOT_RULE_DASH: &str = "3 3";
+/// `stroke-dasharray` of an assembly's outline: a long dash and a dot (section 14.5 rule 6).
+pub const DASH_DOT_ARRAY: &str = "16 4 3 4";
+/// The stroke of an assembly's outline and of its tab.
+pub const ASSEMBLY_BORDER_PX: f32 = 1.1;
+pub const TAB_BORDER_PX: f32 = 1.0;
+/// The outline of a store's compartments and of a step badge, and a badge's corner radius.
+pub const COMPARTMENT_BORDER_PX: f32 = 1.0;
+pub const STEP_BADGE_STROKE_PX: f32 = 1.5;
+pub const STEP_BADGE_RADIUS_PX: f32 = stencil_layout::STEP_BADGE_RADIUS_PX;
 
 /// The paint of a glyph of `kind`: a balloon outlined in its key's wire on the cell, a
 /// flag filled with the mark ink, a diamond filled with its key's fill and outlined in its
@@ -850,6 +891,64 @@ pub fn sheet_part_paint(owner: NodeTag, part: PartName) -> Option<PartPaint> {
         PartName::PartTitle => text_paint(TintInk),
         PartName::PartWhat | PartName::NoteDetail => text_paint(InkSecondary),
         PartName::PartWhy | PartName::NoteText => text_paint(InkPrimary),
+        PartName::Head => PartPaint {
+            shape: PartShape::Circle,
+            fill: Some(TintFill),
+            stroke: Some((TintWire, STEP_BORDER_PX)),
+            text: None,
+        },
+        PartName::Shoulders => PartPaint {
+            shape: PartShape::Shoulders,
+            fill: Some(TintFill),
+            stroke: Some((TintWire, STEP_BORDER_PX)),
+            text: None,
+        },
+        PartName::Compartment => PartPaint {
+            shape: PartShape::Rect,
+            fill: Some(Cell),
+            stroke: Some((TintWire, COMPARTMENT_BORDER_PX)),
+            text: None,
+        },
+        PartName::CompartmentText => text_paint(TintInk),
+        PartName::TabBorder => stroke_paint(
+            PartShape::DashedRect(DASH_DOT_ARRAY),
+            TintWire,
+            ASSEMBLY_BORDER_PX,
+        ),
+        PartName::Tab => PartPaint {
+            shape: PartShape::Rect,
+            fill: Some(Paper),
+            stroke: Some((TintWire, TAB_BORDER_PX)),
+            text: None,
+        },
+        // A rail, a valve, a rail dot and a step badge take the wire of their line, which
+        // the writer reads from the line; these rows give their shape and the actor's wire.
+        PartName::Rail => stroke_paint(PartShape::Line, TintWire, stencil_layout::RAIL_BAR_PX),
+        PartName::StepBadge => PartPaint {
+            shape: PartShape::RoundedRect,
+            fill: Some(SheetInk::TagFill),
+            stroke: Some((TintWire, STEP_BADGE_STROKE_PX)),
+            text: None,
+        },
+        PartName::StepNumeral => text_paint(SheetInk::TagInk),
+        PartName::ValveNear | PartName::ValveFar => PartPaint {
+            shape: PartShape::Valve,
+            fill: Some(TintWire),
+            stroke: None,
+            text: None,
+        },
+        PartName::RailDot => PartPaint {
+            shape: PartShape::Circle,
+            fill: Some(TintWire),
+            stroke: None,
+            text: None,
+        },
+        PartName::Hop => PartPaint {
+            shape: PartShape::OnPath,
+            fill: None,
+            stroke: None,
+            text: None,
+        },
         PartName::Badge
         | PartName::BadgeText
         | PartName::Label
@@ -1210,7 +1309,7 @@ mod tests {
     use stencil_layout::PART_NAMES;
 
     /// The owners and parts of section 14.5 rule 12 that a sheet draws.
-    const SHEET_PARTS: [(NodeTag, PartName); 77] = [
+    const SHEET_PARTS: [(NodeTag, PartName); 92] = [
         (NodeTag::Page, PartName::Border),
         (NodeTag::Page, PartName::RefRule),
         (NodeTag::Page, PartName::RefTick),
@@ -1288,6 +1387,23 @@ mod tests {
         (NodeTag::GeneralNotes, PartName::NoteZones),
         (NodeTag::GeneralNotes, PartName::FootRule),
         (NodeTag::GeneralNotes, PartName::Foot),
+        (NodeTag::Pcard, PartName::Front),
+        (NodeTag::Pcard, PartName::StackBack),
+        (NodeTag::Pcard, PartName::Head),
+        (NodeTag::Pcard, PartName::Shoulders),
+        (NodeTag::Pcard, PartName::Compartment),
+        (NodeTag::Pcard, PartName::CompartmentText),
+        (NodeTag::Zone, PartName::TabBorder),
+        (NodeTag::Zone, PartName::Tab),
+        (NodeTag::Pipe, PartName::Rail),
+        (NodeTag::Pipe, PartName::StepBadge),
+        (NodeTag::Pipe, PartName::StepNumeral),
+        // A link's badge, valve, rail dot and hop are drawn from its route, whatever node
+        // the writer names as owner.
+        (NodeTag::Page, PartName::ValveNear),
+        (NodeTag::Page, PartName::ValveFar),
+        (NodeTag::Page, PartName::RailDot),
+        (NodeTag::Page, PartName::Hop),
     ];
 
     #[test]
