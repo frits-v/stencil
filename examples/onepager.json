@@ -587,10 +587,33 @@
                   ]
                 },
                 {
-                  "tag": "Frame",
-                  "id": "screen-review",
-                  "label": "Verdict review in the console: clip, evidence frames, verdict and plan version",
-                  "height": 468
+                  "tag": "GeneralNotes",
+                  "id": "notes",
+                  "title": "General notes",
+                  "note": "what the service asks of its operators",
+                  "notes": [
+                    {
+                      "id": "approved-plans-only",
+                      "text": "A plan change never reaches a running trigger until an operator approves it.",
+                      "detail": "The worker reads the approved version only."
+                    },
+                    {
+                      "id": "evidence-by-reference",
+                      "text": "Evidence frames are stored as references into the clip, never copied.",
+                      "detail": "Retention follows the clip bucket."
+                    },
+                    {
+                      "id": "no-store-credentials",
+                      "text": "The evaluator holds no credentials for the verdict store.",
+                      "detail": "The blocked line in view 3 is an IAM binding, not a convention."
+                    },
+                    {
+                      "id": "out-of-scope",
+                      "text": "Out of scope: live streams, identifying people, and training a model per customer.",
+                      "detail": "The service evaluates finished clips with one shared model."
+                    }
+                  ],
+                  "foot": "Each flag on the drawings marks where its note applies."
                 }
               ]
             },
@@ -647,33 +670,10 @@
                   ]
                 },
                 {
-                  "tag": "GeneralNotes",
-                  "id": "notes",
-                  "title": "General notes",
-                  "note": "what the service asks of its operators",
-                  "notes": [
-                    {
-                      "id": "approved-plans-only",
-                      "text": "A plan change never reaches a running trigger until an operator approves it.",
-                      "detail": "The worker reads the approved version only."
-                    },
-                    {
-                      "id": "evidence-by-reference",
-                      "text": "Evidence frames are stored as references into the clip, never copied.",
-                      "detail": "Retention follows the clip bucket."
-                    },
-                    {
-                      "id": "no-store-credentials",
-                      "text": "The evaluator holds no credentials for the verdict store.",
-                      "detail": "The blocked line in view 3 is an IAM binding, not a convention."
-                    },
-                    {
-                      "id": "out-of-scope",
-                      "text": "Out of scope: live streams, identifying people, and training a model per customer.",
-                      "detail": "The service evaluates finished clips with one shared model."
-                    }
-                  ],
-                  "foot": "Each flag on the drawings marks where its note applies."
+                  "tag": "Frame",
+                  "id": "screen-review",
+                  "label": "Verdict review in the console: clip, evidence frames, verdict and plan version",
+                  "height": 151
                 }
               ]
             }

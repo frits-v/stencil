@@ -1,5 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1807.8" viewBox="0 0 1600 1807.8">
-  <rect x="0" y="0" width="1600" height="1807.8" fill="#FFFFFF"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1640.6" viewBox="0 0 1600 1640.6">
+  <rect x="0" y="0" width="1600" height="1640.6" fill="#FFFFFF"/>
   <defs>
     <marker id="arrow-center-gray" viewBox="0 0 10 8" refX="10" refY="4" markerWidth="10" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto"><path d="M 0 0 L 10 4 L 0 8 Z" fill="#5F6368"/></marker>
     <marker id="arrow-center-blue" viewBox="0 0 10 8" refX="10" refY="4" markerWidth="10" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto"><path d="M 0 0 L 10 4 L 0 8 Z" fill="#1A73E8"/></marker>
@@ -10,34 +10,34 @@
     <marker id="arrow-center-deny" viewBox="0 0 10 8" refX="10" refY="4" markerWidth="10" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto"><path d="M 0 0 L 10 4 L 0 8 Z" fill="#C5221F"/></marker>
   </defs>
   <g data-id="" data-tag="Page">
-    <rect x="12.5" y="12.5" width="1575" height="1782.8" fill="#FFFFFF" stroke="#202124" stroke-width="1"/>
-    <rect x="32.75" y="32.75" width="1534.5" height="1742.3" fill="none" stroke="#202124" stroke-width="1.5"/>
-    <path d="M 53.5 33.5 V 1774.3 M 73.5 33.5 V 1774.3 M 93.5 33.5 V 1774.3 M 113.5 33.5 V 1774.3 M 153.5 33.5 V 1774.3 M 173.5 33.5 V 1774.3 M 193.5 33.5 V 1774.3 M 213.5 33.5 V 1774.3 M 253.5 33.5 V 1774.3 M 273.5 33.5 V 1774.3 M 293.5 33.5 V 1774.3 M 313.5 33.5 V 1774.3 M 353.5 33.5 V 1774.3 M 373.5 33.5 V 1774.3 M 393.5 33.5 V 1774.3 M 413.5 33.5 V 1774.3 M 453.5 33.5 V 1774.3 M 473.5 33.5 V 1774.3 M 493.5 33.5 V 1774.3 M 513.5 33.5 V 1774.3 M 553.5 33.5 V 1774.3 M 573.5 33.5 V 1774.3 M 593.5 33.5 V 1774.3 M 613.5 33.5 V 1774.3 M 653.5 33.5 V 1774.3 M 673.5 33.5 V 1774.3 M 693.5 33.5 V 1774.3 M 713.5 33.5 V 1774.3 M 753.5 33.5 V 1774.3 M 773.5 33.5 V 1774.3 M 793.5 33.5 V 1774.3 M 813.5 33.5 V 1774.3 M 853.5 33.5 V 1774.3 M 873.5 33.5 V 1774.3 M 893.5 33.5 V 1774.3 M 913.5 33.5 V 1774.3 M 953.5 33.5 V 1774.3 M 973.5 33.5 V 1774.3 M 993.5 33.5 V 1774.3 M 1013.5 33.5 V 1774.3 M 1053.5 33.5 V 1774.3 M 1073.5 33.5 V 1774.3 M 1093.5 33.5 V 1774.3 M 1113.5 33.5 V 1774.3 M 1153.5 33.5 V 1774.3 M 1173.5 33.5 V 1774.3 M 1193.5 33.5 V 1774.3 M 1213.5 33.5 V 1774.3 M 1253.5 33.5 V 1774.3 M 1273.5 33.5 V 1774.3 M 1293.5 33.5 V 1774.3 M 1313.5 33.5 V 1774.3 M 1353.5 33.5 V 1774.3 M 1373.5 33.5 V 1774.3 M 1393.5 33.5 V 1774.3 M 1413.5 33.5 V 1774.3 M 1453.5 33.5 V 1774.3 M 1473.5 33.5 V 1774.3 M 1493.5 33.5 V 1774.3 M 1513.5 33.5 V 1774.3 M 1553.5 33.5 V 1774.3 M 33.5 53.5 H 1566.5 M 33.5 73.5 H 1566.5 M 33.5 93.5 H 1566.5 M 33.5 113.5 H 1566.5 M 33.5 153.5 H 1566.5 M 33.5 173.5 H 1566.5 M 33.5 193.5 H 1566.5 M 33.5 213.5 H 1566.5 M 33.5 253.5 H 1566.5 M 33.5 273.5 H 1566.5 M 33.5 293.5 H 1566.5 M 33.5 313.5 H 1566.5 M 33.5 353.5 H 1566.5 M 33.5 373.5 H 1566.5 M 33.5 393.5 H 1566.5 M 33.5 413.5 H 1566.5 M 33.5 453.5 H 1566.5 M 33.5 473.5 H 1566.5 M 33.5 493.5 H 1566.5 M 33.5 513.5 H 1566.5 M 33.5 553.5 H 1566.5 M 33.5 573.5 H 1566.5 M 33.5 593.5 H 1566.5 M 33.5 613.5 H 1566.5 M 33.5 653.5 H 1566.5 M 33.5 673.5 H 1566.5 M 33.5 693.5 H 1566.5 M 33.5 713.5 H 1566.5 M 33.5 753.5 H 1566.5 M 33.5 773.5 H 1566.5 M 33.5 793.5 H 1566.5 M 33.5 813.5 H 1566.5 M 33.5 853.5 H 1566.5 M 33.5 873.5 H 1566.5 M 33.5 893.5 H 1566.5 M 33.5 913.5 H 1566.5 M 33.5 953.5 H 1566.5 M 33.5 973.5 H 1566.5 M 33.5 993.5 H 1566.5 M 33.5 1013.5 H 1566.5 M 33.5 1053.5 H 1566.5 M 33.5 1073.5 H 1566.5 M 33.5 1093.5 H 1566.5 M 33.5 1113.5 H 1566.5 M 33.5 1153.5 H 1566.5 M 33.5 1173.5 H 1566.5 M 33.5 1193.5 H 1566.5 M 33.5 1213.5 H 1566.5 M 33.5 1253.5 H 1566.5 M 33.5 1273.5 H 1566.5 M 33.5 1293.5 H 1566.5 M 33.5 1313.5 H 1566.5 M 33.5 1353.5 H 1566.5 M 33.5 1373.5 H 1566.5 M 33.5 1393.5 H 1566.5 M 33.5 1413.5 H 1566.5 M 33.5 1453.5 H 1566.5 M 33.5 1473.5 H 1566.5 M 33.5 1493.5 H 1566.5 M 33.5 1513.5 H 1566.5 M 33.5 1553.5 H 1566.5 M 33.5 1573.5 H 1566.5 M 33.5 1593.5 H 1566.5 M 33.5 1613.5 H 1566.5 M 33.5 1653.5 H 1566.5 M 33.5 1673.5 H 1566.5 M 33.5 1693.5 H 1566.5 M 33.5 1713.5 H 1566.5 M 33.5 1753.5 H 1566.5 M 33.5 1773.5 H 1566.5" fill="none" stroke="#F4F5F6" stroke-width="1"/>
-    <path d="M 133.5 33.5 V 1774.3 M 233.5 33.5 V 1774.3 M 333.5 33.5 V 1774.3 M 433.5 33.5 V 1774.3 M 533.5 33.5 V 1774.3 M 633.5 33.5 V 1774.3 M 733.5 33.5 V 1774.3 M 833.5 33.5 V 1774.3 M 933.5 33.5 V 1774.3 M 1033.5 33.5 V 1774.3 M 1133.5 33.5 V 1774.3 M 1233.5 33.5 V 1774.3 M 1333.5 33.5 V 1774.3 M 1433.5 33.5 V 1774.3 M 1533.5 33.5 V 1774.3 M 33.5 133.5 H 1566.5 M 33.5 233.5 H 1566.5 M 33.5 333.5 H 1566.5 M 33.5 433.5 H 1566.5 M 33.5 533.5 H 1566.5 M 33.5 633.5 H 1566.5 M 33.5 733.5 H 1566.5 M 33.5 833.5 H 1566.5 M 33.5 933.5 H 1566.5 M 33.5 1033.5 H 1566.5 M 33.5 1133.5 H 1566.5 M 33.5 1233.5 H 1566.5 M 33.5 1333.5 H 1566.5 M 33.5 1433.5 H 1566.5 M 33.5 1533.5 H 1566.5 M 33.5 1633.5 H 1566.5 M 33.5 1733.5 H 1566.5" fill="none" stroke="#E9EAEC" stroke-width="1"/>
+    <rect x="12.5" y="12.5" width="1575" height="1615.6" fill="#FFFFFF" stroke="#202124" stroke-width="1"/>
+    <rect x="32.75" y="32.75" width="1534.5" height="1575.1" fill="none" stroke="#202124" stroke-width="1.5"/>
+    <path d="M 53.5 33.5 V 1607.1 M 73.5 33.5 V 1607.1 M 93.5 33.5 V 1607.1 M 113.5 33.5 V 1607.1 M 153.5 33.5 V 1607.1 M 173.5 33.5 V 1607.1 M 193.5 33.5 V 1607.1 M 213.5 33.5 V 1607.1 M 253.5 33.5 V 1607.1 M 273.5 33.5 V 1607.1 M 293.5 33.5 V 1607.1 M 313.5 33.5 V 1607.1 M 353.5 33.5 V 1607.1 M 373.5 33.5 V 1607.1 M 393.5 33.5 V 1607.1 M 413.5 33.5 V 1607.1 M 453.5 33.5 V 1607.1 M 473.5 33.5 V 1607.1 M 493.5 33.5 V 1607.1 M 513.5 33.5 V 1607.1 M 553.5 33.5 V 1607.1 M 573.5 33.5 V 1607.1 M 593.5 33.5 V 1607.1 M 613.5 33.5 V 1607.1 M 653.5 33.5 V 1607.1 M 673.5 33.5 V 1607.1 M 693.5 33.5 V 1607.1 M 713.5 33.5 V 1607.1 M 753.5 33.5 V 1607.1 M 773.5 33.5 V 1607.1 M 793.5 33.5 V 1607.1 M 813.5 33.5 V 1607.1 M 853.5 33.5 V 1607.1 M 873.5 33.5 V 1607.1 M 893.5 33.5 V 1607.1 M 913.5 33.5 V 1607.1 M 953.5 33.5 V 1607.1 M 973.5 33.5 V 1607.1 M 993.5 33.5 V 1607.1 M 1013.5 33.5 V 1607.1 M 1053.5 33.5 V 1607.1 M 1073.5 33.5 V 1607.1 M 1093.5 33.5 V 1607.1 M 1113.5 33.5 V 1607.1 M 1153.5 33.5 V 1607.1 M 1173.5 33.5 V 1607.1 M 1193.5 33.5 V 1607.1 M 1213.5 33.5 V 1607.1 M 1253.5 33.5 V 1607.1 M 1273.5 33.5 V 1607.1 M 1293.5 33.5 V 1607.1 M 1313.5 33.5 V 1607.1 M 1353.5 33.5 V 1607.1 M 1373.5 33.5 V 1607.1 M 1393.5 33.5 V 1607.1 M 1413.5 33.5 V 1607.1 M 1453.5 33.5 V 1607.1 M 1473.5 33.5 V 1607.1 M 1493.5 33.5 V 1607.1 M 1513.5 33.5 V 1607.1 M 1553.5 33.5 V 1607.1 M 33.5 53.5 H 1566.5 M 33.5 73.5 H 1566.5 M 33.5 93.5 H 1566.5 M 33.5 113.5 H 1566.5 M 33.5 153.5 H 1566.5 M 33.5 173.5 H 1566.5 M 33.5 193.5 H 1566.5 M 33.5 213.5 H 1566.5 M 33.5 253.5 H 1566.5 M 33.5 273.5 H 1566.5 M 33.5 293.5 H 1566.5 M 33.5 313.5 H 1566.5 M 33.5 353.5 H 1566.5 M 33.5 373.5 H 1566.5 M 33.5 393.5 H 1566.5 M 33.5 413.5 H 1566.5 M 33.5 453.5 H 1566.5 M 33.5 473.5 H 1566.5 M 33.5 493.5 H 1566.5 M 33.5 513.5 H 1566.5 M 33.5 553.5 H 1566.5 M 33.5 573.5 H 1566.5 M 33.5 593.5 H 1566.5 M 33.5 613.5 H 1566.5 M 33.5 653.5 H 1566.5 M 33.5 673.5 H 1566.5 M 33.5 693.5 H 1566.5 M 33.5 713.5 H 1566.5 M 33.5 753.5 H 1566.5 M 33.5 773.5 H 1566.5 M 33.5 793.5 H 1566.5 M 33.5 813.5 H 1566.5 M 33.5 853.5 H 1566.5 M 33.5 873.5 H 1566.5 M 33.5 893.5 H 1566.5 M 33.5 913.5 H 1566.5 M 33.5 953.5 H 1566.5 M 33.5 973.5 H 1566.5 M 33.5 993.5 H 1566.5 M 33.5 1013.5 H 1566.5 M 33.5 1053.5 H 1566.5 M 33.5 1073.5 H 1566.5 M 33.5 1093.5 H 1566.5 M 33.5 1113.5 H 1566.5 M 33.5 1153.5 H 1566.5 M 33.5 1173.5 H 1566.5 M 33.5 1193.5 H 1566.5 M 33.5 1213.5 H 1566.5 M 33.5 1253.5 H 1566.5 M 33.5 1273.5 H 1566.5 M 33.5 1293.5 H 1566.5 M 33.5 1313.5 H 1566.5 M 33.5 1353.5 H 1566.5 M 33.5 1373.5 H 1566.5 M 33.5 1393.5 H 1566.5 M 33.5 1413.5 H 1566.5 M 33.5 1453.5 H 1566.5 M 33.5 1473.5 H 1566.5 M 33.5 1493.5 H 1566.5 M 33.5 1513.5 H 1566.5 M 33.5 1553.5 H 1566.5 M 33.5 1573.5 H 1566.5 M 33.5 1593.5 H 1566.5" fill="none" stroke="#F4F5F6" stroke-width="1"/>
+    <path d="M 133.5 33.5 V 1607.1 M 233.5 33.5 V 1607.1 M 333.5 33.5 V 1607.1 M 433.5 33.5 V 1607.1 M 533.5 33.5 V 1607.1 M 633.5 33.5 V 1607.1 M 733.5 33.5 V 1607.1 M 833.5 33.5 V 1607.1 M 933.5 33.5 V 1607.1 M 1033.5 33.5 V 1607.1 M 1133.5 33.5 V 1607.1 M 1233.5 33.5 V 1607.1 M 1333.5 33.5 V 1607.1 M 1433.5 33.5 V 1607.1 M 1533.5 33.5 V 1607.1 M 33.5 133.5 H 1566.5 M 33.5 233.5 H 1566.5 M 33.5 333.5 H 1566.5 M 33.5 433.5 H 1566.5 M 33.5 533.5 H 1566.5 M 33.5 633.5 H 1566.5 M 33.5 733.5 H 1566.5 M 33.5 833.5 H 1566.5 M 33.5 933.5 H 1566.5 M 33.5 1033.5 H 1566.5 M 33.5 1133.5 H 1566.5 M 33.5 1233.5 H 1566.5 M 33.5 1333.5 H 1566.5 M 33.5 1433.5 H 1566.5 M 33.5 1533.5 H 1566.5" fill="none" stroke="#E9EAEC" stroke-width="1"/>
     <line x1="225.13" y1="13" x2="225.13" y2="32" stroke="#DADCE0" stroke-width="0.8"/>
-    <line x1="225.13" y1="1775.8" x2="225.13" y2="1794.8" stroke="#DADCE0" stroke-width="0.8"/>
+    <line x1="225.13" y1="1608.6" x2="225.13" y2="1627.6" stroke="#DADCE0" stroke-width="0.8"/>
     <line x1="416.75" y1="13" x2="416.75" y2="32" stroke="#DADCE0" stroke-width="0.8"/>
-    <line x1="416.75" y1="1775.8" x2="416.75" y2="1794.8" stroke="#DADCE0" stroke-width="0.8"/>
+    <line x1="416.75" y1="1608.6" x2="416.75" y2="1627.6" stroke="#DADCE0" stroke-width="0.8"/>
     <line x1="608.38" y1="13" x2="608.38" y2="32" stroke="#DADCE0" stroke-width="0.8"/>
-    <line x1="608.38" y1="1775.8" x2="608.38" y2="1794.8" stroke="#DADCE0" stroke-width="0.8"/>
+    <line x1="608.38" y1="1608.6" x2="608.38" y2="1627.6" stroke="#DADCE0" stroke-width="0.8"/>
     <line x1="800" y1="13" x2="800" y2="32" stroke="#DADCE0" stroke-width="0.8"/>
-    <line x1="800" y1="1775.8" x2="800" y2="1794.8" stroke="#DADCE0" stroke-width="0.8"/>
+    <line x1="800" y1="1608.6" x2="800" y2="1627.6" stroke="#DADCE0" stroke-width="0.8"/>
     <line x1="991.63" y1="13" x2="991.63" y2="32" stroke="#DADCE0" stroke-width="0.8"/>
-    <line x1="991.63" y1="1775.8" x2="991.63" y2="1794.8" stroke="#DADCE0" stroke-width="0.8"/>
+    <line x1="991.63" y1="1608.6" x2="991.63" y2="1627.6" stroke="#DADCE0" stroke-width="0.8"/>
     <line x1="1183.25" y1="13" x2="1183.25" y2="32" stroke="#DADCE0" stroke-width="0.8"/>
-    <line x1="1183.25" y1="1775.8" x2="1183.25" y2="1794.8" stroke="#DADCE0" stroke-width="0.8"/>
+    <line x1="1183.25" y1="1608.6" x2="1183.25" y2="1627.6" stroke="#DADCE0" stroke-width="0.8"/>
     <line x1="1374.88" y1="13" x2="1374.88" y2="32" stroke="#DADCE0" stroke-width="0.8"/>
-    <line x1="1374.88" y1="1775.8" x2="1374.88" y2="1794.8" stroke="#DADCE0" stroke-width="0.8"/>
-    <line x1="13" y1="323.63" x2="32" y2="323.63" stroke="#DADCE0" stroke-width="0.8"/>
-    <line x1="1568" y1="323.63" x2="1587" y2="323.63" stroke="#DADCE0" stroke-width="0.8"/>
-    <line x1="13" y1="613.77" x2="32" y2="613.77" stroke="#DADCE0" stroke-width="0.8"/>
-    <line x1="1568" y1="613.77" x2="1587" y2="613.77" stroke="#DADCE0" stroke-width="0.8"/>
-    <line x1="13" y1="903.9" x2="32" y2="903.9" stroke="#DADCE0" stroke-width="0.8"/>
-    <line x1="1568" y1="903.9" x2="1587" y2="903.9" stroke="#DADCE0" stroke-width="0.8"/>
-    <line x1="13" y1="1194.03" x2="32" y2="1194.03" stroke="#DADCE0" stroke-width="0.8"/>
-    <line x1="1568" y1="1194.03" x2="1587" y2="1194.03" stroke="#DADCE0" stroke-width="0.8"/>
-    <line x1="13" y1="1484.17" x2="32" y2="1484.17" stroke="#DADCE0" stroke-width="0.8"/>
-    <line x1="1568" y1="1484.17" x2="1587" y2="1484.17" stroke="#DADCE0" stroke-width="0.8"/>
+    <line x1="1374.88" y1="1608.6" x2="1374.88" y2="1627.6" stroke="#DADCE0" stroke-width="0.8"/>
+    <line x1="13" y1="295.77" x2="32" y2="295.77" stroke="#DADCE0" stroke-width="0.8"/>
+    <line x1="1568" y1="295.77" x2="1587" y2="295.77" stroke="#DADCE0" stroke-width="0.8"/>
+    <line x1="13" y1="558.03" x2="32" y2="558.03" stroke="#DADCE0" stroke-width="0.8"/>
+    <line x1="1568" y1="558.03" x2="1587" y2="558.03" stroke="#DADCE0" stroke-width="0.8"/>
+    <line x1="13" y1="820.3" x2="32" y2="820.3" stroke="#DADCE0" stroke-width="0.8"/>
+    <line x1="1568" y1="820.3" x2="1587" y2="820.3" stroke="#DADCE0" stroke-width="0.8"/>
+    <line x1="13" y1="1082.57" x2="32" y2="1082.57" stroke="#DADCE0" stroke-width="0.8"/>
+    <line x1="1568" y1="1082.57" x2="1587" y2="1082.57" stroke="#DADCE0" stroke-width="0.8"/>
+    <line x1="13" y1="1344.83" x2="32" y2="1344.83" stroke="#DADCE0" stroke-width="0.8"/>
+    <line x1="1568" y1="1344.83" x2="1587" y2="1344.83" stroke="#DADCE0" stroke-width="0.8"/>
     <text x="126.33" y="26.5" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">1</text>
     <text x="316.85" y="26.5" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">2</text>
     <text x="508.4" y="26.5" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">3</text>
@@ -46,26 +46,26 @@
     <text x="1083.26" y="26.5" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">6</text>
     <text x="1275.23" y="26.5" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">7</text>
     <text x="1466.51" y="26.5" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">8</text>
-    <text x="126.33" y="1789.3" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">1</text>
-    <text x="316.85" y="1789.3" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">2</text>
-    <text x="508.4" y="1789.3" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">3</text>
-    <text x="699.86" y="1789.3" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">4</text>
-    <text x="891.78" y="1789.3" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">5</text>
-    <text x="1083.26" y="1789.3" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">6</text>
-    <text x="1275.23" y="1789.3" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">7</text>
-    <text x="1466.51" y="1789.3" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">8</text>
-    <text x="17.84" y="182.57" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">A</text>
-    <text x="18.21" y="472.7" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">B</text>
-    <text x="17.79" y="762.83" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">C</text>
-    <text x="17.87" y="1052.97" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">D</text>
-    <text x="18.51" y="1343.1" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">E</text>
-    <text x="18.61" y="1633.23" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">F</text>
-    <text x="1572.84" y="182.57" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">A</text>
-    <text x="1573.21" y="472.7" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">B</text>
-    <text x="1572.79" y="762.83" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">C</text>
-    <text x="1572.87" y="1052.97" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">D</text>
-    <text x="1573.51" y="1343.1" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">E</text>
-    <text x="1573.61" y="1633.23" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">F</text>
+    <text x="126.33" y="1622.1" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">1</text>
+    <text x="316.85" y="1622.1" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">2</text>
+    <text x="508.4" y="1622.1" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">3</text>
+    <text x="699.86" y="1622.1" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">4</text>
+    <text x="891.78" y="1622.1" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">5</text>
+    <text x="1083.26" y="1622.1" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">6</text>
+    <text x="1275.23" y="1622.1" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">7</text>
+    <text x="1466.51" y="1622.1" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">8</text>
+    <text x="17.84" y="168.63" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">A</text>
+    <text x="18.21" y="430.9" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">B</text>
+    <text x="17.79" y="693.17" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">C</text>
+    <text x="17.87" y="955.43" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">D</text>
+    <text x="18.51" y="1217.7" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">E</text>
+    <text x="18.61" y="1479.97" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">F</text>
+    <text x="1572.84" y="168.63" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">A</text>
+    <text x="1573.21" y="430.9" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">B</text>
+    <text x="1572.79" y="693.17" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">C</text>
+    <text x="1572.87" y="955.43" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">D</text>
+    <text x="1573.51" y="1217.7" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">E</text>
+    <text x="1573.61" y="1479.97" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">F</text>
     <g data-id="/sheet" data-tag="TitleBlock">
       <rect x="50.75" y="50.75" width="1498.5" height="294.5" fill="#FFFFFF" stroke="#202124" stroke-width="1.5"/>
       <line x1="372.31" y1="51.5" x2="372.31" y2="268.7" stroke="#DADCE0" stroke-width="1"/>
@@ -485,12 +485,32 @@
                 </g>
               </g>
             </g>
-            <g data-id="/body/1/children/0/children/0/children/1" data-tag="Frame">
-              <line x1="52.06" y1="1266.46" x2="1034.61" y2="1730.34" stroke="#5F6368" stroke-width="1"/>
-              <line x1="52.06" y1="1730.34" x2="1034.61" y2="1266.46" stroke="#5F6368" stroke-width="1"/>
-              <rect x="50.63" y="1265.03" width="985.42" height="466.75" rx="3.38" fill="none" stroke="#9AA0A6" stroke-width="1.25" stroke-dasharray="6 5"/>
-              <rect x="310.8" y="1487.2" width="465.07" height="22.4" rx="4" fill="#FFFFFF"/>
-              <text x="318.8" y="1502.77" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#5F6368">Verdict review in the console: clip, evidence frames, verdict and plan version</text>
+            <g data-id="/body/1/children/0/children/0/children/1" data-tag="GeneralNotes">
+              <rect x="50.5" y="1264.9" width="985.67" height="299.8" fill="#FFFFFF" stroke="#202124" stroke-width="1"/>
+              <path d="M73 1299 L83 1316 L63 1316 Z" fill="#202124"/>
+              <path d="M73 1356.4 L83 1373.4 L63 1373.4 Z" fill="#202124"/>
+              <path d="M73 1413.8 L83 1430.8 L63 1430.8 Z" fill="#202124"/>
+              <path d="M73 1471.2 L83 1488.2 L63 1488.2 Z" fill="#202124"/>
+              <line x1="63" y1="1529.1" x2="1023.67" y2="1529.1" stroke="#DADCE0" stroke-width="1" stroke-dasharray="3 3"/>
+              <text x="63" y="1287.93" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" letter-spacing="1.56" fill="#202124">GENERAL NOTES</text>
+              <text x="204.01" y="1287.57" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">what the service asks of its operators</text>
+              <text x="71.06" y="1313.27" xml:space="preserve" font-family="Inter" font-size="9" font-weight="700" fill="#FFFFFF">1</text>
+              <text x="89" y="1312.07" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#202124">A plan change never reaches a running trigger until an operator approves it.</text>
+              <text x="89" y="1329.08" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">The worker reads the approved version only.</text>
+              <text x="89" y="1345.08" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">marked at A4 B4 D4</text>
+              <text x="70.17" y="1370.67" xml:space="preserve" font-family="Inter" font-size="9" font-weight="700" fill="#FFFFFF">2</text>
+              <text x="89" y="1369.47" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#202124">Evidence frames are stored as references into the clip, never copied.</text>
+              <text x="89" y="1386.48" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">Retention follows the clip bucket.</text>
+              <text x="89" y="1402.48" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">marked at A4 C7</text>
+              <text x="70.1" y="1428.07" xml:space="preserve" font-family="Inter" font-size="9" font-weight="700" fill="#FFFFFF">3</text>
+              <text x="89" y="1426.87" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#202124">The evaluator holds no credentials for the verdict store.</text>
+              <text x="89" y="1443.88" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">The blocked line in view 3 is an IAM binding, not a convention.</text>
+              <text x="89" y="1459.88" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">marked at C6 E4</text>
+              <text x="69.96" y="1485.47" xml:space="preserve" font-family="Inter" font-size="9" font-weight="700" fill="#FFFFFF">4</text>
+              <text x="89" y="1484.27" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#202124">Out of scope: live streams, identifying people, and training a model per customer.</text>
+              <text x="89" y="1501.28" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">The service evaluates finished clips with one shared model.</text>
+              <text x="89" y="1517.28" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">marked at C5</text>
+              <text x="63" y="1549.77" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">Each flag on the drawings marks where its note applies.</text>
             </g>
           </g>
           <g data-id="/body/1/children/0/children/1" data-tag="Col">
@@ -546,14 +566,14 @@
               <text x="1251.17" y="1101.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">Turns a description into a versioned</text>
               <text x="1251.17" y="1116.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">plan and refuses to queue a plan</text>
               <text x="1251.17" y="1131.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">nobody approved.</text>
-              <text x="1476.5" y="1101.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">A4 B3 D5</text>
+              <text x="1476.5" y="1101.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">A4 C3 D5</text>
               <text x="1071.79" y="1160.34" xml:space="preserve" font-family="Inter" font-size="10" font-weight="700" fill="#202124">4</text>
               <text x="1106.17" y="1160.77" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#5F6368">Evaluation queue</text>
               <text x="1106.17" y="1176.78" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">Pub/Sub</text>
               <text x="1251.17" y="1159.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">The API returns once a job is queued,</text>
               <text x="1251.17" y="1174.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">so a slow clip never holds a request</text>
               <text x="1251.17" y="1189.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">open.</text>
-              <text x="1476.5" y="1159.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">C6 D3</text>
+              <text x="1476.5" y="1159.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">C6 E3</text>
               <text x="1072.06" y="1218.34" xml:space="preserve" font-family="Inter" font-size="10" font-weight="700" fill="#202124">5</text>
               <text x="1106.17" y="1218.77" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">Clip bucket</text>
               <text x="1106.17" y="1234.78" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">Cloud Storage</text>
@@ -566,7 +586,7 @@
               <text x="1106.17" y="1292.78" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">Cloud Run job</text>
               <text x="1251.17" y="1275.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">Clips are independent, so a failed clip</text>
               <text x="1251.17" y="1290.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">retries alone.</text>
-              <text x="1476.5" y="1275.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">C6 D5</text>
+              <text x="1476.5" y="1275.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">C6 E5</text>
               <text x="1072.26" y="1321.74" xml:space="preserve" font-family="Inter" font-size="10" font-weight="700" fill="#202124">7</text>
               <text x="1106.17" y="1322.17" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#4B3275">Clip evaluator</text>
               <text x="1106.17" y="1338.18" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">Vertex AI endpoint</text>
@@ -578,43 +598,22 @@
               <text x="1106.17" y="1383.58" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">Cloud SQL</text>
               <text x="1251.17" y="1366.18" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">Every verdict keeps its evidence frames</text>
               <text x="1251.17" y="1381.18" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">and the plan version that produced it.</text>
-              <text x="1476.5" y="1366.18" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">A4 B4 C7</text>
+              <text x="1476.5" y="1366.18" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">A4 C4 C7</text>
               <text x="1476.5" y="1381.18" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">E4</text>
             </g>
-            <g data-id="/body/1/children/0/children/1/children/1" data-tag="GeneralNotes">
-              <rect x="1057.17" y="1414.9" width="492.33" height="317.2" fill="#FFFFFF" stroke="#202124" stroke-width="1"/>
-              <path d="M1079.67 1449 L1089.67 1466 L1069.67 1466 Z" fill="#202124"/>
-              <path d="M1079.67 1506.4 L1089.67 1523.4 L1069.67 1523.4 Z" fill="#202124"/>
-              <path d="M1079.67 1563.8 L1089.67 1580.8 L1069.67 1580.8 Z" fill="#202124"/>
-              <path d="M1079.67 1621.2 L1089.67 1638.2 L1069.67 1638.2 Z" fill="#202124"/>
-              <line x1="1069.67" y1="1696.5" x2="1537" y2="1696.5" stroke="#DADCE0" stroke-width="1" stroke-dasharray="3 3"/>
-              <text x="1069.67" y="1437.93" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" letter-spacing="1.56" fill="#202124">GENERAL NOTES</text>
-              <text x="1210.68" y="1437.57" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">what the service asks of its operators</text>
-              <text x="1077.73" y="1463.27" xml:space="preserve" font-family="Inter" font-size="9" font-weight="700" fill="#FFFFFF">1</text>
-              <text x="1095.67" y="1462.07" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#202124">A plan change never reaches a running trigger until an operator approves it.</text>
-              <text x="1095.67" y="1479.08" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">The worker reads the approved version only.</text>
-              <text x="1095.67" y="1495.08" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">marked at A4 B4 D4</text>
-              <text x="1076.83" y="1520.67" xml:space="preserve" font-family="Inter" font-size="9" font-weight="700" fill="#FFFFFF">2</text>
-              <text x="1095.67" y="1519.47" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#202124">Evidence frames are stored as references into the clip, never copied.</text>
-              <text x="1095.67" y="1536.48" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">Retention follows the clip bucket.</text>
-              <text x="1095.67" y="1552.48" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">marked at A4 C7</text>
-              <text x="1076.76" y="1578.07" xml:space="preserve" font-family="Inter" font-size="9" font-weight="700" fill="#FFFFFF">3</text>
-              <text x="1095.67" y="1576.87" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#202124">The evaluator holds no credentials for the verdict store.</text>
-              <text x="1095.67" y="1593.88" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">The blocked line in view 3 is an IAM binding, not a convention.</text>
-              <text x="1095.67" y="1609.88" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">marked at C6 E4</text>
-              <text x="1076.62" y="1635.47" xml:space="preserve" font-family="Inter" font-size="9" font-weight="700" fill="#FFFFFF">4</text>
-              <text x="1095.67" y="1634.27" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#202124">Out of scope: live streams, identifying people, and training a model per</text>
-              <text x="1095.67" y="1651.67" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#202124">customer.</text>
-              <text x="1095.67" y="1668.68" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">The service evaluates finished clips with one shared model.</text>
-              <text x="1095.67" y="1684.68" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">marked at C5</text>
-              <text x="1069.67" y="1717.17" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">Each flag on the drawings marks where its note applies.</text>
+            <g data-id="/body/1/children/0/children/1/children/1" data-tag="Frame">
+              <line x1="1058.72" y1="1416.46" x2="1547.94" y2="1563.34" stroke="#5F6368" stroke-width="1"/>
+              <line x1="1058.72" y1="1563.34" x2="1547.94" y2="1416.46" stroke="#5F6368" stroke-width="1"/>
+              <rect x="1057.29" y="1415.03" width="492.08" height="149.75" rx="3.38" fill="none" stroke="#9AA0A6" stroke-width="1.25" stroke-dasharray="6 5"/>
+              <rect x="1070.8" y="1478.7" width="465.07" height="22.4" rx="4" fill="#FFFFFF"/>
+              <text x="1078.8" y="1494.27" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#5F6368">Verdict review in the console: clip, evidence frames, verdict and plan version</text>
             </g>
           </g>
         </g>
       </g>
     </g>
     <g data-id="/foot" data-tag="Foot">
-      <text x="50" y="1755.2" xml:space="preserve" font-family="Inter" font-size="11" font-weight="400" fill="#5F6368">Balloons key the drawings to the parts list, flags to the general notes, diamonds to the attention items in the title block.</text>
+      <text x="50" y="1588" xml:space="preserve" font-family="Inter" font-size="11" font-weight="400" fill="#5F6368">Balloons key the drawings to the parts list, flags to the general notes, diamonds to the attention items in the title block.</text>
     </g>
   </g>
   <g data-id="/links/0" data-tag="Link" data-kind="solid-4">

@@ -1,6 +1,6 @@
 {
   "canvas": {
-    "height": 1807.8,
+    "height": 1640.6,
     "width": 1600
   },
   "links": [
@@ -596,17 +596,17 @@
   ],
   "nodes": [
     {
-      "height": 1807.8,
+      "height": 1640.6,
       "id": "",
       "parts": {
         "border": {
-          "height": 1783.8,
+          "height": 1616.6,
           "width": 1576,
           "x": 12,
           "y": 12
         },
         "grid": {
-          "height": 1740.8,
+          "height": 1573.6,
           "width": 1533,
           "x": 33.5,
           "y": 33.5
@@ -672,143 +672,143 @@
           "line_count": 1,
           "width": 191.63,
           "x": 33.5,
-          "y": 1778.7
+          "y": 1611.5
         },
         "ref_column_foot/1": {
           "height": 13.2,
           "line_count": 1,
           "width": 191.63,
           "x": 225.13,
-          "y": 1778.7
+          "y": 1611.5
         },
         "ref_column_foot/2": {
           "height": 13.2,
           "line_count": 1,
           "width": 191.63,
           "x": 416.75,
-          "y": 1778.7
+          "y": 1611.5
         },
         "ref_column_foot/3": {
           "height": 13.2,
           "line_count": 1,
           "width": 191.63,
           "x": 608.38,
-          "y": 1778.7
+          "y": 1611.5
         },
         "ref_column_foot/4": {
           "height": 13.2,
           "line_count": 1,
           "width": 191.63,
           "x": 800,
-          "y": 1778.7
+          "y": 1611.5
         },
         "ref_column_foot/5": {
           "height": 13.2,
           "line_count": 1,
           "width": 191.63,
           "x": 991.63,
-          "y": 1778.7
+          "y": 1611.5
         },
         "ref_column_foot/6": {
           "height": 13.2,
           "line_count": 1,
           "width": 191.63,
           "x": 1183.25,
-          "y": 1778.7
+          "y": 1611.5
         },
         "ref_column_foot/7": {
           "height": 13.2,
           "line_count": 1,
           "width": 191.63,
           "x": 1374.88,
-          "y": 1778.7
+          "y": 1611.5
         },
         "ref_row/0": {
           "height": 13.2,
           "line_count": 1,
           "width": 19,
           "x": 13,
-          "y": 171.97
+          "y": 158.03
         },
         "ref_row/1": {
           "height": 13.2,
           "line_count": 1,
           "width": 19,
           "x": 13,
-          "y": 462.1
+          "y": 420.3
         },
         "ref_row/2": {
           "height": 13.2,
           "line_count": 1,
           "width": 19,
           "x": 13,
-          "y": 752.23
+          "y": 682.57
         },
         "ref_row/3": {
           "height": 13.2,
           "line_count": 1,
           "width": 19,
           "x": 13,
-          "y": 1042.37
+          "y": 944.83
         },
         "ref_row/4": {
           "height": 13.2,
           "line_count": 1,
           "width": 19,
           "x": 13,
-          "y": 1332.5
+          "y": 1207.1
         },
         "ref_row/5": {
           "height": 13.2,
           "line_count": 1,
           "width": 19,
           "x": 13,
-          "y": 1622.63
+          "y": 1469.37
         },
         "ref_row_right/0": {
           "height": 13.2,
           "line_count": 1,
           "width": 19,
           "x": 1568,
-          "y": 171.97
+          "y": 158.03
         },
         "ref_row_right/1": {
           "height": 13.2,
           "line_count": 1,
           "width": 19,
           "x": 1568,
-          "y": 462.1
+          "y": 420.3
         },
         "ref_row_right/2": {
           "height": 13.2,
           "line_count": 1,
           "width": 19,
           "x": 1568,
-          "y": 752.23
+          "y": 682.57
         },
         "ref_row_right/3": {
           "height": 13.2,
           "line_count": 1,
           "width": 19,
           "x": 1568,
-          "y": 1042.37
+          "y": 944.83
         },
         "ref_row_right/4": {
           "height": 13.2,
           "line_count": 1,
           "width": 19,
           "x": 1568,
-          "y": 1332.5
+          "y": 1207.1
         },
         "ref_row_right/5": {
           "height": 13.2,
           "line_count": 1,
           "width": 19,
           "x": 1568,
-          "y": 1622.63
+          "y": 1469.37
         },
         "ref_rule": {
-          "height": 1743.8,
+          "height": 1576.6,
           "width": 1536,
           "x": 32,
           "y": 32
@@ -823,7 +823,7 @@
           "height": 19,
           "width": 0,
           "x": 225.13,
-          "y": 1775.8
+          "y": 1608.6
         },
         "ref_tick/10": {
           "height": 19,
@@ -835,7 +835,7 @@
           "height": 19,
           "width": 0,
           "x": 1183.25,
-          "y": 1775.8
+          "y": 1608.6
         },
         "ref_tick/12": {
           "height": 19,
@@ -847,43 +847,43 @@
           "height": 19,
           "width": 0,
           "x": 1374.88,
-          "y": 1775.8
+          "y": 1608.6
         },
         "ref_tick/14": {
           "height": 0,
           "width": 19,
           "x": 13,
-          "y": 323.63
+          "y": 295.77
         },
         "ref_tick/15": {
           "height": 0,
           "width": 19,
           "x": 1568,
-          "y": 323.63
+          "y": 295.77
         },
         "ref_tick/16": {
           "height": 0,
           "width": 19,
           "x": 13,
-          "y": 613.77
+          "y": 558.03
         },
         "ref_tick/17": {
           "height": 0,
           "width": 19,
           "x": 1568,
-          "y": 613.77
+          "y": 558.03
         },
         "ref_tick/18": {
           "height": 0,
           "width": 19,
           "x": 13,
-          "y": 903.9
+          "y": 820.3
         },
         "ref_tick/19": {
           "height": 0,
           "width": 19,
           "x": 1568,
-          "y": 903.9
+          "y": 820.3
         },
         "ref_tick/2": {
           "height": 19,
@@ -895,31 +895,31 @@
           "height": 0,
           "width": 19,
           "x": 13,
-          "y": 1194.03
+          "y": 1082.57
         },
         "ref_tick/21": {
           "height": 0,
           "width": 19,
           "x": 1568,
-          "y": 1194.03
+          "y": 1082.57
         },
         "ref_tick/22": {
           "height": 0,
           "width": 19,
           "x": 13,
-          "y": 1484.17
+          "y": 1344.83
         },
         "ref_tick/23": {
           "height": 0,
           "width": 19,
           "x": 1568,
-          "y": 1484.17
+          "y": 1344.83
         },
         "ref_tick/3": {
           "height": 19,
           "width": 0,
           "x": 416.75,
-          "y": 1775.8
+          "y": 1608.6
         },
         "ref_tick/4": {
           "height": 19,
@@ -931,7 +931,7 @@
           "height": 19,
           "width": 0,
           "x": 608.38,
-          "y": 1775.8
+          "y": 1608.6
         },
         "ref_tick/6": {
           "height": 19,
@@ -943,7 +943,7 @@
           "height": 19,
           "width": 0,
           "x": 800,
-          "y": 1775.8
+          "y": 1608.6
         },
         "ref_tick/8": {
           "height": 19,
@@ -955,7 +955,7 @@
           "height": 19,
           "width": 0,
           "x": 991.63,
-          "y": 1775.8
+          "y": 1608.6
         }
       },
       "tag": "Page",
@@ -1709,7 +1709,7 @@
       "y": 297.1
     },
     {
-      "height": 1372.6,
+      "height": 1205.4,
       "id": "/body",
       "parts": {},
       "tag": "Body",
@@ -2511,7 +2511,7 @@
       "y": 781
     },
     {
-      "height": 844.6,
+      "height": 677.4,
       "id": "/body/1",
       "parts": {
         "view_note": {
@@ -2561,7 +2561,7 @@
       "y": 888
     },
     {
-      "height": 808.6,
+      "height": 641.4,
       "id": "/body/1/children/0",
       "parts": {},
       "tag": "Row",
@@ -2570,7 +2570,7 @@
       "y": 924
     },
     {
-      "height": 808.6,
+      "height": 641.4,
       "id": "/body/1/children/0/children/0",
       "parts": {},
       "tag": "Col",
@@ -3136,30 +3136,78 @@
       "y": 1179
     },
     {
-      "height": 468,
+      "height": 300.8,
       "id": "/body/1/children/0/children/0/children/1",
       "parts": {
-        "label": {
-          "height": 14.4,
+        "foot": {
+          "height": 15.6,
           "line_count": 1,
-          "width": 449.07,
-          "x": 318.8,
-          "y": 1491.2
+          "width": 960.67,
+          "x": 63,
+          "y": 1537.6
         },
-        "label_chip": {
-          "height": 22.4,
-          "width": 465.07,
-          "x": 310.8,
-          "y": 1487.2
+        "foot_rule": {
+          "height": 1,
+          "width": 960.67,
+          "x": 63,
+          "y": 1528.6
+        },
+        "note": {
+          "height": 15.6,
+          "line_count": 1,
+          "width": 212.71,
+          "x": 204.01,
+          "y": 1275.4
+        },
+        "note_detail": {
+          "height": 15,
+          "line_count": 1,
+          "width": 934.67,
+          "x": 89,
+          "y": 1489.6
+        },
+        "note_flag": {
+          "height": 17,
+          "width": 20,
+          "x": 63,
+          "y": 1471.2
+        },
+        "note_numeral": {
+          "height": 9,
+          "line_count": 1,
+          "width": 6.09,
+          "x": 69.96,
+          "y": 1477.7
+        },
+        "note_text": {
+          "height": 17.4,
+          "line_count": 1,
+          "width": 934.67,
+          "x": 89,
+          "y": 1471.2
+        },
+        "note_zones": {
+          "height": 15,
+          "line_count": 1,
+          "width": 934.67,
+          "x": 89,
+          "y": 1505.6
+        },
+        "title": {
+          "height": 15.6,
+          "line_count": 1,
+          "width": 129.01,
+          "x": 63,
+          "y": 1275.4
         }
       },
-      "tag": "Frame",
+      "tag": "GeneralNotes",
       "width": 986.67,
       "x": 50,
       "y": 1264.4
     },
     {
-      "height": 808.6,
+      "height": 641.4,
       "id": "/body/1/children/0/children/1",
       "parts": {},
       "tag": "Col",
@@ -3258,72 +3306,24 @@
       "y": 924
     },
     {
-      "height": 318.2,
+      "height": 151,
       "id": "/body/1/children/0/children/1/children/1",
       "parts": {
-        "foot": {
-          "height": 15.6,
+        "label": {
+          "height": 14.4,
           "line_count": 1,
-          "width": 467.33,
-          "x": 1069.67,
-          "y": 1705
+          "width": 449.07,
+          "x": 1078.8,
+          "y": 1482.7
         },
-        "foot_rule": {
-          "height": 1,
-          "width": 467.33,
-          "x": 1069.67,
-          "y": 1696
-        },
-        "note": {
-          "height": 15.6,
-          "line_count": 1,
-          "width": 212.71,
-          "x": 1210.68,
-          "y": 1425.4
-        },
-        "note_detail": {
-          "height": 15,
-          "line_count": 1,
-          "width": 441.33,
-          "x": 1095.67,
-          "y": 1657
-        },
-        "note_flag": {
-          "height": 17,
-          "width": 20,
-          "x": 1069.67,
-          "y": 1621.2
-        },
-        "note_numeral": {
-          "height": 9,
-          "line_count": 1,
-          "width": 6.09,
-          "x": 1076.62,
-          "y": 1627.7
-        },
-        "note_text": {
-          "height": 34.8,
-          "line_count": 2,
-          "width": 441.33,
-          "x": 1095.67,
-          "y": 1621.2
-        },
-        "note_zones": {
-          "height": 15,
-          "line_count": 1,
-          "width": 441.33,
-          "x": 1095.67,
-          "y": 1673
-        },
-        "title": {
-          "height": 15.6,
-          "line_count": 1,
-          "width": 129.01,
-          "x": 1069.67,
-          "y": 1425.4
+        "label_chip": {
+          "height": 22.4,
+          "width": 465.07,
+          "x": 1070.8,
+          "y": 1478.7
         }
       },
-      "tag": "GeneralNotes",
+      "tag": "Frame",
       "width": 493.33,
       "x": 1056.67,
       "y": 1414.4
@@ -3337,13 +3337,13 @@
           "line_count": 1,
           "width": 1500,
           "x": 50,
-          "y": 1744.6
+          "y": 1577.4
         }
       },
       "tag": "Foot",
       "width": 1500,
       "x": 50,
-      "y": 1744.6
+      "y": 1577.4
     }
   ]
 }
