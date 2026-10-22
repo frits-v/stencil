@@ -10,13 +10,16 @@ use taffy::prelude::{
 
 use super::{
     Builder, PartRecord, Placement, TextSpec, apply_flex_placement, base_style, flex_column,
+    flex_row,
 };
+use crate::marks::MARKED_LINE_PX;
 use crate::phases::{
     LANE_BAR_PX, LANE_LABEL_LEFT_PX, LANE_NAME_TOP_PX, LANE_TEXT_GAP_PX, PHASE_HEAD_CENTER_PX,
     PHASE_HEAD_RADIUS_PX, PHASE_SEPARATOR_TOP_PX, PHASE_TITLE_LEFT_PX, PhasesLayout,
     STACK_OFFSET_PX, STEP_TITLE_GAP_PX, StepPlan, step_title_style,
 };
 use crate::{LayoutError, NodeTag, PartName, TextAlign};
+use stencil_model::marks::MarkPlace;
 
 /// A rule between two lanes and a phase separator are hairlines.
 const HAIRLINE_PX: f32 = 1.0;
@@ -148,6 +151,9 @@ impl Builder<'_> {
                 }]));
             };
             let plan = layout.steps.get(child_index).cloned();
+            self.carrier_marks = self
+                .page_marks
+                .marks_at(&child_pointer, stencil_model::NodeRef::Node(child));
             if let Some(plan) = plan {
                 self.add_step(step, &plan, child_pointer, (index, node))?;
             }
@@ -282,6 +288,7 @@ impl Builder<'_> {
         pointer: NodePointer,
         (phases_index, phases_node): (usize, NodeId),
     ) -> Result<(), LayoutError> {
+        let marks = std::mem::take(&mut self.carrier_marks);
         let bounds = plan.bounds;
         let step_node = self.container(
             Style {
@@ -340,9 +347,13 @@ impl Builder<'_> {
             step_node,
             &pointer,
         )?;
+        let title_row = self.marked_text_row(column, &marks, MarkPlace::Trailing, &pointer)?;
         let (title, title_leaf) = self.text_leaf(
-            base_style(),
-            Some(column),
+            match title_row {
+                Some(_) => Self::marked_text_style(base_style()),
+                None => base_style(),
+            },
+            Some(title_row.unwrap_or(column)),
             TextSpec {
                 text: &step.title,
                 style_name: step_title_style(step.look),
@@ -356,6 +367,11 @@ impl Builder<'_> {
             taffy_node: title,
             text_leaf: Some(title_leaf),
         });
+        let mut glyphs = Vec::new();
+        let mut line_glyphs = Vec::new();
+        if let Some(row) = title_row {
+            glyphs.extend(self.add_mark_row(row, &marks, MarkPlace::Trailing, &pointer)?);
+        }
         let lines_pointer = pointer.child("lines");
         for (index, line) in step
             .lines
@@ -364,23 +380,49 @@ impl Builder<'_> {
             .take(SheetList::StepLines.max() + 1)
         {
             let top = if index == 0 { STEP_TITLE_GAP_PX } else { 0.0 };
-            let (leaf, leaf_index) = self.text_leaf(
-                Style {
-                    margin: Rect {
-                        left: LengthPercentageAuto::length(0.0),
-                        right: LengthPercentageAuto::length(0.0),
-                        top: LengthPercentageAuto::length(top),
-                        bottom: LengthPercentageAuto::length(0.0),
+            let margin = Rect {
+                left: LengthPercentageAuto::length(0.0),
+                right: LengthPercentageAuto::length(0.0),
+                top: LengthPercentageAuto::length(top),
+                bottom: LengthPercentageAuto::length(0.0),
+            };
+            let place = MarkPlace::Line(index);
+            let line_row = if marks.iter().any(|mark| mark.place == place) {
+                Some(self.container(
+                    Style {
+                        margin,
+                        min_size: taffy::Size {
+                            width: auto(),
+                            height: length(MARKED_LINE_PX),
+                        },
+                        ..flex_row(AlignItems::START)
                     },
-                    ..base_style()
+                    column,
+                    &pointer,
+                )?)
+            } else {
+                None
+            };
+            let line_pointer = lines_pointer.index(index);
+            let (leaf, leaf_index) = self.text_leaf(
+                match line_row {
+                    Some(_) => Self::marked_text_style(base_style()),
+                    None => Style {
+                        margin,
+                        ..base_style()
+                    },
                 },
-                Some(column),
+                Some(line_row.unwrap_or(column)),
                 TextSpec {
-                    text: line,
+                    text: line.text(),
                     style_name: TextStyleName::StepText,
                     line: None,
                     align: TextAlign::Start,
-                    source: lines_pointer.index(index),
+                    source: if line.is_marked() {
+                        line_pointer.child("text")
+                    } else {
+                        line_pointer
+                    },
                 },
             )?;
             parts.push(PartRecord {
@@ -388,7 +430,15 @@ impl Builder<'_> {
                 taffy_node: leaf,
                 text_leaf: Some(leaf_index),
             });
+            if let Some(row) = line_row {
+                line_glyphs.extend(self.add_mark_row(row, &marks, place, &pointer)?);
+            }
         }
+        // Glyph parts follow the order the marks are listed in: the title's, the corner's,
+        // then each line's.
+        glyphs.extend(self.add_corner_mark((step_node, 0.0), &marks, &pointer)?);
+        glyphs.extend(line_glyphs);
+        parts.extend(glyphs);
         let mut record = Self::record(pointer, NodeTag::Step, None, Some(phases_index), step_node);
         record.tint = self.actors.tint(&step.lane);
         record.parts = parts;

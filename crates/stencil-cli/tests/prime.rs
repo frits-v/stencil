@@ -368,7 +368,7 @@ fn the_base_briefing_names_every_node_tag_in_its_vocabulary() {
     for tag in &base_tags {
         assert!(rows.contains(tag), "vocabulary has no row for {tag}");
     }
-    let topic_rows: BTreeSet<String> = [Topic::Sheet, Topic::Phases]
+    let topic_rows: BTreeSet<String> = [Topic::Sheet, Topic::Phases, Topic::Marks]
         .into_iter()
         .flat_map(|topic| vocabulary_row_names(&topic_text(topic)))
         .collect();
@@ -687,7 +687,7 @@ fn the_base_briefing_covers_every_check_the_pipeline_runs() {
     );
     let text = base_output();
     // A sheet-only check is not applicable on every page without a sheet, so its row lives
-    // in the sheet topic and base has none.
+    // in a sheet topic and base has none.
     for report in &reports {
         let row = format!("| {} |", report.check.as_str());
         let in_base = text.lines().any(|line| line.starts_with(&row));
@@ -698,11 +698,13 @@ fn the_base_briefing_covers_every_check_the_pipeline_runs() {
             report.check.as_str()
         );
     }
-    let topics = [Topic::Sheet, Topic::Iso, Topic::Checks];
+    let topics = [Topic::Sheet, Topic::Marks, Topic::Iso, Topic::Checks];
     for report in &reports {
         let name = report.check.as_str();
+        // The sheet-only checks read keyed lists and marks, so their rows live in the marks
+        // topic.
         let topic = if report.check.is_sheet_only() {
-            Topic::Sheet
+            Topic::Marks
         } else if name.starts_with("iso-") {
             Topic::Iso
         } else {
@@ -738,7 +740,7 @@ fn no_prime_text_names_a_tag_that_does_not_exist() {
     for name in vocabulary_row_names(&base) {
         assert!(objects.contains(&name), "vocabulary names unknown {name}");
     }
-    for topic in [Topic::Sheet, Topic::Phases] {
+    for topic in [Topic::Sheet, Topic::Phases, Topic::Marks] {
         for name in vocabulary_row_names(&topic_text(topic)) {
             assert!(
                 objects.contains(&name),

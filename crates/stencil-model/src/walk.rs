@@ -119,7 +119,9 @@ fn push_children_reversed<'a>(entry: &NodeEntry<'a>, pending: &mut Vec<NodeEntry
             | Node::Text(_)
             | Node::Callout(_)
             | Node::Frame(_)
-            | Node::Step(_),
+            | Node::Step(_)
+            | Node::PartsList(_)
+            | Node::GeneralNotes(_),
         )
         | NodeRef::TeeArm(_) => {}
     }
@@ -235,6 +237,12 @@ pub(crate) fn push_sheet_text_fields<'a>(page: &'a Page, fields: &mut Vec<TextFi
         let item_pointer = items.pointer().index(index);
         push(item_pointer.child("lead"), &item.lead);
         push(item_pointer.child("text"), &item.text);
+    }
+    let marks = sheet_pointer.child("marks");
+    for kind in crate::document::MarkKind::ALL {
+        if let Some(text) = sheet.marks.text(kind) {
+            push(marks.child(kind.as_str()), text);
+        }
     }
 }
 
@@ -375,9 +383,72 @@ pub(crate) fn push_node_text_fields<'a>(entry: &NodeEntry<'a>, fields: &mut Vec<
             let lines_pointer = entry.pointer.child("lines");
             let list = SheetList::StepLines;
             for (index, line) in step.lines.iter().enumerate().take(list.max() + 1) {
+                let pointer = lines_pointer.index(index);
                 fields.push(TextField {
-                    pointer: lines_pointer.index(index),
-                    text: line,
+                    pointer: if line.is_marked() {
+                        pointer.child("text")
+                    } else {
+                        pointer
+                    },
+                    text: line.text(),
+                });
+            }
+        }
+        NodeRef::Node(Node::PartsList(list)) => {
+            push("title", &list.title);
+            if let Some(note) = &list.note {
+                push("note", note);
+            }
+            let parts_pointer = entry.pointer.child("parts");
+            for (index, part) in list
+                .parts
+                .iter()
+                .enumerate()
+                .take(SheetList::Parts.max() + 1)
+            {
+                let part_pointer = parts_pointer.index(index);
+                for (token, text) in [("name", &part.name), ("what", &part.what)] {
+                    if let Some(text) = text {
+                        fields.push(TextField {
+                            pointer: part_pointer.child(token),
+                            text,
+                        });
+                    }
+                }
+                fields.push(TextField {
+                    pointer: part_pointer.child("why"),
+                    text: &part.why,
+                });
+            }
+        }
+        NodeRef::Node(Node::GeneralNotes(notes)) => {
+            push("title", &notes.title);
+            if let Some(note) = &notes.note {
+                push("note", note);
+            }
+            let notes_pointer = entry.pointer.child("notes");
+            for (index, note) in notes
+                .notes
+                .iter()
+                .enumerate()
+                .take(SheetList::GeneralNotes.max() + 1)
+            {
+                let note_pointer = notes_pointer.index(index);
+                fields.push(TextField {
+                    pointer: note_pointer.child("text"),
+                    text: &note.text,
+                });
+                if let Some(detail) = &note.detail {
+                    fields.push(TextField {
+                        pointer: note_pointer.child("detail"),
+                        text: detail,
+                    });
+                }
+            }
+            if let Some(foot) = &notes.foot {
+                fields.push(TextField {
+                    pointer: entry.pointer.child("foot"),
+                    text: foot,
                 });
             }
         }

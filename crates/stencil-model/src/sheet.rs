@@ -22,10 +22,13 @@ pub enum SheetList {
     Phases,
     Steps,
     StepLines,
+    Marks,
+    Parts,
+    GeneralNotes,
 }
 
 impl SheetList {
-    pub const ALL: [SheetList; 8] = [
+    pub const ALL: [SheetList; 11] = [
         SheetList::ProblemPoints,
         SheetList::AnswerParagraphs,
         SheetList::AttentionItems,
@@ -34,6 +37,9 @@ impl SheetList {
         SheetList::Phases,
         SheetList::Steps,
         SheetList::StepLines,
+        SheetList::Marks,
+        SheetList::Parts,
+        SheetList::GeneralNotes,
     ];
 
     /// The list's name in messages and in CUE case names, for example "problem-points".
@@ -47,6 +53,9 @@ impl SheetList {
             SheetList::Phases => "phases",
             SheetList::Steps => "steps",
             SheetList::StepLines => "step-lines",
+            SheetList::Marks => "marks",
+            SheetList::Parts => "parts",
+            SheetList::GeneralNotes => "general-notes",
         }
     }
 
@@ -57,11 +66,14 @@ impl SheetList {
             SheetList::ProblemPoints
             | SheetList::AttentionItems
             | SheetList::Lanes
-            | SheetList::Phases => 1,
+            | SheetList::Phases
+            | SheetList::Parts
+            | SheetList::GeneralNotes => 1,
             SheetList::AnswerParagraphs
             | SheetList::Actors
             | SheetList::Steps
-            | SheetList::StepLines => 0,
+            | SheetList::StepLines
+            | SheetList::Marks => 0,
         }
     }
 
@@ -72,9 +84,11 @@ impl SheetList {
             | SheetList::Actors
             | SheetList::Lanes
             | SheetList::Phases => 8,
-            SheetList::AnswerParagraphs => 4,
+            SheetList::AnswerParagraphs | SheetList::Marks => 4,
             SheetList::Steps => 64,
             SheetList::StepLines => 6,
+            SheetList::Parts => 48,
+            SheetList::GeneralNotes => 16,
         }
     }
 
@@ -96,6 +110,9 @@ impl SheetList {
             SheetList::Phases => owner.child("phases"),
             SheetList::Steps => owner.child("children"),
             SheetList::StepLines => owner.child("lines"),
+            SheetList::Marks => owner.child("marks"),
+            SheetList::Parts => owner.child("parts"),
+            SheetList::GeneralNotes => owner.child("notes"),
         }
     }
 }
@@ -237,6 +254,9 @@ pub enum SheetSurface {
     Step,
     Actor,
     LegendByActor,
+    Marks,
+    PartsList,
+    GeneralNotes,
 }
 
 const SHEET_VOCABULARY: [SurfaceVocabulary; 1] = [SurfaceVocabulary::Field {
@@ -284,8 +304,38 @@ const LEGEND_BY_ACTOR_VOCABULARY: [SurfaceVocabulary; 1] = [SurfaceVocabulary::F
     field: "by_actor",
 }];
 
+const MARKS_VOCABULARY: [SurfaceVocabulary; 7] = [
+    SurfaceVocabulary::Field {
+        object: "Item",
+        field: "marks",
+    },
+    SurfaceVocabulary::Field {
+        object: "Item",
+        field: "corner_mark",
+    },
+    SurfaceVocabulary::Field {
+        object: "Box",
+        field: "marks",
+    },
+    SurfaceVocabulary::Field {
+        object: "Box",
+        field: "corner_mark",
+    },
+    SurfaceVocabulary::Field {
+        object: "Pipe",
+        field: "marks",
+    },
+    SurfaceVocabulary::Field {
+        object: "Link",
+        field: "marks",
+    },
+    SurfaceVocabulary::Definition("Mark"),
+];
+const PARTS_LIST_VOCABULARY: [SurfaceVocabulary; 1] = [SurfaceVocabulary::Tag("PartsList")];
+const GENERAL_NOTES_VOCABULARY: [SurfaceVocabulary; 1] = [SurfaceVocabulary::Tag("GeneralNotes")];
+
 impl SheetSurface {
-    pub const ALL: [SheetSurface; 7] = [
+    pub const ALL: [SheetSurface; 10] = [
         SheetSurface::Sheet,
         SheetSurface::Actors,
         SheetSurface::View,
@@ -293,6 +343,9 @@ impl SheetSurface {
         SheetSurface::Step,
         SheetSurface::Actor,
         SheetSurface::LegendByActor,
+        SheetSurface::Marks,
+        SheetSurface::PartsList,
+        SheetSurface::GeneralNotes,
     ];
 
     /// The kebab-case name in messages, in CUE's `#SheetSurface` and in check.sh case names.
@@ -305,6 +358,9 @@ impl SheetSurface {
             SheetSurface::Step => "step",
             SheetSurface::Actor => "actor",
             SheetSurface::LegendByActor => "legend-by-actor",
+            SheetSurface::Marks => "marks",
+            SheetSurface::PartsList => "parts-list",
+            SheetSurface::GeneralNotes => "general-notes",
         }
     }
 
@@ -344,6 +400,9 @@ impl SheetSurface {
                     .map(|(index, _)| legend.index(index).child("by_actor"))
                     .collect()
             }
+            SheetSurface::Marks => mark_fields(page),
+            SheetSurface::PartsList => tagged(|node| matches!(node, Node::PartsList(_))),
+            SheetSurface::GeneralNotes => tagged(|node| matches!(node, Node::GeneralNotes(_))),
         }
     }
 
@@ -357,6 +416,9 @@ impl SheetSurface {
             SheetSurface::Step => &STEP_VOCABULARY,
             SheetSurface::Actor => &ACTOR_VOCABULARY,
             SheetSurface::LegendByActor => &LEGEND_BY_ACTOR_VOCABULARY,
+            SheetSurface::Marks => &MARKS_VOCABULARY,
+            SheetSurface::PartsList => &PARTS_LIST_VOCABULARY,
+            SheetSurface::GeneralNotes => &GENERAL_NOTES_VOCABULARY,
         }
     }
 
@@ -369,6 +431,7 @@ impl SheetSurface {
             | SheetSurface::Actor
             | SheetSurface::LegendByActor => "sheet",
             SheetSurface::Phases | SheetSurface::Step => "phases",
+            SheetSurface::Marks | SheetSurface::PartsList | SheetSurface::GeneralNotes => "marks",
         }
     }
 }
@@ -393,6 +456,62 @@ fn actor_fields(page: &Page) -> Vec<NodePointer> {
     for (index, link) in page.links.iter().enumerate().take(LINKS_MAX + 1) {
         if link.actor.is_some() {
             pointers.push(links.index(index).child("actor"));
+        }
+    }
+    pointers
+}
+
+/// Every field that holds a mark, body nodes first, then links: a non-empty `marks`, a
+/// `corner_mark`, and the `marks` of a marked line.
+fn mark_fields(page: &Page) -> Vec<NodePointer> {
+    let mut pointers = Vec::new();
+    if let Some(sheet) = &page.sheet {
+        let points = SheetList::ProblemPoints;
+        for (index, point) in sheet
+            .problem
+            .points
+            .iter()
+            .enumerate()
+            .take(points.max() + 1)
+        {
+            if !point.marks.is_empty() {
+                pointers.push(points.pointer().index(index).child("marks"));
+            }
+        }
+    }
+    for entry in body_nodes(page) {
+        let (marks, corner, lines): (&[crate::Mark], bool, &[crate::MarkedText]) = match entry.node
+        {
+            NodeRef::Node(Node::Item(item)) => (&item.marks, item.corner_mark.is_some(), &[]),
+            NodeRef::Node(Node::Box(box_node)) => {
+                (&box_node.marks, box_node.corner_mark.is_some(), &[])
+            }
+            NodeRef::Node(Node::Pipe(pipe)) | NodeRef::TeeArm(pipe) => (&pipe.marks, false, &[]),
+            NodeRef::Node(Node::Step(step)) => {
+                (&step.marks, step.corner_mark.is_some(), &step.lines)
+            }
+            NodeRef::Node(_) => continue,
+        };
+        if !marks.is_empty() {
+            pointers.push(entry.pointer.child("marks"));
+        }
+        if corner {
+            pointers.push(entry.pointer.child("corner_mark"));
+        }
+        for (index, line) in lines
+            .iter()
+            .enumerate()
+            .take(SheetList::StepLines.max() + 1)
+        {
+            if !line.marks().is_empty() {
+                pointers.push(entry.pointer.child("lines").index(index).child("marks"));
+            }
+        }
+    }
+    let links = NodePointer::root().child("links");
+    for (index, link) in page.links.iter().enumerate().take(LINKS_MAX + 1) {
+        if !link.marks.is_empty() {
+            pointers.push(links.index(index).child("marks"));
         }
     }
     pointers

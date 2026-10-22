@@ -31,6 +31,8 @@ pub fn plain() -> Grammar {
 /// A gcp `product` Item with only a title.
 pub fn item(title: &str) -> Node {
     Node::Item(Item {
+        corner_mark: None,
+        marks: Vec::new(),
         actor: None,
         id: None,
         kind: "product".to_string(),
@@ -52,6 +54,7 @@ pub fn fact(text: &str) -> Node {
 
 pub fn pipe_value(dir: PipeDir, line: Line, tint: Option<u8>, label: &str) -> Pipe {
     Pipe {
+        marks: Vec::new(),
         actor: None,
         id: None,
         arrow: stencil_model::Arrow::None,
@@ -104,6 +107,8 @@ pub fn col(children: Vec<Node>) -> Node {
 
 pub fn box_node(kind: &str, tint: Option<u8>, label: &str, children: Vec<Node>) -> Node {
     Node::Box(BoxNode {
+        corner_mark: None,
+        marks: Vec::new(),
         actor: None,
         id: None,
         kind: kind.to_string(),
@@ -159,6 +164,8 @@ pub fn nested_cols(levels: usize) -> Node {
 /// A gcp `product` Item carrying `id`.
 pub fn item_with_id(id: &str, title: &str) -> Node {
     Node::Item(Item {
+        corner_mark: None,
+        marks: Vec::new(),
         actor: None,
         id: Some(id.to_string()),
         kind: "product".to_string(),
@@ -199,6 +206,7 @@ pub fn frame(label: &str) -> Node {
 /// A solid tint 1 link with no label, sides or via points.
 pub fn link(from: &str, to: &str) -> Link {
     Link {
+        marks: Vec::new(),
         actor: None,
         from: from.to_string(),
         to: to.to_string(),

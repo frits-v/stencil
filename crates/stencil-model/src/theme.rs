@@ -493,8 +493,12 @@ pub struct SheetRole {
     pub rule: Color,
     /// Captions, references, view notes. Derived: ink.secondary.
     pub label_ink: Color,
-    /// The title block's cells. Derived: card.fill.
+    /// The title block's cells, keyed lists, balloon fills and flag numerals. Derived:
+    /// card.fill.
     pub cell: Color,
+    /// Flags, and the outline of balloons and diamonds whose key names no actor. Derived:
+    /// ink.primary.
+    pub mark_ink: Color,
     /// The drafting grid, minor lines every 20 px and major every 100 px. Absent draws none
     /// and is the derivation.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -516,6 +520,7 @@ pub struct SheetColors<'a> {
     pub rule: &'a Color,
     pub label_ink: &'a Color,
     pub cell: &'a Color,
+    pub mark_ink: &'a Color,
     pub grid: Option<&'a SheetGrid>,
 }
 
@@ -529,6 +534,7 @@ impl Theme {
                 rule: &sheet.rule,
                 label_ink: &sheet.label_ink,
                 cell: &sheet.cell,
+                mark_ink: &sheet.mark_ink,
                 grid: sheet.grid.as_ref(),
             },
             None => SheetColors {
@@ -537,6 +543,7 @@ impl Theme {
                 rule: &self.card.border.color,
                 label_ink: &self.ink.secondary,
                 cell: &self.card.fill,
+                mark_ink: &self.ink.primary,
                 grid: None,
             },
         }
@@ -947,6 +954,7 @@ pub fn validate_theme(theme: &Theme) -> Vec<ThemeViolation> {
         checker.color(pointer.child("rule"), &sheet.rule);
         checker.color(pointer.child("label_ink"), &sheet.label_ink);
         checker.color(pointer.child("cell"), &sheet.cell);
+        checker.color(pointer.child("mark_ink"), &sheet.mark_ink);
         if let Some(grid) = &sheet.grid {
             let grid_pointer = pointer.child("grid");
             checker.color(grid_pointer.child("minor"), &grid.minor);

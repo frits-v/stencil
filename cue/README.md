@@ -9,15 +9,15 @@ its rules; a figure file writes one topology against a grammar's `#Page`.
 | File | Package | Contents |
 |---|---|---|
 | `cue.mod/module.cue` | | the module `github.com/frits-v/stencil/cue@v0`, language v0.17.1 |
-| `core.cue` | `stencil` | `#Page` and the core nodes: `Row`, `Col`, `Lanes`, `Box`, `Item`, `Fact`, `Note`, `Pipe`, `Tee`, `Text`, `Callout`, `Frame`, `View`, `Phases`, `Step`, plus `#Sheet` and its cells, `#Actor`, `#Phase`, `#SheetSurface`, `#LegendEntry`, `#Link`, `#Line`, `#Bend`, `#Corner`, `#TintSlot` and `#FactEntry` |
+| `core.cue` | `stencil` | `#Page` and the core nodes: `Row`, `Col`, `Lanes`, `Box`, `Item`, `Fact`, `Note`, `Pipe`, `Tee`, `Text`, `Callout`, `Frame`, `View`, `Phases`, `Step`, `PartsList`, `GeneralNotes`, plus `#Sheet` and its cells, `#Mark`, `#MarkedText`, `#MarkLegend`, `#PartEntry`, `#GeneralNote`, `#Actor`, `#Phase`, `#SheetSurface`, `#LegendEntry`, `#Link`, `#Line`, `#Bend`, `#Corner`, `#TintSlot` and `#FactEntry` |
 | `grammar.cue` | `stencil` | `#Grammar` and its parts (`#LineKind` among them), and `#GrammarNesting`, the kind and nesting rules every grammar shares |
 | `theme.cue` | `stencil` | `#Theme`, the closed theme definition every theme file vets against: `cue vet -c -d '#Theme' . <file>.json` |
 | `grammars/gcp.cue` | `gcp` | the Google Cloud grammar data and rules, and the gcp `#Page` |
 | `grammars/plain.cue` | `plain` | the domain-neutral grammar data and the plain `#Page` |
 | `figures/g7.cue` | `gcp` | g7, Dedicated Interconnect at 99.99%: `customer` and `internal: customer & {...}` |
 | `figures/sequence.cue` | `plain` | a request flow in five lanes with ten ordered messages: `figure`, exported as `examples/sequence.json` |
-| `figures/sheet.cue` | `gcp` | the trigger evaluation design sheet, a title block, four actors, a Workflow view and a System view: `onepager`, exported as `examples/onepager.json` |
-| `figures/sheet-small.cue` | `plain` | the smallest design sheet, whose link has a via in the sheet's wider margin: `small`, the base of the sheet negative cases |
+| `figures/sheet.cue` | `gcp` | the trigger evaluation design sheet, a title block, four actors, a Workflow view with its general notes and a System view with its parts list: `onepager`, exported as `examples/onepager.json` |
+| `figures/sheet-small.cue` | `plain` | the smallest design sheet, with a parts list and general notes whose every key is marked once, and a link whose via lies in the sheet's wider margin: `small`, the base of the sheet negative cases |
 | `check.sh` | | the gate, below |
 | `out/` | | exported JSON and renders, not committed |
 
@@ -108,6 +108,18 @@ for example `CUE="$(mise which cue)" ./cue/check.sh`.
   `band` is `wash` or `none` and its `step_fill`, like a Step's `fill`, is `tint`, `cell` or
   `none`; a text-look Step with its own `fill` is `_stepTextFill`. The Step node is
   `#StepNode`, since `#Step` is the theme's face lightness step.
+- A mark is `{part: <id>}`, `{note: <id>}` or `{attention: <id>}`: a balloon keyed to the
+  `PartsList`, a flag to the `GeneralNotes`, a diamond to an attention item. An Item, Box,
+  Pipe, Link, Step or problem point carries up to 4 in `marks`; an Item, Box or Step one
+  `corner_mark`; a Step line is a string or `{text, marks}`; a part with `node` puts its
+  balloon on that Item, Box or Pipe. On a sheet `_partMarksUnknown`, `_noteMarksUnknown`,
+  `_attentionMarksUnknown`, `_marksRepeated`, `_partBalloonRepeated`, `_markLegendUnused`,
+  `_linkMarksWithoutTag`, `_keyedListTwice`, `_partNodesUnknown`, `_partNodesTwice`,
+  `_partFieldFromNode`, `_partNameMissing` and `_keysUsedTwice."part.<id>"` or
+  `."note.<id>"` name the offender, and the keys-used twins `_partsUnmarked`,
+  `_notesUnflagged` and `_attentionUnmarked` name a key no mark uses. Off a sheet marks,
+  a parts list and general notes are `_needsSheet.marks`, `."parts-list"` and
+  `."general-notes"`.
 - `Lanes` is a container of 1 to 32 lane heads with an optional `gap` of 0 to 64. A `Link` may
   carry `order`, 1 to 256, which makes it a message of the Lanes node whose heads it joins.
 - `#Page` adds `grammar` (`gcp`, `plain` or a path ending in `.json`) and `chrome` (`full` or

@@ -7,7 +7,7 @@ use stencil_model::text::{
     TextMeasurer, TextStyle, TextStyleName, WRAP_EPSILON_PX,
 };
 
-const ALL_STYLE_NAMES: [TextStyleName; 33] = [
+const ALL_STYLE_NAMES: [TextStyleName; 37] = [
     TextStyleName::Badge,
     TextStyleName::Kicker,
     TextStyleName::Title,
@@ -41,10 +41,14 @@ const ALL_STYLE_NAMES: [TextStyleName; 33] = [
     TextStyleName::LaneName,
     TextStyleName::StepTitle,
     TextStyleName::StepText,
+    TextStyleName::ListTitle,
+    TextStyleName::MarkNumeral,
+    TextStyleName::MarkNumeralSmall,
+    TextStyleName::FlagNumeral,
 ];
 
 /// Section 2.9: name, weight, size, line height, letter spacing, uppercase.
-const SECTION_2_9: [(&str, u16, f32, f32, f32, bool); 33] = [
+const SECTION_2_9: [(&str, u16, f32, f32, f32, bool); 37] = [
     ("badge", 800, 10.0, 12.0, 0.07, true),
     ("kicker", 700, 11.0, 13.2, 0.08, true),
     ("title", 700, 20.0, 24.0, -0.02, false),
@@ -78,6 +82,10 @@ const SECTION_2_9: [(&str, u16, f32, f32, f32, bool); 33] = [
     ("lane_name", 700, 13.0, 15.6, 0.1, true),
     ("step_title", 700, 12.0, 15.0, 0.0, false),
     ("step_text", 400, 11.5, 15.0, 0.0, false),
+    ("list_title", 700, 13.0, 15.6, 0.12, true),
+    ("mark_numeral", 700, 10.0, 10.0, 0.0, false),
+    ("mark_numeral_small", 700, 9.5, 9.5, 0.0, false),
+    ("flag_numeral", 700, 9.0, 9.0, 0.0, false),
 ];
 
 #[test]

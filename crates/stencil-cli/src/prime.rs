@@ -28,7 +28,7 @@ pub const TOPIC_BYTES_MAX: usize = 5000;
 /// Schema definitions that get their own vocabulary row after Page and the node tags.
 pub const ROW_DEFINITIONS: [&str; 3] = ["FactEntry", "LegendEntry", "Link"];
 /// Structs of the design sheet that a topic prints as rows of its own field table.
-pub const TOPIC_ROW_DEFINITIONS: [&str; 8] = [
+pub const TOPIC_ROW_DEFINITIONS: [&str; 11] = [
     "Sheet",
     "Problem",
     "ProblemPoint",
@@ -37,11 +37,22 @@ pub const TOPIC_ROW_DEFINITIONS: [&str; 8] = [
     "AttentionItem",
     "Actor",
     "Phase",
+    "MarkLegend",
+    "PartEntry",
+    "GeneralNote",
 ];
 /// Definitions written inline where a field uses them, never as a row or an enum line: a
-/// point as `{x,y}`, a Tee arm as its tag, a paragraph as `text or {lead,text}`.
-pub const INLINE_DEFINITIONS: [&str; 4] =
-    ["PagePoint", "TeeArm", "AnswerParagraph", "LedParagraph"];
+/// point as `{x,y}`, a Tee arm as its tag, a paragraph as `text or {lead,text}`, a mark as
+/// `{part/note/attention}` and a marked line as `text or {text,marks}`.
+pub const INLINE_DEFINITIONS: [&str; 7] = [
+    "PagePoint",
+    "TeeArm",
+    "AnswerParagraph",
+    "LedParagraph",
+    "Mark",
+    "MarkedText",
+    "MarkedLine",
+];
 /// A topic marker that fills in the vocabulary of the names it lists:
 /// `{{vocabulary:View,Sheet}}`.
 const TOPIC_VOCABULARY_MARKER: &str = "{{vocabulary:";
@@ -61,11 +72,12 @@ pub enum Topic {
     Cue,
     Sheet,
     Phases,
+    Marks,
     Example,
 }
 
 impl Topic {
-    pub const ALL: [Topic; 10] = [
+    pub const ALL: [Topic; 11] = [
         Topic::Themes,
         Topic::Links,
         Topic::Blocks,
@@ -75,6 +87,7 @@ impl Topic {
         Topic::Cue,
         Topic::Sheet,
         Topic::Phases,
+        Topic::Marks,
         Topic::Example,
     ];
 
@@ -89,6 +102,7 @@ impl Topic {
             Topic::Cue => "cue",
             Topic::Sheet => "sheet",
             Topic::Phases => "phases",
+            Topic::Marks => "marks",
             Topic::Example => "example",
         }
     }
@@ -119,7 +133,11 @@ impl Topic {
             })?;
             let names: Vec<&str> = after.get(..end).unwrap_or_default().split(',').collect();
             text.push_str(rest.get(..start).unwrap_or_default());
-            text.push_str(&topic_vocabulary(schema.as_value(), &names)?);
+            text.push_str(&topic_vocabulary_in(
+                schema.as_value(),
+                &names,
+                Some(self.name()),
+            )?);
             rest = after.get(end + 2..).unwrap_or_default();
         }
         text.push_str(rest);
@@ -137,6 +155,7 @@ impl Topic {
             Topic::Cue => include_str!("../prime/cue.md"),
             Topic::Sheet => include_str!("../prime/sheet.md"),
             Topic::Phases => include_str!("../prime/phases.md"),
+            Topic::Marks => include_str!("../prime/marks.md"),
             Topic::Example => include_str!("../../../examples/g7.json"),
         }
     }
@@ -152,7 +171,8 @@ impl Topic {
             | Topic::Checks
             | Topic::Cue
             | Topic::Sheet
-            | Topic::Phases => true,
+            | Topic::Phases
+            | Topic::Marks => true,
             Topic::Example => false,
         }
     }
@@ -397,8 +417,16 @@ fn sheet_vocabulary() -> Vec<SurfaceVocabulary> {
 
 /// The fields of `object` that only a design sheet uses.
 fn sheet_fields(object: &str) -> Vec<&'static str> {
-    sheet_vocabulary()
-        .into_iter()
+    sheet_fields_in(object, None)
+}
+
+/// The fields of `object` that only a design sheet uses, of the surfaces `topic` names when
+/// it is given.
+fn sheet_fields_in(object: &str, topic: Option<&str>) -> Vec<&'static str> {
+    SheetSurface::ALL
+        .iter()
+        .filter(|surface| topic.is_none_or(|topic| surface.topic() == topic))
+        .flat_map(|surface| surface.vocabulary().iter().copied())
         .filter_map(|item| match item {
             SurfaceVocabulary::Field {
                 object: owner,
@@ -537,6 +565,16 @@ fn is_sheet_tag(tag: &str) -> bool {
 /// fields of each base row named, then one line per enum definition named. An unknown name
 /// is a schema shape error.
 pub fn topic_vocabulary(schema: &Value, names: &[&str]) -> Result<String, PrimeError> {
+    topic_vocabulary_in(schema, names, None)
+}
+
+/// `topic_vocabulary` with the sheet fields of each base row limited to the surfaces
+/// `topic` names, so each topic lists the fields it explains.
+pub fn topic_vocabulary_in(
+    schema: &Value,
+    names: &[&str],
+    topic: Option<&str>,
+) -> Result<String, PrimeError> {
     let definitions = schema
         .get("$defs")
         .and_then(Value::as_object)
@@ -594,7 +632,7 @@ pub fn topic_vocabulary(schema: &Value, names: &[&str]) -> Result<String, PrimeE
             enum_lines.push(format!("{name} ({}): {}", values.len(), values.join(" ")));
             continue;
         }
-        let fields = sheet_fields(name);
+        let fields = sheet_fields_in(name, topic);
         match base_object(name) {
             Some(object) if !fields.is_empty() => {
                 let described = describe_object(
@@ -880,7 +918,9 @@ fn describe_reference(
             [only] => tag_constant(only)
                 .map(str::to_string)
                 .ok_or_else(|| shape_error(path)),
-            _ => Err(shape_error(path)),
+            several => single_keys(several)
+                .map(|keys| format!("{{{}}}", keys.join("/")))
+                .ok_or_else(|| shape_error(path)),
         };
     }
     if let Some(properties) = definition.get("properties").and_then(Value::as_object) {
@@ -888,6 +928,21 @@ fn describe_reference(
         return Ok(format!("{{{}}}", names.join(",")));
     }
     Err(shape_error(path))
+}
+
+/// The one property of each variant, when every variant is an object of one property: a
+/// mark, written `{part/note/attention}`.
+fn single_keys(variants: &[Value]) -> Option<Vec<&str>> {
+    variants
+        .iter()
+        .map(|variant| {
+            let properties = variant.get("properties")?.as_object()?;
+            match properties.keys().collect::<Vec<_>>().as_slice() {
+                [only] => Some(only.as_str()),
+                _ => None,
+            }
+        })
+        .collect()
 }
 
 /// A string or an object, written `text or {<fields>}`: `text or {lead,text}`.
@@ -993,6 +1048,16 @@ mod tests {
         let vet_bounds =
             json!({ "type": "integer", "format": "uint16", "minimum": 0, "maximum": 64 });
         assert_eq!(describe_integer(&vet_bounds), "0-64");
+    }
+
+    #[test]
+    fn a_choice_of_one_key_objects_is_written_with_its_keys() {
+        let schema = stencil_model::page_schema();
+        let definitions = schema.as_value()["$defs"].as_object().unwrap();
+        let described = describe_reference("#/$defs/Mark", definitions, "Item/marks").unwrap();
+        assert_eq!(described, "{part/note/attention}");
+        let marked = describe_reference("#/$defs/MarkedText", definitions, "Step/lines").unwrap();
+        assert_eq!(marked, "text or {marks,text}");
     }
 
     #[test]

@@ -285,16 +285,16 @@ fn override_faults_point_into_theme_overrides() {
 #[test]
 fn quality_counts_match_section_13_5_for_every_builtin() {
     let expected = [
-        ("center", 270, 1, 0),
-        ("paper", 271, 0, 0),
-        ("dusk", 271, 0, 0),
-        ("clear", 271, 0, 0),
-        ("clear-dark", 271, 0, 0),
-        ("wire", 263, 0, 8),
+        ("center", 281, 1, 0),
+        ("paper", 282, 0, 0),
+        ("dusk", 282, 0, 0),
+        ("clear", 282, 0, 0),
+        ("clear-dark", 282, 0, 0),
+        ("wire", 274, 0, 8),
     ];
     for (name, passed, failed, not_applicable) in expected {
         let report = theme_quality(&builtin(name));
-        assert_eq!(report.rows.len(), 271, "{name}");
+        assert_eq!(report.rows.len(), 282, "{name}");
         assert_eq!(report.counts(), (passed, failed, not_applicable), "{name}");
     }
     let center = theme_quality(&builtin("center"));
@@ -450,7 +450,7 @@ fn drawn_legend_labels_follow_rule_9() {
 }
 
 /// Section 14.5 rule 3: in every designed theme with a colour cue each actor wire stands a
-/// delta E of at least 20 from the deny colour and the sheet's frame and rule inks, so an
+/// delta E of at least 20 from the deny colour and the sheet's frame, rule and mark inks, so an
 /// actor's line never reads as a blocked path or as chrome. Wire draws every ink in one.
 #[test]
 fn actor_wires_stand_apart_from_deny_and_sheet_chrome() {
@@ -466,6 +466,7 @@ fn actor_wires_stand_apart_from_deny_and_sheet_chrome() {
                 ("deny.color", &theme.deny.color),
                 ("sheet.frame", sheet.frame),
                 ("sheet.rule", sheet.rule),
+                ("sheet.mark_ink", sheet.mark_ink),
             ] {
                 let distance = stencil_model::theme::color_delta_e(&tint.wire, color).unwrap();
                 assert!(
@@ -477,5 +478,5 @@ fn actor_wires_stand_apart_from_deny_and_sheet_chrome() {
             }
         }
     }
-    assert_eq!(examined, 5 * 8 * 3);
+    assert_eq!(examined, 5 * 8 * 4);
 }

@@ -213,6 +213,8 @@ import "list"
 		rule:      #Color
 		label_ink: #Color
 		cell:      #Color
+		// Flags, and balloons and diamonds that no actor owns.
+		mark_ink: #Color
 		// Minor lines every 20 px, major every 100 px.
 		grid?: {
 			minor: #Color

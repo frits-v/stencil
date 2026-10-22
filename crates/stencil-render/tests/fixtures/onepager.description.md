@@ -2,28 +2,28 @@
 
 Internal · Premise · trigger evaluation `A1-A2` `/kicker`
 
-An operator describes an event in their own words. The service turns the description into an evaluation plan, runs the plan over each new clip, and stores a verdict with the frames that support it. `A1-B2` `/lede`
+An operator describes an event in their own words. The service turns the description into an evaluation plan, runs the plan over each new clip, and stores a verdict with the frames that support it. `A1-A2` `/lede`
 
 ## Sheet
 
-Drawn elements: 70 (44 nodes, 15 links, 11 entries). Canvas 1600 x 1248.8 px, projection flat, grammar gcp. Line styles name a tint slot by number; the colour word is the one the center theme draws it in. References: a reference such as B3 or B2-C5 names the grid cells under an element's top-left and bottom-right corners, columns 1 to 8 left to right, rows A to F top to bottom. The reference before a pointer is where that element is drawn.
+Drawn elements: 119 (48 nodes, 16 links, 23 entries, 32 marks). Canvas 1600 x 1989.8 px, projection flat, grammar gcp. Line styles name a tint slot by number; the colour word is the one the center theme draws it in. References: a reference such as B3 or B2-C5 names the grid cells under an element's top-left and bottom-right corners, columns 1 to 8 left to right, rows A to F top to bottom. The reference before a pointer is where that element is drawn; a Zones cell lists the cells of every balloon, flag or diamond keyed to its entry.
 
 ## Title block (view 1)
 
-Wordmark trig. `A1-B8` `/sheet`
+Wordmark trig. `A1-A8` `/sheet`
 
-### Problem · rules written as code `A2-B5` `/sheet/problem`
+### Problem · rules written as code `A2-A5` `/sheet/problem`
 
 Operators review long stretches of video to find a few events.
 
-| Point | Text | Pointer |
-|---|---|---|
-| P1 | A rule written as code needs an engineer for every change. | `A2-A4` `/sheet/problem/points/0` |
-| P2 | A reviewer watches hours of footage to confirm a few seconds of it. | `A2-A4` `/sheet/problem/points/1` |
-| P3 | A verdict without its frames cannot be checked a month later. | `A2-A4` `/sheet/problem/points/2` |
-| P4 | A model update can quietly change what a trigger means. | `A2-A4` `/sheet/problem/points/3` |
+| Point | Text | Marks | Pointer |
+|---|---|---|---|
+| P1 | A rule written as code needs an engineer for every change. | balloon 1 Operator console `A4` `/sheet/problem/points/0/marks/0`; balloon 3 Trigger API `A4` `/sheet/problem/points/0/marks/1` | `A2-A4` `/sheet/problem/points/0` |
+| P2 | A reviewer watches hours of footage to confirm a few seconds of it. | balloon 7 Clip evaluator `A4` `/sheet/problem/points/1/marks/0` | `A2-A4` `/sheet/problem/points/1` |
+| P3 | A verdict without its frames cannot be checked a month later. | balloon 8 Verdict store `A4` `/sheet/problem/points/2/marks/0`; flag 2 Evidence frames are stored as references into the clip, never copied. `A4` `/sheet/problem/points/2/marks/1` | `A2-A4` `/sheet/problem/points/2` |
+| P4 | A model update can quietly change what a trigger means. | diamond 3 Model updates. `A4` `/sheet/problem/points/3/marks/0`; flag 1 A plan change never reaches a running trigger until an operator approves it. `A4` `/sheet/problem/points/3/marks/1` | `A2-A4` `/sheet/problem/points/3` |
 
-### Answer · triggers in plain language `A5-B7` `/sheet/answer`
+### Answer · triggers in plain language `A5-A7` `/sheet/answer`
 
 The operator writes the event; the service plans it, runs it on every clip, and keeps the frames that decide it.
 
@@ -31,116 +31,169 @@ Versioned plans. Each trigger compiles to an evaluation plan with a version. A v
 
 Asynchronous evaluation. The API returns once a job is queued, and a slow clip never holds an operator request open.
 
-### Your attention goes here, and only here `A7-B8` `/sheet/attention`
+### Your attention goes here, and only here `A7-A8` `/sheet/attention`
 
-| Item | Pointer |
-|---|---|
-| Plan approval. You confirm each new or changed plan before it runs. | `A7-A8` `/sheet/attention/items/0` |
-| Disputed verdicts. A verdict you mark wrong comes back with its frames and plan version. | `A7-A8` `/sheet/attention/items/1` |
-| Model updates. A new evaluator version re-plans every active trigger and waits for your approval. | `A7-A8` `/sheet/attention/items/2` |
+| Mark | Item | Actor | Zones | Pointer |
+|---|---|---|---|---|
+| diamond 1 | Plan approval. You confirm each new or changed plan before it runs. | Operator | B4 | `A7-A8` `/sheet/attention/items/0` |
+| diamond 2 | Disputed verdicts. A verdict you mark wrong comes back with its frames and plan version. | Operator | B8 | `A7-A8` `/sheet/attention/items/1` |
+| diamond 3 | Model updates. A new evaluator version re-plans every active trigger and waits for your approval. | Operator | A4 C8 | `A7-A8` `/sheet/attention/items/2` |
 
 ## Who acts
 
 | Actor | Id | Colour | Text | Pointer |
 |---|---|---|---|---|
-| Operator | operator | tint 4; amber in center | writes triggers, reviews verdicts | `B1-B3` `/actors/0` |
-| Trigger API | api | tint 1; blue in center | plans, versions, queues | `B3-B4` `/actors/1` |
-| Clip worker | worker | tint 6; green in center | one job per clip | `B4-B5` `/actors/2` |
-| Evaluator | model | tint 5; violet in center | reads frames against a plan | `B5-B6` `/actors/3` |
+| Operator | operator | tint 4; amber in center | writes triggers, reviews verdicts | `A1-A3` `/actors/0` |
+| Trigger API | api | tint 1; blue in center | plans, versions, queues | `A3-A4` `/actors/1` |
+| Clip worker | worker | tint 6; green in center | one job per clip | `A4-A5` `/actors/2` |
+| Evaluator | model | tint 5; violet in center | reads frames against a plan | `A5-A6` `/actors/3` |
 
-## Legend `B1-B8` `/legend`
+## Legend `A1-A8` `/legend`
 
 | Key | Center label | Means | Uses | Pointer |
 |---|---|---|---|---|
-| solid-by-actor | Solid, actor colour | work moves, in the colour of the actor that sends it | 12 | `B1-B3` `/legend/0` |
-| dash-by-actor | Dashed, actor colour | reads or writes the verdict store | 2 | `B3-B5` `/legend/1` |
-| deny | Dashed red | blocked path | 1 | `B5-B6` `/legend/2` |
+| solid-by-actor | Solid, actor colour | work moves, in the colour of the actor that sends it | 12 | `A1-A3` `/legend/0` |
+| dash-by-actor | Dashed, actor colour | reads or writes the verdict store | 2 | `A3-A5` `/legend/1` |
+| gray | Solid gray | event from the platform | 1 | `A5-A6` `/legend/2` |
+| deny | Dashed red | blocked path | 1 | `A6-A7` `/legend/3` |
 
-## View 2: Workflow `B1-E8` `/body/0`
+Mark kinds: a piece of the service (balloon, parts list); asked of an operator (flag, general notes); your attention (diamond, attention items).
+
+## View 2: Workflow `B1-D8` `/body/0`
 
 Subtitle: one trigger, from description to stored verdict. Note: a lane for each actor; time runs left to right.
 
-- Phases: lanes Operator, Trigger API, Clip worker, Evaluator; phases 1 Describe, 2 Plan and approve, 3 Evaluate each clip, 4 Review; step fill none. `B1-E8` `/body/0/children/0`
-  - Step Describe the event. Lane Operator, phase 1 Describe, column 1, fill none. `B1-C2` `/body/0/children/0/children/0`
+- Phases: lanes Operator, Trigger API, Clip worker, Evaluator; phases 1 Describe, 2 Plan and approve, 3 Evaluate each clip, 4 Review; step fill none. `B1-C8` `/body/0/children/0`
+  - Step Describe the event. Lane Operator, phase 1 Describe, column 1, fill none. `B1-B2` `/body/0/children/0/children/0`
+    - Mark balloon 1 Operator console `B2` `/body/0/children/0/children/0/marks/0`
     - Line in plain language.
     - Line camera and hours.
-  - Step nothing runs yet. Lane Trigger API, phase 1 Describe, column 1, look text. `C1-C2` `/body/0/children/0/children/1`
-  - Step Compile a plan. Lane Trigger API, phase 2 Plan and approve, column 1, fill none. `C2-C3` `/body/0/children/0/children/2`
+  - Step nothing runs yet. Lane Trigger API, phase 1 Describe, column 1, look text. `B1-B2` `/body/0/children/0/children/1`
+  - Step Compile a plan. Lane Trigger API, phase 2 Plan and approve, column 1, fill none. `B2-B3` `/body/0/children/0/children/2`
+    - Mark balloon 3 Trigger API `B3` `/body/0/children/0/children/2/marks/0`
     - Line objects, conditions, frame rate.
     - Line plan version 1.
-  - Step Approve the plan. Lane Operator, phase 2 Plan and approve, column 2, fill none. `B3-C4` `/body/0/children/0/children/3`
+  - Step Approve the plan. Lane Operator, phase 2 Plan and approve, column 2, fill none. `B3-B4` `/body/0/children/0/children/3`
+    - Mark diamond 1 Plan approval. `B4` `/body/0/children/0/children/3/marks/0`
+    - Mark flag 1 A plan change never reaches a running trigger until an operator approves it. `B4` `/body/0/children/0/children/3/marks/1`
     - Line reads the plan, not the prompt.
-  - Step Store plan version. Lane Trigger API, phase 2 Plan and approve, column 2, look chip, fill tint. `C3-C4` `/body/0/children/0/children/4`
-  - Step Clip arrives. Lane Clip worker, phase 3 Evaluate each clip, column 1, fill none. `D4-D5` `/body/0/children/0/children/5`
+  - Step Store plan version. Lane Trigger API, phase 2 Plan and approve, column 2, look chip, fill tint. `B3-B4` `/body/0/children/0/children/4`
+    - Mark balloon 8 Verdict store `B4` `/body/0/children/0/children/4/marks/0`
+  - Step Clip arrives. Lane Clip worker, phase 3 Evaluate each clip, column 1, fill none. `B4-C5` `/body/0/children/0/children/5`
+    - Mark balloon 5 Clip bucket `C5` `/body/0/children/0/children/5/marks/0`
     - Line the arrival event names a finished clip.
-  - Step One job per clip. Lane Clip worker, phase 3 Evaluate each clip, column 2, look stack, fill none. `D6` `/body/0/children/0/children/6`
+      - Mark flag 4 Out of scope: live streams, identifying people, and training a model per customer. `C5` `/body/0/children/0/children/5/lines/0/marks/0`
+  - Step One job per clip. Lane Clip worker, phase 3 Evaluate each clip, column 2, look stack, fill none. `B6-C6` `/body/0/children/0/children/6`
+    - Mark balloon 6 Clip worker `C6` `/body/0/children/0/children/6/marks/0`
+    - Mark balloon 4 Evaluation queue `C6` `/body/0/children/0/children/6/marks/1`
     - Line fetch frames.
     - Line call the evaluator.
-  - Step Judge the frames. Lane Evaluator, phase 3 Evaluate each clip, column 2, fill none. `D6` `/body/0/children/0/children/7`
+  - Step Judge the frames. Lane Evaluator, phase 3 Evaluate each clip, column 2, fill none. `C6` `/body/0/children/0/children/7`
+    - Mark balloon 7 Clip evaluator `C6` `/body/0/children/0/children/7/marks/0`
+    - Mark flag 3 The evaluator holds no credentials for the verdict store. `C6` `/body/0/children/0/children/7/marks/1`
     - Line against the approved plan.
-  - Step Write the verdict. Lane Clip worker, phase 3 Evaluate each clip, column 3, fill none. `D6-D7` `/body/0/children/0/children/8`
+  - Step Write the verdict. Lane Clip worker, phase 3 Evaluate each clip, column 3, fill none. `B6-C7` `/body/0/children/0/children/8`
+    - Mark balloon 8 Verdict store `C7` `/body/0/children/0/children/8/marks/0`
+    - Mark flag 2 Evidence frames are stored as references into the clip, never copied. `C7` `/body/0/children/0/children/8/marks/1`
     - Line verdict, frames, plan version.
-  - Step Review verdicts. Lane Operator, phase 4 Review, column 1, fill none. `B7-C8` `/body/0/children/0/children/9`
+  - Step Review verdicts. Lane Operator, phase 4 Review, column 1, fill none. `B7-B8` `/body/0/children/0/children/9`
+    - Mark diamond 2 Disputed verdicts. `B8` `/body/0/children/0/children/9/marks/0`
     - Line filter by trigger and time.
-  - Step Replay over earlier clips. Lane Trigger API, phase 4 Review, column 1, look planned. `C7-C8` `/body/0/children/0/children/10`
-  - Step A new model version re-plans every trigger. Lane Evaluator, phase 4 Review, column 1, look note. `D7-D8` `/body/0/children/0/children/11`
+  - Step Replay over earlier clips. Lane Trigger API, phase 4 Review, column 1, look planned. `B7-B8` `/body/0/children/0/children/10`
+  - Step A new model version re-plans every trigger. Lane Evaluator, phase 4 Review, column 1, look note. `C7-C8` `/body/0/children/0/children/11`
+    - Mark diamond 3 Model updates. `C8` `/body/0/children/0/children/11/marks/0`
+- Row, left to right. `/body/0/children/1`
+  - General notes: what the service asks of its operators. `C6-D8` `/body/0/children/1/children/0`
+    - Note 1 (approved-plans-only): A plan change never reaches a running trigger until an operator approves it. The worker reads the approved version only. Zones A4 B4 E4. `C6-C8` `/body/0/children/1/children/0/notes/0`
+    - Note 2 (evidence-by-reference): Evidence frames are stored as references into the clip, never copied. Retention follows the clip bucket. Zones A4 C7. `C6-D8` `/body/0/children/1/children/0/notes/1`
+    - Note 3 (no-store-credentials): The evaluator holds no credentials for the verdict store. The blocked line in view 3 is an IAM binding, not a convention. Zones C6 E4. `D6-D8` `/body/0/children/1/children/0/notes/2`
+    - Note 4 (out-of-scope): Out of scope: live streams, identifying people, and training a model per customer. The service evaluates finished clips with one shared model. Zones C5. `D6-D8` `/body/0/children/1/children/0/notes/3`
+    - Foot: Each flag on the drawings marks where its note applies.
 
-| Lane | 1 Describe `B1-B2` `/body/0/children/0/phases/0` | 2 Plan and approve `B2` `/body/0/children/0/phases/1` | 3 Evaluate each clip `B4` `/body/0/children/0/phases/2` | 4 Review `B7` `/body/0/children/0/phases/3` |
+| Lane | 1 Describe `B1-B2` `/body/0/children/0/phases/0` | 2 Plan and approve `B2` `/body/0/children/0/phases/1` | 3 Evaluate each clip `B4` `/body/0/children/0/phases/2` | 4 Review `B7-B8` `/body/0/children/0/phases/3` |
 |---|---|---|---|---|
-| Operator `B1-C8` `/body/0/children/0/lanes/0` | Describe the event | Approve the plan | none | Review verdicts |
-| Trigger API `C1-D8` `/body/0/children/0/lanes/1` | nothing runs yet | Compile a plan; Store plan version | none | Replay over earlier clips |
-| Clip worker `D1-D8` `/body/0/children/0/lanes/2` | none | none | Clip arrives; One job per clip; Write the verdict | none |
-| Evaluator `D1-E8` `/body/0/children/0/lanes/3` | none | none | Judge the frames | A new model version re-plans every trigger |
+| Operator `B1-B8` `/body/0/children/0/lanes/0` | Describe the event | Approve the plan | none | Review verdicts |
+| Trigger API `B1-B8` `/body/0/children/0/lanes/1` | nothing runs yet | Compile a plan; Store plan version | none | Replay over earlier clips |
+| Clip worker `B1-C8` `/body/0/children/0/lanes/2` | none | none | Clip arrives; One job per clip; Write the verdict | none |
+| Evaluator `C1-C8` `/body/0/children/0/lanes/3` | none | none | Judge the frames | A new model version re-plans every trigger |
 
 ### Lines in view 2
 
-| Line | Kind | From | To | Style | Ends | Means | Actor | Pointer |
-|---|---|---|---|---|---|---|---|---|
-| unlabelled | link | Describe the event (s-describe) | Compile a plan (s-compile) | solid, tint 4, Operator; amber in center | arrow end | work moves, in the colour of the actor that sends it | Operator | `C2` `/links/0` |
-| plan | link | Compile a plan (s-compile) | Approve the plan (s-approve) | solid, tint 1, Trigger API; blue in center | arrow end | work moves, in the colour of the actor that sends it | Trigger API | `C3` `/links/1` |
-| unlabelled | link | Approve the plan (s-approve) | Store plan version (s-store-plan) | solid, tint 4, Operator; amber in center | arrow end | work moves, in the colour of the actor that sends it | Operator | `C4` `/links/2` |
-| reads approved version | link | Store plan version (s-store-plan) | One job per clip (s-evaluate) | dash, tint 6, Clip worker; green in center | arrow end | reads or writes the verdict store | Clip worker | `C5` `/links/3` |
-| unlabelled | link | Clip arrives (s-arrive) | One job per clip (s-evaluate) | solid, tint 6, Clip worker; green in center | arrow end | work moves, in the colour of the actor that sends it | Clip worker | `D5` `/links/4` |
-| unlabelled | link | One job per clip (s-evaluate) | Judge the frames (s-judge) | solid, tint 6, Clip worker; green in center | arrow end | work moves, in the colour of the actor that sends it | Clip worker | `D6` `/links/5` |
-| unlabelled | link | Judge the frames (s-judge) | Write the verdict (s-write) | solid, tint 5, Evaluator; violet in center | arrow end | work moves, in the colour of the actor that sends it | Evaluator | `D6` `/links/6` |
-| unlabelled | link | Write the verdict (s-write) | Review verdicts (s-review) | solid, tint 6, Clip worker; green in center | arrow end | work moves, in the colour of the actor that sends it | Clip worker | `C7` `/links/7` |
+| Line | Kind | From | To | Style | Ends | Means | Actor | Marks | Pointer |
+|---|---|---|---|---|---|---|---|---|---|
+| unlabelled | link | Describe the event (s-describe) | Compile a plan (s-compile) | solid, tint 4, Operator; amber in center | arrow end | work moves, in the colour of the actor that sends it | Operator | none | `B2` `/links/0` |
+| plan | link | Compile a plan (s-compile) | Approve the plan (s-approve) | solid, tint 1, Trigger API; blue in center | arrow end | work moves, in the colour of the actor that sends it | Trigger API | none | `B3` `/links/1` |
+| unlabelled | link | Approve the plan (s-approve) | Store plan version (s-store-plan) | solid, tint 4, Operator; amber in center | arrow end | work moves, in the colour of the actor that sends it | Operator | none | `B4` `/links/2` |
+| reads approved version | link | Store plan version (s-store-plan) | One job per clip (s-evaluate) | dash, tint 6, Clip worker; green in center | arrow end | reads or writes the verdict store | Clip worker | none | `B5` `/links/3` |
+| unlabelled | link | Clip arrives (s-arrive) | One job per clip (s-evaluate) | solid, tint 6, Clip worker; green in center | arrow end | work moves, in the colour of the actor that sends it | Clip worker | none | `C5` `/links/4` |
+| unlabelled | link | One job per clip (s-evaluate) | Judge the frames (s-judge) | solid, tint 6, Clip worker; green in center | arrow end | work moves, in the colour of the actor that sends it | Clip worker | none | `C6` `/links/5` |
+| unlabelled | link | Judge the frames (s-judge) | Write the verdict (s-write) | solid, tint 5, Evaluator; violet in center | arrow end | work moves, in the colour of the actor that sends it | Evaluator | none | `C6` `/links/6` |
+| unlabelled | link | Write the verdict (s-write) | Review verdicts (s-review) | solid, tint 6, Clip worker; green in center | arrow end | work moves, in the colour of the actor that sends it | Clip worker | none | `B7` `/links/7` |
 
-## View 3: System `E1-F8` `/body/1`
+## View 3: System `D1-F8` `/body/1`
 
-Subtitle: the pieces, and why each exists. Note: one request, from the console to a stored verdict.
+Subtitle: the pieces, and why each exists. Note: balloons key the drawing to the parts list.
 
 - Row, left to right. `/body/1/children/0`
-  - Col, top to bottom. `/body/1/children/0/children/0`
-    - Row, left to right. `/body/1/children/0/children/0/children/0`
-      - Item Operator console: web client; kind product, icon devops, actor Operator. `E1-E2` `/body/1/children/0/children/0/children/0/children/0`
-    - Frame Verdict review in the console: clip, evidence frames, verdict and plan version: 135 px placeholder. `E1-F2` `/body/1/children/0/children/0/children/1`
-  - Box Google Cloud; kind gcp. `E2-F8` `/body/1/children/0/children/1`
-    - Col, top to bottom. `/body/1/children/0/children/1/children/0`
-      - Row, left to right. `/body/1/children/0/children/1/children/0/children/0`
-        - Row, left to right. `/body/1/children/0/children/1/children/0/children/0/children/0`
-          - Item Gateway: API Gateway; kind product, icon networking, product API Gateway, actor Trigger API. `E4` `/body/1/children/0/children/1/children/0/children/0/children/0/children/0`
-        - Row, left to right. `/body/1/children/0/children/1/children/0/children/0/children/1`
-          - Item Trigger API: Cloud Run; kind product, icon cloud-run, product Cloud Run, actor Trigger API. `E7` `/body/1/children/0/children/1/children/0/children/0/children/1/children/0`
-      - Row, left to right. `/body/1/children/0/children/1/children/0/children/1`
-        - Row, left to right. `/body/1/children/0/children/1/children/0/children/1/children/0`
-          - Item Evaluation queue: Pub/Sub; kind product, icon integration, product Pub/Sub, actor Trigger API. `E3-F4` `/body/1/children/0/children/1/children/0/children/1/children/0/children/0`
-        - Row, left to right. `/body/1/children/0/children/1/children/0/children/1/children/1`
-          - Item Clip worker: Cloud Run job; kind product, icon cloud-run, product Cloud Run, actor Clip worker. `E5-F6` `/body/1/children/0/children/1/children/0/children/1/children/1/children/0`
-        - Row, left to right. `/body/1/children/0/children/1/children/0/children/1/children/2`
-          - Item Clip evaluator: Vertex AI endpoint; kind product, icon vertex-ai, product Vertex AI, actor Evaluator. `E7-F8` `/body/1/children/0/children/1/children/0/children/1/children/2/children/0`
-      - Row, left to right. `/body/1/children/0/children/1/children/0/children/2`
-        - Item Verdict store: Cloud SQL; kind product, icon cloud-sql, product Cloud SQL. `F5-F6` `/body/1/children/0/children/1/children/0/children/2/children/0`
+  - Row, left to right. `/body/1/children/0/children/0`
+    - Col, top to bottom. `/body/1/children/0/children/0/children/0`
+      - Row, left to right. `/body/1/children/0/children/0/children/0/children/0`
+        - Item Operator console: web client; kind product, icon devops, actor Operator. `E1-E2` `/body/1/children/0/children/0/children/0/children/0/children/0`
+          - Mark balloon 1 Operator console `E1` `/body/1/children/0/children/1/parts/0/node`
+    - Box Google Cloud; kind gcp. `D2-F6` `/body/1/children/0/children/0/children/1`
+      - Col, top to bottom. `/body/1/children/0/children/0/children/1/children/0`
+        - Row, left to right. `/body/1/children/0/children/0/children/1/children/0/children/0`
+          - Row, left to right. `/body/1/children/0/children/0/children/1/children/0/children/0/children/0`
+            - Item Gateway: API Gateway; kind product, icon networking, product API Gateway, actor Trigger API. `D2-E3` `/body/1/children/0/children/0/children/1/children/0/children/0/children/0/children/0`
+              - Mark balloon 2 Gateway `D3` `/body/1/children/0/children/1/parts/1/node`
+          - Row, left to right. `/body/1/children/0/children/0/children/1/children/0/children/0/children/1`
+            - Item Trigger API: Cloud Run; kind product, icon cloud-run, product Cloud Run, actor Trigger API. `D4-E5` `/body/1/children/0/children/0/children/1/children/0/children/0/children/1/children/0`
+              - Mark balloon 3 Trigger API `D5` `/body/1/children/0/children/1/parts/2/node`
+        - Row, left to right. `/body/1/children/0/children/0/children/1/children/0/children/1`
+          - Row, left to right. `/body/1/children/0/children/0/children/1/children/0/children/1/children/0`
+            - Item Evaluation queue: Pub/Sub; kind product, icon integration, product Pub/Sub, actor Trigger API. `E2-E3` `/body/1/children/0/children/0/children/1/children/0/children/1/children/0/children/0`
+              - Mark balloon 4 Evaluation queue `E3` `/body/1/children/0/children/1/parts/3/node`
+          - Row, left to right. `/body/1/children/0/children/0/children/1/children/0/children/1/children/1`
+            - Item Clip worker: Cloud Run job; kind product, icon cloud-run, product Cloud Run, actor Clip worker. `E4-E5` `/body/1/children/0/children/0/children/1/children/0/children/1/children/1/children/0`
+              - Mark balloon 6 Clip worker `E5` `/body/1/children/0/children/1/parts/5/node`
+        - Row, left to right. `/body/1/children/0/children/0/children/1/children/0/children/2`
+          - Row, left to right. `/body/1/children/0/children/0/children/1/children/0/children/2/children/0`
+            - Row, left to right. `/body/1/children/0/children/0/children/1/children/0/children/2/children/0/children/0`
+              - Item Clip bucket: Cloud Storage; kind product, icon cloud-storage, product Cloud Storage. `E2-E3` `/body/1/children/0/children/0/children/1/children/0/children/2/children/0/children/0/children/0`
+                - Mark balloon 5 Clip bucket `E3` `/body/1/children/0/children/1/parts/4/node`
+            - Item Verdict store: Cloud SQL; kind product, icon cloud-sql, product Cloud SQL. `E3-E4` `/body/1/children/0/children/0/children/1/children/0/children/2/children/0/children/1`
+              - Mark balloon 8 Verdict store `E4` `/body/1/children/0/children/1/parts/7/node`
+          - Row, left to right. `/body/1/children/0/children/0/children/1/children/0/children/2/children/1`
+            - Row, left to right. `/body/1/children/0/children/0/children/1/children/0/children/2/children/1/children/0`
+              - Item Clip evaluator: Vertex AI endpoint; kind product, icon vertex-ai, product Vertex AI, actor Evaluator. `E4-E5` `/body/1/children/0/children/0/children/1/children/0/children/2/children/1/children/0/children/0`
+                - Mark balloon 7 Clip evaluator `E5` `/body/1/children/0/children/1/parts/6/node`
+  - Parts list: what the service is made of, and why each part exists. `D6-F8` `/body/1/children/0/children/1`
+- Frame Verdict review in the console: clip, evidence frames, verdict and plan version: 200 px placeholder. `F1-F8` `/body/1/children/1`
+
+### Parts list
+
+| Part | Name | What | Why | Actor | Zones | Pointer |
+|---|---|---|---|---|---|---|
+| 1 | Operator console | web client | Operators write triggers and judge verdicts without an engineer in the loop. | Operator | A4 B2 E1 | `D6-E8` `/body/1/children/0/children/1/parts/0` |
+| 2 | Gateway | API Gateway | One authenticated entry point; the API never sees an anonymous call. | Trigger API | D3 | `E6-E8` `/body/1/children/0/children/1/parts/1` |
+| 3 | Trigger API | Cloud Run | Turns a description into a versioned plan and refuses to queue a plan nobody approved. | Trigger API | A4 B3 D5 | `E6-E8` `/body/1/children/0/children/1/parts/2` |
+| 4 | Evaluation queue | Pub/Sub | The API returns once a job is queued, so a slow clip never holds a request open. | Trigger API | C6 E3 | `E6-E8` `/body/1/children/0/children/1/parts/3` |
+| 5 | Clip bucket | Cloud Storage | A clip is evaluated only once it is complete, and the arrival event names it. | none | C5 E3 | `E6-E8` `/body/1/children/0/children/1/parts/4` |
+| 6 | Clip worker | Cloud Run job | Clips are independent, so a failed clip retries alone. | Clip worker | C6 E5 | `E6-E8` `/body/1/children/0/children/1/parts/5` |
+| 7 | Clip evaluator | Vertex AI endpoint | Reads frames against the plan, and has no write path to the store. | Evaluator | A4 C6 E5 | `E6-F8` `/body/1/children/0/children/1/parts/6` |
+| 8 | Verdict store | Cloud SQL | Every verdict keeps its evidence frames and the plan version that produced it. | none | A4 B4 C7 E4 | `F6-F8` `/body/1/children/0/children/1/parts/7` |
 
 ### Lines in view 3
 
-| Line | Kind | From | To | Style | Ends | Means | Actor | Pointer |
-|---|---|---|---|---|---|---|---|---|
-| submit trigger | link | Operator console (console) | Gateway (gateway) | solid, tint 4, Operator; amber in center | arrow end | work moves, in the colour of the actor that sends it | Operator | `E3` `/links/8` |
-| authorized call | link | Gateway (gateway) | Trigger API (api) | solid, tint 1, Trigger API; blue in center | arrow end | work moves, in the colour of the actor that sends it | Trigger API | `E5` `/links/9` |
-| queue job | link | Trigger API (api) | Evaluation queue (queue) | solid, tint 1, Trigger API; blue in center | arrow end | work moves, in the colour of the actor that sends it | Trigger API | `E5` `/links/10` |
-| deliver job | link | Evaluation queue (queue) | Clip worker (worker) | solid, tint 1, Trigger API; blue in center | arrow end | work moves, in the colour of the actor that sends it | Trigger API | `F4` `/links/11` |
-| evaluate clip | link | Clip worker (worker) | Clip evaluator (evaluator) | solid, tint 6, Clip worker; green in center | arrow end | work moves, in the colour of the actor that sends it | Clip worker | `F6` `/links/12` |
-| write verdict | link | Clip worker (worker) | Verdict store (verdict-store) | dash, tint 6, Clip worker; green in center | arrow end | reads or writes the verdict store | Clip worker | `F5` `/links/13` |
-| no direct write | link | Clip evaluator (evaluator) | Verdict store (verdict-store) | deny; red in center | arrow end | blocked path | none | `F7` `/links/14` |
+| Line | Kind | From | To | Style | Ends | Means | Actor | Marks | Pointer |
+|---|---|---|---|---|---|---|---|---|---|
+| submit trigger | link | Operator console (console) | Gateway (gateway) | solid, tint 4, Operator; amber in center | arrow end | work moves, in the colour of the actor that sends it | Operator | none | `D2` `/links/8` |
+| authorized call | link | Gateway (gateway) | Trigger API (api) | solid, tint 1, Trigger API; blue in center | arrow end | work moves, in the colour of the actor that sends it | Trigger API | none | `D4` `/links/9` |
+| queue job · approved plans only | link | Trigger API (api) | Evaluation queue (queue) | solid, tint 1, Trigger API; blue in center | arrow end | work moves, in the colour of the actor that sends it | Trigger API | flag 1 A plan change never reaches a running trigger until an operator approves it. `E4` `/links/10/marks/0` | `E4` `/links/10` |
+| deliver job | link | Evaluation queue (queue) | Clip worker (worker) | solid, tint 1, Trigger API; blue in center | arrow end | work moves, in the colour of the actor that sends it | Trigger API | none | `E4` `/links/11` |
+| evaluate clip | link | Clip worker (worker) | Clip evaluator (evaluator) | solid, tint 6, Clip worker; green in center | arrow end | work moves, in the colour of the actor that sends it | Clip worker | none | `E5` `/links/12` |
+| write verdict | link | Clip worker (worker) | Verdict store (verdict-store) | dash, tint 6, Clip worker; green in center | arrow end | reads or writes the verdict store | Clip worker | none | `E4` `/links/13` |
+| clip finished | link | Clip bucket (bucket) | Evaluation queue (queue) | gray; gray in center | arrow end | event from the platform | none | none | `E2` `/links/14` |
+| no direct write | link | Clip evaluator (evaluator) | Verdict store (verdict-store) | deny; red in center | arrow end | blocked path | none | flag 3 The evaluator holds no credentials for the verdict store. `E4` `/links/15/marks/0` | `E4` `/links/15` |
 
-Foot: Every verdict keeps the frames that support it and the plan version that produced it. `F1-F8` `/foot`
+Foot: Balloons key the drawings to the parts list, flags to the general notes, diamonds to the attention items in the title block. `F1-F8` `/foot`

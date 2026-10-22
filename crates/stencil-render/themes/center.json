@@ -248,6 +248,7 @@
     "rule": "#DADCE0",
     "label_ink": "#5F6368",
     "cell": "#FFFFFF",
+    "mark_ink": "#202124",
     "grid": {
       "minor": "#F4F5F6",
       "major": "#E9EAEC"

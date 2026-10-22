@@ -776,7 +776,7 @@
       "type": "object",
       "properties": {
         "cell": {
-          "description": "The title block's cells. Derived: card.fill.",
+          "description": "The title block's cells, keyed lists, balloon fills and flag numerals. Derived:\ncard.fill.",
           "$ref": "#/$defs/Color"
         },
         "frame": {
@@ -798,6 +798,10 @@
           "description": "Captions, references, view notes. Derived: ink.secondary.",
           "$ref": "#/$defs/Color"
         },
+        "mark_ink": {
+          "description": "Flags, and the outline of balloons and diamonds whose key names no actor. Derived:\nink.primary.",
+          "$ref": "#/$defs/Color"
+        },
         "paper": {
           "description": "Inside the frame. Derived: page.",
           "$ref": "#/$defs/Color"
@@ -813,7 +817,8 @@
         "frame",
         "rule",
         "label_ink",
-        "cell"
+        "cell",
+        "mark_ink"
       ]
     },
     "SolidEdges": {

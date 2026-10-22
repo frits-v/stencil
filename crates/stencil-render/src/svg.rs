@@ -2,10 +2,11 @@
 
 mod iso_writer;
 
-use std::collections::BTreeSet;
+use std::collections::{BTreeSet, HashMap};
 use stencil_layout::{
     BoxRect, ContainerLook, DrawnLink, LinkRoute, NodeGeometry, NodeTag, PageGeometry, Part,
     PartName, PathPiece, TextAlign, TextRun, container_label_style, drawn_link, fact_presentation,
+    marks::sampled_kinds,
 };
 use stencil_model::grammar::Role;
 use stencil_model::pointer::NodePointer;
@@ -15,8 +16,8 @@ use base64::Engine as _;
 use stencil_model::text::TextMeasurer;
 use stencil_model::{
     Arrow, BandLook, Chrome, FactSource, IconName, LEGEND_ENTRIES_MAX, LINKS_MAX, LegendEntry,
-    Node, NodeRef, NoteKind, Page, PagePoint, Pipe, PipeDir, PipeForm, Projection, SheetList,
-    StepFill, StepLook, Theme, body_nodes,
+    MarkKind, Node, NodeRef, NoteKind, Page, PageActors, PageMarks, PagePoint, Pipe, PipeDir,
+    PipeForm, Projection, SheetList, StepFill, StepLook, Theme, body_nodes,
 };
 use stencil_text::{CosmicTextMeasurer, bundled_font};
 
@@ -99,6 +100,7 @@ pub fn render_svg(
     writer.sheet = page.sheet.as_ref().map(|sheet| SheetLook {
         wordmark: sheet.wordmark.is_some(),
     });
+    writer.mark_paints = MarkPaints::of(page);
     writer.actor_slots = page
         .actors
         .iter()
@@ -182,7 +184,9 @@ pub(crate) fn is_sheet_tag(tag: NodeTag) -> bool {
         | NodeTag::View
         | NodeTag::ActorChip
         | NodeTag::Phases
-        | NodeTag::Step => true,
+        | NodeTag::Step
+        | NodeTag::PartsList
+        | NodeTag::GeneralNotes => true,
         NodeTag::Page
         | NodeTag::Kicker
         | NodeTag::Title
@@ -562,6 +566,88 @@ struct SvgWriter<'a> {
     /// The `step_fill` of the Phases node last written; geometry order puts each Step
     /// after its own Phases node and before the next one.
     phases_step_fill: Option<StepFill>,
+    /// The kind and key colour of every glyph.
+    mark_paints: MarkPaints,
+}
+
+/// The kind and key actor slot of every glyph the page draws, read from the document
+/// before writing: a glyph's colours follow its key's actor, not its carrier's.
+#[derive(Debug, Clone, Default)]
+struct MarkPaints {
+    /// Carrier pointer to its glyphs in drawn order.
+    carriers: HashMap<String, Vec<(MarkKind, Option<u8>)>>,
+    /// Link index to the glyphs in its tag.
+    links: HashMap<usize, Vec<(MarkKind, Option<u8>)>>,
+    /// The actor slot of each part and each attention item, in list order.
+    parts: Vec<Option<u8>>,
+    attention: Vec<Option<u8>>,
+    /// The kinds the legend strip samples, in order.
+    samples: Vec<MarkKind>,
+}
+
+impl MarkPaints {
+    fn of(page: &Page) -> Self {
+        let page_marks = PageMarks::of(page);
+        let actors = PageActors::of(page);
+        let paint = |marks: &[stencil_model::CarrierMark]| -> Vec<(MarkKind, Option<u8>)> {
+            marks
+                .iter()
+                .map(|mark| {
+                    (
+                        mark.mark.kind(),
+                        actors.slot(page_marks.key_actor(&mark.mark)),
+                    )
+                })
+                .collect()
+        };
+        let mut carriers = HashMap::new();
+        if let Some(sheet) = &page.sheet {
+            for index in 0..sheet
+                .problem
+                .points
+                .len()
+                .min(SheetList::ProblemPoints.max() + 1)
+            {
+                let pointer = SheetList::ProblemPoints.pointer().index(index);
+                carriers.insert(
+                    pointer.as_str().to_string(),
+                    paint(&page_marks.point_marks(page, index)),
+                );
+            }
+        }
+        for entry in body_nodes(page) {
+            let marks = page_marks.node_marks(&entry);
+            if !marks.is_empty() {
+                carriers.insert(entry.pointer.as_str().to_string(), paint(&marks));
+            }
+        }
+        let links = page
+            .links
+            .iter()
+            .enumerate()
+            .take(LINKS_MAX + 1)
+            .map(|(index, link)| (index, paint(&PageMarks::link_marks(link, index))))
+            .collect();
+        let parts = page_marks
+            .parts()
+            .iter()
+            .map(|part| actors.slot(page_marks.part_actor(part)))
+            .collect();
+        let attention = page
+            .sheet
+            .iter()
+            .flat_map(|sheet| sheet.attention.items.iter())
+            .take(SheetList::AttentionItems.max() + 1)
+            .map(|item| actors.slot(item.actor.as_deref()))
+            .collect();
+        MarkPaints {
+            carriers,
+            links,
+            parts,
+            attention,
+            samples: sampled_kinds(page),
+        }
+    }
 }
 
 /// What the writer reads of a page's sheet.
@@ -583,6 +669,7 @@ impl<'a> SvgWriter<'a> {
             actor_slots: Vec::new(),
             sheet_grid: None,
             phases_step_fill: None,
+            mark_paints: MarkPaints::default(),
         }
     }
 
@@ -623,13 +710,48 @@ impl<'a> SvgWriter<'a> {
         {
             self.write_gcp_frame_stroke(depth, node.bounds, look, node.tint);
         }
+        let glyph_kinds = self.glyph_kinds(node);
+        let mut numerals = 0;
         for (part, slot) in node.parts.iter().zip(&slots) {
             if let Some(run) = &part.text {
-                let fill = self.text_fill(node, document_node, part, (context, *slot))?;
+                let fill = if matches!(
+                    part.name,
+                    PartName::MarkNumeral | PartName::MarkSampleNumeral
+                ) {
+                    let kind = glyph_kinds.get(numerals).copied().flatten();
+                    numerals += 1;
+                    let kind = kind.ok_or_else(|| part_mismatch(node, part))?;
+                    self.palette.sheet_color(palette::numeral_ink(kind), None)
+                } else {
+                    self.text_fill(node, document_node, part, (context, *slot))?
+                };
                 self.write_text_run(depth, &node.pointer, part.bounds, run, &fill)?;
             }
         }
         Ok(())
+    }
+
+    /// The kind of each carrier glyph or legend sample of a node, in part order; a numeral
+    /// takes the kind of the glyph it is drawn in.
+    fn glyph_kinds(&self, node: &NodeGeometry) -> Vec<Option<MarkKind>> {
+        let paints = self.mark_paints.carriers.get(node.pointer.as_str());
+        let mut glyphs = 0;
+        let mut samples = 0;
+        let mut kinds = Vec::new();
+        for part in &node.parts {
+            if part.name.is_mark_glyph() {
+                kinds.push(
+                    paints
+                        .and_then(|paints| paints.get(glyphs))
+                        .map(|paint| paint.0),
+                );
+                glyphs += 1;
+            } else if part.name == PartName::MarkSample {
+                kinds.push(self.mark_paints.samples.get(samples).copied());
+                samples += 1;
+            }
+        }
+        kinds
     }
 
     /// The tint slot of an actor.
@@ -652,6 +774,8 @@ impl<'a> SvgWriter<'a> {
             _ => Vec::new(),
         };
         let mut seen: Vec<(PartName, usize)> = Vec::new();
+        let glyph_slots = self.mark_paints.carriers.get(node.pointer.as_str());
+        let mut glyph_index = 0;
         node.parts
             .iter()
             .map(|part| {
@@ -670,6 +794,24 @@ impl<'a> SvgWriter<'a> {
                     | PartName::LaneBar
                     | PartName::LaneName
                     | PartName::LaneText => lanes.get(nth).copied().flatten(),
+                    PartName::Balloon | PartName::Flag | PartName::Diamond => {
+                        let glyph = glyph_index;
+                        glyph_index += 1;
+                        glyph_slots
+                            .and_then(|paints| paints.get(glyph))
+                            .and_then(|paint| paint.1)
+                    }
+                    PartName::PartBalloon | PartName::PartTitle => {
+                        self.mark_paints.parts.get(nth).copied().flatten()
+                    }
+                    PartName::AttentionDiamond => {
+                        self.mark_paints.attention.get(nth).copied().flatten()
+                    }
+                    PartName::MarkSample
+                    | PartName::MarkNumeral
+                    | PartName::MarkSampleNumeral
+                    | PartName::PartNumeral
+                    | PartName::AttentionNumeral => None,
                     _ => node.tint,
                 }
             })
@@ -774,6 +916,21 @@ impl<'a> SvgWriter<'a> {
                 }
                 Node::Phases(phases) => self.phases_step_fill = phases.step_fill,
                 Node::View(_) | Node::Step(_) => {}
+                Node::PartsList(_) | Node::GeneralNotes(_) => {
+                    let width_px = if matches!(content, Node::PartsList(_)) {
+                        palette::PARTS_LIST_BORDER_PX
+                    } else {
+                        palette::GENERAL_NOTES_BORDER_PX
+                    };
+                    let fill = self.palette.sheet_ink(palette::SheetInk::Cell).to_string();
+                    let color = self.palette.sheet_ink(palette::SheetInk::Frame).to_string();
+                    let border = Stroke {
+                        width_px,
+                        line: LineStyle::Solid,
+                        color: &color,
+                    };
+                    self.write_rect(depth, node.bounds, 0.0, Some(&fill), Some(border));
+                }
                 Node::Item(_) => {
                     let card_paint = self.palette.card();
                     match (self.sheet, node.tint) {
@@ -855,7 +1012,9 @@ impl<'a> SvgWriter<'a> {
                 | Node::Frame(_)
                 | Node::Box(_)
                 | Node::Fact(_)
-                | Node::View(_) => PartContext::default(),
+                | Node::View(_)
+                | Node::PartsList(_)
+                | Node::GeneralNotes(_) => PartContext::default(),
                 Node::Phases(phases) => PartContext {
                     band: Some(phases.band),
                     ..PartContext::default()
@@ -1005,6 +1164,22 @@ impl<'a> SvgWriter<'a> {
             }
         }
         if part.name == PartName::LaneBand && context.band == Some(BandLook::None) {
+            return Ok(());
+        }
+        if part.name == PartName::MarkSample {
+            let position = node
+                .parts
+                .iter()
+                .take_while(|candidate| !std::ptr::eq(*candidate, part))
+                .filter(|candidate| candidate.name == PartName::MarkSample)
+                .count();
+            let kind = self
+                .mark_paints
+                .samples
+                .get(position)
+                .copied()
+                .ok_or_else(|| part_mismatch(node, part))?;
+            self.write_sheet_part(depth, bounds, palette::glyph_paint(kind), None);
             return Ok(());
         }
         if self.sheet.is_some()
@@ -1207,7 +1382,37 @@ impl<'a> SvgWriter<'a> {
             | PartName::PhaseSeparator
             | PartName::Front
             | PartName::StepLine
-            | PartName::StackBack => return Err(part_mismatch(node, part)),
+            | PartName::StackBack
+            | PartName::Balloon
+            | PartName::Flag
+            | PartName::Diamond
+            | PartName::MarkNumeral
+            | PartName::AttentionDiamond
+            | PartName::AttentionNumeral
+            | PartName::AttentionZones
+            | PartName::MarkSample
+            | PartName::MarkSampleNumeral
+            | PartName::MarkSampleText
+            | PartName::Title
+            | PartName::Note
+            | PartName::TitleRule
+            | PartName::HeaderCell
+            | PartName::RowRule
+            | PartName::PartBalloon
+            | PartName::PartNumeral
+            | PartName::PartTitle
+            | PartName::PartWhat
+            | PartName::PartPlanned
+            | PartName::PartWhy
+            | PartName::PartWhyRule
+            | PartName::PartZones
+            | PartName::NoteFlag
+            | PartName::NoteNumeral
+            | PartName::NoteText
+            | PartName::NoteDetail
+            | PartName::NoteZones
+            | PartName::FootRule
+            | PartName::Foot => return Err(part_mismatch(node, part)),
         }
         Ok(())
     }
@@ -1355,9 +1560,58 @@ impl<'a> SvgWriter<'a> {
                     ),
                 );
             }
+            PartShape::Triangle => {
+                let path = format!(
+                    "M{} {} L{} {} L{} {} Z",
+                    format_number(bounds.x + bounds.width / 2.0),
+                    format_number(bounds.y),
+                    format_number(bounds.right()),
+                    format_number(bounds.bottom()),
+                    format_number(bounds.x),
+                    format_number(bounds.bottom()),
+                );
+                self.write_glyph_path(depth, &path, fill, stroke);
+            }
+            PartShape::Diamond => {
+                let inset = stroke.map_or(0.0, |stroke| stroke.width_px / 2.0);
+                let center_x = bounds.x + bounds.width / 2.0;
+                let center_y = bounds.y + bounds.height / 2.0;
+                let path = format!(
+                    "M{} {} L{} {} L{} {} L{} {} Z",
+                    format_number(center_x),
+                    format_number(bounds.y + inset),
+                    format_number(bounds.right() - inset),
+                    format_number(center_y),
+                    format_number(center_x),
+                    format_number(bounds.bottom() - inset),
+                    format_number(bounds.x + inset),
+                    format_number(center_y),
+                );
+                self.write_glyph_path(depth, &path, fill, stroke);
+            }
             PartShape::Grid => self.write_sheet_grid(depth, bounds),
             PartShape::Text => {}
         }
+    }
+
+    /// A flag or diamond outline.
+    fn write_glyph_path(
+        &mut self,
+        depth: usize,
+        path: &str,
+        fill: Option<&str>,
+        stroke: Option<Stroke<'_>>,
+    ) {
+        let stroke_part = stroke
+            .map(|stroke| format!("{} stroke-linejoin=\"round\"", stroke_attributes(stroke)))
+            .unwrap_or_default();
+        self.line(
+            depth,
+            &format!(
+                r#"<path d="{path}" fill="{}"{stroke_part}/>"#,
+                fill.unwrap_or("none")
+            ),
+        );
     }
 
     /// A line through the middle of `bounds` along its longer side.
@@ -1587,11 +1841,36 @@ impl<'a> SvgWriter<'a> {
         for (base, tip) in [drawn.start_arrow, drawn.end_arrow].into_iter().flatten() {
             self.write_arrow_carrier(depth + 1, base, tip, line_use);
         }
+        let glyphs = self
+            .mark_paints
+            .links
+            .get(&route.index)
+            .cloned()
+            .unwrap_or_default();
+        let mut glyph_index = 0;
+        let mut numeral_index = 0;
         for part in &route.parts {
             match (part.name, &part.text) {
                 (PartName::Tag, None) => {
                     let tag_paint = self.palette.tag(route.line);
                     self.write_box(depth + 1, part.bounds, TAG_RADIUS_PX, tag_paint);
+                }
+                (PartName::Balloon | PartName::Flag | PartName::Diamond, None) => {
+                    let (kind, slot) = glyphs
+                        .get(glyph_index)
+                        .copied()
+                        .ok_or_else(|| link_mismatch(route))?;
+                    glyph_index += 1;
+                    self.write_sheet_part(depth + 1, part.bounds, palette::glyph_paint(kind), slot);
+                }
+                (PartName::MarkNumeral, Some(run)) => {
+                    let (kind, _) = glyphs
+                        .get(numeral_index)
+                        .copied()
+                        .ok_or_else(|| link_mismatch(route))?;
+                    numeral_index += 1;
+                    let fill = self.palette.sheet_color(palette::numeral_ink(kind), None);
+                    self.write_text_run(depth + 1, &pointer, part.bounds, run, &fill)?;
                 }
                 (PartName::TagLabel | PartName::TagSub, Some(run)) => {
                     let style_name =

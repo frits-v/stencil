@@ -211,7 +211,7 @@ fn fill_with_hazards(
 ) {
     // A sheet's wordmark and captions hold at most 24 and 60 characters, shorter than a
     // hazard string, so they keep their text.
-    const TEXT_KEYS: [&str; 14] = [
+    const TEXT_KEYS: [&str; 16] = [
         "title",
         "kicker",
         "lede",
@@ -226,6 +226,8 @@ fn fill_with_hazards(
         "lead",
         "statement",
         "note",
+        "why",
+        "detail",
     ];
     match value {
         Value::String(text) if key.is_some_and(|key| TEXT_KEYS.contains(&key)) => {
@@ -246,6 +248,10 @@ fn fill_with_hazards(
         }
         Value::Object(fields) => {
             for (field, item) in fields.iter_mut() {
+                // A mark holds the id of its key, not text.
+                if field == "marks" || field == "corner_mark" {
+                    continue;
+                }
                 fill_with_hazards(item, offset, written, Some(field.as_str()));
             }
         }
@@ -803,11 +809,34 @@ fn every_entry_part_is_drawn_once_per_entry() {
             ),
             stencil_model::SheetList::Lanes => (phases_pointer.clone(), phases.lanes.len()),
             stencil_model::SheetList::Phases => (phases_pointer.clone(), phases.phases.len()),
+            stencil_model::SheetList::Parts | stencil_model::SheetList::GeneralNotes => {
+                let (tag, field) = match list {
+                    stencil_model::SheetList::Parts => {
+                        (stencil_layout::NodeTag::PartsList, "parts")
+                    }
+                    _ => (stencil_layout::NodeTag::GeneralNotes, "notes"),
+                };
+                let owner = geometry
+                    .nodes
+                    .iter()
+                    .find(|node| node.tag == tag)
+                    .unwrap()
+                    .pointer
+                    .clone();
+                let document = serde_json::to_value(&page).unwrap();
+                let entries = document
+                    .pointer(owner.child(field).as_str())
+                    .and_then(serde_json::Value::as_array)
+                    .unwrap()
+                    .len();
+                (owner, entries)
+            }
             stencil_model::SheetList::ProblemPoints
             | stencil_model::SheetList::AnswerParagraphs
             | stencil_model::SheetList::Actors
             | stencil_model::SheetList::Steps
-            | stencil_model::SheetList::StepLines => {
+            | stencil_model::SheetList::StepLines
+            | stencil_model::SheetList::Marks => {
                 panic!("{} keys no entry parts", list.name())
             }
         };
@@ -818,7 +847,7 @@ fn every_entry_part_is_drawn_once_per_entry() {
             examined += 1;
         }
     }
-    assert_eq!(examined, 4);
+    assert_eq!(examined, 10);
 }
 
 /// A reference that names another cell than the one the element is drawn in, a missing
@@ -836,7 +865,14 @@ fn a_wrong_reference_is_a_defect() {
         .position(|candidate| candidate == line)
         .unwrap()
         + 1;
-    let drawn = line.split('`').nth(1).unwrap().to_string();
+    // The reference span right before the point's pointer; marks' spans come earlier.
+    let before = line.split(point).next().unwrap().trim_end();
+    let drawn = before
+        .trim_end_matches('`')
+        .rsplit('`')
+        .next()
+        .unwrap()
+        .to_string();
     let wrong = if drawn == "F8" { "A1" } else { "F8" };
     let moved = text.replace(&format!("`{drawn}` {point}"), &format!("`{wrong}` {point}"));
     let report = description_covers_drawing(&page, &geometry, &moved);
@@ -940,4 +976,55 @@ fn the_description_names_a_lane_band_and_a_step_fill_that_differ_from_the_look()
             assert!(line.contains(", fill none. `"), "{line}");
         }
     }
+}
+
+/// Section 14.6: a drawn where-used text that differs from its key's glyph cells, and a
+/// carrier that draws fewer glyphs than it has marks, are defects of the description check.
+#[test]
+fn a_where_used_text_or_a_missing_glyph_is_a_defect() {
+    use stencil_layout::PartName;
+    let (page, mut geometry, text) = onepager();
+    let notes = geometry
+        .nodes
+        .iter_mut()
+        .find(|node| node.tag == stencil_layout::NodeTag::GeneralNotes)
+        .unwrap();
+    let pointer = notes.pointer.clone();
+    let zones = notes
+        .parts
+        .iter_mut()
+        .find(|part| part.name == PartName::NoteZones)
+        .unwrap();
+    let drawn = zones.text.as_ref().unwrap().text.clone();
+    zones.text.as_mut().unwrap().text = "marked at A1".to_string();
+    let report = description_covers_drawing(&page, &geometry, &text);
+    assert_eq!(
+        messages(&report),
+        [(
+            format!("{}/notes/0", pointer.as_str()),
+            format!("where-used reads \"marked at A1\", marks at {drawn}")
+        )]
+    );
+
+    let (page, mut geometry, text) = onepager();
+    let point = geometry
+        .nodes
+        .iter_mut()
+        .find(|node| node.pointer.as_str() == "/sheet/problem/points/0")
+        .unwrap();
+    let last = point
+        .parts
+        .iter()
+        .rposition(|part| part.name.is_mark_glyph())
+        .unwrap();
+    point.parts.remove(last);
+    let report = description_covers_drawing(&page, &geometry, &text);
+    let found = messages(&report);
+    assert!(
+        found.contains(&(
+            "/sheet/problem/points/0".to_string(),
+            "draws 1 mark glyphs for 2 marks".to_string()
+        )),
+        "{found:?}"
+    );
 }

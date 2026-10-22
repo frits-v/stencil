@@ -2,10 +2,12 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use crate::document::{
     AnswerParagraph, BUILTIN_GRAMMARS, BUILTIN_THEMES, CAPTION_SCALARS_MAX, Chrome, FACTS_MAX,
-    LANES_MAX, Line, Link, Node, PHASE_COLUMNS_MAX, Page, Phases, PipeDir, Projection, Sheet, Step,
-    StepLook, TINT_SLOTS, Tee, Text, WORDMARK_SCALARS_MAX, canvas_width, is_valid_id,
+    GeneralNotes, LANES_MAX, Line, Link, MarkKind, Node, PHASE_COLUMNS_MAX, Page, PartsList,
+    Phases, PipeDir, Projection, Sheet, Step, StepLook, TINT_SLOTS, Tee, Text,
+    WORDMARK_SCALARS_MAX, canvas_width, is_valid_id,
 };
 use crate::grammar::{Grammar, IconPack, PAGE_PARENT};
+use crate::marks::{CarrierMark, PageMarks};
 use crate::pointer::NodePointer;
 use crate::sheet::{PageActors, SheetList, SheetSurface};
 use crate::walk::{
@@ -93,11 +95,20 @@ pub enum VetRule {
     StepPhaseUnknown,
     StepSpanOutOfRange,
     StepTextFill,
+    MarkUnknown,
+    MarkRepeated,
+    MarkLegendUnused,
+    LinkMarksWithoutTag,
+    KeyedListTwice,
+    PartNodeUnknown,
+    PartNodeTwice,
+    PartFieldFromNode,
+    PartNameMissing,
 }
 
 impl VetRule {
     /// The rules of section 14.3, in table order.
-    pub const SHEET: [VetRule; 26] = [
+    pub const SHEET: [VetRule; 35] = [
         VetRule::NeedsSheet,
         VetRule::SheetInIso,
         VetRule::SheetChromeNone,
@@ -124,6 +135,15 @@ impl VetRule {
         VetRule::StepPhaseUnknown,
         VetRule::StepSpanOutOfRange,
         VetRule::StepTextFill,
+        VetRule::MarkUnknown,
+        VetRule::MarkRepeated,
+        VetRule::MarkLegendUnused,
+        VetRule::LinkMarksWithoutTag,
+        VetRule::KeyedListTwice,
+        VetRule::PartNodeUnknown,
+        VetRule::PartNodeTwice,
+        VetRule::PartFieldFromNode,
+        VetRule::PartNameMissing,
     ];
 
     /// Kebab-case name used on the CLI, as in section 1.3.
@@ -195,6 +215,15 @@ impl VetRule {
             VetRule::StepPhaseUnknown => "step-phase-unknown",
             VetRule::StepSpanOutOfRange => "step-span-out-of-range",
             VetRule::StepTextFill => "step-text-fill",
+            VetRule::MarkUnknown => "mark-unknown",
+            VetRule::MarkRepeated => "mark-repeated",
+            VetRule::MarkLegendUnused => "mark-legend-unused",
+            VetRule::LinkMarksWithoutTag => "link-marks-without-tag",
+            VetRule::KeyedListTwice => "keyed-list-twice",
+            VetRule::PartNodeUnknown => "part-node-unknown",
+            VetRule::PartNodeTwice => "part-node-twice",
+            VetRule::PartFieldFromNode => "part-field-from-node",
+            VetRule::PartNameMissing => "part-name-missing",
         }
     }
 }
@@ -350,13 +379,26 @@ pub fn validate_page(page: &Page, grammar: &Grammar) -> Vec<Violation> {
     });
     let mut sheet_nodes = SheetNodes {
         actors: PageActors::of(page),
+        marks: PageMarks::of(page),
+        node_tags: entries
+            .iter()
+            .filter_map(|entry| entry.node.id().map(|id| (id, entry.node.tag_name())))
+            .collect(),
+        keyed_lists: BTreeMap::new(),
         phases: BTreeMap::new(),
         on_sheet: page.sheet.is_some(),
     };
     for entry in &entries {
-        let actor_field = entry.pointer.child("actor");
+        let own_fields = [
+            entry.pointer.child("actor"),
+            entry.pointer.child("marks"),
+            entry.pointer.child("corner_mark"),
+        ];
+        let lines_prefix = format!("{}/", entry.pointer.child("lines").as_str());
         report_needs_sheet(&surfaces, &mut reported, &mut violations, |pointer| {
-            *pointer == entry.pointer || *pointer == actor_field
+            *pointer == entry.pointer
+                || own_fields.contains(pointer)
+                || pointer.as_str().starts_with(&lines_prefix)
         });
         check_sheet_placement(page, entry, &mut violations);
         let context = enclosing_box_kind(entry, &box_context);
@@ -437,6 +479,12 @@ fn report_needs_sheet(
 /// What the actor and Phases rules read while the body is walked on a sheet.
 struct SheetNodes<'a> {
     actors: PageActors<'a>,
+    /// The keyed lists the marks name, and the balloon each part puts on its node.
+    marks: PageMarks<'a>,
+    /// Every well-formed node id with its tag, for `part-node-unknown`.
+    node_tags: BTreeMap<&'a str, &'static str>,
+    /// The first PartsList and GeneralNotes node walked, for `keyed-list-twice`.
+    keyed_lists: BTreeMap<&'static str, NodePointer>,
     /// Every Phases node walked so far, by pointer; a Step reads its parent here.
     phases: BTreeMap<NodePointer, &'a Phases>,
     on_sheet: bool,
@@ -534,8 +582,23 @@ fn check_sheet_node<'a>(
     sheet_nodes: &mut SheetNodes<'a>,
     violations: &mut Violations,
 ) {
+    check_carrier_marks(
+        &sheet_nodes.marks,
+        &sheet_nodes.marks.node_marks(entry),
+        violations,
+    );
     let actors = &sheet_nodes.actors;
     match entry.node {
+        NodeRef::Node(Node::PartsList(list)) => {
+            if keyed_list_first(sheet_nodes, "PartsList", entry, violations) {
+                check_parts_list(page, entry, list, sheet_nodes, violations);
+            }
+        }
+        NodeRef::Node(Node::GeneralNotes(notes)) => {
+            if keyed_list_first(sheet_nodes, "GeneralNotes", entry, violations) {
+                check_general_notes(entry, notes, violations);
+            }
+        }
         NodeRef::Node(Node::Item(item)) => {
             if let Some(actor) = &item.actor {
                 check_actor_known(
@@ -963,7 +1026,218 @@ fn check_sheet(page: &Page, sheet: &Sheet, entries: &[NodeEntry<'_>], violations
         }
     }
 
+    let page_marks = PageMarks::of(page);
+    for index in 0..sheet.problem.points.len().min(points.max() + 1) {
+        check_carrier_marks(
+            &page_marks,
+            &page_marks.point_marks(page, index),
+            violations,
+        );
+    }
+    check_mark_legend(sheet, entries, violations);
+
     check_actors(page, violations);
+}
+
+/// The text of each mark kind in `sheet.marks`, then `mark-legend-unused` for the text of a
+/// kind whose list the sheet does not draw. Attention items always exist.
+fn check_mark_legend(sheet: &Sheet, entries: &[NodeEntry<'_>], violations: &mut Violations) {
+    let pointer = NodePointer::root().child("sheet").child("marks");
+    for kind in MarkKind::ALL {
+        let Some(text) = sheet.marks.text(kind) else {
+            continue;
+        };
+        check_sheet_text(pointer.child(kind.as_str()), text, None, violations);
+        let has_list = match kind {
+            MarkKind::Part => entries
+                .iter()
+                .any(|entry| matches!(entry.node, NodeRef::Node(Node::PartsList(_)))),
+            MarkKind::Note => entries
+                .iter()
+                .any(|entry| matches!(entry.node, NodeRef::Node(Node::GeneralNotes(_)))),
+            MarkKind::Attention => true,
+        };
+        if !has_list {
+            violations.push(
+                pointer.child(kind.as_str()),
+                VetRule::MarkLegendUnused,
+                format!("no {} key on this sheet; remove the text", kind.as_str()),
+            );
+        }
+    }
+}
+
+/// The mark rules of one carrier in drawn order: `list-too-long` for a field of more than
+/// MARKS_MAX marks, then for each mark `mark-unknown` when its key is not in its list and
+/// `mark-repeated` when the carrier already draws that key.
+fn check_carrier_marks(
+    page_marks: &PageMarks<'_>,
+    drawn: &[CarrierMark],
+    violations: &mut Violations,
+) {
+    let list = SheetList::Marks;
+    let mut fields: Vec<NodePointer> = Vec::new();
+    for mark in drawn {
+        let Some(field) = mark.pointer.parent() else {
+            continue;
+        };
+        if field.as_str().ends_with("/marks") && !fields.contains(&field) {
+            let count = drawn
+                .iter()
+                .filter(|other| other.pointer.parent().as_ref() == Some(&field))
+                .count();
+            if count > list.max() {
+                violations.push(
+                    field.clone(),
+                    VetRule::ListTooLong,
+                    format!("{count} {}, above {}", list.name(), list.max()),
+                );
+            }
+            fields.push(field);
+        }
+    }
+    let mut seen: Vec<&crate::Mark> = Vec::new();
+    for mark in drawn {
+        let kind = mark.mark.kind();
+        if page_marks.position(&mark.mark).is_none() {
+            violations.push(
+                mark.pointer.clone(),
+                VetRule::MarkUnknown,
+                format!(
+                    "{} \"{}\" is not in the {}",
+                    kind.as_str(),
+                    mark.mark.id(),
+                    kind.list()
+                ),
+            );
+        } else if seen.contains(&&mark.mark) {
+            violations.push(
+                mark.pointer.clone(),
+                VetRule::MarkRepeated,
+                format!(
+                    "{} \"{}\" is already marked here",
+                    kind.as_str(),
+                    mark.mark.id()
+                ),
+            );
+        }
+        seen.push(&mark.mark);
+    }
+}
+
+/// True for the first PartsList or GeneralNotes node of the sheet; a later one is
+/// `keyed-list-twice`.
+fn keyed_list_first(
+    sheet_nodes: &mut SheetNodes<'_>,
+    tag: &'static str,
+    entry: &NodeEntry<'_>,
+    violations: &mut Violations,
+) -> bool {
+    match sheet_nodes.keyed_lists.get(tag) {
+        Some(first) => {
+            let list = if tag == "PartsList" {
+                MarkKind::Part.list()
+            } else {
+                MarkKind::Note.list()
+            };
+            violations.push(
+                entry.pointer.clone(),
+                VetRule::KeyedListTwice,
+                format!("the sheet has its {list} at {first}"),
+            );
+            false
+        }
+        None => {
+            sheet_nodes.keyed_lists.insert(tag, entry.pointer.clone());
+            true
+        }
+    }
+}
+
+/// A parts list's rules, part by part in field order: the id, then `node` (it names an
+/// Item, Box or Pipe that no earlier part names), the fields a node gives, and the name a
+/// part without a node needs; then the list's length.
+fn check_parts_list(
+    page: &Page,
+    entry: &NodeEntry<'_>,
+    list: &PartsList,
+    sheet_nodes: &SheetNodes<'_>,
+    violations: &mut Violations,
+) {
+    let parts = SheetList::Parts;
+    check_list_length_in(parts, &entry.pointer, list.parts.len(), violations);
+    let parts_pointer = parts.pointer_in(&entry.pointer);
+    let mut ids: BTreeMap<&str, NodePointer> = BTreeMap::new();
+    let mut nodes: BTreeMap<&str, &str> = BTreeMap::new();
+    for (index, part) in list.parts.iter().enumerate().take(parts.max() + 1) {
+        let pointer = parts_pointer.index(index);
+        check_key_id(&part.id, &pointer, &mut ids, violations);
+        let Some(node) = part.node.as_deref() else {
+            if part.name.is_none() {
+                violations.push(
+                    pointer.clone(),
+                    VetRule::PartNameMissing,
+                    format!("part \"{}\" names a node or writes its name", part.id),
+                );
+            }
+            if let Some(actor) = &part.actor {
+                check_actor_known(
+                    page,
+                    &sheet_nodes.actors,
+                    actor,
+                    pointer.child("actor"),
+                    violations,
+                );
+            }
+            continue;
+        };
+        let node_pointer = pointer.child("node");
+        match sheet_nodes.node_tags.get(node) {
+            Some(&("Item" | "Box" | "Pipe")) => match nodes.get(node) {
+                Some(first) => violations.push(
+                    node_pointer,
+                    VetRule::PartNodeTwice,
+                    format!("node \"{node}\" is already part \"{first}\""),
+                ),
+                None => {
+                    nodes.insert(node, part.id.as_str());
+                }
+            },
+            _ => violations.push(
+                node_pointer,
+                VetRule::PartNodeUnknown,
+                format!("\"{node}\" names no Item, Box or Pipe"),
+            ),
+        }
+        for (field, written) in [
+            ("name", part.name.is_some()),
+            ("what", part.what.is_some()),
+            ("actor", part.actor.is_some()),
+            ("planned", part.planned),
+        ] {
+            if written {
+                violations.push(
+                    pointer.child(field),
+                    VetRule::PartFieldFromNode,
+                    format!(
+                        "part \"{}\" takes its {field} from node \"{node}\"",
+                        part.id
+                    ),
+                );
+            }
+        }
+    }
+}
+
+/// A general notes node's rules: each note's id, then the list's length.
+fn check_general_notes(entry: &NodeEntry<'_>, notes: &GeneralNotes, violations: &mut Violations) {
+    let list = SheetList::GeneralNotes;
+    check_list_length_in(list, &entry.pointer, notes.notes.len(), violations);
+    let notes_pointer = list.pointer_in(&entry.pointer);
+    let mut ids: BTreeMap<&str, NodePointer> = BTreeMap::new();
+    for (index, note) in notes.notes.iter().enumerate().take(list.max() + 1) {
+        check_key_id(&note.id, &notes_pointer.index(index), &mut ids, violations);
+    }
 }
 
 /// The actors list: its length, then per actor its id, name, text and tint, and
@@ -1258,6 +1532,20 @@ fn check_links(
             &mut orders,
             violations,
         );
+        if sheet_nodes.on_sheet {
+            if !link.marks.is_empty() && link.label.is_none() {
+                violations.push(
+                    link_pointer.child("marks"),
+                    VetRule::LinkMarksWithoutTag,
+                    "a link's marks sit in its tag; give it a label".to_string(),
+                );
+            }
+            check_carrier_marks(
+                &sheet_nodes.marks,
+                &PageMarks::link_marks(link, index),
+                violations,
+            );
+        }
     }
 }
 
@@ -1429,7 +1717,9 @@ fn check_entry<'a>(
             | Node::Tee(_)
             | Node::Text(_)
             | Node::Callout(_)
-            | Node::Step(_),
+            | Node::Step(_)
+            | Node::PartsList(_)
+            | Node::GeneralNotes(_),
         )
         | NodeRef::TeeArm(_) => {}
     }
@@ -1520,7 +1810,9 @@ fn check_kind_and_tint(
             | Node::Frame(_)
             | Node::View(_)
             | Node::Phases(_)
-            | Node::Step(_),
+            | Node::Step(_)
+            | Node::PartsList(_)
+            | Node::GeneralNotes(_),
         ) => {}
     }
 }

@@ -1471,6 +1471,27 @@ fn actor_document() -> Value {
     document
 }
 
+/// The smallest sheet with marks: the `api` Item marked with the attention item and a
+/// note, a parts list keyed by `worker`, and the general notes.
+fn marks_document() -> Value {
+    let mut document = sheet_document();
+    let view = &mut document["body"][0];
+    view["children"][0]["children"][0]["marks"] =
+        json!([{ "attention": "first" }, { "note": "retry" }]);
+    let children = view["children"].as_array_mut().unwrap();
+    children.push(json!({
+        "tag": "PartsList",
+        "title": "Parts",
+        "parts": [{ "id": "worker", "node": "worker", "why": "Runs the jobs." }]
+    }));
+    children.push(json!({
+        "tag": "GeneralNotes",
+        "title": "Notes",
+        "notes": [{ "id": "retry", "text": "A job retries once." }]
+    }));
+    document
+}
+
 /// `document` laid out flat with fixed metrics, flipped to iso, and with every node and
 /// part a sheet draws above `keep` removed, so the writer meets `keep` first.
 fn traced_at(document: Value, keep: &str) -> String {
@@ -1582,6 +1603,25 @@ fn every_sheet_surface_is_refused_on_every_path() {
                 without_sheet.as_object_mut().unwrap().remove("sheet");
                 assert!(vet_rules(without_sheet).contains(&(pointer.to_string(), "needs-sheet")));
                 assert_eq!(traced_at(actor_document(), pointer), pointer);
+            }
+            stencil_model::SheetSurface::Marks
+            | stencil_model::SheetSurface::PartsList
+            | stencil_model::SheetSurface::GeneralNotes => {
+                let pointer = match surface {
+                    stencil_model::SheetSurface::Marks => "/body/0/children/0/children/0",
+                    stencil_model::SheetSurface::PartsList => "/body/0/children/1",
+                    _ => "/body/0/children/2",
+                };
+                let mut without_sheet = marks_document();
+                without_sheet.as_object_mut().unwrap().remove("sheet");
+                let needs = match surface {
+                    stencil_model::SheetSurface::Marks => {
+                        "/body/0/children/0/children/0/marks".to_string()
+                    }
+                    _ => pointer.to_string(),
+                };
+                assert!(vet_rules(without_sheet).contains(&(needs, "needs-sheet")));
+                assert_eq!(traced_at(marks_document(), pointer), pointer);
             }
             // An actor field and a by-actor legend entry leave no trace that is not also
             // legal on another page, so vet alone holds them.

@@ -305,6 +305,10 @@ nine_lanes="$(printf '"lane-%s",' 1 2 3 4 5 6 7 8 9)"
 nine_phases="$(printf '{id: "phase-%s", title: "Phase"},' 1 2 3 4 5 6 7 8 9)"
 many_steps="$(printf '{tag: "Step", lane: "operator", phase: "describe", title: "Filler step"},%.0s' {1..65})"
 seven_lines="$(printf '"line %s",' 1 2 3 4 5 6 7)"
+# Fillers for the key list bounds: 48 parts beside sheet-small's two, and 16
+# notes beside its one.
+many_parts="$(printf '{id: "part-%s", name: "Part", why: "Filler."},' $(seq 1 48))"
+many_notes="$(printf '{id: "note-%s", text: "Filler."},' $(seq 1 16))"
 
 # figure | name | sed expression applied to figures/<figure>.cue | text the
 # vet error must contain [| second text the error must also contain]. A g7 or
@@ -370,6 +374,9 @@ sequence_cases=(
 	'needs-sheet-actor|s/title: "Operator", subtitle: "submits and cancels jobs"/actor: "crew", &/|_needsSheet.actor'
 	'needs-sheet-legend-by-actor|s/{line: "solid", text: "call"}/{line: "solid", by_actor: true, text: "call"}/|_needsSheet."legend-by-actor"'
 	'needs-sheet-phases|s/^\tbody: \[{$/\tbody: [{tag: "Phases", lanes: ["crew"], phases: [{id: "run", title: "Run"}], children: [{tag: "Step", lane: "crew", phase: "run", title: "Work"}]}, {/|_needsSheet.phases'
+	'needs-sheet-marks|s/title: "Operator", subtitle: "submits and cancels jobs"/marks: [{part: "console"}], &/|_needsSheet.marks'
+	'needs-sheet-parts-list|s/^\tbody: \[{$/\tbody: [{tag: "PartsList", title: "Parts", parts: [{id: "console", name: "Console", why: "Submits jobs."}]}, {/|_needsSheet."parts-list"'
+	'needs-sheet-general-notes|s/^\tbody: \[{$/\tbody: [{tag: "GeneralNotes", title: "Notes", notes: [{id: "retry", text: "Jobs retry once."}]}, {/|_needsSheet."general-notes"'
 	'needs-sheet-step|s/^\tbody: \[{$/\tbody: [{tag: "Phases", lanes: ["crew"], phases: [{id: "run", title: "Run"}], children: [{tag: "Step", lane: "crew", phase: "run", title: "Work"}]}, {/|_needsSheet.step'
 	'line-kind-listed-twice|s/^figure: plain.#Page \& {/_house: plain.grammar \& {lines: [{line: "dash", corner: 4}, {line: "dash", bend: "curve"}]}\n&/|_house._linesAreUnique'
 )
@@ -403,6 +410,14 @@ sheet_cases=(
 	"list-too-long-lanes|s/lanes: \[\"operator\"/lanes: [$nine_lanes \"operator\"/|lanes: invalid value|list.MaxItems(8)"
 	"list-too-long-phases|s/^\t\t\t\t\tphases: \[$/&\n\t\t\t\t\t\t$nine_phases/|phases: invalid value|list.MaxItems(8)"
 	"list-too-long-steps|s/^\t\t\t\t\tchildren: \[$/&\n\t\t\t\t\t\t$many_steps/|children: invalid value|list.MaxItems(64)"
+	'mark-unknown-part|s/{part: "worker"}, {part: "queue"}/{part: "worker"}, {part: "scheduler"}/|_partMarksUnknown.scheduler'
+	'mark-unknown-note|s/marks: \[{note: "no-store-credentials"}\]/marks: [{note: "no-credentials"}]/|_noteMarksUnknown."no-credentials"'
+	'mark-unknown-attention|s/marks: \[{attention: "model-updates"}\]$/marks: [{attention: "model-update"}]/|_attentionMarksUnknown."model-update"'
+	'link-marks-without-tag|/label:     "no direct write"/d|_linkMarksWithoutTag'
+	'part-node-unknown|s/{id: "queue", node: "queue",/{id: "queue", node: "s-evaluate",/|_partNodesUnknown."s-evaluate"'
+	'part-node-twice|s/{id: "queue", node: "queue",/{id: "queue", node: "worker",/|_partNodesTwice.worker'
+	'part-field-from-node|s/{id: "gateway", node: "gateway",/& name: "Gateway",/|_partFieldFromNode'
+	'keys-used-note|s/, {note: "no-store-credentials"}//; /marks: \[{note: "no-store-credentials"}\]/d|_notesUnflagged."no-store-credentials"'
 	"list-too-long-step-lines|s/lines: \[\"in plain language\", \"camera and hours\"\]/lines: [$seven_lines]/|lines: invalid value|list.MaxItems(6)"
 )
 sheet_small_cases=(
@@ -411,9 +426,9 @@ sheet_small_cases=(
 	'sheet-body-not-view|s/^\t}]$/\t}, {tag: "Row", children: [{tag: "Item", kind: "service", title: "Loose", subtitle: "outside every view"}]}]/|_sheetBodyNotView."1"'
 	'view-not-top-level|s/^\t\t}]$/\t\t}, {tag: "View", title: "Inner", children: [{tag: "Item", kind: "service", title: "Nested", subtitle: "inside another view"}]}]/|_viewNotTopLevel.Inner'
 	'sheet-without-lines|/^\tlinks:/d; /tag: "Tee"/d; s/^\tlegend: .*/\tlegend: []/|_sheetWithoutLines'
-	'list-empty-problem-points|s/points: \[{text: "Calls wait on a slow store."}\]/points: []/|sheet.problem.points: invalid value []|list.MinItems(1)'
+	'list-empty-problem-points|s/points: \[{text: "Calls wait on a slow store.", marks: \[{attention: "staleness"}\]}\]/points: []/|sheet.problem.points: invalid value []|list.MinItems(1)'
 	'list-empty-attention-items|s/items: \[{id: "staleness".*}\]$/items: []/|sheet.attention.items: invalid value []|list.MinItems(1)'
-	'list-too-long-problem-points|s/points: \[{text: "Calls wait on a slow store."}\]/points: [{text: "point 1"}, {text: "point 2"}, {text: "point 3"}, {text: "point 4"}, {text: "point 5"}, {text: "point 6"}, {text: "point 7"}, {text: "point 8"}, {text: "point 9"}]/|list.MaxItems(8)'
+	'list-too-long-problem-points|s/points: \[{text: "Calls wait on a slow store.", marks: \[{attention: "staleness"}\]}\]/points: [{text: "point 1", marks: [{attention: "staleness"}]}, {text: "point 2"}, {text: "point 3"}, {text: "point 4"}, {text: "point 5"}, {text: "point 6"}, {text: "point 7"}, {text: "point 8"}, {text: "point 9"}]/|list.MaxItems(8)'
 	'list-too-long-answer-paragraphs|s/paragraphs: \[{lead: "Cached reads.", text: "A read never waits on the store."}\]/paragraphs: ["paragraph 1", "paragraph 2", "paragraph 3", "paragraph 4", "paragraph 5"]/|list.MaxItems(4)'
 	'list-too-long-attention-items|s/items: \[{id: "staleness".*}\]$/items: [{id: "item-1", lead: "Item 1.", text: "text"}, {id: "item-2", lead: "Item 2.", text: "text"}, {id: "item-3", lead: "Item 3.", text: "text"}, {id: "item-4", lead: "Item 4.", text: "text"}, {id: "item-5", lead: "Item 5.", text: "text"}, {id: "item-6", lead: "Item 6.", text: "text"}, {id: "item-7", lead: "Item 7.", text: "text"}, {id: "item-8", lead: "Item 8.", text: "text"}, {id: "item-9", lead: "Item 9.", text: "text"}]/|list.MaxItems(8)'
 	'sheet-text-too-long-wordmark|s/wordmark: "relay"/wordmark: "wwwwwwwwwwwwwwwwwwwwwwwww"/|sheet.wordmark: invalid value|strings.MaxRunes(24)'
@@ -421,6 +436,20 @@ sheet_small_cases=(
 	'tee-arm-actor-differs|s/^\tgrammar: "plain"$/&\n\tactors: [{id: "crew", name: "Crew", tint: 2}, {id: "ops", name: "Ops", tint: 3}]/; s/{tag: "Tee", line: "solid", hub: "fan out", arms: \[{tag: "Pipe", dir: "h", line: "solid", label: "read"}/{tag: "Tee", line: "solid", actor: "crew", hub: "fan out", arms: [{tag: "Pipe", dir: "h", line: "solid", actor: "ops", label: "read"}/; s/id: "client", kind: "service"/&, actor: "crew"/|_teeArmActorDiffers."0"'
 	'key-duplicate-attention|s/items: \[{id: "staleness", \(.*\)}\]$/items: [{id: "staleness", \1}, {id: "staleness", \1}]/|_keysUsedTwice."attention.staleness"'
 	'link-via-outside-sheet|s/x: 1375/x: 1381/|_viaOutsidePage'
+	'mark-repeated-carrier|s/marks: \[{part: "cache"}\]/marks: [{part: "cache"}, {part: "cache"}]/|_marksRepeated."part.cache"'
+	'mark-repeated-balloon|s/subtitle: "web front end"/&, marks: [{part: "client"}]/|_partBalloonRepeated.client'
+	'mark-legend-unused|s/tag:   "GeneralNotes"/tag: "Fact", text: "no notes"/; /title: "General notes"/d; /notes: \[{id: "bounded"/d; s/, marks: \[{note: "bounded"}\]//; s/^\tsheet: {$/\tsheet: {marks: {note: "a rule"}/|_markLegendUnused.note'
+	'keyed-list-twice|s/notes: \[{id: "bounded", text: "A cached answer is never older than a minute."}\]/&\n\t\t}, {\n\t\t\ttag: "GeneralNotes", title: "More notes", notes: [{id: "second", text: "Another note."}]/; s/marks: \[{note: "bounded"}\]/marks: [{note: "bounded"}, {note: "second"}]/|_keyedListTwice.GeneralNotes'
+	'part-name-missing|s/{id: "cache", name: "Cache", /{id: "cache", /|_partNameMissing'
+	'key-duplicate-part|s/{id: "cache", name/{id: "client", name/; s/marks: \[{part: "cache"}\]/marks: [{part: "client"}]/|_keysUsedTwice."part.client"'
+	'key-duplicate-note|s/notes: \[{id: "bounded", text: "\([^"]*\)"}\]/notes: [{id: "bounded", text: "\1"}, {id: "bounded", text: "Again."}]/|_keysUsedTwice."note.bounded"'
+	'list-too-long-marks|s/marks: \[{attention: "staleness"}\]/marks: [{attention: "staleness"}, {part: "client"}, {part: "cache"}, {note: "bounded"}, {part: "client"}]/|marks: invalid value|list.MaxItems(4)'
+	"list-too-long-parts|s/^\t\t\tparts: \[$/&\n\t\t\t\t$many_parts/|parts: invalid value|list.MaxItems(48)"
+	"list-too-long-general-notes|s/notes: \[{id: \"bounded\"/notes: [$many_notes {id: \"bounded\"/|notes: invalid value|list.MaxItems(16)"
+	'list-empty-parts|/^\t\t\tparts: \[$/,/^\t\t\t\]$/d; s/^\t\t\ttag:   "PartsList"$/&\n\t\t\tparts: []/; s/, marks: \[{part: "cache"}\]//|parts: invalid value []|list.MinItems(1)'
+	'list-empty-general-notes|s/notes: \[{id: "bounded".*\]$/notes: []/; s/, marks: \[{note: "bounded"}\]//|notes: invalid value []|list.MinItems(1)'
+	'keys-used-part|s/{id: "cache", name: "Cache"/{id: "spare", name: "Spare", why: "Kept for later."},\n\t\t\t\t&/|_partsUnmarked.spare'
+	'keys-used-attention|s/items: \[{id: "staleness", \(.*\)}\]$/items: [{id: "staleness", \1}, {id: "later", lead: "Later.", text: "Not marked anywhere."}]/|_attentionUnmarked.later'
 )
 cases=()
 for entry in "${g7_cases[@]}"; do

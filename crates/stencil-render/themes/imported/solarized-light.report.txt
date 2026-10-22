@@ -269,4 +269,15 @@ row contrast tints.8.ink on lane band 8: 12.01, at least 4.50, passed
 row contrast ink.secondary on lane band 8: 4.31, at least 4.50, FAILED
 row contrast tints.8.ink on sheet.paper: 13.92, at least 4.50, passed
 row contrast tints.8.wire on sheet.paper: 4.21, at least 3.00, passed
-stencil theme check solarized-light: 271 rows, 163 passed, 108 failed
+row contrast sheet.cell on sheet.mark_ink: 9.69, at least 4.50, passed
+row contrast ink.primary on tints.1.fill: 10.82, at least 4.50, passed
+row contrast ink.primary on tints.2.fill: 10.75, at least 4.50, passed
+row contrast ink.primary on tints.3.fill: 11.14, at least 4.50, passed
+row contrast ink.primary on tints.4.fill: 11.21, at least 4.50, passed
+row contrast ink.primary on tints.5.fill: 10.14, at least 4.50, passed
+row contrast ink.primary on tints.6.fill: 11.28, at least 4.50, passed
+row contrast ink.primary on tints.7.fill: 10.35, at least 4.50, passed
+row contrast ink.primary on tints.8.fill: 10.28, at least 4.50, passed
+row contrast sheet.mark_ink on sheet.paper: 13.92, at least 3.00, passed
+row contrast sheet.mark_ink on sheet.cell: 9.69, at least 3.00, passed
+stencil theme check solarized-light: 282 rows, 174 passed, 108 failed

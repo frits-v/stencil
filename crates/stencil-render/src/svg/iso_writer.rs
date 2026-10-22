@@ -270,7 +270,11 @@ impl<'a> SvgWriter<'a> {
             | Node::Tee(_) => {
                 return Ok(None);
             }
-            Node::View(_) | Node::Phases(_) | Node::Step(_) => {
+            Node::View(_)
+            | Node::Phases(_)
+            | Node::Step(_)
+            | Node::PartsList(_)
+            | Node::GeneralNotes(_) => {
                 return Err(RenderError::SheetSurface {
                     pointer: node.pointer.clone(),
                 });
@@ -698,7 +702,9 @@ impl<'a> SvgWriter<'a> {
             | Node::Text(_)
             | Node::View(_)
             | Node::Phases(_)
-            | Node::Step(_) => {}
+            | Node::Step(_)
+            | Node::PartsList(_)
+            | Node::GeneralNotes(_) => {}
         }
     }
 

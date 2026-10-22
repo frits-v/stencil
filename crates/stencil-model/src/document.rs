@@ -36,6 +36,8 @@ pub const CAPTION_SCALARS_MAX: usize = 60;
 pub const VIEW_GAP_DEFAULT_PX: u16 = 16;
 /// Columns a phase of a Phases node holds; a Step's `col` and `span` stay inside them.
 pub const PHASE_COLUMNS_MAX: u8 = 6;
+/// The marks one carrier, line or compartment holds (section 14.2 rule 4).
+pub const MARKS_MAX: usize = 4;
 /// Scalar values in an `id`, the `{0,63}` repetition plus the first character.
 pub const ID_SCALARS_MAX: usize = 64;
 /// The JSON Schema and CUE pattern for `id`. `is_valid_id` is its Rust twin.
@@ -230,6 +232,10 @@ pub struct Sheet {
     pub problem: Problem,
     pub answer: Answer,
     pub attention: Attention,
+    /// What each mark kind means, printed in the legend strip; absent prints `part`,
+    /// `general note` or `attention`.
+    #[serde(default, skip_serializing_if = "MarkLegend::is_empty")]
+    pub marks: MarkLegend,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
@@ -252,6 +258,11 @@ pub struct Problem {
 pub struct ProblemPoint {
     #[schemars(length(min = 1, max = 400))]
     pub text: String,
+    /// Balloons, flags and diamonds keyed to the parts list, the general notes and the
+    /// attention items (section 14.2 rule 4).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[schemars(length(max = 4))]
+    pub marks: Vec<Mark>,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
@@ -412,6 +423,8 @@ pub enum Node {
     View(View),
     Phases(Phases),
     Step(Step),
+    PartsList(PartsList),
+    GeneralNotes(GeneralNotes),
 }
 
 /// A numbered view of a design sheet: a heading with its number, title, subtitle and note,
@@ -514,15 +527,261 @@ pub struct Step {
     pub span: u8,
     #[schemars(length(min = 1, max = 400))]
     pub title: String,
+    /// Each line a string, or `{"text": ..., "marks": [...]}` to mark that line.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[schemars(length(max = 6), inner(length(min = 1, max = 400)))]
-    pub lines: Vec<String>,
+    #[schemars(length(max = 6))]
+    pub lines: Vec<MarkedText>,
     #[serde(default, skip_serializing_if = "StepLook::is_box")]
     pub look: StepLook,
     /// What the box of the look is filled with; absent takes the parent's `step_fill`, and
     /// without one the look's own fill. A text look draws no box and takes none.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub fill: Option<StepFill>,
+    /// Marks on the title line, right-aligned.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[schemars(length(max = 4))]
+    pub marks: Vec<Mark>,
+    /// One mark centred on the top-right corner, half outside it.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub corner_mark: Option<Mark>,
+}
+
+/// What a mark keys: a balloon names a part of the parts list, a flag a general note, a
+/// diamond an attention item (section 14.2 rule 4). Its drawn number is the key's position
+/// in its list plus one.
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "lowercase")]
+pub enum Mark {
+    /// A balloon keyed to the parts list: `{"part": "verdict-store"}`.
+    Part(#[schemars(regex(pattern = ID_PATTERN))] String),
+    /// A flag keyed to the general notes: `{"note": "evidence-by-reference"}`.
+    Note(#[schemars(regex(pattern = ID_PATTERN))] String),
+    /// A diamond keyed to the attention items: `{"attention": "plan-approval"}`.
+    Attention(#[schemars(regex(pattern = ID_PATTERN))] String),
+}
+
+/// The three kinds of mark, in the order the legend strip samples them.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub enum MarkKind {
+    Part,
+    Note,
+    Attention,
+}
+
+impl MarkKind {
+    pub const ALL: [MarkKind; 3] = [MarkKind::Part, MarkKind::Note, MarkKind::Attention];
+
+    /// The serialized key, for example "note".
+    pub fn as_str(self) -> &'static str {
+        match self {
+            MarkKind::Part => "part",
+            MarkKind::Note => "note",
+            MarkKind::Attention => "attention",
+        }
+    }
+
+    /// The glyph the kind draws: "balloon", "flag" or "diamond".
+    pub fn glyph(self) -> &'static str {
+        match self {
+            MarkKind::Part => "balloon",
+            MarkKind::Note => "flag",
+            MarkKind::Attention => "diamond",
+        }
+    }
+
+    /// The list the kind keys, in messages: "parts list", "general notes" or "attention
+    /// items".
+    pub fn list(self) -> &'static str {
+        match self {
+            MarkKind::Part => "parts list",
+            MarkKind::Note => "general notes",
+            MarkKind::Attention => "attention items",
+        }
+    }
+
+    /// The strip's sample text when `sheet.marks` sets none.
+    pub fn default_legend(self) -> &'static str {
+        match self {
+            MarkKind::Part => "part",
+            MarkKind::Note => "general note",
+            MarkKind::Attention => "attention",
+        }
+    }
+}
+
+impl Mark {
+    pub fn kind(&self) -> MarkKind {
+        match self {
+            Mark::Part(_) => MarkKind::Part,
+            Mark::Note(_) => MarkKind::Note,
+            Mark::Attention(_) => MarkKind::Attention,
+        }
+    }
+
+    /// The id of the key the mark names.
+    pub fn id(&self) -> &str {
+        match self {
+            Mark::Part(id) | Mark::Note(id) | Mark::Attention(id) => id,
+        }
+    }
+}
+
+/// A line of text and the marks keyed to it: a string, or `{"text": ..., "marks": [...]}`.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(untagged)]
+pub enum MarkedText {
+    Plain(#[schemars(length(min = 1, max = 400))] String),
+    Marked(MarkedLine),
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct MarkedLine {
+    #[schemars(length(min = 1, max = 400))]
+    pub text: String,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[schemars(length(max = 4))]
+    pub marks: Vec<Mark>,
+}
+
+impl MarkedText {
+    pub fn text(&self) -> &str {
+        match self {
+            MarkedText::Plain(text) => text,
+            MarkedText::Marked(line) => &line.text,
+        }
+    }
+
+    pub fn marks(&self) -> &[Mark] {
+        match self {
+            MarkedText::Plain(_) => &[],
+            MarkedText::Marked(line) => &line.marks,
+        }
+    }
+
+    /// True for an object entry, whose text is at `<entry>/text`.
+    pub fn is_marked(&self) -> bool {
+        matches!(self, MarkedText::Marked(_))
+    }
+}
+
+impl From<&str> for MarkedText {
+    fn from(text: &str) -> Self {
+        MarkedText::Plain(text.to_string())
+    }
+}
+
+/// What each mark kind means, printed beside its sample in the legend strip.
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct MarkLegend {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(length(min = 1, max = 400))]
+    pub part: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(length(min = 1, max = 400))]
+    pub note: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(length(min = 1, max = 400))]
+    pub attention: Option<String>,
+}
+
+impl MarkLegend {
+    fn is_empty(legend: &MarkLegend) -> bool {
+        legend.part.is_none() && legend.note.is_none() && legend.attention.is_none()
+    }
+
+    /// The authored text of a kind, when there is one.
+    pub fn text(&self, kind: MarkKind) -> Option<&str> {
+        match kind {
+            MarkKind::Part => self.part.as_deref(),
+            MarkKind::Note => self.note.as_deref(),
+            MarkKind::Attention => self.attention.as_deref(),
+        }
+    }
+}
+
+/// The parts list of a design sheet: the keys of its balloons, numbered in list order.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct PartsList {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(regex(pattern = ID_PATTERN))]
+    pub id: Option<String>,
+    #[schemars(length(min = 1, max = 400))]
+    pub title: String,
+    /// Right-aligned on the title row.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(length(min = 1, max = 400))]
+    pub note: Option<String>,
+    #[schemars(length(min = 1, max = 48))]
+    pub parts: Vec<PartEntry>,
+}
+
+/// A part: the key of a balloon. With `node` the part is that drawn Item, Box or Pipe: its
+/// name, what, actor and planned come from the node, and the node carries its balloon
+/// without a mark.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct PartEntry {
+    /// Unique among the parts.
+    #[schemars(regex(pattern = ID_PATTERN))]
+    pub id: String,
+    /// The id of the Item, Box or Pipe the part is.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(regex(pattern = ID_PATTERN))]
+    pub node: Option<String>,
+    /// Required without `node`, rejected with it.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(length(min = 1, max = 400))]
+    pub name: Option<String>,
+    /// What the part is; rejected with `node`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(length(min = 1, max = 400))]
+    pub what: Option<String>,
+    #[schemars(length(min = 1, max = 400))]
+    pub why: String,
+    /// Rejected with `node`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(regex(pattern = ID_PATTERN))]
+    pub actor: Option<String>,
+    /// Not built yet; rejected with `node`.
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub planned: bool,
+}
+
+/// The general notes of a design sheet: the keys of its flags, numbered in list order.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct GeneralNotes {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(regex(pattern = ID_PATTERN))]
+    pub id: Option<String>,
+    #[schemars(length(min = 1, max = 400))]
+    pub title: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(length(min = 1, max = 400))]
+    pub note: Option<String>,
+    #[schemars(length(min = 1, max = 16))]
+    pub notes: Vec<GeneralNote>,
+    /// Under a dashed rule after the notes.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(length(min = 1, max = 400))]
+    pub foot: Option<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct GeneralNote {
+    /// Unique among the general notes.
+    #[schemars(regex(pattern = ID_PATTERN))]
+    pub id: String,
+    #[schemars(length(min = 1, max = 400))]
+    pub text: String,
+    /// A smaller line under the text.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(length(min = 1, max = 400))]
+    pub detail: Option<String>,
 }
 
 /// A lane's band. wash: the actor's fill mixed halfway toward the paper, with the drafting
@@ -719,6 +978,14 @@ pub struct BoxNode {
     pub label: String,
     #[schemars(length(min = 1, max = 256))]
     pub children: Vec<Node>,
+    /// Balloons, flags and diamonds keyed to the parts list, the general notes and the
+    /// attention items (section 14.2 rule 4).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[schemars(length(max = 4))]
+    pub marks: Vec<Mark>,
+    /// One mark centred on the top-right corner, half outside it.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub corner_mark: Option<Mark>,
 }
 
 /// Any named leaf. `kind` names one of the grammar's item kinds.
@@ -748,6 +1015,14 @@ pub struct Item {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[schemars(regex(pattern = ID_PATTERN))]
     pub actor: Option<String>,
+    /// Balloons, flags and diamonds keyed to the parts list, the general notes and the
+    /// attention items (section 14.2 rule 4).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[schemars(length(max = 4))]
+    pub marks: Vec<Mark>,
+    /// One mark centred on the top-right corner, half outside it.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub corner_mark: Option<Mark>,
 }
 
 /// Where a fact comes from (section 13.7): `doc` is read from the live documentation when
@@ -923,6 +1198,10 @@ pub struct Pipe {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[schemars(regex(pattern = ID_PATTERN))]
     pub to: Option<String>,
+    /// On a design sheet, marks set in the tag after the label and sub.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[schemars(length(max = 4))]
+    pub marks: Vec<Mark>,
 }
 
 /// How a Pipe is drawn under iso: a round tube on its plane, or a band, a flat wide arrow
@@ -1068,6 +1347,11 @@ pub struct Link {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[schemars(range(min = 1, max = 256))]
     pub order: Option<u16>,
+    /// On a design sheet, marks set in the tag after the label and sub; a link with marks
+    /// has a label.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[schemars(length(max = 4))]
+    pub marks: Vec<Mark>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema, Default)]
@@ -1156,6 +1440,8 @@ impl Node {
             Node::View(_) => "View",
             Node::Phases(_) => "Phases",
             Node::Step(_) => "Step",
+            Node::PartsList(_) => "PartsList",
+            Node::GeneralNotes(_) => "GeneralNotes",
         }
     }
 
@@ -1177,6 +1463,8 @@ impl Node {
             Node::View(view) => &view.id,
             Node::Phases(phases) => &phases.id,
             Node::Step(step) => &step.id,
+            Node::PartsList(list) => &list.id,
+            Node::GeneralNotes(notes) => &notes.id,
         };
         id.as_deref()
     }

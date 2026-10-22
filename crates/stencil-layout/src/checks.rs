@@ -17,6 +17,8 @@ use crate::{
 };
 use stencil_model::PagePoint;
 
+pub use crate::marks_clear::marks_clear;
+
 /// Why print-fit does not apply when no `--print-width` was given.
 const NO_PRINT_WIDTH: &str = "no print width";
 
@@ -145,7 +147,11 @@ pub fn child_inside_container(geometry: &PageGeometry) -> CheckReport {
         }
     }
     for node in &geometry.nodes {
-        for part in node.parts.iter().filter(|part| part.name.is_sheet()) {
+        // A mark glyph and its numeral may sit half outside a carrier's corner by design;
+        // marks-clear owns where they lie.
+        for part in node.parts.iter().filter(|part| {
+            part.name.is_sheet() && !part.name.is_mark_glyph() && part.name != PartName::MarkNumeral
+        }) {
             examined += 1;
             if extends_outside(&part.bounds, &node.bounds) {
                 defects.push(Defect {
@@ -381,7 +387,9 @@ fn examine_text_parts(
                 ),
             });
         }
-        if extends_outside(&part.bounds, owner_bounds) {
+        // A carrier's numeral lies in its glyph, which may stand half outside the carrier's
+        // corner; marks-clear reads where it lies.
+        if part.name != PartName::MarkNumeral && extends_outside(&part.bounds, owner_bounds) {
             defects.push(Defect {
                 pointer: owner.clone(),
                 message: format!(
@@ -757,7 +765,9 @@ pub fn pipes_land(page: &Page, geometry: &PageGeometry) -> CheckReport {
                 | Node::Frame(_)
                 | Node::View(_)
                 | Node::Phases(_)
-                | Node::Step(_),
+                | Node::Step(_)
+                | Node::PartsList(_)
+                | Node::GeneralNotes(_),
             ) => {}
         }
     }
@@ -1139,7 +1149,9 @@ fn pipe_lands_on(tag: NodeTag) -> bool {
         | NodeTag::ProblemPoint
         | NodeTag::View
         | NodeTag::ActorChip
-        | NodeTag::Phases => false,
+        | NodeTag::Phases
+        | NodeTag::PartsList
+        | NodeTag::GeneralNotes => false,
     }
 }
 
