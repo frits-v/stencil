@@ -181,8 +181,8 @@ fn note_kind_selects_its_text_style() {
 }
 
 /// Section 14.4 rules 1 and 3: a sheet pads its root 50 px on every side, so a 1280 px
-/// page has a 1380 px canvas; the frame's border sits 12 px in and its rule 32 px in, and
-/// the title block starts at the padding.
+/// page has a 1380 px canvas; the frame's border sits 12 px in and its rule 32 px in, the
+/// grid starts past the rule's 1.5 px stroke, and the title block starts at the padding.
 #[test]
 fn a_sheet_pads_its_root_50_px_and_draws_its_frame_inside_the_padding() {
     let page = page_from(json!({
@@ -220,12 +220,141 @@ fn a_sheet_pads_its_root_50_px_and_draws_its_frame_inside_the_padding() {
     let rule = part(root, PartName::RefRule).bounds;
     assert_eq!((rule.x, rule.y), (32.0, 32.0));
     let grid = part(root, PartName::Grid).bounds;
-    assert_eq!((grid.x, grid.y), (33.0, 33.0));
-    assert_close(grid.bottom(), geometry.canvas.height - 33.0, "grid bottom");
+    assert_eq!((grid.x, grid.y), (33.5, 33.5));
+    assert_close(grid.bottom(), geometry.canvas.height - 33.5, "grid bottom");
     let ticks = root
         .parts
         .iter()
         .filter(|part| part.name == PartName::RefTick)
         .count();
     assert_eq!(ticks, 2 * 7 + 2 * 5);
+}
+
+/// A sheet with one View holding `children`, its legend keying a solid line.
+fn sheet_page(children: serde_json::Value) -> stencil_model::Page {
+    page_from(json!({
+        "title": "Title",
+        "kicker": "Kicker",
+        "lede": "Lede",
+        "badge": "Internal",
+        "sheet": {
+            "problem": { "points": [{ "text": "A point." }] },
+            "answer": { "statement": "A statement." },
+            "attention": { "items": [{ "id": "first", "lead": "Lead.", "text": "Text." }] }
+        },
+        "body": [{ "tag": "View", "title": "System", "children": children }],
+        "legend": [{ "line": "solid", "text": "request path" }]
+    }))
+}
+
+fn google_cloud_box() -> serde_json::Value {
+    json!({
+        "tag": "Box",
+        "kind": "gcp",
+        "label": "Google Cloud",
+        "children": [{ "tag": "Pipe", "dir": "h", "line": "solid", "label": "link" }]
+    })
+}
+
+/// Section 14.4 rules 4 and 8: the legend strip is the last row inside the title block's
+/// 1.5 px border, under a 1 px hairline as wide as the block's inside, and the cell rules
+/// stop above it.
+#[test]
+fn a_sheet_holds_its_legend_strip_inside_the_title_block_under_a_hairline() {
+    let geometry = layout(&sheet_page(json!([
+        { "tag": "Pipe", "dir": "h", "line": "solid", "label": "link" }
+    ])));
+    let block = node(&geometry, "/sheet").bounds;
+    let legend = node(&geometry, "/legend");
+    let strip = legend.bounds;
+    assert_close(strip.x, block.x + 1.5, "strip left");
+    assert_close(strip.right(), block.right() - 1.5, "strip right");
+    assert_close(strip.bottom(), block.bottom() - 1.5, "strip bottom");
+    let hairline = part(legend, PartName::StripRule).bounds;
+    assert_close(hairline.y, strip.y, "hairline top");
+    assert_close(hairline.height, 1.0, "hairline height");
+    assert_close(hairline.width, block.width - 3.0, "hairline width");
+    let cell_rules: Vec<_> = node(&geometry, "/sheet")
+        .parts
+        .iter()
+        .filter(|part| part.name == PartName::CellRule)
+        .collect();
+    assert_eq!(cell_rules.len(), 3);
+    for rule in cell_rules {
+        assert_close(rule.bounds.bottom(), strip.y, "cell rule bottom");
+    }
+}
+
+/// Section 14.4 rule 4: the head, problem, answer and attention cells take the width left
+/// after their padding at weights 316 : 446 : 394 : 338.
+#[test]
+fn the_title_block_cells_share_their_width_at_their_weights() {
+    let geometry = layout(&sheet_page(json!([
+        { "tag": "Pipe", "dir": "h", "line": "solid", "label": "link" }
+    ])));
+    let head = node(&geometry, "/kicker").bounds.width;
+    let others: Vec<f32> = ["/sheet/problem", "/sheet/answer", "/sheet/attention"]
+        .iter()
+        .map(|pointer| node(&geometry, pointer).bounds.width - 28.0)
+        .collect();
+    let content = [head, others[0], others[1], others[2]];
+    let weights = [316.0, 446.0, 394.0, 338.0];
+    let total: f32 = content.iter().sum();
+    let weight_total: f32 = weights.iter().sum();
+    for (width, weight) in content.iter().zip(weights) {
+        assert_close(width / total, weight / weight_total, "cell share");
+    }
+}
+
+/// Section 14.4 rules 4 and 12: on a sheet the kicker is set in `sheet_kicker` and a Box
+/// label in `sheet_label`; off a sheet the kicker keeps `kicker` and the gcp Box its bar.
+#[test]
+fn a_sheet_sets_its_kicker_and_box_labels_in_sheet_styles() {
+    use stencil_model::text::TextStyleName;
+    let style = |name: TextStyleName| name.text_style().style;
+    let run_style = |geometry: &stencil_layout::PageGeometry, pointer: &str, name| {
+        part(node(geometry, pointer), name)
+            .text
+            .as_ref()
+            .expect("a text part")
+            .style
+    };
+
+    let sheet = layout(&sheet_page(json!([google_cloud_box()])));
+    assert_eq!(
+        run_style(&sheet, "/kicker", PartName::Text),
+        style(TextStyleName::SheetKicker)
+    );
+    assert_eq!(
+        run_style(&sheet, "/body/0/children/0", PartName::Label),
+        style(TextStyleName::SheetLabel)
+    );
+
+    let plain = layout(&page_with_body(1280, json!([google_cloud_box()])));
+    assert_eq!(
+        run_style(&plain, "/kicker", PartName::Text),
+        style(TextStyleName::Kicker)
+    );
+    assert_eq!(
+        run_style(&plain, "/body/0", PartName::Label),
+        style(TextStyleName::GcpBar)
+    );
+}
+
+/// Section 14.4 rule 4: the wordmark stands 6 below the kicker row and the motto 6 below
+/// the wordmark's line.
+#[test]
+fn the_wordmark_stands_6_below_the_kicker_and_the_motto_6_below_it() {
+    let mut document = serde_json::to_value(sheet_page(json!([
+        { "tag": "Pipe", "dir": "h", "line": "solid", "label": "link" }
+    ])))
+    .unwrap();
+    document["sheet"]["wordmark"] = json!("trig");
+    let geometry = layout(&page_from(document));
+    let kicker = node(&geometry, "/kicker").bounds;
+    let wordmark = part(node(&geometry, "/sheet"), PartName::Wordmark).bounds;
+    let title = node(&geometry, "/title").bounds;
+    assert_close(wordmark.y, kicker.bottom() + 6.0, "wordmark top");
+    assert_close(wordmark.height, 55.0, "wordmark line");
+    assert_close(title.y, wordmark.bottom() + 6.0, "motto top");
 }

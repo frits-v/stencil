@@ -21,9 +21,7 @@ use stencil_model::{
 use stencil_text::{CosmicTextMeasurer, bundled_font};
 
 use crate::icons::icon_data_uri;
-use crate::palette::{
-    self, BoxPaint, DotStyle, LineStyle, LineUse, Palette, PartShape, SheetInk, Stroke,
-};
+use crate::palette::{self, BoxPaint, DotStyle, LineStyle, LineUse, Palette, PartShape, Stroke};
 use crate::{RenderError, SvgDocument, format_number};
 
 const SVG_NAMESPACE: &str = "http://www.w3.org/2000/svg";
@@ -843,17 +841,9 @@ impl<'a> SvgWriter<'a> {
                 let badge_paint = self.palette.badge();
                 self.write_box(depth, bounds, BADGE_RADIUS_PX, badge_paint);
             }
-            // On a sheet a frame-role Box leaves its bar and body unfilled and rules the bar
-            // off in the sheet's hairline.
-            PartName::Bar if self.sheet.is_some() => {
-                let rule = Stroke {
-                    width_px: 1.0,
-                    line: LineStyle::Solid,
-                    color: self.palette.sheet_ink(SheetInk::Rule),
-                };
-                self.write_bottom_rule(depth, bounds, rule);
-            }
-            PartName::Body if self.sheet.is_some() => {}
+            // On a sheet a frame-role Box leaves its bar and body unfilled; its label stands
+            // on the body with no rule under it.
+            PartName::Bar | PartName::Body if self.sheet.is_some() => {}
             PartName::Bar => {
                 let fill = self.palette.frame_bar_fill();
                 self.write_rect(depth, bounds, 0.0, Some(fill), None);

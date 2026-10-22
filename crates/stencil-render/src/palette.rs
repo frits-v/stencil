@@ -3,7 +3,9 @@
 //! kind names. No color is named here: every method returns a value borrowed from the
 //! theme, or derived from one by `shade`.
 
-use stencil_layout::{ContainerLook, NodeTag, PartName};
+use stencil_layout::{
+    ContainerLook, NodeTag, PartName, SHEET_BLOCK_BORDER_PX, SHEET_BORDER_PX, SHEET_RULE_PX,
+};
 use stencil_model::grammar::{BorderPattern, Role};
 use stencil_model::text::TextStyleName;
 use stencil_model::theme::{SolidEdges, ThemeStroke, Tint, solid_dot};
@@ -448,9 +450,9 @@ impl<'a> Palette<'a> {
             TextStyleName::TagSub => &theme.tag.sub_ink,
             TextStyleName::NoteLegend | TextStyleName::LegendText => &theme.legend.text_ink,
             TextStyleName::Foot => &theme.foot,
-            TextStyleName::SheetLabel | TextStyleName::ViewNoteSmall => {
-                theme.sheet_colors().label_ink
-            }
+            TextStyleName::SheetLabel
+            | TextStyleName::SheetKicker
+            | TextStyleName::ViewNoteSmall => theme.sheet_colors().label_ink,
             TextStyleName::Wordmark
             | TextStyleName::Motto
             | TextStyleName::SheetTitle
@@ -489,8 +491,8 @@ impl<'a> Palette<'a> {
     }
 
     /// A Box on a design sheet (section 14.5 rule 3): a frame-role Box strokes the sheet
-    /// frame with no fill, a boundary-role Box the sheet rule with no fill; group and tile
-    /// Boxes keep their tone paint.
+    /// frame with no fill, a boundary-role Box the sheet rule with no fill, both at
+    /// `SHEET_BOX_BORDER_PX`; group and tile Boxes keep their tone paint.
     pub fn sheet_zone_style(self, look: ContainerLook, tint: Option<u8>) -> ZoneStyle<'a> {
         let flat = self.zone_style(look, tint);
         let ink = match look.role {
@@ -506,7 +508,7 @@ impl<'a> Palette<'a> {
         };
         ZoneStyle {
             border: line.map(|line| Stroke {
-                width_px: look.border_width,
+                width_px: SHEET_BOX_BORDER_PX,
                 line,
                 color: self.sheet_ink(ink),
             }),
@@ -581,21 +583,29 @@ const fn stroke_paint(shape: PartShape, ink: SheetInk, width: f32) -> PartPaint 
 
 /// `stroke-dasharray` of a problem point's rule.
 pub const POINT_RULE_DASH: &str = "3 3";
+/// The ticks that cut the frame's reference band into cells.
+pub const REF_TICK_PX: f32 = 0.8;
+/// The circle around a View's number.
+pub const VIEW_NUMBER_STROKE_PX: f32 = 1.5;
+/// The border of a frame-role or boundary-role Box on a sheet, whatever the grammar's width.
+pub const SHEET_BOX_BORDER_PX: f32 = 1.25;
 
 /// The paint row of every part a design sheet adds (section 14.5 rule 12), matched on the
 /// part name with no wildcard so a new part has to choose its row. None for the parts that
-/// existed before the sheet, on their existing owners.
+/// existed before the sheet, on their existing owners, except the kicker's and the lede's
+/// text, which a sheet sets in its label and secondary inks.
 pub fn sheet_part_paint(owner: NodeTag, part: PartName) -> Option<PartPaint> {
     use SheetInk::{Cell, Frame, InkPrimary, InkSecondary, LabelInk, Paper, Rule};
     let paint = match part {
         PartName::Border => PartPaint {
             shape: PartShape::Rect,
             fill: Some(Paper),
-            stroke: Some((Frame, 2.0)),
+            stroke: Some((Frame, SHEET_BORDER_PX)),
             text: None,
         },
-        PartName::RefRule => stroke_paint(PartShape::Rect, Frame, 1.0),
-        PartName::RefTick | PartName::CellRule | PartName::ViewRule => {
+        PartName::RefRule => stroke_paint(PartShape::Rect, Frame, SHEET_RULE_PX),
+        PartName::RefTick => stroke_paint(PartShape::Line, Rule, REF_TICK_PX),
+        PartName::CellRule | PartName::ViewRule | PartName::StripRule => {
             stroke_paint(PartShape::Line, Rule, 1.0)
         }
         PartName::Grid => PartPaint {
@@ -615,7 +625,7 @@ pub fn sheet_part_paint(owner: NodeTag, part: PartName) -> Option<PartPaint> {
         PartName::BlockBorder => PartPaint {
             shape: PartShape::Rect,
             fill: Some(Cell),
-            stroke: Some((Frame, 2.0)),
+            stroke: Some((Frame, SHEET_BLOCK_BORDER_PX)),
             text: None,
         },
         PartName::Wordmark | PartName::Statement | PartName::ViewNumeral | PartName::ViewTitle => {
@@ -627,15 +637,16 @@ pub fn sheet_part_paint(owner: NodeTag, part: PartName) -> Option<PartPaint> {
         | PartName::AttentionText => text_paint(InkPrimary),
         PartName::Paragraph | PartName::ViewSubtitle => text_paint(InkSecondary),
         PartName::PointRule => stroke_paint(PartShape::DashedLine(POINT_RULE_DASH), Rule, 1.0),
-        PartName::StripRule => stroke_paint(PartShape::Line, Frame, 2.0),
         PartName::ViewNumber => PartPaint {
             shape: PartShape::Circle,
             fill: Some(Paper),
-            stroke: Some((Frame, 2.0)),
+            stroke: Some((Frame, VIEW_NUMBER_STROKE_PX)),
             text: None,
         },
         PartName::Text => match owner {
             NodeTag::ProblemPoint => text_paint(InkPrimary),
+            NodeTag::Kicker => text_paint(LabelInk),
+            NodeTag::Lede => text_paint(InkSecondary),
             _ => return None,
         },
         PartName::Badge

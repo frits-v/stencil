@@ -48,6 +48,7 @@ pub fn text_color(name: TextStyleName, line: Option<Line>) -> &'static str {
         | TextStyleName::LegendText
         | TextStyleName::Foot
         | TextStyleName::SheetLabel
+        | TextStyleName::SheetKicker
         | TextStyleName::ViewNote
         | TextStyleName::ViewNoteSmall => TEXT_MUTED,
     }
@@ -73,6 +74,7 @@ pub(crate) fn text_style_for(name: TextStyleName, iso: bool) -> TextStyle {
         | TextStyleName::LegendText
         | TextStyleName::Foot
         | TextStyleName::SheetLabel
+        | TextStyleName::SheetKicker
         | TextStyleName::Wordmark
         | TextStyleName::Motto
         | TextStyleName::SheetTitle
@@ -138,6 +140,7 @@ mod tests {
             ("foot", "#5F6368"),
             ("block_body", "#202124"),
             ("sheet_label", "#5F6368"),
+            ("sheet_kicker", "#5F6368"),
             ("wordmark", "#202124"),
             ("motto", "#202124"),
             ("sheet_title", "#202124"),

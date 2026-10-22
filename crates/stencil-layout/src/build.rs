@@ -3,6 +3,8 @@
 
 mod sheet;
 
+pub use sheet::SHEET_BLOCK_BORDER_PX;
+
 use stencil_model::grammar::{LabelStyle, Role};
 use stencil_model::pointer::NodePointer;
 use stencil_model::products::item_shape;
@@ -137,6 +139,7 @@ pub(crate) fn build_page(
         grammar,
         lanes_plan,
         iso: page.projection == Projection::Iso,
+        sheet: page.sheet.is_some(),
     };
     builder.tree.disable_rounding();
     let root = builder.add_page(page)?;
@@ -156,6 +159,8 @@ struct Builder<'page> {
     lanes_plan: &'page LanesPlan,
     /// True under iso: every zone label reserves the floor its placard needs.
     iso: bool,
+    /// True on a design sheet: a Box sets its label in `sheet_label`.
+    sheet: bool,
 }
 
 /// Extra floor under a zone label under iso: the strip a child block of
@@ -557,16 +562,20 @@ impl Builder<'_> {
     }
 
     /// The badge and kicker in a row under `parent`. On a design sheet the kicker reads
-    /// `prefix` first, the number of the view the title block is.
+    /// `sheet_prefix` first, the number of the view the title block is, and is set in
+    /// `sheet_kicker`.
     fn add_kicker(
         &mut self,
         page: &Page,
         root: NodeId,
         root_index: usize,
-        prefix: Option<&str>,
+        sheet_prefix: Option<&str>,
     ) -> Result<(), LayoutError> {
         let pointer = NodePointer::root().child("kicker");
-        let bottom = if prefix.is_some() { 0.0 } else { 6.0 };
+        let (bottom, kicker_style_name) = match sheet_prefix {
+            Some(_) => (0.0, TextStyleName::SheetKicker),
+            None => (6.0, TextStyleName::Kicker),
+        };
         let style = Style {
             gap: taffy::Size {
                 width: length(6.0),
@@ -575,7 +584,7 @@ impl Builder<'_> {
             margin: margins(0.0, 0.0, bottom, 0.0),
             ..flex_row(AlignItems::CENTER)
         };
-        let kicker_text = format!("{}{}", prefix.unwrap_or_default(), page.kicker);
+        let kicker_text = format!("{}{}", sheet_prefix.unwrap_or_default(), page.kicker);
         let kicker = self.container(style, root, &pointer)?;
         let badge_parts = match &page.badge {
             Some(text) => {
@@ -620,7 +629,7 @@ impl Builder<'_> {
             Some(kicker),
             TextSpec {
                 text: &kicker_text,
-                style_name: TextStyleName::Kicker,
+                style_name: kicker_style_name,
                 line: None,
                 align: TextAlign::Start,
                 source: pointer.clone(),
@@ -1150,7 +1159,11 @@ impl Builder<'_> {
             radius: kind.radius,
             label: kind.label,
         });
-        let label_style = container_label_style(kind.label);
+        let label_style = if self.sheet {
+            TextStyleName::SheetLabel
+        } else {
+            container_label_style(kind.label)
+        };
         let label_leaf_style = if self.iso {
             let tallest = self.tallest_shape_px(&box_node.children);
             Style {

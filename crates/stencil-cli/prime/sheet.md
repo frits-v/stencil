@@ -5,7 +5,7 @@ A page with `sheet` is a design sheet: one system drawn as an engineering drawin
 - Frame: the canvas is the width plus 50 px on each side. A border 12 px in and a rule 32 px in hold a band of grid references, columns 1 to 8 along the top and bottom and rows A to F down both sides. The theme's sheet role paints it and may draw a faint drafting grid inside.
 - Title block, view 1, across the top in four cells. The first is the page head: the badge, the kicker after `1 · `, the wordmark set large when given, the title (the motto under a wordmark), and the lede. The problem cell holds a lead and points P1 to P8; the answer cell a statement and up to four paragraphs; the attention cell items, each an id, a lead and a text. A paragraph is a string or {lead,text}; a lead is set bold with its text running on after it on the same line.
 - Captions: each cell opens with its caption in capitals, the authored one or the word Problem, Answer or Attention. A caption holds at most 60 characters, a wordmark 24.
-- Legend: a strip under the title block, its entries after the caption Lines. A sheet draws at least one Pipe, Tee or Link for it to key.
+- Legend: a strip along the foot of the title block, inside its border, its entries after the caption Lines. A sheet draws at least one Pipe, Tee or Link for it to key.
 - Views: the body holds Views and nothing else, each a body child, numbered from 2. A View is a heading (a numbered circle, the title, a subtitle, a rule to the right edge and the note) over its children in a column, gap 16. Inside a View every node works as on any page.
 - Boxes on a sheet: a frame-role Box such as gcp is an outline with its label and no fill, and a boundary Box a hairline; group and tile Boxes keep their tone.
 

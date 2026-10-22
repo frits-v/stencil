@@ -1,5 +1,5 @@
-//! A design sheet's title block, legend strip and Views (section 14.4 rules 1 to 10). The
-//! frame and its grid references are added after layout by `sheet_frame`.
+//! A design sheet's title block, the legend strip inside it, and Views (section 14.4 rules
+//! 1 to 10). The frame and its grid references are added after layout by `sheet_frame`.
 
 use stencil_model::pointer::NodePointer;
 use stencil_model::text::TextStyleName;
@@ -19,18 +19,22 @@ use super::{
 use crate::styles::{text_color, text_style_for};
 use crate::{Axis, LayoutError, NodeTag, PartName, TextAlign};
 
-/// Space between the legend strip and the first View.
+/// Space between the title block and the first View.
 pub(crate) const BODY_MARGIN_TOP_PX: f32 = 14.0;
-const BLOCK_BORDER_PX: f32 = 2.0;
+/// The title block's border, which the writer strokes at the same width.
+pub const SHEET_BLOCK_BORDER_PX: f32 = 1.5;
 const CELL_RULE_PX: f32 = 1.0;
 /// Cell padding: top, sides, bottom.
 const CELL_PADDING_PX: (f32, f32, f32) = (11.0, 14.0, 12.0);
-/// Grow weights of the head, problem, answer and attention cells.
-const CELL_WEIGHTS: [f32; 4] = [25.0, 47.0, 41.0, 37.0];
-/// The wordmark's 62 px line holds 5 px above and below its 52 px type, so its gaps are the
-/// sheet's 8 and 4 less that.
-const WORDMARK_GAP_PX: f32 = 3.0;
-const TITLE_GAP_PX: f32 = 0.0;
+/// Grow weights of the head, problem, answer and attention cells, which are their widths in
+/// a block whose cells share 1494 px (a 1500 px page). The head cell holds the kicker on one
+/// line and the motto on two.
+const CELL_WEIGHTS: [f32; 4] = [316.0, 446.0, 394.0, 338.0];
+/// Between the kicker row and the wordmark's 55 px line, which holds its 46 px type with
+/// 4.5 px above and below.
+const WORDMARK_GAP_PX: f32 = 6.0;
+/// Between the wordmark's line and the motto, air under the descenders.
+const TITLE_GAP_PX: f32 = 6.0;
 /// The gap above the title when no wordmark stands over it.
 const HEAD_TITLE_GAP_PX: f32 = 8.0;
 const LEDE_GAP_PX: f32 = 6.0;
@@ -41,7 +45,8 @@ const POINT_RULE_PX: f32 = 1.0;
 const POINT_TEXT_GAP_PX: f32 = 5.0;
 /// Drops `P<n>` in `sheet_label` onto the baseline of its `block_body` text.
 const POINT_LABEL_DROP_PX: f32 = 2.5;
-const STRIP_RULE_PX: f32 = 2.0;
+/// The hairline between the cells and the legend strip, across the block.
+const STRIP_RULE_PX: f32 = 1.0;
 const STRIP_PADDING_PX: (f32, f32) = (7.0, 14.0);
 const STRIP_GAP_PX: f32 = 9.0;
 const STRIP_ROW_GAP_PX: f32 = 6.0;
@@ -59,8 +64,8 @@ fn top_margin(top: f32) -> Rect<LengthPercentageAuto> {
 }
 
 impl Builder<'_> {
-    /// The root of a design sheet: the title block, the legend strip under it, the Views and
-    /// the foot, inside a padding that leaves room for the frame.
+    /// The root of a design sheet: the title block with the legend strip inside its border,
+    /// the Views and the foot, inside a padding that leaves room for the frame.
     pub(super) fn add_sheet_page(
         &mut self,
         page: &Page,
@@ -82,8 +87,8 @@ impl Builder<'_> {
             .map_err(Self::taffy_error(&root_pointer))?;
         let root_index =
             self.push_record(Self::record(root_pointer, NodeTag::Page, None, None, root));
-        self.add_title_block(page, sheet, root, root_index)?;
-        self.add_sheet_legend(&page.legend, root, root_index)?;
+        let block = self.add_title_block(page, sheet, root, root_index)?;
+        self.add_sheet_legend(&page.legend, block)?;
         self.add_body(page, root, root_index)?;
         if let Some(foot) = &page.foot {
             self.add_page_text(
@@ -110,7 +115,7 @@ impl Builder<'_> {
 
     fn cell_rule(
         &mut self,
-        block: NodeId,
+        cells: NodeId,
         pointer: &NodePointer,
     ) -> Result<PartRecord, LayoutError> {
         let rule = self.plain_leaf(
@@ -121,7 +126,7 @@ impl Builder<'_> {
                 },
                 ..base_style()
             },
-            block,
+            cells,
             pointer,
         )?;
         Ok(PartRecord {
@@ -162,26 +167,29 @@ impl Builder<'_> {
         })
     }
 
-    /// `/sheet`: four cells at weights 25 : 47 : 41 : 37 with a rule between each pair. The
-    /// first holds the page head; the others are the problem, answer and attention cells.
+    /// `/sheet`: a bordered column of four cells at weights 316 : 446 : 394 : 338 with a rule
+    /// between each pair, and the legend strip under them. The first cell holds the page
+    /// head; the others are the problem, answer and attention cells. Returns the block's
+    /// taffy node and record index, which the legend strip is added to.
     fn add_title_block(
         &mut self,
         page: &Page,
         sheet: &Sheet,
         root: NodeId,
         root_index: usize,
-    ) -> Result<(), LayoutError> {
+    ) -> Result<(NodeId, usize), LayoutError> {
         let pointer = NodePointer::root().child("sheet");
         let block_style = Style {
             border: sides(
-                BLOCK_BORDER_PX,
-                BLOCK_BORDER_PX,
-                BLOCK_BORDER_PX,
-                BLOCK_BORDER_PX,
+                SHEET_BLOCK_BORDER_PX,
+                SHEET_BLOCK_BORDER_PX,
+                SHEET_BLOCK_BORDER_PX,
+                SHEET_BLOCK_BORDER_PX,
             ),
-            ..flex_row(AlignItems::STRETCH)
+            ..flex_column(AlignItems::STRETCH)
         };
         let block = self.container(block_style, root, &pointer)?;
+        let cells = self.container(flex_row(AlignItems::STRETCH), block, &pointer)?;
         let mut record = Self::record(
             pointer.clone(),
             NodeTag::TitleBlock,
@@ -197,7 +205,7 @@ impl Builder<'_> {
         let block_index = self.push_record(record);
 
         let [head_weight, problem_weight, answer_weight, attention_weight] = CELL_WEIGHTS;
-        let head = self.container(Self::cell_style(head_weight), block, &pointer)?;
+        let head = self.container(Self::cell_style(head_weight), cells, &pointer)?;
         self.add_kicker(page, head, block_index, Some("1 \u{b7} "))?;
         let title_style = match &sheet.wordmark {
             Some(wordmark) => {
@@ -236,15 +244,16 @@ impl Builder<'_> {
             top_margin(LEDE_GAP_PX),
         )?;
 
-        let rule = self.cell_rule(block, &pointer)?;
+        let rule = self.cell_rule(cells, &pointer)?;
         self.push_part(block_index, rule);
-        self.add_problem_cell(sheet, block, block_index, problem_weight)?;
-        let rule = self.cell_rule(block, &pointer)?;
+        self.add_problem_cell(sheet, cells, block_index, problem_weight)?;
+        let rule = self.cell_rule(cells, &pointer)?;
         self.push_part(block_index, rule);
-        self.add_answer_cell(sheet, block, block_index, answer_weight)?;
-        let rule = self.cell_rule(block, &pointer)?;
+        self.add_answer_cell(sheet, cells, block_index, answer_weight)?;
+        let rule = self.cell_rule(cells, &pointer)?;
         self.push_part(block_index, rule);
-        self.add_attention_cell(sheet, block, block_index, attention_weight)
+        self.add_attention_cell(sheet, cells, block_index, attention_weight)?;
+        Ok((block, block_index))
     }
 
     fn push_part(&mut self, record_index: usize, part: PartRecord) {
@@ -256,13 +265,13 @@ impl Builder<'_> {
     /// A cell node with its caption, the authored one or the fixed word.
     fn title_cell(
         &mut self,
-        block: NodeId,
+        cells: NodeId,
         weight: f32,
         token: &str,
         caption: (Option<&str>, &str),
     ) -> Result<(NodeId, NodePointer, Vec<PartRecord>), LayoutError> {
         let pointer = NodePointer::root().child("sheet").child(token);
-        let cell = self.container(Self::cell_style(weight), block, &pointer)?;
+        let cell = self.container(Self::cell_style(weight), cells, &pointer)?;
         let (authored, fixed) = caption;
         let source = match authored {
             Some(_) => pointer.child("caption"),
@@ -282,13 +291,13 @@ impl Builder<'_> {
     fn add_problem_cell(
         &mut self,
         sheet: &Sheet,
-        block: NodeId,
+        cells: NodeId,
         block_index: usize,
         weight: f32,
     ) -> Result<(), LayoutError> {
         let problem = &sheet.problem;
         let (cell, pointer, mut parts) = self.title_cell(
-            block,
+            cells,
             weight,
             "problem",
             (problem.caption.as_deref(), "Problem"),
@@ -429,13 +438,13 @@ impl Builder<'_> {
     fn add_answer_cell(
         &mut self,
         sheet: &Sheet,
-        block: NodeId,
+        cells: NodeId,
         block_index: usize,
         weight: f32,
     ) -> Result<(), LayoutError> {
         let answer = &sheet.answer;
         let (cell, pointer, mut parts) = self.title_cell(
-            block,
+            cells,
             weight,
             "answer",
             (answer.caption.as_deref(), "Answer"),
@@ -478,13 +487,13 @@ impl Builder<'_> {
     fn add_attention_cell(
         &mut self,
         sheet: &Sheet,
-        block: NodeId,
+        cells: NodeId,
         block_index: usize,
         weight: f32,
     ) -> Result<(), LayoutError> {
         let attention = &sheet.attention;
         let (cell, pointer, mut parts) = self.title_cell(
-            block,
+            cells,
             weight,
             "attention",
             (attention.caption.as_deref(), "Attention"),
@@ -568,19 +577,19 @@ impl Builder<'_> {
         ])
     }
 
-    /// `/legend` on a sheet: a strip under the title block with a rule on top and the
-    /// entries in a wrapping row after the `Lines` caption.
+    /// `/legend` on a sheet: a strip at the foot of the title block, inside its border, with
+    /// a hairline across the block on top and the entries in a wrapping row after the
+    /// `Lines` caption.
     fn add_sheet_legend(
         &mut self,
         legend: &[LegendEntry],
-        root: NodeId,
-        root_index: usize,
+        (block, block_index): (NodeId, usize),
     ) -> Result<(), LayoutError> {
         if legend.is_empty() {
             return Ok(());
         }
         let pointer = NodePointer::root().child("legend");
-        let strip = self.container(flex_column(AlignItems::STRETCH), root, &pointer)?;
+        let strip = self.container(flex_column(AlignItems::STRETCH), block, &pointer)?;
         let rule = self.plain_leaf(
             Style {
                 size: taffy::Size {
@@ -618,7 +627,7 @@ impl Builder<'_> {
             pointer.clone(),
             NodeTag::Legend,
             None,
-            Some(root_index),
+            Some(block_index),
             strip,
         );
         record.content_node = group;

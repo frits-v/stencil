@@ -7,7 +7,7 @@ use stencil_model::text::{
     TextMeasurer, TextStyle, TextStyleName, WRAP_EPSILON_PX,
 };
 
-const ALL_STYLE_NAMES: [TextStyleName; 18] = [
+const ALL_STYLE_NAMES: [TextStyleName; 29] = [
     TextStyleName::Badge,
     TextStyleName::Kicker,
     TextStyleName::Title,
@@ -26,10 +26,21 @@ const ALL_STYLE_NAMES: [TextStyleName; 18] = [
     TextStyleName::LegendText,
     TextStyleName::Foot,
     TextStyleName::BlockBody,
+    TextStyleName::SheetLabel,
+    TextStyleName::SheetKicker,
+    TextStyleName::Wordmark,
+    TextStyleName::Motto,
+    TextStyleName::SheetTitle,
+    TextStyleName::Statement,
+    TextStyleName::ViewNumeral,
+    TextStyleName::ViewTitle,
+    TextStyleName::ViewNote,
+    TextStyleName::ViewNoteSmall,
+    TextStyleName::LeadBody,
 ];
 
 /// Section 2.9: name, weight, size, line height, letter spacing, uppercase.
-const SECTION_2_9: [(&str, u16, f32, f32, f32, bool); 18] = [
+const SECTION_2_9: [(&str, u16, f32, f32, f32, bool); 29] = [
     ("badge", 800, 10.0, 12.0, 0.07, true),
     ("kicker", 700, 11.0, 13.2, 0.08, true),
     ("title", 700, 20.0, 24.0, -0.02, false),
@@ -48,6 +59,17 @@ const SECTION_2_9: [(&str, u16, f32, f32, f32, bool); 18] = [
     ("legend_text", 400, 12.0, 14.4, 0.0, false),
     ("foot", 400, 11.0, 13.2, 0.0, false),
     ("block_body", 400, 12.0, 17.4, 0.0, false),
+    ("sheet_label", 600, 11.0, 13.2, 0.12, true),
+    ("sheet_kicker", 600, 10.0, 12.0, 0.05, true),
+    ("wordmark", 800, 46.0, 55.0, -0.02, false),
+    ("motto", 700, 13.0, 16.0, 0.06, true),
+    ("sheet_title", 800, 26.0, 30.0, 0.0, false),
+    ("statement", 700, 18.0, 23.4, 0.0, false),
+    ("view_numeral", 700, 13.0, 15.6, 0.0, false),
+    ("view_title", 700, 16.0, 19.2, 0.1, true),
+    ("view_note", 400, 14.0, 18.0, 0.0, false),
+    ("view_note_small", 400, 12.0, 15.6, 0.0, false),
+    ("lead_body", 700, 12.0, 17.4, 0.0, false),
 ];
 
 #[test]
@@ -62,6 +84,7 @@ fn text_styles_are_indexed_by_name() {
 
 #[test]
 fn text_styles_match_section_2_9() {
+    assert_eq!(TEXT_STYLES.len(), SECTION_2_9.len());
     for (named, expected) in TEXT_STYLES.iter().zip(SECTION_2_9) {
         let (name, weight, size_px, line_height_px, letter_spacing_em, uppercase) = expected;
         assert_eq!(named.name.as_str(), name);

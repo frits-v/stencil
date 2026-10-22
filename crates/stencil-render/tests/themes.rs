@@ -831,6 +831,121 @@ fn a_theme_without_sheet_roles_draws_the_derived_colours() {
     );
 }
 
+fn stroke_width<'a>(element: roxmltree::Node<'a, '_>) -> &'a str {
+    element.attribute("stroke-width").unwrap()
+}
+
+/// Section 14.5 rule 3: the frame line is 1 px, the inner frame rule 1.5, the reference
+/// ticks 0.8, the title block border 1.5, the strip hairline 1 in the rule ink, a View's
+/// circle 1.5 and the gcp Box 1.25 with no rule under its label, in every designed theme.
+#[test]
+fn a_sheet_draws_its_frame_block_and_box_in_light_strokes() {
+    let page: Page = serde_json::from_value(onepager_document()).unwrap();
+    let geometry = common::layout_with_fixed_metrics(&page);
+    let width = stroke_width;
+    let mut examined = 0;
+    for theme_name in THEMES {
+        let theme = common::theme(theme_name);
+        let rendered = render_svg(&page, &theme, &geometry).unwrap();
+        let document = common::parse_xml(&rendered.svg);
+        let root = common::group(&document, "");
+        let rects = common::children_named(root, "rect");
+        assert_eq!(width(rects[0]), "1", "{theme_name} frame line");
+        assert_eq!(width(rects[1]), "1.5", "{theme_name} inner frame rule");
+        let ticks = common::children_named(root, "line");
+        assert_eq!(ticks.len(), 2 * 7 + 2 * 5, "{theme_name}");
+        assert!(
+            ticks.iter().all(|tick| width(*tick) == "0.8"),
+            "{theme_name}"
+        );
+        let block = common::group(&document, "/sheet");
+        assert_eq!(
+            width(common::children_named(block, "rect")[0]),
+            "1.5",
+            "{theme_name} block border"
+        );
+        let rule_ink = theme.sheet_colors().rule;
+        let hairline = common::children_named(common::group(&document, "/legend"), "line")[0];
+        assert_eq!(width(hairline), "1", "{theme_name} strip hairline");
+        assert_eq!(hairline.attribute("stroke"), Some(rule_ink.as_str()));
+        let view = common::group(&document, "/body/0");
+        assert_eq!(
+            width(common::children_named(view, "circle")[0]),
+            "1.5",
+            "{theme_name} view circle"
+        );
+        let cloud = common::group(&document, "/body/0/children/0/children/1");
+        let stroked: Vec<_> = common::children_named(cloud, "path")
+            .into_iter()
+            .filter(|path| path.attribute("stroke").is_some())
+            .collect();
+        assert_eq!(stroked.len(), 1, "{theme_name}");
+        assert_eq!(width(stroked[0]), "1.25", "{theme_name} box border");
+        assert!(
+            common::children_named(cloud, "line").is_empty(),
+            "{theme_name}: a rule under the Box label"
+        );
+        examined += 1;
+    }
+    assert_eq!(examined, THEMES.len());
+}
+
+/// Section 14.5 rule 4: on a sheet the kicker text takes the sheet label ink and the lede
+/// the secondary ink, in every designed theme.
+#[test]
+fn on_a_sheet_the_kicker_takes_the_label_ink_and_the_lede_the_secondary_ink() {
+    let page: Page = serde_json::from_value(onepager_document()).unwrap();
+    let geometry = common::layout_with_fixed_metrics(&page);
+    let mut examined = 0;
+    for theme_name in THEMES {
+        let theme = common::theme(theme_name);
+        let rendered = render_svg(&page, &theme, &geometry).unwrap();
+        let document = common::parse_xml(&rendered.svg);
+        let kicker = common::children_named(common::group(&document, "/kicker"), "text");
+        let kicker_text = kicker.last().unwrap();
+        assert!(kicker_text.text().unwrap().starts_with("1 \u{b7} "));
+        assert_eq!(
+            kicker_text.attribute("fill"),
+            Some(theme.sheet_colors().label_ink.as_str()),
+            "{theme_name} kicker"
+        );
+        let lede = common::children_named(common::group(&document, "/lede"), "text");
+        assert!(!lede.is_empty());
+        for line in lede {
+            assert_eq!(
+                line.attribute("fill"),
+                Some(theme.ink.secondary.as_str()),
+                "{theme_name} lede"
+            );
+        }
+        examined += 1;
+    }
+    assert_eq!(examined, THEMES.len());
+}
+
+/// The onepager's head cell holds the kicker on one line beside the badge and the motto on
+/// two, measured with the bundled faces.
+#[test]
+fn the_onepager_head_sets_its_kicker_on_one_line_and_its_motto_on_two() {
+    let page: Page = serde_json::from_value(onepager_document()).unwrap();
+    let geometry = common::layout_with_cosmic_text(&page);
+    let line_count = |pointer: &str| {
+        let pointer = stencil_model::pointer::NodePointer::root().child(pointer);
+        geometry
+            .node(&pointer)
+            .unwrap()
+            .part(PartName::Text)
+            .unwrap()
+            .text
+            .as_ref()
+            .unwrap()
+            .metrics
+            .line_count
+    };
+    assert_eq!(line_count("kicker"), 1);
+    assert_eq!(line_count("title"), 2);
+}
+
 #[test]
 fn icon_chip_sits_under_the_icon_when_the_theme_sets_one() {
     for theme_name in THEMES {
