@@ -120,6 +120,8 @@ import (
 }
 
 #StepLook: "box" | "chip" | "note" | "stack" | "planned" | "text"
+#BandLook: "wash" | "none"
+#StepFill: "tint" | "cell" | "none"
 
 // A built-in theme name or a path to a theme file, the THEME_REFERENCE_PATTERN
 // of the Rust model.
@@ -499,6 +501,8 @@ import (
 	tag: "Phases"
 	lanes: [...#Id] & list.MinItems(1) & list.MaxItems(8)
 	phases: [...#Phase] & list.MinItems(1) & list.MaxItems(8)
+	band?:      #BandLook
+	step_fill?: #StepFill
 	children: [...#Node & {tag: "Step"}] & list.MinItems(1) & list.MaxItems(64)
 	_keys: {}
 	_ids: list.Concat([[if id != _|_ {id}], for c in children {c._ids}])
@@ -538,6 +542,10 @@ import (
 	title: #Text
 	lines?: [...#Text] & list.MaxItems(6)
 	look?: #StepLook
+	fill?: #StepFill
+	if look != _|_ if fill != _|_ if look == "text" {
+		_stepTextFill: "a text Step" & "draws no box, so it takes no fill"
+	}
 	_first: [if col != _|_ {col}, 1][0]
 	_count: [if span != _|_ {span}, 1][0]
 	if _first+_count-1 > 6 {

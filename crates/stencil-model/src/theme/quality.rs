@@ -407,8 +407,10 @@ fn sheet_rows(theme: &Theme, rows: &mut Rows) {
 }
 
 /// The actor rows (section 14.5 rule 1), per tint slot: the actor's ink, which its lane
-/// name, step titles and node headings take, on a step's `sheet.cell` and on its lane band,
-/// then its wire, which its strokes and lines take, on `sheet.paper`.
+/// name, step titles and node headings take, on a step's `sheet.cell` and on its lane band;
+/// `ink.secondary`, which lane texts and step lines take, on the lane band, where a step
+/// with no fill sets them; the actor's ink on `sheet.paper`, where a lane with no band sets
+/// it; then its wire, which its strokes and lines take, on `sheet.paper`.
 fn actor_rows(theme: &Theme, rows: &mut Rows) {
     let sheet = theme.sheet_colors();
     for (index, tint) in theme.tints.iter().enumerate() {
@@ -419,17 +421,23 @@ fn actor_rows(theme: &Theme, rows: &mut Rows) {
         let band = u8::try_from(slot)
             .ok()
             .and_then(|slot| theme.lane_band(slot));
-        match &band {
-            Some(band) => rows.text((&ink.0, ink.1), (&band_name, band)),
-            None => rows.rows.push(QualityRow {
-                class: QualityClass::Contrast,
-                subject: format!("{} on {band_name}", ink.0),
-                value: None,
-                threshold: TEXT_CONTRAST_MIN,
-                closest: None,
-                not_applicable: Some(MALFORMED_COLOR),
-            }),
+        for on_band in [
+            (ink.0.as_str(), ink.1),
+            ("ink.secondary", &theme.ink.secondary),
+        ] {
+            match &band {
+                Some(band) => rows.text(on_band, (&band_name, band)),
+                None => rows.rows.push(QualityRow {
+                    class: QualityClass::Contrast,
+                    subject: format!("{} on {band_name}", on_band.0),
+                    value: None,
+                    threshold: TEXT_CONTRAST_MIN,
+                    closest: None,
+                    not_applicable: Some(MALFORMED_COLOR),
+                }),
+            }
         }
+        rows.text((&ink.0, ink.1), ("sheet.paper", sheet.paper));
         rows.non_text(
             (&format!("tints.{slot}.wire"), &tint.wire),
             ("sheet.paper", sheet.paper),

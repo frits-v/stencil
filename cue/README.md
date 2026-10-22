@@ -104,7 +104,9 @@ for example `CUE="$(mise which cue)" ./cue/check.sh`.
   `_actorOnUntintableKind` and `_kindTintWithoutActor` name the offender.
 - A `Phases` node holds `Step`s only, each in one of its `lanes` and `phases` and inside
   column 6: `_lanesUsedTwice`, `_phaseIdsUsedTwice`, `_stepLanesUnknown`,
-  `_stepPhasesUnknown`, `_stepSpanOutOfRange` and `_stepOutsidePhases`. The Step node is
+  `_stepPhasesUnknown`, `_stepSpanOutOfRange` and `_stepOutsidePhases`. A Phases node's
+  `band` is `wash` or `none` and its `step_fill`, like a Step's `fill`, is `tint`, `cell` or
+  `none`; a text-look Step with its own `fill` is `_stepTextFill`. The Step node is
   `#StepNode`, since `#Step` is the theme's face lightness step.
 - `Lanes` is a container of 1 to 32 lane heads with an optional `gap` of 0 to 64. A `Link` may
   carry `order`, 1 to 256, which makes it a message of the Lanes node whose heads it joins.

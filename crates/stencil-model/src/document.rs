@@ -454,6 +454,12 @@ pub struct Phases {
     /// Left to right, numbered from 1.
     #[schemars(length(min = 1, max = 8))]
     pub phases: Vec<Phase>,
+    /// What each lane is drawn on.
+    #[serde(default, skip_serializing_if = "BandLook::is_wash")]
+    pub band: BandLook,
+    /// The fill of every Step that sets none of its own; absent leaves each Step its look's.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub step_fill: Option<StepFill>,
     /// Steps only.
     #[schemars(length(min = 1, max = 64))]
     pub children: Vec<Node>,
@@ -513,6 +519,71 @@ pub struct Step {
     pub lines: Vec<String>,
     #[serde(default, skip_serializing_if = "StepLook::is_box")]
     pub look: StepLook,
+    /// What the box of the look is filled with; absent takes the parent's `step_fill`, and
+    /// without one the look's own fill. A text look draws no box and takes none.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub fill: Option<StepFill>,
+}
+
+/// A lane's band. wash: the actor's fill mixed halfway toward the paper, with the drafting
+/// grid drawn over it. none: no band, so the paper and grid show; the bar, name and rules
+/// stay.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema, Default)]
+#[serde(rename_all = "lowercase")]
+pub enum BandLook {
+    #[default]
+    Wash,
+    None,
+}
+
+impl BandLook {
+    pub const ALL: [BandLook; 2] = [BandLook::Wash, BandLook::None];
+
+    #[allow(clippy::trivially_copy_pass_by_ref)]
+    fn is_wash(band: &BandLook) -> bool {
+        *band == BandLook::Wash
+    }
+
+    /// The serialized name, for example "none".
+    pub fn as_str(self) -> &'static str {
+        match self {
+            BandLook::Wash => "wash",
+            BandLook::None => "none",
+        }
+    }
+}
+
+/// What a Step's box is filled with. tint: the actor's fill. cell: the sheet's cell. none:
+/// no fill, so the lane and the grid show through.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "lowercase")]
+pub enum StepFill {
+    Tint,
+    Cell,
+    None,
+}
+
+impl StepFill {
+    pub const ALL: [StepFill; 3] = [StepFill::Tint, StepFill::Cell, StepFill::None];
+
+    /// The serialized name, for example "tint".
+    pub fn as_str(self) -> &'static str {
+        match self {
+            StepFill::Tint => "tint",
+            StepFill::Cell => "cell",
+            StepFill::None => "none",
+        }
+    }
+}
+
+impl Step {
+    /// What the Step is filled with under a parent whose `step_fill` is `parent`: its own
+    /// fill, else the parent's, else its look's.
+    pub fn fill_under(&self, parent: Option<StepFill>) -> StepFill {
+        self.fill
+            .or(parent)
+            .unwrap_or_else(|| self.look.default_fill())
+    }
 }
 
 /// How a Step is drawn. box: an outlined box. chip: a rounded tinted pill, one stored
@@ -543,6 +614,16 @@ impl StepLook {
     #[allow(clippy::trivially_copy_pass_by_ref)]
     fn is_box(look: &StepLook) -> bool {
         *look == StepLook::Box
+    }
+
+    /// The fill a look takes when neither the Step nor its parent sets one: the cell for a
+    /// box and a stack, the actor's fill for a chip, none for the rest.
+    pub fn default_fill(self) -> StepFill {
+        match self {
+            StepLook::Box | StepLook::Stack => StepFill::Cell,
+            StepLook::Chip => StepFill::Tint,
+            StepLook::Note | StepLook::Planned | StepLook::Text => StepFill::None,
+        }
     }
 
     /// The serialized name, for example "stack".

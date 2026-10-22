@@ -231,26 +231,42 @@ row contrast sheet.frame on sheet.paper: 13.92, at least 4.50, passed
 row contrast sheet.frame on sheet.paper: 13.92, at least 3.00, passed
 row contrast tints.1.ink on sheet.cell: 8.72, at least 4.50, passed
 row contrast tints.1.ink on lane band 1: 12.32, at least 4.50, passed
+row contrast ink.secondary on lane band 1: 4.97, at least 4.50, passed
+row contrast tints.1.ink on sheet.paper: 13.92, at least 4.50, passed
 row contrast tints.1.wire on sheet.paper: 4.08, at least 3.00, passed
 row contrast tints.2.ink on sheet.cell: 8.72, at least 4.50, passed
 row contrast tints.2.ink on lane band 2: 12.56, at least 4.50, passed
+row contrast ink.secondary on lane band 2: 5.07, at least 4.50, passed
+row contrast tints.2.ink on sheet.paper: 13.92, at least 4.50, passed
 row contrast tints.2.wire on sheet.paper: 3.43, at least 3.00, passed
 row contrast tints.3.ink on sheet.cell: 8.72, at least 4.50, passed
 row contrast tints.3.ink on lane band 3: 12.13, at least 4.50, passed
+row contrast ink.secondary on lane band 3: 4.89, at least 4.50, passed
+row contrast tints.3.ink on sheet.paper: 13.92, at least 4.50, passed
 row contrast tints.3.wire on sheet.paper: 4.75, at least 3.00, passed
 row contrast tints.4.ink on sheet.cell: 8.72, at least 4.50, passed
 row contrast tints.4.ink on lane band 4: 12.48, at least 4.50, passed
+row contrast ink.secondary on lane band 4: 5.04, at least 4.50, passed
+row contrast tints.4.ink on sheet.paper: 13.92, at least 4.50, passed
 row contrast tints.4.wire on sheet.paper: 4.68, at least 3.00, passed
 row contrast tints.5.ink on sheet.cell: 8.72, at least 4.50, passed
 row contrast tints.5.ink on lane band 5: 13.49, at least 4.50, passed
+row contrast ink.secondary on lane band 5: 5.44, at least 4.50, passed
+row contrast tints.5.ink on sheet.paper: 13.92, at least 4.50, passed
 row contrast tints.5.wire on sheet.paper: 3.25, at least 3.00, passed
 row contrast tints.6.ink on sheet.cell: 8.72, at least 4.50, passed
 row contrast tints.6.ink on lane band 6: 12.41, at least 4.50, passed
+row contrast ink.secondary on lane band 6: 5.00, at least 4.50, passed
+row contrast tints.6.ink on sheet.paper: 13.92, at least 4.50, passed
 row contrast tints.6.wire on sheet.paper: 4.69, at least 3.00, passed
 row contrast tints.7.ink on sheet.cell: 8.72, at least 4.50, passed
 row contrast tints.7.ink on lane band 7: 13.28, at least 4.50, passed
+row contrast ink.secondary on lane band 7: 5.36, at least 4.50, passed
+row contrast tints.7.ink on sheet.paper: 13.92, at least 4.50, passed
 row contrast tints.7.wire on sheet.paper: 3.26, at least 3.00, passed
 row contrast tints.8.ink on sheet.cell: 8.72, at least 4.50, passed
 row contrast tints.8.ink on lane band 8: 13.38, at least 4.50, passed
+row contrast ink.secondary on lane band 8: 5.40, at least 4.50, passed
+row contrast tints.8.ink on sheet.paper: 13.92, at least 4.50, passed
 row contrast tints.8.wire on sheet.paper: 3.30, at least 3.00, passed
-stencil theme check solarized-dark: 255 rows, 162 passed, 93 failed
+stencil theme check solarized-dark: 271 rows, 178 passed, 93 failed
