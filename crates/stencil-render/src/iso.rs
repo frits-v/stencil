@@ -528,10 +528,15 @@ fn solid_shape(
             Some((SolidShape::Block, slab_top, ISO_BLOCK_HEIGHT_PX))
         }
         // A band lies flat on its plane, so its tag does too.
-        NodeTag::Pipe if node.pipe_form == Some(PipeForm::Band) => {
-            Some((SolidShape::Surface, slab_top, 0.0))
-        }
-        NodeTag::Pipe | NodeTag::Tee => Some((
+        NodeTag::Pipe => match node.pipe_form {
+            Some(PipeForm::Band) => Some((SolidShape::Surface, slab_top, 0.0)),
+            Some(PipeForm::Tube) | None => Some((
+                SolidShape::Surface,
+                slab_top,
+                2.0 * tube::ISO_TUBE_RADIUS_PX,
+            )),
+        },
+        NodeTag::Tee => Some((
             SolidShape::Surface,
             slab_top,
             2.0 * tube::ISO_TUBE_RADIUS_PX,
@@ -734,7 +739,11 @@ fn surface_outline(node: &NodeGeometry, base_z: f32, zoom: f32) -> Option<Vec<Sc
         NodeTag::Pipe => {
             let start = box_center(node.part(PartName::DotStart)?.bounds);
             let end = box_center(node.part(PartName::DotEnd)?.bounds);
-            if node.pipe_form == Some(PipeForm::Band) {
+            let is_band = match node.pipe_form {
+                Some(PipeForm::Band) => true,
+                Some(PipeForm::Tube) | None => false,
+            };
+            if is_band {
                 let (dx, dy) = (end.0 - start.0, end.1 - start.1);
                 let length = dx.hypot(dy);
                 if length <= GEOMETRY_EPSILON {

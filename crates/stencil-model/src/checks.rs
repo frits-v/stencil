@@ -279,8 +279,9 @@ impl LegendKey {
             KeyColour::Slot(None) => format!("line {}", self.line.as_str()),
             KeyColour::ByActor => format!("line {} by actor", self.line.as_str()),
         };
-        if self.form == PipeForm::Band {
-            key.push_str(" form band");
+        match self.form {
+            PipeForm::Tube => {}
+            PipeForm::Band => key.push_str(" form band"),
         }
         key
     }

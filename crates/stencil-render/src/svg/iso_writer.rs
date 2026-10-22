@@ -793,7 +793,11 @@ impl<'a> SvgWriter<'a> {
         };
         let start_center = box_center(dot_start.bounds);
         let end_center = box_center(dot_end.bounds);
-        if context.pipe_form == Some(PipeForm::Band) {
+        let is_band = match context.pipe_form {
+            Some(PipeForm::Band) => true,
+            Some(PipeForm::Tube) | None => false,
+        };
+        if is_band {
             self.write_band(
                 depth,
                 (start_center, end_center),
