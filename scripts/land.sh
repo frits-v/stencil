@@ -8,7 +8,10 @@ set -euo pipefail
 pr="${1:?usage: scripts/land.sh <pr-number>}"
 head=$(gh pr view "$pr" --json headRefName --jq .headRefName)
 sha=$(gh pr view "$pr" --json headRefOid --jq .headRefOid)
-run=$(gh run list --workflow ci.yml --branch "$head" --commit "$sha" --limit 1 --json databaseId --jq '.[0].databaseId')
+# The branch filter combined with the workflow filter can list nothing for a run that exists,
+# so the run is found by commit and its branch is checked from the result.
+run=$(gh run list --workflow ci.yml --commit "$sha" --limit 20 --json databaseId,headBranch \
+  --jq "[.[] | select(.headBranch == \"$head\")][0].databaseId // empty")
 if [ -z "$run" ]; then
   echo "land: no ci.yml run for $head at $sha" >&2
   exit 1
