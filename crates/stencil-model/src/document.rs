@@ -40,6 +40,8 @@ pub const PHASE_COLUMNS_MAX: u8 = 6;
 pub const MARKS_MAX: usize = 4;
 /// The largest step badge a Link or Pipe draws (section 14.4 rule 23).
 pub const LINE_STEP_MAX: u16 = 64;
+/// Detail ladders a sheet draws, lettered A to H in body order.
+pub const LADDERS_MAX: usize = 8;
 /// Scalar values in an `id`, the `{0,63}` repetition plus the first character.
 pub const ID_SCALARS_MAX: usize = 64;
 /// The JSON Schema and CUE pattern for `id`. `is_valid_id` is its Rust twin.
@@ -431,6 +433,7 @@ pub enum Node {
     Step(Step),
     PartsList(PartsList),
     GeneralNotes(GeneralNotes),
+    Ladder(Ladder),
 }
 
 /// A numbered view of a design sheet: a heading with its number, title, subtitle and note,
@@ -795,6 +798,53 @@ pub struct GeneralNote {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[schemars(length(min = 1, max = 400))]
     pub detail: Option<String>,
+}
+
+/// A detail ladder of a design sheet: rungs of escalation, rung 1 at the bottom, and a
+/// detail frame drawn around the `around` Steps, lettered A, B in body order.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct Ladder {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(regex(pattern = ID_PATTERN))]
+    pub id: Option<String>,
+    #[schemars(length(min = 1, max = 400))]
+    pub title: String,
+    /// Right-aligned on the heading row.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(length(min = 1, max = 400))]
+    pub note: Option<String>,
+    /// The ids of the Steps the detail frame lies around, all in one Phases node.
+    #[schemars(length(min = 1, max = 16), inner(regex(pattern = ID_PATTERN)))]
+    pub around: Vec<String>,
+    /// From rung 1, drawn at the bottom, to the last, drawn at the top.
+    #[schemars(length(min = 1, max = 6))]
+    pub rungs: Vec<Rung>,
+}
+
+/// One rung of a ladder: who acts at this level of escalation and what happens.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct Rung {
+    #[schemars(length(min = 1, max = 400))]
+    pub title: String,
+    /// Set after the title on its line, in the regular weight.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(length(min = 1, max = 400))]
+    pub who: Option<String>,
+    #[schemars(length(min = 1, max = 400))]
+    pub text: String,
+    /// The actor whose colours the rung takes.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(regex(pattern = ID_PATTERN))]
+    pub actor: Option<String>,
+    /// Not in place yet: drawn dashed with no fill.
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub planned: bool,
+    /// Marks on the title line, right-aligned.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[schemars(length(max = 4))]
+    pub marks: Vec<Mark>,
 }
 
 /// A lane's band. wash: the actor's fill mixed halfway toward the paper, with the drafting
@@ -1542,6 +1592,7 @@ impl Node {
             Node::Step(_) => "Step",
             Node::PartsList(_) => "PartsList",
             Node::GeneralNotes(_) => "GeneralNotes",
+            Node::Ladder(_) => "Ladder",
         }
     }
 
@@ -1565,6 +1616,7 @@ impl Node {
             Node::Step(step) => &step.id,
             Node::PartsList(list) => &list.id,
             Node::GeneralNotes(notes) => &notes.id,
+            Node::Ladder(ladder) => &ladder.id,
         };
         id.as_deref()
     }

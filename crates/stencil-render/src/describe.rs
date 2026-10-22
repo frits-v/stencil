@@ -12,10 +12,10 @@ use stencil_model::checks::{CheckName, CheckReport, Defect};
 use stencil_model::pointer::NodePointer;
 use stencil_model::products::{item_shape, named_product};
 use stencil_model::{
-    Arrow, BandLook, CalloutKind, Chrome, Grammar, KeyColour, LINKS_MAX, LegendKey, Line, ListKind,
-    Node, NodeRef, NoteKind, Page, PageActors, PageMarks, PartsList, Phases, Pipe, PipeDir,
-    PipeForm, Projection, Sheet, SheetList, Step, StepLook, TINT_NAMES, Tee, body_nodes,
-    canonical_legend_label, entry_key, line_key,
+    Arrow, BandLook, CalloutKind, Chrome, Grammar, KeyColour, LADDERS_MAX, LINKS_MAX, Ladder,
+    LegendKey, Line, ListKind, Node, NodeRef, NoteKind, Page, PageActors, PageMarks, PartsList,
+    Phases, Pipe, PipeDir, PipeForm, Projection, Sheet, SheetList, Step, StepLook, TINT_NAMES, Tee,
+    body_nodes, canonical_legend_label, entry_key, line_key,
 };
 
 use crate::format_number;
@@ -685,6 +685,56 @@ impl<'a> Writer<'a> {
                 }
                 format!("{text}. {pointer}")
             }
+            (NodeTag::Ladder, Some(NodeRef::Node(Node::Ladder(ladder)))) => {
+                let mut text = format!(
+                    "Ladder, detail {}: {}",
+                    self.detail_letter_of(ladder),
+                    escape_markdown(&ladder.title)
+                );
+                if let Some(note) = &ladder.note {
+                    text.push_str(&format!("; {}", escape_markdown(note)));
+                }
+                format!(
+                    "{text}. Frames {}. {pointer}",
+                    self.framed_titles(ladder).join(", ")
+                )
+            }
+            (NodeTag::Rung, _) => {
+                let Some((ladder, ladder_pointer, index)) = self.rung_at(&node.pointer) else {
+                    return;
+                };
+                let Some(rung) = ladder.rungs.get(index) else {
+                    return;
+                };
+                let count = ladder.rungs.len().min(SheetList::Rungs.max() + 1);
+                let place = match index {
+                    _ if count < 2 => "",
+                    0 => " (bottom)",
+                    _ if index + 1 == count => " (top)",
+                    _ => "",
+                };
+                let mut text =
+                    format!("Rung {}{place} {}", index + 1, escape_markdown(&rung.title));
+                if let Some(who) = &rung.who {
+                    text.push_str(&format!(", {}", escape_markdown(who)));
+                }
+                if let Some(actor) = &rung.actor {
+                    text.push_str(&format!(
+                        "; actor {}",
+                        escape_markdown(&self.actor_name(actor))
+                    ));
+                }
+                if rung.planned {
+                    text.push_str("; planned");
+                }
+                lines.push(format!(
+                    "{indent}- {text}: {} {pointer}",
+                    escape_markdown(&rung.text)
+                ));
+                let marks = stencil_model::PageMarks::rung_marks(ladder, &ladder_pointer, index);
+                self.mark_lines(&marks, |_| true, &nested, lines);
+                return;
+            }
             (NodeTag::GeneralNotes, Some(NodeRef::Node(Node::GeneralNotes(notes)))) => {
                 let mut text = escape_markdown(&notes.title);
                 if let Some(note) = &notes.note {
@@ -728,7 +778,8 @@ impl<'a> Writer<'a> {
                 | NodeTag::Phases
                 | NodeTag::Step
                 | NodeTag::PartsList
-                | NodeTag::GeneralNotes,
+                | NodeTag::GeneralNotes
+                | NodeTag::Ladder,
                 _,
             ) => format!(
                 "{} {}. {pointer}",
@@ -798,6 +849,64 @@ impl<'a> Writer<'a> {
         )
     }
 
+    /// The page's Ladders in body order, up to the eight vet allows.
+    fn ladders(&self) -> Vec<&'a Ladder> {
+        body_nodes(self.page)
+            .into_iter()
+            .filter_map(|entry| match entry.node {
+                NodeRef::Node(Node::Ladder(ladder)) => Some(ladder),
+                _ => None,
+            })
+            .take(LADDERS_MAX)
+            .collect()
+    }
+
+    /// The letter a ladder's detail is drawn with: A for the first Ladder in body order.
+    fn detail_letter_of(&self, ladder: &Ladder) -> String {
+        let index = self
+            .ladders()
+            .iter()
+            .position(|candidate| std::ptr::eq(*candidate, ladder))
+            .unwrap_or_default();
+        let offset = u8::try_from(index).unwrap_or(u8::MAX).min(25);
+        char::from(b'A' + offset).to_string()
+    }
+
+    /// The Steps a ladder frames, in `around` order.
+    fn framed_steps(&self, ladder: &Ladder) -> Vec<&'a Step> {
+        ladder
+            .around
+            .iter()
+            .take(SheetList::Around.max() + 1)
+            .filter_map(|id| {
+                self.nodes.values().copied().find_map(|node| match node {
+                    NodeRef::Node(Node::Step(step)) if step.id.as_deref() == Some(id) => Some(step),
+                    _ => None,
+                })
+            })
+            .collect()
+    }
+
+    fn framed_titles(&self, ladder: &Ladder) -> Vec<String> {
+        self.framed_steps(ladder)
+            .iter()
+            .map(|step| escape_markdown(&step.title))
+            .collect()
+    }
+
+    /// The Ladder holding the rung at `pointer`, its pointer and the rung's index.
+    fn rung_at(&self, pointer: &NodePointer) -> Option<(&'a Ladder, NodePointer, usize)> {
+        let rungs = SheetList::Rungs;
+        body_nodes(self.page).into_iter().find_map(|entry| {
+            let NodeRef::Node(Node::Ladder(ladder)) = entry.node else {
+                return None;
+            };
+            (0..ladder.rungs.len().min(rungs.max() + 1))
+                .find(|index| rungs.pointer_in(&entry.pointer).index(*index) == *pointer)
+                .map(|index| (ladder, entry.pointer.clone(), index))
+        })
+    }
+
     /// The Phases node that holds a Step.
     fn phases_of(&self, step: &Step) -> Option<&'a Phases> {
         self.nodes.values().copied().find_map(|node| match node {
@@ -836,8 +945,25 @@ impl<'a> Writer<'a> {
         let step_fill = phases.step_fill.map_or(String::new(), |fill| {
             format!("; step fill {}", fill.as_str())
         });
+        let mut details = String::new();
+        for ladder in self.ladders() {
+            let framed = self.framed_steps(ladder);
+            let in_node = framed.first().is_some_and(|step| {
+                phases.children.iter().any(|child| match child {
+                    Node::Step(candidate) => std::ptr::eq(candidate, *step),
+                    _ => false,
+                })
+            });
+            if in_node {
+                details.push_str(&format!(
+                    "; detail {} frames {}",
+                    self.detail_letter_of(ladder),
+                    self.framed_titles(ladder).join(", ")
+                ));
+            }
+        }
         lines.push(format!(
-            "{indent}- Phases: lanes {}; phases {}{band}{step_fill}. {}",
+            "{indent}- Phases: lanes {}; phases {}{band}{step_fill}{details}. {}",
             lanes.join(", "),
             phase_titles(phases).join(", "),
             self.spans(&node.pointer)
@@ -959,7 +1085,8 @@ impl<'a> Writer<'a> {
                     | Node::Phases(_)
                     | Node::Step(_)
                     | Node::PartsList(_)
-                    | Node::GeneralNotes(_),
+                    | Node::GeneralNotes(_)
+                    | Node::Ladder(_),
                 ))
                 | None => {}
             }
@@ -1041,7 +1168,8 @@ impl<'a> Writer<'a> {
                     | Node::Phases(_)
                     | Node::Step(_)
                     | Node::PartsList(_)
-                    | Node::GeneralNotes(_),
+                    | Node::GeneralNotes(_)
+                    | Node::Ladder(_),
                 ))
                 | None => {}
             }

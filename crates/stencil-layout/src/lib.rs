@@ -6,7 +6,9 @@ pub mod styles;
 
 mod build;
 mod compute;
+mod detail_frames;
 mod drawn;
+mod ladder;
 mod lanes;
 mod lead_run;
 pub mod marks;
@@ -32,6 +34,7 @@ pub use build::{
     SHEET_BLOCK_BORDER_PX, STEP_BADGE_PX, STEP_BADGE_RADIUS_PX, STORE_LID_RY_PX, compartment_rows,
     container_label_style, fact_presentation,
 };
+pub use detail_frames::{DETAIL_FRAME_GROW_PX, DETAIL_FRAME_RADIUS_PX, DETAIL_TAG_RADIUS_PX};
 pub use drawn::{
     DashRun, DrawnLink, Fillet, JOINT_REACH_PX, PathPiece, dash_runs, drawn_link, fillet,
     joint_intervals, piece_length, push_flattened, stroke_on_at, turn_positions,
@@ -172,13 +175,22 @@ pub fn layout_page(
     } else {
         String::new()
     };
-    let built = build::build_page(page, grammar, &lanes_plan, &phases_plan, &widest_cell)?;
+    let ladder_plan = ladder::plan_ladders(page, measurer)?;
+    let built = build::build_page(
+        page,
+        grammar,
+        &lanes_plan,
+        &phases_plan,
+        &ladder_plan,
+        &widest_cell,
+    )?;
     let mut geometry = compute::compute_geometry(built, canvas_width(page), measurer)?;
     compute::translate_pipe_slots(page, &mut geometry);
     pipe_ends::extend_pipe_ends(page, &mut geometry);
     lanes::add_lifelines(&mut geometry);
     if page.sheet.is_some() {
         sheet_frame::add_sheet_frame(&mut geometry, measurer)?;
+        detail_frames::add_detail_frames(page, &mut geometry, measurer)?;
     }
     geometry.links = route::route_links(page, grammar, &geometry, &lanes_plan, measurer)?;
     if page.sheet.is_some() {
@@ -352,6 +364,10 @@ pub enum NodeTag {
     PartsList,
     /// The general notes: the keys of a sheet's flags (section 14.4 rule 18).
     GeneralNotes,
+    /// A detail ladder: rungs of escalation beside its rails (section 14.4 rule 20).
+    Ladder,
+    /// One rung of a ladder, `/…/rungs/<i>`.
+    Rung,
 }
 
 impl NodeTag {
@@ -403,6 +419,8 @@ impl NodeTag {
             NodeTag::Step => "Step",
             NodeTag::PartsList => "PartsList",
             NodeTag::GeneralNotes => "GeneralNotes",
+            NodeTag::Ladder => "Ladder",
+            NodeTag::Rung => "Rung",
         }
     }
 }
@@ -578,10 +596,25 @@ pub enum PartName {
     RailDot,
     /// A semicircle where a link hops over another link of another actor (section 14.4 rule 24).
     Hop,
+    /// The dashed frame a detail ladder draws around its Steps in a Phases node (section
+    /// 14.4 rule 16).
+    DetailFrame,
+    /// The circle that carries a detail's letter, on a Phases node and on its Ladder.
+    DetailTag,
+    DetailLetter,
+    /// The two rails of a ladder, the ticks where its rungs meet them, and the dashed arrow
+    /// up between the rails (section 14.4 rule 20).
+    RailLeft,
+    RailRight,
+    RungTick,
+    EscalationArrow,
+    RungTitle,
+    RungWho,
+    RungText,
 }
 
 /// The number of part names, so a new name has to join `PartName::ALL`.
-pub const PART_NAMES: usize = 122;
+pub const PART_NAMES: usize = 132;
 
 impl PartName {
     /// Every part name, in declaration order.
@@ -708,6 +741,16 @@ impl PartName {
         PartName::ValveFar,
         PartName::RailDot,
         PartName::Hop,
+        PartName::DetailFrame,
+        PartName::DetailTag,
+        PartName::DetailLetter,
+        PartName::RailLeft,
+        PartName::RailRight,
+        PartName::RungTick,
+        PartName::EscalationArrow,
+        PartName::RungTitle,
+        PartName::RungWho,
+        PartName::RungText,
     ];
 
     /// True for the parts a design sheet adds (section 14.2 rule 10); only a sheet draws
@@ -798,7 +841,17 @@ impl PartName {
             | PartName::ValveNear
             | PartName::ValveFar
             | PartName::RailDot
-            | PartName::Hop => true,
+            | PartName::Hop
+            | PartName::DetailFrame
+            | PartName::DetailTag
+            | PartName::DetailLetter
+            | PartName::RailLeft
+            | PartName::RailRight
+            | PartName::RungTick
+            | PartName::EscalationArrow
+            | PartName::RungTitle
+            | PartName::RungWho
+            | PartName::RungText => true,
             PartName::Badge
             | PartName::BadgeText
             | PartName::Text
@@ -969,6 +1022,16 @@ impl PartName {
             PartName::ValveFar => "valve_far",
             PartName::RailDot => "rail_dot",
             PartName::Hop => "hop",
+            PartName::DetailFrame => "detail_frame",
+            PartName::DetailTag => "detail_tag",
+            PartName::DetailLetter => "detail_letter",
+            PartName::RailLeft => "rail_left",
+            PartName::RailRight => "rail_right",
+            PartName::RungTick => "rung_tick",
+            PartName::EscalationArrow => "escalation_arrow",
+            PartName::RungTitle => "rung_title",
+            PartName::RungWho => "rung_who",
+            PartName::RungText => "rung_text",
         }
     }
 }

@@ -51,7 +51,7 @@ pub const FONT_SIZE_MAX_PX: f32 = 96.0;
 pub const LETTER_SPACING_MIN_EM: f32 = -0.2;
 pub const LETTER_SPACING_MAX_EM: f32 = 0.5;
 
-/// The 37 styles of section 2.9, in table order.
+/// The 39 styles of section 2.9, in table order.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum TextStyleName {
     Badge,
@@ -91,6 +91,8 @@ pub enum TextStyleName {
     MarkNumeral,
     MarkNumeralSmall,
     FlagNumeral,
+    RungTitle,
+    RungWho,
 }
 
 impl TextStyleName {
@@ -134,6 +136,8 @@ impl TextStyleName {
             TextStyleName::MarkNumeral => "mark_numeral",
             TextStyleName::MarkNumeralSmall => "mark_numeral_small",
             TextStyleName::FlagNumeral => "flag_numeral",
+            TextStyleName::RungTitle => "rung_title",
+            TextStyleName::RungWho => "rung_who",
         }
     }
 
@@ -179,6 +183,8 @@ impl TextStyleName {
             TextStyleName::MarkNumeral => &MARK_NUMERAL,
             TextStyleName::MarkNumeralSmall => &MARK_NUMERAL_SMALL,
             TextStyleName::FlagNumeral => &FLAG_NUMERAL,
+            TextStyleName::RungTitle => &RUNG_TITLE,
+            TextStyleName::RungWho => &RUNG_WHO,
         }
     }
 }
@@ -527,9 +533,28 @@ const FLAG_NUMERAL: NamedTextStyle = inter(
     false,
 );
 
-/// The 37 styles of section 2.9, in table order, which is TextStyleName order:
+/// A rung's number and title, the lead of a run whose body says who acts (section 14.4
+/// rule 20).
+const RUNG_TITLE: NamedTextStyle = inter(
+    TextStyleName::RungTitle,
+    FontWeight::Bold,
+    12.0,
+    14.4,
+    0.08,
+    true,
+);
+const RUNG_WHO: NamedTextStyle = inter(
+    TextStyleName::RungWho,
+    FontWeight::Regular,
+    12.0,
+    14.4,
+    0.0,
+    false,
+);
+
+/// The 39 styles of section 2.9, in table order, which is TextStyleName order:
 /// TEXT_STYLES[i].name as usize == i.
-pub const TEXT_STYLES: [NamedTextStyle; 37] = [
+pub const TEXT_STYLES: [NamedTextStyle; 39] = [
     BADGE,
     KICKER,
     TITLE,
@@ -567,6 +592,8 @@ pub const TEXT_STYLES: [NamedTextStyle; 37] = [
     MARK_NUMERAL,
     MARK_NUMERAL_SMALL,
     FLAG_NUMERAL,
+    RUNG_TITLE,
+    RUNG_WHO,
 ];
 
 #[derive(Debug, Clone, PartialEq)]

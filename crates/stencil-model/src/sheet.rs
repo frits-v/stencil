@@ -26,10 +26,12 @@ pub enum SheetList {
     Parts,
     GeneralNotes,
     Compartments,
+    Around,
+    Rungs,
 }
 
 impl SheetList {
-    pub const ALL: [SheetList; 12] = [
+    pub const ALL: [SheetList; 14] = [
         SheetList::ProblemPoints,
         SheetList::AnswerParagraphs,
         SheetList::AttentionItems,
@@ -42,6 +44,8 @@ impl SheetList {
         SheetList::Parts,
         SheetList::GeneralNotes,
         SheetList::Compartments,
+        SheetList::Around,
+        SheetList::Rungs,
     ];
 
     /// The list's name in messages and in CUE case names, for example "problem-points".
@@ -59,6 +63,8 @@ impl SheetList {
             SheetList::Parts => "parts",
             SheetList::GeneralNotes => "general-notes",
             SheetList::Compartments => "compartments",
+            SheetList::Around => "around",
+            SheetList::Rungs => "rungs",
         }
     }
 
@@ -71,7 +77,9 @@ impl SheetList {
             | SheetList::Lanes
             | SheetList::Phases
             | SheetList::Parts
-            | SheetList::GeneralNotes => 1,
+            | SheetList::GeneralNotes
+            | SheetList::Around
+            | SheetList::Rungs => 1,
             SheetList::AnswerParagraphs
             | SheetList::Actors
             | SheetList::Steps
@@ -90,9 +98,9 @@ impl SheetList {
             | SheetList::Phases => 8,
             SheetList::AnswerParagraphs | SheetList::Marks => 4,
             SheetList::Steps => 64,
-            SheetList::StepLines | SheetList::Compartments => 6,
+            SheetList::StepLines | SheetList::Compartments | SheetList::Rungs => 6,
             SheetList::Parts => 48,
-            SheetList::GeneralNotes => 16,
+            SheetList::GeneralNotes | SheetList::Around => 16,
         }
     }
 
@@ -118,6 +126,8 @@ impl SheetList {
             SheetList::Parts => owner.child("parts"),
             SheetList::GeneralNotes => owner.child("notes"),
             SheetList::Compartments => owner.child("compartments"),
+            SheetList::Around => owner.child("around"),
+            SheetList::Rungs => owner.child("rungs"),
         }
     }
 }
@@ -270,6 +280,7 @@ pub enum SheetSurface {
     LinkStep,
     PipeStep,
     Valve,
+    Ladder,
 }
 
 const SHEET_VOCABULARY: [SurfaceVocabulary; 1] = [SurfaceVocabulary::Field {
@@ -346,6 +357,7 @@ const MARKS_VOCABULARY: [SurfaceVocabulary; 7] = [
 ];
 const PARTS_LIST_VOCABULARY: [SurfaceVocabulary; 1] = [SurfaceVocabulary::Tag("PartsList")];
 const GENERAL_NOTES_VOCABULARY: [SurfaceVocabulary; 1] = [SurfaceVocabulary::Tag("GeneralNotes")];
+const LADDER_VOCABULARY: [SurfaceVocabulary; 1] = [SurfaceVocabulary::Tag("Ladder")];
 const ITEM_OUTLINE_VOCABULARY: [SurfaceVocabulary; 2] = [
     SurfaceVocabulary::Field {
         object: "Item",
@@ -397,7 +409,7 @@ const VALVE_VOCABULARY: [SurfaceVocabulary; 1] = [SurfaceVocabulary::Field {
 }];
 
 impl SheetSurface {
-    pub const ALL: [SheetSurface; 18] = [
+    pub const ALL: [SheetSurface; 19] = [
         SheetSurface::Sheet,
         SheetSurface::Actors,
         SheetSurface::View,
@@ -416,6 +428,7 @@ impl SheetSurface {
         SheetSurface::LinkStep,
         SheetSurface::PipeStep,
         SheetSurface::Valve,
+        SheetSurface::Ladder,
     ];
 
     /// The kebab-case name in messages, in CUE's `#SheetSurface` and in check.sh case names.
@@ -439,6 +452,7 @@ impl SheetSurface {
             SheetSurface::LinkStep => "link-step",
             SheetSurface::PipeStep => "pipe-step",
             SheetSurface::Valve => "valve",
+            SheetSurface::Ladder => "ladder",
         }
     }
 
@@ -525,6 +539,7 @@ impl SheetSurface {
                 NodeRef::Node(_) => false,
             }),
             SheetSurface::Valve => link_fields(page, "valve", |link| link.valve),
+            SheetSurface::Ladder => tagged(|node| matches!(node, Node::Ladder(_))),
         }
     }
 
@@ -550,6 +565,7 @@ impl SheetSurface {
             SheetSurface::LinkStep => &LINK_STEP_VOCABULARY,
             SheetSurface::PipeStep => &PIPE_STEP_VOCABULARY,
             SheetSurface::Valve => &VALVE_VOCABULARY,
+            SheetSurface::Ladder => &LADDER_VOCABULARY,
         }
     }
 
@@ -561,7 +577,7 @@ impl SheetSurface {
             | SheetSurface::View
             | SheetSurface::Actor
             | SheetSurface::LegendByActor => "sheet",
-            SheetSurface::Phases | SheetSurface::Step => "phases",
+            SheetSurface::Phases | SheetSurface::Step | SheetSurface::Ladder => "phases",
             SheetSurface::Marks | SheetSurface::PartsList | SheetSurface::GeneralNotes => "marks",
             SheetSurface::ItemOutline
             | SheetSurface::Compartments
@@ -680,6 +696,15 @@ fn mark_fields(page: &Page) -> Vec<NodePointer> {
             NodeRef::Node(Node::Pipe(pipe)) | NodeRef::TeeArm(pipe) => (&pipe.marks, false, &[]),
             NodeRef::Node(Node::Step(step)) => {
                 (&step.marks, step.corner_mark.is_some(), &step.lines)
+            }
+            NodeRef::Node(Node::Ladder(ladder)) => {
+                let rungs = SheetList::Rungs;
+                for (index, rung) in ladder.rungs.iter().enumerate().take(rungs.max() + 1) {
+                    if !rung.marks.is_empty() {
+                        pointers.push(rungs.pointer_in(&entry.pointer).index(index).child("marks"));
+                    }
+                }
+                continue;
             }
             NodeRef::Node(_) => continue,
         };

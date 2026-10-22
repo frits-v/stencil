@@ -67,7 +67,7 @@ import (
 
 // Every surface valid on a design sheet only; a page without sheet that draws
 // one fails _needsSheet. The Rust twin is SheetSurface::as_str.
-#SheetSurface: "sheet" | "actors" | "view" | "phases" | "step" | "actor" | "legend-by-actor" | "marks" | "parts-list" | "general-notes" | "item-outline" | "compartments" | "planned" | "sheet-look" | "rail-form" | "link-step" | "pipe-step" | "valve"
+#SheetSurface: "sheet" | "actors" | "view" | "phases" | "step" | "actor" | "legend-by-actor" | "marks" | "parts-list" | "general-notes" | "item-outline" | "compartments" | "planned" | "sheet-look" | "rail-form" | "link-step" | "pipe-step" | "valve" | "ladder"
 
 // A title block cell caption: 1 to 60 characters.
 #Caption: #Text & strings.MaxRunes(60)
@@ -442,6 +442,7 @@ import (
 			[for item in sheet.attention.items if item.actor != _|_ {item.actor}],
 			list.Concat([for n in body {n._lanes}]),
 			list.Concat([for l in _keyedLists {l.actors}]),
+			list.Concat([for l in _ladders {l.actors}]),
 		])
 		_actorsUnknown: {
 			for a in _namedActors if !list.Contains(_actorIds, a) {(a): "actor" & "is not declared"}
@@ -468,6 +469,20 @@ import (
 			for i, e in legend if e.by_actor != _|_ if e.by_actor if !_hasActors || e.line == "gray" || e.line == "deny" {"\(i)": "by_actor" & "names solid or dashed lines on a page with actors"}
 		}
 		_looseSteps: list.Concat([for n in body {n._looseSteps}])
+		_ladders: list.Concat([for n in body {n._ladders}])
+		_stepSets: list.Concat([for n in body {n._stepSets}])
+		_stepIds: list.Concat(_stepSets)
+		if len(_ladders) > 8 {
+			_laddersTooMany: "\(len(_ladders)) ladders, above 8" & "details are lettered A to H"
+		}
+		_ladderAroundUnknown: {
+			for l in _ladders for a in l.around if !list.Contains(_stepIds, a) {(a): "\"\(a)\"" & "names a Step"}
+		}
+		_ladderAroundTwoPhases: {
+			for l in _ladders
+			let framing = [for i, set in _stepSets if len([for a in l.around if list.Contains(set, a) {a}]) > 0 {i}]
+			if len(framing) > 1 {(l.title): "a detail frame" & "lies in one Phases node"}
+		}
 		_stepOutsidePhases: {
 			for t in _looseSteps {(t): "Step" & "sits directly in a Phases node"}
 		}
@@ -619,12 +634,12 @@ import (
 	y: number & >=0
 }
 
-// A node is one of seventeen tags. Switching on tag, rather than a disjunction of
+// A node is one of eighteen tags. Switching on tag, rather than a disjunction of
 // definitions, keeps vet errors pointed at the offending field. Every node may
 // carry an id; _ids lists the ids in its subtree and _keys the legend keys of
 // the pipes and tees in it.
 #Node: {
-	tag: "Row" | "Col" | "Lanes" | "Box" | "Item" | "Fact" | "Note" | "Pipe" | "Tee" | "Text" | "Callout" | "Frame" | "View" | "Phases" | "Step" | "PartsList" | "GeneralNotes"
+	tag: "Row" | "Col" | "Lanes" | "Box" | "Item" | "Fact" | "Note" | "Pipe" | "Tee" | "Text" | "Callout" | "Frame" | "View" | "Phases" | "Step" | "PartsList" | "GeneralNotes" | "Ladder"
 	if tag == "Row" {#Row}
 	if tag == "Col" {#Col}
 	if tag == "Lanes" {#Lanes}
@@ -642,6 +657,7 @@ import (
 	if tag == "Step" {#StepNode}
 	if tag == "PartsList" {#PartsList}
 	if tag == "GeneralNotes" {#GeneralNotes}
+	if tag == "Ladder" {#Ladder}
 
 	// The ids a Pipe names in from and to, gathered up the tree. A Tee's arms
 	// cannot name one, so a Tee gathers none.
@@ -651,13 +667,14 @@ import (
 
 	// The sheet surfaces in the subtree and the titles of the Views strictly
 	// below the node.
-	if !list.Contains(["Row", "Col", "Lanes", "Box", "View", "Item", "Pipe", "Tee", "Phases", "Step", "PartsList", "GeneralNotes"], tag) {
+	if !list.Contains(["Row", "Col", "Lanes", "Box", "View", "Item", "Pipe", "Tee", "Phases", "Step", "PartsList", "GeneralNotes", "Ladder"], tag) {
 		_surfaces: []
 	}
+
 	// _marks: every mark on a carrier in the subtree. _kinded: the ids of the
 	// Items, Boxes and Pipes a part may name. _keyedLists: each PartsList and
 	// GeneralNotes node with its keys.
-	if !list.Contains(["Row", "Col", "Lanes", "Box", "View", "Item", "Pipe", "Tee", "Phases", "Step"], tag) {
+	if !list.Contains(["Row", "Col", "Lanes", "Box", "View", "Item", "Pipe", "Tee", "Phases", "Step", "Ladder"], tag) {
 		_marks: []
 	}
 	if !list.Contains(["Row", "Col", "Lanes", "Box", "View", "Item", "Pipe", "Tee"], tag) {
@@ -685,9 +702,19 @@ import (
 	if !list.Contains(["Row", "Col", "Lanes", "Box", "View", "Step"], tag) {
 		_looseSteps: []
 	}
+
 	// _plannedIds: the ids of planned Items, Boxes and Steps.
 	if !list.Contains(["Row", "Col", "Lanes", "Box", "View", "Item", "Phases", "Step"], tag) {
 		_plannedIds: []
+	}
+
+	// _stepSets: the Step ids of each Phases node. _ladders: each Ladder with
+	// its around ids and the actors its rungs name.
+	if !list.Contains(["Row", "Col", "Lanes", "Box", "View", "Phases"], tag) {
+		_stepSets: []
+	}
+	if !list.Contains(["Row", "Col", "Lanes", "Box", "View", "Ladder"], tag) {
+		_ladders: []
 	}
 }
 
@@ -710,6 +737,8 @@ import (
 	_kinded: list.Concat([for c in children {c._kinded}])
 	_keyedLists: list.Concat([for c in children {c._keyedLists}])
 	_plannedIds: list.Concat([for c in children {c._plannedIds}])
+	_stepSets: list.Concat([for c in children {c._stepSets}])
+	_ladders: list.Concat([for c in children {c._ladders}])
 }
 
 // A numbered view of a design sheet: a heading, then its children in a
@@ -755,6 +784,8 @@ import (
 	_looseSteps: []
 	_marks: list.Concat([for c in children {c._marks}])
 	_plannedIds: list.Concat([for c in children {c._plannedIds}])
+	_stepSets: [[for c in children if c.id != _|_ {c.id}]]
+	_ladders: []
 	_phaseIds: list.SortStrings([for p in phases {p.id}])
 	_phaseIdsUsedTwice: {
 		for i, a in _phaseIds if i > 0 if _phaseIds[i-1] == a {(a): "phase id" & "used by two phases of one Phases node"}
@@ -849,6 +880,47 @@ import (
 	_keyedLists: [{tag: "GeneralNotes", ids: [for n in notes {n.id}], actors: []}]
 }
 
+// A detail ladder of a design sheet: rungs of escalation, rung 1 at the bottom,
+// and a detail frame around the around Steps, which lie in one Phases node.
+#Ladder: {
+	id?:   #Id
+	tag:   "Ladder"
+	title: #Text
+	note?: #Text
+	around: [...#Id] & list.MinItems(1) & list.MaxItems(16)
+	rungs: [...#Rung] & list.MinItems(1) & list.MaxItems(6)
+	_keys: {}
+	_ids: [if id != _|_ {id}]
+	_laneSets: []
+	_rungMarked: [for r in rungs if r.marks != _|_ if len(r.marks) > 0 {r}]
+	_surfaces: ["ladder", if len(_rungMarked) > 0 {"marks"}]
+	_title:  title
+	_around: around
+	_ladders: [{
+		title:  _title
+		around: _around
+		actors: [for r in rungs if r.actor != _|_ {r.actor}]
+	}]
+	_marks: list.Concat([for r in rungs if r.marks != _|_ {[for m in r.marks {
+		let k = #MarkKey & {#mark: m}
+		{kind: k.kind, id: k.id, carrier: r.title}
+	}]}])
+	_rungMarksRepeated: {
+		for i, r in rungs if r.marks != _|_
+		let keys = [for m in r.marks {let k = #MarkKey & {#mark: m}, "\(k.kind).\(k.id)"}]
+		for a, x in keys for b, y in keys if a < b && x == y {"\(i).\(y)": "mark" & "once per carrier"}
+	}
+}
+
+#Rung: {
+	title:    #Text
+	who?:     #Text
+	text:     #Text
+	actor?:   #Id
+	planned?: bool
+	marks?:   #Marks
+}
+
 // Shared by Row and Col. grow carries one weight per child.
 #Container: {
 	id?:  #Id
@@ -937,6 +1009,8 @@ import (
 	_lineUses: list.Concat([for c in children {c._lineUses}])
 	_lanes: list.Concat([for c in children {c._lanes}])
 	_looseSteps: list.Concat([for c in children {c._looseSteps}])
+	_stepSets: list.Concat([for c in children {c._stepSets}])
+	_ladders: list.Concat([for c in children {c._ladders}])
 }
 
 // Any named leaf, drawn with its facts in list order under title and subtitle.

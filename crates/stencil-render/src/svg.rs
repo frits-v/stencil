@@ -75,6 +75,8 @@ enum DocumentNode<'a> {
     ProblemPoint,
     /// An actor's chip in the legend strip.
     Actor,
+    /// A rung of a ladder, `/…/rungs/<i>`.
+    Rung(&'a stencil_model::Rung),
 }
 
 /// Walks page and geometry in the section 4.4 geometry order and asserts the pointers match,
@@ -195,7 +197,9 @@ pub(crate) fn is_sheet_tag(tag: NodeTag) -> bool {
         | NodeTag::Phases
         | NodeTag::Step
         | NodeTag::PartsList
-        | NodeTag::GeneralNotes => true,
+        | NodeTag::GeneralNotes
+        | NodeTag::Ladder
+        | NodeTag::Rung => true,
         NodeTag::Page
         | NodeTag::Kicker
         | NodeTag::Title
@@ -248,11 +252,28 @@ fn geometry_order(page: &Page) -> Vec<(NodePointer, DocumentNode<'_>)> {
         order.push((sheet_pointer.child("attention"), DocumentNode::SheetCell));
         push_legend_order(page, &mut order);
         order.push((root.child("body"), DocumentNode::Body));
-        order.extend(
-            body_nodes(page)
-                .into_iter()
-                .map(|entry| (entry.pointer, DocumentNode::Content(entry.node))),
-        );
+        for entry in body_nodes(page) {
+            let rungs = match entry.node {
+                NodeRef::Node(Node::Ladder(ladder)) => {
+                    let list = SheetList::Rungs;
+                    ladder
+                        .rungs
+                        .iter()
+                        .take(list.max() + 1)
+                        .enumerate()
+                        .map(|(index, rung)| {
+                            (
+                                list.pointer_in(&entry.pointer).index(index),
+                                DocumentNode::Rung(rung),
+                            )
+                        })
+                        .collect()
+                }
+                _ => Vec::new(),
+            };
+            order.push((entry.pointer, DocumentNode::Content(entry.node)));
+            order.extend(rungs);
+        }
         if page.foot.is_some() {
             order.push((root.child("foot"), DocumentNode::Foot));
         }
@@ -635,6 +656,22 @@ impl MarkPaints {
             if !marks.is_empty() {
                 carriers.insert(entry.pointer.as_str().to_string(), paint(&marks));
             }
+            if let NodeRef::Node(Node::Ladder(ladder)) = entry.node {
+                let rungs = SheetList::Rungs;
+                for index in 0..ladder.rungs.len().min(rungs.max() + 1) {
+                    let marks = PageMarks::rung_marks(ladder, &entry.pointer, index);
+                    if !marks.is_empty() {
+                        carriers.insert(
+                            rungs
+                                .pointer_in(&entry.pointer)
+                                .index(index)
+                                .as_str()
+                                .to_string(),
+                            paint(&marks),
+                        );
+                    }
+                }
+            }
         }
         let links = page
             .links
@@ -938,11 +975,11 @@ impl<'a> SvgWriter<'a> {
                 }
                 Node::Phases(phases) => self.phases_step_fill = phases.step_fill,
                 Node::View(_) | Node::Step(_) => {}
-                Node::PartsList(_) | Node::GeneralNotes(_) => {
-                    let width_px = if matches!(content, Node::PartsList(_)) {
-                        palette::PARTS_LIST_BORDER_PX
-                    } else {
-                        palette::GENERAL_NOTES_BORDER_PX
+                Node::PartsList(_) | Node::GeneralNotes(_) | Node::Ladder(_) => {
+                    let width_px = match content {
+                        Node::PartsList(_) => palette::PARTS_LIST_BORDER_PX,
+                        Node::Ladder(_) => palette::LADDER_BORDER_PX,
+                        _ => palette::GENERAL_NOTES_BORDER_PX,
                     };
                     let fill = self.palette.sheet_ink(palette::SheetInk::Cell).to_string();
                     let color = self.palette.sheet_ink(palette::SheetInk::Frame).to_string();
@@ -1020,6 +1057,21 @@ impl<'a> SvgWriter<'a> {
             | DocumentNode::SheetCell
             | DocumentNode::ProblemPoint
             | DocumentNode::Actor => PartContext::default(),
+            // A rung's box is drawn as a boxed Step is: filled in its actor's fill and
+            // outlined in its wire, or dashed and unfilled when planned.
+            DocumentNode::Rung(rung) => PartContext {
+                step_look: Some(if rung.planned {
+                    StepLook::Planned
+                } else {
+                    StepLook::Box
+                }),
+                step_fill: Some(if rung.planned {
+                    StepFill::None
+                } else {
+                    StepFill::Tint
+                }),
+                ..PartContext::default()
+            },
             DocumentNode::LegendEntry(entry) => PartContext {
                 line: Some(LineUse::new(entry.line, entry.tint)),
                 pipe_form: Some(entry.form),
@@ -1047,7 +1099,8 @@ impl<'a> SvgWriter<'a> {
                 | Node::Fact(_)
                 | Node::View(_)
                 | Node::PartsList(_)
-                | Node::GeneralNotes(_) => PartContext::default(),
+                | Node::GeneralNotes(_)
+                | Node::Ladder(_) => PartContext::default(),
                 Node::Phases(phases) => PartContext {
                     band: Some(phases.band),
                     ..PartContext::default()
@@ -1382,7 +1435,17 @@ impl<'a> SvgWriter<'a> {
             | PartName::Marker
             | PartName::BodyLine => {}
             // A sheet part reaches here only off a sheet, which never lays one out.
-            PartName::Border
+            PartName::DetailFrame
+            | PartName::DetailTag
+            | PartName::DetailLetter
+            | PartName::RailLeft
+            | PartName::RailRight
+            | PartName::RungTick
+            | PartName::EscalationArrow
+            | PartName::RungTitle
+            | PartName::RungWho
+            | PartName::RungText
+            | PartName::Border
             | PartName::RefRule
             | PartName::Grid
             | PartName::RefTick
@@ -1492,7 +1555,12 @@ impl<'a> SvgWriter<'a> {
         slot: Option<u8>,
     ) {
         use palette::SheetInk::{Rule, TintWire};
-        let wire = self.palette.sheet_color(TintWire, slot);
+        // A Step always has its lane's actor; a rung without one outlines in the frame ink,
+        // which reads on every paper where the hairline rule would not.
+        let wire = match slot {
+            Some(_) => self.palette.sheet_color(TintWire, slot),
+            None => self.palette.sheet_ink(palette::SheetInk::Frame).to_string(),
+        };
         let fill = self.step_fill_color(fill, slot);
         let (stroke_color, radius, dash) = match look {
             StepLook::Box | StepLook::Stack => (wire, 0.0, None),
@@ -1683,9 +1751,63 @@ impl<'a> SvgWriter<'a> {
                 );
                 self.write_glyph_path(depth, &path, fill, stroke);
             }
+            PartShape::RoundedDashedRect(dash) => {
+                if let Some(stroke) = stroke {
+                    let rect = inset_rect(bounds, stroke.width_px / 2.0);
+                    let radius = stencil_layout::DETAIL_FRAME_RADIUS_PX - stroke.width_px / 2.0;
+                    self.line(
+                        depth,
+                        &format!(
+                            r#"<rect x="{}" y="{}" width="{}" height="{}" rx="{}" fill="none"{} stroke-dasharray="{dash}"/>"#,
+                            format_number(rect.x),
+                            format_number(rect.y),
+                            format_number(rect.width),
+                            format_number(rect.height),
+                            format_number(radius.max(0.0)),
+                            stroke_attributes(stroke)
+                        ),
+                    );
+                }
+            }
+            PartShape::UpArrow(dash) => {
+                if let Some(stroke) = stroke {
+                    self.write_up_arrow(depth, bounds, stroke, dash);
+                }
+            }
             // A valve and a hop are drawn with their link.
             PartShape::Valve | PartShape::OnPath | PartShape::Text => {}
         }
+    }
+
+    /// A dashed line up the middle of `bounds` from its bottom to the base of a filled
+    /// arrowhead whose tip is the box's top.
+    fn write_up_arrow(&mut self, depth: usize, bounds: BoxRect, stroke: Stroke<'_>, dash: &str) {
+        let center_x = bounds.x + bounds.width / 2.0;
+        let base_y = bounds.y + ARROW_LENGTH_PX;
+        self.line(
+            depth,
+            &format!(
+                r#"<line x1="{x}" y1="{}" x2="{x}" y2="{}" fill="none"{} stroke-dasharray="{dash}"/>"#,
+                format_number(bounds.bottom()),
+                format_number(base_y),
+                stroke_attributes(stroke),
+                x = format_number(center_x),
+            ),
+        );
+        let half = ARROW_WIDTH_PX / 2.0;
+        self.line(
+            depth,
+            &format!(
+                r#"<path d="M{} {} L{} {} L{} {} Z" fill="{}"/>"#,
+                format_number(center_x),
+                format_number(bounds.y),
+                format_number(center_x + half),
+                format_number(base_y),
+                format_number(center_x - half),
+                format_number(base_y),
+                stroke.color,
+            ),
+        );
     }
 
     /// A flag or diamond outline.

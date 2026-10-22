@@ -907,7 +907,7 @@ pub(crate) fn block_shadows(geometry: &PageGeometry, obstacles: &[Obstacle]) -> 
 
 /// The heading parts of a node that contains the links it labels (section 14.4 rule 15):
 /// for a View its number, title, subtitle and note; for a Phases node its lane names and
-/// captions and its phase heads and titles; nothing for every other tag.
+/// captions, its phase heads and titles and its detail tags; nothing for every other tag.
 pub(crate) fn label_boxes(node: &NodeGeometry) -> Vec<BoxRect> {
     match node.tag {
         NodeTag::Phases => node
@@ -920,6 +920,7 @@ pub(crate) fn label_boxes(node: &NodeGeometry) -> Vec<BoxRect> {
                         | PartName::LaneText
                         | PartName::PhaseHead
                         | PartName::PhaseTitle
+                        | PartName::DetailTag
                 )
             })
             .map(|part| part.bounds)
@@ -968,7 +969,9 @@ pub(crate) fn label_boxes(node: &NodeGeometry) -> Vec<BoxRect> {
         | NodeTag::ActorChip
         | NodeTag::Step
         | NodeTag::PartsList
-        | NodeTag::GeneralNotes => Vec::new(),
+        | NodeTag::GeneralNotes
+        | NodeTag::Ladder
+        | NodeTag::Rung => Vec::new(),
     }
 }
 
@@ -990,7 +993,8 @@ fn obstacle_box(node: &NodeGeometry) -> Option<BoxRect> {
         | NodeTag::ActorChip
         | NodeTag::Step
         | NodeTag::PartsList
-        | NodeTag::GeneralNotes => Some(node.bounds),
+        | NodeTag::GeneralNotes
+        | NodeTag::Ladder => Some(node.bounds),
         // No link crosses a rail it does not attach to (section 14.4 rule 15).
         NodeTag::Pipe if rail_bar(node).is_some() => Some(node.bounds),
         NodeTag::Pipe => node.part(PartName::Tag).map(|part| part.bounds),
@@ -1009,7 +1013,8 @@ fn obstacle_box(node: &NodeGeometry) -> Option<BoxRect> {
         | NodeTag::TitleBlock
         | NodeTag::ProblemPoint
         | NodeTag::View
-        | NodeTag::Phases => None,
+        | NodeTag::Phases
+        | NodeTag::Rung => None,
     }
 }
 

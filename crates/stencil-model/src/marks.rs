@@ -4,7 +4,9 @@
 
 use std::collections::BTreeMap;
 
-use crate::document::{GeneralNotes, Link, Mark, MarkKind, Node, Page, PartEntry, PartsList};
+use crate::document::{
+    GeneralNotes, Ladder, Link, Mark, MarkKind, Node, Page, PartEntry, PartsList,
+};
 use crate::pointer::NodePointer;
 use crate::sheet::{PageActors, SheetList};
 use crate::walk::{NodeEntry, NodeRef, body_nodes};
@@ -415,6 +417,31 @@ impl<'a> PageMarks<'a> {
             .collect()
     }
 
+    /// The marks of rung `index` of the Ladder at `ladder_pointer`, on its title line.
+    pub fn rung_marks(
+        ladder: &Ladder,
+        ladder_pointer: &NodePointer,
+        index: usize,
+    ) -> Vec<CarrierMark> {
+        let Some(rung) = ladder.rungs.get(index) else {
+            return Vec::new();
+        };
+        let pointer = SheetList::Rungs
+            .pointer_in(ladder_pointer)
+            .index(index)
+            .child("marks");
+        rung.marks
+            .iter()
+            .take(MARKS_MAX + 1)
+            .enumerate()
+            .map(|(position, mark)| CarrierMark {
+                pointer: pointer.index(position),
+                mark: mark.clone(),
+                place: MarkPlace::Trailing,
+            })
+            .collect()
+    }
+
     /// The marks of link `index`, in its tag.
     pub fn link_marks(link: &Link, index: usize) -> Vec<CarrierMark> {
         let pointer = NodePointer::root()
@@ -448,6 +475,11 @@ impl<'a> PageMarks<'a> {
         }
         for entry in body_nodes(page) {
             all.extend(self.node_marks(&entry));
+            if let NodeRef::Node(Node::Ladder(ladder)) = entry.node {
+                for index in 0..ladder.rungs.len().min(SheetList::Rungs.max() + 1) {
+                    all.extend(Self::rung_marks(ladder, &entry.pointer, index));
+                }
+            }
         }
         for (index, link) in page.links.iter().enumerate().take(LINKS_MAX + 1) {
             all.extend(Self::link_marks(link, index));

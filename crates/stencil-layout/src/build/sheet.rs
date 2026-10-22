@@ -24,6 +24,22 @@ use stencil_model::MarkKind;
 use stencil_model::marks::MarkPlace;
 
 /// Space between the title block and the first View.
+/// The styles of a lead run and the fields its two pieces come from.
+pub(super) struct RunStyles {
+    pub lead: TextStyleName,
+    pub body: TextStyleName,
+    pub lead_field: &'static str,
+    pub body_field: &'static str,
+}
+
+/// An attention item's or an answer paragraph's lead and text.
+const ITEM_RUN: RunStyles = RunStyles {
+    lead: TextStyleName::LeadBody,
+    body: TextStyleName::BlockBody,
+    lead_field: "lead",
+    body_field: "text",
+};
+
 pub(crate) const BODY_MARGIN_TOP_PX: f32 = 14.0;
 /// The title block's border, which the writer strokes at the same width.
 pub const SHEET_BLOCK_BORDER_PX: f32 = 1.5;
@@ -483,9 +499,15 @@ impl Builder<'_> {
                 )?),
                 AnswerParagraph::Led(led) => parts.extend(self.lead_run(
                     cell,
-                    CELL_ITEM_GAP_PX,
-                    (PartName::ParagraphLead, &led.lead),
-                    (PartName::Paragraph, &led.text),
+                    Style {
+                        margin: top_margin(CELL_ITEM_GAP_PX),
+                        ..base_style()
+                    },
+                    &ITEM_RUN,
+                    [
+                        (PartName::ParagraphLead, &led.lead),
+                        (PartName::Paragraph, &led.text),
+                    ],
                     &paragraph_pointer,
                 )?),
             }
@@ -551,9 +573,12 @@ impl Builder<'_> {
             )?;
             parts.extend(self.lead_run(
                 column,
-                0.0,
-                (PartName::AttentionLead, &item.lead),
-                (PartName::AttentionText, &item.text),
+                base_style(),
+                &ITEM_RUN,
+                [
+                    (PartName::AttentionLead, &item.lead),
+                    (PartName::AttentionText, &item.text),
+                ],
                 &item_pointer,
             )?);
             parts.push(self.where_used_part(
@@ -574,37 +599,40 @@ impl Builder<'_> {
         Ok(())
     }
 
-    /// A bold lead and its body as one taffy leaf, drawn as two parts: the lead in
-    /// `lead_body`, the body in `block_body` continuing on the lead's last line.
-    fn lead_run(
+    /// A bold lead and its body as one taffy leaf, drawn as two parts: the lead in the
+    /// run's lead style, the body in its body style continuing on the lead's last line.
+    pub(super) fn lead_run(
         &mut self,
         parent: NodeId,
-        top: f32,
-        (lead_name, lead): (PartName, &str),
-        (body_name, body): (PartName, &str),
+        style: Style,
+        styles: &RunStyles,
+        [(lead_name, lead), (body_name, body)]: [(PartName, &str); 2],
         source: &NodePointer,
     ) -> Result<[PartRecord; 2], LayoutError> {
-        let lead_style_name = TextStyleName::LeadBody;
-        let body_style_name = TextStyleName::BlockBody;
+        let lead_style_name = styles.lead;
+        let body_style_name = styles.body;
         let lead_style = text_style_for(lead_style_name, false);
         let body_style = text_style_for(body_style_name, false);
+        let cased = |text: &str, name: TextStyleName| {
+            if name.text_style().uppercase {
+                text.to_uppercase()
+            } else {
+                text.to_string()
+            }
+        };
+        let lead = cased(lead, lead_style_name);
+        let body = cased(body, body_style_name);
         let run = |piece| LeadRunLeaf {
-            lead: lead.to_string(),
+            lead: lead.clone(),
             lead_style,
-            body: body.to_string(),
+            body: body.clone(),
             body_style,
             piece,
         };
         let lead_index = self.text_leaves.len();
         let node = self
             .tree
-            .new_leaf_with_context(
-                Style {
-                    margin: top_margin(top),
-                    ..base_style()
-                },
-                lead_index,
-            )
+            .new_leaf_with_context(style, lead_index)
             .map_err(Self::taffy_error(source))?;
         self.attach(parent, node, source)?;
         let leaf = |text: &str, style, style_name, piece, field: &str| TextLeaf {
@@ -617,8 +645,20 @@ impl Builder<'_> {
             source: source.child(field),
             lead_run: Some(run(piece)),
         };
-        let lead_leaf = leaf(lead, lead_style, lead_style_name, RunPiece::Lead, "lead");
-        let body_leaf = leaf(body, body_style, body_style_name, RunPiece::Body, "text");
+        let lead_leaf = leaf(
+            &lead,
+            lead_style,
+            lead_style_name,
+            RunPiece::Lead,
+            styles.lead_field,
+        );
+        let body_leaf = leaf(
+            &body,
+            body_style,
+            body_style_name,
+            RunPiece::Body,
+            styles.body_field,
+        );
         self.text_leaves.push(lead_leaf);
         self.text_leaves.push(body_leaf);
         Ok([

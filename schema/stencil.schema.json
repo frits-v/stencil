@@ -1780,6 +1780,63 @@
             "title",
             "notes"
           ]
+        },
+        {
+          "description": "A detail ladder of a design sheet: rungs of escalation, rung 1 at the bottom, and a\ndetail frame drawn around the `around` Steps, lettered A, B in body order.",
+          "type": "object",
+          "properties": {
+            "around": {
+              "description": "The ids of the Steps the detail frame lies around, all in one Phases node.",
+              "type": "array",
+              "items": {
+                "type": "string",
+                "pattern": "^[a-z0-9][a-z0-9-]{0,63}$"
+              },
+              "maxItems": 16,
+              "minItems": 1
+            },
+            "id": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "pattern": "^[a-z0-9][a-z0-9-]{0,63}$"
+            },
+            "note": {
+              "description": "Right-aligned on the heading row.",
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 400,
+              "minLength": 1
+            },
+            "rungs": {
+              "description": "From rung 1, drawn at the bottom, to the last, drawn at the top.",
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Rung"
+              },
+              "maxItems": 6,
+              "minItems": 1
+            },
+            "tag": {
+              "type": "string",
+              "const": "Ladder"
+            },
+            "title": {
+              "type": "string",
+              "maxLength": 400,
+              "minLength": 1
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "tag",
+            "title",
+            "around",
+            "rungs"
+          ]
         }
       ]
     },
@@ -1978,6 +2035,56 @@
       "enum": [
         "flat",
         "iso"
+      ]
+    },
+    "Rung": {
+      "description": "One rung of a ladder: who acts at this level of escalation and what happens.",
+      "type": "object",
+      "properties": {
+        "actor": {
+          "description": "The actor whose colours the rung takes.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[a-z0-9][a-z0-9-]{0,63}$"
+        },
+        "marks": {
+          "description": "Marks on the title line, right-aligned.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Mark"
+          },
+          "maxItems": 4
+        },
+        "planned": {
+          "description": "Not in place yet: drawn dashed with no fill.",
+          "type": "boolean"
+        },
+        "text": {
+          "type": "string",
+          "maxLength": 400,
+          "minLength": 1
+        },
+        "title": {
+          "type": "string",
+          "maxLength": 400,
+          "minLength": 1
+        },
+        "who": {
+          "description": "Set after the title on its line, in the regular weight.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 400,
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "title",
+        "text"
       ]
     },
     "Shape": {

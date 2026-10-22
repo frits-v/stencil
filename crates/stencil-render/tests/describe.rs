@@ -845,7 +845,9 @@ fn every_entry_part_is_drawn_once_per_entry() {
             | stencil_model::SheetList::Steps
             | stencil_model::SheetList::StepLines
             | stencil_model::SheetList::Marks
-            | stencil_model::SheetList::Compartments => {
+            | stencil_model::SheetList::Compartments
+            | stencil_model::SheetList::Around
+            | stencil_model::SheetList::Rungs => {
                 panic!("{} keys no entry parts", list.name())
             }
         };
@@ -964,7 +966,7 @@ fn the_description_names_a_lane_band_and_a_step_fill_that_differ_from_the_look()
         .find(|line| line.starts_with("- Phases: "))
         .unwrap();
     assert!(
-        phases_line.contains("; band none; step fill none. `"),
+        phases_line.contains("; band none; step fill none; detail A frames "),
         "{phases_line}"
     );
     let step_lines: Vec<&str> = text

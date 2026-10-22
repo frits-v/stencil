@@ -354,6 +354,48 @@
               ]
             }
           ]
+        },
+        {
+          "tag": "Ladder",
+          "id": "failure-ladder",
+          "title": "When a clip fails or a verdict is disputed",
+          "note": "a failed clip never blocks the queue",
+          "around": [
+            "s-evaluate",
+            "s-judge",
+            "s-write"
+          ],
+          "rungs": [
+            {
+              "title": "Retry",
+              "who": "the clip worker",
+              "text": "A failed frame fetch or evaluator call retries the clip job with backoff, three attempts in all.",
+              "actor": "worker"
+            },
+            {
+              "title": "Dead letter",
+              "who": "the Trigger API",
+              "text": "After the third failure the job moves to a dead-letter subscription and the trigger lists the clip as unevaluated.",
+              "actor": "api"
+            },
+            {
+              "title": "Ask the operator",
+              "who": "you",
+              "text": "A disputed verdict returns with its frames and plan version; a confirmed dispute opens a plan change for approval.",
+              "actor": "operator",
+              "marks": [
+                {
+                  "attention": "disputed-verdicts"
+                }
+              ]
+            },
+            {
+              "title": "Page the owner",
+              "who": "the service owner",
+              "text": "A trigger with more than ten dead-lettered clips in an hour pages the service owner.",
+              "planned": true
+            }
+          ]
         }
       ]
     },

@@ -489,14 +489,18 @@ impl<'a> Palette<'a> {
             | TextStyleName::Statement
             | TextStyleName::ViewNumeral
             | TextStyleName::ViewTitle => theme.sheet_colors().frame,
-            TextStyleName::ViewNote | TextStyleName::StepText => &theme.ink.secondary,
+            TextStyleName::ViewNote | TextStyleName::StepText | TextStyleName::RungWho => {
+                &theme.ink.secondary
+            }
             TextStyleName::LeadBody
             | TextStyleName::StepTitle
             | TextStyleName::MarkNumeral
             | TextStyleName::MarkNumeralSmall => &theme.ink.primary,
             TextStyleName::ListTitle => theme.sheet_colors().frame,
             TextStyleName::FlagNumeral => theme.sheet_colors().cell,
-            TextStyleName::ActorName | TextStyleName::LaneName => theme.sheet_colors().frame,
+            TextStyleName::ActorName | TextStyleName::LaneName | TextStyleName::RungTitle => {
+                theme.sheet_colors().frame
+            }
         };
         color.as_str()
     }
@@ -661,6 +665,11 @@ pub enum PartShape {
     Valve,
     /// Drawn as part of the link's own path: a hop.
     OnPath,
+    /// A rect with corners of `DETAIL_FRAME_RADIUS_PX` and this dash array: a detail frame.
+    RoundedDashedRect(&'static str),
+    /// A line up the middle of the part with this dash array and an arrowhead at its top: a
+    /// ladder's escalation arrow.
+    UpArrow(&'static str),
     Text,
 }
 
@@ -725,6 +734,13 @@ pub const TAB_BORDER_PX: f32 = 1.0;
 pub const COMPARTMENT_BORDER_PX: f32 = 1.0;
 pub const STEP_BADGE_STROKE_PX: f32 = 1.5;
 pub const STEP_BADGE_RADIUS_PX: f32 = stencil_layout::STEP_BADGE_RADIUS_PX;
+/// The border of a ladder, as of the general notes, and the stroke of its rails, its ticks,
+/// its escalation arrow and every detail frame and tag (section 14.5 rule 12).
+pub const LADDER_BORDER_PX: f32 = 1.0;
+pub const DETAIL_STROKE_PX: f32 = 1.5;
+/// `stroke-dasharray` of a detail frame and of a ladder's escalation arrow.
+pub const DETAIL_FRAME_DASH: &str = "6 4";
+pub const ESCALATION_DASH: &str = "4 3";
 
 /// The paint of a glyph of `kind`: a balloon outlined in its key's wire on the cell, a
 /// flag filled with the mark ink, a diamond filled with its key's fill and outlined in its
@@ -949,6 +965,27 @@ pub fn sheet_part_paint(owner: NodeTag, part: PartName) -> Option<PartPaint> {
             stroke: None,
             text: None,
         },
+        PartName::DetailFrame => stroke_paint(
+            PartShape::RoundedDashedRect(DETAIL_FRAME_DASH),
+            Frame,
+            DETAIL_STROKE_PX,
+        ),
+        PartName::DetailTag => PartPaint {
+            shape: PartShape::Circle,
+            fill: Some(Cell),
+            stroke: Some((Frame, DETAIL_STROKE_PX)),
+            text: None,
+        },
+        PartName::DetailLetter => text_paint(Frame),
+        PartName::RailLeft | PartName::RailRight | PartName::RungTick => {
+            stroke_paint(PartShape::Line, Frame, DETAIL_STROKE_PX)
+        }
+        PartName::EscalationArrow => {
+            stroke_paint(PartShape::UpArrow(ESCALATION_DASH), Frame, DETAIL_STROKE_PX)
+        }
+        PartName::RungTitle => text_paint(TintInk),
+        PartName::RungWho => text_paint(InkSecondary),
+        PartName::RungText => text_paint(InkPrimary),
         PartName::Badge
         | PartName::BadgeText
         | PartName::Label
@@ -1309,7 +1346,7 @@ mod tests {
     use stencil_layout::PART_NAMES;
 
     /// The owners and parts of section 14.5 rule 12 that a sheet draws.
-    const SHEET_PARTS: [(NodeTag, PartName); 92] = [
+    const SHEET_PARTS: [(NodeTag, PartName); 108] = [
         (NodeTag::Page, PartName::Border),
         (NodeTag::Page, PartName::RefRule),
         (NodeTag::Page, PartName::RefTick),
@@ -1404,6 +1441,22 @@ mod tests {
         (NodeTag::Page, PartName::ValveFar),
         (NodeTag::Page, PartName::RailDot),
         (NodeTag::Page, PartName::Hop),
+        (NodeTag::Phases, PartName::DetailFrame),
+        (NodeTag::Phases, PartName::DetailTag),
+        (NodeTag::Phases, PartName::DetailLetter),
+        (NodeTag::Ladder, PartName::Title),
+        (NodeTag::Ladder, PartName::Note),
+        (NodeTag::Ladder, PartName::DetailTag),
+        (NodeTag::Ladder, PartName::DetailLetter),
+        (NodeTag::Ladder, PartName::RailLeft),
+        (NodeTag::Ladder, PartName::RailRight),
+        (NodeTag::Ladder, PartName::RungTick),
+        (NodeTag::Ladder, PartName::EscalationArrow),
+        (NodeTag::Rung, PartName::Front),
+        (NodeTag::Rung, PartName::RungTitle),
+        (NodeTag::Rung, PartName::RungWho),
+        (NodeTag::Rung, PartName::RungText),
+        (NodeTag::Rung, PartName::Diamond),
     ];
 
     #[test]

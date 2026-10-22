@@ -37,6 +37,7 @@ fn copy_fields(node: &Value, out: &mut Vec<(String, String)>) {
                 "what",
                 "why",
                 "detail",
+                "who",
                 "foot",
             ] {
                 if let Some(Value::String(text)) = map.get(field) {

@@ -377,7 +377,8 @@ pub fn legend_consistency(page: &Page) -> CheckReport {
                 | Node::Phases(_)
                 | Node::Step(_)
                 | Node::PartsList(_)
-                | Node::GeneralNotes(_),
+                | Node::GeneralNotes(_)
+                | Node::Ladder(_),
             ) => {}
         }
     }
@@ -497,6 +498,15 @@ pub fn keys_used(page: &Page) -> CheckReport {
             }
             NodeRef::Node(Node::PartsList(list)) => {
                 named.extend(list.parts.iter().filter_map(|part| part.actor.as_deref()));
+            }
+            NodeRef::Node(Node::Ladder(ladder)) => {
+                named.extend(
+                    ladder
+                        .rungs
+                        .iter()
+                        .take(SheetList::Rungs.max() + 1)
+                        .filter_map(|rung| rung.actor.as_deref()),
+                );
             }
             NodeRef::Node(
                 Node::Row(_)

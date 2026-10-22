@@ -369,6 +369,21 @@ pub fn description_units(page: &Page, geometry: &PageGeometry) -> DescriptionUni
             if !marks.is_empty() || !parts.is_empty() {
                 carriers.push((entry.pointer.clone(), marks, parts));
             }
+            if let NodeRef::Node(Node::Ladder(ladder)) = entry.node {
+                let rungs = SheetList::Rungs;
+                for index in 0..ladder.rungs.len().min(rungs.max() + 1) {
+                    let pointer = rungs.pointer_in(&entry.pointer).index(index);
+                    let parts = geometry
+                        .node(&pointer)
+                        .map(|node| glyphs_of(&node.parts))
+                        .unwrap_or_default();
+                    carriers.push((
+                        pointer,
+                        PageMarks::rung_marks(ladder, &entry.pointer, index),
+                        parts,
+                    ));
+                }
+            }
         }
         for route in geometry.links.iter().take(LINKS_MAX + 1) {
             let Some(link) = page.links.get(route.index) else {
@@ -506,7 +521,9 @@ fn node_name(
         | NodeTag::View
         | NodeTag::Step
         | NodeTag::PartsList
-        | NodeTag::GeneralNotes => node.map(body_node_name).unwrap_or_default(),
+        | NodeTag::GeneralNotes
+        | NodeTag::Ladder => node.map(body_node_name).unwrap_or_default(),
+        NodeTag::Rung => rung_title(page, pointer).unwrap_or_default(),
         NodeTag::Phases => "Phases".to_string(),
         NodeTag::ActorChip => page
             .actors
@@ -529,6 +546,23 @@ fn node_name(
             .map(|(_, point)| point.text.clone())
             .unwrap_or_default(),
     }
+}
+
+/// The title of the rung at `pointer`, `/…/rungs/<i>` of a Ladder.
+fn rung_title(page: &Page, pointer: &NodePointer) -> Option<String> {
+    let rungs = SheetList::Rungs;
+    body_nodes(page).into_iter().find_map(|entry| {
+        let NodeRef::Node(Node::Ladder(ladder)) = entry.node else {
+            return None;
+        };
+        ladder
+            .rungs
+            .iter()
+            .enumerate()
+            .take(rungs.max() + 1)
+            .find(|(index, _)| rungs.pointer_in(&entry.pointer).index(*index) == *pointer)
+            .map(|(_, rung)| rung.title.clone())
+    })
 }
 
 /// The caption a title cell opens with: the authored one, or the cell's fixed word.
@@ -570,6 +604,7 @@ fn body_node_name(node: NodeRef<'_>) -> String {
         NodeRef::Node(Node::Phases(_)) => "Phases".to_string(),
         NodeRef::Node(Node::PartsList(list)) => list.title.clone(),
         NodeRef::Node(Node::GeneralNotes(notes)) => notes.title.clone(),
+        NodeRef::Node(Node::Ladder(ladder)) => ladder.title.clone(),
         NodeRef::Node(Node::Row(_)) => "Row".to_string(),
         NodeRef::Node(Node::Col(_)) => "Col".to_string(),
         NodeRef::Node(Node::Lanes(_)) => "Lanes".to_string(),
@@ -606,7 +641,8 @@ fn pipe_landings(
                 | Node::Phases(_)
                 | Node::Step(_)
                 | Node::PartsList(_)
-                | Node::GeneralNotes(_),
+                | Node::GeneralNotes(_)
+                | Node::Ladder(_),
             ))
             | None => continue,
         };
