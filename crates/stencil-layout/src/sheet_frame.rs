@@ -9,9 +9,11 @@ use crate::styles::{text_color, text_style_for};
 use crate::{BoxRect, LayoutError, PageGeometry, Part, PartName, TextAlign, TextRun};
 
 const BORDER_INSET_PX: f32 = 12.0;
-const BORDER_PX: f32 = 2.0;
+/// The stroke of the outer frame line, drawn inside its 12 px inset.
+pub const SHEET_BORDER_PX: f32 = 1.0;
 const RULE_INSET_PX: f32 = 32.0;
-const RULE_PX: f32 = 1.0;
+/// The stroke of the inner frame rule, drawn inside its 32 px inset; the grid starts past it.
+pub const SHEET_RULE_PX: f32 = 1.5;
 
 fn inset(bounds: BoxRect, by: f32) -> BoxRect {
     BoxRect {
@@ -37,9 +39,9 @@ pub(crate) fn add_sheet_frame(
     };
     let border = inset(canvas, BORDER_INSET_PX);
     let rule = inset(canvas, RULE_INSET_PX);
-    let grid = inset(rule, RULE_PX);
-    let band = RULE_INSET_PX - BORDER_INSET_PX - BORDER_PX;
-    let band_near = BORDER_INSET_PX + BORDER_PX;
+    let grid = inset(rule, SHEET_RULE_PX);
+    let band = RULE_INSET_PX - BORDER_INSET_PX - SHEET_BORDER_PX;
+    let band_near = BORDER_INSET_PX + SHEET_BORDER_PX;
     let band_far_x = canvas.width - RULE_INSET_PX;
     let band_far_y = canvas.height - RULE_INSET_PX;
     let column_width = grid.width / f32::from(SHEET_COLUMNS);

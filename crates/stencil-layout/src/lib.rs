@@ -23,12 +23,13 @@ use stencil_model::{
     validate_page,
 };
 
-pub use build::{container_label_style, fact_presentation};
+pub use build::{SHEET_BLOCK_BORDER_PX, container_label_style, fact_presentation};
 pub use drawn::{DrawnLink, Fillet, PathPiece, drawn_link, fillet, push_flattened};
 pub use lead_run::{LeadRun, measure_lead_run};
 pub use route::{
     OBSTACLE_CLEARANCE_PX, longest_segment_midpoint, longest_segment_point, reroute_link,
 };
+pub use sheet_frame::{SHEET_BORDER_PX, SHEET_RULE_PX};
 pub use stencil_model::text::WRAP_EPSILON_PX;
 pub use theme_labels::theme_legend_labels;
 pub use units::{

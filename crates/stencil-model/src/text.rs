@@ -51,7 +51,7 @@ pub const FONT_SIZE_MAX_PX: f32 = 96.0;
 pub const LETTER_SPACING_MIN_EM: f32 = -0.2;
 pub const LETTER_SPACING_MAX_EM: f32 = 0.5;
 
-/// The 28 styles of section 2.9, in table order.
+/// The 29 styles of section 2.9, in table order.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum TextStyleName {
     Badge,
@@ -73,6 +73,7 @@ pub enum TextStyleName {
     Foot,
     BlockBody,
     SheetLabel,
+    SheetKicker,
     Wordmark,
     Motto,
     SheetTitle,
@@ -107,6 +108,7 @@ impl TextStyleName {
             TextStyleName::Foot => "foot",
             TextStyleName::BlockBody => "block_body",
             TextStyleName::SheetLabel => "sheet_label",
+            TextStyleName::SheetKicker => "sheet_kicker",
             TextStyleName::Wordmark => "wordmark",
             TextStyleName::Motto => "motto",
             TextStyleName::SheetTitle => "sheet_title",
@@ -143,6 +145,7 @@ impl TextStyleName {
             TextStyleName::Foot => &FOOT,
             TextStyleName::BlockBody => &BLOCK_BODY,
             TextStyleName::SheetLabel => &SHEET_LABEL,
+            TextStyleName::SheetKicker => &SHEET_KICKER,
             TextStyleName::Wordmark => &WORDMARK,
             TextStyleName::Motto => &MOTTO,
             TextStyleName::SheetTitle => &SHEET_TITLE,
@@ -161,8 +164,8 @@ impl TextStyleName {
 pub struct NamedTextStyle {
     pub name: TextStyleName,
     pub style: TextStyle,
-    /// True for `badge`, `kicker`, `sheet_label`, `motto` and `view_title`: the string is
-    /// uppercased before measurement.
+    /// True for `badge`, `kicker`, `sheet_label`, `sheet_kicker`, `motto` and `view_title`: the
+    /// string is uppercased before measurement.
     pub uppercase: bool,
 }
 
@@ -343,12 +346,21 @@ const SHEET_LABEL: NamedTextStyle = inter(
     0.12,
     true,
 );
-/// A 52 px line would let descenders hang 5 px below the measured box; 62 holds them.
+/// The page kicker on a sheet: a small label beside the badge, on one line in the head cell.
+const SHEET_KICKER: NamedTextStyle = inter(
+    TextStyleName::SheetKicker,
+    FontWeight::SemiBold,
+    10.0,
+    12.0,
+    0.05,
+    true,
+);
+/// A 46 px line would let descenders hang below the measured box; 55 holds them.
 const WORDMARK: NamedTextStyle = inter(
     TextStyleName::Wordmark,
     FontWeight::ExtraBold,
-    52.0,
-    62.0,
+    46.0,
+    55.0,
     -0.02,
     false,
 );
@@ -371,8 +383,8 @@ const SHEET_TITLE: NamedTextStyle = inter(
 const STATEMENT: NamedTextStyle = inter(
     TextStyleName::Statement,
     FontWeight::Bold,
-    20.0,
-    26.0,
+    18.0,
+    23.4,
     0.0,
     false,
 );
@@ -417,9 +429,9 @@ const LEAD_BODY: NamedTextStyle = inter(
     false,
 );
 
-/// The 28 styles of section 2.9, in table order, which is TextStyleName order:
+/// The 29 styles of section 2.9, in table order, which is TextStyleName order:
 /// TEXT_STYLES[i].name as usize == i.
-pub const TEXT_STYLES: [NamedTextStyle; 28] = [
+pub const TEXT_STYLES: [NamedTextStyle; 29] = [
     BADGE,
     KICKER,
     TITLE,
@@ -439,6 +451,7 @@ pub const TEXT_STYLES: [NamedTextStyle; 28] = [
     FOOT,
     BLOCK_BODY,
     SHEET_LABEL,
+    SHEET_KICKER,
     WORDMARK,
     MOTTO,
     SHEET_TITLE,

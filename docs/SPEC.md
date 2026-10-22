@@ -544,17 +544,18 @@ Every string on the canvas uses one of these styles. Family, weight, size, line 
 | foot | 400 | 11 | 13.2 | 0 | #5F6368 | |
 | block_body | 400 | 12 | 17.4 | 0 | #202124 | |
 | sheet_label | 600 | 11 | 13.2 | 0.12 | #5F6368 | uppercase |
-| wordmark | 800 | 52 | 62.0 | -0.02 | #202124 | |
+| sheet_kicker | 600 | 10 | 12.0 | 0.05 | #5F6368 | uppercase |
+| wordmark | 800 | 46 | 55.0 | -0.02 | #202124 | |
 | motto | 700 | 13 | 16.0 | 0.06 | #202124 | uppercase |
 | sheet_title | 800 | 26 | 30.0 | 0 | #202124 | |
-| statement | 700 | 20 | 26.0 | 0 | #202124 | |
+| statement | 700 | 18 | 23.4 | 0 | #202124 | |
 | view_numeral | 700 | 13 | 15.6 | 0 | #202124 | |
 | view_title | 700 | 16 | 19.2 | 0.1 | #202124 | uppercase |
 | view_note | 400 | 14 | 18.0 | 0 | #5F6368 | |
 | view_note_small | 400 | 12 | 15.6 | 0 | #5F6368 | |
 | lead_body | 700 | 12 | 17.4 | 0 | #202124 | |
 
-The last ten draw a design sheet (section 14.4 rule 28) and keep their size under iso, which a sheet never takes. The wordmark's line is 62 px so the descenders of its 52 px type stay inside its measured box. The section 11.3 blocks reuse three of these: the Text heading and the Callout title are `card_function`, the Frame label is `zone_label`, and the Text body lines, numbered list markers and Callout text are `block_body`.
+The last eleven draw a design sheet (section 14.4) and keep their size under iso, which a sheet never takes. The wordmark's line is 55 px so the descenders of its 46 px type stay inside its measured box. The section 11.3 blocks reuse three of these: the Text heading and the Callout title are `card_function`, the Frame label is `zone_label`, and the Text body lines, numbered list markers and Callout text are `block_body`.
 
 All styles use family Inter. Uppercasing uses `str::to_uppercase` and runs before measurement, so the measured string is the rendered string. The remembered-constants check reads the untransformed input.
 
@@ -4878,16 +4879,16 @@ Existing rules extended: `id-malformed` covers attention item ids; `children-emp
 
 Flat only. Sizes are named constants in `crates/stencil-layout/src/build/sheet.rs` and `sheet_frame.rs`. A page without `sheet` lays out exactly as before.
 
-1. Root. A sheet's root padding is 50 on every side: a 12 px margin, a 2 px frame, an 18 px reference band, a 1 px inner rule and 17 px of padding.
+1. Root. A sheet's root padding is 50 on every side: a 12 px margin, a 1 px frame line, a 19 px reference band, a 1.5 px inner rule and 16.5 px of padding. The two frame widths are `SHEET_BORDER_PX` and `SHEET_RULE_PX` in `sheet_frame.rs`, which the writer strokes at.
 2. Geometry order: `""`, `/sheet`, `/kicker`, `/title`, `/lede`, `/sheet/problem`, `/sheet/problem/points/<i>`..., `/sheet/answer`, `/sheet/attention`, `/legend`, `/legend/<i>`..., `/body`, the body nodes in `body_nodes` order, `/foot`. The SVG writer's `geometry_order` follows it with the document nodes `Sheet`, `SheetCell` and `ProblemPoint`. `crates/stencil-layout/tests/order.rs` pins it.
-3. Frame. After `compute_geometry`, `add_sheet_frame` appends to the page root `Border` (inset 12), `RefRule` (inset 32), `Grid` (the rectangle inside `RefRule`), a 1 px `RefTick/<i>` across the band at each inner cell edge (7 column edges top and bottom, 5 row edges left and right), and the labels `RefColumn/<i>` and `RefColumnFoot/<i>` (the column numbers, top and bottom) and `RefRow/<i>` and `RefRowRight/<i>` (the row letters, left and right), centred in their cells in `sheet_label`. The grid has 8 equal columns and 6 equal rows over `Grid`, so a row's height follows the content. `Grid` is present on every sheet; whether lines are drawn in it is paint.
-4. Title block. `/sheet` is a `TitleBlock` row as wide as the content with a 2 px border (`BlockBorder`, the node box), four cells at grow weights 25 : 47 : 41 : 37 with a 1 px `CellRule/<i>` between them, cell padding 11 top, 14 sides, 12 bottom, stretched to the tallest cell. The first cell holds the badge and `/kicker` reading `1 · <kicker>`, then the `Wordmark` part when set (3 below, its 62 px line holding 5 px of air over its 52 px type), then `/title` in `motto` right under it (`sheet_title` 8 below the kicker without a wordmark), then `/lede` in `block_body` 6 below. Kicker, title and lede are children of `/sheet`. The other cells are the `TitleCell` nodes `/sheet/problem`, `/sheet/answer` and `/sheet/attention`, each opening with a `Caption` part in `sheet_label` 8 above its content.
+3. Frame. After `compute_geometry`, `add_sheet_frame` appends to the page root `Border` (inset 12), `RefRule` (inset 32), `Grid` (the rectangle inside `RefRule`'s stroke), a `RefTick/<i>` line across the band at each inner cell edge (7 column edges top and bottom, 5 row edges left and right), and the labels `RefColumn/<i>` and `RefColumnFoot/<i>` (the column numbers, top and bottom) and `RefRow/<i>` and `RefRowRight/<i>` (the row letters, left and right), centred in their cells in `sheet_label`. The grid has 8 equal columns and 6 equal rows over `Grid`, so a row's height follows the content. `Grid` is present on every sheet; whether lines are drawn in it is paint.
+4. Title block. `/sheet` is a `TitleBlock` column as wide as the content with a 1.5 px border (`BlockBorder`, the node box, `SHEET_BLOCK_BORDER_PX`) holding a row of four cells and, under it, the legend strip of rule 8. The cells take the width left after their padding at grow weights 316 : 446 : 394 : 338, with a 1 px `CellRule/<i>` between them, cell padding 11 top, 14 sides, 12 bottom, stretched to the tallest cell; the rules stop at the strip. The weights are sized so that on a 1500 px page the head cell holds a kicker of about 32 characters on one line beside the badge and a motto of about 60 on two. The first cell holds the badge and `/kicker` reading `1 · <kicker>` in `sheet_kicker`, then the `Wordmark` part when set (6 below, its 55 px line holding 4.5 px of air over its 46 px type), then `/title` in `motto` 6 below it (`sheet_title` 8 below the kicker without a wordmark), then `/lede` in `block_body` 6 below. Kicker, title and lede are children of `/sheet`. The other cells are the `TitleCell` nodes `/sheet/problem`, `/sheet/answer` and `/sheet/attention`, each opening with a `Caption` part in `sheet_label` 8 above its content. Tests in `crates/stencil-layout/tests/page.rs`: `the_title_block_cells_share_their_width_at_their_weights`, `a_sheet_holds_its_legend_strip_inside_the_title_block_under_a_hairline`, `the_wordmark_stands_6_below_the_kicker_and_the_motto_6_below_it` and `a_sheet_sets_its_kicker_and_box_labels_in_sheet_styles`; `the_onepager_head_sets_its_kicker_on_one_line_and_its_motto_on_two` in `crates/stencil-render/tests/themes.rs` measures with the bundled faces.
 5. Problem cell: a `Lead` part in `block_body`, then one `ProblemPoint` node per point, 6 apart: a 1 px dashed `PointRule` along its top, then 5 below a row of `PointLabel` (`P<n>`, `sheet_label`, a 24 px column, dropped 2.5 px onto the text's baseline) and `Text` (`block_body`).
 6. Answer cell: `Statement` in `statement`, then one paragraph per entry, 6 apart: `Paragraph/<i>` in `block_body`, led by `ParagraphLead/<i>` in `lead_body` as a lead run (rule 9) when it has a lead.
 7. Attention cell: per item a lead run of `AttentionLead/<i>` (`lead_body`) and `AttentionText/<i>` (`block_body`), items 6 apart.
-8. Legend strip. On a sheet `/legend` sits under the title block as wide as it: a 2 px `StripRule` on top, then a wrapping row, padding 7 by 14, gap 9 and 6 between wrapped rows, holding `GroupCaption/0` (`Lines`, `sheet_label`) and the `/legend/<i>` entries as section 2.2 lays them out. The strip replaces the bottom legend, and the Legend node is a unit because it draws parts.
+8. Legend strip. On a sheet `/legend` is the last row inside the title block's border, its geometry parent `/sheet`: a 1 px `StripRule` hairline across the block's inside on top, then a wrapping row, padding 7 by 14, gap 9 and 6 between wrapped rows, holding `GroupCaption/0` (`Lines`, `sheet_label`) and the `/legend/<i>` entries as section 2.2 lays them out. The strip replaces the bottom legend, and the Legend node is a unit because it draws parts.
 9. Lead runs. A lead run is one taffy leaf drawn as two text parts: a lead in a bold style and a body in a regular style of the same size and line height (`lead_body` with `block_body`; `every_lead_run_pairs_styles_of_one_line_height` holds the pair). The leaf is measured with `measure_lead_run` at the width layout offers, and again at its final width: the lead part takes the top of the leaf, the body part starts at the top of the lead's last line with `TextRun.first_line_indent_px` set to the lead's last line plus one space, so its first line continues after the lead and its measured width includes the indent. When the body's first word does not fit after the indent, the body part starts under the lead with no indent and no empty first line.
-10. Views. The body has no gap on a sheet and sits 14 below the strip. A `View` node is a column, 13 below the View before it, holding a heading row (gap 12, centred, 8 above the children) and its children with gap `gap`, default 16; its content box is the children's column. Heading parts: `ViewNumber`, a 28 px circle, with `ViewNumeral` (`view_numeral`) centred; `ViewTitle` (`view_title`); `ViewSubtitle` (`view_note`) 8 after the title; `ViewRule`, a 1 px rule that grows to the end of the row; `ViewNote` (`view_note_small`) at the right end. The title block is view 1, so a View's number is its position among the Views plus 2.
+10. Views. The body has no gap on a sheet and sits 14 below the title block. A `View` node is a column, 13 below the View before it, holding a heading row (gap 12, centred, 8 above the children) and its children with gap `gap`, default 16; its content box is the children's column. Heading parts: `ViewNumber`, a 28 px circle, with `ViewNumeral` (`view_numeral`) centred; `ViewTitle` (`view_title`); `ViewSubtitle` (`view_note`) 8 after the title; `ViewRule`, a 1 px rule that grows to the end of the row; `ViewNote` (`view_note_small`) at the right end. The title block is view 1, so a View's number is its position among the Views plus 2.
 11. Label obstacles. `label_boxes(node)`, matched exhaustively on `NodeTag`, returns a View's `ViewNumber`, `ViewTitle`, `ViewSubtitle` and `ViewNote`, and nothing for any other tag. `link_obstacles` adds the label boxes of every node, whether or not it is an ancestor of an endpoint, so no link runs through a View's heading. `obstacle_box` returns a `TitleCell`'s bounds and None for `TitleBlock`, `ProblemPoint` and `View`; `links-avoid-boxes` skips a View as a container.
 
 ### 14.5 Paint
@@ -4908,16 +4909,16 @@ pub struct SheetGrid { pub minor: Color, pub major: Color }
 
 1. The six designed themes set the role to its derivations, with a grid of `mix(paper, rule, 0.3)` minor and `mix(paper, rule, 0.6)` major, except wire, which sets none. The imported themes carry no sheet role and draw the derivations. `validate_theme` checks the colour format of every leaf; `cue/theme.cue` mirrors the role.
 2. Quality rows (section 13.4 rule 10), computed on the resolved role and appended after the separation rows: `sheet.label_ink`, `ink.primary`, `ink.secondary` and `sheet.frame` on `sheet.cell` and on `sheet.paper` as text, and `sheet.frame` on `sheet.paper` as non-text, 9 rows. Every designed theme passes them.
-3. Parts. `sheet_part_paint(owner: NodeTag, part: PartName) -> Option<PartPaint>` in `crates/stencil-render/src/palette.rs` matches `PartName` exhaustively and returns None for every part that existed before the sheet on its existing owner. `PartName::ALL` lists every part, its length checked against `PART_NAMES`, and `PartName::is_sheet` is true for the parts below.
+3. Parts. `sheet_part_paint(owner: NodeTag, part: PartName) -> Option<PartPaint>` in `crates/stencil-render/src/palette.rs` matches `PartName` exhaustively and returns None for every part that existed before the sheet on its existing owner, except the `Text` of the Kicker and the Lede, which a sheet paints in its label and secondary inks. `PartName::ALL` lists every part, its length checked against `PART_NAMES`, and `PartName::is_sheet` is true for the parts below.
 
 | Owner | Part | Shape | Fill | Stroke | Text |
 |---|---|---|---|---|---|
-| Page | `Border` | rect | `sheet.paper` | `sheet.frame` 2 | - |
-| Page | `RefRule` | rect | - | `sheet.frame` 1 | - |
-| Page | `RefTick/<i>` | line | - | `sheet.rule` 1 | - |
+| Page | `Border` | rect | `sheet.paper` | `sheet.frame` 1 | - |
+| Page | `RefRule` | rect | - | `sheet.frame` 1.5 | - |
+| Page | `RefTick/<i>` | line | - | `sheet.rule` 0.8 | - |
 | Page | `RefColumn`, `RefColumnFoot`, `RefRow`, `RefRowRight` | text | - | - | `sheet.label_ink` |
 | Page | `Grid` | grid lines | - | `grid.minor`, `grid.major` 1 | - |
-| TitleBlock | `BlockBorder` | rect | `sheet.cell` | `sheet.frame` 2 | - |
+| TitleBlock | `BlockBorder` | rect | `sheet.cell` | `sheet.frame` 1.5 | - |
 | TitleBlock | `CellRule/<i>` | line | - | `sheet.rule` 1 | - |
 | TitleBlock | `Wordmark` | text | - | - | `sheet.frame` |
 | TitleCell | `Caption` | text | - | - | `sheet.label_ink` |
@@ -4927,17 +4928,19 @@ pub struct SheetGrid { pub minor: Color, pub major: Color }
 | ProblemPoint | `PointRule` | line, dash 3 3 | - | `sheet.rule` 1 | - |
 | ProblemPoint | `PointLabel` | text | - | - | `sheet.label_ink` |
 | ProblemPoint | `Text` | text | - | - | `ink.primary` |
-| Legend | `StripRule` | line | - | `sheet.frame` 2 | - |
+| Kicker | `Text` | text | - | - | `sheet.label_ink` |
+| Lede | `Text` | text | - | - | `ink.secondary` |
+| Legend | `StripRule` | line | - | `sheet.rule` 1 | - |
 | Legend | `GroupCaption/<g>` | text | - | - | `sheet.label_ink` |
-| View | `ViewNumber` | circle | `sheet.paper` | `sheet.frame` 2 | - |
+| View | `ViewNumber` | circle | `sheet.paper` | `sheet.frame` 1.5 | - |
 | View | `ViewNumeral`, `ViewTitle` | text | - | - | `sheet.frame` |
 | View | `ViewSubtitle` | text | - | - | `ink.secondary` |
 | View | `ViewRule` | line | - | `sheet.rule` 1 | - |
 | View | `ViewNote` | text | - | - | `sheet.label_ink` |
 
-4. On a sheet the title takes `motto` or `sheet_title` and the lede `block_body`, each in its style's default ink. A frame-role Box (gcp's `gcp`) strokes `sheet.frame` at the grammar's width and pattern, leaves its body and bar unfilled, draws a 1 px `sheet.rule` line along the bar's bottom and sets its label in `sheet.frame`; a boundary-role Box strokes `sheet.rule` with no fill, its label in `sheet.label_ink`; group and tile Boxes keep their tone paint.
+4. On a sheet the title takes `motto` or `sheet_title` in its style's default ink, the kicker `sheet_kicker` in `sheet.label_ink` and the lede `block_body` in `ink.secondary`. Every Box on a sheet sets its label in `sheet_label`, small letterspaced capitals, chosen at layout (`Builder.sheet`), so no page without a sheet moves. A frame-role Box (gcp's `gcp`) strokes `sheet.frame` at 1.25 px (`SHEET_BOX_BORDER_PX`, whatever the grammar's width) in the grammar's pattern, leaves its body and bar unfilled with no rule under the bar, and sets its label in `sheet.frame`; a boundary-role Box strokes `sheet.rule` at 1.25 px with no fill, its label in `sheet.label_ink`; group and tile Boxes keep their tone paint.
 5. Grid. When the role sets a grid, the writer draws 1 px lines inside `Grid` every 20 px from its top-left corner, every fifth in `grid.major`, as one path per colour, right after `Border`, under every other sheet surface.
-6. Every new shape is a `rect`, `circle`, `line` or `path`. `no_renderer_source_names_a_color_literal` holds. Tests: `every_designed_theme_sets_the_sheet_role`, `a_theme_without_sheet_roles_draws_the_derived_colours`, `every_sheet_part_has_a_paint_row`, `wire_paints_only_white_fills_and_two_inks` with onepager under wire (every fill white or the ink, every stroke the ink except a Frame's placeholder diagonal, every text one of the two inks), `measured_json_is_identical_and_svg_differs_across_themes` over onepager, and role coverage with onepager among its figures, so every `sheet.*` leaf changes the drawing.
+6. Every new shape is a `rect`, `circle`, `line` or `path`. `no_renderer_source_names_a_color_literal` holds. Tests: `every_designed_theme_sets_the_sheet_role`, `a_theme_without_sheet_roles_draws_the_derived_colours`, `every_sheet_part_has_a_paint_row`, `wire_paints_only_white_fills_and_two_inks` with onepager under wire (every fill white or the ink, every stroke the ink except a Frame's placeholder diagonal, every text one of the two inks), `measured_json_is_identical_and_svg_differs_across_themes` over onepager, and role coverage with onepager among its figures, so every `sheet.*` leaf changes the drawing. `a_sheet_draws_its_frame_block_and_box_in_light_strokes` and `on_a_sheet_the_kicker_takes_the_label_ink_and_the_lede_the_secondary_ink` hold the widths and inks of rules 3 and 4 in every designed theme.
 
 ### 14.6 Checks
 

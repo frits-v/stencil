@@ -72,19 +72,26 @@ onepager: gcp.#Page & {
 				{
 					tag: "Row"
 					gap: 32
-					grow: [0, 1]
+					grow: [1, 4]
 					children: [
 						{
 							tag:     "Col"
 							justify: "center"
 							children: [
 								{
-									tag:      "Item"
-									id:       "console"
-									kind:     "product"
-									icon:     "devops"
-									title:    "Operator console"
-									subtitle: "web client"
+									tag:     "Row"
+									justify: "center"
+									grow: [0]
+									children: [
+										{
+											tag:      "Item"
+											id:       "console"
+											kind:     "product"
+											icon:     "devops"
+											title:    "Operator console"
+											subtitle: "web client"
+										},
+									]
 								},
 							]
 						},
@@ -96,7 +103,7 @@ onepager: gcp.#Page & {
 							children: [
 								{
 									tag: "Col"
-									gap: 64
+									gap: 48
 									children: [
 										{
 											tag: "Row"
@@ -210,7 +217,7 @@ onepager: gcp.#Page & {
 					tag:    "Frame"
 					id:     "screen-review"
 					label:  "Verdict review in the console: clip, evidence frames, verdict and plan version"
-					height: 120
+					height: 72
 				},
 			]
 		},
