@@ -138,6 +138,7 @@ fn golden_g7() {
             (CheckName::PrintFit, 0),
             (CheckName::IconMatchesProduct, 6),
             (CheckName::DescriptionCoversDrawing, 26),
+            (CheckName::KeysUsed, 0),
         ]
     );
     for report in &reports {
@@ -148,7 +149,8 @@ fn golden_g7() {
             | CheckName::IsoLinksClear
             | CheckName::IsoLinkEnds
             | CheckName::IsoLinksApart
-            | CheckName::PrintFit => CheckOutcome::NotApplicable,
+            | CheckName::PrintFit
+            | CheckName::KeysUsed => CheckOutcome::NotApplicable,
             CheckName::ChildInsideContainer
             | CheckName::SiblingsDoNotOverlap
             | CheckName::TextFitsBox

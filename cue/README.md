@@ -9,14 +9,14 @@ its rules; a figure file writes one topology against a grammar's `#Page`.
 | File | Package | Contents |
 |---|---|---|
 | `cue.mod/module.cue` | | the module `github.com/frits-v/stencil/cue@v0`, language v0.17.1 |
-| `core.cue` | `stencil` | `#Page` and the core nodes: `Row`, `Col`, `Lanes`, `Box`, `Item`, `Fact`, `Note`, `Pipe`, `Tee`, `Text`, `Callout`, `Frame`, `View`, plus `#Sheet` and its cells, `#SheetSurface`, `#LegendEntry`, `#Link`, `#Line`, `#Bend`, `#Corner`, `#TintSlot` and `#FactEntry` |
+| `core.cue` | `stencil` | `#Page` and the core nodes: `Row`, `Col`, `Lanes`, `Box`, `Item`, `Fact`, `Note`, `Pipe`, `Tee`, `Text`, `Callout`, `Frame`, `View`, `Phases`, `Step`, plus `#Sheet` and its cells, `#Actor`, `#Phase`, `#SheetSurface`, `#LegendEntry`, `#Link`, `#Line`, `#Bend`, `#Corner`, `#TintSlot` and `#FactEntry` |
 | `grammar.cue` | `stencil` | `#Grammar` and its parts (`#LineKind` among them), and `#GrammarNesting`, the kind and nesting rules every grammar shares |
 | `theme.cue` | `stencil` | `#Theme`, the closed theme definition every theme file vets against: `cue vet -c -d '#Theme' . <file>.json` |
 | `grammars/gcp.cue` | `gcp` | the Google Cloud grammar data and rules, and the gcp `#Page` |
 | `grammars/plain.cue` | `plain` | the domain-neutral grammar data and the plain `#Page` |
 | `figures/g7.cue` | `gcp` | g7, Dedicated Interconnect at 99.99%: `customer` and `internal: customer & {...}` |
 | `figures/sequence.cue` | `plain` | a request flow in five lanes with ten ordered messages: `figure`, exported as `examples/sequence.json` |
-| `figures/sheet.cue` | `gcp` | the trigger evaluation design sheet, a title block and one View: `onepager`, exported as `examples/onepager.json` |
+| `figures/sheet.cue` | `gcp` | the trigger evaluation design sheet, a title block, four actors, a Workflow view and a System view: `onepager`, exported as `examples/onepager.json` |
 | `figures/sheet-small.cue` | `plain` | the smallest design sheet, whose link has a via in the sheet's wider margin: `small`, the base of the sheet negative cases |
 | `check.sh` | | the gate, below |
 | `out/` | | exported JSON and renders, not committed |
@@ -95,6 +95,17 @@ for example `CUE="$(mise which cue)" ./cue/check.sh`.
   `_sheetInIso`, `_sheetChromeNone`, `_sheetBodyNotView.<i>`, `_viewNotTopLevel.<title>`,
   `_sheetWithoutLines` and `_keysUsedTwice."attention.<id>"` name the offender, and a via may
   lie up to the width plus 100. Off a sheet, a `View` is `_needsSheet.view`.
+- `actors` names who acts on a sheet, each with its own tint slot; `actor` on an Item, Box,
+  Pipe, Tee or Link colours it, and a line without one takes the actor of the node it
+  leaves, a Step's lane included. A use with an actor keys `<line>-by-actor`, which a
+  `by_actor` legend entry names. On a sheet `_actorTintsTwice`, `_actorsUnknown`,
+  `_actorsUnused`, `_tintOnActorPage`, `_lineWithoutActor`, `_actorOnNeutralLine`,
+  `_legendByActorMisused`, `_teeArmActorDiffers` and, from the grammar,
+  `_actorOnUntintableKind` and `_kindTintWithoutActor` name the offender.
+- A `Phases` node holds `Step`s only, each in one of its `lanes` and `phases` and inside
+  column 6: `_lanesUsedTwice`, `_phaseIdsUsedTwice`, `_stepLanesUnknown`,
+  `_stepPhasesUnknown`, `_stepSpanOutOfRange` and `_stepOutsidePhases`. The Step node is
+  `#StepNode`, since `#Step` is the theme's face lightness step.
 - `Lanes` is a container of 1 to 32 lane heads with an optional `gap` of 0 to 64. A `Link` may
   carry `order`, 1 to 256, which makes it a message of the Lanes node whose heads it joins.
 - `#Page` adds `grammar` (`gcp`, `plain` or a path ending in `.json`) and `chrome` (`full` or

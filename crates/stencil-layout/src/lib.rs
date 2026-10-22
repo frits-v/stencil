@@ -9,6 +9,7 @@ mod compute;
 mod drawn;
 mod lanes;
 mod lead_run;
+mod phases;
 mod pipe_ends;
 mod route;
 mod sheet_frame;
@@ -152,7 +153,9 @@ pub fn layout_page(
         return Err(LayoutError::Invalid(violations));
     }
     let lanes_plan = lanes::plan_lanes(page, measurer)?;
-    let built = build::build_page(page, grammar, &lanes_plan)?;
+    // A Phases node is as wide as the sheet's content: its View stretches to it.
+    let phases_plan = phases::plan_phases(page, page.width as f32, measurer)?;
+    let built = build::build_page(page, grammar, &lanes_plan, &phases_plan)?;
     let mut geometry = compute::compute_geometry(built, canvas_width(page), measurer)?;
     compute::translate_pipe_slots(page, &mut geometry);
     pipe_ends::extend_pipe_ends(page, &mut geometry);
@@ -316,6 +319,12 @@ pub enum NodeTag {
     ProblemPoint,
     /// A numbered view of a design sheet.
     View,
+    /// An actor's chip in the legend strip's Who acts group, `/actors/<i>`.
+    ActorChip,
+    /// A swimlane of lanes by actor and phases left to right (section 14.4 rule 11).
+    Phases,
+    /// One piece of work in a Phases node.
+    Step,
 }
 
 impl NodeTag {
@@ -346,6 +355,9 @@ impl NodeTag {
             NodeTag::TitleCell => "TitleCell",
             NodeTag::ProblemPoint => "ProblemPoint",
             NodeTag::View => "View",
+            NodeTag::ActorChip => "ActorChip",
+            NodeTag::Phases => "Phases",
+            NodeTag::Step => "Step",
         }
     }
 }
@@ -453,10 +465,24 @@ pub enum PartName {
     ViewSubtitle,
     ViewRule,
     ViewNote,
+    ActorName,
+    ActorText,
+    LaneBand,
+    LaneBar,
+    LaneName,
+    LaneText,
+    LaneRule,
+    PhaseHead,
+    PhaseNumeral,
+    PhaseTitle,
+    PhaseSeparator,
+    Front,
+    StepLine,
+    StackBack,
 }
 
 /// The number of part names, so a new name has to join `PartName::ALL`.
-pub const PART_NAMES: usize = 65;
+pub const PART_NAMES: usize = 79;
 
 impl PartName {
     /// Every part name, in declaration order.
@@ -526,6 +552,20 @@ impl PartName {
         PartName::ViewSubtitle,
         PartName::ViewRule,
         PartName::ViewNote,
+        PartName::ActorName,
+        PartName::ActorText,
+        PartName::LaneBand,
+        PartName::LaneBar,
+        PartName::LaneName,
+        PartName::LaneText,
+        PartName::LaneRule,
+        PartName::PhaseHead,
+        PartName::PhaseNumeral,
+        PartName::PhaseTitle,
+        PartName::PhaseSeparator,
+        PartName::Front,
+        PartName::StepLine,
+        PartName::StackBack,
     ];
 
     /// True for the parts a design sheet adds (section 14.2 rule 10); only a sheet draws
@@ -559,7 +599,21 @@ impl PartName {
             | PartName::ViewTitle
             | PartName::ViewSubtitle
             | PartName::ViewRule
-            | PartName::ViewNote => true,
+            | PartName::ViewNote
+            | PartName::ActorName
+            | PartName::ActorText
+            | PartName::LaneBand
+            | PartName::LaneBar
+            | PartName::LaneName
+            | PartName::LaneText
+            | PartName::LaneRule
+            | PartName::PhaseHead
+            | PartName::PhaseNumeral
+            | PartName::PhaseTitle
+            | PartName::PhaseSeparator
+            | PartName::Front
+            | PartName::StepLine
+            | PartName::StackBack => true,
             PartName::Badge
             | PartName::BadgeText
             | PartName::Text
@@ -668,6 +722,20 @@ impl PartName {
             PartName::ViewSubtitle => "view_subtitle",
             PartName::ViewRule => "view_rule",
             PartName::ViewNote => "view_note",
+            PartName::ActorName => "actor_name",
+            PartName::ActorText => "actor_text",
+            PartName::LaneBand => "lane_band",
+            PartName::LaneBar => "lane_bar",
+            PartName::LaneName => "lane_name",
+            PartName::LaneText => "lane_text",
+            PartName::LaneRule => "lane_rule",
+            PartName::PhaseHead => "phase_head",
+            PartName::PhaseNumeral => "phase_numeral",
+            PartName::PhaseTitle => "phase_title",
+            PartName::PhaseSeparator => "phase_separator",
+            PartName::Front => "front",
+            PartName::StepLine => "step_line",
+            PartName::StackBack => "stack_back",
         }
     }
 }

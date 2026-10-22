@@ -31,6 +31,7 @@ pub fn plain() -> Grammar {
 /// A gcp `product` Item with only a title.
 pub fn item(title: &str) -> Node {
     Node::Item(Item {
+        actor: None,
         id: None,
         kind: "product".to_string(),
         icon: None,
@@ -51,6 +52,7 @@ pub fn fact(text: &str) -> Node {
 
 pub fn pipe_value(dir: PipeDir, line: Line, tint: Option<u8>, label: &str) -> Pipe {
     Pipe {
+        actor: None,
         id: None,
         arrow: stencil_model::Arrow::None,
         axis: None,
@@ -71,6 +73,7 @@ pub fn pipe(line: Line, tint: Option<u8>, label: &str) -> Node {
 
 pub fn tee(line: Line, tint: Option<u8>, first_arm: Pipe, second_arm: Pipe) -> Node {
     Node::Tee(Tee {
+        actor: None,
         id: None,
         line,
         tint,
@@ -101,6 +104,7 @@ pub fn col(children: Vec<Node>) -> Node {
 
 pub fn box_node(kind: &str, tint: Option<u8>, label: &str, children: Vec<Node>) -> Node {
     Node::Box(BoxNode {
+        actor: None,
         id: None,
         kind: kind.to_string(),
         tint,
@@ -111,6 +115,7 @@ pub fn box_node(kind: &str, tint: Option<u8>, label: &str, children: Vec<Node>) 
 
 pub fn legend_entry(line: Line, tint: Option<u8>, text: &str) -> LegendEntry {
     LegendEntry {
+        by_actor: false,
         line,
         tint,
         form: stencil_model::PipeForm::Tube,
@@ -121,6 +126,7 @@ pub fn legend_entry(line: Line, tint: Option<u8>, text: &str) -> LegendEntry {
 /// A valid page holding `body` and a legend entry for solid tint 1.
 pub fn page_with_body(body: Vec<Node>) -> Page {
     Page {
+        actors: Vec::new(),
         title: "Title".to_string(),
         kicker: "Kicker".to_string(),
         lede: "Lede".to_string(),
@@ -153,6 +159,7 @@ pub fn nested_cols(levels: usize) -> Node {
 /// A gcp `product` Item carrying `id`.
 pub fn item_with_id(id: &str, title: &str) -> Node {
     Node::Item(Item {
+        actor: None,
         id: Some(id.to_string()),
         kind: "product".to_string(),
         icon: None,
@@ -192,6 +199,7 @@ pub fn frame(label: &str) -> Node {
 /// A solid tint 1 link with no label, sides or via points.
 pub fn link(from: &str, to: &str) -> Link {
     Link {
+        actor: None,
         from: from.to_string(),
         to: to.to_string(),
         line: Line::Solid,

@@ -100,6 +100,7 @@ import (
 		if tag == "Row" || tag == "Col" || tag == "Lanes" || tag == "View" {
 			children: [...#KindedNode]
 			_tops: {for c in children {c._tops}}
+			_tintedWithoutActor: list.Concat([for c in children {c._tintedWithoutActor}])
 		}
 		if tag == "Box" {
 			kind:  or(_containerNames)
@@ -115,6 +116,17 @@ import (
 			if tint != _|_ if !_tintable {
 				_tintWithoutEffect: "tint \(tint)" & "has no effect on a \(kind) box"
 			}
+			// On a design sheet an actor colours a Box, so its kind must take a tint;
+			// a kind that paints a default tint reads as an actor unless it names one.
+			actor?: string
+			label:  string
+			if actor != _|_ if !_tintable {
+				_actorOnUntintableKind: "\(kind) takes no colour" & "so it cannot name an actor"
+			}
+			_tintedWithoutActor: list.Concat([
+				[if actor == _|_ for c in #grammar.containers if c.name == kind && c.tintable && c.default_tint != _|_ {label}],
+				for c in children {c._tintedWithoutActor},
+			])
 		}
 		if tag == "Item" {
 			kind: or(_itemNames)
@@ -123,12 +135,21 @@ import (
 		if !list.Contains(["Row", "Col", "Lanes", "View", "Box", "Item"], tag) {
 			_tops: {}
 		}
+		if !list.Contains(["Row", "Col", "Lanes", "View", "Box"], tag) {
+			_tintedWithoutActor: []
+		}
 		...
 	}
 
 	#KindedPage: #Page & {
 		grammar?: #grammar.name
 		body: [...#KindedNode]
+		actors?: [...]
+		if actors != _|_ if len(actors) > 0 {
+			_kindTintWithoutActor: {
+				for n in body for l in n._tintedWithoutActor {(l): "a Box whose kind paints a tint" & "names its actor on a page with actors"}
+			}
+		}
 		_kindParentNotAllowed: {
 			for n in body for k, _ in n._tops
 			let parents = list.FlattenN([for d in _kinds if d.name == k {d.parents}], 1)

@@ -34,6 +34,8 @@ pub const WORDMARK_SCALARS_MAX: usize = 24;
 pub const CAPTION_SCALARS_MAX: usize = 60;
 /// A View's gap between its children when it names none.
 pub const VIEW_GAP_DEFAULT_PX: u16 = 16;
+/// Columns a phase of a Phases node holds; a Step's `col` and `span` stay inside them.
+pub const PHASE_COLUMNS_MAX: u8 = 6;
 /// Scalar values in an `id`, the `{0,63}` repetition plus the first character.
 pub const ID_SCALARS_MAX: usize = 64;
 /// The JSON Schema and CUE pattern for `id`. `is_valid_id` is its Rust twin.
@@ -131,6 +133,11 @@ fn is_default_chrome(chrome: &Chrome) -> bool {
     *chrome == Chrome::Full
 }
 
+#[allow(clippy::trivially_copy_pass_by_ref)]
+fn is_false(value: &bool) -> bool {
+    !*value
+}
+
 fn is_default_fact_source(source: &FactSource) -> bool {
     *source == FactSource::Doc
 }
@@ -197,6 +204,11 @@ pub struct Page {
     /// block and numbered Views. Flat only.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub sheet: Option<Sheet>,
+    /// Who acts on a design sheet. Each actor owns one tint slot, and everything it does
+    /// is drawn in that slot's colours.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[schemars(length(max = 8))]
+    pub actors: Vec<Actor>,
     #[schemars(length(min = 1, max = 256))]
     pub body: Vec<Node>,
     #[schemars(length(max = 16))]
@@ -317,6 +329,30 @@ pub struct AttentionItem {
     pub lead: String,
     #[schemars(length(min = 1, max = 400))]
     pub text: String,
+    /// The actor who attends to the item.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(regex(pattern = ID_PATTERN))]
+    pub actor: Option<String>,
+}
+
+/// Who acts on a design sheet: a lane of a Phases node, a chip in the legend strip, and
+/// the colour of every node and line it owns.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct Actor {
+    /// Unique among the actors.
+    #[schemars(regex(pattern = ID_PATTERN))]
+    pub id: String,
+    /// Printed upper case in lane names and the legend strip.
+    #[schemars(length(min = 1, max = 400))]
+    pub name: String,
+    /// The line under the name: what the actor does.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(length(min = 1, max = 400))]
+    pub text: Option<String>,
+    /// The tint slot the actor is drawn in; unique on the page.
+    #[schemars(range(min = 1, max = 8))]
+    pub tint: u8,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema, Default)]
@@ -347,10 +383,17 @@ pub struct LegendEntry {
     /// a tube of one line and tint are two legend entries, and the swatch draws the form.
     #[serde(default, skip_serializing_if = "PipeForm::is_tube")]
     pub form: PipeForm,
+    /// On a page with actors, the entry names every use of its line and form that has an
+    /// effective actor; each is drawn in its actor's colour.
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub by_actor: bool,
     #[schemars(length(min = 1, max = 400))]
     pub text: String,
 }
 
+// A Tee holds its two arms inline; a page holds at most NODES_MAX nodes parsed once, so the
+// size of the largest variant costs less than a box on every arm would.
+#[allow(clippy::large_enum_variant)]
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
 #[serde(tag = "tag")]
 pub enum Node {
@@ -367,6 +410,8 @@ pub enum Node {
     Callout(Callout),
     Frame(Frame),
     View(View),
+    Phases(Phases),
+    Step(Step),
 }
 
 /// A numbered view of a design sheet: a heading with its number, title, subtitle and note,
@@ -392,6 +437,125 @@ pub struct View {
     pub gap: Option<u16>,
     #[schemars(length(min = 1, max = 256))]
     pub children: Vec<Node>,
+}
+
+/// A swimlane of a design sheet: a lane per actor top to bottom, phases left to right, and
+/// Steps placed by lane, phase and column. Lanes (section 13.6) is a sequence diagram on a
+/// time axis and is unrelated.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct Phases {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(regex(pattern = ID_PATTERN))]
+    pub id: Option<String>,
+    /// Actor ids, one lane each, top to bottom.
+    #[schemars(length(min = 1, max = 8), inner(regex(pattern = ID_PATTERN)))]
+    pub lanes: Vec<String>,
+    /// Left to right, numbered from 1.
+    #[schemars(length(min = 1, max = 8))]
+    pub phases: Vec<Phase>,
+    /// Steps only.
+    #[schemars(length(min = 1, max = 64))]
+    pub children: Vec<Node>,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct Phase {
+    /// Unique among the phases of its Phases node.
+    #[schemars(regex(pattern = ID_PATTERN))]
+    pub id: String,
+    #[schemars(length(min = 1, max = 400))]
+    pub title: String,
+}
+
+fn step_column_default() -> u8 {
+    1
+}
+
+#[allow(clippy::trivially_copy_pass_by_ref)]
+fn is_step_column_default(column: &u8) -> bool {
+    *column == 1
+}
+
+/// One piece of work in a Phases node: who does it (its lane), when (its phase) and where
+/// in the phase (its columns).
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct Step {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(regex(pattern = ID_PATTERN))]
+    pub id: Option<String>,
+    /// An actor id among the parent's lanes.
+    #[schemars(regex(pattern = ID_PATTERN))]
+    pub lane: String,
+    /// A phase id of the parent.
+    #[schemars(regex(pattern = ID_PATTERN))]
+    pub phase: String,
+    /// The first column of the phase the Step covers, from 1.
+    #[serde(
+        default = "step_column_default",
+        skip_serializing_if = "is_step_column_default"
+    )]
+    #[schemars(range(min = 1, max = 6))]
+    pub col: u8,
+    /// How many columns the Step covers.
+    #[serde(
+        default = "step_column_default",
+        skip_serializing_if = "is_step_column_default"
+    )]
+    #[schemars(range(min = 1, max = 6))]
+    pub span: u8,
+    #[schemars(length(min = 1, max = 400))]
+    pub title: String,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[schemars(length(max = 6), inner(length(min = 1, max = 400)))]
+    pub lines: Vec<String>,
+    #[serde(default, skip_serializing_if = "StepLook::is_box")]
+    pub look: StepLook,
+}
+
+/// How a Step is drawn. box: an outlined box. chip: a rounded tinted pill, one stored
+/// thing. note: no outline, an aside. stack: three offset boxes, many of one thing.
+/// planned: dashed, not built yet. text: no box.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema, Default)]
+#[serde(rename_all = "lowercase")]
+pub enum StepLook {
+    #[default]
+    Box,
+    Chip,
+    Note,
+    Stack,
+    Planned,
+    Text,
+}
+
+impl StepLook {
+    pub const ALL: [StepLook; 6] = [
+        StepLook::Box,
+        StepLook::Chip,
+        StepLook::Note,
+        StepLook::Stack,
+        StepLook::Planned,
+        StepLook::Text,
+    ];
+
+    #[allow(clippy::trivially_copy_pass_by_ref)]
+    fn is_box(look: &StepLook) -> bool {
+        *look == StepLook::Box
+    }
+
+    /// The serialized name, for example "stack".
+    pub fn as_str(self) -> &'static str {
+        match self {
+            StepLook::Box => "box",
+            StepLook::Chip => "chip",
+            StepLook::Note => "note",
+            StepLook::Stack => "stack",
+            StepLook::Planned => "planned",
+            StepLook::Text => "text",
+        }
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
@@ -466,6 +630,10 @@ pub struct BoxNode {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[schemars(range(min = 1, max = 8))]
     pub tint: Option<u8>,
+    /// On a design sheet, the actor whose colour the Box takes.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(regex(pattern = ID_PATTERN))]
+    pub actor: Option<String>,
     #[schemars(length(min = 1, max = 400))]
     pub label: String,
     #[schemars(length(min = 1, max = 256))]
@@ -495,6 +663,10 @@ pub struct Item {
     /// in the kind's product table, or card.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub shape: Option<Shape>,
+    /// On a design sheet, the actor whose colour the Item takes.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(regex(pattern = ID_PATTERN))]
+    pub actor: Option<String>,
 }
 
 /// Where a fact comes from (section 13.7): `doc` is read from the live documentation when
@@ -639,6 +811,11 @@ pub struct Pipe {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[schemars(range(min = 1, max = 8))]
     pub tint: Option<u8>,
+    /// On a design sheet, the actor whose colour the pipe takes; absent takes the actor of
+    /// its `from` node.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(regex(pattern = ID_PATTERN))]
+    pub actor: Option<String>,
     #[schemars(length(min = 1, max = 400))]
     pub label: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -701,6 +878,10 @@ pub struct Tee {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[schemars(range(min = 1, max = 8))]
     pub tint: Option<u8>,
+    /// On a design sheet, the actor whose colour the Tee and its arms take.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(regex(pattern = ID_PATTERN))]
+    pub actor: Option<String>,
     #[schemars(length(min = 1, max = 400))]
     pub hub: String,
     pub arms: [TeeArm; 2],
@@ -775,6 +956,11 @@ pub struct Link {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[schemars(range(min = 1, max = 8))]
     pub tint: Option<u8>,
+    /// On a design sheet, the actor whose colour the link takes; absent takes the actor of
+    /// the node it leaves.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(regex(pattern = ID_PATTERN))]
+    pub actor: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[schemars(length(min = 1, max = 400))]
     pub label: Option<String>,
@@ -884,6 +1070,8 @@ impl Node {
             Node::Callout(_) => "Callout",
             Node::Frame(_) => "Frame",
             Node::View(_) => "View",
+            Node::Phases(_) => "Phases",
+            Node::Step(_) => "Step",
         }
     }
 
@@ -903,6 +1091,8 @@ impl Node {
             Node::Callout(callout) => &callout.id,
             Node::Frame(frame) => &frame.id,
             Node::View(view) => &view.id,
+            Node::Phases(phases) => &phases.id,
+            Node::Step(step) => &step.id,
         };
         id.as_deref()
     }
@@ -1097,5 +1287,27 @@ pub fn legend_label(line: Line, tint: Option<u8>) -> &'static str {
         Line::Deny => "Dashed red",
         Line::Solid => slot_entry(&SOLID_LABELS, index),
         Line::Dash => slot_entry(&DASH_LABELS, index),
+    }
+}
+
+/// The canonical label layout measures for a legend entry (section 13.1 rule 7 and section
+/// 14.2 rule 7): `legend_label`, or for a `by_actor` entry `Solid, actor colour` or
+/// `Dashed, actor colour`, since its uses are drawn in several actors' colours.
+pub fn canonical_legend_label(entry: &LegendEntry) -> &'static str {
+    match (entry.by_actor, entry.line) {
+        (true, Line::Solid) => "Solid, actor colour",
+        (true, Line::Dash) => "Dashed, actor colour",
+        (true, Line::Gray | Line::Deny) | (false, _) => legend_label(entry.line, entry.tint),
+    }
+}
+
+/// The output key of a legend entry: `line_key`, or `<line>-by-actor` for a `by_actor`
+/// entry, which names no slot.
+pub fn legend_entry_key(entry: &LegendEntry) -> String {
+    match (entry.by_actor, entry.line) {
+        (true, Line::Solid | Line::Dash) => format!("{}-by-actor", entry.line.as_str()),
+        (true, Line::Gray | Line::Deny) | (false, _) => {
+            line_key(entry.line, entry.tint).to_string()
+        }
     }
 }

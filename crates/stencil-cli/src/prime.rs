@@ -28,13 +28,15 @@ pub const TOPIC_BYTES_MAX: usize = 5000;
 /// Schema definitions that get their own vocabulary row after Page and the node tags.
 pub const ROW_DEFINITIONS: [&str; 3] = ["FactEntry", "LegendEntry", "Link"];
 /// Structs of the design sheet that a topic prints as rows of its own field table.
-pub const TOPIC_ROW_DEFINITIONS: [&str; 6] = [
+pub const TOPIC_ROW_DEFINITIONS: [&str; 8] = [
     "Sheet",
     "Problem",
     "ProblemPoint",
     "Answer",
     "Attention",
     "AttentionItem",
+    "Actor",
+    "Phase",
 ];
 /// Definitions written inline where a field uses them, never as a row or an enum line: a
 /// point as `{x,y}`, a Tee arm as its tag, a paragraph as `text or {lead,text}`.
@@ -58,11 +60,12 @@ pub enum Topic {
     Checks,
     Cue,
     Sheet,
+    Phases,
     Example,
 }
 
 impl Topic {
-    pub const ALL: [Topic; 9] = [
+    pub const ALL: [Topic; 10] = [
         Topic::Themes,
         Topic::Links,
         Topic::Blocks,
@@ -71,6 +74,7 @@ impl Topic {
         Topic::Checks,
         Topic::Cue,
         Topic::Sheet,
+        Topic::Phases,
         Topic::Example,
     ];
 
@@ -84,6 +88,7 @@ impl Topic {
             Topic::Checks => "checks",
             Topic::Cue => "cue",
             Topic::Sheet => "sheet",
+            Topic::Phases => "phases",
             Topic::Example => "example",
         }
     }
@@ -131,6 +136,7 @@ impl Topic {
             Topic::Checks => include_str!("../prime/checks.md"),
             Topic::Cue => include_str!("../prime/cue.md"),
             Topic::Sheet => include_str!("../prime/sheet.md"),
+            Topic::Phases => include_str!("../prime/phases.md"),
             Topic::Example => include_str!("../../../examples/g7.json"),
         }
     }
@@ -145,7 +151,8 @@ impl Topic {
             | Topic::Iso
             | Topic::Checks
             | Topic::Cue
-            | Topic::Sheet => true,
+            | Topic::Sheet
+            | Topic::Phases => true,
             Topic::Example => false,
         }
     }
@@ -758,6 +765,7 @@ fn describe_property(
         Some("string") => Ok(describe_string(property)),
         Some("integer") => Ok(describe_integer(property)),
         Some("number") => Ok(describe_number(property)),
+        Some("boolean") => Ok("bool".to_string()),
         Some("object") if property.get("additionalProperties") == Some(&Value::Bool(true)) => {
             Ok("object".to_string())
         }
@@ -950,12 +958,21 @@ mod tests {
     #[test]
     fn a_field_of_an_unknown_type_is_a_shape_error() {
         let mut schema = stencil_model::page_schema().as_value().clone();
-        schema["properties"]["title"] = json!({ "type": "boolean" });
+        schema["properties"]["title"] = json!({ "type": "null" });
         let error = vocabulary(&schema).unwrap_err();
         assert!(
             matches!(&error, PrimeError::SchemaShape { path } if path == "Page/title"),
             "{error}"
         );
+    }
+
+    #[test]
+    fn a_boolean_field_reads_bool() {
+        let definitions = Map::new();
+        let described =
+            describe_property(&json!({ "type": "boolean" }), &definitions, "Entry/flag", 0)
+                .unwrap();
+        assert_eq!(described, "bool");
     }
 
     #[test]

@@ -67,6 +67,7 @@ fn one(pointer: &str, rule: &'static str, message: &str) -> Vec<(String, &'stati
 
 fn plain_item(kind: &str, icon: Option<IconName>) -> Node {
     Node::Item(Item {
+        actor: None,
         id: None,
         kind: kind.to_string(),
         icon,
@@ -317,6 +318,7 @@ fn grammar_unknown_for_a_name_that_is_neither_built_in_nor_a_path() {
 fn facts_appear_in_text_fields_after_title_and_subtitle() {
     let mut page = page_with_body(vec![pipe(Line::Solid, Some(1), "p")]);
     page.body.push(Node::Item(Item {
+        actor: None,
         id: None,
         kind: "product".to_string(),
         icon: None,
@@ -390,6 +392,7 @@ fn facts_too_many_above_eight() {
     ];
     let page = page_with_body(vec![
         Node::Item(Item {
+            actor: None,
             id: None,
             kind: "product".to_string(),
             icon: None,
@@ -525,6 +528,7 @@ fn every_plain_example_parses_round_trips_and_vets_clean_under_plain() {
 
 fn head(id: &str) -> Node {
     Node::Item(Item {
+        actor: None,
         id: Some(id.to_string()),
         kind: "product".to_string(),
         icon: None,

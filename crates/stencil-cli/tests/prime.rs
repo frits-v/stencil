@@ -368,8 +368,9 @@ fn the_base_briefing_names_every_node_tag_in_its_vocabulary() {
     for tag in &base_tags {
         assert!(rows.contains(tag), "vocabulary has no row for {tag}");
     }
-    let topic_rows: BTreeSet<String> = vocabulary_row_names(&topic_text(Topic::Sheet))
+    let topic_rows: BTreeSet<String> = [Topic::Sheet, Topic::Phases]
         .into_iter()
+        .flat_map(|topic| vocabulary_row_names(&topic_text(topic)))
         .collect();
     for tag in &sheet {
         assert!(
@@ -378,7 +379,7 @@ fn the_base_briefing_names_every_node_tag_in_its_vocabulary() {
         );
         assert!(
             topic_rows.contains(tag),
-            "the sheet topic has no row for {tag}"
+            "no sheet topic has a row for {tag}"
         );
     }
     for object in ["Page", "FactEntry", "LegendEntry", "Link"] {
@@ -654,7 +655,7 @@ fn the_links_field_table_names_only_link_fields() {
         .skip(2)
         .take_while(|line| line.starts_with("| "))
         .collect();
-    assert_eq!(rows.len(), 8, "{rows:?}");
+    assert_eq!(rows.len(), 9, "{rows:?}");
     let mut named = BTreeSet::new();
     for row in rows {
         let cell = row.trim_start_matches("| ").split(" |").next().unwrap();
@@ -685,40 +686,42 @@ fn the_base_briefing_covers_every_check_the_pipeline_runs() {
         None,
     );
     let text = base_output();
+    // A sheet-only check is not applicable on every page without a sheet, so its row lives
+    // in the sheet topic and base has none.
     for report in &reports {
         let row = format!("| {} |", report.check.as_str());
-        assert!(
-            text.lines().any(|line| line.starts_with(&row)),
-            "the checks table has no row for {}",
+        let in_base = text.lines().any(|line| line.starts_with(&row));
+        assert_eq!(
+            in_base,
+            !report.check.is_sheet_only(),
+            "the base checks table and {}",
             report.check.as_str()
         );
     }
+    let topics = [Topic::Sheet, Topic::Iso, Topic::Checks];
     for report in &reports {
         let name = report.check.as_str();
-        let topic = if name.starts_with("iso-") {
+        let topic = if report.check.is_sheet_only() {
+            Topic::Sheet
+        } else if name.starts_with("iso-") {
             Topic::Iso
         } else {
             Topic::Checks
         };
-        assert!(
-            topic_text(topic).contains(&format!("| {name} |")),
-            "the {} topic has no row for {name}",
-            topic.name()
-        );
-        let other = if topic == Topic::Iso {
-            Topic::Checks
-        } else {
-            Topic::Iso
-        };
-        assert!(
-            !topic_text(other).contains(&format!("| {name} |")),
-            "the {} topic also has a row for {name}",
-            other.name()
-        );
+        for candidate in topics {
+            assert_eq!(
+                topic_text(candidate).contains(&format!("| {name} |")),
+                candidate == topic,
+                "the {} topic and the row for {name}",
+                candidate.name()
+            );
+        }
     }
     let topic = topic_text(Topic::Checks);
     assert!(
-        topic.contains("runs remembered-constants, legend-consistency and icon-matches-product"),
+        topic.contains(
+            "runs remembered-constants, legend-consistency, icon-matches-product and keys-used"
+        ),
         "{topic}"
     );
     assert!(
@@ -735,11 +738,14 @@ fn no_prime_text_names_a_tag_that_does_not_exist() {
     for name in vocabulary_row_names(&base) {
         assert!(objects.contains(&name), "vocabulary names unknown {name}");
     }
-    for name in vocabulary_row_names(&topic_text(Topic::Sheet)) {
-        assert!(
-            objects.contains(&name),
-            "the sheet topic names unknown {name}"
-        );
+    for topic in [Topic::Sheet, Topic::Phases] {
+        for name in vocabulary_row_names(&topic_text(topic)) {
+            assert!(
+                objects.contains(&name),
+                "the {} topic names unknown {name}",
+                topic.name()
+            );
+        }
     }
     for (topic, text) in all_texts() {
         for marker in ["\"tag\": \"", "\"tag\":\""] {

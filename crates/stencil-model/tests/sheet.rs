@@ -1,6 +1,11 @@
 // Integration-test crates are not cfg(test), so clippy's allow-*-in-tests settings do not
 // reach their helper functions.
-#![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
+#![allow(
+    clippy::unwrap_used,
+    clippy::expect_used,
+    clippy::panic,
+    clippy::indexing_slicing
+)]
 
 //! The design sheet's vet rules (section 14.3): one test per rule, the via bound on a
 //! sheet, and the CUE twin of every rule.
@@ -310,6 +315,357 @@ fn a_via_in_the_sheet_margin_vets() {
     assert_eq!(off_sheet, ["link-via-outside"]);
 }
 
+/// The smallest sheet with actors: two actors, each item acting for one, and a Phases node
+/// of both lanes, one phase and one Step after the items.
+fn actor_sheet_value() -> Value {
+    let mut document = sheet_value();
+    document["actors"] = json!([
+        { "id": "crew", "name": "Crew", "tint": 2 },
+        { "id": "ops", "name": "Ops", "text": "runs the jobs", "tint": 4 }
+    ]);
+    document["body"][0]["children"][0]["children"][0]["actor"] = json!("crew");
+    document["body"][0]["children"][0]["children"][1]["actor"] = json!("ops");
+    document["body"][0]["children"]
+        .as_array_mut()
+        .unwrap()
+        .push(json!({
+            "tag": "Phases",
+            "lanes": ["crew", "ops"],
+            "phases": [{ "id": "run", "title": "Run" }],
+            "children": [{ "tag": "Step", "lane": "crew", "phase": "run", "title": "Work" }]
+        }));
+    document["legend"] = json!([{ "line": "solid", "by_actor": true, "text": "work moves" }]);
+    document
+}
+
+const PHASES: &str = "/body/0/children/1";
+const STEP: &str = "/body/0/children/1/children/0";
+
+#[test]
+fn the_smallest_actor_sheet_vets_clean() {
+    assert_eq!(violations(actor_sheet_value()), Vec::new());
+}
+
+#[test]
+fn two_actors_in_one_slot_are_refused() {
+    let mut document = actor_sheet_value();
+    document["actors"][1]["tint"] = json!(2);
+    assert_eq!(
+        violations(document),
+        one(
+            "/actors/1/tint",
+            "actor-tint-duplicate",
+            "tint 2 is already used by actor \"crew\""
+        )
+    );
+}
+
+#[test]
+fn two_actors_with_one_id_are_refused() {
+    let mut document = actor_sheet_value();
+    document["actors"][1]["id"] = json!("crew");
+    document["body"][0]["children"][0]["children"][1]["actor"] = json!("crew");
+    document["body"][0]["children"][1]["lanes"] = json!(["crew"]);
+    assert_eq!(
+        violations(document),
+        one(
+            "/actors/1/id",
+            "key-duplicate",
+            "\"crew\" is already used by /actors/0"
+        )
+    );
+}
+
+#[test]
+fn an_undeclared_actor_is_refused() {
+    let mut document = actor_sheet_value();
+    document["body"][0]["children"][0]["children"][0]["actor"] = json!("crews");
+    assert_eq!(
+        violations(document),
+        one(
+            "/body/0/children/0/children/0/actor",
+            "actor-unknown",
+            "actor \"crews\" is not declared; declared: crew, ops"
+        )
+    );
+}
+
+#[test]
+fn a_tint_on_a_page_with_actors_is_refused() {
+    let mut document = actor_sheet_value();
+    document["links"][0]["tint"] = json!(2);
+    assert_eq!(
+        violations(document),
+        one(
+            "/links/0/tint",
+            "tint-on-actor-page",
+            "a page with actors colours by actor; remove tint"
+        )
+    );
+}
+
+#[test]
+fn a_kind_that_paints_a_tint_needs_an_actor() {
+    let mut document = actor_sheet_value();
+    let row = document["body"][0]["children"][0].clone();
+    document["body"][0]["children"][0] = json!({
+        "tag": "Box", "kind": "gcp", "label": "Cloud",
+        "children": [{ "tag": "Box", "kind": "region", "label": "Region", "children": [row] }]
+    });
+    assert_eq!(
+        violations(document),
+        one(
+            "/body/0/children/0/children/0",
+            "kind-tint-without-actor",
+            "region paints tint 1 by default, which reads as an actor; name its actor"
+        )
+    );
+}
+
+#[test]
+fn a_line_without_an_actor_on_a_page_with_actors_is_refused() {
+    let mut document = actor_sheet_value();
+    document["body"][0]["children"][0]["children"][0]
+        .as_object_mut()
+        .unwrap()
+        .remove("actor");
+    document["body"][0]["children"][1]["lanes"] = json!(["crew", "ops"]);
+    assert_eq!(
+        violations(document),
+        one(
+            "/links/0/line",
+            "line-without-actor",
+            "solid line from \"api\" has no actor; set actor or leave from an actor's node"
+        )
+    );
+}
+
+#[test]
+fn a_gray_line_takes_no_actor() {
+    let mut document = actor_sheet_value();
+    document["links"][0]["line"] = json!("gray");
+    document["links"][0]["actor"] = json!("crew");
+    assert_eq!(
+        violations(document),
+        one(
+            "/links/0/actor",
+            "actor-on-neutral-line",
+            "a gray or deny line takes no actor"
+        )
+    );
+}
+
+#[test]
+fn an_untintable_box_names_no_actor() {
+    let mut document = actor_sheet_value();
+    let row = document["body"][0]["children"][0].clone();
+    document["body"][0]["children"][0] = json!({
+        "tag": "Box", "kind": "gcp", "label": "Cloud", "actor": "crew", "children": [row]
+    });
+    assert_eq!(
+        violations(document),
+        one(
+            "/body/0/children/0/actor",
+            "actor-on-untintable-kind",
+            "gcp takes no colour, so it cannot name an actor"
+        )
+    );
+}
+
+#[test]
+fn a_tee_arm_acts_for_its_tee() {
+    let mut document = actor_sheet_value();
+    document["body"][0]["children"][0]["children"]
+        .as_array_mut()
+        .unwrap()
+        .insert(
+            1,
+            json!({
+                "tag": "Tee", "line": "solid", "actor": "crew", "hub": "fan out",
+                "arms": [
+                    { "tag": "Pipe", "dir": "h", "line": "solid", "actor": "ops", "label": "read" },
+                    { "tag": "Pipe", "dir": "h", "line": "solid", "label": "write" }
+                ]
+            }),
+        );
+    assert_eq!(
+        violations(document),
+        one(
+            "/body/0/children/0/children/1/arms/0/actor",
+            "tee-arm-actor-differs",
+            "a Tee arm acts for its Tee's actor"
+        )
+    );
+}
+
+#[test]
+fn a_by_actor_entry_names_solid_or_dashed_lines_on_a_page_with_actors() {
+    let mut gray = actor_sheet_value();
+    gray["legend"][0]["line"] = json!("gray");
+    assert_eq!(
+        violations(gray),
+        one(
+            "/legend/0/by_actor",
+            "legend-by-actor-misused",
+            "by_actor names solid or dashed lines on a page with actors"
+        )
+    );
+    let mut without_actors = sheet_value();
+    without_actors["legend"][0]["by_actor"] = json!(true);
+    assert_eq!(
+        violations(without_actors),
+        one(
+            "/legend/0/by_actor",
+            "legend-by-actor-misused",
+            "by_actor names solid or dashed lines on a page with actors"
+        )
+    );
+}
+
+#[test]
+fn a_phases_node_holds_steps_only() {
+    let mut document = actor_sheet_value();
+    document["body"][0]["children"][1]["children"]
+        .as_array_mut()
+        .unwrap()
+        .push(json!({ "tag": "Fact", "text": "loose" }));
+    assert_eq!(
+        violations(document),
+        one(
+            &format!("{PHASES}/children/1"),
+            "phases-child-not-step",
+            "a Phases node holds Steps only"
+        )
+    );
+}
+
+#[test]
+fn a_step_outside_a_phases_node_is_refused() {
+    let mut document = actor_sheet_value();
+    document["body"][0]["children"]
+        .as_array_mut()
+        .unwrap()
+        .push(json!({ "tag": "Step", "lane": "crew", "phase": "run", "title": "Loose" }));
+    assert_eq!(
+        violations(document),
+        one(
+            "/body/0/children/2",
+            "step-outside-phases",
+            "a Step sits directly in a Phases node"
+        )
+    );
+}
+
+#[test]
+fn an_actor_with_two_lanes_is_refused() {
+    let mut document = actor_sheet_value();
+    document["body"][0]["children"][1]["lanes"] = json!(["crew", "ops", "crew"]);
+    assert_eq!(
+        violations(document),
+        one(
+            &format!("{PHASES}/lanes/2"),
+            "phase-lane-twice",
+            "actor \"crew\" already has a lane"
+        )
+    );
+}
+
+#[test]
+fn a_step_in_a_lane_or_phase_its_node_lacks_is_refused() {
+    let mut lane = actor_sheet_value();
+    lane["body"][0]["children"][1]["lanes"] = json!(["crew"]);
+    lane["body"][0]["children"][1]["children"][0]["lane"] = json!("ops");
+    assert_eq!(
+        violations(lane),
+        one(
+            &format!("{STEP}/lane"),
+            "step-lane-unknown",
+            "lane \"ops\" is not a lane of this Phases node"
+        )
+    );
+    let mut phase = actor_sheet_value();
+    phase["body"][0]["children"][1]["children"][0]["phase"] = json!("later");
+    assert_eq!(
+        violations(phase),
+        one(
+            &format!("{STEP}/phase"),
+            "step-phase-unknown",
+            "phase \"later\" is not a phase of this Phases node"
+        )
+    );
+}
+
+#[test]
+fn a_step_past_column_6_is_refused() {
+    let mut document = actor_sheet_value();
+    document["body"][0]["children"][1]["children"][0]["col"] = json!(5);
+    document["body"][0]["children"][1]["children"][0]["span"] = json!(3);
+    assert_eq!(
+        violations(document),
+        one(
+            &format!("{STEP}/span"),
+            "step-span-out-of-range",
+            "columns 5 to 7 run past column 6"
+        )
+    );
+}
+
+#[test]
+fn a_phases_node_without_lanes_or_phases_is_refused() {
+    let mut lanes = actor_sheet_value();
+    lanes["body"][0]["children"][1]["lanes"] = json!([]);
+    assert!(violations(lanes).contains(&(
+        format!("{PHASES}/lanes"),
+        "list-empty",
+        "lanes is empty".to_string()
+    )));
+    let mut phases = actor_sheet_value();
+    phases["body"][0]["children"][1]["phases"] = json!([]);
+    assert!(violations(phases).contains(&(
+        format!("{PHASES}/phases"),
+        "list-empty",
+        "phases is empty".to_string()
+    )));
+}
+
+#[test]
+fn two_phases_with_one_id_are_refused() {
+    let mut document = actor_sheet_value();
+    document["body"][0]["children"][1]["phases"] =
+        json!([{ "id": "run", "title": "Run" }, { "id": "run", "title": "Again" }]);
+    assert_eq!(
+        violations(document),
+        one(
+            &format!("{PHASES}/phases/1/id"),
+            "key-duplicate",
+            &format!("\"run\" is already used by {PHASES}/phases/0")
+        )
+    );
+}
+
+#[test]
+fn every_actor_surface_off_a_sheet_needs_a_sheet() {
+    let mut document = actor_sheet_value();
+    document.as_object_mut().unwrap().remove("sheet");
+    let found: Vec<(String, &'static str)> = violations(document)
+        .into_iter()
+        .map(|(pointer, rule, _)| (pointer, rule))
+        .collect();
+    let expected: Vec<(String, &'static str)> = [
+        "/actors",
+        "/body/0",
+        "/body/0/children/0/children/0/actor",
+        "/body/0/children/0/children/1/actor",
+        PHASES,
+        STEP,
+        "/legend/0/by_actor",
+    ]
+    .iter()
+    .map(|pointer| (pointer.to_string(), "needs-sheet"))
+    .collect();
+    assert_eq!(found, expected);
+}
+
 /// Every rule of section 14.3 has a test above, in table order.
 #[test]
 fn every_sheet_rule_is_listed_in_table_order() {
@@ -327,6 +683,21 @@ fn every_sheet_rule_is_listed_in_table_order() {
             "list-too-long",
             "sheet-text-too-long",
             "key-duplicate",
+            "actor-tint-duplicate",
+            "actor-unknown",
+            "tint-on-actor-page",
+            "kind-tint-without-actor",
+            "line-without-actor",
+            "actor-on-neutral-line",
+            "actor-on-untintable-kind",
+            "tee-arm-actor-differs",
+            "legend-by-actor-misused",
+            "phases-child-not-step",
+            "step-outside-phases",
+            "phase-lane-twice",
+            "step-lane-unknown",
+            "step-phase-unknown",
+            "step-span-out-of-range",
         ]
     );
 }
@@ -434,8 +805,45 @@ fn every_section_14_vet_rule_has_a_cue_case() {
             non_empty,
             others.len()
         ),
-        (1, 3, 2, 7),
+        (6, 8, 4, 22),
         "surfaces, lists, non-empty lists and other rules examined"
     );
     assert_eq!(matched, expected.len());
+}
+
+/// Section 14.6: keys-used examines every actor and reports one that no lane, node, line
+/// or attention item names; a page without actors reports it not applicable.
+#[test]
+fn an_actor_nothing_names_is_an_unused_key() {
+    let page: Page = serde_json::from_value(actor_sheet_value()).unwrap();
+    let report = stencil_model::checks::keys_used(&page);
+    assert_eq!((report.examined, report.defects.len()), (2, 0));
+
+    let mut document = actor_sheet_value();
+    document["actors"]
+        .as_array_mut()
+        .unwrap()
+        .push(json!({ "id": "audit", "name": "Audit", "tint": 7 }));
+    let page: Page = serde_json::from_value(document).unwrap();
+    let report = stencil_model::checks::keys_used(&page);
+    assert_eq!(report.examined, 3);
+    let defects: Vec<(&str, &str)> = report
+        .defects
+        .iter()
+        .map(|defect| (defect.pointer.as_str(), defect.message.as_str()))
+        .collect();
+    assert_eq!(
+        defects,
+        [(
+            "/actors/2",
+            "actor \"audit\" is never named by a lane, a node, a line or an attention item"
+        )]
+    );
+
+    let page: Page = serde_json::from_value(sheet_value()).unwrap();
+    let report = stencil_model::checks::keys_used(&page);
+    assert_eq!(
+        report.not_applicable,
+        Some("page has no actors or keyed lists")
+    );
 }

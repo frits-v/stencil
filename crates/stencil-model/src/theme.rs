@@ -15,7 +15,7 @@ use crate::pointer::NodePointer;
 pub use overrides::apply_overrides;
 pub use quality::{
     QualityClass, QualityRow, TOLD_APART_BY_LINE, ThemeReport, channel_contrast_ratio,
-    channel_lightness, contrast_ratio, lightness, theme_quality,
+    channel_lightness, color_delta_e, contrast_ratio, lightness, theme_quality,
 };
 
 pub const COLOR_PATTERN: &str = r"^#[0-9A-F]{6}$";
@@ -546,6 +546,45 @@ impl Theme {
     pub fn tint(&self, slot: u8) -> &Tint {
         let index = usize::from(slot.saturating_sub(1));
         self.tints.get(index).unwrap_or(&self.tints[0])
+    }
+
+    /// The band of an actor's lane in a Phases node (section 14.5 rule 2): the slot's fill
+    /// mixed halfway toward the sheet paper. None when either colour is malformed.
+    pub fn lane_band(&self, slot: u8) -> Option<Color> {
+        let fill = self.tint(slot).fill.channels()?;
+        let paper = self.sheet_colors().paper.channels()?;
+        let channel = |index: usize| -> Option<u8> {
+            let start = u16::from(*fill.get(index)?);
+            let end = u16::from(*paper.get(index)?);
+            // The halfway point rounded half up stays within u8.
+            u8::try_from((start + end).div_ceil(2)).ok()
+        };
+        Some(Color(format!(
+            "#{:02X}{:02X}{:02X}",
+            channel(0)?,
+            channel(1)?,
+            channel(2)?
+        )))
+    }
+}
+
+/// The label the legend draws for a key (section 14.5 rule 7): `drawn_legend_label` for a
+/// slot key; for a by-actor key `<Pattern>, actor colour` under `tint_cue: color` and
+/// `<Pattern> line, by actor` under `line`, where the pattern is `Solid` for a solid line
+/// and the dash role's word for a dash line.
+pub fn drawn_legend_entry_label(theme: &Theme, key: &crate::checks::LegendKey) -> String {
+    match key.colour {
+        crate::checks::KeyColour::Slot(tint) => drawn_legend_label(theme, key.line, tint),
+        crate::checks::KeyColour::ByActor => {
+            let pattern = match key.line {
+                Line::Dash => theme.dash.pattern.label_word(),
+                Line::Solid | Line::Gray | Line::Deny => "Solid",
+            };
+            match theme.tint_cue {
+                TintCue::Color => format!("{pattern}, actor colour"),
+                TintCue::Line => format!("{pattern} line, by actor"),
+            }
+        }
     }
 }
 

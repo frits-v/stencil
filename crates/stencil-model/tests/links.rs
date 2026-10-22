@@ -78,6 +78,7 @@ fn tee_arm_ids_take_part_in_uniqueness_and_resolution() {
     arm.id = Some("api".to_string());
     let mut page = page_with_link();
     page.body.push(Node::Tee(Tee {
+        actor: None,
         id: None,
         line: Line::Solid,
         tint: Some(1),

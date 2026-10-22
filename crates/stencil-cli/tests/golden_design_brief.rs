@@ -79,7 +79,7 @@ fn check_passes_every_check_under_every_theme() {
         assert!(
             outcome
                 .stdout
-                .contains("stencil check: 15 checks, 9 passed, 0 failed, 6 not applicable"),
+                .contains("stencil check: 16 checks, 9 passed, 0 failed, 7 not applicable"),
             "{theme}: {}",
             outcome.stdout
         );

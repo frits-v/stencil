@@ -14,8 +14,8 @@ use stencil_model::text::{FontFamily, FontWeight, TextStyleName};
 use base64::Engine as _;
 use stencil_model::text::TextMeasurer;
 use stencil_model::{
-    Arrow, Chrome, FactSource, IconName, LEGEND_ENTRIES_MAX, LINKS_MAX, LegendEntry, Link, Node,
-    NodeRef, NoteKind, Page, PagePoint, Pipe, PipeDir, PipeForm, Projection, SheetList, Theme,
+    Arrow, Chrome, FactSource, IconName, LEGEND_ENTRIES_MAX, LINKS_MAX, LegendEntry, Node, NodeRef,
+    NoteKind, Page, PagePoint, Pipe, PipeDir, PipeForm, Projection, SheetList, StepLook, Theme,
     body_nodes,
 };
 use stencil_text::{CosmicTextMeasurer, bundled_font};
@@ -71,6 +71,8 @@ enum DocumentNode<'a> {
     SheetCell,
     /// A point of the problem cell.
     ProblemPoint,
+    /// An actor's chip in the legend strip.
+    Actor,
 }
 
 /// Walks page and geometry in the section 4.4 geometry order and asserts the pointers match,
@@ -97,6 +99,12 @@ pub fn render_svg(
     writer.sheet = page.sheet.as_ref().map(|sheet| SheetLook {
         wordmark: sheet.wordmark.is_some(),
     });
+    writer.actor_slots = page
+        .actors
+        .iter()
+        .take(SheetList::Actors.max() + 1)
+        .map(|actor| (actor.id.clone(), actor.tint))
+        .collect();
     let mut relabeler = Relabeler::default();
     let width = format_number(geometry.canvas.width);
     let height = format_number(geometry.canvas.height);
@@ -113,7 +121,7 @@ pub fn render_svg(
             writer.palette.page_background()
         ),
     );
-    let arrow_kinds = arrow_kinds(&expected, &page.links);
+    let arrow_kinds = arrow_kinds(page, geometry, &expected);
     if !arrow_kinds.is_empty() {
         writer.write_arrow_markers(1, &arrow_kinds);
     }
@@ -168,7 +176,13 @@ fn sheet_surface_in(geometry: &PageGeometry) -> Option<NodePointer> {
 /// True for the node tags a design sheet adds.
 pub(crate) fn is_sheet_tag(tag: NodeTag) -> bool {
     match tag {
-        NodeTag::TitleBlock | NodeTag::TitleCell | NodeTag::ProblemPoint | NodeTag::View => true,
+        NodeTag::TitleBlock
+        | NodeTag::TitleCell
+        | NodeTag::ProblemPoint
+        | NodeTag::View
+        | NodeTag::ActorChip
+        | NodeTag::Phases
+        | NodeTag::Step => true,
         NodeTag::Page
         | NodeTag::Kicker
         | NodeTag::Title
@@ -253,11 +267,20 @@ fn geometry_order(page: &Page) -> Vec<(NodePointer, DocumentNode<'_>)> {
 }
 
 fn push_legend_order<'a>(page: &'a Page, order: &mut Vec<(NodePointer, DocumentNode<'a>)>) {
-    if page.legend.is_empty() {
+    // Only a sheet has actors, whose chips open its legend strip.
+    if page.legend.is_empty() && page.actors.is_empty() {
         return;
     }
     let legend_pointer = NodePointer::root().child("legend");
     order.push((legend_pointer.clone(), DocumentNode::Legend));
+    let actors_pointer = SheetList::Actors.pointer();
+    order.extend(
+        page.actors
+            .iter()
+            .enumerate()
+            .take(SheetList::Actors.max() + 1)
+            .map(|(index, _)| (actors_pointer.index(index), DocumentNode::Actor)),
+    );
     order.extend(
         page.legend
             .iter()
@@ -272,23 +295,35 @@ fn push_legend_order<'a>(page: &'a Page, order: &mut Vec<(NodePointer, DocumentN
     );
 }
 
-/// Lines of the Pipes, Tee arms and links that draw an arrowhead, one marker each.
-fn arrow_kinds(expected: &[(NodePointer, DocumentNode<'_>)], links: &[Link]) -> BTreeSet<LineUse> {
+/// Lines of the Pipes, Tee arms and links that draw an arrowhead, one marker each, by their
+/// effective tint, which an actor gives on a sheet. `expected` and the geometry are in the
+/// same order, which the caller has checked.
+fn arrow_kinds(
+    page: &Page,
+    geometry: &PageGeometry,
+    expected: &[(NodePointer, DocumentNode<'_>)],
+) -> BTreeSet<LineUse> {
     let pipe_kinds = expected
         .iter()
-        .filter_map(|(_, document_node)| match *document_node {
+        .zip(&geometry.nodes)
+        .filter_map(|((_, document_node), node)| match *document_node {
             DocumentNode::Content(NodeRef::Node(Node::Pipe(pipe)) | NodeRef::TeeArm(pipe)) => {
-                Some(pipe)
+                Some((pipe, node.tint))
             }
             _ => None,
         })
-        .filter(|pipe| pipe.arrow != Arrow::None)
-        .map(|pipe| LineUse::new(pipe.line, pipe.tint));
-    let link_kinds = links
+        .filter(|(pipe, _)| pipe.arrow != Arrow::None)
+        .map(|(pipe, tint)| LineUse::new(pipe.line, tint));
+    let link_kinds = geometry
+        .links
         .iter()
         .take(LINKS_MAX)
-        .filter(|link| link.arrow != Arrow::None)
-        .map(|link| LineUse::new(link.line, link.tint));
+        .filter(|route| {
+            page.links
+                .get(route.index)
+                .is_some_and(|link| link.arrow != Arrow::None)
+        })
+        .map(|route| LineUse::new(route.line, route.tint));
     pipe_kinds.chain(link_kinds).collect()
 }
 
@@ -441,7 +476,7 @@ impl Relabeler {
         let DocumentNode::LegendEntry(entry) = document_node else {
             return Ok(None);
         };
-        let Some(label) = palette.legend_relabel(LineUse::new(entry.line, entry.tint)) else {
+        let Some(label) = palette.legend_entry_relabel(entry) else {
             return Ok(None);
         };
         let measurer = match self.measurer.as_mut() {
@@ -501,6 +536,10 @@ struct PartContext<'a> {
     icon: Option<IconName>,
     /// Accent bar color of a Callout.
     accent: Option<&'a str>,
+    /// How a Step is drawn.
+    step_look: Option<StepLook>,
+    /// A legend entry that names every actor's use of its line.
+    by_actor: bool,
 }
 
 struct SvgWriter<'a> {
@@ -513,6 +552,8 @@ struct SvgWriter<'a> {
     iso_zoom: f32,
     /// Set on a design sheet, whose chrome and Boxes paint from the sheet role.
     sheet: Option<SheetLook>,
+    /// Each actor's tint slot, by actor id.
+    actor_slots: Vec<(String, u8)>,
 }
 
 /// What the writer reads of a page's sheet.
@@ -531,6 +572,7 @@ impl<'a> SvgWriter<'a> {
             palette,
             iso_zoom: 1.0,
             sheet: None,
+            actor_slots: Vec::new(),
         }
     }
 
@@ -561,8 +603,9 @@ impl<'a> SvgWriter<'a> {
         document_node: DocumentNode<'_>,
     ) -> Result<(), RenderError> {
         let context = self.write_node_box(depth, node, document_node)?;
-        for part in &node.parts {
-            self.write_part_shape(depth, node, part, context)?;
+        let slots = self.part_slots(node, document_node);
+        for (part, slot) in node.parts.iter().zip(&slots) {
+            self.write_part_shape(depth, node, part, (context, *slot))?;
         }
         if let DocumentNode::Content(NodeRef::Node(Node::Box(_))) = document_node
             && let Some(look) = node.container
@@ -570,13 +613,57 @@ impl<'a> SvgWriter<'a> {
         {
             self.write_gcp_frame_stroke(depth, node.bounds, look, node.tint);
         }
-        for part in &node.parts {
+        for (part, slot) in node.parts.iter().zip(&slots) {
             if let Some(run) = &part.text {
-                let fill = self.text_fill(node, document_node, part, context)?;
-                self.write_text_run(depth, &node.pointer, part.bounds, run, fill)?;
+                let fill = self.text_fill(node, document_node, part, (context, *slot))?;
+                self.write_text_run(depth, &node.pointer, part.bounds, run, &fill)?;
             }
         }
         Ok(())
+    }
+
+    /// The tint slot of an actor.
+    fn actor_slot(&self, actor: &str) -> Option<u8> {
+        self.actor_slots
+            .iter()
+            .find(|(id, _)| id == actor)
+            .map(|(_, slot)| *slot)
+    }
+
+    /// The tint slot each part paints with: a lane's part takes its lane's actor, every
+    /// other part its node's effective tint.
+    fn part_slots(&self, node: &NodeGeometry, document_node: DocumentNode<'_>) -> Vec<Option<u8>> {
+        let lanes: Vec<Option<u8>> = match document_node {
+            DocumentNode::Content(NodeRef::Node(Node::Phases(phases))) => phases
+                .lanes
+                .iter()
+                .map(|lane| self.actor_slot(lane))
+                .collect(),
+            _ => Vec::new(),
+        };
+        let mut seen: Vec<(PartName, usize)> = Vec::new();
+        node.parts
+            .iter()
+            .map(|part| {
+                let nth = match seen.iter_mut().find(|(name, _)| *name == part.name) {
+                    Some((_, count)) => {
+                        *count += 1;
+                        *count - 1
+                    }
+                    None => {
+                        seen.push((part.name, 1));
+                        0
+                    }
+                };
+                match part.name {
+                    PartName::LaneBand
+                    | PartName::LaneBar
+                    | PartName::LaneName
+                    | PartName::LaneText => lanes.get(nth).copied().flatten(),
+                    _ => node.tint,
+                }
+            })
+            .collect()
     }
 
     /// The ink of a text part: a Box label by its container's paint, every other run by
@@ -586,8 +673,8 @@ impl<'a> SvgWriter<'a> {
         node: &NodeGeometry,
         document_node: DocumentNode<'_>,
         part: &Part,
-        context: PartContext<'a>,
-    ) -> Result<&'a str, RenderError> {
+        (context, slot): (PartContext<'a>, Option<u8>),
+    ) -> Result<String, RenderError> {
         if let DocumentNode::Content(NodeRef::Node(Node::Box(_))) = document_node
             && part.name == PartName::Label
         {
@@ -595,13 +682,31 @@ impl<'a> SvgWriter<'a> {
             return Ok(match self.sheet {
                 Some(_) => self.palette.sheet_container_label_ink(look, node.tint),
                 None => self.palette.container_label_ink(look, node.tint),
-            });
+            }
+            .to_string());
+        }
+        // A text-look Step is an aside: its title takes the secondary ink.
+        if context.step_look == Some(StepLook::Text) && part.name == PartName::Text {
+            return Ok(self
+                .palette
+                .sheet_ink(palette::SheetInk::InkSecondary)
+                .to_string());
+        }
+        // An actor's Item names its work in the actor's ink (section 14.5 rule 2).
+        if self.sheet.is_some()
+            && node.tag == NodeTag::Pcard
+            && part.name == PartName::FunctionName
+            && let Some(slot) = node.tint
+        {
+            return Ok(self
+                .palette
+                .sheet_color(palette::SheetInk::TintInk, Some(slot)));
         }
         if self.sheet.is_some()
             && let Some(ink) =
                 palette::sheet_part_paint(node.tag, part.name).and_then(|paint| paint.text)
         {
-            return Ok(self.palette.sheet_ink(ink));
+            return Ok(self.palette.sheet_color(ink, slot));
         }
         let style_name = match (self.sheet, document_node, part.name) {
             (Some(sheet), DocumentNode::Title, PartName::Text) => {
@@ -617,7 +722,8 @@ impl<'a> SvgWriter<'a> {
         };
         Ok(self
             .palette
-            .text_ink(style_name, context.line.map(|line_use| line_use.line)))
+            .text_ink(style_name, context.line.map(|line_use| line_use.line))
+            .to_string())
     }
 
     /// Draws the box of the node itself, below its parts, and returns what the parts need.
@@ -648,10 +754,30 @@ impl<'a> SvgWriter<'a> {
                     let look = node.container.ok_or_else(|| container_mismatch(node))?;
                     self.write_zone_box(depth, node.bounds, look, node.tint);
                 }
-                Node::View(_) => {}
+                Node::View(_) | Node::Phases(_) | Node::Step(_) => {}
                 Node::Item(_) => {
                     let card_paint = self.palette.card();
-                    self.write_box(depth, node.bounds, CARD_RADIUS_PX, card_paint);
+                    match (self.sheet, node.tint) {
+                        // An actor's Item outlines in the actor's wire (section 14.5 rule 2).
+                        (Some(_), Some(slot)) => {
+                            let wire = self
+                                .palette
+                                .sheet_color(palette::SheetInk::TintWire, Some(slot));
+                            let border = Stroke {
+                                width_px: palette::STEP_BORDER_PX,
+                                line: LineStyle::Solid,
+                                color: &wire,
+                            };
+                            self.write_rect(
+                                depth,
+                                node.bounds,
+                                CARD_RADIUS_PX,
+                                Some(card_paint.fill),
+                                Some(border),
+                            );
+                        }
+                        _ => self.write_box(depth, node.bounds, CARD_RADIUS_PX, card_paint),
+                    }
                 }
                 Node::Fact(fact) => {
                     if let Some(fill) = self.fact_box_fill(fact.source) {
@@ -666,11 +792,16 @@ impl<'a> SvgWriter<'a> {
                 | Node::Tee(_) => {}
             }
         }
-        Ok(self.part_context(document_node))
+        Ok(self.part_context(node, document_node))
     }
 
-    /// The document facts the parts of a node need, without drawing anything.
-    fn part_context(&self, document_node: DocumentNode<'_>) -> PartContext<'a> {
+    /// The document facts the parts of a node need, without drawing anything. A line takes
+    /// its node's effective tint, which an actor gives on a sheet.
+    fn part_context(
+        &self,
+        node: &NodeGeometry,
+        document_node: DocumentNode<'_>,
+    ) -> PartContext<'a> {
         match document_node {
             DocumentNode::Page
             | DocumentNode::Kicker
@@ -681,14 +812,16 @@ impl<'a> SvgWriter<'a> {
             | DocumentNode::Foot
             | DocumentNode::Sheet
             | DocumentNode::SheetCell
-            | DocumentNode::ProblemPoint => PartContext::default(),
+            | DocumentNode::ProblemPoint
+            | DocumentNode::Actor => PartContext::default(),
             DocumentNode::LegendEntry(entry) => PartContext {
                 line: Some(LineUse::new(entry.line, entry.tint)),
                 pipe_form: Some(entry.form),
+                by_actor: entry.by_actor,
                 ..PartContext::default()
             },
             DocumentNode::Content(NodeRef::TeeArm(pipe)) => PartContext {
-                line: Some(LineUse::new(pipe.line, pipe.tint)),
+                line: Some(LineUse::new(pipe.line, node.tint)),
                 pipe_dir: Some(pipe.dir),
                 pipe_form: Some(pipe.form),
                 arrows: ArrowEnds::of(pipe),
@@ -703,7 +836,12 @@ impl<'a> SvgWriter<'a> {
                 | Node::Frame(_)
                 | Node::Box(_)
                 | Node::Fact(_)
-                | Node::View(_) => PartContext::default(),
+                | Node::View(_)
+                | Node::Phases(_) => PartContext::default(),
+                Node::Step(step) => PartContext {
+                    step_look: Some(step.look),
+                    ..PartContext::default()
+                },
                 Node::Callout(callout) => PartContext {
                     accent: Some(self.palette.callout(callout.kind).accent),
                     ..PartContext::default()
@@ -713,14 +851,14 @@ impl<'a> SvgWriter<'a> {
                     ..PartContext::default()
                 },
                 Node::Pipe(pipe) => PartContext {
-                    line: Some(LineUse::new(pipe.line, pipe.tint)),
+                    line: Some(LineUse::new(pipe.line, node.tint)),
                     pipe_dir: Some(pipe.dir),
                     pipe_form: Some(pipe.form),
                     arrows: ArrowEnds::of(pipe),
                     ..PartContext::default()
                 },
                 Node::Tee(tee) => PartContext {
-                    line: Some(LineUse::new(tee.line, tee.tint)),
+                    line: Some(LineUse::new(tee.line, node.tint)),
                     ..PartContext::default()
                 },
             },
@@ -825,13 +963,25 @@ impl<'a> SvgWriter<'a> {
         depth: usize,
         node: &NodeGeometry,
         part: &Part,
-        context: PartContext<'a>,
+        (context, slot): (PartContext<'a>, Option<u8>),
     ) -> Result<(), RenderError> {
         let bounds = part.bounds;
+        if let Some(look) = context.step_look
+            && part.name == PartName::Front
+        {
+            self.write_step_front(depth, bounds, look, slot);
+            return Ok(());
+        }
         if self.sheet.is_some()
             && let Some(paint) = palette::sheet_part_paint(node.tag, part.name)
         {
-            self.write_sheet_part(depth, bounds, paint);
+            self.write_sheet_part(depth, bounds, paint, slot);
+            return Ok(());
+        }
+        if context.by_actor && part.name == PartName::Swatch {
+            let kind = context.line.ok_or_else(|| part_mismatch(node, part))?;
+            let stroke = self.palette.by_actor_sample(kind.line).stroke;
+            self.write_axis_line(depth, bounds, stroke, None);
             return Ok(());
         }
         match part.name {
@@ -996,19 +1146,93 @@ impl<'a> SvgWriter<'a> {
             | PartName::ViewTitle
             | PartName::ViewSubtitle
             | PartName::ViewRule
-            | PartName::ViewNote => return Err(part_mismatch(node, part)),
+            | PartName::ViewNote
+            | PartName::ActorName
+            | PartName::ActorText
+            | PartName::LaneBand
+            | PartName::LaneBar
+            | PartName::LaneName
+            | PartName::LaneText
+            | PartName::LaneRule
+            | PartName::PhaseHead
+            | PartName::PhaseNumeral
+            | PartName::PhaseTitle
+            | PartName::PhaseSeparator
+            | PartName::Front
+            | PartName::StepLine
+            | PartName::StackBack => return Err(part_mismatch(node, part)),
         }
         Ok(())
     }
 
+    /// The box a Step's look outlines (section 14.5 rule 6): a box and a stack's front in
+    /// the cell with the actor's wire, a chip as a pill in the actor's fill, a note in the
+    /// rule with no fill, a planned Step dashed with no fill.
+    fn write_step_front(
+        &mut self,
+        depth: usize,
+        bounds: BoxRect,
+        look: StepLook,
+        slot: Option<u8>,
+    ) {
+        use palette::SheetInk::{Cell, Rule, TintFill, TintWire};
+        let wire = self.palette.sheet_color(TintWire, slot);
+        let (fill, stroke_color, radius, dash) = match look {
+            StepLook::Box | StepLook::Stack => {
+                (Some(self.palette.sheet_color(Cell, slot)), wire, 0.0, None)
+            }
+            StepLook::Chip => (
+                Some(self.palette.sheet_color(TintFill, slot)),
+                wire,
+                bounds.height.min(bounds.width) / 2.0,
+                None,
+            ),
+            StepLook::Note => (None, self.palette.sheet_color(Rule, slot), 0.0, None),
+            StepLook::Planned => (None, wire, 0.0, Some(palette::PLANNED_DASH)),
+            StepLook::Text => return,
+        };
+        let stroke = Stroke {
+            width_px: palette::STEP_BORDER_PX,
+            line: LineStyle::Solid,
+            color: &stroke_color,
+        };
+        match dash {
+            None => self.write_rect(depth, bounds, radius, fill.as_deref(), Some(stroke)),
+            Some(dash) => {
+                let rect = inset_rect(bounds, stroke.width_px / 2.0);
+                self.line(
+                    depth,
+                    &format!(
+                        r#"<rect x="{}" y="{}" width="{}" height="{}" fill="none"{} stroke-dasharray="{dash}"/>"#,
+                        format_number(rect.x),
+                        format_number(rect.y),
+                        format_number(rect.width),
+                        format_number(rect.height),
+                        stroke_attributes(stroke)
+                    ),
+                );
+            }
+        }
+    }
+
     /// One sheet part by its paint row: a rect, a line along its long axis, a circle, or
     /// the drafting grid. A text part draws nothing here.
-    fn write_sheet_part(&mut self, depth: usize, bounds: BoxRect, paint: palette::PartPaint) {
-        let fill = paint.fill.map(|ink| self.palette.sheet_ink(ink));
-        let stroke = paint.stroke.map(|(ink, width_px)| Stroke {
-            width_px,
+    fn write_sheet_part(
+        &mut self,
+        depth: usize,
+        bounds: BoxRect,
+        paint: palette::PartPaint,
+        slot: Option<u8>,
+    ) {
+        let fill_color = paint.fill.map(|ink| self.palette.sheet_color(ink, slot));
+        let stroke_color = paint
+            .stroke
+            .map(|(ink, width_px)| (self.palette.sheet_color(ink, slot), width_px));
+        let fill = fill_color.as_deref();
+        let stroke = stroke_color.as_ref().map(|(color, width_px)| Stroke {
+            width_px: *width_px,
             line: LineStyle::Solid,
-            color: self.palette.sheet_ink(ink),
+            color,
         });
         match paint.shape {
             PartShape::Rect => self.write_rect(depth, bounds, 0.0, fill, stroke),

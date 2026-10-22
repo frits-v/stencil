@@ -229,4 +229,28 @@ row contrast ink.secondary on sheet.paper: 10.75, at least 4.50, passed
 row contrast sheet.frame on sheet.cell: 8.43, at least 4.50, passed
 row contrast sheet.frame on sheet.paper: 13.39, at least 4.50, passed
 row contrast sheet.frame on sheet.paper: 13.39, at least 3.00, passed
-stencil theme check gruvbox-dark: 231 rows, 123 passed, 108 failed
+row contrast tints.1.ink on sheet.cell: 8.43, at least 4.50, passed
+row contrast tints.1.ink on lane band 1: 12.02, at least 4.50, passed
+row contrast tints.1.wire on sheet.paper: 3.48, at least 3.00, passed
+row contrast tints.2.ink on sheet.cell: 8.43, at least 4.50, passed
+row contrast tints.2.ink on lane band 2: 12.14, at least 4.50, passed
+row contrast tints.2.wire on sheet.paper: 3.48, at least 3.00, passed
+row contrast tints.3.ink on sheet.cell: 8.43, at least 4.50, passed
+row contrast tints.3.ink on lane band 3: 11.71, at least 4.50, passed
+row contrast tints.3.wire on sheet.paper: 4.65, at least 3.00, passed
+row contrast tints.4.ink on sheet.cell: 8.43, at least 4.50, passed
+row contrast tints.4.ink on lane band 4: 11.52, at least 4.50, passed
+row contrast tints.4.wire on sheet.paper: 5.94, at least 3.00, passed
+row contrast tints.5.ink on sheet.cell: 8.43, at least 4.50, passed
+row contrast tints.5.ink on lane band 5: 12.75, at least 4.50, passed
+row contrast tints.5.wire on sheet.paper: 2.69, at least 3.00, FAILED
+row contrast tints.6.ink on sheet.cell: 8.43, at least 4.50, passed
+row contrast tints.6.ink on lane band 6: 11.76, at least 4.50, passed
+row contrast tints.6.wire on sheet.paper: 4.76, at least 3.00, passed
+row contrast tints.7.ink on sheet.cell: 8.43, at least 4.50, passed
+row contrast tints.7.ink on lane band 7: 12.14, at least 4.50, passed
+row contrast tints.7.wire on sheet.paper: 3.81, at least 3.00, passed
+row contrast tints.8.ink on sheet.cell: 8.43, at least 4.50, passed
+row contrast tints.8.ink on lane band 8: 13.32, at least 4.50, passed
+row contrast tints.8.wire on sheet.paper: 1.71, at least 3.00, FAILED
+stencil theme check gruvbox-dark: 255 rows, 145 passed, 110 failed

@@ -275,9 +275,12 @@ _nesting: stencil.#GrammarNesting & {#grammar: grammar}
 		label: string
 		children: [...#Node]
 		_kindData: [for c in grammar.containers if c.name == kind {c}]
+		// An actor's colour says who acts, not which network path, so a Box that
+		// names an actor takes no part in tint pairing.
+		actor?: string
 		_tint: list.Take([
-			for c in _kindData if c.tintable if tint != _|_ {tint},
-			for c in _kindData if c.tintable if c.default_tint != _|_ {c.default_tint},
+			if actor == _|_ for c in _kindData if c.tintable if tint != _|_ {tint},
+			if actor == _|_ for c in _kindData if c.tintable if c.default_tint != _|_ {c.default_tint},
 		], 1)
 		_below: {for c in children {c._tinted}}
 		_tinted: {_below, for t in _tint {"\(kind)-\(t)": t}}

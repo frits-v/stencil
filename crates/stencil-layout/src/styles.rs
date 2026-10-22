@@ -32,7 +32,10 @@ pub fn text_color(name: TextStyleName, line: Option<Line>) -> &'static str {
         | TextStyleName::Statement
         | TextStyleName::ViewNumeral
         | TextStyleName::ViewTitle
-        | TextStyleName::LeadBody => TEXT_DARK,
+        | TextStyleName::LeadBody
+        | TextStyleName::ActorName
+        | TextStyleName::LaneName
+        | TextStyleName::StepTitle => TEXT_DARK,
         TextStyleName::TagLabel => match line {
             Some(Line::Deny) => TEXT_DENY,
             Some(Line::Gray | Line::Solid | Line::Dash) | None => TEXT_DARK,
@@ -50,7 +53,8 @@ pub fn text_color(name: TextStyleName, line: Option<Line>) -> &'static str {
         | TextStyleName::SheetLabel
         | TextStyleName::SheetKicker
         | TextStyleName::ViewNote
-        | TextStyleName::ViewNoteSmall => TEXT_MUTED,
+        | TextStyleName::ViewNoteSmall
+        | TextStyleName::StepText => TEXT_MUTED,
     }
 }
 
@@ -83,7 +87,11 @@ pub(crate) fn text_style_for(name: TextStyleName, iso: bool) -> TextStyle {
         | TextStyleName::ViewTitle
         | TextStyleName::ViewNote
         | TextStyleName::ViewNoteSmall
-        | TextStyleName::LeadBody => return flat,
+        | TextStyleName::LeadBody
+        | TextStyleName::ActorName
+        | TextStyleName::LaneName
+        | TextStyleName::StepTitle
+        | TextStyleName::StepText => return flat,
         TextStyleName::ZoneLabel | TextStyleName::PerimeterLabel => ISO_ZONE_LABEL_SCALE,
         TextStyleName::GcpBar => ISO_FRAME_LABEL_SCALE,
         TextStyleName::CardFunction
@@ -150,6 +158,10 @@ mod tests {
             ("view_note", "#5F6368"),
             ("view_note_small", "#5F6368"),
             ("lead_body", "#202124"),
+            ("actor_name", "#202124"),
+            ("lane_name", "#202124"),
+            ("step_title", "#202124"),
+            ("step_text", "#5F6368"),
         ];
         assert_eq!(TEXT_STYLES.len(), expected.len());
         for (named, (name, color)) in TEXT_STYLES.iter().zip(expected) {

@@ -4,8 +4,8 @@
 use stencil_model::pointer::NodePointer;
 use stencil_model::text::TextStyleName;
 use stencil_model::{
-    AnswerParagraph, LegendEntry, Page, SHEET_ROOT_PADDING_PX, Sheet, VIEW_GAP_DEFAULT_PX, View,
-    canvas_width,
+    Actor, AnswerParagraph, LegendEntry, Page, SHEET_ROOT_PADDING_PX, Sheet, SheetList,
+    VIEW_GAP_DEFAULT_PX, View, canvas_width,
 };
 use taffy::prelude::{
     AlignItems, Dimension, FlexWrap, JustifyContent, LengthPercentageAuto, NodeId, Rect, Style,
@@ -50,6 +50,8 @@ const STRIP_RULE_PX: f32 = 1.0;
 const STRIP_PADDING_PX: (f32, f32) = (7.0, 14.0);
 const STRIP_GAP_PX: f32 = 9.0;
 const STRIP_ROW_GAP_PX: f32 = 6.0;
+const ACTOR_SWATCH_PX: (f32, f32) = (18.0, 12.0);
+const ACTOR_CHIP_GAP_PX: f32 = 6.0;
 const VIEW_MARGIN_TOP_PX: f32 = 13.0;
 const VIEW_HEADING_GAP_PX: f32 = 12.0;
 const VIEW_HEADING_MARGIN_BOTTOM_PX: f32 = 8.0;
@@ -88,7 +90,7 @@ impl Builder<'_> {
         let root_index =
             self.push_record(Self::record(root_pointer, NodeTag::Page, None, None, root));
         let block = self.add_title_block(page, sheet, root, root_index)?;
-        self.add_sheet_legend(&page.legend, block)?;
+        self.add_sheet_legend((&page.actors, &page.legend), block)?;
         self.add_body(page, root, root_index)?;
         if let Some(foot) = &page.foot {
             self.add_page_text(
@@ -578,14 +580,14 @@ impl Builder<'_> {
     }
 
     /// `/legend` on a sheet: a strip at the foot of the title block, inside its border, with
-    /// a hairline across the block on top and the entries in a wrapping row after the
-    /// `Lines` caption.
+    /// a hairline across the block on top and a wrapping row per group: `Who acts` with a
+    /// chip per actor, then `Lines` with the entries.
     fn add_sheet_legend(
         &mut self,
-        legend: &[LegendEntry],
+        (actors, legend): (&[Actor], &[LegendEntry]),
         (block, block_index): (NodeId, usize),
     ) -> Result<(), LayoutError> {
-        if legend.is_empty() {
+        if legend.is_empty() && actors.is_empty() {
             return Ok(());
         }
         let pointer = NodePointer::root().child("legend");
@@ -602,27 +604,23 @@ impl Builder<'_> {
             &pointer,
         )?;
         let (vertical, horizontal) = STRIP_PADDING_PX;
-        let group = self.container(
+        let groups = self.container(
             Style {
-                flex_wrap: FlexWrap::Wrap,
                 gap: taffy::Size {
-                    width: length(STRIP_GAP_PX),
+                    width: length(0.0),
                     height: length(STRIP_ROW_GAP_PX),
                 },
                 padding: sides(vertical, horizontal, vertical, horizontal),
-                ..flex_row(AlignItems::CENTER)
+                ..flex_column(AlignItems::STRETCH)
             },
             strip,
             &pointer,
         )?;
-        let caption = self.sheet_text(
-            group,
-            PartName::GroupCaption,
-            "Lines",
-            TextStyleName::SheetLabel,
-            0.0,
-            pointer.clone(),
-        )?;
+        let mut parts = vec![PartRecord {
+            name: PartName::StripRule,
+            taffy_node: rule,
+            text_leaf: None,
+        }];
         let mut record = Self::record(
             pointer.clone(),
             NodeTag::Legend,
@@ -630,19 +628,122 @@ impl Builder<'_> {
             Some(block_index),
             strip,
         );
-        record.content_node = group;
-        record.parts = vec![
+        record.content_node = groups;
+        let legend_index = self.push_record(record);
+        if !actors.is_empty() {
+            let group = self.strip_group(groups, &pointer)?;
+            parts.push(self.sheet_text(
+                group,
+                PartName::GroupCaption,
+                "Who acts",
+                TextStyleName::SheetLabel,
+                0.0,
+                pointer.clone(),
+            )?);
+            let actors_pointer = SheetList::Actors.pointer();
+            for (index, actor) in actors.iter().enumerate() {
+                self.add_actor_chip(actor, actors_pointer.index(index), group, legend_index)?;
+            }
+        }
+        if !legend.is_empty() {
+            let group = self.strip_group(groups, &pointer)?;
+            parts.push(self.sheet_text(
+                group,
+                PartName::GroupCaption,
+                "Lines",
+                TextStyleName::SheetLabel,
+                0.0,
+                pointer.clone(),
+            )?);
+            if let Some(record) = self.records.get_mut(legend_index) {
+                record.parts = parts;
+            }
+            for (index, entry) in legend.iter().enumerate() {
+                self.add_legend_entry(entry, pointer.index(index), group, legend_index)?;
+            }
+        } else if let Some(record) = self.records.get_mut(legend_index) {
+            record.parts = parts;
+        }
+        Ok(())
+    }
+
+    /// One group of the legend strip: its caption and entries in a row that wraps.
+    fn strip_group(
+        &mut self,
+        groups: NodeId,
+        pointer: &NodePointer,
+    ) -> Result<NodeId, LayoutError> {
+        self.container(
+            Style {
+                flex_wrap: FlexWrap::Wrap,
+                gap: taffy::Size {
+                    width: length(STRIP_GAP_PX),
+                    height: length(STRIP_ROW_GAP_PX),
+                },
+                ..flex_row(AlignItems::CENTER)
+            },
+            groups,
+            pointer,
+        )
+    }
+
+    /// `/actors/<i>`: a swatch in the actor's colours, its name and its text, in one row.
+    fn add_actor_chip(
+        &mut self,
+        actor: &Actor,
+        pointer: NodePointer,
+        group: NodeId,
+        legend_index: usize,
+    ) -> Result<(), LayoutError> {
+        let chip = self.container(
+            Style {
+                gap: taffy::Size {
+                    width: length(ACTOR_CHIP_GAP_PX),
+                    height: length(0.0),
+                },
+                ..flex_row(AlignItems::CENTER)
+            },
+            group,
+            &pointer,
+        )?;
+        let (swatch_width, swatch_height) = ACTOR_SWATCH_PX;
+        let swatch = self.plain_leaf(
+            Style {
+                size: fixed_size(swatch_width, swatch_height),
+                ..base_style()
+            },
+            chip,
+            &pointer,
+        )?;
+        let mut parts = vec![
             PartRecord {
-                name: PartName::StripRule,
-                taffy_node: rule,
+                name: PartName::Swatch,
+                taffy_node: swatch,
                 text_leaf: None,
             },
-            caption,
+            self.sheet_text(
+                chip,
+                PartName::ActorName,
+                &actor.name,
+                TextStyleName::ActorName,
+                0.0,
+                pointer.child("name"),
+            )?,
         ];
-        let legend_index = self.push_record(record);
-        for (index, entry) in legend.iter().enumerate() {
-            self.add_legend_entry(entry, pointer.index(index), group, legend_index)?;
+        if let Some(text) = &actor.text {
+            parts.push(self.sheet_text(
+                chip,
+                PartName::ActorText,
+                text,
+                TextStyleName::LegendText,
+                0.0,
+                pointer.child("text"),
+            )?);
         }
+        let mut record = Self::record(pointer, NodeTag::ActorChip, None, Some(legend_index), chip);
+        record.tint = Some(actor.tint);
+        record.parts = parts;
+        self.push_record(record);
         Ok(())
     }
 

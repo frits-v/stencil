@@ -11,6 +11,8 @@
 mod common;
 
 use common::{LineKey, THEMES, ZoneKey};
+use std::collections::BTreeSet;
+
 use resvg::usvg::roxmltree;
 use serde_json::{Value, json};
 use stencil_layout::PartName;
@@ -868,13 +870,13 @@ fn a_sheet_draws_its_frame_block_and_box_in_light_strokes() {
         let hairline = common::children_named(common::group(&document, "/legend"), "line")[0];
         assert_eq!(width(hairline), "1", "{theme_name} strip hairline");
         assert_eq!(hairline.attribute("stroke"), Some(rule_ink.as_str()));
-        let view = common::group(&document, "/body/0");
+        let view = common::group(&document, "/body/1");
         assert_eq!(
             width(common::children_named(view, "circle")[0]),
             "1.5",
             "{theme_name} view circle"
         );
-        let cloud = common::group(&document, "/body/0/children/0/children/1");
+        let cloud = common::group(&document, "/body/1/children/0/children/1");
         let stroked: Vec<_> = common::children_named(cloud, "path")
             .into_iter()
             .filter(|path| path.attribute("stroke").is_some())
@@ -1326,6 +1328,137 @@ fn clear_keeps_each_slot_in_its_hue_family() {
         paper,
         [
             "blue", "rose", "teal", "ochre", "violet", "green", "clay", "petrol"
+        ]
+    );
+}
+
+/// The actor of each Step of onepager's Phases node, by the Step's pointer, with its look.
+fn onepager_steps(document: &Value) -> Vec<(String, String, String)> {
+    let phases = &document["body"][0]["children"][0];
+    phases["children"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .enumerate()
+        .map(|(index, step)| {
+            (
+                format!("/body/0/children/0/children/{index}"),
+                step["lane"].as_str().unwrap().to_string(),
+                step["look"].as_str().unwrap_or("box").to_string(),
+            )
+        })
+        .collect()
+}
+
+/// Section 14.5 rule 2: in each designed theme with a colour cue the outlines of any two of
+/// onepager's actors differ by a delta E of at least 20; under wire, which tells actors apart
+/// by their lane names and the strip's text, every actor outline is the one ink.
+#[test]
+fn actor_strokes_are_told_apart_by_colour_or_by_text() {
+    let document = onepager_document();
+    let steps = onepager_steps(&document);
+    let mut examined = 0;
+    for theme_name in DESIGNED_THEMES {
+        let rendered = render_themed(document.clone(), theme_name);
+        let svg = common::parse_xml(&rendered.svg.svg);
+        let mut strokes: Vec<(String, String)> = Vec::new();
+        for (pointer, lane, look) in &steps {
+            if look == "note" || look == "text" {
+                continue;
+            }
+            let group = common::group(&svg, pointer);
+            for rect in common::children_named(group, "rect") {
+                let stroke = rect.attribute("stroke").unwrap().to_string();
+                if !strokes.contains(&(lane.clone(), stroke.clone())) {
+                    strokes.push((lane.clone(), stroke));
+                }
+            }
+        }
+        let lanes: BTreeSet<&String> = strokes.iter().map(|(lane, _)| lane).collect();
+        assert_eq!(
+            strokes.len(),
+            lanes.len(),
+            "{theme_name}: one outline per actor"
+        );
+        assert_eq!(lanes.len(), 4, "{theme_name}");
+        let theme = common::theme(theme_name);
+        for (position, (first_lane, first)) in strokes.iter().enumerate() {
+            for (second_lane, second) in strokes.iter().skip(position + 1) {
+                if theme.tint_cue == TintCue::Line {
+                    assert_eq!(first, second, "{theme_name}");
+                    assert_eq!(first, "#222222", "{theme_name}");
+                } else {
+                    let distance = stencil_model::theme::color_delta_e(
+                        &stencil_model::theme::Color(first.clone()),
+                        &stencil_model::theme::Color(second.clone()),
+                    )
+                    .unwrap();
+                    assert!(
+                        distance >= 20.0,
+                        "{theme_name}: {first_lane} and {second_lane} are {distance:.1} apart"
+                    );
+                }
+                examined += 1;
+            }
+        }
+    }
+    assert_eq!(examined, DESIGNED_THEMES.len() * 6);
+}
+
+/// Section 14.5 rule 7: a by-actor legend sample draws its line in the sheet frame ink,
+/// with no end dot, so it names no actor's colour.
+#[test]
+fn a_by_actor_sample_draws_in_the_frame_ink() {
+    let document = onepager_document();
+    let mut examined = 0;
+    for theme_name in DESIGNED_THEMES {
+        let theme = common::theme(theme_name);
+        let frame = theme.sheet_colors().frame.as_str().to_string();
+        let rendered = render_themed(document.clone(), theme_name);
+        let svg = common::parse_xml(&rendered.svg.svg);
+        for (index, entry) in document["legend"].as_array().unwrap().iter().enumerate() {
+            if entry["by_actor"] != json!(true) {
+                continue;
+            }
+            let group = common::group(&svg, &format!("/legend/{index}"));
+            let lines = common::children_named(group, "line");
+            assert_eq!(lines.len(), 1, "{theme_name}");
+            assert!(common::children_named(group, "circle").is_empty());
+            let stroke = lines[0].attribute("stroke").unwrap();
+            assert_eq!(stroke, frame, "{theme_name}");
+            if theme.tint_cue == TintCue::Color {
+                assert!(
+                    theme.tints.iter().all(|tint| tint.wire.as_str() != stroke),
+                    "{theme_name}"
+                );
+            }
+            examined += 1;
+        }
+    }
+    assert_eq!(examined, DESIGNED_THEMES.len() * 2);
+}
+
+/// Section 14.5 rule 7: under wire a by-actor entry reads by its line, so each strip entry
+/// reads differently from the others.
+#[test]
+fn wire_labels_a_by_actor_entry_by_line() {
+    let rendered = render_themed(onepager_document(), "wire");
+    let svg = common::parse_xml(&rendered.svg.svg);
+    let labels: Vec<String> = (0..3)
+        .map(|index| {
+            let group = common::group(&svg, &format!("/legend/{index}"));
+            common::children_named(group, "text")[0]
+                .text()
+                .unwrap()
+                .to_string()
+        })
+        .collect();
+    assert_eq!(
+        labels,
+        [
+            "Solid line, by actor",
+            "Dashed line, by actor",
+            "Dotted line"
         ]
     );
 }

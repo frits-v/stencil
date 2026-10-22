@@ -89,7 +89,7 @@ fn a_plain_page_vets_and_remembered_constants_is_not_applicable() {
     );
     assert_eq!(
         lines.last().copied(),
-        Some("stencil vet: 0 violations, 3 checks, 1 passed, 0 failed, 2 not applicable")
+        Some("stencil vet: 0 violations, 4 checks, 1 passed, 0 failed, 3 not applicable")
     );
 }
 

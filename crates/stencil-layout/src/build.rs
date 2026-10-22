@@ -1,6 +1,7 @@
 //! Builds the taffy tree for a vetted page (sections 2.2 to 2.8) and records, per geometry
 //! node, the taffy nodes its bounds, content box and parts are read from.
 
+mod phases_node;
 mod sheet;
 
 pub use sheet::SHEET_BLOCK_BORDER_PX;
@@ -12,8 +13,8 @@ use stencil_model::text::{TextStyle, TextStyleName};
 use stencil_model::{
     Arrow, BoxNode, Callout, Chrome, DEPTH_MAX, Fact, FactSource, Frame, GAP_DEFAULT_PX, Grammar,
     Item, Justify, LANE_GAP_DEFAULT_PX, Lanes, LegendEntry, ListKind, Node, Note, NoteKind, Page,
-    Pipe, PipeDir, PipeForm, Projection, Shape, Tee, TeeArm, Text, VetRule, Violation, box_key,
-    box_tint, canvas_width, legend_label, line_key, line_tint,
+    PageActors, Pipe, PipeDir, PipeForm, Projection, Shape, Tee, TeeArm, Text, VetRule, Violation,
+    box_key, box_tint, canonical_legend_label, canvas_width, legend_entry_key, line_key, line_tint,
 };
 use taffy::prelude::{
     AlignItems, AlignSelf, Dimension, Display, FlexDirection, FlexWrap, JustifyContent,
@@ -22,6 +23,7 @@ use taffy::prelude::{
 };
 
 use crate::lanes::LanesPlan;
+use crate::phases::PhasesPlan;
 use crate::styles::{text_color, text_style_for};
 use crate::{
     Axis, ContainerLook, ISO_APPROACH_PX, ISO_BLOCK_HEIGHT_PX, ISO_FLOOR_TEXT_RESERVE_PX,
@@ -131,6 +133,7 @@ pub(crate) fn build_page(
     page: &Page,
     grammar: &Grammar,
     lanes_plan: &LanesPlan,
+    phases_plan: &PhasesPlan,
 ) -> Result<BuiltPage, LayoutError> {
     let mut builder = Builder {
         tree: TaffyTree::new(),
@@ -138,6 +141,9 @@ pub(crate) fn build_page(
         text_leaves: Vec::new(),
         grammar,
         lanes_plan,
+        phases_plan,
+        actors: PageActors::of(page),
+        page,
         iso: page.projection == Projection::Iso,
         sheet: page.sheet.is_some(),
     };
@@ -157,6 +163,10 @@ struct Builder<'page> {
     text_leaves: Vec<TextLeaf>,
     grammar: &'page Grammar,
     lanes_plan: &'page LanesPlan,
+    phases_plan: &'page PhasesPlan,
+    /// What each node and line acts for; empty on a page without actors.
+    actors: PageActors<'page>,
+    page: &'page Page,
     /// True under iso: every zone label reserves the floor its placard needs.
     iso: bool,
     /// True on a design sheet: a Box sets its label in `sheet_label`.
@@ -287,7 +297,9 @@ fn default_weight(container: NodeTag, child: &Node) -> u16 {
         | Node::Text(_)
         | Node::Callout(_)
         | Node::Frame(_)
-        | Node::View(_) => 1,
+        | Node::View(_)
+        | Node::Phases(_)
+        | Node::Step(_) => 1,
     };
     match container {
         NodeTag::Row => row_weight,
@@ -312,7 +324,10 @@ fn default_weight(container: NodeTag, child: &Node) -> u16 {
         | NodeTag::TitleBlock
         | NodeTag::TitleCell
         | NodeTag::ProblemPoint
-        | NodeTag::View => 0,
+        | NodeTag::View
+        | NodeTag::ActorChip
+        | NodeTag::Phases
+        | NodeTag::Step => 0,
     }
 }
 
@@ -787,7 +802,7 @@ impl Builder<'_> {
             base_style(),
             Some(entry_node),
             TextSpec {
-                text: legend_label(entry.line, entry.tint),
+                text: canonical_legend_label(entry),
                 style_name: TextStyleName::LegendLabel,
                 line: None,
                 align: TextAlign::Start,
@@ -808,11 +823,16 @@ impl Builder<'_> {
         let mut record = Self::record(
             pointer,
             NodeTag::LegendEntry,
-            Some(line_key(entry.line, entry.tint).to_string()),
+            Some(legend_entry_key(entry)),
             Some(legend_index),
             entry_node,
         );
-        record.tint = line_tint(entry.line, entry.tint);
+        // A by-actor entry names no slot: its sample is drawn in the frame ink.
+        record.tint = if entry.by_actor {
+            None
+        } else {
+            line_tint(entry.line, entry.tint)
+        };
         record.parts = vec![
             PartRecord {
                 name: PartName::Swatch,
@@ -906,9 +926,13 @@ impl Builder<'_> {
             Node::Note(note) => {
                 self.add_note(note, pointer, parent_index, parent_container, placement)
             }
-            Node::Pipe(pipe) => {
-                self.add_pipe(pipe, pointer, parent_index, parent_container, placement)
-            }
+            Node::Pipe(pipe) => self.add_pipe(
+                (pipe, None),
+                pointer,
+                parent_index,
+                parent_container,
+                placement,
+            ),
             Node::Tee(tee) => self.add_tee(tee, pointer, parent_index, parent_container, placement),
             Node::Text(text) => {
                 self.add_text(text, pointer, parent_index, parent_container, placement)
@@ -927,6 +951,15 @@ impl Builder<'_> {
                 placement,
                 depth,
             ),
+            Node::Phases(phases) => {
+                self.add_phases(phases, pointer, parent_index, parent_container, placement)
+            }
+            // Vet keeps every Step inside a Phases node, which lays its Steps out itself.
+            Node::Step(_) => Err(LayoutError::Invalid(vec![Violation {
+                message: "a Step sits directly in a Phases node".to_string(),
+                pointer,
+                rule: VetRule::StepOutsidePhases,
+            }])),
         }
     }
 
@@ -1142,7 +1175,8 @@ impl Builder<'_> {
         apply_flex_placement(&mut style, placement);
         let zone_node = self.container(style, parent_container, &pointer)?;
         let label_source = pointer.child("label");
-        let tint = box_tint(kind, box_node.tint);
+        let actor_slot = self.actors.slot(box_node.actor.as_deref());
+        let tint = box_tint(kind, actor_slot.or(box_node.tint));
         let mut record = Self::record(
             pointer.clone(),
             NodeTag::Zone,
@@ -1418,6 +1452,7 @@ impl Builder<'_> {
         }
 
         let mut record = Self::record(pointer, NodeTag::Pcard, None, Some(parent_index), card);
+        record.tint = self.actors.slot(item.actor.as_deref());
         record.shape = Some(shape);
         record.parts = parts;
         self.push_record(record);
@@ -1532,9 +1567,10 @@ impl Builder<'_> {
         Ok(())
     }
 
+    /// A Pipe node, or with `tee` one of that Tee's arms, whose actor it inherits.
     fn add_pipe(
         &mut self,
-        pipe: &Pipe,
+        (pipe, tee): (&Pipe, Option<&Tee>),
         pointer: NodePointer,
         parent_index: usize,
         parent_container: NodeId,
@@ -1723,14 +1759,19 @@ impl Builder<'_> {
             text_leaf: None,
         });
 
+        let tint = match tee {
+            Some(tee) => self.actors.slot(self.actors.arm_actor(tee, pipe)),
+            None => self.actors.slot(self.actors.pipe_actor(pipe)),
+        }
+        .or(pipe.tint);
         let mut record = Self::record(
             pointer,
             NodeTag::Pipe,
-            Some(line_key(pipe.line, pipe.tint).to_string()),
+            Some(line_key(pipe.line, tint).to_string()),
             Some(parent_index),
             pipe_node,
         );
-        record.tint = line_tint(pipe.line, pipe.tint);
+        record.tint = line_tint(pipe.line, tint);
         record.parts = parts;
         record.arrow_ends = arrow_ends(pipe.arrow, horizontal);
         record.pipe_form = Some(pipe.form);
@@ -1804,14 +1845,15 @@ impl Builder<'_> {
                 source: pointer.child("hub"),
             },
         )?;
+        let tint = self.actors.slot(self.actors.tee_actor(tee)).or(tee.tint);
         let mut record = Self::record(
             pointer.clone(),
             NodeTag::Tee,
-            Some(line_key(tee.line, tee.tint).to_string()),
+            Some(line_key(tee.line, tint).to_string()),
             Some(parent_index),
             tee_node,
         );
-        record.tint = line_tint(tee.line, tee.tint);
+        record.tint = line_tint(tee.line, tint);
         record.parts = vec![
             PartRecord {
                 name: PartName::Spine,
@@ -1835,7 +1877,7 @@ impl Builder<'_> {
         for (arm_index, (arm, row_line)) in tee.arms.iter().zip([1_i16, 3]).enumerate() {
             let TeeArm::Pipe(arm_pipe) = arm;
             self.add_pipe(
-                arm_pipe,
+                (arm_pipe, Some(tee)),
                 arms_pointer.index(arm_index),
                 tee_index,
                 tee_node,

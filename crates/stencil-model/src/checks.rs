@@ -1,9 +1,12 @@
 //! Check reports (section 6) and the geometry-free checks; icon-matches-product lives in
 //! `products`.
 
+use std::collections::BTreeSet;
+
 use crate::document::{Chrome, Line, Node, Page, PipeForm, line_tint};
 use crate::grammar::{GRAMMAR_REMEMBERED_MAX, Grammar};
 use crate::pointer::NodePointer;
+use crate::sheet::{PageActors, SheetList};
 use crate::walk::{NodeRef, body_nodes, text_fields};
 use crate::{LEGEND_ENTRIES_MAX, LINKS_MAX};
 
@@ -24,6 +27,7 @@ pub enum CheckName {
     PrintFit,
     IconMatchesProduct,
     DescriptionCoversDrawing,
+    KeysUsed,
 }
 
 impl CheckName {
@@ -45,6 +49,30 @@ impl CheckName {
             CheckName::PrintFit => "print-fit",
             CheckName::IconMatchesProduct => "icon-matches-product",
             CheckName::DescriptionCoversDrawing => "description-covers-drawing",
+            CheckName::KeysUsed => "keys-used",
+        }
+    }
+
+    /// True for a check whose surface exists on a design sheet only: it reports not
+    /// applicable on every other page, so its row lives in the sheet briefing.
+    pub fn is_sheet_only(self) -> bool {
+        match self {
+            CheckName::KeysUsed => true,
+            CheckName::ChildInsideContainer
+            | CheckName::SiblingsDoNotOverlap
+            | CheckName::TextFitsBox
+            | CheckName::RememberedConstants
+            | CheckName::LegendConsistency
+            | CheckName::LinksRouted
+            | CheckName::LinksAvoidBoxes
+            | CheckName::PipesLand
+            | CheckName::IsoLabelsClear
+            | CheckName::IsoLinksClear
+            | CheckName::IsoLinkEnds
+            | CheckName::IsoLinksApart
+            | CheckName::PrintFit
+            | CheckName::IconMatchesProduct
+            | CheckName::DescriptionCoversDrawing => false,
         }
     }
 
@@ -84,6 +112,8 @@ impl CheckName {
             (CheckName::IconMatchesProduct, false) => "items",
             (CheckName::DescriptionCoversDrawing, true) => "element",
             (CheckName::DescriptionCoversDrawing, false) => "elements",
+            (CheckName::KeysUsed, true) => "key",
+            (CheckName::KeysUsed, false) => "keys",
         }
     }
 }
@@ -196,36 +226,81 @@ pub fn remembered_constants(page: &Page, grammar: &Grammar) -> CheckReport {
     }
 }
 
-/// What legend consistency compares: a line, its effective tint and its form (section 13.1
-/// rule 8). A band and a tube of one line and tint are two looks, so two entries.
+/// What legend consistency compares: a line, its colour and its form (section 13.1 rule 8
+/// and section 14.2 rule 7). A band and a tube of one line and tint are two looks, so two
+/// entries; on a page with actors every use with an effective actor keys by actor.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct LegendKey {
     pub line: Line,
-    /// The effective tint: `line_tint` of the authored one.
-    pub tint: Option<u8>,
+    pub colour: KeyColour,
     pub form: PipeForm,
+}
+
+/// How a legend key names a line's colour: by its effective tint slot, or by the actor of
+/// each use, whose slot varies.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum KeyColour {
+    /// The effective tint: `line_tint` of the authored one.
+    Slot(Option<u8>),
+    ByActor,
 }
 
 impl LegendKey {
     pub fn new(line: Line, tint: Option<u8>, form: PipeForm) -> Self {
         LegendKey {
             line,
-            tint: line_tint(line, tint),
+            colour: KeyColour::Slot(line_tint(line, tint)),
             form,
         }
     }
 
-    /// The key in document terms, for example "line solid tint 2", "line gray" or "line
-    /// solid tint 4 form band".
+    /// The key of a use with an effective actor, or of a `by_actor` entry.
+    pub fn by_actor(line: Line, form: PipeForm) -> Self {
+        LegendKey {
+            line,
+            colour: KeyColour::ByActor,
+            form,
+        }
+    }
+
+    /// The effective tint of a slot key; None for a by-actor key and for gray and deny.
+    pub fn tint(self) -> Option<u8> {
+        match self.colour {
+            KeyColour::Slot(tint) => tint,
+            KeyColour::ByActor => None,
+        }
+    }
+
+    /// The key in document terms, for example "line solid tint 2", "line gray", "line
+    /// solid tint 4 form band" or "line solid by actor".
     fn describe(self) -> String {
-        let mut key = match self.tint {
-            Some(tint) => format!("line {} tint {tint}", self.line.as_str()),
-            None => format!("line {}", self.line.as_str()),
+        let mut key = match self.colour {
+            KeyColour::Slot(Some(tint)) => format!("line {} tint {tint}", self.line.as_str()),
+            KeyColour::Slot(None) => format!("line {}", self.line.as_str()),
+            KeyColour::ByActor => format!("line {} by actor", self.line.as_str()),
         };
         if self.form == PipeForm::Band {
             key.push_str(" form band");
         }
         key
+    }
+}
+
+/// The legend key of a line use: by actor when it has an effective actor that the page
+/// declares, else by its slot.
+fn use_key(line: Line, tint: Option<u8>, form: PipeForm, actor: Option<u8>) -> LegendKey {
+    match actor {
+        Some(_) => LegendKey::by_actor(line, form),
+        None => LegendKey::new(line, tint, form),
+    }
+}
+
+/// The legend key of an entry.
+pub fn entry_key(entry: &crate::document::LegendEntry) -> LegendKey {
+    if entry.by_actor {
+        LegendKey::by_actor(entry.line, entry.form)
+    } else {
+        LegendKey::new(entry.line, entry.tint, entry.form)
     }
 }
 
@@ -236,27 +311,33 @@ impl LegendKey {
 /// never vetted. A `chrome: none` page whose uses share one key may leave the legend empty
 /// (section 13.7 rule 3).
 pub fn legend_consistency(page: &Page) -> CheckReport {
+    let actors = PageActors::of(page);
     let mut uses: Vec<(NodePointer, LegendKey, &'static str)> = Vec::new();
+    let mut tee: Option<&crate::document::Tee> = None;
     for entry in body_nodes(page) {
         match entry.node {
             NodeRef::Node(Node::Pipe(pipe)) => {
+                let actor = actors.slot(actors.pipe_actor(pipe));
                 uses.push((
                     entry.pointer,
-                    LegendKey::new(pipe.line, pipe.tint, pipe.form),
+                    use_key(pipe.line, pipe.tint, pipe.form, actor),
                     "Pipe",
                 ));
             }
             NodeRef::TeeArm(arm) => {
+                let actor = tee.and_then(|tee| actors.slot(actors.arm_actor(tee, arm)));
                 uses.push((
                     entry.pointer,
-                    LegendKey::new(arm.line, arm.tint, arm.form),
+                    use_key(arm.line, arm.tint, arm.form, actor),
                     "Tee arm",
                 ));
             }
-            NodeRef::Node(Node::Tee(tee)) => {
+            NodeRef::Node(Node::Tee(tee_node)) => {
+                tee = Some(tee_node);
+                let actor = actors.slot(actors.tee_actor(tee_node));
                 uses.push((
                     entry.pointer,
-                    LegendKey::new(tee.line, tee.tint, PipeForm::Tube),
+                    use_key(tee_node.line, tee_node.tint, PipeForm::Tube, actor),
                     "Tee spine",
                 ));
             }
@@ -271,15 +352,18 @@ pub fn legend_consistency(page: &Page) -> CheckReport {
                 | Node::Text(_)
                 | Node::Callout(_)
                 | Node::Frame(_)
-                | Node::View(_),
+                | Node::View(_)
+                | Node::Phases(_)
+                | Node::Step(_),
             ) => {}
         }
     }
     let links_pointer = NodePointer::root().child("links");
     for (index, link) in page.links.iter().enumerate().take(LINKS_MAX + 1) {
+        let actor = actors.slot(actors.link_actor(link));
         uses.push((
             links_pointer.index(index),
-            LegendKey::new(link.line, link.tint, PipeForm::Tube),
+            use_key(link.line, link.tint, PipeForm::Tube, actor),
             "Link",
         ));
     }
@@ -289,7 +373,7 @@ pub fn legend_consistency(page: &Page) -> CheckReport {
         .legend
         .iter()
         .take(legend_examined)
-        .map(|legend_entry| LegendKey::new(legend_entry.line, legend_entry.tint, legend_entry.form))
+        .map(entry_key)
         .collect();
 
     let single_key_without_legend = page.chrome == Chrome::None
@@ -338,6 +422,84 @@ pub fn legend_consistency(page: &Page) -> CheckReport {
     CheckReport {
         check: CheckName::LegendConsistency,
         examined: count_as_u64(uses.len().saturating_add(legend_examined)),
+        defects,
+        not_applicable: None,
+    }
+}
+
+/// Every actor is a key (section 14.6): one defect per actor that no lane, carrier or
+/// attention item names. Not applicable on a page without actors.
+pub fn keys_used(page: &Page) -> CheckReport {
+    let actors: Vec<&str> = page
+        .actors
+        .iter()
+        .take(SheetList::Actors.max() + 1)
+        .map(|actor| actor.id.as_str())
+        .collect();
+    if actors.is_empty() {
+        return CheckReport::not_applicable(
+            CheckName::KeysUsed,
+            "page has no actors or keyed lists",
+        );
+    }
+    let mut named: BTreeSet<&str> = BTreeSet::new();
+    for entry in body_nodes(page) {
+        match entry.node {
+            NodeRef::Node(Node::Item(item)) => named.extend(item.actor.as_deref()),
+            NodeRef::Node(Node::Box(box_node)) => named.extend(box_node.actor.as_deref()),
+            NodeRef::Node(Node::Pipe(pipe)) | NodeRef::TeeArm(pipe) => {
+                named.extend(pipe.actor.as_deref());
+            }
+            NodeRef::Node(Node::Tee(tee)) => named.extend(tee.actor.as_deref()),
+            NodeRef::Node(Node::Phases(phases)) => {
+                named.extend(phases.lanes.iter().map(String::as_str));
+            }
+            NodeRef::Node(Node::Step(step)) => {
+                named.insert(step.lane.as_str());
+            }
+            NodeRef::Node(
+                Node::Row(_)
+                | Node::Col(_)
+                | Node::Lanes(_)
+                | Node::Fact(_)
+                | Node::Note(_)
+                | Node::Text(_)
+                | Node::Callout(_)
+                | Node::Frame(_)
+                | Node::View(_),
+            ) => {}
+        }
+    }
+    named.extend(
+        page.links
+            .iter()
+            .take(LINKS_MAX + 1)
+            .filter_map(|link| link.actor.as_deref()),
+    );
+    if let Some(sheet) = &page.sheet {
+        named.extend(
+            sheet
+                .attention
+                .items
+                .iter()
+                .filter_map(|item| item.actor.as_deref()),
+        );
+    }
+    let actors_pointer = SheetList::Actors.pointer();
+    let defects = actors
+        .iter()
+        .enumerate()
+        .filter(|(_, id)| !named.contains(**id))
+        .map(|(index, id)| Defect {
+            pointer: actors_pointer.index(index),
+            message: format!(
+                "actor \"{id}\" is never named by a lane, a node, a line or an attention item"
+            ),
+        })
+        .collect();
+    CheckReport {
+        check: CheckName::KeysUsed,
+        examined: count_as_u64(actors.len()),
         defects,
         not_applicable: None,
     }

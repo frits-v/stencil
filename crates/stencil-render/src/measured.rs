@@ -232,7 +232,18 @@ fn parts_json(parts: &[Part]) -> Map<String, Value> {
             | PartName::Paragraph
             | PartName::AttentionLead
             | PartName::AttentionText
-            | PartName::GroupCaption => {
+            | PartName::GroupCaption
+            | PartName::LaneBand
+            | PartName::LaneBar
+            | PartName::LaneName
+            | PartName::LaneText
+            | PartName::LaneRule
+            | PartName::PhaseHead
+            | PartName::PhaseNumeral
+            | PartName::PhaseTitle
+            | PartName::PhaseSeparator
+            | PartName::StepLine
+            | PartName::StackBack => {
                 let count = repeated.entry(part.name).or_insert(0);
                 *count += 1;
                 format!("{}/{}", part.name.as_str(), *count - 1)
