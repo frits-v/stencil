@@ -3,7 +3,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use crate::document::{
     AnswerParagraph, BUILTIN_GRAMMARS, BUILTIN_THEMES, CAPTION_SCALARS_MAX, Chrome, FACTS_MAX,
     LANES_MAX, Line, Link, Node, PHASE_COLUMNS_MAX, Page, Phases, PipeDir, Projection, Sheet, Step,
-    TINT_SLOTS, Tee, Text, WORDMARK_SCALARS_MAX, canvas_width, is_valid_id,
+    StepLook, TINT_SLOTS, Tee, Text, WORDMARK_SCALARS_MAX, canvas_width, is_valid_id,
 };
 use crate::grammar::{Grammar, IconPack, PAGE_PARENT};
 use crate::pointer::NodePointer;
@@ -92,11 +92,12 @@ pub enum VetRule {
     StepLaneUnknown,
     StepPhaseUnknown,
     StepSpanOutOfRange,
+    StepTextFill,
 }
 
 impl VetRule {
     /// The rules of section 14.3, in table order.
-    pub const SHEET: [VetRule; 25] = [
+    pub const SHEET: [VetRule; 26] = [
         VetRule::NeedsSheet,
         VetRule::SheetInIso,
         VetRule::SheetChromeNone,
@@ -122,6 +123,7 @@ impl VetRule {
         VetRule::StepLaneUnknown,
         VetRule::StepPhaseUnknown,
         VetRule::StepSpanOutOfRange,
+        VetRule::StepTextFill,
     ];
 
     /// Kebab-case name used on the CLI, as in section 1.3.
@@ -192,6 +194,7 @@ impl VetRule {
             VetRule::StepLaneUnknown => "step-lane-unknown",
             VetRule::StepPhaseUnknown => "step-phase-unknown",
             VetRule::StepSpanOutOfRange => "step-span-out-of-range",
+            VetRule::StepTextFill => "step-text-fill",
         }
     }
 }
@@ -718,8 +721,8 @@ fn check_phases(
     }
 }
 
-/// A Step's rules: it sits in a Phases node, in one of its lanes and phases, and its
-/// columns stay inside the phase.
+/// A Step's rules: it sits in a Phases node, in one of its lanes and phases, its columns
+/// stay inside the phase, and a text look sets no fill it would not draw.
 fn check_step(
     page: &Page,
     entry: &NodeEntry<'_>,
@@ -728,6 +731,13 @@ fn check_step(
     actors: &PageActors<'_>,
     violations: &mut Violations,
 ) {
+    if step.look == StepLook::Text && step.fill.is_some() {
+        violations.push(
+            entry.pointer.child("fill"),
+            VetRule::StepTextFill,
+            "a text Step draws no box, so it takes no fill".to_string(),
+        );
+    }
     let Some(phases) = parent else {
         violations.push(
             entry.pointer.clone(),

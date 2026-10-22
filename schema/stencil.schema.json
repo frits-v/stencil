@@ -305,6 +305,14 @@
         "y"
       ]
     },
+    "BandLook": {
+      "description": "A lane's band. wash: the actor's fill mixed halfway toward the paper, with the drafting\ngrid drawn over it. none: no band, so the paper and grid show; the bar, name and rules\nstay.",
+      "type": "string",
+      "enum": [
+        "wash",
+        "none"
+      ]
+    },
     "Bend": {
       "description": "The curve a routed link takes through a bend: a quarter circle, a cubic whose control\npoints both sit on the corner, which meets each leg with no jump in curvature, or a\nspline: a quadratic from the middle of one leg to the middle of the next with its control\npoint on the corner, so the whole route is one smooth curve.",
       "type": "string",
@@ -1258,6 +1266,10 @@
           "description": "A swimlane of a design sheet: a lane per actor top to bottom, phases left to right, and\nSteps placed by lane, phase and column. Lanes (section 13.6) is a sequence diagram on a\ntime axis and is unrelated.",
           "type": "object",
           "properties": {
+            "band": {
+              "description": "What each lane is drawn on.",
+              "$ref": "#/$defs/BandLook"
+            },
             "children": {
               "description": "Steps only.",
               "type": "array",
@@ -1293,6 +1305,17 @@
               "maxItems": 8,
               "minItems": 1
             },
+            "step_fill": {
+              "description": "The fill of every Step that sets none of its own; absent leaves each Step its look's.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/StepFill"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
             "tag": {
               "type": "string",
               "const": "Phases"
@@ -1316,6 +1339,17 @@
               "format": "uint8",
               "maximum": 6,
               "minimum": 1
+            },
+            "fill": {
+              "description": "What the box of the look is filled with; absent takes the parent's `step_fill`, and\nwithout one the look's own fill. A text look draws no box and takes none.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/StepFill"
+                },
+                {
+                  "type": "null"
+                }
+              ]
             },
             "id": {
               "type": [
@@ -1544,6 +1578,15 @@
         "right",
         "bottom",
         "left"
+      ]
+    },
+    "StepFill": {
+      "description": "What a Step's box is filled with. tint: the actor's fill. cell: the sheet's cell. none:\nno fill, so the lane and the grid show through.",
+      "type": "string",
+      "enum": [
+        "tint",
+        "cell",
+        "none"
       ]
     },
     "StepLook": {

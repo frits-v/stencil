@@ -125,6 +125,7 @@
               "title": "Review"
             }
           ],
+          "step_fill": "none",
           "children": [
             {
               "tag": "Step",
@@ -174,7 +175,8 @@
               "phase": "plan",
               "col": 2,
               "title": "Store plan version",
-              "look": "chip"
+              "look": "chip",
+              "fill": "tint"
             },
             {
               "tag": "Step",

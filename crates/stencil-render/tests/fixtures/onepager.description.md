@@ -60,27 +60,27 @@ Asynchronous evaluation. The API returns once a job is queued, and a slow clip n
 
 Subtitle: one trigger, from description to stored verdict. Note: a lane for each actor; time runs left to right.
 
-- Phases: lanes Operator, Trigger API, Clip worker, Evaluator; phases 1 Describe, 2 Plan and approve, 3 Evaluate each clip, 4 Review. `B1-E8` `/body/0/children/0`
-  - Step Describe the event. Lane Operator, phase 1 Describe, column 1. `B1-C2` `/body/0/children/0/children/0`
+- Phases: lanes Operator, Trigger API, Clip worker, Evaluator; phases 1 Describe, 2 Plan and approve, 3 Evaluate each clip, 4 Review; step fill none. `B1-E8` `/body/0/children/0`
+  - Step Describe the event. Lane Operator, phase 1 Describe, column 1, fill none. `B1-C2` `/body/0/children/0/children/0`
     - Line in plain language.
     - Line camera and hours.
   - Step nothing runs yet. Lane Trigger API, phase 1 Describe, column 1, look text. `C1-C2` `/body/0/children/0/children/1`
-  - Step Compile a plan. Lane Trigger API, phase 2 Plan and approve, column 1. `C2-C3` `/body/0/children/0/children/2`
+  - Step Compile a plan. Lane Trigger API, phase 2 Plan and approve, column 1, fill none. `C2-C3` `/body/0/children/0/children/2`
     - Line objects, conditions, frame rate.
     - Line plan version 1.
-  - Step Approve the plan. Lane Operator, phase 2 Plan and approve, column 2. `B3-C4` `/body/0/children/0/children/3`
+  - Step Approve the plan. Lane Operator, phase 2 Plan and approve, column 2, fill none. `B3-C4` `/body/0/children/0/children/3`
     - Line reads the plan, not the prompt.
-  - Step Store plan version. Lane Trigger API, phase 2 Plan and approve, column 2, look chip. `C3-C4` `/body/0/children/0/children/4`
-  - Step Clip arrives. Lane Clip worker, phase 3 Evaluate each clip, column 1. `D4-D5` `/body/0/children/0/children/5`
+  - Step Store plan version. Lane Trigger API, phase 2 Plan and approve, column 2, look chip, fill tint. `C3-C4` `/body/0/children/0/children/4`
+  - Step Clip arrives. Lane Clip worker, phase 3 Evaluate each clip, column 1, fill none. `D4-D5` `/body/0/children/0/children/5`
     - Line the arrival event names a finished clip.
-  - Step One job per clip. Lane Clip worker, phase 3 Evaluate each clip, column 2, look stack. `D6` `/body/0/children/0/children/6`
+  - Step One job per clip. Lane Clip worker, phase 3 Evaluate each clip, column 2, look stack, fill none. `D6` `/body/0/children/0/children/6`
     - Line fetch frames.
     - Line call the evaluator.
-  - Step Judge the frames. Lane Evaluator, phase 3 Evaluate each clip, column 2. `D6` `/body/0/children/0/children/7`
+  - Step Judge the frames. Lane Evaluator, phase 3 Evaluate each clip, column 2, fill none. `D6` `/body/0/children/0/children/7`
     - Line against the approved plan.
-  - Step Write the verdict. Lane Clip worker, phase 3 Evaluate each clip, column 3. `D6-D7` `/body/0/children/0/children/8`
+  - Step Write the verdict. Lane Clip worker, phase 3 Evaluate each clip, column 3, fill none. `D6-D7` `/body/0/children/0/children/8`
     - Line verdict, frames, plan version.
-  - Step Review verdicts. Lane Operator, phase 4 Review, column 1. `B7-C8` `/body/0/children/0/children/9`
+  - Step Review verdicts. Lane Operator, phase 4 Review, column 1, fill none. `B7-C8` `/body/0/children/0/children/9`
     - Line filter by trigger and time.
   - Step Replay over earlier clips. Lane Trigger API, phase 4 Review, column 1, look planned. `C7-C8` `/body/0/children/0/children/10`
   - Step A new model version re-plans every trigger. Lane Evaluator, phase 4 Review, column 1, look note. `D7-D8` `/body/0/children/0/children/11`

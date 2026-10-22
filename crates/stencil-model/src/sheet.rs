@@ -248,10 +248,14 @@ const ACTORS_VOCABULARY: [SurfaceVocabulary; 1] = [SurfaceVocabulary::Field {
     field: "actors",
 }];
 const VIEW_VOCABULARY: [SurfaceVocabulary; 1] = [SurfaceVocabulary::Tag("View")];
-const PHASES_VOCABULARY: [SurfaceVocabulary; 1] = [SurfaceVocabulary::Tag("Phases")];
-const STEP_VOCABULARY: [SurfaceVocabulary; 2] = [
+const PHASES_VOCABULARY: [SurfaceVocabulary; 2] = [
+    SurfaceVocabulary::Tag("Phases"),
+    SurfaceVocabulary::Definition("BandLook"),
+];
+const STEP_VOCABULARY: [SurfaceVocabulary; 3] = [
     SurfaceVocabulary::Tag("Step"),
     SurfaceVocabulary::Definition("StepLook"),
+    SurfaceVocabulary::Definition("StepFill"),
 ];
 const ACTOR_VOCABULARY: [SurfaceVocabulary; 5] = [
     SurfaceVocabulary::Field {

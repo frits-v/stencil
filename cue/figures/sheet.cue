@@ -89,6 +89,7 @@ onepager: gcp.#Page & {
 						{id: "evaluate", title: "Evaluate each clip"},
 						{id: "review", title: "Review"},
 					]
+					step_fill: "none"
 					children: [
 						{
 							tag:   "Step"
@@ -131,6 +132,7 @@ onepager: gcp.#Page & {
 							col:   2
 							title: "Store plan version"
 							look:  "chip"
+							fill:  "tint"
 						},
 						{
 							tag:   "Step"

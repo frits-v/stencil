@@ -611,6 +611,33 @@ fn a_step_past_column_6_is_refused() {
 }
 
 #[test]
+fn a_text_step_with_its_own_fill_is_refused() {
+    let mut document = actor_sheet_value();
+    document["body"][0]["children"][1]["children"][0]["look"] = json!("text");
+    document["body"][0]["children"][1]["children"][0]["fill"] = json!("tint");
+    assert_eq!(
+        violations(document),
+        one(
+            &format!("{STEP}/fill"),
+            "step-text-fill",
+            "a text Step draws no box, so it takes no fill"
+        )
+    );
+}
+
+#[test]
+fn a_text_step_under_a_phases_step_fill_and_a_box_step_with_a_fill_vet() {
+    let mut document = actor_sheet_value();
+    document["body"][0]["children"][1]["step_fill"] = json!("none");
+    document["body"][0]["children"][1]["band"] = json!("none");
+    document["body"][0]["children"][1]["children"][0]["look"] = json!("text");
+    assert_eq!(violations(document.clone()), Vec::new());
+    document["body"][0]["children"][1]["children"][0]["look"] = json!("box");
+    document["body"][0]["children"][1]["children"][0]["fill"] = json!("tint");
+    assert_eq!(violations(document), Vec::new());
+}
+
+#[test]
 fn a_phases_node_without_lanes_or_phases_is_refused() {
     let mut lanes = actor_sheet_value();
     lanes["body"][0]["children"][1]["lanes"] = json!([]);
@@ -698,6 +725,7 @@ fn every_sheet_rule_is_listed_in_table_order() {
             "step-lane-unknown",
             "step-phase-unknown",
             "step-span-out-of-range",
+            "step-text-fill",
         ]
     );
 }
@@ -805,7 +833,7 @@ fn every_section_14_vet_rule_has_a_cue_case() {
             non_empty,
             others.len()
         ),
-        (6, 8, 4, 22),
+        (6, 8, 4, 23),
         "surfaces, lists, non-empty lists and other rules examined"
     );
     assert_eq!(matched, expected.len());

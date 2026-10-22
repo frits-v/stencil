@@ -870,3 +870,74 @@ fn a_wrong_reference_is_a_defect() {
         )]
     );
 }
+
+/// The Phases line names a band other than the wash and a `step_fill`; a Step line names
+/// its fill when the Step sets one or takes one other than its look's, and never on a text
+/// look. With neither field set no fill is named.
+#[test]
+fn the_description_names_a_lane_band_and_a_step_fill_that_differ_from_the_look() {
+    let (mut page, _, _) = onepager();
+    let Some(Node::View(view)) = page.body.first_mut() else {
+        panic!("onepager opens with a View");
+    };
+    let Some(Node::Phases(phases)) = view.children.first_mut() else {
+        panic!("the Workflow view opens with a Phases node");
+    };
+    phases.band = stencil_model::BandLook::Wash;
+    phases.step_fill = None;
+    for child in &mut phases.children {
+        if let Node::Step(step) = child {
+            step.fill = None;
+        }
+    }
+    let default_page = page.clone();
+    let (_, default_text) = description_of(&default_page);
+    assert!(!default_text.contains("band "), "{default_text}");
+    assert!(!default_text.contains(", fill "), "{default_text}");
+    assert!(!default_text.contains("step fill"), "{default_text}");
+
+    let Some(Node::View(view)) = page.body.first_mut() else {
+        panic!("onepager opens with a View");
+    };
+    let Some(Node::Phases(phases)) = view.children.first_mut() else {
+        panic!("the Workflow view opens with a Phases node");
+    };
+    phases.band = stencil_model::BandLook::None;
+    phases.step_fill = Some(stencil_model::StepFill::None);
+    let mut chip_title = String::new();
+    for child in &mut phases.children {
+        if let Node::Step(step) = child
+            && step.look == stencil_model::StepLook::Chip
+        {
+            step.fill = Some(stencil_model::StepFill::Tint);
+            chip_title = step.title.clone();
+        }
+    }
+    let (_, text) = description_of(&page);
+    let phases_line = text
+        .lines()
+        .find(|line| line.starts_with("- Phases: "))
+        .unwrap();
+    assert!(
+        phases_line.contains("; band none; step fill none. `"),
+        "{phases_line}"
+    );
+    let step_lines: Vec<&str> = text
+        .lines()
+        .filter(|line| line.trim_start().starts_with("- Step "))
+        .collect();
+    assert_eq!(step_lines.len(), 12);
+    for line in step_lines {
+        // A text look takes no fill, and none is a note's and a planned Step's own.
+        if line.contains(", look text")
+            || line.contains(", look note")
+            || line.contains(", look planned")
+        {
+            assert!(!line.contains(", fill "), "{line}");
+        } else if line.contains(&chip_title) {
+            assert!(line.contains(", look chip, fill tint. `"), "{line}");
+        } else {
+            assert!(line.contains(", fill none. `"), "{line}");
+        }
+    }
+}

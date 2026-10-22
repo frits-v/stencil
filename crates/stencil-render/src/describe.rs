@@ -12,8 +12,8 @@ use stencil_model::checks::{CheckName, CheckReport, Defect};
 use stencil_model::pointer::NodePointer;
 use stencil_model::products::{item_shape, named_product};
 use stencil_model::{
-    Arrow, CalloutKind, Chrome, Grammar, KeyColour, LINKS_MAX, LegendKey, Line, ListKind, Node,
-    NodeRef, NoteKind, Page, PageActors, Phases, Pipe, PipeDir, PipeForm, Projection, Sheet,
+    Arrow, BandLook, CalloutKind, Chrome, Grammar, KeyColour, LINKS_MAX, LegendKey, Line, ListKind,
+    Node, NodeRef, NoteKind, Page, PageActors, Phases, Pipe, PipeDir, PipeForm, Projection, Sheet,
     SheetList, Step, StepLook, TINT_NAMES, Tee, body_nodes, canonical_legend_label, entry_key,
     line_key,
 };
@@ -583,9 +583,18 @@ impl<'a> Writer<'a> {
     }
 
     /// A Step's outline line: `Step <title>. Lane <actor>, phase <n> <title>, column <c>[ to
-    /// <d>][, look <look>].`
+    /// <d>][, look <look>][, fill <fill>].` The fill is named when the Step sets one or
+    /// when the one it takes differs from its look's.
     fn step_line(&self, step: &Step) -> String {
         let phases = self.phases_of(step);
+        let fill = step.fill_under(phases.and_then(|phases| phases.step_fill));
+        let fill_text = if step.look != StepLook::Text
+            && (step.fill.is_some() || fill != step.look.default_fill())
+        {
+            format!(", fill {}", fill.as_str())
+        } else {
+            String::new()
+        };
         let phase = phases.and_then(|phases| {
             phases
                 .phases
@@ -608,7 +617,7 @@ impl<'a> Writer<'a> {
             other => format!(", look {}", other.as_str()),
         };
         format!(
-            "Step {}. Lane {}, {phase_text}, {columns}{look}.",
+            "Step {}. Lane {}, {phase_text}, {columns}{look}{fill_text}.",
             escape_markdown(&step.title),
             escape_markdown(&self.actor_name(&step.lane))
         )
@@ -645,8 +654,15 @@ impl<'a> Writer<'a> {
             .iter()
             .map(|lane| escape_markdown(&self.actor_name(lane)))
             .collect();
+        let band = match phases.band {
+            BandLook::Wash => String::new(),
+            other => format!("; band {}", other.as_str()),
+        };
+        let step_fill = phases.step_fill.map_or(String::new(), |fill| {
+            format!("; step fill {}", fill.as_str())
+        });
         lines.push(format!(
-            "{indent}- Phases: lanes {}; phases {}. {}",
+            "{indent}- Phases: lanes {}; phases {}{band}{step_fill}. {}",
             lanes.join(", "),
             phase_titles(phases).join(", "),
             self.spans(&node.pointer)

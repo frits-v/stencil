@@ -14,9 +14,9 @@ use stencil_model::text::{FontFamily, FontWeight, TextStyleName};
 use base64::Engine as _;
 use stencil_model::text::TextMeasurer;
 use stencil_model::{
-    Arrow, Chrome, FactSource, IconName, LEGEND_ENTRIES_MAX, LINKS_MAX, LegendEntry, Node, NodeRef,
-    NoteKind, Page, PagePoint, Pipe, PipeDir, PipeForm, Projection, SheetList, StepLook, Theme,
-    body_nodes,
+    Arrow, BandLook, Chrome, FactSource, IconName, LEGEND_ENTRIES_MAX, LINKS_MAX, LegendEntry,
+    Node, NodeRef, NoteKind, Page, PagePoint, Pipe, PipeDir, PipeForm, Projection, SheetList,
+    StepFill, StepLook, Theme, body_nodes,
 };
 use stencil_text::{CosmicTextMeasurer, bundled_font};
 
@@ -536,8 +536,11 @@ struct PartContext<'a> {
     icon: Option<IconName>,
     /// Accent bar color of a Callout.
     accent: Option<&'a str>,
-    /// How a Step is drawn.
+    /// How a Step is drawn, and what its box is filled with.
     step_look: Option<StepLook>,
+    step_fill: Option<StepFill>,
+    /// What a Phases node draws its lanes on.
+    band: Option<BandLook>,
     /// A legend entry that names every actor's use of its line.
     by_actor: bool,
 }
@@ -554,6 +557,11 @@ struct SvgWriter<'a> {
     sheet: Option<SheetLook>,
     /// Each actor's tint slot, by actor id.
     actor_slots: Vec<(String, u8)>,
+    /// The page's `Grid` part, whose lines a washed lane band draws again over itself.
+    sheet_grid: Option<BoxRect>,
+    /// The `step_fill` of the Phases node last written; geometry order puts each Step
+    /// after its own Phases node and before the next one.
+    phases_step_fill: Option<StepFill>,
 }
 
 /// What the writer reads of a page's sheet.
@@ -573,6 +581,8 @@ impl<'a> SvgWriter<'a> {
             iso_zoom: 1.0,
             sheet: None,
             actor_slots: Vec::new(),
+            sheet_grid: None,
+            phases_step_fill: None,
         }
     }
 
@@ -685,6 +695,14 @@ impl<'a> SvgWriter<'a> {
             }
             .to_string());
         }
+        // On the actor's fill a Step's lines take the actor's ink, the pair the theme's
+        // `tints.<n>.ink on tints.<n>.fill` row holds.
+        if context.step_fill == Some(StepFill::Tint)
+            && context.step_look != Some(StepLook::Text)
+            && part.name == PartName::StepLine
+        {
+            return Ok(self.palette.sheet_color(palette::SheetInk::TintInk, slot));
+        }
         // A text-look Step is an aside: its title takes the secondary ink.
         if context.step_look == Some(StepLook::Text) && part.name == PartName::Text {
             return Ok(self
@@ -754,7 +772,8 @@ impl<'a> SvgWriter<'a> {
                     let look = node.container.ok_or_else(|| container_mismatch(node))?;
                     self.write_zone_box(depth, node.bounds, look, node.tint);
                 }
-                Node::View(_) | Node::Phases(_) | Node::Step(_) => {}
+                Node::Phases(phases) => self.phases_step_fill = phases.step_fill,
+                Node::View(_) | Node::Step(_) => {}
                 Node::Item(_) => {
                     let card_paint = self.palette.card();
                     match (self.sheet, node.tint) {
@@ -836,10 +855,14 @@ impl<'a> SvgWriter<'a> {
                 | Node::Frame(_)
                 | Node::Box(_)
                 | Node::Fact(_)
-                | Node::View(_)
-                | Node::Phases(_) => PartContext::default(),
+                | Node::View(_) => PartContext::default(),
+                Node::Phases(phases) => PartContext {
+                    band: Some(phases.band),
+                    ..PartContext::default()
+                },
                 Node::Step(step) => PartContext {
                     step_look: Some(step.look),
+                    step_fill: Some(step.fill_under(self.phases_step_fill)),
                     ..PartContext::default()
                 },
                 Node::Callout(callout) => PartContext {
@@ -966,16 +989,39 @@ impl<'a> SvgWriter<'a> {
         (context, slot): (PartContext<'a>, Option<u8>),
     ) -> Result<(), RenderError> {
         let bounds = part.bounds;
-        if let Some(look) = context.step_look
-            && part.name == PartName::Front
-        {
-            self.write_step_front(depth, bounds, look, slot);
+        if let (Some(look), Some(fill)) = (context.step_look, context.step_fill) {
+            match part.name {
+                PartName::Front => {
+                    self.write_step_front(depth, bounds, (look, fill), slot);
+                    return Ok(());
+                }
+                PartName::StackBack => {
+                    let nearer =
+                        sheet_in_front_of(node, part).ok_or_else(|| part_mismatch(node, part))?;
+                    self.write_stack_back(depth, (bounds, nearer), fill, slot);
+                    return Ok(());
+                }
+                _ => {}
+            }
+        }
+        if part.name == PartName::LaneBand && context.band == Some(BandLook::None) {
             return Ok(());
         }
         if self.sheet.is_some()
             && let Some(paint) = palette::sheet_part_paint(node.tag, part.name)
         {
             self.write_sheet_part(depth, bounds, paint, slot);
+            match part.name {
+                PartName::Grid => self.sheet_grid = Some(bounds),
+                // A washed band redraws the grid over itself, so the grid reads through
+                // the lane while the band keeps its colour between the lines.
+                PartName::LaneBand => {
+                    if let Some(grid) = self.sheet_grid {
+                        self.write_grid_lines(depth, grid, bounds);
+                    }
+                }
+                _ => {}
+            }
             return Ok(());
         }
         if context.by_actor && part.name == PartName::Swatch {
@@ -1165,30 +1211,34 @@ impl<'a> SvgWriter<'a> {
         Ok(())
     }
 
-    /// The box a Step's look outlines (section 14.5 rule 6): a box and a stack's front in
-    /// the cell with the actor's wire, a chip as a pill in the actor's fill, a note in the
-    /// rule with no fill, a planned Step dashed with no fill.
+    /// The colour a Step's fill paints: the actor's fill, the sheet cell, or nothing.
+    fn step_fill_color(&self, fill: StepFill, slot: Option<u8>) -> Option<String> {
+        use palette::SheetInk::{Cell, TintFill};
+        match fill {
+            StepFill::Tint => Some(self.palette.sheet_color(TintFill, slot)),
+            StepFill::Cell => Some(self.palette.sheet_color(Cell, slot)),
+            StepFill::None => None,
+        }
+    }
+
+    /// The box a Step's look outlines (section 14.5 rule 6), filled as `fill` says: a box
+    /// and a stack's front stroked in the actor's wire, a chip as a pill in the wire, a
+    /// note in the rule, a planned Step dashed in the wire. A text look draws no box.
     fn write_step_front(
         &mut self,
         depth: usize,
         bounds: BoxRect,
-        look: StepLook,
+        (look, fill): (StepLook, StepFill),
         slot: Option<u8>,
     ) {
-        use palette::SheetInk::{Cell, Rule, TintFill, TintWire};
+        use palette::SheetInk::{Rule, TintWire};
         let wire = self.palette.sheet_color(TintWire, slot);
-        let (fill, stroke_color, radius, dash) = match look {
-            StepLook::Box | StepLook::Stack => {
-                (Some(self.palette.sheet_color(Cell, slot)), wire, 0.0, None)
-            }
-            StepLook::Chip => (
-                Some(self.palette.sheet_color(TintFill, slot)),
-                wire,
-                bounds.height.min(bounds.width) / 2.0,
-                None,
-            ),
-            StepLook::Note => (None, self.palette.sheet_color(Rule, slot), 0.0, None),
-            StepLook::Planned => (None, wire, 0.0, Some(palette::PLANNED_DASH)),
+        let fill = self.step_fill_color(fill, slot);
+        let (stroke_color, radius, dash) = match look {
+            StepLook::Box | StepLook::Stack => (wire, 0.0, None),
+            StepLook::Chip => (wire, bounds.height.min(bounds.width) / 2.0, None),
+            StepLook::Note => (self.palette.sheet_color(Rule, slot), 0.0, None),
+            StepLook::Planned => (wire, 0.0, Some(palette::PLANNED_DASH)),
             StepLook::Text => return,
         };
         let stroke = Stroke {
@@ -1203,16 +1253,59 @@ impl<'a> SvgWriter<'a> {
                 self.line(
                     depth,
                     &format!(
-                        r#"<rect x="{}" y="{}" width="{}" height="{}" fill="none"{} stroke-dasharray="{dash}"/>"#,
+                        r#"<rect x="{}" y="{}" width="{}" height="{}" fill="{}"{} stroke-dasharray="{dash}"/>"#,
                         format_number(rect.x),
                         format_number(rect.y),
                         format_number(rect.width),
                         format_number(rect.height),
+                        fill.as_deref().unwrap_or("none"),
                         stroke_attributes(stroke)
                     ),
                 );
             }
         }
+    }
+
+    /// One sheet behind a stack's front (section 14.5 rule 6). Filled, it is a rect in the
+    /// fill with the actor's wire, which the nearer sheet covers in part. Unfilled, nothing
+    /// would cover its edges inside the nearer sheet, so it draws only the edges that stand
+    /// clear of it: up its left side from the nearer sheet's top, along its top, down its
+    /// right side, and back along its bottom to the nearer sheet's right edge.
+    fn write_stack_back(
+        &mut self,
+        depth: usize,
+        (bounds, nearer): (BoxRect, BoxRect),
+        fill: StepFill,
+        slot: Option<u8>,
+    ) {
+        let wire = self.palette.sheet_color(palette::SheetInk::TintWire, slot);
+        let stroke = Stroke {
+            width_px: palette::STEP_BORDER_PX,
+            line: LineStyle::Solid,
+            color: &wire,
+        };
+        if let Some(fill) = self.step_fill_color(fill, slot) {
+            self.write_rect(depth, bounds, 0.0, Some(&fill), Some(stroke));
+            return;
+        }
+        let rect = inset_rect(bounds, stroke.width_px / 2.0);
+        let nearer = inset_rect(nearer, stroke.width_px / 2.0);
+        let path = format!(
+            "M {} {} V {} H {} V {} H {}",
+            format_number(rect.x),
+            format_number(nearer.y.max(rect.y)),
+            format_number(rect.y),
+            format_number(rect.right()),
+            format_number(rect.bottom()),
+            format_number(nearer.right().min(rect.right())),
+        );
+        self.line(
+            depth,
+            &format!(
+                r#"<path d="{path}" fill="none"{}/>"#,
+                stroke_attributes(stroke)
+            ),
+        );
     }
 
     /// One sheet part by its paint row: a rect, a line along its long axis, a circle, or
@@ -1301,17 +1394,35 @@ impl<'a> SvgWriter<'a> {
     /// top-left corner, every fifth in the major color, drawn as one path per color. A
     /// theme without a grid draws nothing.
     fn write_sheet_grid(&mut self, depth: usize, bounds: BoxRect) {
+        self.write_grid_lines(depth, bounds, bounds);
+    }
+
+    /// The lines of the drafting grid `grid` that fall inside `clip`, each cut to it: the
+    /// whole grid when `clip` is the grid, and the grid over a lane band when it is the
+    /// band. Lines keep their place and colour from the grid's own corner, so the lines
+    /// over a band continue the lines around it.
+    fn write_grid_lines(&mut self, depth: usize, grid: BoxRect, clip: BoxRect) {
         let Some((minor, major)) = self.palette.sheet_grid() else {
             return;
         };
+        let left = clip.x.max(grid.x);
+        let right = clip.right().min(grid.right());
+        let top = clip.y.max(grid.y);
+        let bottom = clip.bottom().min(grid.bottom());
+        if left >= right || top >= bottom {
+            return;
+        }
         let mut minor_path = String::new();
         let mut major_path = String::new();
-        let columns = (bounds.width / SHEET_GRID_STEP_PX).ceil() as usize;
-        let rows = (bounds.height / SHEET_GRID_STEP_PX).ceil() as usize;
+        let columns = (grid.width / SHEET_GRID_STEP_PX).ceil() as usize;
+        let rows = (grid.height / SHEET_GRID_STEP_PX).ceil() as usize;
         for step in 1..columns.min(SHEET_GRID_LINES_MAX) {
-            let x = bounds.x + step as f32 * SHEET_GRID_STEP_PX;
-            if x >= bounds.right() {
+            let x = grid.x + step as f32 * SHEET_GRID_STEP_PX;
+            if x >= right {
                 break;
+            }
+            if x < left {
+                continue;
             }
             let path = if step % SHEET_GRID_MAJOR_EVERY == 0 {
                 &mut major_path
@@ -1321,14 +1432,17 @@ impl<'a> SvgWriter<'a> {
             path.push_str(&format!(
                 "M {} {} V {} ",
                 format_number(x),
-                format_number(bounds.y),
-                format_number(bounds.bottom())
+                format_number(top),
+                format_number(bottom)
             ));
         }
         for step in 1..rows.min(SHEET_GRID_LINES_MAX) {
-            let y = bounds.y + step as f32 * SHEET_GRID_STEP_PX;
-            if y >= bounds.bottom() {
+            let y = grid.y + step as f32 * SHEET_GRID_STEP_PX;
+            if y >= bottom {
                 break;
+            }
+            if y < top {
+                continue;
             }
             let path = if step % SHEET_GRID_MAJOR_EVERY == 0 {
                 &mut major_path
@@ -1337,9 +1451,9 @@ impl<'a> SvgWriter<'a> {
             };
             path.push_str(&format!(
                 "M {} {} H {} ",
-                format_number(bounds.x),
+                format_number(left),
                 format_number(y),
-                format_number(bounds.right())
+                format_number(right)
             ));
         }
         for (path, color) in [(minor_path, minor), (major_path, major)] {
@@ -2024,6 +2138,20 @@ fn escape_xml(text: &str) -> String {
         }
     }
     escaped
+}
+
+/// The sheet drawn right after a stack's back sheet `part`: the next back sheet or the
+/// front, which covers it in part.
+fn sheet_in_front_of(node: &NodeGeometry, part: &Part) -> Option<BoxRect> {
+    let index = node
+        .parts
+        .iter()
+        .position(|candidate| std::ptr::eq(candidate, part))?;
+    node.parts
+        .iter()
+        .skip(index + 1)
+        .find(|candidate| matches!(candidate.name, PartName::StackBack | PartName::Front))
+        .map(|candidate| candidate.bounds)
 }
 
 #[cfg(test)]

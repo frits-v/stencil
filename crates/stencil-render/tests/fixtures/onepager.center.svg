@@ -186,12 +186,20 @@
         <text x="1308.65" y="348.77" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">a lane for each actor; time runs left to right</text>
         <g data-id="/body/0/children/0" data-tag="Phases">
           <rect x="50" y="396.4" width="1500" height="125" fill="#FDFCE5"/>
+          <path d="M 53.5 396.4 V 521.4 M 73.5 396.4 V 521.4 M 93.5 396.4 V 521.4 M 113.5 396.4 V 521.4 M 153.5 396.4 V 521.4 M 173.5 396.4 V 521.4 M 193.5 396.4 V 521.4 M 213.5 396.4 V 521.4 M 253.5 396.4 V 521.4 M 273.5 396.4 V 521.4 M 293.5 396.4 V 521.4 M 313.5 396.4 V 521.4 M 353.5 396.4 V 521.4 M 373.5 396.4 V 521.4 M 393.5 396.4 V 521.4 M 413.5 396.4 V 521.4 M 453.5 396.4 V 521.4 M 473.5 396.4 V 521.4 M 493.5 396.4 V 521.4 M 513.5 396.4 V 521.4 M 553.5 396.4 V 521.4 M 573.5 396.4 V 521.4 M 593.5 396.4 V 521.4 M 613.5 396.4 V 521.4 M 653.5 396.4 V 521.4 M 673.5 396.4 V 521.4 M 693.5 396.4 V 521.4 M 713.5 396.4 V 521.4 M 753.5 396.4 V 521.4 M 773.5 396.4 V 521.4 M 793.5 396.4 V 521.4 M 813.5 396.4 V 521.4 M 853.5 396.4 V 521.4 M 873.5 396.4 V 521.4 M 893.5 396.4 V 521.4 M 913.5 396.4 V 521.4 M 953.5 396.4 V 521.4 M 973.5 396.4 V 521.4 M 993.5 396.4 V 521.4 M 1013.5 396.4 V 521.4 M 1053.5 396.4 V 521.4 M 1073.5 396.4 V 521.4 M 1093.5 396.4 V 521.4 M 1113.5 396.4 V 521.4 M 1153.5 396.4 V 521.4 M 1173.5 396.4 V 521.4 M 1193.5 396.4 V 521.4 M 1213.5 396.4 V 521.4 M 1253.5 396.4 V 521.4 M 1273.5 396.4 V 521.4 M 1293.5 396.4 V 521.4 M 1313.5 396.4 V 521.4 M 1353.5 396.4 V 521.4 M 1373.5 396.4 V 521.4 M 1393.5 396.4 V 521.4 M 1413.5 396.4 V 521.4 M 1453.5 396.4 V 521.4 M 1473.5 396.4 V 521.4 M 1493.5 396.4 V 521.4 M 1513.5 396.4 V 521.4 M 50 413.5 H 1550 M 50 453.5 H 1550 M 50 473.5 H 1550 M 50 493.5 H 1550 M 50 513.5 H 1550" fill="none" stroke="#F4F5F6" stroke-width="1"/>
+          <path d="M 133.5 396.4 V 521.4 M 233.5 396.4 V 521.4 M 333.5 396.4 V 521.4 M 433.5 396.4 V 521.4 M 533.5 396.4 V 521.4 M 633.5 396.4 V 521.4 M 733.5 396.4 V 521.4 M 833.5 396.4 V 521.4 M 933.5 396.4 V 521.4 M 1033.5 396.4 V 521.4 M 1133.5 396.4 V 521.4 M 1233.5 396.4 V 521.4 M 1333.5 396.4 V 521.4 M 1433.5 396.4 V 521.4 M 1533.5 396.4 V 521.4 M 50 433.5 H 1550" fill="none" stroke="#E9EAEC" stroke-width="1"/>
           <rect x="50" y="396.4" width="4" height="125" fill="#A36E14"/>
           <rect x="50" y="521.4" width="1500" height="110" fill="#E9F1FE"/>
+          <path d="M 53.5 521.4 V 631.4 M 73.5 521.4 V 631.4 M 93.5 521.4 V 631.4 M 113.5 521.4 V 631.4 M 153.5 521.4 V 631.4 M 173.5 521.4 V 631.4 M 193.5 521.4 V 631.4 M 213.5 521.4 V 631.4 M 253.5 521.4 V 631.4 M 273.5 521.4 V 631.4 M 293.5 521.4 V 631.4 M 313.5 521.4 V 631.4 M 353.5 521.4 V 631.4 M 373.5 521.4 V 631.4 M 393.5 521.4 V 631.4 M 413.5 521.4 V 631.4 M 453.5 521.4 V 631.4 M 473.5 521.4 V 631.4 M 493.5 521.4 V 631.4 M 513.5 521.4 V 631.4 M 553.5 521.4 V 631.4 M 573.5 521.4 V 631.4 M 593.5 521.4 V 631.4 M 613.5 521.4 V 631.4 M 653.5 521.4 V 631.4 M 673.5 521.4 V 631.4 M 693.5 521.4 V 631.4 M 713.5 521.4 V 631.4 M 753.5 521.4 V 631.4 M 773.5 521.4 V 631.4 M 793.5 521.4 V 631.4 M 813.5 521.4 V 631.4 M 853.5 521.4 V 631.4 M 873.5 521.4 V 631.4 M 893.5 521.4 V 631.4 M 913.5 521.4 V 631.4 M 953.5 521.4 V 631.4 M 973.5 521.4 V 631.4 M 993.5 521.4 V 631.4 M 1013.5 521.4 V 631.4 M 1053.5 521.4 V 631.4 M 1073.5 521.4 V 631.4 M 1093.5 521.4 V 631.4 M 1113.5 521.4 V 631.4 M 1153.5 521.4 V 631.4 M 1173.5 521.4 V 631.4 M 1193.5 521.4 V 631.4 M 1213.5 521.4 V 631.4 M 1253.5 521.4 V 631.4 M 1273.5 521.4 V 631.4 M 1293.5 521.4 V 631.4 M 1313.5 521.4 V 631.4 M 1353.5 521.4 V 631.4 M 1373.5 521.4 V 631.4 M 1393.5 521.4 V 631.4 M 1413.5 521.4 V 631.4 M 1453.5 521.4 V 631.4 M 1473.5 521.4 V 631.4 M 1493.5 521.4 V 631.4 M 1513.5 521.4 V 631.4 M 50 553.5 H 1550 M 50 573.5 H 1550 M 50 593.5 H 1550 M 50 613.5 H 1550" fill="none" stroke="#F4F5F6" stroke-width="1"/>
+          <path d="M 133.5 521.4 V 631.4 M 233.5 521.4 V 631.4 M 333.5 521.4 V 631.4 M 433.5 521.4 V 631.4 M 533.5 521.4 V 631.4 M 633.5 521.4 V 631.4 M 733.5 521.4 V 631.4 M 833.5 521.4 V 631.4 M 933.5 521.4 V 631.4 M 1033.5 521.4 V 631.4 M 1133.5 521.4 V 631.4 M 1233.5 521.4 V 631.4 M 1333.5 521.4 V 631.4 M 1433.5 521.4 V 631.4 M 1533.5 521.4 V 631.4 M 50 533.5 H 1550" fill="none" stroke="#E9EAEC" stroke-width="1"/>
           <rect x="50" y="521.4" width="4" height="110" fill="#1A73E8"/>
           <rect x="50" y="631.4" width="1500" height="101" fill="#F2FBF1"/>
+          <path d="M 53.5 631.4 V 732.4 M 73.5 631.4 V 732.4 M 93.5 631.4 V 732.4 M 113.5 631.4 V 732.4 M 153.5 631.4 V 732.4 M 173.5 631.4 V 732.4 M 193.5 631.4 V 732.4 M 213.5 631.4 V 732.4 M 253.5 631.4 V 732.4 M 273.5 631.4 V 732.4 M 293.5 631.4 V 732.4 M 313.5 631.4 V 732.4 M 353.5 631.4 V 732.4 M 373.5 631.4 V 732.4 M 393.5 631.4 V 732.4 M 413.5 631.4 V 732.4 M 453.5 631.4 V 732.4 M 473.5 631.4 V 732.4 M 493.5 631.4 V 732.4 M 513.5 631.4 V 732.4 M 553.5 631.4 V 732.4 M 573.5 631.4 V 732.4 M 593.5 631.4 V 732.4 M 613.5 631.4 V 732.4 M 653.5 631.4 V 732.4 M 673.5 631.4 V 732.4 M 693.5 631.4 V 732.4 M 713.5 631.4 V 732.4 M 753.5 631.4 V 732.4 M 773.5 631.4 V 732.4 M 793.5 631.4 V 732.4 M 813.5 631.4 V 732.4 M 853.5 631.4 V 732.4 M 873.5 631.4 V 732.4 M 893.5 631.4 V 732.4 M 913.5 631.4 V 732.4 M 953.5 631.4 V 732.4 M 973.5 631.4 V 732.4 M 993.5 631.4 V 732.4 M 1013.5 631.4 V 732.4 M 1053.5 631.4 V 732.4 M 1073.5 631.4 V 732.4 M 1093.5 631.4 V 732.4 M 1113.5 631.4 V 732.4 M 1153.5 631.4 V 732.4 M 1173.5 631.4 V 732.4 M 1193.5 631.4 V 732.4 M 1213.5 631.4 V 732.4 M 1253.5 631.4 V 732.4 M 1273.5 631.4 V 732.4 M 1293.5 631.4 V 732.4 M 1313.5 631.4 V 732.4 M 1353.5 631.4 V 732.4 M 1373.5 631.4 V 732.4 M 1393.5 631.4 V 732.4 M 1413.5 631.4 V 732.4 M 1453.5 631.4 V 732.4 M 1473.5 631.4 V 732.4 M 1493.5 631.4 V 732.4 M 1513.5 631.4 V 732.4 M 50 653.5 H 1550 M 50 673.5 H 1550 M 50 693.5 H 1550 M 50 713.5 H 1550" fill="none" stroke="#F4F5F6" stroke-width="1"/>
+          <path d="M 133.5 631.4 V 732.4 M 233.5 631.4 V 732.4 M 333.5 631.4 V 732.4 M 433.5 631.4 V 732.4 M 533.5 631.4 V 732.4 M 633.5 631.4 V 732.4 M 733.5 631.4 V 732.4 M 833.5 631.4 V 732.4 M 933.5 631.4 V 732.4 M 1033.5 631.4 V 732.4 M 1133.5 631.4 V 732.4 M 1233.5 631.4 V 732.4 M 1333.5 631.4 V 732.4 M 1433.5 631.4 V 732.4 M 1533.5 631.4 V 732.4 M 50 633.5 H 1550" fill="none" stroke="#E9EAEC" stroke-width="1"/>
           <rect x="50" y="631.4" width="4" height="101" fill="#497938"/>
           <rect x="50" y="732.4" width="1500" height="95" fill="#F7F5FF"/>
+          <path d="M 53.5 732.4 V 827.4 M 73.5 732.4 V 827.4 M 93.5 732.4 V 827.4 M 113.5 732.4 V 827.4 M 153.5 732.4 V 827.4 M 173.5 732.4 V 827.4 M 193.5 732.4 V 827.4 M 213.5 732.4 V 827.4 M 253.5 732.4 V 827.4 M 273.5 732.4 V 827.4 M 293.5 732.4 V 827.4 M 313.5 732.4 V 827.4 M 353.5 732.4 V 827.4 M 373.5 732.4 V 827.4 M 393.5 732.4 V 827.4 M 413.5 732.4 V 827.4 M 453.5 732.4 V 827.4 M 473.5 732.4 V 827.4 M 493.5 732.4 V 827.4 M 513.5 732.4 V 827.4 M 553.5 732.4 V 827.4 M 573.5 732.4 V 827.4 M 593.5 732.4 V 827.4 M 613.5 732.4 V 827.4 M 653.5 732.4 V 827.4 M 673.5 732.4 V 827.4 M 693.5 732.4 V 827.4 M 713.5 732.4 V 827.4 M 753.5 732.4 V 827.4 M 773.5 732.4 V 827.4 M 793.5 732.4 V 827.4 M 813.5 732.4 V 827.4 M 853.5 732.4 V 827.4 M 873.5 732.4 V 827.4 M 893.5 732.4 V 827.4 M 913.5 732.4 V 827.4 M 953.5 732.4 V 827.4 M 973.5 732.4 V 827.4 M 993.5 732.4 V 827.4 M 1013.5 732.4 V 827.4 M 1053.5 732.4 V 827.4 M 1073.5 732.4 V 827.4 M 1093.5 732.4 V 827.4 M 1113.5 732.4 V 827.4 M 1153.5 732.4 V 827.4 M 1173.5 732.4 V 827.4 M 1193.5 732.4 V 827.4 M 1213.5 732.4 V 827.4 M 1253.5 732.4 V 827.4 M 1273.5 732.4 V 827.4 M 1293.5 732.4 V 827.4 M 1313.5 732.4 V 827.4 M 1353.5 732.4 V 827.4 M 1373.5 732.4 V 827.4 M 1393.5 732.4 V 827.4 M 1413.5 732.4 V 827.4 M 1453.5 732.4 V 827.4 M 1473.5 732.4 V 827.4 M 1493.5 732.4 V 827.4 M 1513.5 732.4 V 827.4 M 50 753.5 H 1550 M 50 773.5 H 1550 M 50 793.5 H 1550 M 50 813.5 H 1550" fill="none" stroke="#F4F5F6" stroke-width="1"/>
+          <path d="M 133.5 732.4 V 827.4 M 233.5 732.4 V 827.4 M 333.5 732.4 V 827.4 M 433.5 732.4 V 827.4 M 533.5 732.4 V 827.4 M 633.5 732.4 V 827.4 M 733.5 732.4 V 827.4 M 833.5 732.4 V 827.4 M 933.5 732.4 V 827.4 M 1033.5 732.4 V 827.4 M 1133.5 732.4 V 827.4 M 1233.5 732.4 V 827.4 M 1333.5 732.4 V 827.4 M 1433.5 732.4 V 827.4 M 1533.5 732.4 V 827.4 M 50 733.5 H 1550" fill="none" stroke="#E9EAEC" stroke-width="1"/>
           <rect x="50" y="732.4" width="4" height="95" fill="#593894"/>
           <line x1="50" y1="521.9" x2="1550" y2="521.9" stroke="#DADCE0" stroke-width="1"/>
           <line x1="50" y1="631.9" x2="1550" y2="631.9" stroke="#DADCE0" stroke-width="1"/>
@@ -223,7 +231,7 @@
           <text x="1354.26" y="386.13" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#202124">4</text>
           <text x="1374.66" y="385.4" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">REVIEW</text>
           <g data-id="/body/0/children/0/children/0" data-tag="Step">
-            <rect x="224.63" y="413.02" width="111.19" height="91.75" fill="#FFFFFF" stroke="#A36E14" stroke-width="1.25"/>
+            <rect x="224.63" y="413.02" width="111.19" height="91.75" fill="none" stroke="#A36E14" stroke-width="1.25"/>
             <text x="233" y="432.27" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#5A3900">Describe the</text>
             <text x="233" y="447.27" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#5A3900">event</text>
             <text x="233" y="464.08" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">in plain language</text>
@@ -234,14 +242,14 @@
             <text x="233" y="580.58" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">nothing runs yet</text>
           </g>
           <g data-id="/body/0/children/0/children/2" data-tag="Step">
-            <rect x="385.07" y="538.03" width="152.52" height="76.75" fill="#FFFFFF" stroke="#1A73E8" stroke-width="1.25"/>
+            <rect x="385.07" y="538.03" width="152.52" height="76.75" fill="none" stroke="#1A73E8" stroke-width="1.25"/>
             <text x="393.44" y="557.27" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#5F6368">Compile a plan</text>
             <text x="393.44" y="574.08" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">objects, conditions,</text>
             <text x="393.44" y="589.08" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">frame rate</text>
             <text x="393.44" y="604.08" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">plan version 1</text>
           </g>
           <g data-id="/body/0/children/0/children/3" data-tag="Step">
-            <rect x="586.83" y="413.02" width="148.71" height="91.75" fill="#FFFFFF" stroke="#A36E14" stroke-width="1.25"/>
+            <rect x="586.83" y="413.02" width="148.71" height="91.75" fill="none" stroke="#A36E14" stroke-width="1.25"/>
             <text x="595.21" y="432.27" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#5A3900">Approve the plan</text>
             <text x="595.21" y="449.08" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">reads the plan, not the</text>
             <text x="595.21" y="464.08" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">prompt</text>
@@ -251,33 +259,33 @@
             <text x="595.21" y="580.77" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#5F6368">Store plan version</text>
           </g>
           <g data-id="/body/0/children/0/children/5" data-tag="Step">
-            <rect x="784.8" y="648.03" width="158.82" height="67.75" fill="#FFFFFF" stroke="#497938" stroke-width="1.25"/>
+            <rect x="784.8" y="648.03" width="158.82" height="67.75" fill="none" stroke="#497938" stroke-width="1.25"/>
             <text x="793.17" y="667.27" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#26481B">Clip arrives</text>
             <text x="793.17" y="684.08" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">the arrival event names a</text>
             <text x="793.17" y="699.08" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">finished clip</text>
           </g>
           <g data-id="/body/0/children/0/children/6" data-tag="Step">
-            <rect x="1000.87" y="648.03" width="126.6" height="61.75" fill="#FFFFFF" stroke="#497938" stroke-width="1.25"/>
-            <rect x="996.87" y="651.03" width="126.6" height="61.75" fill="#FFFFFF" stroke="#497938" stroke-width="1.25"/>
-            <rect x="992.87" y="654.03" width="126.6" height="61.75" fill="#FFFFFF" stroke="#497938" stroke-width="1.25"/>
+            <path d="M 1000.87 651.03 V 648.03 H 1127.47 V 709.78 H 1123.47" fill="none" stroke="#497938" stroke-width="1.25"/>
+            <path d="M 996.87 654.03 V 651.03 H 1123.47 V 712.78 H 1119.47" fill="none" stroke="#497938" stroke-width="1.25"/>
+            <rect x="992.87" y="654.03" width="126.6" height="61.75" fill="none" stroke="#497938" stroke-width="1.25"/>
             <text x="1001.24" y="673.27" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#26481B">One job per clip</text>
             <text x="1001.24" y="690.08" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">fetch frames</text>
             <text x="1001.24" y="705.08" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">call the evaluator</text>
           </g>
           <g data-id="/body/0/children/0/children/7" data-tag="Step">
-            <rect x="992.87" y="749.03" width="134.6" height="61.75" fill="#FFFFFF" stroke="#593894" stroke-width="1.25"/>
+            <rect x="992.87" y="749.03" width="134.6" height="61.75" fill="none" stroke="#593894" stroke-width="1.25"/>
             <text x="1001.24" y="768.27" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#4B3275">Judge the frames</text>
             <text x="1001.24" y="785.08" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">against the approved</text>
             <text x="1001.24" y="800.08" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">plan</text>
           </g>
           <g data-id="/body/0/children/0/children/8" data-tag="Step">
-            <rect x="1176.72" y="648.03" width="139.31" height="67.75" fill="#FFFFFF" stroke="#497938" stroke-width="1.25"/>
+            <rect x="1176.72" y="648.03" width="139.31" height="67.75" fill="none" stroke="#497938" stroke-width="1.25"/>
             <text x="1185.1" y="667.27" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#26481B">Write the verdict</text>
             <text x="1185.1" y="684.08" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">verdict, frames, plan</text>
             <text x="1185.1" y="699.08" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">version</text>
           </g>
           <g data-id="/body/0/children/0/children/9" data-tag="Step">
-            <rect x="1365.28" y="413.02" width="160.09" height="91.75" fill="#FFFFFF" stroke="#A36E14" stroke-width="1.25"/>
+            <rect x="1365.28" y="413.02" width="160.09" height="91.75" fill="none" stroke="#A36E14" stroke-width="1.25"/>
             <text x="1373.66" y="432.27" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#5A3900">Review verdicts</text>
             <text x="1373.66" y="449.08" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">filter by trigger and time</text>
           </g>
