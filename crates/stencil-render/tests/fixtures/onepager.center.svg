@@ -1,5 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1640.6" viewBox="0 0 1600 1640.6">
-  <rect x="0" y="0" width="1600" height="1640.6" fill="#FFFFFF"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1927.2" viewBox="0 0 1600 1927.2">
+  <rect x="0" y="0" width="1600" height="1927.2" fill="#FFFFFF"/>
   <defs>
     <marker id="arrow-center-gray" viewBox="0 0 10 8" refX="10" refY="4" markerWidth="10" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto"><path d="M 0 0 L 10 4 L 0 8 Z" fill="#5F6368"/></marker>
     <marker id="arrow-center-blue" viewBox="0 0 10 8" refX="10" refY="4" markerWidth="10" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto"><path d="M 0 0 L 10 4 L 0 8 Z" fill="#1A73E8"/></marker>
@@ -10,34 +10,34 @@
     <marker id="arrow-center-deny" viewBox="0 0 10 8" refX="10" refY="4" markerWidth="10" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto"><path d="M 0 0 L 10 4 L 0 8 Z" fill="#C5221F"/></marker>
   </defs>
   <g data-id="" data-tag="Page">
-    <rect x="12.5" y="12.5" width="1575" height="1615.6" fill="#FFFFFF" stroke="#202124" stroke-width="1"/>
-    <rect x="32.75" y="32.75" width="1534.5" height="1575.1" fill="none" stroke="#202124" stroke-width="1.5"/>
-    <path d="M 53.5 33.5 V 1607.1 M 73.5 33.5 V 1607.1 M 93.5 33.5 V 1607.1 M 113.5 33.5 V 1607.1 M 153.5 33.5 V 1607.1 M 173.5 33.5 V 1607.1 M 193.5 33.5 V 1607.1 M 213.5 33.5 V 1607.1 M 253.5 33.5 V 1607.1 M 273.5 33.5 V 1607.1 M 293.5 33.5 V 1607.1 M 313.5 33.5 V 1607.1 M 353.5 33.5 V 1607.1 M 373.5 33.5 V 1607.1 M 393.5 33.5 V 1607.1 M 413.5 33.5 V 1607.1 M 453.5 33.5 V 1607.1 M 473.5 33.5 V 1607.1 M 493.5 33.5 V 1607.1 M 513.5 33.5 V 1607.1 M 553.5 33.5 V 1607.1 M 573.5 33.5 V 1607.1 M 593.5 33.5 V 1607.1 M 613.5 33.5 V 1607.1 M 653.5 33.5 V 1607.1 M 673.5 33.5 V 1607.1 M 693.5 33.5 V 1607.1 M 713.5 33.5 V 1607.1 M 753.5 33.5 V 1607.1 M 773.5 33.5 V 1607.1 M 793.5 33.5 V 1607.1 M 813.5 33.5 V 1607.1 M 853.5 33.5 V 1607.1 M 873.5 33.5 V 1607.1 M 893.5 33.5 V 1607.1 M 913.5 33.5 V 1607.1 M 953.5 33.5 V 1607.1 M 973.5 33.5 V 1607.1 M 993.5 33.5 V 1607.1 M 1013.5 33.5 V 1607.1 M 1053.5 33.5 V 1607.1 M 1073.5 33.5 V 1607.1 M 1093.5 33.5 V 1607.1 M 1113.5 33.5 V 1607.1 M 1153.5 33.5 V 1607.1 M 1173.5 33.5 V 1607.1 M 1193.5 33.5 V 1607.1 M 1213.5 33.5 V 1607.1 M 1253.5 33.5 V 1607.1 M 1273.5 33.5 V 1607.1 M 1293.5 33.5 V 1607.1 M 1313.5 33.5 V 1607.1 M 1353.5 33.5 V 1607.1 M 1373.5 33.5 V 1607.1 M 1393.5 33.5 V 1607.1 M 1413.5 33.5 V 1607.1 M 1453.5 33.5 V 1607.1 M 1473.5 33.5 V 1607.1 M 1493.5 33.5 V 1607.1 M 1513.5 33.5 V 1607.1 M 1553.5 33.5 V 1607.1 M 33.5 53.5 H 1566.5 M 33.5 73.5 H 1566.5 M 33.5 93.5 H 1566.5 M 33.5 113.5 H 1566.5 M 33.5 153.5 H 1566.5 M 33.5 173.5 H 1566.5 M 33.5 193.5 H 1566.5 M 33.5 213.5 H 1566.5 M 33.5 253.5 H 1566.5 M 33.5 273.5 H 1566.5 M 33.5 293.5 H 1566.5 M 33.5 313.5 H 1566.5 M 33.5 353.5 H 1566.5 M 33.5 373.5 H 1566.5 M 33.5 393.5 H 1566.5 M 33.5 413.5 H 1566.5 M 33.5 453.5 H 1566.5 M 33.5 473.5 H 1566.5 M 33.5 493.5 H 1566.5 M 33.5 513.5 H 1566.5 M 33.5 553.5 H 1566.5 M 33.5 573.5 H 1566.5 M 33.5 593.5 H 1566.5 M 33.5 613.5 H 1566.5 M 33.5 653.5 H 1566.5 M 33.5 673.5 H 1566.5 M 33.5 693.5 H 1566.5 M 33.5 713.5 H 1566.5 M 33.5 753.5 H 1566.5 M 33.5 773.5 H 1566.5 M 33.5 793.5 H 1566.5 M 33.5 813.5 H 1566.5 M 33.5 853.5 H 1566.5 M 33.5 873.5 H 1566.5 M 33.5 893.5 H 1566.5 M 33.5 913.5 H 1566.5 M 33.5 953.5 H 1566.5 M 33.5 973.5 H 1566.5 M 33.5 993.5 H 1566.5 M 33.5 1013.5 H 1566.5 M 33.5 1053.5 H 1566.5 M 33.5 1073.5 H 1566.5 M 33.5 1093.5 H 1566.5 M 33.5 1113.5 H 1566.5 M 33.5 1153.5 H 1566.5 M 33.5 1173.5 H 1566.5 M 33.5 1193.5 H 1566.5 M 33.5 1213.5 H 1566.5 M 33.5 1253.5 H 1566.5 M 33.5 1273.5 H 1566.5 M 33.5 1293.5 H 1566.5 M 33.5 1313.5 H 1566.5 M 33.5 1353.5 H 1566.5 M 33.5 1373.5 H 1566.5 M 33.5 1393.5 H 1566.5 M 33.5 1413.5 H 1566.5 M 33.5 1453.5 H 1566.5 M 33.5 1473.5 H 1566.5 M 33.5 1493.5 H 1566.5 M 33.5 1513.5 H 1566.5 M 33.5 1553.5 H 1566.5 M 33.5 1573.5 H 1566.5 M 33.5 1593.5 H 1566.5" fill="none" stroke="#F4F5F6" stroke-width="1"/>
-    <path d="M 133.5 33.5 V 1607.1 M 233.5 33.5 V 1607.1 M 333.5 33.5 V 1607.1 M 433.5 33.5 V 1607.1 M 533.5 33.5 V 1607.1 M 633.5 33.5 V 1607.1 M 733.5 33.5 V 1607.1 M 833.5 33.5 V 1607.1 M 933.5 33.5 V 1607.1 M 1033.5 33.5 V 1607.1 M 1133.5 33.5 V 1607.1 M 1233.5 33.5 V 1607.1 M 1333.5 33.5 V 1607.1 M 1433.5 33.5 V 1607.1 M 1533.5 33.5 V 1607.1 M 33.5 133.5 H 1566.5 M 33.5 233.5 H 1566.5 M 33.5 333.5 H 1566.5 M 33.5 433.5 H 1566.5 M 33.5 533.5 H 1566.5 M 33.5 633.5 H 1566.5 M 33.5 733.5 H 1566.5 M 33.5 833.5 H 1566.5 M 33.5 933.5 H 1566.5 M 33.5 1033.5 H 1566.5 M 33.5 1133.5 H 1566.5 M 33.5 1233.5 H 1566.5 M 33.5 1333.5 H 1566.5 M 33.5 1433.5 H 1566.5 M 33.5 1533.5 H 1566.5" fill="none" stroke="#E9EAEC" stroke-width="1"/>
+    <rect x="12.5" y="12.5" width="1575" height="1902.2" fill="#FFFFFF" stroke="#202124" stroke-width="1"/>
+    <rect x="32.75" y="32.75" width="1534.5" height="1861.7" fill="none" stroke="#202124" stroke-width="1.5"/>
+    <path d="M 53.5 33.5 V 1893.7 M 73.5 33.5 V 1893.7 M 93.5 33.5 V 1893.7 M 113.5 33.5 V 1893.7 M 153.5 33.5 V 1893.7 M 173.5 33.5 V 1893.7 M 193.5 33.5 V 1893.7 M 213.5 33.5 V 1893.7 M 253.5 33.5 V 1893.7 M 273.5 33.5 V 1893.7 M 293.5 33.5 V 1893.7 M 313.5 33.5 V 1893.7 M 353.5 33.5 V 1893.7 M 373.5 33.5 V 1893.7 M 393.5 33.5 V 1893.7 M 413.5 33.5 V 1893.7 M 453.5 33.5 V 1893.7 M 473.5 33.5 V 1893.7 M 493.5 33.5 V 1893.7 M 513.5 33.5 V 1893.7 M 553.5 33.5 V 1893.7 M 573.5 33.5 V 1893.7 M 593.5 33.5 V 1893.7 M 613.5 33.5 V 1893.7 M 653.5 33.5 V 1893.7 M 673.5 33.5 V 1893.7 M 693.5 33.5 V 1893.7 M 713.5 33.5 V 1893.7 M 753.5 33.5 V 1893.7 M 773.5 33.5 V 1893.7 M 793.5 33.5 V 1893.7 M 813.5 33.5 V 1893.7 M 853.5 33.5 V 1893.7 M 873.5 33.5 V 1893.7 M 893.5 33.5 V 1893.7 M 913.5 33.5 V 1893.7 M 953.5 33.5 V 1893.7 M 973.5 33.5 V 1893.7 M 993.5 33.5 V 1893.7 M 1013.5 33.5 V 1893.7 M 1053.5 33.5 V 1893.7 M 1073.5 33.5 V 1893.7 M 1093.5 33.5 V 1893.7 M 1113.5 33.5 V 1893.7 M 1153.5 33.5 V 1893.7 M 1173.5 33.5 V 1893.7 M 1193.5 33.5 V 1893.7 M 1213.5 33.5 V 1893.7 M 1253.5 33.5 V 1893.7 M 1273.5 33.5 V 1893.7 M 1293.5 33.5 V 1893.7 M 1313.5 33.5 V 1893.7 M 1353.5 33.5 V 1893.7 M 1373.5 33.5 V 1893.7 M 1393.5 33.5 V 1893.7 M 1413.5 33.5 V 1893.7 M 1453.5 33.5 V 1893.7 M 1473.5 33.5 V 1893.7 M 1493.5 33.5 V 1893.7 M 1513.5 33.5 V 1893.7 M 1553.5 33.5 V 1893.7 M 33.5 53.5 H 1566.5 M 33.5 73.5 H 1566.5 M 33.5 93.5 H 1566.5 M 33.5 113.5 H 1566.5 M 33.5 153.5 H 1566.5 M 33.5 173.5 H 1566.5 M 33.5 193.5 H 1566.5 M 33.5 213.5 H 1566.5 M 33.5 253.5 H 1566.5 M 33.5 273.5 H 1566.5 M 33.5 293.5 H 1566.5 M 33.5 313.5 H 1566.5 M 33.5 353.5 H 1566.5 M 33.5 373.5 H 1566.5 M 33.5 393.5 H 1566.5 M 33.5 413.5 H 1566.5 M 33.5 453.5 H 1566.5 M 33.5 473.5 H 1566.5 M 33.5 493.5 H 1566.5 M 33.5 513.5 H 1566.5 M 33.5 553.5 H 1566.5 M 33.5 573.5 H 1566.5 M 33.5 593.5 H 1566.5 M 33.5 613.5 H 1566.5 M 33.5 653.5 H 1566.5 M 33.5 673.5 H 1566.5 M 33.5 693.5 H 1566.5 M 33.5 713.5 H 1566.5 M 33.5 753.5 H 1566.5 M 33.5 773.5 H 1566.5 M 33.5 793.5 H 1566.5 M 33.5 813.5 H 1566.5 M 33.5 853.5 H 1566.5 M 33.5 873.5 H 1566.5 M 33.5 893.5 H 1566.5 M 33.5 913.5 H 1566.5 M 33.5 953.5 H 1566.5 M 33.5 973.5 H 1566.5 M 33.5 993.5 H 1566.5 M 33.5 1013.5 H 1566.5 M 33.5 1053.5 H 1566.5 M 33.5 1073.5 H 1566.5 M 33.5 1093.5 H 1566.5 M 33.5 1113.5 H 1566.5 M 33.5 1153.5 H 1566.5 M 33.5 1173.5 H 1566.5 M 33.5 1193.5 H 1566.5 M 33.5 1213.5 H 1566.5 M 33.5 1253.5 H 1566.5 M 33.5 1273.5 H 1566.5 M 33.5 1293.5 H 1566.5 M 33.5 1313.5 H 1566.5 M 33.5 1353.5 H 1566.5 M 33.5 1373.5 H 1566.5 M 33.5 1393.5 H 1566.5 M 33.5 1413.5 H 1566.5 M 33.5 1453.5 H 1566.5 M 33.5 1473.5 H 1566.5 M 33.5 1493.5 H 1566.5 M 33.5 1513.5 H 1566.5 M 33.5 1553.5 H 1566.5 M 33.5 1573.5 H 1566.5 M 33.5 1593.5 H 1566.5 M 33.5 1613.5 H 1566.5 M 33.5 1653.5 H 1566.5 M 33.5 1673.5 H 1566.5 M 33.5 1693.5 H 1566.5 M 33.5 1713.5 H 1566.5 M 33.5 1753.5 H 1566.5 M 33.5 1773.5 H 1566.5 M 33.5 1793.5 H 1566.5 M 33.5 1813.5 H 1566.5 M 33.5 1853.5 H 1566.5 M 33.5 1873.5 H 1566.5 M 33.5 1893.5 H 1566.5" fill="none" stroke="#F4F5F6" stroke-width="1"/>
+    <path d="M 133.5 33.5 V 1893.7 M 233.5 33.5 V 1893.7 M 333.5 33.5 V 1893.7 M 433.5 33.5 V 1893.7 M 533.5 33.5 V 1893.7 M 633.5 33.5 V 1893.7 M 733.5 33.5 V 1893.7 M 833.5 33.5 V 1893.7 M 933.5 33.5 V 1893.7 M 1033.5 33.5 V 1893.7 M 1133.5 33.5 V 1893.7 M 1233.5 33.5 V 1893.7 M 1333.5 33.5 V 1893.7 M 1433.5 33.5 V 1893.7 M 1533.5 33.5 V 1893.7 M 33.5 133.5 H 1566.5 M 33.5 233.5 H 1566.5 M 33.5 333.5 H 1566.5 M 33.5 433.5 H 1566.5 M 33.5 533.5 H 1566.5 M 33.5 633.5 H 1566.5 M 33.5 733.5 H 1566.5 M 33.5 833.5 H 1566.5 M 33.5 933.5 H 1566.5 M 33.5 1033.5 H 1566.5 M 33.5 1133.5 H 1566.5 M 33.5 1233.5 H 1566.5 M 33.5 1333.5 H 1566.5 M 33.5 1433.5 H 1566.5 M 33.5 1533.5 H 1566.5 M 33.5 1633.5 H 1566.5 M 33.5 1733.5 H 1566.5 M 33.5 1833.5 H 1566.5" fill="none" stroke="#E9EAEC" stroke-width="1"/>
     <line x1="225.13" y1="13" x2="225.13" y2="32" stroke="#DADCE0" stroke-width="0.8"/>
-    <line x1="225.13" y1="1608.6" x2="225.13" y2="1627.6" stroke="#DADCE0" stroke-width="0.8"/>
+    <line x1="225.13" y1="1895.2" x2="225.13" y2="1914.2" stroke="#DADCE0" stroke-width="0.8"/>
     <line x1="416.75" y1="13" x2="416.75" y2="32" stroke="#DADCE0" stroke-width="0.8"/>
-    <line x1="416.75" y1="1608.6" x2="416.75" y2="1627.6" stroke="#DADCE0" stroke-width="0.8"/>
+    <line x1="416.75" y1="1895.2" x2="416.75" y2="1914.2" stroke="#DADCE0" stroke-width="0.8"/>
     <line x1="608.38" y1="13" x2="608.38" y2="32" stroke="#DADCE0" stroke-width="0.8"/>
-    <line x1="608.38" y1="1608.6" x2="608.38" y2="1627.6" stroke="#DADCE0" stroke-width="0.8"/>
+    <line x1="608.38" y1="1895.2" x2="608.38" y2="1914.2" stroke="#DADCE0" stroke-width="0.8"/>
     <line x1="800" y1="13" x2="800" y2="32" stroke="#DADCE0" stroke-width="0.8"/>
-    <line x1="800" y1="1608.6" x2="800" y2="1627.6" stroke="#DADCE0" stroke-width="0.8"/>
+    <line x1="800" y1="1895.2" x2="800" y2="1914.2" stroke="#DADCE0" stroke-width="0.8"/>
     <line x1="991.63" y1="13" x2="991.63" y2="32" stroke="#DADCE0" stroke-width="0.8"/>
-    <line x1="991.63" y1="1608.6" x2="991.63" y2="1627.6" stroke="#DADCE0" stroke-width="0.8"/>
+    <line x1="991.63" y1="1895.2" x2="991.63" y2="1914.2" stroke="#DADCE0" stroke-width="0.8"/>
     <line x1="1183.25" y1="13" x2="1183.25" y2="32" stroke="#DADCE0" stroke-width="0.8"/>
-    <line x1="1183.25" y1="1608.6" x2="1183.25" y2="1627.6" stroke="#DADCE0" stroke-width="0.8"/>
+    <line x1="1183.25" y1="1895.2" x2="1183.25" y2="1914.2" stroke="#DADCE0" stroke-width="0.8"/>
     <line x1="1374.88" y1="13" x2="1374.88" y2="32" stroke="#DADCE0" stroke-width="0.8"/>
-    <line x1="1374.88" y1="1608.6" x2="1374.88" y2="1627.6" stroke="#DADCE0" stroke-width="0.8"/>
-    <line x1="13" y1="295.77" x2="32" y2="295.77" stroke="#DADCE0" stroke-width="0.8"/>
-    <line x1="1568" y1="295.77" x2="1587" y2="295.77" stroke="#DADCE0" stroke-width="0.8"/>
-    <line x1="13" y1="558.03" x2="32" y2="558.03" stroke="#DADCE0" stroke-width="0.8"/>
-    <line x1="1568" y1="558.03" x2="1587" y2="558.03" stroke="#DADCE0" stroke-width="0.8"/>
-    <line x1="13" y1="820.3" x2="32" y2="820.3" stroke="#DADCE0" stroke-width="0.8"/>
-    <line x1="1568" y1="820.3" x2="1587" y2="820.3" stroke="#DADCE0" stroke-width="0.8"/>
-    <line x1="13" y1="1082.57" x2="32" y2="1082.57" stroke="#DADCE0" stroke-width="0.8"/>
-    <line x1="1568" y1="1082.57" x2="1587" y2="1082.57" stroke="#DADCE0" stroke-width="0.8"/>
-    <line x1="13" y1="1344.83" x2="32" y2="1344.83" stroke="#DADCE0" stroke-width="0.8"/>
-    <line x1="1568" y1="1344.83" x2="1587" y2="1344.83" stroke="#DADCE0" stroke-width="0.8"/>
+    <line x1="1374.88" y1="1895.2" x2="1374.88" y2="1914.2" stroke="#DADCE0" stroke-width="0.8"/>
+    <line x1="13" y1="343.53" x2="32" y2="343.53" stroke="#DADCE0" stroke-width="0.8"/>
+    <line x1="1568" y1="343.53" x2="1587" y2="343.53" stroke="#DADCE0" stroke-width="0.8"/>
+    <line x1="13" y1="653.57" x2="32" y2="653.57" stroke="#DADCE0" stroke-width="0.8"/>
+    <line x1="1568" y1="653.57" x2="1587" y2="653.57" stroke="#DADCE0" stroke-width="0.8"/>
+    <line x1="13" y1="963.6" x2="32" y2="963.6" stroke="#DADCE0" stroke-width="0.8"/>
+    <line x1="1568" y1="963.6" x2="1587" y2="963.6" stroke="#DADCE0" stroke-width="0.8"/>
+    <line x1="13" y1="1273.63" x2="32" y2="1273.63" stroke="#DADCE0" stroke-width="0.8"/>
+    <line x1="1568" y1="1273.63" x2="1587" y2="1273.63" stroke="#DADCE0" stroke-width="0.8"/>
+    <line x1="13" y1="1583.67" x2="32" y2="1583.67" stroke="#DADCE0" stroke-width="0.8"/>
+    <line x1="1568" y1="1583.67" x2="1587" y2="1583.67" stroke="#DADCE0" stroke-width="0.8"/>
     <text x="126.33" y="26.5" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">1</text>
     <text x="316.85" y="26.5" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">2</text>
     <text x="508.4" y="26.5" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">3</text>
@@ -46,28 +46,28 @@
     <text x="1083.26" y="26.5" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">6</text>
     <text x="1275.23" y="26.5" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">7</text>
     <text x="1466.51" y="26.5" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">8</text>
-    <text x="126.33" y="1622.1" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">1</text>
-    <text x="316.85" y="1622.1" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">2</text>
-    <text x="508.4" y="1622.1" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">3</text>
-    <text x="699.86" y="1622.1" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">4</text>
-    <text x="891.78" y="1622.1" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">5</text>
-    <text x="1083.26" y="1622.1" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">6</text>
-    <text x="1275.23" y="1622.1" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">7</text>
-    <text x="1466.51" y="1622.1" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">8</text>
-    <text x="17.84" y="168.63" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">A</text>
-    <text x="18.21" y="430.9" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">B</text>
-    <text x="17.79" y="693.17" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">C</text>
-    <text x="17.87" y="955.43" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">D</text>
-    <text x="18.51" y="1217.7" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">E</text>
-    <text x="18.61" y="1479.97" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">F</text>
-    <text x="1572.84" y="168.63" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">A</text>
-    <text x="1573.21" y="430.9" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">B</text>
-    <text x="1572.79" y="693.17" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">C</text>
-    <text x="1572.87" y="955.43" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">D</text>
-    <text x="1573.51" y="1217.7" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">E</text>
-    <text x="1573.61" y="1479.97" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">F</text>
+    <text x="126.33" y="1908.7" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">1</text>
+    <text x="316.85" y="1908.7" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">2</text>
+    <text x="508.4" y="1908.7" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">3</text>
+    <text x="699.86" y="1908.7" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">4</text>
+    <text x="891.78" y="1908.7" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">5</text>
+    <text x="1083.26" y="1908.7" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">6</text>
+    <text x="1275.23" y="1908.7" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">7</text>
+    <text x="1466.51" y="1908.7" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">8</text>
+    <text x="17.84" y="192.52" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">A</text>
+    <text x="18.21" y="502.55" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">B</text>
+    <text x="17.79" y="812.58" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">C</text>
+    <text x="17.87" y="1122.62" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">D</text>
+    <text x="18.51" y="1432.65" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">E</text>
+    <text x="18.61" y="1742.68" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">F</text>
+    <text x="1572.84" y="192.52" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">A</text>
+    <text x="1573.21" y="502.55" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">B</text>
+    <text x="1572.79" y="812.58" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">C</text>
+    <text x="1572.87" y="1122.62" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">D</text>
+    <text x="1573.51" y="1432.65" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">E</text>
+    <text x="1573.61" y="1742.68" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">F</text>
     <g data-id="/sheet" data-tag="TitleBlock">
-      <rect x="50.75" y="50.75" width="1498.5" height="294.5" fill="#FFFFFF" stroke="#202124" stroke-width="1.5"/>
+      <rect x="50.75" y="50.75" width="1498.5" height="314.9" fill="#FFFFFF" stroke="#202124" stroke-width="1.5"/>
       <line x1="372.31" y1="51.5" x2="372.31" y2="268.7" stroke="#DADCE0" stroke-width="1"/>
       <line x1="813.88" y1="51.5" x2="813.88" y2="268.7" stroke="#DADCE0" stroke-width="1"/>
       <line x1="1207.34" y1="51.5" x2="1207.34" y2="268.7" stroke="#DADCE0" stroke-width="1"/>
@@ -109,7 +109,7 @@
         </g>
         <g data-id="/sheet/problem/points/2" data-tag="ProblemPoint">
           <line x1="386.81" y1="184.4" x2="799.38" y2="184.4" stroke="#DADCE0" stroke-width="1" stroke-dasharray="3 3"/>
-          <circle cx="766.38" cy="198.9" r="8.35" fill="#FFFFFF" stroke="#202124" stroke-width="1.3"/>
+          <circle cx="766.38" cy="198.9" r="8.35" fill="#FFFFFF" stroke="#497938" stroke-width="1.3"/>
           <path d="M789.38 190.4 L799.38 207.4 L779.38 207.4 Z" fill="#202124"/>
           <text x="386.81" y="203" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">P3</text>
           <text x="410.81" y="202.97" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#202124">A verdict without its frames cannot be checked a month</text>
@@ -163,18 +163,21 @@
       </g>
       <g data-id="/legend" data-tag="Legend">
         <line x1="51.5" y1="269.2" x2="1548.5" y2="269.2" stroke="#DADCE0" stroke-width="1"/>
-        <circle cx="130.21" cy="327.5" r="8.35" fill="#FFFFFF" stroke="#202124" stroke-width="1.3"/>
-        <path d="M286.74 319 L296.74 336 L276.74 336 Z" fill="#202124"/>
-        <path d="M439.38 318.2 L448.68 327.5 L439.38 336.8 L430.08 327.5 Z" fill="#FFFFFF" stroke="#202124" stroke-width="1.4" stroke-linejoin="round"/>
+        <circle cx="130.21" cy="347.9" r="8.35" fill="#FFFFFF" stroke="#202124" stroke-width="1.3"/>
+        <path d="M286.74 339.4 L296.74 356.4 L276.74 356.4 Z" fill="#202124"/>
+        <path d="M439.38 338.6 L448.68 347.9 L439.38 357.2 L430.08 347.9 Z" fill="#FFFFFF" stroke="#202124" stroke-width="1.4" stroke-linejoin="round"/>
+        <rect x="543.49" y="339.65" width="16.5" height="16.5" rx="2.25" fill="#FFFFFF" stroke="#202124" stroke-width="1.5"/>
         <text x="65.5" y="287.9" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">WHO ACTS</text>
         <text x="65.5" y="308.3" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">LINES</text>
-        <text x="65.5" y="331.5" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">MARKS</text>
-        <text x="128.05" y="331.14" xml:space="preserve" font-family="Inter" font-size="10" font-weight="700" fill="#202124">1</text>
-        <text x="145.21" y="331.87" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">a piece of the service</text>
-        <text x="284.8" y="333.27" xml:space="preserve" font-family="Inter" font-size="9" font-weight="700" fill="#FFFFFF">1</text>
-        <text x="302.74" y="331.87" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">asked of an operator</text>
-        <text x="437.33" y="330.96" xml:space="preserve" font-family="Inter" font-size="9.5" font-weight="700" fill="#202124">1</text>
-        <text x="455.38" y="331.87" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">your attention</text>
+        <text x="65.5" y="351.9" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">MARKS</text>
+        <text x="128.05" y="351.54" xml:space="preserve" font-family="Inter" font-size="10" font-weight="700" fill="#202124">1</text>
+        <text x="145.21" y="352.27" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">a piece of the service</text>
+        <text x="284.8" y="353.67" xml:space="preserve" font-family="Inter" font-size="9" font-weight="700" fill="#FFFFFF">1</text>
+        <text x="302.74" y="352.27" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">asked of an operator</text>
+        <text x="437.33" y="351.36" xml:space="preserve" font-family="Inter" font-size="9.5" font-weight="700" fill="#202124">1</text>
+        <text x="455.38" y="352.27" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">your attention</text>
+        <text x="549.59" y="351.54" xml:space="preserve" font-family="Inter" font-size="10" font-weight="700" fill="#202124">1</text>
+        <text x="566.74" y="352.27" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">a numbered request step</text>
         <g data-id="/actors/0" data-tag="ActorChip">
           <rect x="146.26" y="278.4" width="17" height="11" fill="#FAF9CA" stroke="#A36E14" stroke-width="1"/>
           <text x="169.76" y="287.9" xml:space="preserve" font-family="Inter" font-size="11" font-weight="700" letter-spacing="0.88" fill="#5A3900">OPERATOR</text>
@@ -205,279 +208,331 @@
           <text x="586.22" y="308.67" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">Dashed, actor colour</text>
           <text x="714.39" y="308.67" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">reads or writes the verdict store</text>
         </g>
-        <g data-id="/legend/2" data-tag="LegendEntry" data-kind="gray">
-          <line x1="903.86" y1="304.3" x2="929.86" y2="304.3" stroke="#5F6368" stroke-width="2"/>
-          <text x="935.86" y="308.67" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">Solid gray</text>
-          <text x="1000.28" y="308.67" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">event from the platform</text>
+        <g data-id="/legend/2" data-tag="LegendEntry" data-kind="solid-by-actor">
+          <line x1="906.36" y1="299.8" x2="906.36" y2="308.8" stroke="#202124" stroke-width="5" stroke-linecap="round"/>
+          <text x="914.86" y="308.67" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">Solid, actor colour, rail</text>
+          <text x="1052.07" y="308.67" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">one topic that every job passes through</text>
         </g>
-        <g data-id="/legend/3" data-tag="LegendEntry" data-kind="deny">
-          <line x1="1142.3" y1="304.3" x2="1168.3" y2="304.3" stroke="#C5221F" stroke-width="2" stroke-dasharray="6 5"/>
-          <text x="1174.3" y="308.67" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">Dashed red</text>
-          <text x="1246.98" y="308.67" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">blocked path</text>
+        <g data-id="/legend/3" data-tag="LegendEntry" data-kind="solid-by-actor">
+          <path d="M 69.5 324.7 H 87.5" fill="none" stroke="#202124" stroke-width="4" stroke-dasharray="7 4"/>
+          <path d="M 69.5 324.7 H 87.5" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-dasharray="5 6" stroke-dashoffset="-1"/>
+          <text x="97.5" y="329.07" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">Hollow, actor colour</text>
+          <text x="220.47" y="329.07" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">planned, not built yet</text>
+        </g>
+        <g data-id="/legend/4" data-tag="LegendEntry" data-kind="gray">
+          <line x1="348.57" y1="324.7" x2="374.57" y2="324.7" stroke="#5F6368" stroke-width="2"/>
+          <text x="380.57" y="329.07" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">Solid gray</text>
+          <text x="444.99" y="329.07" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">event from the platform</text>
+        </g>
+        <g data-id="/legend/5" data-tag="LegendEntry" data-kind="deny">
+          <line x1="587.01" y1="324.7" x2="613.01" y2="324.7" stroke="#C5221F" stroke-width="2" stroke-dasharray="6 5"/>
+          <text x="619.01" y="329.07" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">Dashed red</text>
+          <text x="691.69" y="329.07" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">blocked path</text>
         </g>
       </g>
     </g>
     <g data-id="/body" data-tag="Body">
       <g data-id="/body/0" data-tag="View">
-        <circle cx="64" cy="374" r="13.25" fill="#FFFFFF" stroke="#202124" stroke-width="1.5"/>
-        <line x1="520.65" y1="374" x2="1296.65" y2="374" stroke="#DADCE0" stroke-width="1"/>
-        <text x="59.91" y="378.73" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#202124">2</text>
-        <text x="90" y="379.82" xml:space="preserve" font-family="Inter" font-size="16" font-weight="700" letter-spacing="1.6" fill="#202124">WORKFLOW</text>
-        <text x="207.88" y="379.09" xml:space="preserve" font-family="Inter" font-size="14" font-weight="400" fill="#5F6368">one trigger, from description to stored verdict</text>
-        <text x="1308.65" y="378.37" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">a lane for each actor; time runs left to right</text>
+        <circle cx="64" cy="394.4" r="13.25" fill="#FFFFFF" stroke="#202124" stroke-width="1.5"/>
+        <line x1="520.65" y1="394.4" x2="1296.65" y2="394.4" stroke="#DADCE0" stroke-width="1"/>
+        <text x="59.91" y="399.13" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#202124">2</text>
+        <text x="90" y="400.22" xml:space="preserve" font-family="Inter" font-size="16" font-weight="700" letter-spacing="1.6" fill="#202124">WORKFLOW</text>
+        <text x="207.88" y="399.49" xml:space="preserve" font-family="Inter" font-size="14" font-weight="400" fill="#5F6368">one trigger, from description to stored verdict</text>
+        <text x="1308.65" y="398.77" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">a lane for each actor; time runs left to right</text>
         <g data-id="/body/0/children/0" data-tag="Phases">
-          <rect x="50" y="426" width="1500" height="110" fill="#FDFCE5"/>
-          <path d="M 53.5 426 V 536 M 73.5 426 V 536 M 93.5 426 V 536 M 113.5 426 V 536 M 153.5 426 V 536 M 173.5 426 V 536 M 193.5 426 V 536 M 213.5 426 V 536 M 253.5 426 V 536 M 273.5 426 V 536 M 293.5 426 V 536 M 313.5 426 V 536 M 353.5 426 V 536 M 373.5 426 V 536 M 393.5 426 V 536 M 413.5 426 V 536 M 453.5 426 V 536 M 473.5 426 V 536 M 493.5 426 V 536 M 513.5 426 V 536 M 553.5 426 V 536 M 573.5 426 V 536 M 593.5 426 V 536 M 613.5 426 V 536 M 653.5 426 V 536 M 673.5 426 V 536 M 693.5 426 V 536 M 713.5 426 V 536 M 753.5 426 V 536 M 773.5 426 V 536 M 793.5 426 V 536 M 813.5 426 V 536 M 853.5 426 V 536 M 873.5 426 V 536 M 893.5 426 V 536 M 913.5 426 V 536 M 953.5 426 V 536 M 973.5 426 V 536 M 993.5 426 V 536 M 1013.5 426 V 536 M 1053.5 426 V 536 M 1073.5 426 V 536 M 1093.5 426 V 536 M 1113.5 426 V 536 M 1153.5 426 V 536 M 1173.5 426 V 536 M 1193.5 426 V 536 M 1213.5 426 V 536 M 1253.5 426 V 536 M 1273.5 426 V 536 M 1293.5 426 V 536 M 1313.5 426 V 536 M 1353.5 426 V 536 M 1373.5 426 V 536 M 1393.5 426 V 536 M 1413.5 426 V 536 M 1453.5 426 V 536 M 1473.5 426 V 536 M 1493.5 426 V 536 M 1513.5 426 V 536 M 50 453.5 H 1550 M 50 473.5 H 1550 M 50 493.5 H 1550 M 50 513.5 H 1550" fill="none" stroke="#F4F5F6" stroke-width="1"/>
-          <path d="M 133.5 426 V 536 M 233.5 426 V 536 M 333.5 426 V 536 M 433.5 426 V 536 M 533.5 426 V 536 M 633.5 426 V 536 M 733.5 426 V 536 M 833.5 426 V 536 M 933.5 426 V 536 M 1033.5 426 V 536 M 1133.5 426 V 536 M 1233.5 426 V 536 M 1333.5 426 V 536 M 1433.5 426 V 536 M 1533.5 426 V 536 M 50 433.5 H 1550 M 50 533.5 H 1550" fill="none" stroke="#E9EAEC" stroke-width="1"/>
-          <rect x="50" y="426" width="4" height="110" fill="#A36E14"/>
-          <rect x="50" y="536" width="1500" height="113" fill="#E9F1FE"/>
-          <path d="M 53.5 536 V 649 M 73.5 536 V 649 M 93.5 536 V 649 M 113.5 536 V 649 M 153.5 536 V 649 M 173.5 536 V 649 M 193.5 536 V 649 M 213.5 536 V 649 M 253.5 536 V 649 M 273.5 536 V 649 M 293.5 536 V 649 M 313.5 536 V 649 M 353.5 536 V 649 M 373.5 536 V 649 M 393.5 536 V 649 M 413.5 536 V 649 M 453.5 536 V 649 M 473.5 536 V 649 M 493.5 536 V 649 M 513.5 536 V 649 M 553.5 536 V 649 M 573.5 536 V 649 M 593.5 536 V 649 M 613.5 536 V 649 M 653.5 536 V 649 M 673.5 536 V 649 M 693.5 536 V 649 M 713.5 536 V 649 M 753.5 536 V 649 M 773.5 536 V 649 M 793.5 536 V 649 M 813.5 536 V 649 M 853.5 536 V 649 M 873.5 536 V 649 M 893.5 536 V 649 M 913.5 536 V 649 M 953.5 536 V 649 M 973.5 536 V 649 M 993.5 536 V 649 M 1013.5 536 V 649 M 1053.5 536 V 649 M 1073.5 536 V 649 M 1093.5 536 V 649 M 1113.5 536 V 649 M 1153.5 536 V 649 M 1173.5 536 V 649 M 1193.5 536 V 649 M 1213.5 536 V 649 M 1253.5 536 V 649 M 1273.5 536 V 649 M 1293.5 536 V 649 M 1313.5 536 V 649 M 1353.5 536 V 649 M 1373.5 536 V 649 M 1393.5 536 V 649 M 1413.5 536 V 649 M 1453.5 536 V 649 M 1473.5 536 V 649 M 1493.5 536 V 649 M 1513.5 536 V 649 M 50 553.5 H 1550 M 50 573.5 H 1550 M 50 593.5 H 1550 M 50 613.5 H 1550" fill="none" stroke="#F4F5F6" stroke-width="1"/>
-          <path d="M 133.5 536 V 649 M 233.5 536 V 649 M 333.5 536 V 649 M 433.5 536 V 649 M 533.5 536 V 649 M 633.5 536 V 649 M 733.5 536 V 649 M 833.5 536 V 649 M 933.5 536 V 649 M 1033.5 536 V 649 M 1133.5 536 V 649 M 1233.5 536 V 649 M 1333.5 536 V 649 M 1433.5 536 V 649 M 1533.5 536 V 649 M 50 633.5 H 1550" fill="none" stroke="#E9EAEC" stroke-width="1"/>
-          <rect x="50" y="536" width="4" height="113" fill="#1A73E8"/>
-          <rect x="50" y="649" width="1500" height="116" fill="#F2FBF1"/>
-          <path d="M 53.5 649 V 765 M 73.5 649 V 765 M 93.5 649 V 765 M 113.5 649 V 765 M 153.5 649 V 765 M 173.5 649 V 765 M 193.5 649 V 765 M 213.5 649 V 765 M 253.5 649 V 765 M 273.5 649 V 765 M 293.5 649 V 765 M 313.5 649 V 765 M 353.5 649 V 765 M 373.5 649 V 765 M 393.5 649 V 765 M 413.5 649 V 765 M 453.5 649 V 765 M 473.5 649 V 765 M 493.5 649 V 765 M 513.5 649 V 765 M 553.5 649 V 765 M 573.5 649 V 765 M 593.5 649 V 765 M 613.5 649 V 765 M 653.5 649 V 765 M 673.5 649 V 765 M 693.5 649 V 765 M 713.5 649 V 765 M 753.5 649 V 765 M 773.5 649 V 765 M 793.5 649 V 765 M 813.5 649 V 765 M 853.5 649 V 765 M 873.5 649 V 765 M 893.5 649 V 765 M 913.5 649 V 765 M 953.5 649 V 765 M 973.5 649 V 765 M 993.5 649 V 765 M 1013.5 649 V 765 M 1053.5 649 V 765 M 1073.5 649 V 765 M 1093.5 649 V 765 M 1113.5 649 V 765 M 1153.5 649 V 765 M 1173.5 649 V 765 M 1193.5 649 V 765 M 1213.5 649 V 765 M 1253.5 649 V 765 M 1273.5 649 V 765 M 1293.5 649 V 765 M 1313.5 649 V 765 M 1353.5 649 V 765 M 1373.5 649 V 765 M 1393.5 649 V 765 M 1413.5 649 V 765 M 1453.5 649 V 765 M 1473.5 649 V 765 M 1493.5 649 V 765 M 1513.5 649 V 765 M 50 653.5 H 1550 M 50 673.5 H 1550 M 50 693.5 H 1550 M 50 713.5 H 1550 M 50 753.5 H 1550" fill="none" stroke="#F4F5F6" stroke-width="1"/>
-          <path d="M 133.5 649 V 765 M 233.5 649 V 765 M 333.5 649 V 765 M 433.5 649 V 765 M 533.5 649 V 765 M 633.5 649 V 765 M 733.5 649 V 765 M 833.5 649 V 765 M 933.5 649 V 765 M 1033.5 649 V 765 M 1133.5 649 V 765 M 1233.5 649 V 765 M 1333.5 649 V 765 M 1433.5 649 V 765 M 1533.5 649 V 765 M 50 733.5 H 1550" fill="none" stroke="#E9EAEC" stroke-width="1"/>
-          <rect x="50" y="649" width="4" height="116" fill="#497938"/>
-          <rect x="50" y="765" width="1500" height="110" fill="#F7F5FF"/>
-          <path d="M 53.5 765 V 875 M 73.5 765 V 875 M 93.5 765 V 875 M 113.5 765 V 875 M 153.5 765 V 875 M 173.5 765 V 875 M 193.5 765 V 875 M 213.5 765 V 875 M 253.5 765 V 875 M 273.5 765 V 875 M 293.5 765 V 875 M 313.5 765 V 875 M 353.5 765 V 875 M 373.5 765 V 875 M 393.5 765 V 875 M 413.5 765 V 875 M 453.5 765 V 875 M 473.5 765 V 875 M 493.5 765 V 875 M 513.5 765 V 875 M 553.5 765 V 875 M 573.5 765 V 875 M 593.5 765 V 875 M 613.5 765 V 875 M 653.5 765 V 875 M 673.5 765 V 875 M 693.5 765 V 875 M 713.5 765 V 875 M 753.5 765 V 875 M 773.5 765 V 875 M 793.5 765 V 875 M 813.5 765 V 875 M 853.5 765 V 875 M 873.5 765 V 875 M 893.5 765 V 875 M 913.5 765 V 875 M 953.5 765 V 875 M 973.5 765 V 875 M 993.5 765 V 875 M 1013.5 765 V 875 M 1053.5 765 V 875 M 1073.5 765 V 875 M 1093.5 765 V 875 M 1113.5 765 V 875 M 1153.5 765 V 875 M 1173.5 765 V 875 M 1193.5 765 V 875 M 1213.5 765 V 875 M 1253.5 765 V 875 M 1273.5 765 V 875 M 1293.5 765 V 875 M 1313.5 765 V 875 M 1353.5 765 V 875 M 1373.5 765 V 875 M 1393.5 765 V 875 M 1413.5 765 V 875 M 1453.5 765 V 875 M 1473.5 765 V 875 M 1493.5 765 V 875 M 1513.5 765 V 875 M 50 773.5 H 1550 M 50 793.5 H 1550 M 50 813.5 H 1550 M 50 853.5 H 1550 M 50 873.5 H 1550" fill="none" stroke="#F4F5F6" stroke-width="1"/>
-          <path d="M 133.5 765 V 875 M 233.5 765 V 875 M 333.5 765 V 875 M 433.5 765 V 875 M 533.5 765 V 875 M 633.5 765 V 875 M 733.5 765 V 875 M 833.5 765 V 875 M 933.5 765 V 875 M 1033.5 765 V 875 M 1133.5 765 V 875 M 1233.5 765 V 875 M 1333.5 765 V 875 M 1433.5 765 V 875 M 1533.5 765 V 875 M 50 833.5 H 1550" fill="none" stroke="#E9EAEC" stroke-width="1"/>
-          <rect x="50" y="765" width="4" height="110" fill="#593894"/>
-          <line x1="50" y1="536.5" x2="1550" y2="536.5" stroke="#DADCE0" stroke-width="1"/>
-          <line x1="50" y1="649.5" x2="1550" y2="649.5" stroke="#DADCE0" stroke-width="1"/>
-          <line x1="50" y1="765.5" x2="1550" y2="765.5" stroke="#DADCE0" stroke-width="1"/>
-          <circle cx="218" cy="411" r="9.5" fill="#FFFFFF" stroke="#202124" stroke-width="1"/>
-          <line x1="374.83" y1="400" x2="374.83" y2="875" stroke="#DADCE0" stroke-width="1" stroke-dasharray="4 4"/>
-          <circle cx="392.33" cy="411" r="9.5" fill="#FFFFFF" stroke="#202124" stroke-width="1"/>
-          <line x1="768.91" y1="400" x2="768.91" y2="875" stroke="#DADCE0" stroke-width="1" stroke-dasharray="4 4"/>
-          <circle cx="786.41" cy="411" r="9.5" fill="#FFFFFF" stroke="#202124" stroke-width="1"/>
-          <line x1="1349.59" y1="400" x2="1349.59" y2="875" stroke="#DADCE0" stroke-width="1" stroke-dasharray="4 4"/>
-          <circle cx="1367.09" cy="411" r="9.5" fill="#FFFFFF" stroke="#202124" stroke-width="1"/>
-          <text x="66" y="452.53" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" letter-spacing="1.3" fill="#5A3900">OPERATOR</text>
-          <text x="66" y="470.28" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">writes triggers,</text>
-          <text x="66" y="485.28" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">reviews verdicts</text>
-          <text x="66" y="562.53" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" letter-spacing="1.3" fill="#5F6368">TRIGGER API</text>
-          <text x="66" y="580.28" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">plans, versions,</text>
-          <text x="66" y="595.28" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">queues</text>
-          <text x="66" y="675.53" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" letter-spacing="1.3" fill="#26481B">CLIP WORKER</text>
-          <text x="66" y="693.28" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">one job per clip</text>
-          <text x="66" y="791.53" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" letter-spacing="1.3" fill="#4B3275">EVALUATOR</text>
-          <text x="66" y="809.28" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">reads frames against</text>
-          <text x="66" y="824.28" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">a plan</text>
-          <text x="215.2" y="415.73" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#202124">1</text>
-          <text x="234" y="415" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">DESCRIBE</text>
-          <text x="388.23" y="415.73" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#202124">2</text>
-          <text x="408.33" y="415" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">PLAN AND APPROVE</text>
-          <text x="782.21" y="415.73" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#202124">3</text>
-          <text x="802.41" y="415" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">EVALUATE EACH CLIP</text>
-          <text x="1362.7" y="415.73" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#202124">4</text>
-          <text x="1383.09" y="415" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">REVIEW</text>
+          <rect x="50" y="446.4" width="1500" height="110" fill="#FDFCE5"/>
+          <path d="M 53.5 446.4 V 556.4 M 73.5 446.4 V 556.4 M 93.5 446.4 V 556.4 M 113.5 446.4 V 556.4 M 153.5 446.4 V 556.4 M 173.5 446.4 V 556.4 M 193.5 446.4 V 556.4 M 213.5 446.4 V 556.4 M 253.5 446.4 V 556.4 M 273.5 446.4 V 556.4 M 293.5 446.4 V 556.4 M 313.5 446.4 V 556.4 M 353.5 446.4 V 556.4 M 373.5 446.4 V 556.4 M 393.5 446.4 V 556.4 M 413.5 446.4 V 556.4 M 453.5 446.4 V 556.4 M 473.5 446.4 V 556.4 M 493.5 446.4 V 556.4 M 513.5 446.4 V 556.4 M 553.5 446.4 V 556.4 M 573.5 446.4 V 556.4 M 593.5 446.4 V 556.4 M 613.5 446.4 V 556.4 M 653.5 446.4 V 556.4 M 673.5 446.4 V 556.4 M 693.5 446.4 V 556.4 M 713.5 446.4 V 556.4 M 753.5 446.4 V 556.4 M 773.5 446.4 V 556.4 M 793.5 446.4 V 556.4 M 813.5 446.4 V 556.4 M 853.5 446.4 V 556.4 M 873.5 446.4 V 556.4 M 893.5 446.4 V 556.4 M 913.5 446.4 V 556.4 M 953.5 446.4 V 556.4 M 973.5 446.4 V 556.4 M 993.5 446.4 V 556.4 M 1013.5 446.4 V 556.4 M 1053.5 446.4 V 556.4 M 1073.5 446.4 V 556.4 M 1093.5 446.4 V 556.4 M 1113.5 446.4 V 556.4 M 1153.5 446.4 V 556.4 M 1173.5 446.4 V 556.4 M 1193.5 446.4 V 556.4 M 1213.5 446.4 V 556.4 M 1253.5 446.4 V 556.4 M 1273.5 446.4 V 556.4 M 1293.5 446.4 V 556.4 M 1313.5 446.4 V 556.4 M 1353.5 446.4 V 556.4 M 1373.5 446.4 V 556.4 M 1393.5 446.4 V 556.4 M 1413.5 446.4 V 556.4 M 1453.5 446.4 V 556.4 M 1473.5 446.4 V 556.4 M 1493.5 446.4 V 556.4 M 1513.5 446.4 V 556.4 M 50 453.5 H 1550 M 50 473.5 H 1550 M 50 493.5 H 1550 M 50 513.5 H 1550 M 50 553.5 H 1550" fill="none" stroke="#F4F5F6" stroke-width="1"/>
+          <path d="M 133.5 446.4 V 556.4 M 233.5 446.4 V 556.4 M 333.5 446.4 V 556.4 M 433.5 446.4 V 556.4 M 533.5 446.4 V 556.4 M 633.5 446.4 V 556.4 M 733.5 446.4 V 556.4 M 833.5 446.4 V 556.4 M 933.5 446.4 V 556.4 M 1033.5 446.4 V 556.4 M 1133.5 446.4 V 556.4 M 1233.5 446.4 V 556.4 M 1333.5 446.4 V 556.4 M 1433.5 446.4 V 556.4 M 1533.5 446.4 V 556.4 M 50 533.5 H 1550" fill="none" stroke="#E9EAEC" stroke-width="1"/>
+          <rect x="50" y="446.4" width="4" height="110" fill="#A36E14"/>
+          <rect x="50" y="556.4" width="1500" height="113" fill="#E9F1FE"/>
+          <path d="M 53.5 556.4 V 669.4 M 73.5 556.4 V 669.4 M 93.5 556.4 V 669.4 M 113.5 556.4 V 669.4 M 153.5 556.4 V 669.4 M 173.5 556.4 V 669.4 M 193.5 556.4 V 669.4 M 213.5 556.4 V 669.4 M 253.5 556.4 V 669.4 M 273.5 556.4 V 669.4 M 293.5 556.4 V 669.4 M 313.5 556.4 V 669.4 M 353.5 556.4 V 669.4 M 373.5 556.4 V 669.4 M 393.5 556.4 V 669.4 M 413.5 556.4 V 669.4 M 453.5 556.4 V 669.4 M 473.5 556.4 V 669.4 M 493.5 556.4 V 669.4 M 513.5 556.4 V 669.4 M 553.5 556.4 V 669.4 M 573.5 556.4 V 669.4 M 593.5 556.4 V 669.4 M 613.5 556.4 V 669.4 M 653.5 556.4 V 669.4 M 673.5 556.4 V 669.4 M 693.5 556.4 V 669.4 M 713.5 556.4 V 669.4 M 753.5 556.4 V 669.4 M 773.5 556.4 V 669.4 M 793.5 556.4 V 669.4 M 813.5 556.4 V 669.4 M 853.5 556.4 V 669.4 M 873.5 556.4 V 669.4 M 893.5 556.4 V 669.4 M 913.5 556.4 V 669.4 M 953.5 556.4 V 669.4 M 973.5 556.4 V 669.4 M 993.5 556.4 V 669.4 M 1013.5 556.4 V 669.4 M 1053.5 556.4 V 669.4 M 1073.5 556.4 V 669.4 M 1093.5 556.4 V 669.4 M 1113.5 556.4 V 669.4 M 1153.5 556.4 V 669.4 M 1173.5 556.4 V 669.4 M 1193.5 556.4 V 669.4 M 1213.5 556.4 V 669.4 M 1253.5 556.4 V 669.4 M 1273.5 556.4 V 669.4 M 1293.5 556.4 V 669.4 M 1313.5 556.4 V 669.4 M 1353.5 556.4 V 669.4 M 1373.5 556.4 V 669.4 M 1393.5 556.4 V 669.4 M 1413.5 556.4 V 669.4 M 1453.5 556.4 V 669.4 M 1473.5 556.4 V 669.4 M 1493.5 556.4 V 669.4 M 1513.5 556.4 V 669.4 M 50 573.5 H 1550 M 50 593.5 H 1550 M 50 613.5 H 1550 M 50 653.5 H 1550" fill="none" stroke="#F4F5F6" stroke-width="1"/>
+          <path d="M 133.5 556.4 V 669.4 M 233.5 556.4 V 669.4 M 333.5 556.4 V 669.4 M 433.5 556.4 V 669.4 M 533.5 556.4 V 669.4 M 633.5 556.4 V 669.4 M 733.5 556.4 V 669.4 M 833.5 556.4 V 669.4 M 933.5 556.4 V 669.4 M 1033.5 556.4 V 669.4 M 1133.5 556.4 V 669.4 M 1233.5 556.4 V 669.4 M 1333.5 556.4 V 669.4 M 1433.5 556.4 V 669.4 M 1533.5 556.4 V 669.4 M 50 633.5 H 1550" fill="none" stroke="#E9EAEC" stroke-width="1"/>
+          <rect x="50" y="556.4" width="4" height="113" fill="#1A73E8"/>
+          <rect x="50" y="669.4" width="1500" height="116" fill="#F2FBF1"/>
+          <path d="M 53.5 669.4 V 785.4 M 73.5 669.4 V 785.4 M 93.5 669.4 V 785.4 M 113.5 669.4 V 785.4 M 153.5 669.4 V 785.4 M 173.5 669.4 V 785.4 M 193.5 669.4 V 785.4 M 213.5 669.4 V 785.4 M 253.5 669.4 V 785.4 M 273.5 669.4 V 785.4 M 293.5 669.4 V 785.4 M 313.5 669.4 V 785.4 M 353.5 669.4 V 785.4 M 373.5 669.4 V 785.4 M 393.5 669.4 V 785.4 M 413.5 669.4 V 785.4 M 453.5 669.4 V 785.4 M 473.5 669.4 V 785.4 M 493.5 669.4 V 785.4 M 513.5 669.4 V 785.4 M 553.5 669.4 V 785.4 M 573.5 669.4 V 785.4 M 593.5 669.4 V 785.4 M 613.5 669.4 V 785.4 M 653.5 669.4 V 785.4 M 673.5 669.4 V 785.4 M 693.5 669.4 V 785.4 M 713.5 669.4 V 785.4 M 753.5 669.4 V 785.4 M 773.5 669.4 V 785.4 M 793.5 669.4 V 785.4 M 813.5 669.4 V 785.4 M 853.5 669.4 V 785.4 M 873.5 669.4 V 785.4 M 893.5 669.4 V 785.4 M 913.5 669.4 V 785.4 M 953.5 669.4 V 785.4 M 973.5 669.4 V 785.4 M 993.5 669.4 V 785.4 M 1013.5 669.4 V 785.4 M 1053.5 669.4 V 785.4 M 1073.5 669.4 V 785.4 M 1093.5 669.4 V 785.4 M 1113.5 669.4 V 785.4 M 1153.5 669.4 V 785.4 M 1173.5 669.4 V 785.4 M 1193.5 669.4 V 785.4 M 1213.5 669.4 V 785.4 M 1253.5 669.4 V 785.4 M 1273.5 669.4 V 785.4 M 1293.5 669.4 V 785.4 M 1313.5 669.4 V 785.4 M 1353.5 669.4 V 785.4 M 1373.5 669.4 V 785.4 M 1393.5 669.4 V 785.4 M 1413.5 669.4 V 785.4 M 1453.5 669.4 V 785.4 M 1473.5 669.4 V 785.4 M 1493.5 669.4 V 785.4 M 1513.5 669.4 V 785.4 M 50 673.5 H 1550 M 50 693.5 H 1550 M 50 713.5 H 1550 M 50 753.5 H 1550 M 50 773.5 H 1550" fill="none" stroke="#F4F5F6" stroke-width="1"/>
+          <path d="M 133.5 669.4 V 785.4 M 233.5 669.4 V 785.4 M 333.5 669.4 V 785.4 M 433.5 669.4 V 785.4 M 533.5 669.4 V 785.4 M 633.5 669.4 V 785.4 M 733.5 669.4 V 785.4 M 833.5 669.4 V 785.4 M 933.5 669.4 V 785.4 M 1033.5 669.4 V 785.4 M 1133.5 669.4 V 785.4 M 1233.5 669.4 V 785.4 M 1333.5 669.4 V 785.4 M 1433.5 669.4 V 785.4 M 1533.5 669.4 V 785.4 M 50 733.5 H 1550" fill="none" stroke="#E9EAEC" stroke-width="1"/>
+          <rect x="50" y="669.4" width="4" height="116" fill="#497938"/>
+          <rect x="50" y="785.4" width="1500" height="110" fill="#F7F5FF"/>
+          <path d="M 53.5 785.4 V 895.4 M 73.5 785.4 V 895.4 M 93.5 785.4 V 895.4 M 113.5 785.4 V 895.4 M 153.5 785.4 V 895.4 M 173.5 785.4 V 895.4 M 193.5 785.4 V 895.4 M 213.5 785.4 V 895.4 M 253.5 785.4 V 895.4 M 273.5 785.4 V 895.4 M 293.5 785.4 V 895.4 M 313.5 785.4 V 895.4 M 353.5 785.4 V 895.4 M 373.5 785.4 V 895.4 M 393.5 785.4 V 895.4 M 413.5 785.4 V 895.4 M 453.5 785.4 V 895.4 M 473.5 785.4 V 895.4 M 493.5 785.4 V 895.4 M 513.5 785.4 V 895.4 M 553.5 785.4 V 895.4 M 573.5 785.4 V 895.4 M 593.5 785.4 V 895.4 M 613.5 785.4 V 895.4 M 653.5 785.4 V 895.4 M 673.5 785.4 V 895.4 M 693.5 785.4 V 895.4 M 713.5 785.4 V 895.4 M 753.5 785.4 V 895.4 M 773.5 785.4 V 895.4 M 793.5 785.4 V 895.4 M 813.5 785.4 V 895.4 M 853.5 785.4 V 895.4 M 873.5 785.4 V 895.4 M 893.5 785.4 V 895.4 M 913.5 785.4 V 895.4 M 953.5 785.4 V 895.4 M 973.5 785.4 V 895.4 M 993.5 785.4 V 895.4 M 1013.5 785.4 V 895.4 M 1053.5 785.4 V 895.4 M 1073.5 785.4 V 895.4 M 1093.5 785.4 V 895.4 M 1113.5 785.4 V 895.4 M 1153.5 785.4 V 895.4 M 1173.5 785.4 V 895.4 M 1193.5 785.4 V 895.4 M 1213.5 785.4 V 895.4 M 1253.5 785.4 V 895.4 M 1273.5 785.4 V 895.4 M 1293.5 785.4 V 895.4 M 1313.5 785.4 V 895.4 M 1353.5 785.4 V 895.4 M 1373.5 785.4 V 895.4 M 1393.5 785.4 V 895.4 M 1413.5 785.4 V 895.4 M 1453.5 785.4 V 895.4 M 1473.5 785.4 V 895.4 M 1493.5 785.4 V 895.4 M 1513.5 785.4 V 895.4 M 50 793.5 H 1550 M 50 813.5 H 1550 M 50 853.5 H 1550 M 50 873.5 H 1550 M 50 893.5 H 1550" fill="none" stroke="#F4F5F6" stroke-width="1"/>
+          <path d="M 133.5 785.4 V 895.4 M 233.5 785.4 V 895.4 M 333.5 785.4 V 895.4 M 433.5 785.4 V 895.4 M 533.5 785.4 V 895.4 M 633.5 785.4 V 895.4 M 733.5 785.4 V 895.4 M 833.5 785.4 V 895.4 M 933.5 785.4 V 895.4 M 1033.5 785.4 V 895.4 M 1133.5 785.4 V 895.4 M 1233.5 785.4 V 895.4 M 1333.5 785.4 V 895.4 M 1433.5 785.4 V 895.4 M 1533.5 785.4 V 895.4 M 50 833.5 H 1550" fill="none" stroke="#E9EAEC" stroke-width="1"/>
+          <rect x="50" y="785.4" width="4" height="110" fill="#593894"/>
+          <line x1="50" y1="556.9" x2="1550" y2="556.9" stroke="#DADCE0" stroke-width="1"/>
+          <line x1="50" y1="669.9" x2="1550" y2="669.9" stroke="#DADCE0" stroke-width="1"/>
+          <line x1="50" y1="785.9" x2="1550" y2="785.9" stroke="#DADCE0" stroke-width="1"/>
+          <circle cx="218" cy="431.4" r="9.5" fill="#FFFFFF" stroke="#202124" stroke-width="1"/>
+          <line x1="374.83" y1="420.4" x2="374.83" y2="895.4" stroke="#DADCE0" stroke-width="1" stroke-dasharray="4 4"/>
+          <circle cx="392.33" cy="431.4" r="9.5" fill="#FFFFFF" stroke="#202124" stroke-width="1"/>
+          <line x1="768.91" y1="420.4" x2="768.91" y2="895.4" stroke="#DADCE0" stroke-width="1" stroke-dasharray="4 4"/>
+          <circle cx="786.41" cy="431.4" r="9.5" fill="#FFFFFF" stroke="#202124" stroke-width="1"/>
+          <line x1="1349.59" y1="420.4" x2="1349.59" y2="895.4" stroke="#DADCE0" stroke-width="1" stroke-dasharray="4 4"/>
+          <circle cx="1367.09" cy="431.4" r="9.5" fill="#FFFFFF" stroke="#202124" stroke-width="1"/>
+          <text x="66" y="472.93" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" letter-spacing="1.3" fill="#5A3900">OPERATOR</text>
+          <text x="66" y="490.68" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">writes triggers,</text>
+          <text x="66" y="505.68" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">reviews verdicts</text>
+          <text x="66" y="582.93" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" letter-spacing="1.3" fill="#5F6368">TRIGGER API</text>
+          <text x="66" y="600.68" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">plans, versions,</text>
+          <text x="66" y="615.68" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">queues</text>
+          <text x="66" y="695.93" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" letter-spacing="1.3" fill="#26481B">CLIP WORKER</text>
+          <text x="66" y="713.68" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">one job per clip</text>
+          <text x="66" y="811.93" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" letter-spacing="1.3" fill="#4B3275">EVALUATOR</text>
+          <text x="66" y="829.68" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">reads frames against</text>
+          <text x="66" y="844.68" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">a plan</text>
+          <text x="215.2" y="436.13" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#202124">1</text>
+          <text x="234" y="435.4" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">DESCRIBE</text>
+          <text x="388.23" y="436.13" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#202124">2</text>
+          <text x="408.33" y="435.4" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">PLAN AND APPROVE</text>
+          <text x="782.21" y="436.13" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#202124">3</text>
+          <text x="802.41" y="435.4" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">EVALUATE EACH CLIP</text>
+          <text x="1362.7" y="436.13" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#202124">4</text>
+          <text x="1383.09" y="435.4" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">REVIEW</text>
           <g data-id="/body/0/children/0/children/0" data-tag="Step">
-            <rect x="224.63" y="442.63" width="125.08" height="76.75" fill="none" stroke="#A36E14" stroke-width="1.25"/>
-            <circle cx="331.33" cy="459" r="8.35" fill="#FFFFFF" stroke="#A36E14" stroke-width="1.3"/>
-            <text x="233" y="461.87" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#5A3900">Describe the</text>
-            <text x="233" y="476.87" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#5A3900">event</text>
-            <text x="233" y="493.68" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">in plain language</text>
-            <text x="233" y="508.68" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">camera and hours</text>
-            <text x="329.17" y="462.64" xml:space="preserve" font-family="Inter" font-size="10" font-weight="700" fill="#202124">1</text>
+            <rect x="224.63" y="463.02" width="125.08" height="76.75" fill="none" stroke="#A36E14" stroke-width="1.25"/>
+            <circle cx="331.33" cy="479.4" r="8.35" fill="#FFFFFF" stroke="#A36E14" stroke-width="1.3"/>
+            <text x="233" y="482.27" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#5A3900">Describe the</text>
+            <text x="233" y="497.27" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#5A3900">event</text>
+            <text x="233" y="514.08" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">in plain language</text>
+            <text x="233" y="529.08" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">camera and hours</text>
+            <text x="329.17" y="483.04" xml:space="preserve" font-family="Inter" font-size="10" font-weight="700" fill="#202124">1</text>
           </g>
           <g data-id="/body/0/children/0/children/1" data-tag="Step">
-            <text x="233" y="596.68" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">nothing runs yet</text>
+            <text x="233" y="617.08" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">nothing runs yet</text>
           </g>
           <g data-id="/body/0/children/0/children/2" data-tag="Step">
-            <rect x="398.95" y="552.63" width="142.25" height="79.75" fill="none" stroke="#1A73E8" stroke-width="1.25"/>
-            <circle cx="522.83" cy="569" r="8.35" fill="#FFFFFF" stroke="#1A73E8" stroke-width="1.3"/>
-            <text x="407.33" y="571.87" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#5F6368">Compile a plan</text>
-            <text x="407.33" y="591.68" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">objects, conditions,</text>
-            <text x="407.33" y="606.68" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">frame rate</text>
-            <text x="407.33" y="621.68" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">plan version 1</text>
-            <text x="519.6" y="572.64" xml:space="preserve" font-family="Inter" font-size="10" font-weight="700" fill="#202124">3</text>
+            <rect x="398.95" y="573.03" width="142.25" height="79.75" fill="none" stroke="#1A73E8" stroke-width="1.25"/>
+            <circle cx="522.83" cy="589.4" r="8.35" fill="#FFFFFF" stroke="#1A73E8" stroke-width="1.3"/>
+            <text x="407.33" y="592.27" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#5F6368">Compile a plan</text>
+            <text x="407.33" y="612.08" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">objects, conditions,</text>
+            <text x="407.33" y="627.08" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">frame rate</text>
+            <text x="407.33" y="642.08" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">plan version 1</text>
+            <text x="519.6" y="593.04" xml:space="preserve" font-family="Inter" font-size="10" font-weight="700" fill="#202124">3</text>
           </g>
           <g data-id="/body/0/children/0/children/3" data-tag="Step">
-            <rect x="590.46" y="442.63" width="153.33" height="76.75" fill="none" stroke="#A36E14" stroke-width="1.25"/>
-            <path d="M700.41 450.7 L709.71 460 L700.41 469.3 L691.11 460 Z" fill="#FAF9CA" stroke="#A36E14" stroke-width="1.4" stroke-linejoin="round"/>
-            <path d="M724.41 451.5 L734.41 468.5 L714.41 468.5 Z" fill="#202124"/>
-            <text x="598.83" y="461.87" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#5A3900">Approve the</text>
-            <text x="598.83" y="476.87" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#5A3900">plan</text>
-            <text x="598.83" y="493.68" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">reads the plan, not the</text>
-            <text x="598.83" y="508.68" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">prompt</text>
-            <text x="698.36" y="463.46" xml:space="preserve" font-family="Inter" font-size="9.5" font-weight="700" fill="#202124">1</text>
-            <text x="722.47" y="465.77" xml:space="preserve" font-family="Inter" font-size="9" font-weight="700" fill="#FFFFFF">1</text>
+            <rect x="590.46" y="463.02" width="153.33" height="76.75" fill="none" stroke="#A36E14" stroke-width="1.25"/>
+            <path d="M700.41 471.1 L709.71 480.4 L700.41 489.7 L691.11 480.4 Z" fill="#FAF9CA" stroke="#A36E14" stroke-width="1.4" stroke-linejoin="round"/>
+            <path d="M724.41 471.9 L734.41 488.9 L714.41 488.9 Z" fill="#202124"/>
+            <text x="598.83" y="482.27" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#5A3900">Approve the</text>
+            <text x="598.83" y="497.27" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#5A3900">plan</text>
+            <text x="598.83" y="514.08" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">reads the plan, not the</text>
+            <text x="598.83" y="529.08" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">prompt</text>
+            <text x="698.36" y="483.86" xml:space="preserve" font-family="Inter" font-size="9.5" font-weight="700" fill="#202124">1</text>
+            <text x="722.47" y="486.17" xml:space="preserve" font-family="Inter" font-size="9" font-weight="700" fill="#FFFFFF">1</text>
           </g>
           <g data-id="/body/0/children/0/children/4" data-tag="Step">
-            <rect x="590.46" y="576.13" width="153.33" height="32.75" rx="16.38" fill="#D2E3FC" stroke="#1A73E8" stroke-width="1.25"/>
-            <circle cx="725.41" cy="592.5" r="8.35" fill="#FFFFFF" stroke="#202124" stroke-width="1.3"/>
-            <text x="598.83" y="595.37" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#5F6368">Store plan version</text>
-            <text x="722.15" y="596.14" xml:space="preserve" font-family="Inter" font-size="10" font-weight="700" fill="#202124">8</text>
+            <rect x="590.46" y="596.53" width="153.33" height="32.75" rx="16.38" fill="#D2E3FC" stroke="#1A73E8" stroke-width="1.25"/>
+            <circle cx="725.41" cy="612.9" r="8.35" fill="#FFFFFF" stroke="#497938" stroke-width="1.3"/>
+            <text x="598.83" y="615.77" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#5F6368">Store plan version</text>
+            <text x="722.15" y="616.54" xml:space="preserve" font-family="Inter" font-size="10" font-weight="700" fill="#202124">8</text>
           </g>
           <g data-id="/body/0/children/0/children/5" data-tag="Step">
-            <rect x="793.03" y="665.63" width="149.77" height="82.75" fill="none" stroke="#497938" stroke-width="1.25"/>
-            <circle cx="924.43" cy="682" r="8.35" fill="#FFFFFF" stroke="#202124" stroke-width="1.3"/>
-            <path d="M923.43 693 L933.43 710 L913.43 710 Z" fill="#202124"/>
-            <text x="801.41" y="684.87" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#26481B">Clip arrives</text>
-            <text x="801.41" y="704.68" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">the arrival event</text>
-            <text x="801.41" y="719.68" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">names a finished</text>
-            <text x="801.41" y="734.68" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">clip</text>
-            <text x="921.32" y="685.64" xml:space="preserve" font-family="Inter" font-size="10" font-weight="700" fill="#202124">5</text>
-            <text x="920.38" y="707.27" xml:space="preserve" font-family="Inter" font-size="9" font-weight="700" fill="#FFFFFF">4</text>
+            <rect x="793.03" y="686.03" width="149.77" height="82.75" fill="none" stroke="#497938" stroke-width="1.25"/>
+            <circle cx="924.43" cy="702.4" r="8.35" fill="#FFFFFF" stroke="#202124" stroke-width="1.3"/>
+            <path d="M923.43 713.4 L933.43 730.4 L913.43 730.4 Z" fill="#202124"/>
+            <text x="801.41" y="705.27" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#26481B">Clip arrives</text>
+            <text x="801.41" y="725.08" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">the arrival event</text>
+            <text x="801.41" y="740.08" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">names a finished</text>
+            <text x="801.41" y="755.08" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">clip</text>
+            <text x="921.32" y="706.04" xml:space="preserve" font-family="Inter" font-size="10" font-weight="700" fill="#202124">5</text>
+            <text x="920.38" y="727.67" xml:space="preserve" font-family="Inter" font-size="9" font-weight="700" fill="#FFFFFF">4</text>
           </g>
           <g data-id="/body/0/children/0/children/6" data-tag="Step">
-            <path d="M 1000.05 668.63 V 665.63 H 1132.11 V 742.38 H 1128.11" fill="none" stroke="#497938" stroke-width="1.25"/>
-            <path d="M 996.05 671.63 V 668.63 H 1128.11 V 745.38 H 1124.11" fill="none" stroke="#497938" stroke-width="1.25"/>
-            <rect x="992.05" y="671.63" width="132.06" height="76.75" fill="none" stroke="#497938" stroke-width="1.25"/>
-            <circle cx="1083.74" cy="688" r="8.35" fill="#FFFFFF" stroke="#497938" stroke-width="1.3"/>
-            <circle cx="1105.74" cy="688" r="8.35" fill="#FFFFFF" stroke="#1A73E8" stroke-width="1.3"/>
-            <text x="1000.43" y="690.87" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#26481B">One job per</text>
-            <text x="1000.43" y="705.87" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#26481B">clip</text>
-            <text x="1000.43" y="722.68" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">fetch frames</text>
-            <text x="1000.43" y="737.68" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">call the evaluator</text>
-            <text x="1080.49" y="691.64" xml:space="preserve" font-family="Inter" font-size="10" font-weight="700" fill="#202124">6</text>
-            <text x="1102.36" y="691.64" xml:space="preserve" font-family="Inter" font-size="10" font-weight="700" fill="#202124">4</text>
+            <path d="M 1000.05 689.03 V 686.03 H 1132.11 V 762.78 H 1128.11" fill="none" stroke="#497938" stroke-width="1.25"/>
+            <path d="M 996.05 692.03 V 689.03 H 1128.11 V 765.78 H 1124.11" fill="none" stroke="#497938" stroke-width="1.25"/>
+            <rect x="992.05" y="692.03" width="132.06" height="76.75" fill="none" stroke="#497938" stroke-width="1.25"/>
+            <circle cx="1083.74" cy="708.4" r="8.35" fill="#FFFFFF" stroke="#497938" stroke-width="1.3"/>
+            <circle cx="1105.74" cy="708.4" r="8.35" fill="#FFFFFF" stroke="#1A73E8" stroke-width="1.3"/>
+            <text x="1000.43" y="711.27" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#26481B">One job per</text>
+            <text x="1000.43" y="726.27" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#26481B">clip</text>
+            <text x="1000.43" y="743.08" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">fetch frames</text>
+            <text x="1000.43" y="758.08" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">call the evaluator</text>
+            <text x="1080.49" y="712.04" xml:space="preserve" font-family="Inter" font-size="10" font-weight="700" fill="#202124">6</text>
+            <text x="1102.36" y="712.04" xml:space="preserve" font-family="Inter" font-size="10" font-weight="700" fill="#202124">4</text>
           </g>
           <g data-id="/body/0/children/0/children/7" data-tag="Step">
-            <rect x="992.05" y="781.63" width="140.06" height="76.75" fill="none" stroke="#593894" stroke-width="1.25"/>
-            <circle cx="1089.74" cy="798" r="8.35" fill="#FFFFFF" stroke="#593894" stroke-width="1.3"/>
-            <path d="M1112.74 789.5 L1122.74 806.5 L1102.74 806.5 Z" fill="#202124"/>
-            <text x="1000.43" y="800.87" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#4B3275">Judge the</text>
-            <text x="1000.43" y="815.87" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#4B3275">frames</text>
-            <text x="1000.43" y="832.68" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">against the approved</text>
-            <text x="1000.43" y="847.68" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">plan</text>
-            <text x="1086.83" y="801.64" xml:space="preserve" font-family="Inter" font-size="10" font-weight="700" fill="#202124">7</text>
-            <text x="1109.83" y="803.77" xml:space="preserve" font-family="Inter" font-size="9" font-weight="700" fill="#FFFFFF">3</text>
+            <rect x="992.05" y="802.03" width="140.06" height="76.75" fill="none" stroke="#593894" stroke-width="1.25"/>
+            <circle cx="1089.74" cy="818.4" r="8.35" fill="#FFFFFF" stroke="#593894" stroke-width="1.3"/>
+            <path d="M1112.74 809.9 L1122.74 826.9 L1102.74 826.9 Z" fill="#202124"/>
+            <text x="1000.43" y="821.27" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#4B3275">Judge the</text>
+            <text x="1000.43" y="836.27" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#4B3275">frames</text>
+            <text x="1000.43" y="853.08" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">against the approved</text>
+            <text x="1000.43" y="868.08" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">plan</text>
+            <text x="1086.83" y="822.04" xml:space="preserve" font-family="Inter" font-size="10" font-weight="700" fill="#202124">7</text>
+            <text x="1109.83" y="824.17" xml:space="preserve" font-family="Inter" font-size="9" font-weight="700" fill="#FFFFFF">3</text>
           </g>
           <g data-id="/body/0/children/0/children/8" data-tag="Step">
-            <rect x="1181.36" y="665.63" width="143.1" height="82.75" fill="none" stroke="#497938" stroke-width="1.25"/>
-            <circle cx="1282.09" cy="682" r="8.35" fill="#FFFFFF" stroke="#202124" stroke-width="1.3"/>
-            <path d="M1305.09 673.5 L1315.09 690.5 L1295.09 690.5 Z" fill="#202124"/>
-            <text x="1189.74" y="684.87" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#26481B">Write the</text>
-            <text x="1189.74" y="699.87" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#26481B">verdict</text>
-            <text x="1189.74" y="716.68" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">verdict, frames, plan</text>
-            <text x="1189.74" y="731.68" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">version</text>
-            <text x="1278.84" y="685.64" xml:space="preserve" font-family="Inter" font-size="10" font-weight="700" fill="#202124">8</text>
-            <text x="1302.26" y="687.77" xml:space="preserve" font-family="Inter" font-size="9" font-weight="700" fill="#FFFFFF">2</text>
+            <rect x="1181.36" y="686.03" width="143.1" height="82.75" fill="none" stroke="#497938" stroke-width="1.25"/>
+            <circle cx="1282.09" cy="702.4" r="8.35" fill="#FFFFFF" stroke="#497938" stroke-width="1.3"/>
+            <path d="M1305.09 693.9 L1315.09 710.9 L1295.09 710.9 Z" fill="#202124"/>
+            <text x="1189.74" y="705.27" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#26481B">Write the</text>
+            <text x="1189.74" y="720.27" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#26481B">verdict</text>
+            <text x="1189.74" y="737.08" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">verdict, frames, plan</text>
+            <text x="1189.74" y="752.08" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">version</text>
+            <text x="1278.84" y="706.04" xml:space="preserve" font-family="Inter" font-size="10" font-weight="700" fill="#202124">8</text>
+            <text x="1302.26" y="708.17" xml:space="preserve" font-family="Inter" font-size="9" font-weight="700" fill="#FFFFFF">2</text>
           </g>
           <g data-id="/body/0/children/0/children/9" data-tag="Step">
-            <rect x="1373.72" y="442.63" width="151.66" height="76.75" fill="none" stroke="#A36E14" stroke-width="1.25"/>
-            <path d="M1506 450.7 L1515.3 460 L1506 469.3 L1496.7 460 Z" fill="#FAF9CA" stroke="#A36E14" stroke-width="1.4" stroke-linejoin="round"/>
-            <text x="1382.09" y="461.87" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#5A3900">Review verdicts</text>
-            <text x="1382.09" y="483.68" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">filter by trigger and time</text>
-            <text x="1503.01" y="463.46" xml:space="preserve" font-family="Inter" font-size="9.5" font-weight="700" fill="#202124">2</text>
+            <rect x="1373.72" y="463.02" width="151.66" height="76.75" fill="none" stroke="#A36E14" stroke-width="1.25"/>
+            <path d="M1506 471.1 L1515.3 480.4 L1506 489.7 L1496.7 480.4 Z" fill="#FAF9CA" stroke="#A36E14" stroke-width="1.4" stroke-linejoin="round"/>
+            <text x="1382.09" y="482.27" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#5A3900">Review verdicts</text>
+            <text x="1382.09" y="504.08" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">filter by trigger and time</text>
+            <text x="1503.01" y="483.86" xml:space="preserve" font-family="Inter" font-size="9.5" font-weight="700" fill="#202124">2</text>
           </g>
           <g data-id="/body/0/children/0/children/10" data-tag="Step">
-            <rect x="1373.72" y="552.63" width="151.66" height="79.75" fill="none" stroke="#1A73E8" stroke-width="1.25" stroke-dasharray="7 4"/>
-            <text x="1382.09" y="571.87" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#5F6368">Replay over earlier</text>
-            <text x="1382.09" y="586.87" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#5F6368">clips</text>
+            <rect x="1373.72" y="573.03" width="151.66" height="79.75" fill="none" stroke="#1A73E8" stroke-width="1.25" stroke-dasharray="7 4"/>
+            <text x="1382.09" y="592.27" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#5F6368">Replay over earlier</text>
+            <text x="1382.09" y="607.27" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#5F6368">clips</text>
           </g>
           <g data-id="/body/0/children/0/children/11" data-tag="Step">
-            <rect x="1373.72" y="781.63" width="151.66" height="76.75" fill="none" stroke="#DADCE0" stroke-width="1.25"/>
-            <path d="M1506 789.7 L1515.3 799 L1506 808.3 L1496.7 799 Z" fill="#FAF9CA" stroke="#A36E14" stroke-width="1.4" stroke-linejoin="round"/>
-            <text x="1382.09" y="800.87" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#4B3275">A new model</text>
-            <text x="1382.09" y="815.87" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#4B3275">version re-plans</text>
-            <text x="1382.09" y="830.87" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#4B3275">every trigger</text>
-            <text x="1502.93" y="802.46" xml:space="preserve" font-family="Inter" font-size="9.5" font-weight="700" fill="#202124">3</text>
+            <rect x="1373.72" y="802.03" width="151.66" height="76.75" fill="none" stroke="#DADCE0" stroke-width="1.25"/>
+            <path d="M1506 810.1 L1515.3 819.4 L1506 828.7 L1496.7 819.4 Z" fill="#FAF9CA" stroke="#A36E14" stroke-width="1.4" stroke-linejoin="round"/>
+            <text x="1382.09" y="821.27" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#4B3275">A new model</text>
+            <text x="1382.09" y="836.27" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#4B3275">version re-plans</text>
+            <text x="1382.09" y="851.27" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#4B3275">every trigger</text>
+            <text x="1502.93" y="822.86" xml:space="preserve" font-family="Inter" font-size="9.5" font-weight="700" fill="#202124">3</text>
           </g>
         </g>
       </g>
       <g data-id="/body/1" data-tag="View">
-        <circle cx="64" cy="902" r="13.25" fill="#FFFFFF" stroke="#202124" stroke-width="1.5"/>
-        <line x1="398.5" y1="902" x2="1308.78" y2="902" stroke="#DADCE0" stroke-width="1"/>
-        <text x="59.8" y="906.73" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#202124">3</text>
-        <text x="90" y="907.82" xml:space="preserve" font-family="Inter" font-size="16" font-weight="700" letter-spacing="1.6" fill="#202124">SYSTEM</text>
-        <text x="175.44" y="907.09" xml:space="preserve" font-family="Inter" font-size="14" font-weight="400" fill="#5F6368">the pieces, and why each exists</text>
-        <text x="1320.78" y="906.37" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">balloons key the drawing to the parts list</text>
+        <circle cx="64" cy="922.4" r="13.25" fill="#FFFFFF" stroke="#202124" stroke-width="1.5"/>
+        <line x1="398.5" y1="922.4" x2="1308.78" y2="922.4" stroke="#DADCE0" stroke-width="1"/>
+        <text x="59.8" y="927.13" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#202124">3</text>
+        <text x="90" y="928.22" xml:space="preserve" font-family="Inter" font-size="16" font-weight="700" letter-spacing="1.6" fill="#202124">SYSTEM</text>
+        <text x="175.44" y="927.49" xml:space="preserve" font-family="Inter" font-size="14" font-weight="400" fill="#5F6368">the pieces, and why each exists</text>
+        <text x="1320.78" y="926.77" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">balloons key the drawing to the parts list</text>
         <g data-id="/body/1/children/0" data-tag="Row">
           <g data-id="/body/1/children/0/children/0" data-tag="Col">
             <g data-id="/body/1/children/0/children/0/children/0" data-tag="Row">
               <g data-id="/body/1/children/0/children/0/children/0/children/0" data-tag="Col">
                 <g data-id="/body/1/children/0/children/0/children/0/children/0/children/0" data-tag="Row">
                   <g data-id="/body/1/children/0/children/0/children/0/children/0/children/0/children/0" data-tag="Pcard">
-                    <rect x="50.63" y="1060.63" width="191.58" height="47.15" rx="7.38" fill="#FFFFFF" stroke="#A36E14" stroke-width="1.25"/>
-                    <image x="61.5" y="1070.2" width="28" height="28" href="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyBpZD0iU3RhbmRhcmRfUHJvZHVjdF9JY29uIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZlcnNpb249IjEuMSIgdmlld0JveD0iMCAwIDUxMiA1MTIiPgogIDwhLS0gR2VuZXJhdG9yOiBBZG9iZSBJbGx1c3RyYXRvciAyOS4xLjAsIFNWRyBFeHBvcnQgUGx1Zy1JbiAuIFNWRyBWZXJzaW9uOiAyLjEuMCBCdWlsZCAxNDIpICAtLT4KICA8ZyBpZD0iYm91bmRpbmdfYm94Ij4KICAgIDxyZWN0IHdpZHRoPSI1MTIiIGhlaWdodD0iNTEyIiBmaWxsPSJub25lIi8+CiAgPC9nPgogIDxnIGlkPSJBcnQiPgogICAgPHBhdGggZD0iTTM0OSwyNzJoLTE1LjVjLTguODM3LDAtMTYtNy4xNjMtMTYtMTZzNy4xNjMtMTYsMTYtMTZoMTUuNWM0Mi40NTgsMCw3Ny0zNC41NDIsNzctNzdzLTM0LjU0Mi03Ny03Ny03N2MtOC44MzcsMC0xNi03LjE2My0xNi0xNnM3LjE2My0xNiwxNi0xNmM2MC4xMDMsMCwxMDksNDguODk3LDEwOSwxMDlzLTQ4Ljg5NywxMDktMTA5LDEwOVoiIGZpbGw9IiM5YWEwYTYiLz4KICAgIDxwYXRoIGQ9Ik0xNjMsNDU4Yy02MC4xMDMsMC0xMDktNDguODk3LTEwOS0xMDlzNDguODk3LTEwOSwxMDktMTA5aDE1LjVjOC44MzcsMCwxNiw3LjE2MywxNiwxNnMtNy4xNjMsMTYtMTYsMTZoLTE1LjVjLTQyLjQ1OCwwLTc3LDM0LjU0Mi03Nyw3N3MzNC41NDIsNzcsNzcsNzdjOC44MzcsMCwxNiw3LjE2MywxNiwxNnMtNy4xNjMsMTYtMTYsMTZaIiBmaWxsPSIjOWFhMGE2Ii8+CiAgICA8cGF0aCBkPSJNMTYzLDQ1OHYtMzJjNDIuNDU4LDAsNzctMzQuNTQyLDc3LTc3di0xODZjMC02MC4xMDMsNDguODk3LTEwOSwxMDktMTA5djMyYy00Mi40NTgsMC03NywzNC41NDItNzcsNzd2MTg2YzAsNjAuMTAzLTQ4Ljg5NywxMDktMTA5LDEwOVoiIGZpbGw9IiM0Mjg1ZjQiLz4KICA8L2c+Cjwvc3ZnPg=="/>
-                    <circle cx="222.33" cy="1076.5" r="8.35" fill="#FFFFFF" stroke="#A36E14" stroke-width="1.3"/>
-                    <text x="99.5" y="1080.03" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#5A3900">Operator console</text>
-                    <text x="99.5" y="1098.07" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">web client</text>
-                    <text x="220.18" y="1080.14" xml:space="preserve" font-family="Inter" font-size="10" font-weight="700" fill="#202124">1</text>
+                    <circle cx="146.42" cy="1144.1" r="14.38" fill="#FAF9CA" stroke="#A36E14" stroke-width="1.25"/>
+                    <path d="M 117.04 1198.47 Q 117.04 1166.72 146.42 1166.72 Q 175.79 1166.72 175.79 1198.47 Z" fill="#FAF9CA" stroke="#A36E14" stroke-width="1.25" stroke-linejoin="round"/>
+                    <text x="118.16" y="1216.63" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#5A3900">Operator</text>
+                    <text x="112.95" y="1232.27" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">one per site</text>
+                  </g>
+                </g>
+                <g data-id="/body/1/children/0/children/0/children/0/children/0/children/1" data-tag="Row">
+                  <g data-id="/body/1/children/0/children/0/children/0/children/0/children/1/children/0" data-tag="Pcard">
+                    <rect x="50.63" y="1299.73" width="191.58" height="47.15" rx="7.38" fill="#FFFFFF" stroke="#A36E14" stroke-width="1.25"/>
+                    <image x="61.5" y="1309.3" width="28" height="28" href="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyBpZD0iU3RhbmRhcmRfUHJvZHVjdF9JY29uIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZlcnNpb249IjEuMSIgdmlld0JveD0iMCAwIDUxMiA1MTIiPgogIDwhLS0gR2VuZXJhdG9yOiBBZG9iZSBJbGx1c3RyYXRvciAyOS4xLjAsIFNWRyBFeHBvcnQgUGx1Zy1JbiAuIFNWRyBWZXJzaW9uOiAyLjEuMCBCdWlsZCAxNDIpICAtLT4KICA8ZyBpZD0iYm91bmRpbmdfYm94Ij4KICAgIDxyZWN0IHdpZHRoPSI1MTIiIGhlaWdodD0iNTEyIiBmaWxsPSJub25lIi8+CiAgPC9nPgogIDxnIGlkPSJBcnQiPgogICAgPHBhdGggZD0iTTM0OSwyNzJoLTE1LjVjLTguODM3LDAtMTYtNy4xNjMtMTYtMTZzNy4xNjMtMTYsMTYtMTZoMTUuNWM0Mi40NTgsMCw3Ny0zNC41NDIsNzctNzdzLTM0LjU0Mi03Ny03Ny03N2MtOC44MzcsMC0xNi03LjE2My0xNi0xNnM3LjE2My0xNiwxNi0xNmM2MC4xMDMsMCwxMDksNDguODk3LDEwOSwxMDlzLTQ4Ljg5NywxMDktMTA5LDEwOVoiIGZpbGw9IiM5YWEwYTYiLz4KICAgIDxwYXRoIGQ9Ik0xNjMsNDU4Yy02MC4xMDMsMC0xMDktNDguODk3LTEwOS0xMDlzNDguODk3LTEwOSwxMDktMTA5aDE1LjVjOC44MzcsMCwxNiw3LjE2MywxNiwxNnMtNy4xNjMsMTYtMTYsMTZoLTE1LjVjLTQyLjQ1OCwwLTc3LDM0LjU0Mi03Nyw3N3MzNC41NDIsNzcsNzcsNzdjOC44MzcsMCwxNiw3LjE2MywxNiwxNnMtNy4xNjMsMTYtMTYsMTZaIiBmaWxsPSIjOWFhMGE2Ii8+CiAgICA8cGF0aCBkPSJNMTYzLDQ1OHYtMzJjNDIuNDU4LDAsNzctMzQuNTQyLDc3LTc3di0xODZjMC02MC4xMDMsNDguODk3LTEwOSwxMDktMTA5djMyYy00Mi40NTgsMC03NywzNC41NDItNzcsNzd2MTg2YzAsNjAuMTAzLTQ4Ljg5NywxMDktMTA5LDEwOVoiIGZpbGw9IiM0Mjg1ZjQiLz4KICA8L2c+Cjwvc3ZnPg=="/>
+                    <circle cx="222.33" cy="1315.6" r="8.35" fill="#FFFFFF" stroke="#A36E14" stroke-width="1.3"/>
+                    <text x="99.5" y="1319.13" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#5A3900">Operator console</text>
+                    <text x="99.5" y="1337.17" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">web client</text>
+                    <text x="220.18" y="1319.24" xml:space="preserve" font-family="Inter" font-size="10" font-weight="700" fill="#202124">1</text>
                   </g>
                 </g>
               </g>
               <g data-id="/body/1/children/0/children/0/children/0/children/1" data-tag="Zone" data-kind="gcp">
-                <path d="M 270.83 924 H 1032.67 A 4 4 0 0 1 1036.67 928 V 1234.4 A 10 10 0 0 1 1026.67 1244.4 H 276.83 A 10 10 0 0 1 266.83 1234.4 V 928 A 4 4 0 0 1 270.83 924 Z" fill="none"/>
-                <path d="M 270.83 924.63 H 1032.67 A 3.38 3.38 0 0 1 1036.04 928 V 1234.4 A 9.38 9.38 0 0 1 1026.67 1243.78 H 276.83 A 9.38 9.38 0 0 1 267.46 1234.4 V 928 A 3.38 3.38 0 0 1 270.83 924.63 Z" fill="none" stroke="#202124" stroke-width="1.25"/>
-                <text x="285.83" y="944.6" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#202124">GOOGLE CLOUD</text>
+                <path d="M 310.83 944.4 H 1103.14 A 4 4 0 0 1 1107.14 948.4 V 1521.2 A 10 10 0 0 1 1097.14 1531.2 H 316.83 A 10 10 0 0 1 306.83 1521.2 V 948.4 A 4 4 0 0 1 310.83 944.4 Z" fill="none"/>
+                <path d="M 310.83 945.03 H 1103.14 A 3.38 3.38 0 0 1 1106.52 948.4 V 1521.2 A 9.38 9.38 0 0 1 1097.14 1530.57 H 316.83 A 9.38 9.38 0 0 1 307.46 1521.2 V 948.4 A 3.38 3.38 0 0 1 310.83 945.03 Z" fill="none" stroke="#202124" stroke-width="1.25"/>
+                <text x="325.83" y="965" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#202124">GOOGLE CLOUD</text>
                 <g data-id="/body/1/children/0/children/0/children/0/children/1/children/0" data-tag="Col">
                   <g data-id="/body/1/children/0/children/0/children/0/children/1/children/0/children/0" data-tag="Row">
                     <g data-id="/body/1/children/0/children/0/children/0/children/1/children/0/children/0/children/0" data-tag="Row">
                       <g data-id="/body/1/children/0/children/0/children/0/children/1/children/0/children/0/children/0/children/0" data-tag="Pcard">
-                        <rect x="397.08" y="970.83" width="137.43" height="47.15" rx="7.38" fill="#FFFFFF" stroke="#1A73E8" stroke-width="1.25"/>
-                        <image x="407.95" y="980.4" width="28" height="28" href="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyBpZD0ic3RhbmRhcmRfcHJvZHVjdF9pY29uIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZlcnNpb249IjEuMSIgdmlld0JveD0iMCAwIDUxMiA1MTIiPgogIDwhLS0gR2VuZXJhdG9yOiBBZG9iZSBJbGx1c3RyYXRvciAyOS4yLjEsIFNWRyBFeHBvcnQgUGx1Zy1JbiAuIFNWRyBWZXJzaW9uOiAyLjEuMCBCdWlsZCAxMTYpICAtLT4KICA8ZyBpZD0iYm91bmRpbmdfYm94Ij4KICAgIDxyZWN0IHdpZHRoPSI1MTIiIGhlaWdodD0iNTEyIiBmaWxsPSJub25lIi8+CiAgPC9nPgogIDxnIGlkPSJhcnQiPgogICAgPHBhdGggZD0iTTMzMS42NiwzMzEuNjZsLTIyLjYyNy0yMi42MjdjMjkuMjQyLTI5LjI0MywyOS4yNDItNzYuODIzLDAtMTA2LjA2NmwyMi42MjctMjIuNjI3YzQxLjcyLDQxLjcxOSw0MS43MiwxMDkuNjAyLDAsMTUxLjMyaDBaIiBmaWxsPSIjOWFhMGE2Ii8+CiAgICA8cGF0aCBkPSJNMTgwLjM0LDMzMS42NmMtNDEuNzItNDEuNzE5LTQxLjcyLTEwOS42MDIsMC0xNTEuMzJsMjIuNjI3LDIyLjYyN2MtMjkuMjQyLDI5LjI0My0yOS4yNDIsNzYuODIzLDAsMTA2LjA2NmwtMjIuNjI3LDIyLjYyN1oiIGZpbGw9IiM5YWEwYTYiLz4KICAgIDxwYXRoIGQ9Ik0zMDkuMDMzLDIwMi45NjdjLTI5LjI0Mi0yOS4yNDItNzYuODI0LTI5LjI0Mi0xMDYuMDY2LDBsLTIyLjYyNy0yMi42MjdjMjAuMjEtMjAuMjEsNDcuMDgtMzEuMzQsNzUuNjYtMzEuMzRzNTUuNDUsMTEuMTMsNzUuNjYsMzEuMzRsLTIyLjYyNywyMi42MjdoMFoiIGZpbGw9IiM0Mjg1ZjQiLz4KICAgIDxwYXRoIGQ9Ik0yNTYsMzYzYy0yOC41OCwwLTU1LjQ1LTExLjEzLTc1LjY2LTMxLjM0bDIyLjYyNy0yMi42MjdjMjkuMjQyLDI5LjI0Miw3Ni44MjQsMjkuMjQyLDEwNi4wNjYsMGwyMi42MjcsMjIuNjI3Yy0yMC4yMSwyMC4yMS00Ny4wOCwzMS4zNC03NS42NiwzMS4zNFoiIGZpbGw9IiM0Mjg1ZjQiLz4KICAgIDxwYXRoIGQ9Ik0xNzAuMjI5LDE0Ny42MDNjNS40MDYtOS4yNTYsOC41MjEtMjAuMDA3LDguNTIxLTMxLjQ3OCwwLTM0LjUzMS0yOC4wOTQtNjIuNjI1LTYyLjYyNS02Mi42MjVzLTYyLjYyNSwyOC4wOTQtNjIuNjI1LDYyLjYyNSwyOC4wOTQsNjIuNjI1LDYyLjYyNSw2Mi42MjVjMTEuNDcxLDAsMjIuMjIyLTMuMTE0LDMxLjQ3OC04LjUybDQ1LjI4MSw0NS4yODFjNS44MzEtOS4wNywxMy41NTctMTYuNzk2LDIyLjYyNy0yMi42MjdsLTQ1LjI4MS00NS4yODFoLS4wMDFaTTExNi4xMjUsMTQ2Ljc1Yy0xNi44ODcsMC0zMC42MjUtMTMuNzM4LTMwLjYyNS0zMC42MjVzMTMuNzM4LTMwLjYyNSwzMC42MjUtMzAuNjI1LDMwLjYyNSwxMy43MzgsMzAuNjI1LDMwLjYyNS0xMy43MzgsMzAuNjI1LTMwLjYyNSwzMC42MjVaIiBmaWxsPSIjNDI4NWY0Ii8+CiAgICA8cGF0aCBkPSJNMjE1LjUxLDMxOS4xMTdjLTkuMDctNS44MzEtMTYuNzk2LTEzLjU1Ny0yMi42MjctMjIuNjI3bC00NS4yODEsNDUuMjgxYy05LjI1Ni01LjQwNi0yMC4wMDctOC41Mi0zMS40NzgtOC41Mi0zNC41MzEsMC02Mi42MjUsMjguMDk0LTYyLjYyNSw2Mi42MjVzMjguMDk0LDYyLjYyNSw2Mi42MjUsNjIuNjI1LDYyLjYyNS0yOC4wOTQsNjIuNjI1LTYyLjYyNWMwLTExLjQ3MS0zLjExNC0yMi4yMjItOC41MjEtMzEuNDc4bDQ1LjI4MS00NS4yODFoMFpNMTE2LjEyNSw0MjYuNWMtMTYuODg3LDAtMzAuNjI1LTEzLjczOC0zMC42MjUtMzAuNjI1czEzLjczOC0zMC42MjUsMzAuNjI1LTMwLjYyNSwzMC42MjUsMTMuNzM4LDMwLjYyNSwzMC42MjUtMTMuNzM4LDMwLjYyNS0zMC42MjUsMzAuNjI1WiIgZmlsbD0iIzlhYTBhNiIvPgogICAgPHBhdGggZD0iTTM5NS44NzUsMzMzLjI1Yy0xMS40NzEsMC0yMi4yMjIsMy4xMTQtMzEuNDc4LDguNTJsLTQ1LjI4MS00NS4yODFjLTUuODMxLDkuMDctMTMuNTU3LDE2Ljc5Ni0yMi42MjcsMjIuNjI3bDQ1LjI4MSw0NS4yODFjLTUuNDA2LDkuMjU2LTguNTIxLDIwLjAwNy04LjUyMSwzMS40NzgsMCwzNC41MzEsMjguMDk0LDYyLjYyNSw2Mi42MjUsNjIuNjI1czYyLjYyNS0yOC4wOTQsNjIuNjI1LTYyLjYyNS0yOC4wOTQtNjIuNjI1LTYyLjYyNS02Mi42MjVoLjAwMVpNMzk1Ljg3NSw0MjYuNWMtMTYuODg3LDAtMzAuNjI1LTEzLjczOC0zMC42MjUtMzAuNjI1czEzLjczOC0zMC42MjUsMzAuNjI1LTMwLjYyNSwzMC42MjUsMTMuNzM4LDMwLjYyNSwzMC42MjUtMTMuNzM4LDMwLjYyNS0zMC42MjUsMzAuNjI1WiIgZmlsbD0iIzQyODVmNCIvPgogICAgPHBhdGggZD0iTTM5NS44NzUsNTMuNWMtMzQuNTMxLDAtNjIuNjI1LDI4LjA5NC02Mi42MjUsNjIuNjI1LDAsMTEuNjQ1LDMuMjA1LDIyLjU1MSw4Ljc2NCwzMS45MDJsLTQ1LjExOCw0NS4xMThjOS4wMyw1Ljg4NywxNi43MDcsMTMuNjYzLDIyLjQ4MSwyMi43NzNsNDUuNDQ0LTQ1LjQ0NGM5LjE2LDUuMjU1LDE5Ljc1OCw4LjI3NiwzMS4wNTQsOC4yNzYsMzQuNTMxLDAsNjIuNjI1LTI4LjA5NCw2Mi42MjUtNjIuNjI1cy0yOC4wOTQtNjIuNjI1LTYyLjYyNS02Mi42MjVaTTM5NS44NzUsMTQ2Ljc1Yy0xNi44ODcsMC0zMC42MjUtMTMuNzM4LTMwLjYyNS0zMC42MjVzMTMuNzM4LTMwLjYyNSwzMC42MjUtMzAuNjI1LDMwLjYyNSwxMy43MzgsMzAuNjI1LDMwLjYyNS0xMy43MzgsMzAuNjI1LTMwLjYyNSwzMC42MjVaIiBmaWxsPSIjOWFhMGE2Ii8+CiAgPC9nPgo8L3N2Zz4="/>
-                        <circle cx="514.63" cy="986.7" r="8.35" fill="#FFFFFF" stroke="#1A73E8" stroke-width="1.3"/>
-                        <text x="445.95" y="990.23" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#5F6368">Gateway</text>
-                        <text x="445.95" y="1008.27" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">API Gateway</text>
-                        <text x="511.48" y="990.34" xml:space="preserve" font-family="Inter" font-size="10" font-weight="700" fill="#202124">2</text>
+                        <rect x="482.61" y="991.23" width="137.43" height="47.15" rx="7.38" fill="#FFFFFF" stroke="#1A73E8" stroke-width="1.25"/>
+                        <image x="493.49" y="1000.8" width="28" height="28" href="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyBpZD0ic3RhbmRhcmRfcHJvZHVjdF9pY29uIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZlcnNpb249IjEuMSIgdmlld0JveD0iMCAwIDUxMiA1MTIiPgogIDwhLS0gR2VuZXJhdG9yOiBBZG9iZSBJbGx1c3RyYXRvciAyOS4yLjEsIFNWRyBFeHBvcnQgUGx1Zy1JbiAuIFNWRyBWZXJzaW9uOiAyLjEuMCBCdWlsZCAxMTYpICAtLT4KICA8ZyBpZD0iYm91bmRpbmdfYm94Ij4KICAgIDxyZWN0IHdpZHRoPSI1MTIiIGhlaWdodD0iNTEyIiBmaWxsPSJub25lIi8+CiAgPC9nPgogIDxnIGlkPSJhcnQiPgogICAgPHBhdGggZD0iTTMzMS42NiwzMzEuNjZsLTIyLjYyNy0yMi42MjdjMjkuMjQyLTI5LjI0MywyOS4yNDItNzYuODIzLDAtMTA2LjA2NmwyMi42MjctMjIuNjI3YzQxLjcyLDQxLjcxOSw0MS43MiwxMDkuNjAyLDAsMTUxLjMyaDBaIiBmaWxsPSIjOWFhMGE2Ii8+CiAgICA8cGF0aCBkPSJNMTgwLjM0LDMzMS42NmMtNDEuNzItNDEuNzE5LTQxLjcyLTEwOS42MDIsMC0xNTEuMzJsMjIuNjI3LDIyLjYyN2MtMjkuMjQyLDI5LjI0My0yOS4yNDIsNzYuODIzLDAsMTA2LjA2NmwtMjIuNjI3LDIyLjYyN1oiIGZpbGw9IiM5YWEwYTYiLz4KICAgIDxwYXRoIGQ9Ik0zMDkuMDMzLDIwMi45NjdjLTI5LjI0Mi0yOS4yNDItNzYuODI0LTI5LjI0Mi0xMDYuMDY2LDBsLTIyLjYyNy0yMi42MjdjMjAuMjEtMjAuMjEsNDcuMDgtMzEuMzQsNzUuNjYtMzEuMzRzNTUuNDUsMTEuMTMsNzUuNjYsMzEuMzRsLTIyLjYyNywyMi42MjdoMFoiIGZpbGw9IiM0Mjg1ZjQiLz4KICAgIDxwYXRoIGQ9Ik0yNTYsMzYzYy0yOC41OCwwLTU1LjQ1LTExLjEzLTc1LjY2LTMxLjM0bDIyLjYyNy0yMi42MjdjMjkuMjQyLDI5LjI0Miw3Ni44MjQsMjkuMjQyLDEwNi4wNjYsMGwyMi42MjcsMjIuNjI3Yy0yMC4yMSwyMC4yMS00Ny4wOCwzMS4zNC03NS42NiwzMS4zNFoiIGZpbGw9IiM0Mjg1ZjQiLz4KICAgIDxwYXRoIGQ9Ik0xNzAuMjI5LDE0Ny42MDNjNS40MDYtOS4yNTYsOC41MjEtMjAuMDA3LDguNTIxLTMxLjQ3OCwwLTM0LjUzMS0yOC4wOTQtNjIuNjI1LTYyLjYyNS02Mi42MjVzLTYyLjYyNSwyOC4wOTQtNjIuNjI1LDYyLjYyNSwyOC4wOTQsNjIuNjI1LDYyLjYyNSw2Mi42MjVjMTEuNDcxLDAsMjIuMjIyLTMuMTE0LDMxLjQ3OC04LjUybDQ1LjI4MSw0NS4yODFjNS44MzEtOS4wNywxMy41NTctMTYuNzk2LDIyLjYyNy0yMi42MjdsLTQ1LjI4MS00NS4yODFoLS4wMDFaTTExNi4xMjUsMTQ2Ljc1Yy0xNi44ODcsMC0zMC42MjUtMTMuNzM4LTMwLjYyNS0zMC42MjVzMTMuNzM4LTMwLjYyNSwzMC42MjUtMzAuNjI1LDMwLjYyNSwxMy43MzgsMzAuNjI1LDMwLjYyNS0xMy43MzgsMzAuNjI1LTMwLjYyNSwzMC42MjVaIiBmaWxsPSIjNDI4NWY0Ii8+CiAgICA8cGF0aCBkPSJNMjE1LjUxLDMxOS4xMTdjLTkuMDctNS44MzEtMTYuNzk2LTEzLjU1Ny0yMi42MjctMjIuNjI3bC00NS4yODEsNDUuMjgxYy05LjI1Ni01LjQwNi0yMC4wMDctOC41Mi0zMS40NzgtOC41Mi0zNC41MzEsMC02Mi42MjUsMjguMDk0LTYyLjYyNSw2Mi42MjVzMjguMDk0LDYyLjYyNSw2Mi42MjUsNjIuNjI1LDYyLjYyNS0yOC4wOTQsNjIuNjI1LTYyLjYyNWMwLTExLjQ3MS0zLjExNC0yMi4yMjItOC41MjEtMzEuNDc4bDQ1LjI4MS00NS4yODFoMFpNMTE2LjEyNSw0MjYuNWMtMTYuODg3LDAtMzAuNjI1LTEzLjczOC0zMC42MjUtMzAuNjI1czEzLjczOC0zMC42MjUsMzAuNjI1LTMwLjYyNSwzMC42MjUsMTMuNzM4LDMwLjYyNSwzMC42MjUtMTMuNzM4LDMwLjYyNS0zMC42MjUsMzAuNjI1WiIgZmlsbD0iIzlhYTBhNiIvPgogICAgPHBhdGggZD0iTTM5NS44NzUsMzMzLjI1Yy0xMS40NzEsMC0yMi4yMjIsMy4xMTQtMzEuNDc4LDguNTJsLTQ1LjI4MS00NS4yODFjLTUuODMxLDkuMDctMTMuNTU3LDE2Ljc5Ni0yMi42MjcsMjIuNjI3bDQ1LjI4MSw0NS4yODFjLTUuNDA2LDkuMjU2LTguNTIxLDIwLjAwNy04LjUyMSwzMS40NzgsMCwzNC41MzEsMjguMDk0LDYyLjYyNSw2Mi42MjUsNjIuNjI1czYyLjYyNS0yOC4wOTQsNjIuNjI1LTYyLjYyNS0yOC4wOTQtNjIuNjI1LTYyLjYyNS02Mi42MjVoLjAwMVpNMzk1Ljg3NSw0MjYuNWMtMTYuODg3LDAtMzAuNjI1LTEzLjczOC0zMC42MjUtMzAuNjI1czEzLjczOC0zMC42MjUsMzAuNjI1LTMwLjYyNSwzMC42MjUsMTMuNzM4LDMwLjYyNSwzMC42MjUtMTMuNzM4LDMwLjYyNS0zMC42MjUsMzAuNjI1WiIgZmlsbD0iIzQyODVmNCIvPgogICAgPHBhdGggZD0iTTM5NS44NzUsNTMuNWMtMzQuNTMxLDAtNjIuNjI1LDI4LjA5NC02Mi42MjUsNjIuNjI1LDAsMTEuNjQ1LDMuMjA1LDIyLjU1MSw4Ljc2NCwzMS45MDJsLTQ1LjExOCw0NS4xMThjOS4wMyw1Ljg4NywxNi43MDcsMTMuNjYzLDIyLjQ4MSwyMi43NzNsNDUuNDQ0LTQ1LjQ0NGM5LjE2LDUuMjU1LDE5Ljc1OCw4LjI3NiwzMS4wNTQsOC4yNzYsMzQuNTMxLDAsNjIuNjI1LTI4LjA5NCw2Mi42MjUtNjIuNjI1cy0yOC4wOTQtNjIuNjI1LTYyLjYyNS02Mi42MjVaTTM5NS44NzUsMTQ2Ljc1Yy0xNi44ODcsMC0zMC42MjUtMTMuNzM4LTMwLjYyNS0zMC42MjVzMTMuNzM4LTMwLjYyNSwzMC42MjUtMzAuNjI1LDMwLjYyNSwxMy43MzgsMzAuNjI1LDMwLjYyNS0xMy43MzgsMzAuNjI1LTMwLjYyNSwzMC42MjVaIiBmaWxsPSIjOWFhMGE2Ii8+CiAgPC9nPgo8L3N2Zz4="/>
+                        <circle cx="600.16" cy="1007.1" r="8.35" fill="#FFFFFF" stroke="#1A73E8" stroke-width="1.3"/>
+                        <text x="531.49" y="1010.63" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#5F6368">Gateway</text>
+                        <text x="531.49" y="1028.67" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">API Gateway</text>
+                        <text x="597.01" y="1010.74" xml:space="preserve" font-family="Inter" font-size="10" font-weight="700" fill="#202124">2</text>
                       </g>
                     </g>
                     <g data-id="/body/1/children/0/children/0/children/0/children/1/children/0/children/0/children/1" data-tag="Row">
                       <g data-id="/body/1/children/0/children/0/children/0/children/1/children/0/children/0/children/1/children/0" data-tag="Pcard">
-                        <rect x="761.26" y="970.83" width="152.89" height="47.15" rx="7.38" fill="#FFFFFF" stroke="#1A73E8" stroke-width="1.25"/>
-                        <image x="772.14" y="980.4" width="28" height="28" href="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyBpZD0ic3RhbmRhcmRfcHJvZHVjdF9pY29uIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZlcnNpb249IjEuMSIgdmlld0JveD0iMCAwIDUxMiA1MTIiPgogIDwhLS0gR2VuZXJhdG9yOiBBZG9iZSBJbGx1c3RyYXRvciAyOS4xLjAsIFNWRyBFeHBvcnQgUGx1Zy1JbiAuIFNWRyBWZXJzaW9uOiAyLjEuMCBCdWlsZCAxNDIpICAtLT4KICA8ZGVmcz4KICAgIDxzdHlsZT4KICAgICAgLnN0MCB7CiAgICAgICAgZmlsbDogbm9uZTsKICAgICAgfQoKICAgICAgLnN0MSB7CiAgICAgICAgZmlsbDogIzQyODVmNDsKICAgICAgfQoKICAgICAgLnN0MiB7CiAgICAgICAgZmlsbDogIzM0YTg1MzsKICAgICAgfQoKICAgICAgLnN0MyB7CiAgICAgICAgZmlsbDogI2ZiYmMwNDsKICAgICAgfQoKICAgICAgLnN0NCB7CiAgICAgICAgZmlsbDogI2VhNDMzNTsKICAgICAgfQogICAgPC9zdHlsZT4KICA8L2RlZnM+CiAgPGcgaWQ9ImJvdW5kaW5nX2JveCI+CiAgICA8cmVjdCBjbGFzcz0ic3QwIiB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIvPgogIDwvZz4KICA8ZyBpZD0iYXJ0Ij4KICAgIDxwYXRoIGNsYXNzPSJzdDMiIGQ9Ik0xNDQuNCwyNzJjLTYuNCwwLTEyLjQtMy44LTE0LjktMTAuMUw1NS40LDc1LjljLTMuMy04LjIuNy0xNy41LDguOS0yMC44LDguMi0zLjMsMTcuNS43LDIwLjgsOC45bDc0LjIsMTg2YzMuMyw4LjItLjcsMTcuNS04LjksMjAuOC0xLjkuOC0zLjksMS4xLTUuOSwxLjFoLS4xWiIvPgogICAgPGcgaWQ9ImIiPgogICAgICA8cGF0aCBjbGFzcz0ic3Q0IiBkPSJNMjU2LDI3MmMtNi40LDAtMTIuNC0zLjgtMTQuOS0xMC4xbC03NC4xLTE4NmMtMi42LTYuNi0uNi0xNC4xLDUtMTguNXMxMy40LTQuNSwxOS4yLS40bDI2MC4xLDE4NmM3LjIsNS4xLDguOSwxNS4xLDMuNywyMi4zcy0xNS4xLDguOS0yMi4zLDMuN0wyMTYuOSwxMTQuN2w1NCwxMzUuM2MzLjMsOC4yLS43LDE3LjUtOC45LDIwLjgtMS45LjgtNCwxLjEtNS45LDEuMWgtLjFaIi8+CiAgICA8L2c+CiAgICA8cGF0aCBjbGFzcz0ic3QyIiBkPSJNMTI3LjIsMjU2bC03MiwxODBjLTMuMyw4LjIuNywxNy41LDguOSwyMC44LDMuMSwxLjIsNCwxLjEsNS45LDEuMSw2LjMsMCwxMi40LTMuOCwxNC45LTEwLjFsNzQuNC0xODZjLjgtMiwxLjEtNCwxLjEtNS45aC0zMy4yWiIvPgogICAgPHBhdGggY2xhc3M9InN0MSIgZD0iTTQxNC41LDI1NmwtMTk3LjcsMTQxLjIsNTQuMS0xMzUuM2MuOC0yLDEuMS00LDEuMS01LjloLTMzLjJsLTcyLDE4MGMtMi42LDYuNi0uNiwxNC4xLDUsMTguNSwyLjksMi4zLDYuNCwzLjQsOS45LDMuNHM2LjUtMSw5LjMtM2wyNjAuNC0xODZjNC40LTMuMSw2LjctOCw2LjctMTNoLTQzLjZaIi8+CiAgPC9nPgo8L3N2Zz4="/>
-                        <circle cx="894.28" cy="986.7" r="8.35" fill="#FFFFFF" stroke="#1A73E8" stroke-width="1.3"/>
-                        <text x="810.14" y="990.23" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#5F6368">Trigger API</text>
-                        <text x="810.14" y="1008.27" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">Cloud Run</text>
-                        <text x="891.05" y="990.34" xml:space="preserve" font-family="Inter" font-size="10" font-weight="700" fill="#202124">3</text>
+                        <rect x="862.04" y="991.23" width="152.89" height="47.15" rx="7.38" fill="#FFFFFF" stroke="#1A73E8" stroke-width="1.25"/>
+                        <image x="872.91" y="1000.8" width="28" height="28" href="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyBpZD0ic3RhbmRhcmRfcHJvZHVjdF9pY29uIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZlcnNpb249IjEuMSIgdmlld0JveD0iMCAwIDUxMiA1MTIiPgogIDwhLS0gR2VuZXJhdG9yOiBBZG9iZSBJbGx1c3RyYXRvciAyOS4xLjAsIFNWRyBFeHBvcnQgUGx1Zy1JbiAuIFNWRyBWZXJzaW9uOiAyLjEuMCBCdWlsZCAxNDIpICAtLT4KICA8ZGVmcz4KICAgIDxzdHlsZT4KICAgICAgLnN0MCB7CiAgICAgICAgZmlsbDogbm9uZTsKICAgICAgfQoKICAgICAgLnN0MSB7CiAgICAgICAgZmlsbDogIzQyODVmNDsKICAgICAgfQoKICAgICAgLnN0MiB7CiAgICAgICAgZmlsbDogIzM0YTg1MzsKICAgICAgfQoKICAgICAgLnN0MyB7CiAgICAgICAgZmlsbDogI2ZiYmMwNDsKICAgICAgfQoKICAgICAgLnN0NCB7CiAgICAgICAgZmlsbDogI2VhNDMzNTsKICAgICAgfQogICAgPC9zdHlsZT4KICA8L2RlZnM+CiAgPGcgaWQ9ImJvdW5kaW5nX2JveCI+CiAgICA8cmVjdCBjbGFzcz0ic3QwIiB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIvPgogIDwvZz4KICA8ZyBpZD0iYXJ0Ij4KICAgIDxwYXRoIGNsYXNzPSJzdDMiIGQ9Ik0xNDQuNCwyNzJjLTYuNCwwLTEyLjQtMy44LTE0LjktMTAuMUw1NS40LDc1LjljLTMuMy04LjIuNy0xNy41LDguOS0yMC44LDguMi0zLjMsMTcuNS43LDIwLjgsOC45bDc0LjIsMTg2YzMuMyw4LjItLjcsMTcuNS04LjksMjAuOC0xLjkuOC0zLjksMS4xLTUuOSwxLjFoLS4xWiIvPgogICAgPGcgaWQ9ImIiPgogICAgICA8cGF0aCBjbGFzcz0ic3Q0IiBkPSJNMjU2LDI3MmMtNi40LDAtMTIuNC0zLjgtMTQuOS0xMC4xbC03NC4xLTE4NmMtMi42LTYuNi0uNi0xNC4xLDUtMTguNXMxMy40LTQuNSwxOS4yLS40bDI2MC4xLDE4NmM3LjIsNS4xLDguOSwxNS4xLDMuNywyMi4zcy0xNS4xLDguOS0yMi4zLDMuN0wyMTYuOSwxMTQuN2w1NCwxMzUuM2MzLjMsOC4yLS43LDE3LjUtOC45LDIwLjgtMS45LjgtNCwxLjEtNS45LDEuMWgtLjFaIi8+CiAgICA8L2c+CiAgICA8cGF0aCBjbGFzcz0ic3QyIiBkPSJNMTI3LjIsMjU2bC03MiwxODBjLTMuMyw4LjIuNywxNy41LDguOSwyMC44LDMuMSwxLjIsNCwxLjEsNS45LDEuMSw2LjMsMCwxMi40LTMuOCwxNC45LTEwLjFsNzQuNC0xODZjLjgtMiwxLjEtNCwxLjEtNS45aC0zMy4yWiIvPgogICAgPHBhdGggY2xhc3M9InN0MSIgZD0iTTQxNC41LDI1NmwtMTk3LjcsMTQxLjIsNTQuMS0xMzUuM2MuOC0yLDEuMS00LDEuMS01LjloLTMzLjJsLTcyLDE4MGMtMi42LDYuNi0uNiwxNC4xLDUsMTguNSwyLjksMi4zLDYuNCwzLjQsOS45LDMuNHM2LjUtMSw5LjMtM2wyNjAuNC0xODZjNC40LTMuMSw2LjctOCw2LjctMTNoLTQzLjZaIi8+CiAgPC9nPgo8L3N2Zz4="/>
+                        <circle cx="995.05" cy="1007.1" r="8.35" fill="#FFFFFF" stroke="#1A73E8" stroke-width="1.3"/>
+                        <text x="910.91" y="1010.63" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#5F6368">Trigger API</text>
+                        <text x="910.91" y="1028.67" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">Cloud Run</text>
+                        <text x="991.82" y="1010.74" xml:space="preserve" font-family="Inter" font-size="10" font-weight="700" fill="#202124">3</text>
                       </g>
                     </g>
                   </g>
                   <g data-id="/body/1/children/0/children/0/children/0/children/1/children/0/children/1" data-tag="Row">
-                    <g data-id="/body/1/children/0/children/0/children/0/children/1/children/0/children/1/children/0" data-tag="Row">
-                      <g data-id="/body/1/children/0/children/0/children/0/children/1/children/0/children/1/children/0/children/0" data-tag="Pcard">
-                        <rect x="370.13" y="1075.22" width="191.32" height="47.15" rx="7.38" fill="#FFFFFF" stroke="#1A73E8" stroke-width="1.25"/>
-                        <image x="381.01" y="1084.8" width="28" height="28" href="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyBpZD0ic3RhbmRhcmRfcHJvZHVjdF9pY29uIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZlcnNpb249IjEuMSIgdmlld0JveD0iMCAwIDUxMiA1MTIiPgogIDwhLS0gR2VuZXJhdG9yOiBBZG9iZSBJbGx1c3RyYXRvciAyOS4xLjAsIFNWRyBFeHBvcnQgUGx1Zy1JbiAuIFNWRyBWZXJzaW9uOiAyLjEuMCBCdWlsZCAxNDIpICAtLT4KICA8ZyBpZD0iYm91bmRpbmdfYm94Ij4KICAgIDxyZWN0IHdpZHRoPSI1MTIiIGhlaWdodD0iNTEyIiBmaWxsPSJub25lIi8+CiAgPC9nPgogIDxnIGlkPSJhcnQiPgogICAgPHBhdGggZD0iTTM0Ni42ODMsMTEyLjYxMWwtLjAzOS03NS4xNzFjLS4wMDUtOC44MzQtNy4xNjctMTUuOTkyLTE2LTE1Ljk5MmgtLjAwOGMtOC44MzcuMDA0LTE1Ljk5Nyw3LjE3Mi0xNS45OTIsMTYuMDA4bC4wMzksNzUuMTU1SDExOGMtMTcuNjczLDAtMzIsMTQuMzI3LTMyLDMydjExMS44NjVjMCw4OS4wODUsNzYuMjYyLDE2MS41NjIsMTcwLDE2MS41NjJzMTcwLTcyLjQ3NywxNzAtMTYxLjU2MnYtMTExLjg2NWMwLTE3LjY3My0xNC4zMjctMzItMzItMzJoLTQ3LjMxN1pNMzk0LDI1Ni40NzdjMCw3MS40NC02MS45MDYsMTI5LjU2Mi0xMzgsMTI5LjU2MnMtMTM4LTU4LjEyMS0xMzgtMTI5LjU2MnYtMTExLjg2NWgyNzZ2MTExLjg2NVoiIGZpbGw9IiM0Mjg1ZjQiLz4KICAgIDxwYXRoIGQ9Ik0zMTQuNjQ0LDE0NC42MTF2LTMyaC0xMTcuMjk0bC0uMDM5LTc1LjE3MWMtLjAwNS04LjgzNC03LjE2Ny0xNS45OTItMTYtMTUuOTkyaC0uMDA4Yy04LjgzNy4wMDQtMTUuOTk3LDcuMTcyLTE1Ljk5MiwxNi4wMDhsLjAzOSw3NS4xNTVoLTQ3LjM1Yy0xNy42NzMsMC0zMiwxNC4zMjctMzIsMzJ2MTExLjg2NWMwLDgzLjk1OSw2Ny43NDEsMTUzLjE1NSwxNTQuMDA3LDE2MC44NDF2NTYuNjc5YzAsOC42MTYsNi42MjEsMTYuMDI5LDE1LjIyOCwxNi40MzMsOS4xODguNDMyLDE2Ljc3Mi02Ljg4OSwxNi43NzItMTUuOTgydi04OS4yNzdjLTYuNTk0LjYyNy04LjAxNC42NTItMTYsLjg2N2gtLjAwN2MtNzYuMDk0LDAtMTM4LTU4LjEyMS0xMzgtMTI5LjU2MnYtMTExLjg2NWgxOTYuNjQ0LDBaIiBmaWxsPSIjOWFhMGE2Ii8+CiAgPC9nPgo8L3N2Zz4="/>
-                        <circle cx="541.58" cy="1091.1" r="8.35" fill="#FFFFFF" stroke="#1A73E8" stroke-width="1.3"/>
-                        <text x="419.01" y="1094.63" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#5F6368">Evaluation queue</text>
-                        <text x="419.01" y="1112.67" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">Pub/Sub</text>
-                        <text x="538.2" y="1094.74" xml:space="preserve" font-family="Inter" font-size="10" font-weight="700" fill="#202124">4</text>
-                      </g>
+                    <g data-id="/body/1/children/0/children/0/children/0/children/1/children/0/children/1/children/0" data-tag="Pipe" data-kind="blue">
+                      <line x1="477.98" y1="1105.5" x2="477.98" y2="1305.3" stroke="#1A73E8" stroke-width="5" stroke-linecap="round"/>
+                      <rect x="324.58" y="1260.35" width="140.64" height="46.7" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
+                      <circle cx="447.48" cy="1283.7" r="8.35" fill="#FFFFFF" stroke="#1A73E8" stroke-width="1.3"/>
+                      <text x="333.33" y="1279.27" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">Evaluation queue</text>
+                      <text x="384.71" y="1296.87" xml:space="preserve" font-family="Inter" font-size="12" font-weight="600" fill="#5F6368">Pub/Sub</text>
+                      <text x="444.1" y="1287.34" xml:space="preserve" font-family="Inter" font-size="10" font-weight="700" fill="#202124">4</text>
                     </g>
                     <g data-id="/body/1/children/0/children/0/children/0/children/1/children/0/children/1/children/1" data-tag="Row">
-                      <g data-id="/body/1/children/0/children/0/children/0/children/1/children/0/children/1/children/1/children/0" data-tag="Pcard">
-                        <rect x="760.55" y="1075.22" width="154.32" height="47.15" rx="7.38" fill="#FFFFFF" stroke="#497938" stroke-width="1.25"/>
-                        <image x="771.43" y="1084.8" width="28" height="28" href="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyBpZD0ic3RhbmRhcmRfcHJvZHVjdF9pY29uIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZlcnNpb249IjEuMSIgdmlld0JveD0iMCAwIDUxMiA1MTIiPgogIDwhLS0gR2VuZXJhdG9yOiBBZG9iZSBJbGx1c3RyYXRvciAyOS4xLjAsIFNWRyBFeHBvcnQgUGx1Zy1JbiAuIFNWRyBWZXJzaW9uOiAyLjEuMCBCdWlsZCAxNDIpICAtLT4KICA8ZGVmcz4KICAgIDxzdHlsZT4KICAgICAgLnN0MCB7CiAgICAgICAgZmlsbDogbm9uZTsKICAgICAgfQoKICAgICAgLnN0MSB7CiAgICAgICAgZmlsbDogIzQyODVmNDsKICAgICAgfQoKICAgICAgLnN0MiB7CiAgICAgICAgZmlsbDogIzM0YTg1MzsKICAgICAgfQoKICAgICAgLnN0MyB7CiAgICAgICAgZmlsbDogI2ZiYmMwNDsKICAgICAgfQoKICAgICAgLnN0NCB7CiAgICAgICAgZmlsbDogI2VhNDMzNTsKICAgICAgfQogICAgPC9zdHlsZT4KICA8L2RlZnM+CiAgPGcgaWQ9ImJvdW5kaW5nX2JveCI+CiAgICA8cmVjdCBjbGFzcz0ic3QwIiB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIvPgogIDwvZz4KICA8ZyBpZD0iYXJ0Ij4KICAgIDxwYXRoIGNsYXNzPSJzdDMiIGQ9Ik0xNDQuNCwyNzJjLTYuNCwwLTEyLjQtMy44LTE0LjktMTAuMUw1NS40LDc1LjljLTMuMy04LjIuNy0xNy41LDguOS0yMC44LDguMi0zLjMsMTcuNS43LDIwLjgsOC45bDc0LjIsMTg2YzMuMyw4LjItLjcsMTcuNS04LjksMjAuOC0xLjkuOC0zLjksMS4xLTUuOSwxLjFoLS4xWiIvPgogICAgPGcgaWQ9ImIiPgogICAgICA8cGF0aCBjbGFzcz0ic3Q0IiBkPSJNMjU2LDI3MmMtNi40LDAtMTIuNC0zLjgtMTQuOS0xMC4xbC03NC4xLTE4NmMtMi42LTYuNi0uNi0xNC4xLDUtMTguNXMxMy40LTQuNSwxOS4yLS40bDI2MC4xLDE4NmM3LjIsNS4xLDguOSwxNS4xLDMuNywyMi4zcy0xNS4xLDguOS0yMi4zLDMuN0wyMTYuOSwxMTQuN2w1NCwxMzUuM2MzLjMsOC4yLS43LDE3LjUtOC45LDIwLjgtMS45LjgtNCwxLjEtNS45LDEuMWgtLjFaIi8+CiAgICA8L2c+CiAgICA8cGF0aCBjbGFzcz0ic3QyIiBkPSJNMTI3LjIsMjU2bC03MiwxODBjLTMuMyw4LjIuNywxNy41LDguOSwyMC44LDMuMSwxLjIsNCwxLjEsNS45LDEuMSw2LjMsMCwxMi40LTMuOCwxNC45LTEwLjFsNzQuNC0xODZjLjgtMiwxLjEtNCwxLjEtNS45aC0zMy4yWiIvPgogICAgPHBhdGggY2xhc3M9InN0MSIgZD0iTTQxNC41LDI1NmwtMTk3LjcsMTQxLjIsNTQuMS0xMzUuM2MuOC0yLDEuMS00LDEuMS01LjloLTMzLjJsLTcyLDE4MGMtMi42LDYuNi0uNiwxNC4xLDUsMTguNSwyLjksMi4zLDYuNCwzLjQsOS45LDMuNHM2LjUtMSw5LjMtM2wyNjAuNC0xODZjNC40LTMuMSw2LjctOCw2LjctMTNoLTQzLjZaIi8+CiAgPC9nPgo8L3N2Zz4="/>
-                        <circle cx="894.99" cy="1091.1" r="8.35" fill="#FFFFFF" stroke="#497938" stroke-width="1.3"/>
-                        <text x="809.43" y="1094.63" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#26481B">Clip worker</text>
-                        <text x="809.43" y="1112.67" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">Cloud Run job</text>
-                        <text x="891.74" y="1094.74" xml:space="preserve" font-family="Inter" font-size="10" font-weight="700" fill="#202124">6</text>
+                      <g data-id="/body/1/children/0/children/0/children/0/children/1/children/0/children/1/children/1/children/0" data-tag="Zone" data-kind="assembly-f">
+                        <rect x="657.67" y="1103" width="290.77" height="204.8" fill="none"/>
+                        <rect x="658.22" y="1111.55" width="289.67" height="195.7" fill="none" stroke="#497938" stroke-width="1.1" stroke-dasharray="16 4 3 4"/>
+                        <rect x="668.17" y="1103.5" width="265.77" height="15" fill="#FFFFFF" stroke="#497938" stroke-width="1"/>
+                        <text x="673.67" y="1115" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#26481B">EVALUATION PATH · ONE JOB PER CLIP</text>
+                        <g data-id="/body/1/children/0/children/0/children/0/children/1/children/0/children/1/children/1/children/0/children/0" data-tag="Col">
+                          <g data-id="/body/1/children/0/children/0/children/0/children/1/children/0/children/1/children/1/children/0/children/0/children/0" data-tag="Row">
+                            <g data-id="/body/1/children/0/children/0/children/0/children/1/children/0/children/1/children/1/children/0/children/0/children/0/children/0" data-tag="Pcard">
+                              <rect x="729.9" y="1127.63" width="154.32" height="47.15" fill="#FFFFFF" stroke="#497938" stroke-width="1.25"/>
+                              <rect x="725.9" y="1130.63" width="154.32" height="47.15" fill="#FFFFFF" stroke="#497938" stroke-width="1.25"/>
+                              <rect x="721.9" y="1133.63" width="154.32" height="47.15" fill="#FFFFFF" stroke="#497938" stroke-width="1.25"/>
+                              <image x="732.78" y="1143.2" width="28" height="28" href="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyBpZD0ic3RhbmRhcmRfcHJvZHVjdF9pY29uIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZlcnNpb249IjEuMSIgdmlld0JveD0iMCAwIDUxMiA1MTIiPgogIDwhLS0gR2VuZXJhdG9yOiBBZG9iZSBJbGx1c3RyYXRvciAyOS4xLjAsIFNWRyBFeHBvcnQgUGx1Zy1JbiAuIFNWRyBWZXJzaW9uOiAyLjEuMCBCdWlsZCAxNDIpICAtLT4KICA8ZGVmcz4KICAgIDxzdHlsZT4KICAgICAgLnN0MCB7CiAgICAgICAgZmlsbDogbm9uZTsKICAgICAgfQoKICAgICAgLnN0MSB7CiAgICAgICAgZmlsbDogIzQyODVmNDsKICAgICAgfQoKICAgICAgLnN0MiB7CiAgICAgICAgZmlsbDogIzM0YTg1MzsKICAgICAgfQoKICAgICAgLnN0MyB7CiAgICAgICAgZmlsbDogI2ZiYmMwNDsKICAgICAgfQoKICAgICAgLnN0NCB7CiAgICAgICAgZmlsbDogI2VhNDMzNTsKICAgICAgfQogICAgPC9zdHlsZT4KICA8L2RlZnM+CiAgPGcgaWQ9ImJvdW5kaW5nX2JveCI+CiAgICA8cmVjdCBjbGFzcz0ic3QwIiB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIvPgogIDwvZz4KICA8ZyBpZD0iYXJ0Ij4KICAgIDxwYXRoIGNsYXNzPSJzdDMiIGQ9Ik0xNDQuNCwyNzJjLTYuNCwwLTEyLjQtMy44LTE0LjktMTAuMUw1NS40LDc1LjljLTMuMy04LjIuNy0xNy41LDguOS0yMC44LDguMi0zLjMsMTcuNS43LDIwLjgsOC45bDc0LjIsMTg2YzMuMyw4LjItLjcsMTcuNS04LjksMjAuOC0xLjkuOC0zLjksMS4xLTUuOSwxLjFoLS4xWiIvPgogICAgPGcgaWQ9ImIiPgogICAgICA8cGF0aCBjbGFzcz0ic3Q0IiBkPSJNMjU2LDI3MmMtNi40LDAtMTIuNC0zLjgtMTQuOS0xMC4xbC03NC4xLTE4NmMtMi42LTYuNi0uNi0xNC4xLDUtMTguNXMxMy40LTQuNSwxOS4yLS40bDI2MC4xLDE4NmM3LjIsNS4xLDguOSwxNS4xLDMuNywyMi4zcy0xNS4xLDguOS0yMi4zLDMuN0wyMTYuOSwxMTQuN2w1NCwxMzUuM2MzLjMsOC4yLS43LDE3LjUtOC45LDIwLjgtMS45LjgtNCwxLjEtNS45LDEuMWgtLjFaIi8+CiAgICA8L2c+CiAgICA8cGF0aCBjbGFzcz0ic3QyIiBkPSJNMTI3LjIsMjU2bC03MiwxODBjLTMuMyw4LjIuNywxNy41LDguOSwyMC44LDMuMSwxLjIsNCwxLjEsNS45LDEuMSw2LjMsMCwxMi40LTMuOCwxNC45LTEwLjFsNzQuNC0xODZjLjgtMiwxLjEtNCwxLjEtNS45aC0zMy4yWiIvPgogICAgPHBhdGggY2xhc3M9InN0MSIgZD0iTTQxNC41LDI1NmwtMTk3LjcsMTQxLjIsNTQuMS0xMzUuM2MuOC0yLDEuMS00LDEuMS01LjloLTMzLjJsLTcyLDE4MGMtMi42LDYuNi0uNiwxNC4xLDUsMTguNSwyLjksMi4zLDYuNCwzLjQsOS45LDMuNHM2LjUtMSw5LjMtM2wyNjAuNC0xODZjNC40LTMuMSw2LjctOCw2LjctMTNoLTQzLjZaIi8+CiAgPC9nPgo8L3N2Zz4="/>
+                              <circle cx="856.34" cy="1149.5" r="8.35" fill="#FFFFFF" stroke="#497938" stroke-width="1.3"/>
+                              <text x="770.78" y="1153.03" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#26481B">Clip worker</text>
+                              <text x="770.78" y="1171.07" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">Cloud Run job</text>
+                              <text x="853.1" y="1153.14" xml:space="preserve" font-family="Inter" font-size="10" font-weight="700" fill="#202124">6</text>
+                            </g>
+                          </g>
+                          <g data-id="/body/1/children/0/children/0/children/0/children/1/children/0/children/1/children/1/children/0/children/0/children/1" data-tag="Row">
+                            <g data-id="/body/1/children/0/children/0/children/0/children/1/children/0/children/1/children/1/children/0/children/0/children/1/children/0" data-tag="Pcard">
+                              <rect x="718.32" y="1246.03" width="169.47" height="47.15" rx="7.38" fill="#FFFFFF" stroke="#593894" stroke-width="1.25"/>
+                              <image x="729.2" y="1255.6" width="28" height="28" href="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyBpZD0ic3RhbmRhcmRfcHJvZHVjdF9pY29uIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZlcnNpb249IjEuMSIgdmlld0JveD0iMCAwIDUxMiA1MTIiPgogIDwhLS0gR2VuZXJhdG9yOiBBZG9iZSBJbGx1c3RyYXRvciAyOS4xLjAsIFNWRyBFeHBvcnQgUGx1Zy1JbiAuIFNWRyBWZXJzaW9uOiAyLjEuMCBCdWlsZCAxNDIpICAtLT4KICA8ZyBpZD0iYm91bmRpbmdfYm94Ij4KICAgIDxyZWN0IHdpZHRoPSI1MTIiIGhlaWdodD0iNTEyIiBmaWxsPSJub25lIi8+CiAgPC9nPgogIDxnIGlkPSJhcnQiPgogICAgPHBhdGggZD0iTTEyOCwyNDQuOTljLTguODQsMC0xNi03LjE2LTE2LTE2di05NS45N2MwLTguODQsNy4xNi0xNiwxNi0xNnMxNiw3LjE2LDE2LDE2djk1Ljk3YzAsOC44NC03LjE2LDE2LTE2LDE2WiIgZmlsbD0iI2VhNDMzNSIvPgogICAgPHBhdGggZD0iTTI1Niw0NThjLTIuOTgsMC01Ljk3LS44My04LjU5LTIuNWwtMTg2LTEyMmMtNy40Ni00Ljc0LTkuNjUtMTQuNjMtNC45MS0yMi4wOSw0Ljc1LTcuNDYsMTQuNjQtOS42NSwyMi4wOS00LjkxbDE3Ny40MSwxMTYuNTMsMTc3LjQxLTExNi41M2M3LjQ1LTQuNzQsMTcuMzQtMi41NSwyMi4wOSw0LjkxLDQuNzQsNy40NiwyLjU1LDE3LjM0LTQuOTEsMjIuMDlsLTE4NiwxMjJjLTIuNjIsMS42Ny01LjYxLDIuNS04LjU5LDIuNVoiIGZpbGw9IiNmYmJjMDQiLz4KICAgIDxwYXRoIGQ9Ik0yNTYsMzg4LjAzYy04Ljg0LDAtMTYtNy4xNi0xNi0xNnYtNzMuMDZjMC04Ljg0LDcuMTYtMTYsMTYtMTZzMTYsNy4xNiwxNiwxNnY3My4wNmMwLDguODQtNy4xNiwxNi0xNiwxNloiIGZpbGw9IiMzNGE4NTMiLz4KICAgIDxjaXJjbGUgY3g9IjEyOCIgY3k9IjcwIiByPSIxNiIgZmlsbD0iI2VhNDMzNSIvPgogICAgPGNpcmNsZSBjeD0iMTI4IiBjeT0iMjkyIiByPSIxNiIgZmlsbD0iI2VhNDMzNSIvPgogICAgPHBhdGggZD0iTTM4NC4yMywzMDguMDFjLTguODIsMC0xNS45OC03LjE0LTE2LTE1Ljk3bC0uMjMtOTQuMDFjLS4wMi04Ljg0LDcuMTMtMTYuMDIsMTUuOTctMTYuMDNoLjA0YzguODIsMCwxNS45OCw3LjE0LDE2LDE1Ljk3bC4yMyw5NC4wMWMuMDIsOC44NC03LjEzLDE2LjAyLTE1Ljk3LDE2LjAzaC0uMDRaIiBmaWxsPSIjNDI4NWY0Ii8+CiAgICA8Y2lyY2xlIGN4PSIzODQiIGN5PSI3MCIgcj0iMTYiIGZpbGw9IiM0Mjg1ZjQiLz4KICAgIDxjaXJjbGUgY3g9IjM4NCIgY3k9IjEzNCIgcj0iMTYiIGZpbGw9IiM0Mjg1ZjQiLz4KICAgIDxwYXRoIGQ9Ik0zMjAsMjIwLjM2Yy04Ljg0LDAtMTYtNy4xNi0xNi0xNnYtMTAzLjAyYzAtOC44NCw3LjE2LTE2LDE2LTE2czE2LDcuMTYsMTYsMTZ2MTAzLjAyYzAsOC44NC03LjE2LDE2LTE2LDE2WiIgZmlsbD0iI2ZiYmMwNCIvPgogICAgPGNpcmNsZSBjeD0iMjU2IiBjeT0iMTcxIiByPSIxNiIgZmlsbD0iIzM0YTg1MyIvPgogICAgPGNpcmNsZSBjeD0iMjU2IiBjeT0iMjM1IiByPSIxNiIgZmlsbD0iIzM0YTg1MyIvPgogICAgPGNpcmNsZSBjeD0iMzIwIiBjeT0iMjY1IiByPSIxNiIgZmlsbD0iI2ZiYmMwNCIvPgogICAgPGNpcmNsZSBjeD0iMzIwIiBjeT0iMzI5IiByPSIxNiIgZmlsbD0iI2ZiYmMwNCIvPgogICAgPHBhdGggZD0iTTE5MiwyMTcuMzZjLTguODQsMC0xNi03LjE2LTE2LTE2di0xMDAuMDJjMC04Ljg0LDcuMTYtMTYsMTYtMTZzMTYsNy4xNiwxNiwxNnYxMDAuMDJjMCw4Ljg0LTcuMTYsMTYtMTYsMTZaIiBmaWxsPSIjZmJiYzA0Ii8+CiAgICA8Y2lyY2xlIGN4PSIxOTIiIGN5PSIyNjUiIHI9IjE2IiBmaWxsPSIjZmJiYzA0Ii8+CiAgICA8Y2lyY2xlIGN4PSIxOTIiIGN5PSIzMjkiIHI9IjE2IiBmaWxsPSIjZmJiYzA0Ii8+CiAgPC9nPgo8L3N2Zz4="/>
+                              <circle cx="867.92" cy="1261.9" r="8.35" fill="#FFFFFF" stroke="#593894" stroke-width="1.3"/>
+                              <text x="767.2" y="1265.43" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#4B3275">Clip evaluator</text>
+                              <text x="767.2" y="1283.47" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">Vertex AI endpoint</text>
+                              <text x="865.02" y="1265.54" xml:space="preserve" font-family="Inter" font-size="10" font-weight="700" fill="#202124">7</text>
+                            </g>
+                          </g>
+                        </g>
                       </g>
                     </g>
                   </g>
                   <g data-id="/body/1/children/0/children/0/children/0/children/1/children/0/children/2" data-tag="Row">
-                    <g data-id="/body/1/children/0/children/0/children/0/children/1/children/0/children/2/children/0" data-tag="Row">
+                    <g data-id="/body/1/children/0/children/0/children/0/children/1/children/0/children/2/children/0" data-tag="Col">
                       <g data-id="/body/1/children/0/children/0/children/0/children/1/children/0/children/2/children/0/children/0" data-tag="Row">
                         <g data-id="/body/1/children/0/children/0/children/0/children/1/children/0/children/2/children/0/children/0/children/0" data-tag="Pcard">
-                          <rect x="284.58" y="1179.75" width="153.13" height="46.9" rx="7.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
-                          <image x="295.33" y="1189.2" width="28" height="28" href="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyBpZD0ic3RhbmRhcmRfcHJvZHVjdF9pY29uIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZlcnNpb249IjEuMSIgdmlld0JveD0iMCAwIDUxMiA1MTIiPgogIDwhLS0gR2VuZXJhdG9yOiBBZG9iZSBJbGx1c3RyYXRvciAyOS4xLjAsIFNWRyBFeHBvcnQgUGx1Zy1JbiAuIFNWRyBWZXJzaW9uOiAyLjEuMCBCdWlsZCAxNDIpICAtLT4KICA8ZGVmcz4KICAgIDxzdHlsZT4KICAgICAgLnN0MCB7CiAgICAgICAgZmlsbDogbm9uZTsKICAgICAgfQoKICAgICAgLnN0MSB7CiAgICAgICAgZmlsbDogIzQyODVmNDsKICAgICAgfQoKICAgICAgLnN0MiB7CiAgICAgICAgZmlsbDogIzM0YTg1MzsKICAgICAgfQoKICAgICAgLnN0MyB7CiAgICAgICAgZmlsbDogI2ZiYmMwNDsKICAgICAgfQoKICAgICAgLnN0NCB7CiAgICAgICAgZmlsbDogI2VhNDMzNTsKICAgICAgfQogICAgPC9zdHlsZT4KICA8L2RlZnM+CiAgPGcgaWQ9ImJvdW5kaW5nX2JveCI+CiAgICA8cmVjdCBjbGFzcz0ic3QwIiB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIvPgogIDwvZz4KICA8ZyBpZD0iYXJ0Ij4KICAgIDxwYXRoIGNsYXNzPSJzdDIiIGQ9Ik00NDIsMjc3LjlINzBjLTguOCwwLTE2LDcuMi0xNiwxNnYxNDguMWMwLDguOCw3LjIsMTYsMTYsMTZoMTA3LjJjMS41LjUsMy4xLjcsNC44LjdzMy4zLS4zLDQuOC0uN2gyNTUuMmM4LjgsMCwxNi03LjIsMTYtMTZ2LTE0OC4xYzAtOC44LTcuMi0xNi0xNi0xNlpNODYsMzA5LjloODB2MTE2LjFoLTgwdi0xMTYuMVpNNDI2LDQyNS45aC0yMjh2LTExNi4xaDIyOHYxMTYuMVoiLz4KICAgIDxwYXRoIGNsYXNzPSJzdDMiIGQ9Ik00NDIsNTRINzBjLTguOCwwLTE2LDcuMi0xNiwxNnYxNDguOGMwLDguOCw3LjIsMTYsMTYsMTZoMzcyYzguOCwwLDE2LTcuMiwxNi0xNlY3MGMwLTguOC03LjItMTYtMTYtMTZaTTg2LDg2aDgwdjExNi44aC04MHYtMTE2LjhaTTQyNiwyMDIuOGgtMjI4di0xMTYuOGgyMjh2MTE2LjhaIi8+CiAgICA8cGF0aCBjbGFzcz0ic3Q0IiBkPSJNNDQyLDIzNC44aC0xNlY4Nkg1NHYtMTZjMC04LjgsNy4yLTE2LDE2LTE2aDM3MmM4LjgsMCwxNiw3LjIsMTYsMTZ2MTQ4LjhjMCw4LjgtNy4yLDE2LTE2LDE2WiIvPgogICAgPHBhdGggY2xhc3M9InN0MSIgZD0iTTQ0Miw0NTcuOWgtMTZ2LTE0OC4xSDU0di0xNmMwLTguOCw3LjItMTYsMTYtMTZoMzcyYzguOCwwLDE2LDcuMiwxNiwxNnYxNDguMWMwLDguOC03LjIsMTYtMTYsMTZaIi8+CiAgICA8Y2lyY2xlIGNsYXNzPSJzdDQiIGN4PSIzNDkiIGN5PSIxNDQuNCIgcj0iMzciLz4KICAgIDxjaXJjbGUgY2xhc3M9InN0MSIgY3g9IjM0OSIgY3k9IjM2Ny45IiByPSIzNyIvPgogIDwvZz4KPC9zdmc+"/>
-                          <circle cx="417.96" cy="1195.5" r="8.35" fill="#FFFFFF" stroke="#202124" stroke-width="1.3"/>
-                          <text x="333.33" y="1199.03" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#202124">Clip bucket</text>
-                          <text x="333.33" y="1217.07" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">Cloud Storage</text>
-                          <text x="414.85" y="1199.14" xml:space="preserve" font-family="Inter" font-size="10" font-weight="700" fill="#202124">5</text>
+                          <rect x="354.46" y="1419.55" width="153.13" height="46.9" rx="7.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
+                          <image x="365.21" y="1429" width="28" height="28" href="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyBpZD0ic3RhbmRhcmRfcHJvZHVjdF9pY29uIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZlcnNpb249IjEuMSIgdmlld0JveD0iMCAwIDUxMiA1MTIiPgogIDwhLS0gR2VuZXJhdG9yOiBBZG9iZSBJbGx1c3RyYXRvciAyOS4xLjAsIFNWRyBFeHBvcnQgUGx1Zy1JbiAuIFNWRyBWZXJzaW9uOiAyLjEuMCBCdWlsZCAxNDIpICAtLT4KICA8ZGVmcz4KICAgIDxzdHlsZT4KICAgICAgLnN0MCB7CiAgICAgICAgZmlsbDogbm9uZTsKICAgICAgfQoKICAgICAgLnN0MSB7CiAgICAgICAgZmlsbDogIzQyODVmNDsKICAgICAgfQoKICAgICAgLnN0MiB7CiAgICAgICAgZmlsbDogIzM0YTg1MzsKICAgICAgfQoKICAgICAgLnN0MyB7CiAgICAgICAgZmlsbDogI2ZiYmMwNDsKICAgICAgfQoKICAgICAgLnN0NCB7CiAgICAgICAgZmlsbDogI2VhNDMzNTsKICAgICAgfQogICAgPC9zdHlsZT4KICA8L2RlZnM+CiAgPGcgaWQ9ImJvdW5kaW5nX2JveCI+CiAgICA8cmVjdCBjbGFzcz0ic3QwIiB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIvPgogIDwvZz4KICA8ZyBpZD0iYXJ0Ij4KICAgIDxwYXRoIGNsYXNzPSJzdDIiIGQ9Ik00NDIsMjc3LjlINzBjLTguOCwwLTE2LDcuMi0xNiwxNnYxNDguMWMwLDguOCw3LjIsMTYsMTYsMTZoMTA3LjJjMS41LjUsMy4xLjcsNC44LjdzMy4zLS4zLDQuOC0uN2gyNTUuMmM4LjgsMCwxNi03LjIsMTYtMTZ2LTE0OC4xYzAtOC44LTcuMi0xNi0xNi0xNlpNODYsMzA5LjloODB2MTE2LjFoLTgwdi0xMTYuMVpNNDI2LDQyNS45aC0yMjh2LTExNi4xaDIyOHYxMTYuMVoiLz4KICAgIDxwYXRoIGNsYXNzPSJzdDMiIGQ9Ik00NDIsNTRINzBjLTguOCwwLTE2LDcuMi0xNiwxNnYxNDguOGMwLDguOCw3LjIsMTYsMTYsMTZoMzcyYzguOCwwLDE2LTcuMiwxNi0xNlY3MGMwLTguOC03LjItMTYtMTYtMTZaTTg2LDg2aDgwdjExNi44aC04MHYtMTE2LjhaTTQyNiwyMDIuOGgtMjI4di0xMTYuOGgyMjh2MTE2LjhaIi8+CiAgICA8cGF0aCBjbGFzcz0ic3Q0IiBkPSJNNDQyLDIzNC44aC0xNlY4Nkg1NHYtMTZjMC04LjgsNy4yLTE2LDE2LTE2aDM3MmM4LjgsMCwxNiw3LjIsMTYsMTZ2MTQ4LjhjMCw4LjgtNy4yLDE2LTE2LDE2WiIvPgogICAgPHBhdGggY2xhc3M9InN0MSIgZD0iTTQ0Miw0NTcuOWgtMTZ2LTE0OC4xSDU0di0xNmMwLTguOCw3LjItMTYsMTYtMTZoMzcyYzguOCwwLDE2LDcuMiwxNiwxNnYxNDguMWMwLDguOC03LjIsMTYtMTYsMTZaIi8+CiAgICA8Y2lyY2xlIGNsYXNzPSJzdDQiIGN4PSIzNDkiIGN5PSIxNDQuNCIgcj0iMzciLz4KICAgIDxjaXJjbGUgY2xhc3M9InN0MSIgY3g9IjM0OSIgY3k9IjM2Ny45IiByPSIzNyIvPgogIDwvZz4KPC9zdmc+"/>
+                          <circle cx="487.83" cy="1435.3" r="8.35" fill="#FFFFFF" stroke="#202124" stroke-width="1.3"/>
+                          <text x="403.21" y="1438.83" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#202124">Clip bucket</text>
+                          <text x="403.21" y="1456.87" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">Cloud Storage</text>
+                          <text x="484.72" y="1438.94" xml:space="preserve" font-family="Inter" font-size="10" font-weight="700" fill="#202124">5</text>
                         </g>
-                      </g>
-                      <g data-id="/body/1/children/0/children/0/children/0/children/1/children/0/children/2/children/0/children/1" data-tag="Pcard">
-                        <rect x="471.21" y="1179.75" width="162.95" height="46.9" rx="7.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
-                        <image x="481.96" y="1189.2" width="28" height="28" href="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyBpZD0ic3RhbmRhcmRfcHJvZHVjdF9pY29uIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZlcnNpb249IjEuMSIgdmlld0JveD0iMCAwIDUxMiA1MTIiPgogIDwhLS0gR2VuZXJhdG9yOiBBZG9iZSBJbGx1c3RyYXRvciAyOS4xLjAsIFNWRyBFeHBvcnQgUGx1Zy1JbiAuIFNWRyBWZXJzaW9uOiAyLjEuMCBCdWlsZCAxNDIpICAtLT4KICA8ZGVmcz4KICAgIDxzdHlsZT4KICAgICAgLnN0MCB7CiAgICAgICAgZmlsbDogbm9uZTsKICAgICAgfQoKICAgICAgLnN0MSB7CiAgICAgICAgZmlsbDogIzQyODVmNDsKICAgICAgfQoKICAgICAgLnN0MiB7CiAgICAgICAgZmlsbDogIzM0YTg1MzsKICAgICAgfQoKICAgICAgLnN0MyB7CiAgICAgICAgZmlsbDogI2ZiYmMwNDsKICAgICAgfQoKICAgICAgLnN0NCB7CiAgICAgICAgZmlsbDogI2VhNDMzNTsKICAgICAgfQogICAgPC9zdHlsZT4KICA8L2RlZnM+CiAgPGcgaWQ9ImJvdW5kaW5nX2JveCI+CiAgICA8cmVjdCBjbGFzcz0ic3QwIiB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIvPgogIDwvZz4KICA8ZyBpZD0iYXJ0Ij4KICAgIDxwYXRoIGNsYXNzPSJzdDMiIGQ9Ik00NDcuNSwxMjMuN2wtMTg2LTY4LjdjLTMuNi0xLjMtNy41LTEuMy0xMS4xLDBsLTQwLjcsMTUtMTQ1LjIsNTMuNWMtNi4zLDIuMy0xMC41LDguMy0xMC41LDE1czQuMiwxMi43LDEwLjUsMTVsMTQ1LjEsNTMuNHMwLDAsMCwwbDQwLjgsMTVjMS44LjYsMy43LDEsNS41LDFzMy43LS4zLDUuNS0xbDE4NS45LTY4LjJjNi4zLTIuMywxMC41LTguMywxMC41LTE1LDAtNi43LTQuMi0xMi43LTEwLjUtMTVoMFpNMjU2LDE4OS45bC0xMzkuNi01MS40LDEzOS42LTUxLjQsMTM5LjcsNTEuNi0xMzkuNiw1MS4yWiIvPgogICAgPHBhdGggY2xhc3M9InN0MiIgZD0iTTQ0Ny41LDM4OC44bC0xODUuOSw2OC4yYy0xLjguNi0zLjYsMS01LjUsMXMtMy43LS4zLTUuNS0xbC00MC44LTE1aDBsLTE0NS4xLTUzLjRjLTguMy0zLTEyLjUtMTIuMi05LjUtMjAuNSwzLTguMywxMi4yLTEyLjUsMjAuNS05LjVsMTgwLjQsNjYuNCwxODAuNC02Ni4yYzguMy0zLDE3LjUsMS4yLDIwLjUsOS41LDMsOC4zLTEuMiwxNy41LTkuNSwyMC41aDBaIi8+CiAgICA8cGF0aCBjbGFzcz0ic3QyIiBkPSJNNDQ3LjUsMzEwLjRsLTE4NS45LDY4LjJjLTEuOC42LTMuNiwxLTUuNSwxcy0zLjctLjMtNS41LTFsLTQwLjgtMTVoMGwtMTQ1LjEtNTMuNGMtOC4zLTMtMTIuNS0xMi4yLTkuNS0yMC41LDMtOC4zLDEyLjItMTIuNSwyMC41LTkuNWwxODAuNCw2Ni40LDE4MC40LTY2LjJjOC4zLTMsMTcuNSwxLjIsMjAuNSw5LjUsMyw4LjMtMS4yLDE3LjUtOS41LDIwLjVoMFoiLz4KICAgIDxwYXRoIGNsYXNzPSJzdDIiIGQ9Ik00NDcuNSwyMzIuMWwtMTg1LjksNjguMmMtMS44LjctMy42LDEtNS41LDFzLTMuNy0uMy01LjUtMWwtNDAuOC0xNWgwbC0xNDUuMS01My40Yy04LjMtMy4xLTEyLjUtMTIuMi05LjUtMjAuNSwzLTguMywxMi4yLTEyLjUsMjAuNS05LjVsMTgwLjQsNjYuNCwxODAuNC02Ni4yYzguMy0zLDE3LjUsMS4yLDIwLjUsOS41LDMsOC4zLTEuMiwxNy41LTkuNSwyMC41aDBaIi8+CiAgICA8cGF0aCBjbGFzcz0ic3Q0IiBkPSJNNDU4LDEzOC43YzAsNi43LTQuMiwxMi43LTEwLjUsMTVsLTE4Niw2OC4yYy0xLjguNy0zLjYsMS01LjUsMXMtMy43LS4zLTUuNS0xbC00MC44LTE1aDBzNDYuNC0xNyw0Ni40LTE3bDEzOS42LTUxLjItMTM5LjctNTEuNi00Ni4yLTE3LjEsNDAuNy0xNWMzLjYtMS4zLDcuNS0xLjMsMTEuMSwwbDE4Niw2OC43YzYuMywyLjMsMTAuNSw4LjMsMTAuNSwxNWgwWiIvPgogICAgPHBhdGggY2xhc3M9InN0MSIgZD0iTTQ0Ny41LDM4OC44bC0xODUuOSw2OC4yYy0xLjguNi0zLjYsMS01LjUsMXMtMy43LS4zLTUuNS0xbC00MC44LTE1LDQ2LjQtMTcsMTgwLjQtNjYuMmM4LjMtMywxNy41LDEuMiwyMC41LDkuNSwzLDguMy0xLjIsMTcuNS05LjUsMjAuNWgwWiIvPgogICAgPHBhdGggY2xhc3M9InN0MSIgZD0iTTQ0Ny41LDMxMC40bC0xODUuOSw2OC4yYy0xLjguNi0zLjYsMS01LjUsMXMtMy43LS4zLTUuNS0xbC00MC44LTE1aDBsNDYuNC0xNywxODAuNC02Ni4yYzguMy0zLDE3LjUsMS4yLDIwLjUsOS41LDMsOC4zLTEuMiwxNy41LTkuNSwyMC41WiIvPgogICAgPHBhdGggY2xhc3M9InN0MSIgZD0iTTQ0Ny41LDIzMi4xbC0xODUuOSw2OC4yYy0xLjguNy0zLjYsMS01LjUsMXMtMy43LS4zLTUuNS0xbC00MC44LTE1aDBsNDYuNC0xNywxODAuNC02Ni4yYzguMy0zLDE3LjUsMS4yLDIwLjUsOS41LDMsOC4zLTEuMiwxNy41LTkuNSwyMC41aDBaIi8+CiAgICA8cGF0aCBjbGFzcz0ic3QzIiBkPSJNMzAyLjQsMjA2LjlsLTE4Ni02OC41LTUxLjgtMTVjLTYuMywyLjMtMTAuNSw4LjMtMTAuNSwxNXM0LjIsMTIuNywxMC41LDE1bDE0NS4xLDUzLjRzMCwwLDAsMGw0MC44LDE1YzEuOC42LDMuNywxLDUuNSwxczMuNy0uMyw1LjUtMWw0MC45LTE1aDBaIi8+CiAgPC9nPgo8L3N2Zz4="/>
-                        <circle cx="614.41" cy="1195.5" r="8.35" fill="#FFFFFF" stroke="#202124" stroke-width="1.3"/>
-                        <text x="519.96" y="1199.03" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#202124">Verdict store</text>
-                        <text x="519.96" y="1217.07" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">Cloud SQL</text>
-                        <text x="611.15" y="1199.14" xml:space="preserve" font-family="Inter" font-size="10" font-weight="700" fill="#202124">8</text>
                       </g>
                     </g>
                     <g data-id="/body/1/children/0/children/0/children/0/children/1/children/0/children/2/children/1" data-tag="Row">
-                      <g data-id="/body/1/children/0/children/0/children/0/children/1/children/0/children/2/children/1/children/0" data-tag="Row">
-                        <g data-id="/body/1/children/0/children/0/children/0/children/1/children/0/children/2/children/1/children/0/children/0" data-tag="Pcard">
-                          <rect x="849.57" y="1179.63" width="169.47" height="47.15" rx="7.38" fill="#FFFFFF" stroke="#593894" stroke-width="1.25"/>
-                          <image x="860.44" y="1189.2" width="28" height="28" href="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyBpZD0ic3RhbmRhcmRfcHJvZHVjdF9pY29uIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZlcnNpb249IjEuMSIgdmlld0JveD0iMCAwIDUxMiA1MTIiPgogIDwhLS0gR2VuZXJhdG9yOiBBZG9iZSBJbGx1c3RyYXRvciAyOS4xLjAsIFNWRyBFeHBvcnQgUGx1Zy1JbiAuIFNWRyBWZXJzaW9uOiAyLjEuMCBCdWlsZCAxNDIpICAtLT4KICA8ZyBpZD0iYm91bmRpbmdfYm94Ij4KICAgIDxyZWN0IHdpZHRoPSI1MTIiIGhlaWdodD0iNTEyIiBmaWxsPSJub25lIi8+CiAgPC9nPgogIDxnIGlkPSJhcnQiPgogICAgPHBhdGggZD0iTTEyOCwyNDQuOTljLTguODQsMC0xNi03LjE2LTE2LTE2di05NS45N2MwLTguODQsNy4xNi0xNiwxNi0xNnMxNiw3LjE2LDE2LDE2djk1Ljk3YzAsOC44NC03LjE2LDE2LTE2LDE2WiIgZmlsbD0iI2VhNDMzNSIvPgogICAgPHBhdGggZD0iTTI1Niw0NThjLTIuOTgsMC01Ljk3LS44My04LjU5LTIuNWwtMTg2LTEyMmMtNy40Ni00Ljc0LTkuNjUtMTQuNjMtNC45MS0yMi4wOSw0Ljc1LTcuNDYsMTQuNjQtOS42NSwyMi4wOS00LjkxbDE3Ny40MSwxMTYuNTMsMTc3LjQxLTExNi41M2M3LjQ1LTQuNzQsMTcuMzQtMi41NSwyMi4wOSw0LjkxLDQuNzQsNy40NiwyLjU1LDE3LjM0LTQuOTEsMjIuMDlsLTE4NiwxMjJjLTIuNjIsMS42Ny01LjYxLDIuNS04LjU5LDIuNVoiIGZpbGw9IiNmYmJjMDQiLz4KICAgIDxwYXRoIGQ9Ik0yNTYsMzg4LjAzYy04Ljg0LDAtMTYtNy4xNi0xNi0xNnYtNzMuMDZjMC04Ljg0LDcuMTYtMTYsMTYtMTZzMTYsNy4xNiwxNiwxNnY3My4wNmMwLDguODQtNy4xNiwxNi0xNiwxNloiIGZpbGw9IiMzNGE4NTMiLz4KICAgIDxjaXJjbGUgY3g9IjEyOCIgY3k9IjcwIiByPSIxNiIgZmlsbD0iI2VhNDMzNSIvPgogICAgPGNpcmNsZSBjeD0iMTI4IiBjeT0iMjkyIiByPSIxNiIgZmlsbD0iI2VhNDMzNSIvPgogICAgPHBhdGggZD0iTTM4NC4yMywzMDguMDFjLTguODIsMC0xNS45OC03LjE0LTE2LTE1Ljk3bC0uMjMtOTQuMDFjLS4wMi04Ljg0LDcuMTMtMTYuMDIsMTUuOTctMTYuMDNoLjA0YzguODIsMCwxNS45OCw3LjE0LDE2LDE1Ljk3bC4yMyw5NC4wMWMuMDIsOC44NC03LjEzLDE2LjAyLTE1Ljk3LDE2LjAzaC0uMDRaIiBmaWxsPSIjNDI4NWY0Ii8+CiAgICA8Y2lyY2xlIGN4PSIzODQiIGN5PSI3MCIgcj0iMTYiIGZpbGw9IiM0Mjg1ZjQiLz4KICAgIDxjaXJjbGUgY3g9IjM4NCIgY3k9IjEzNCIgcj0iMTYiIGZpbGw9IiM0Mjg1ZjQiLz4KICAgIDxwYXRoIGQ9Ik0zMjAsMjIwLjM2Yy04Ljg0LDAtMTYtNy4xNi0xNi0xNnYtMTAzLjAyYzAtOC44NCw3LjE2LTE2LDE2LTE2czE2LDcuMTYsMTYsMTZ2MTAzLjAyYzAsOC44NC03LjE2LDE2LTE2LDE2WiIgZmlsbD0iI2ZiYmMwNCIvPgogICAgPGNpcmNsZSBjeD0iMjU2IiBjeT0iMTcxIiByPSIxNiIgZmlsbD0iIzM0YTg1MyIvPgogICAgPGNpcmNsZSBjeD0iMjU2IiBjeT0iMjM1IiByPSIxNiIgZmlsbD0iIzM0YTg1MyIvPgogICAgPGNpcmNsZSBjeD0iMzIwIiBjeT0iMjY1IiByPSIxNiIgZmlsbD0iI2ZiYmMwNCIvPgogICAgPGNpcmNsZSBjeD0iMzIwIiBjeT0iMzI5IiByPSIxNiIgZmlsbD0iI2ZiYmMwNCIvPgogICAgPHBhdGggZD0iTTE5MiwyMTcuMzZjLTguODQsMC0xNi03LjE2LTE2LTE2di0xMDAuMDJjMC04Ljg0LDcuMTYtMTYsMTYtMTZzMTYsNy4xNiwxNiwxNnYxMDAuMDJjMCw4Ljg0LTcuMTYsMTYtMTYsMTZaIiBmaWxsPSIjZmJiYzA0Ii8+CiAgICA8Y2lyY2xlIGN4PSIxOTIiIGN5PSIyNjUiIHI9IjE2IiBmaWxsPSIjZmJiYzA0Ii8+CiAgICA8Y2lyY2xlIGN4PSIxOTIiIGN5PSIzMjkiIHI9IjE2IiBmaWxsPSIjZmJiYzA0Ii8+CiAgPC9nPgo8L3N2Zz4="/>
-                          <circle cx="999.17" cy="1195.5" r="8.35" fill="#FFFFFF" stroke="#593894" stroke-width="1.3"/>
-                          <text x="898.44" y="1199.03" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#4B3275">Clip evaluator</text>
-                          <text x="898.44" y="1217.07" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">Vertex AI endpoint</text>
-                          <text x="996.26" y="1199.14" xml:space="preserve" font-family="Inter" font-size="10" font-weight="700" fill="#202124">7</text>
+                      <g data-id="/body/1/children/0/children/0/children/0/children/1/children/0/children/2/children/1/children/0" data-tag="Pcard">
+                        <path d="M 578.77 1381.8 V 1504.2 A 128.22 9.38 0 0 0 835.21 1504.2 V 1381.8" fill="#FFFFFF" stroke="#497938" stroke-width="1.25"/>
+                        <ellipse cx="706.99" cy="1381.8" rx="128.22" ry="9.38" fill="#F2FBF1" stroke="#497938" stroke-width="1.25"/>
+                        <image x="636.26" y="1400.5" width="28" height="28" href="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyBpZD0ic3RhbmRhcmRfcHJvZHVjdF9pY29uIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZlcnNpb249IjEuMSIgdmlld0JveD0iMCAwIDUxMiA1MTIiPgogIDwhLS0gR2VuZXJhdG9yOiBBZG9iZSBJbGx1c3RyYXRvciAyOS4xLjAsIFNWRyBFeHBvcnQgUGx1Zy1JbiAuIFNWRyBWZXJzaW9uOiAyLjEuMCBCdWlsZCAxNDIpICAtLT4KICA8ZGVmcz4KICAgIDxzdHlsZT4KICAgICAgLnN0MCB7CiAgICAgICAgZmlsbDogbm9uZTsKICAgICAgfQoKICAgICAgLnN0MSB7CiAgICAgICAgZmlsbDogIzQyODVmNDsKICAgICAgfQoKICAgICAgLnN0MiB7CiAgICAgICAgZmlsbDogIzM0YTg1MzsKICAgICAgfQoKICAgICAgLnN0MyB7CiAgICAgICAgZmlsbDogI2ZiYmMwNDsKICAgICAgfQoKICAgICAgLnN0NCB7CiAgICAgICAgZmlsbDogI2VhNDMzNTsKICAgICAgfQogICAgPC9zdHlsZT4KICA8L2RlZnM+CiAgPGcgaWQ9ImJvdW5kaW5nX2JveCI+CiAgICA8cmVjdCBjbGFzcz0ic3QwIiB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIvPgogIDwvZz4KICA8ZyBpZD0iYXJ0Ij4KICAgIDxwYXRoIGNsYXNzPSJzdDMiIGQ9Ik00NDcuNSwxMjMuN2wtMTg2LTY4LjdjLTMuNi0xLjMtNy41LTEuMy0xMS4xLDBsLTQwLjcsMTUtMTQ1LjIsNTMuNWMtNi4zLDIuMy0xMC41LDguMy0xMC41LDE1czQuMiwxMi43LDEwLjUsMTVsMTQ1LjEsNTMuNHMwLDAsMCwwbDQwLjgsMTVjMS44LjYsMy43LDEsNS41LDFzMy43LS4zLDUuNS0xbDE4NS45LTY4LjJjNi4zLTIuMywxMC41LTguMywxMC41LTE1LDAtNi43LTQuMi0xMi43LTEwLjUtMTVoMFpNMjU2LDE4OS45bC0xMzkuNi01MS40LDEzOS42LTUxLjQsMTM5LjcsNTEuNi0xMzkuNiw1MS4yWiIvPgogICAgPHBhdGggY2xhc3M9InN0MiIgZD0iTTQ0Ny41LDM4OC44bC0xODUuOSw2OC4yYy0xLjguNi0zLjYsMS01LjUsMXMtMy43LS4zLTUuNS0xbC00MC44LTE1aDBsLTE0NS4xLTUzLjRjLTguMy0zLTEyLjUtMTIuMi05LjUtMjAuNSwzLTguMywxMi4yLTEyLjUsMjAuNS05LjVsMTgwLjQsNjYuNCwxODAuNC02Ni4yYzguMy0zLDE3LjUsMS4yLDIwLjUsOS41LDMsOC4zLTEuMiwxNy41LTkuNSwyMC41aDBaIi8+CiAgICA8cGF0aCBjbGFzcz0ic3QyIiBkPSJNNDQ3LjUsMzEwLjRsLTE4NS45LDY4LjJjLTEuOC42LTMuNiwxLTUuNSwxcy0zLjctLjMtNS41LTFsLTQwLjgtMTVoMGwtMTQ1LjEtNTMuNGMtOC4zLTMtMTIuNS0xMi4yLTkuNS0yMC41LDMtOC4zLDEyLjItMTIuNSwyMC41LTkuNWwxODAuNCw2Ni40LDE4MC40LTY2LjJjOC4zLTMsMTcuNSwxLjIsMjAuNSw5LjUsMyw4LjMtMS4yLDE3LjUtOS41LDIwLjVoMFoiLz4KICAgIDxwYXRoIGNsYXNzPSJzdDIiIGQ9Ik00NDcuNSwyMzIuMWwtMTg1LjksNjguMmMtMS44LjctMy42LDEtNS41LDFzLTMuNy0uMy01LjUtMWwtNDAuOC0xNWgwbC0xNDUuMS01My40Yy04LjMtMy4xLTEyLjUtMTIuMi05LjUtMjAuNSwzLTguMywxMi4yLTEyLjUsMjAuNS05LjVsMTgwLjQsNjYuNCwxODAuNC02Ni4yYzguMy0zLDE3LjUsMS4yLDIwLjUsOS41LDMsOC4zLTEuMiwxNy41LTkuNSwyMC41aDBaIi8+CiAgICA8cGF0aCBjbGFzcz0ic3Q0IiBkPSJNNDU4LDEzOC43YzAsNi43LTQuMiwxMi43LTEwLjUsMTVsLTE4Niw2OC4yYy0xLjguNy0zLjYsMS01LjUsMXMtMy43LS4zLTUuNS0xbC00MC44LTE1aDBzNDYuNC0xNyw0Ni40LTE3bDEzOS42LTUxLjItMTM5LjctNTEuNi00Ni4yLTE3LjEsNDAuNy0xNWMzLjYtMS4zLDcuNS0xLjMsMTEuMSwwbDE4Niw2OC43YzYuMywyLjMsMTAuNSw4LjMsMTAuNSwxNWgwWiIvPgogICAgPHBhdGggY2xhc3M9InN0MSIgZD0iTTQ0Ny41LDM4OC44bC0xODUuOSw2OC4yYy0xLjguNi0zLjYsMS01LjUsMXMtMy43LS4zLTUuNS0xbC00MC44LTE1LDQ2LjQtMTcsMTgwLjQtNjYuMmM4LjMtMywxNy41LDEuMiwyMC41LDkuNSwzLDguMy0xLjIsMTcuNS05LjUsMjAuNWgwWiIvPgogICAgPHBhdGggY2xhc3M9InN0MSIgZD0iTTQ0Ny41LDMxMC40bC0xODUuOSw2OC4yYy0xLjguNi0zLjYsMS01LjUsMXMtMy43LS4zLTUuNS0xbC00MC44LTE1aDBsNDYuNC0xNywxODAuNC02Ni4yYzguMy0zLDE3LjUsMS4yLDIwLjUsOS41LDMsOC4zLTEuMiwxNy41LTkuNSwyMC41WiIvPgogICAgPHBhdGggY2xhc3M9InN0MSIgZD0iTTQ0Ny41LDIzMi4xbC0xODUuOSw2OC4yYy0xLjguNy0zLjYsMS01LjUsMXMtMy43LS4zLTUuNS0xbC00MC44LTE1aDBsNDYuNC0xNywxODAuNC02Ni4yYzguMy0zLDE3LjUsMS4yLDIwLjUsOS41LDMsOC4zLTEuMiwxNy41LTkuNSwyMC41aDBaIi8+CiAgICA8cGF0aCBjbGFzcz0ic3QzIiBkPSJNMzAyLjQsMjA2LjlsLTE4Ni02OC41LTUxLjgtMTVjLTYuMywyLjMtMTAuNSw4LjMtMTAuNSwxNXM0LjIsMTIuNywxMC41LDE1bDE0NS4xLDUzLjRzMCwwLDAsMGw0MC44LDE1YzEuOC42LDMuNywxLDUuNSwxczMuNy0uMyw1LjUtMWw0MC45LTE1aDBaIi8+CiAgPC9nPgo8L3N2Zz4="/>
+                        <rect x="592.64" y="1439.7" width="102.09" height="25" fill="#FFFFFF" stroke="#497938" stroke-width="1"/>
+                        <rect x="700.73" y="1439.7" width="120.6" height="25" fill="#FFFFFF" stroke="#497938" stroke-width="1"/>
+                        <rect x="592.64" y="1470.7" width="80.87" height="25" fill="#FFFFFF" stroke="#497938" stroke-width="1"/>
+                        <rect x="679.51" y="1470.7" width="141.82" height="25" fill="#FFFFFF" stroke="#497938" stroke-width="1"/>
+                        <circle cx="768.71" cy="1406.8" r="8.35" fill="#FFFFFF" stroke="#497938" stroke-width="1.3"/>
+                        <path d="M803.83 1474.7 L813.83 1491.7 L793.83 1491.7 Z" fill="#202124"/>
+                        <text x="674.26" y="1410.33" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#26481B">Verdict store</text>
+                        <text x="695.82" y="1428.37" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">Cloud SQL</text>
+                        <text x="600.14" y="1456.2" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#26481B">TRIGGERS</text>
+                        <text x="708.23" y="1456.2" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#26481B">PLAN VERSIONS</text>
+                        <text x="600.14" y="1487.2" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#26481B">VERDICTS</text>
+                        <text x="687.01" y="1487.2" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#26481B">EVIDENCE REFS</text>
+                        <text x="765.46" y="1410.44" xml:space="preserve" font-family="Inter" font-size="10" font-weight="700" fill="#202124">8</text>
+                        <text x="801" y="1488.97" xml:space="preserve" font-family="Inter" font-size="9" font-weight="700" fill="#FFFFFF">2</text>
+                      </g>
+                    </g>
+                    <g data-id="/body/1/children/0/children/0/children/0/children/1/children/0/children/2/children/2" data-tag="Col">
+                      <g data-id="/body/1/children/0/children/0/children/0/children/1/children/0/children/2/children/2/children/0" data-tag="Row">
+                        <g data-id="/body/1/children/0/children/0/children/0/children/1/children/0/children/2/children/2/children/0/children/0" data-tag="Pcard">
+                          <rect x="887.24" y="1419.43" width="191.44" height="47.15" fill="none" stroke="#1A73E8" stroke-width="1.25" stroke-dasharray="7 4"/>
+                          <image x="898.11" y="1429" width="28" height="28" href="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyBpZD0ic3RhbmRhcmRfcHJvZHVjdF9pY29uIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZlcnNpb249IjEuMSIgdmlld0JveD0iMCAwIDUxMiA1MTIiPgogIDwhLS0gR2VuZXJhdG9yOiBBZG9iZSBJbGx1c3RyYXRvciAyOS4xLjAsIFNWRyBFeHBvcnQgUGx1Zy1JbiAuIFNWRyBWZXJzaW9uOiAyLjEuMCBCdWlsZCAxNDIpICAtLT4KICA8ZyBpZD0iYm91bmRpbmdfYm94Ij4KICAgIDxyZWN0IHdpZHRoPSI1MTIiIGhlaWdodD0iNTEyIiBmaWxsPSJub25lIi8+CiAgPC9nPgogIDxnIGlkPSJhcnQiPgogICAgPHBhdGggZD0iTTM0Ni42ODMsMTEyLjYxMWwtLjAzOS03NS4xNzFjLS4wMDUtOC44MzQtNy4xNjctMTUuOTkyLTE2LTE1Ljk5MmgtLjAwOGMtOC44MzcuMDA0LTE1Ljk5Nyw3LjE3Mi0xNS45OTIsMTYuMDA4bC4wMzksNzUuMTU1SDExOGMtMTcuNjczLDAtMzIsMTQuMzI3LTMyLDMydjExMS44NjVjMCw4OS4wODUsNzYuMjYyLDE2MS41NjIsMTcwLDE2MS41NjJzMTcwLTcyLjQ3NywxNzAtMTYxLjU2MnYtMTExLjg2NWMwLTE3LjY3My0xNC4zMjctMzItMzItMzJoLTQ3LjMxN1pNMzk0LDI1Ni40NzdjMCw3MS40NC02MS45MDYsMTI5LjU2Mi0xMzgsMTI5LjU2MnMtMTM4LTU4LjEyMS0xMzgtMTI5LjU2MnYtMTExLjg2NWgyNzZ2MTExLjg2NVoiIGZpbGw9IiM0Mjg1ZjQiLz4KICAgIDxwYXRoIGQ9Ik0zMTQuNjQ0LDE0NC42MTF2LTMyaC0xMTcuMjk0bC0uMDM5LTc1LjE3MWMtLjAwNS04LjgzNC03LjE2Ny0xNS45OTItMTYtMTUuOTkyaC0uMDA4Yy04LjgzNy4wMDQtMTUuOTk3LDcuMTcyLTE1Ljk5MiwxNi4wMDhsLjAzOSw3NS4xNTVoLTQ3LjM1Yy0xNy42NzMsMC0zMiwxNC4zMjctMzIsMzJ2MTExLjg2NWMwLDgzLjk1OSw2Ny43NDEsMTUzLjE1NSwxNTQuMDA3LDE2MC44NDF2NTYuNjc5YzAsOC42MTYsNi42MjEsMTYuMDI5LDE1LjIyOCwxNi40MzMsOS4xODguNDMyLDE2Ljc3Mi02Ljg4OSwxNi43NzItMTUuOTgydi04OS4yNzdjLTYuNTk0LjYyNy04LjAxNC42NTItMTYsLjg2N2gtLjAwN2MtNzYuMDk0LDAtMTM4LTU4LjEyMS0xMzgtMTI5LjU2MnYtMTExLjg2NWgxOTYuNjQ0LDBaIiBmaWxsPSIjOWFhMGE2Ii8+CiAgPC9nPgo8L3N2Zz4="/>
+                          <circle cx="1058.8" cy="1435.3" r="8.35" fill="#FFFFFF" stroke="#1A73E8" stroke-width="1.3"/>
+                          <text x="936.11" y="1438.83" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#5F6368">Replay scheduler</text>
+                          <text x="936.11" y="1456.87" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">Cloud Scheduler</text>
+                          <text x="1055.55" y="1438.94" xml:space="preserve" font-family="Inter" font-size="10" font-weight="700" fill="#202124">9</text>
                         </g>
                       </g>
                     </g>
@@ -486,223 +541,277 @@
               </g>
             </g>
             <g data-id="/body/1/children/0/children/0/children/1" data-tag="GeneralNotes">
-              <rect x="50.5" y="1264.9" width="985.67" height="299.8" fill="#FFFFFF" stroke="#202124" stroke-width="1"/>
-              <path d="M73 1299 L83 1316 L63 1316 Z" fill="#202124"/>
-              <path d="M73 1356.4 L83 1373.4 L63 1373.4 Z" fill="#202124"/>
-              <path d="M73 1413.8 L83 1430.8 L63 1430.8 Z" fill="#202124"/>
-              <path d="M73 1471.2 L83 1488.2 L63 1488.2 Z" fill="#202124"/>
-              <line x1="63" y1="1529.1" x2="1023.67" y2="1529.1" stroke="#DADCE0" stroke-width="1" stroke-dasharray="3 3"/>
-              <text x="63" y="1287.93" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" letter-spacing="1.56" fill="#202124">GENERAL NOTES</text>
-              <text x="204.01" y="1287.57" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">what the service asks of its operators</text>
-              <text x="71.06" y="1313.27" xml:space="preserve" font-family="Inter" font-size="9" font-weight="700" fill="#FFFFFF">1</text>
-              <text x="89" y="1312.07" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#202124">A plan change never reaches a running trigger until an operator approves it.</text>
-              <text x="89" y="1329.08" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">The worker reads the approved version only.</text>
-              <text x="89" y="1345.08" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">marked at A4 B4 D4</text>
-              <text x="70.17" y="1370.67" xml:space="preserve" font-family="Inter" font-size="9" font-weight="700" fill="#FFFFFF">2</text>
-              <text x="89" y="1369.47" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#202124">Evidence frames are stored as references into the clip, never copied.</text>
-              <text x="89" y="1386.48" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">Retention follows the clip bucket.</text>
-              <text x="89" y="1402.48" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">marked at A4 C7</text>
-              <text x="70.1" y="1428.07" xml:space="preserve" font-family="Inter" font-size="9" font-weight="700" fill="#FFFFFF">3</text>
-              <text x="89" y="1426.87" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#202124">The evaluator holds no credentials for the verdict store.</text>
-              <text x="89" y="1443.88" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">The blocked line in view 3 is an IAM binding, not a convention.</text>
-              <text x="89" y="1459.88" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">marked at C6 E4</text>
-              <text x="69.96" y="1485.47" xml:space="preserve" font-family="Inter" font-size="9" font-weight="700" fill="#FFFFFF">4</text>
-              <text x="89" y="1484.27" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#202124">Out of scope: live streams, identifying people, and training a model per customer.</text>
-              <text x="89" y="1501.28" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">The service evaluates finished clips with one shared model.</text>
-              <text x="89" y="1517.28" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">marked at C5</text>
-              <text x="63" y="1549.77" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">Each flag on the drawings marks where its note applies.</text>
+              <rect x="50.5" y="1551.7" width="1056.14" height="299.8" fill="#FFFFFF" stroke="#202124" stroke-width="1"/>
+              <path d="M73 1585.8 L83 1602.8 L63 1602.8 Z" fill="#202124"/>
+              <path d="M73 1643.2 L83 1660.2 L63 1660.2 Z" fill="#202124"/>
+              <path d="M73 1700.6 L83 1717.6 L63 1717.6 Z" fill="#202124"/>
+              <path d="M73 1758 L83 1775 L63 1775 Z" fill="#202124"/>
+              <line x1="63" y1="1815.9" x2="1094.14" y2="1815.9" stroke="#DADCE0" stroke-width="1" stroke-dasharray="3 3"/>
+              <text x="63" y="1574.73" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" letter-spacing="1.56" fill="#202124">GENERAL NOTES</text>
+              <text x="204.01" y="1574.37" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">what the service asks of its operators</text>
+              <text x="71.06" y="1600.07" xml:space="preserve" font-family="Inter" font-size="9" font-weight="700" fill="#FFFFFF">1</text>
+              <text x="89" y="1598.87" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#202124">A plan change never reaches a running trigger until an operator approves it.</text>
+              <text x="89" y="1615.88" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">The worker reads the approved version only.</text>
+              <text x="89" y="1631.88" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">marked at A4 B4 D5</text>
+              <text x="70.17" y="1657.47" xml:space="preserve" font-family="Inter" font-size="9" font-weight="700" fill="#FFFFFF">2</text>
+              <text x="89" y="1656.27" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#202124">Evidence frames are stored as references into the clip, never copied.</text>
+              <text x="89" y="1673.28" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">Retention follows the clip bucket.</text>
+              <text x="89" y="1689.28" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">marked at A4 C7 E5</text>
+              <text x="70.1" y="1714.87" xml:space="preserve" font-family="Inter" font-size="9" font-weight="700" fill="#FFFFFF">3</text>
+              <text x="89" y="1713.67" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#202124">The evaluator holds no credentials for the verdict store.</text>
+              <text x="89" y="1730.68" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">The blocked line in view 3 is an IAM binding, not a convention.</text>
+              <text x="89" y="1746.68" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">marked at C6 E5</text>
+              <text x="69.96" y="1772.27" xml:space="preserve" font-family="Inter" font-size="9" font-weight="700" fill="#FFFFFF">4</text>
+              <text x="89" y="1771.07" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#202124">Out of scope: live streams, identifying people, and training a model per customer.</text>
+              <text x="89" y="1788.08" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">The service evaluates finished clips with one shared model.</text>
+              <text x="89" y="1804.08" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">marked at C5</text>
+              <text x="63" y="1836.57" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">Each flag on the drawings marks where its note applies.</text>
             </g>
           </g>
           <g data-id="/body/1/children/0/children/1" data-tag="Col">
             <g data-id="/body/1/children/0/children/1/children/0" data-tag="PartsList">
-              <rect x="1057.42" y="924.75" width="491.83" height="468.9" fill="#FFFFFF" stroke="#202124" stroke-width="1.5"/>
-              <line x1="1058.17" y1="957.6" x2="1548.5" y2="957.6" stroke="#202124" stroke-width="1"/>
-              <line x1="1058.17" y1="979.8" x2="1548.5" y2="979.8" stroke="#DADCE0" stroke-width="1"/>
-              <circle cx="1075.17" cy="995.3" r="8.35" fill="#FFFFFF" stroke="#A36E14" stroke-width="1.3"/>
-              <line x1="1242.67" y1="986.3" x2="1242.67" y2="1031.3" stroke="#DADCE0" stroke-width="1"/>
-              <line x1="1058.17" y1="1037.8" x2="1548.5" y2="1037.8" stroke="#DADCE0" stroke-width="1"/>
-              <circle cx="1075.17" cy="1053.3" r="8.35" fill="#FFFFFF" stroke="#1A73E8" stroke-width="1.3"/>
-              <line x1="1242.67" y1="1044.3" x2="1242.67" y2="1076.7" stroke="#DADCE0" stroke-width="1"/>
-              <line x1="1058.17" y1="1083.2" x2="1548.5" y2="1083.2" stroke="#DADCE0" stroke-width="1"/>
-              <circle cx="1075.17" cy="1098.7" r="8.35" fill="#FFFFFF" stroke="#1A73E8" stroke-width="1.3"/>
-              <line x1="1242.67" y1="1089.7" x2="1242.67" y2="1134.7" stroke="#DADCE0" stroke-width="1"/>
-              <line x1="1058.17" y1="1141.2" x2="1548.5" y2="1141.2" stroke="#DADCE0" stroke-width="1"/>
-              <circle cx="1075.17" cy="1156.7" r="8.35" fill="#FFFFFF" stroke="#1A73E8" stroke-width="1.3"/>
-              <line x1="1242.67" y1="1147.7" x2="1242.67" y2="1192.7" stroke="#DADCE0" stroke-width="1"/>
-              <line x1="1058.17" y1="1199.2" x2="1548.5" y2="1199.2" stroke="#DADCE0" stroke-width="1"/>
-              <circle cx="1075.17" cy="1214.7" r="8.35" fill="#FFFFFF" stroke="#202124" stroke-width="1.3"/>
-              <line x1="1242.67" y1="1205.7" x2="1242.67" y2="1250.7" stroke="#DADCE0" stroke-width="1"/>
-              <line x1="1058.17" y1="1257.2" x2="1548.5" y2="1257.2" stroke="#DADCE0" stroke-width="1"/>
-              <circle cx="1075.17" cy="1272.7" r="8.35" fill="#FFFFFF" stroke="#497938" stroke-width="1.3"/>
-              <line x1="1242.67" y1="1263.7" x2="1242.67" y2="1296.1" stroke="#DADCE0" stroke-width="1"/>
-              <line x1="1058.17" y1="1302.6" x2="1548.5" y2="1302.6" stroke="#DADCE0" stroke-width="1"/>
-              <circle cx="1075.17" cy="1318.1" r="8.35" fill="#FFFFFF" stroke="#593894" stroke-width="1.3"/>
-              <line x1="1242.67" y1="1309.1" x2="1242.67" y2="1341.5" stroke="#DADCE0" stroke-width="1"/>
-              <line x1="1058.17" y1="1348" x2="1548.5" y2="1348" stroke="#DADCE0" stroke-width="1"/>
-              <circle cx="1075.17" cy="1363.5" r="8.35" fill="#FFFFFF" stroke="#202124" stroke-width="1.3"/>
-              <line x1="1242.67" y1="1354.5" x2="1242.67" y2="1386.9" stroke="#DADCE0" stroke-width="1"/>
-              <text x="1070.17" y="946.03" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" letter-spacing="1.56" fill="#202124">PARTS LIST</text>
-              <text x="1232.41" y="945.67" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">what the service is made of, and why each part exists</text>
-              <text x="1066.17" y="974.7" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">ITEM</text>
-              <text x="1106.17" y="974.7" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">PART · WHAT IT IS</text>
-              <text x="1251.17" y="974.7" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">WHY IT EXISTS</text>
-              <text x="1476.5" y="974.7" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">ZONES</text>
-              <text x="1073.01" y="998.94" xml:space="preserve" font-family="Inter" font-size="10" font-weight="700" fill="#202124">1</text>
-              <text x="1106.17" y="999.37" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#5A3900">Operator console</text>
-              <text x="1106.17" y="1015.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">web client</text>
-              <text x="1251.17" y="997.98" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">Operators write triggers and judge</text>
-              <text x="1251.17" y="1012.98" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">verdicts without an engineer in the</text>
-              <text x="1251.17" y="1027.98" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">loop.</text>
-              <text x="1476.5" y="997.98" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">A4 B2 D1</text>
-              <text x="1072.02" y="1056.94" xml:space="preserve" font-family="Inter" font-size="10" font-weight="700" fill="#202124">2</text>
-              <text x="1106.17" y="1057.37" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#5F6368">Gateway</text>
-              <text x="1106.17" y="1073.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">API Gateway</text>
-              <text x="1251.17" y="1055.98" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">One authenticated entry point; the API</text>
-              <text x="1251.17" y="1070.98" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">never sees an anonymous call.</text>
-              <text x="1476.5" y="1055.98" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">D3</text>
-              <text x="1071.94" y="1102.34" xml:space="preserve" font-family="Inter" font-size="10" font-weight="700" fill="#202124">3</text>
-              <text x="1106.17" y="1102.77" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#5F6368">Trigger API</text>
-              <text x="1106.17" y="1118.78" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">Cloud Run</text>
-              <text x="1251.17" y="1101.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">Turns a description into a versioned</text>
-              <text x="1251.17" y="1116.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">plan and refuses to queue a plan</text>
-              <text x="1251.17" y="1131.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">nobody approved.</text>
-              <text x="1476.5" y="1101.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">A4 C3 D5</text>
-              <text x="1071.79" y="1160.34" xml:space="preserve" font-family="Inter" font-size="10" font-weight="700" fill="#202124">4</text>
-              <text x="1106.17" y="1160.77" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#5F6368">Evaluation queue</text>
-              <text x="1106.17" y="1176.78" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">Pub/Sub</text>
-              <text x="1251.17" y="1159.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">The API returns once a job is queued,</text>
-              <text x="1251.17" y="1174.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">so a slow clip never holds a request</text>
-              <text x="1251.17" y="1189.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">open.</text>
-              <text x="1476.5" y="1159.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">C6 E3</text>
-              <text x="1072.06" y="1218.34" xml:space="preserve" font-family="Inter" font-size="10" font-weight="700" fill="#202124">5</text>
-              <text x="1106.17" y="1218.77" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">Clip bucket</text>
-              <text x="1106.17" y="1234.78" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">Cloud Storage</text>
-              <text x="1251.17" y="1217.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">A clip is evaluated only once it is</text>
-              <text x="1251.17" y="1232.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">complete, and the arrival event names</text>
-              <text x="1251.17" y="1247.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">it.</text>
-              <text x="1476.5" y="1217.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">C5 E3</text>
-              <text x="1071.92" y="1276.34" xml:space="preserve" font-family="Inter" font-size="10" font-weight="700" fill="#202124">6</text>
-              <text x="1106.17" y="1276.77" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#26481B">Clip worker</text>
-              <text x="1106.17" y="1292.78" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">Cloud Run job</text>
-              <text x="1251.17" y="1275.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">Clips are independent, so a failed clip</text>
-              <text x="1251.17" y="1290.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">retries alone.</text>
-              <text x="1476.5" y="1275.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">C6 E5</text>
-              <text x="1072.26" y="1321.74" xml:space="preserve" font-family="Inter" font-size="10" font-weight="700" fill="#202124">7</text>
-              <text x="1106.17" y="1322.17" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#4B3275">Clip evaluator</text>
-              <text x="1106.17" y="1338.18" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">Vertex AI endpoint</text>
-              <text x="1251.17" y="1320.78" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">Reads frames against the plan, and has</text>
-              <text x="1251.17" y="1335.78" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">no write path to the store.</text>
-              <text x="1476.5" y="1320.78" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">A4 C6 E6</text>
-              <text x="1071.91" y="1367.14" xml:space="preserve" font-family="Inter" font-size="10" font-weight="700" fill="#202124">8</text>
-              <text x="1106.17" y="1367.57" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">Verdict store</text>
-              <text x="1106.17" y="1383.58" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">Cloud SQL</text>
-              <text x="1251.17" y="1366.18" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">Every verdict keeps its evidence frames</text>
-              <text x="1251.17" y="1381.18" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">and the plan version that produced it.</text>
-              <text x="1476.5" y="1366.18" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">A4 C4 C7</text>
-              <text x="1476.5" y="1381.18" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">E4</text>
+              <rect x="1127.89" y="945.15" width="421.36" height="640.3" fill="#FFFFFF" stroke="#202124" stroke-width="1.5"/>
+              <line x1="1128.64" y1="993.6" x2="1548.5" y2="993.6" stroke="#202124" stroke-width="1"/>
+              <line x1="1128.64" y1="1015.8" x2="1548.5" y2="1015.8" stroke="#DADCE0" stroke-width="1"/>
+              <circle cx="1145.64" cy="1031.3" r="8.35" fill="#FFFFFF" stroke="#A36E14" stroke-width="1.3"/>
+              <line x1="1313.14" y1="1022.3" x2="1313.14" y2="1067.3" stroke="#DADCE0" stroke-width="1"/>
+              <line x1="1128.64" y1="1073.8" x2="1548.5" y2="1073.8" stroke="#DADCE0" stroke-width="1"/>
+              <circle cx="1145.64" cy="1089.3" r="8.35" fill="#FFFFFF" stroke="#1A73E8" stroke-width="1.3"/>
+              <line x1="1313.14" y1="1080.3" x2="1313.14" y2="1125.3" stroke="#DADCE0" stroke-width="1"/>
+              <line x1="1128.64" y1="1131.8" x2="1548.5" y2="1131.8" stroke="#DADCE0" stroke-width="1"/>
+              <circle cx="1145.64" cy="1147.3" r="8.35" fill="#FFFFFF" stroke="#1A73E8" stroke-width="1.3"/>
+              <line x1="1313.14" y1="1138.3" x2="1313.14" y2="1198.3" stroke="#DADCE0" stroke-width="1"/>
+              <line x1="1128.64" y1="1204.8" x2="1548.5" y2="1204.8" stroke="#DADCE0" stroke-width="1"/>
+              <circle cx="1145.64" cy="1220.3" r="8.35" fill="#FFFFFF" stroke="#1A73E8" stroke-width="1.3"/>
+              <line x1="1313.14" y1="1211.3" x2="1313.14" y2="1271.3" stroke="#DADCE0" stroke-width="1"/>
+              <line x1="1128.64" y1="1277.8" x2="1548.5" y2="1277.8" stroke="#DADCE0" stroke-width="1"/>
+              <circle cx="1145.64" cy="1293.3" r="8.35" fill="#FFFFFF" stroke="#202124" stroke-width="1.3"/>
+              <line x1="1313.14" y1="1284.3" x2="1313.14" y2="1329.3" stroke="#DADCE0" stroke-width="1"/>
+              <line x1="1128.64" y1="1335.8" x2="1548.5" y2="1335.8" stroke="#DADCE0" stroke-width="1"/>
+              <circle cx="1145.64" cy="1351.3" r="8.35" fill="#FFFFFF" stroke="#497938" stroke-width="1.3"/>
+              <line x1="1313.14" y1="1342.3" x2="1313.14" y2="1374.7" stroke="#DADCE0" stroke-width="1"/>
+              <line x1="1128.64" y1="1381.2" x2="1548.5" y2="1381.2" stroke="#DADCE0" stroke-width="1"/>
+              <circle cx="1145.64" cy="1396.7" r="8.35" fill="#FFFFFF" stroke="#593894" stroke-width="1.3"/>
+              <line x1="1313.14" y1="1387.7" x2="1313.14" y2="1432.7" stroke="#DADCE0" stroke-width="1"/>
+              <line x1="1128.64" y1="1439.2" x2="1548.5" y2="1439.2" stroke="#DADCE0" stroke-width="1"/>
+              <circle cx="1145.64" cy="1454.7" r="8.35" fill="#FFFFFF" stroke="#497938" stroke-width="1.3"/>
+              <line x1="1313.14" y1="1445.7" x2="1313.14" y2="1505.7" stroke="#DADCE0" stroke-width="1"/>
+              <line x1="1128.64" y1="1512.2" x2="1548.5" y2="1512.2" stroke="#DADCE0" stroke-width="1"/>
+              <circle cx="1145.64" cy="1527.7" r="8.35" fill="#FFFFFF" stroke="#1A73E8" stroke-width="1.3"/>
+              <line x1="1313.14" y1="1518.7" x2="1313.14" y2="1578.7" stroke="#DADCE0" stroke-width="1"/>
+              <text x="1140.64" y="974.23" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" letter-spacing="1.56" fill="#202124">PARTS LIST</text>
+              <text x="1242.12" y="966.07" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">what the service is made of, and why each part</text>
+              <text x="1242.12" y="981.67" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">exists</text>
+              <text x="1136.64" y="1010.7" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">ITEM</text>
+              <text x="1176.64" y="1010.7" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">PART · WHAT IT IS</text>
+              <text x="1321.64" y="1010.7" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">WHY IT EXISTS</text>
+              <text x="1476.5" y="1010.7" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">ZONES</text>
+              <text x="1143.49" y="1034.94" xml:space="preserve" font-family="Inter" font-size="10" font-weight="700" fill="#202124">1</text>
+              <text x="1176.64" y="1035.37" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#5A3900">Operator console</text>
+              <text x="1176.64" y="1051.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">web client</text>
+              <text x="1321.64" y="1033.98" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">Operators write triggers</text>
+              <text x="1321.64" y="1048.98" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">and judge verdicts without</text>
+              <text x="1321.64" y="1063.98" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">an engineer in the loop.</text>
+              <text x="1476.5" y="1033.98" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">A4 B2 E1</text>
+              <text x="1142.49" y="1092.94" xml:space="preserve" font-family="Inter" font-size="10" font-weight="700" fill="#202124">2</text>
+              <text x="1176.64" y="1093.37" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#5F6368">Gateway</text>
+              <text x="1176.64" y="1109.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">API Gateway</text>
+              <text x="1321.64" y="1091.98" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">One authenticated entry</text>
+              <text x="1321.64" y="1106.98" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">point; the API never sees</text>
+              <text x="1321.64" y="1121.98" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">an anonymous call.</text>
+              <text x="1476.5" y="1091.98" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">D3</text>
+              <text x="1142.42" y="1150.94" xml:space="preserve" font-family="Inter" font-size="10" font-weight="700" fill="#202124">3</text>
+              <text x="1176.64" y="1151.37" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#5F6368">Trigger API</text>
+              <text x="1176.64" y="1167.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">Cloud Run</text>
+              <text x="1321.64" y="1149.98" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">Turns a description into a</text>
+              <text x="1321.64" y="1164.98" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">versioned plan and</text>
+              <text x="1321.64" y="1179.98" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">refuses to queue a plan</text>
+              <text x="1321.64" y="1194.98" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">nobody approved.</text>
+              <text x="1476.5" y="1149.98" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">A4 B3 D6</text>
+              <text x="1142.26" y="1223.94" xml:space="preserve" font-family="Inter" font-size="10" font-weight="700" fill="#202124">4</text>
+              <text x="1176.64" y="1224.37" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#5F6368">Evaluation queue</text>
+              <text x="1176.64" y="1240.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">Pub/Sub</text>
+              <text x="1321.64" y="1222.98" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">The API returns once a job</text>
+              <text x="1321.64" y="1237.98" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">is queued, so a slow clip</text>
+              <text x="1321.64" y="1252.98" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">never holds a request</text>
+              <text x="1321.64" y="1267.98" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">open.</text>
+              <text x="1476.5" y="1222.98" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">C6 E3</text>
+              <text x="1142.53" y="1296.94" xml:space="preserve" font-family="Inter" font-size="10" font-weight="700" fill="#202124">5</text>
+              <text x="1176.64" y="1297.37" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">Clip bucket</text>
+              <text x="1176.64" y="1313.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">Cloud Storage</text>
+              <text x="1321.64" y="1295.98" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">A clip is evaluated only</text>
+              <text x="1321.64" y="1310.98" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">once it is complete, and</text>
+              <text x="1321.64" y="1325.98" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">the arrival event names it.</text>
+              <text x="1476.5" y="1295.98" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">C5 E3</text>
+              <text x="1142.4" y="1354.94" xml:space="preserve" font-family="Inter" font-size="10" font-weight="700" fill="#202124">6</text>
+              <text x="1176.64" y="1355.37" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#26481B">Clip worker</text>
+              <text x="1176.64" y="1371.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">Cloud Run job</text>
+              <text x="1321.64" y="1353.98" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">Clips are independent, so</text>
+              <text x="1321.64" y="1368.98" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">a failed clip retries alone.</text>
+              <text x="1476.5" y="1353.98" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">C6 D5</text>
+              <text x="1142.74" y="1400.34" xml:space="preserve" font-family="Inter" font-size="10" font-weight="700" fill="#202124">7</text>
+              <text x="1176.64" y="1400.77" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#4B3275">Clip evaluator</text>
+              <text x="1176.64" y="1416.78" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">Vertex AI endpoint</text>
+              <text x="1321.64" y="1399.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">Reads frames against the</text>
+              <text x="1321.64" y="1414.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">plan, and has no write</text>
+              <text x="1321.64" y="1429.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">path to the store.</text>
+              <text x="1476.5" y="1399.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">A4 C6 D5</text>
+              <text x="1142.39" y="1458.34" xml:space="preserve" font-family="Inter" font-size="10" font-weight="700" fill="#202124">8</text>
+              <text x="1176.64" y="1458.77" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#26481B">Verdict store</text>
+              <text x="1176.64" y="1474.78" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">Cloud SQL</text>
+              <text x="1321.64" y="1457.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">Every verdict keeps its</text>
+              <text x="1321.64" y="1472.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">evidence frames and the</text>
+              <text x="1321.64" y="1487.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">plan version that produced</text>
+              <text x="1321.64" y="1502.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">it.</text>
+              <text x="1476.5" y="1457.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">A4 B4 C7</text>
+              <text x="1476.5" y="1472.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">E4</text>
+              <text x="1142.4" y="1531.34" xml:space="preserve" font-family="Inter" font-size="10" font-weight="700" fill="#202124">9</text>
+              <text x="1176.64" y="1531.77" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#5F6368">Replay scheduler</text>
+              <text x="1176.64" y="1547.78" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">Cloud Scheduler</text>
+              <text x="1176.64" y="1565.7" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">PLANNED</text>
+              <text x="1321.64" y="1530.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">Runs a trigger over earlier</text>
+              <text x="1321.64" y="1545.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">clips on a schedule, so the</text>
+              <text x="1321.64" y="1560.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">operator does not wait on</text>
+              <text x="1321.64" y="1575.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">a replay.</text>
+              <text x="1476.5" y="1530.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">E6</text>
             </g>
             <g data-id="/body/1/children/0/children/1/children/1" data-tag="Frame">
-              <line x1="1058.72" y1="1416.46" x2="1547.94" y2="1563.34" stroke="#5F6368" stroke-width="1"/>
-              <line x1="1058.72" y1="1563.34" x2="1547.94" y2="1416.46" stroke="#5F6368" stroke-width="1"/>
-              <rect x="1057.29" y="1415.03" width="492.08" height="149.75" rx="3.38" fill="none" stroke="#9AA0A6" stroke-width="1.25" stroke-dasharray="6 5"/>
-              <rect x="1070.8" y="1478.7" width="465.07" height="22.4" rx="4" fill="#FFFFFF"/>
-              <text x="1078.8" y="1494.27" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#5F6368">Verdict review in the console: clip, evidence frames, verdict and plan version</text>
+              <line x1="1129.2" y1="1608.26" x2="1547.94" y2="1844.14" stroke="#5F6368" stroke-width="1"/>
+              <line x1="1129.2" y1="1844.14" x2="1547.94" y2="1608.26" stroke="#5F6368" stroke-width="1"/>
+              <rect x="1127.77" y="1606.82" width="421.61" height="238.75" rx="3.38" fill="none" stroke="#9AA0A6" stroke-width="1.25" stroke-dasharray="6 5"/>
+              <rect x="1143.41" y="1707.8" width="390.31" height="36.8" rx="4" fill="#FFFFFF"/>
+              <text x="1151.41" y="1723.37" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#5F6368">Verdict review in the console: clip, evidence frames, verdict and</text>
+              <text x="1302.62" y="1737.77" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#5F6368">plan version</text>
             </g>
           </g>
         </g>
       </g>
     </g>
     <g data-id="/foot" data-tag="Foot">
-      <text x="50" y="1588" xml:space="preserve" font-family="Inter" font-size="11" font-weight="400" fill="#5F6368">Balloons key the drawings to the parts list, flags to the general notes, diamonds to the attention items in the title block.</text>
+      <text x="50" y="1874.6" xml:space="preserve" font-family="Inter" font-size="11" font-weight="400" fill="#5F6368">Balloons key the drawings to the parts list, flags to the general notes, diamonds to the attention items in the title block.</text>
     </g>
   </g>
   <g data-id="/links/0" data-tag="Link" data-kind="solid-4">
-    <path d="M 350.33 481 L 370.33 481 A 6 6 0 0 1 376.33 487 L 376.33 586.5 A 6 6 0 0 0 382.33 592.5 L 388.33 592.5" fill="none" stroke="#A36E14" stroke-width="2" stroke-linejoin="round"/>
-    <line x1="388.33" y1="592.5" x2="398.33" y2="592.5" stroke="none" marker-end="url(#arrow-center-solid-4)"/>
+    <path d="M 350.33 501.4 L 370.33 501.4 A 6 6 0 0 1 376.33 507.4 L 376.33 606.9 A 6 6 0 0 0 382.33 612.9 L 388.33 612.9" fill="none" stroke="#A36E14" stroke-width="2" stroke-linejoin="round"/>
+    <line x1="388.33" y1="612.9" x2="398.33" y2="612.9" stroke="none" marker-end="url(#arrow-center-solid-4)"/>
   </g>
   <g data-id="/links/1" data-tag="Link" data-kind="blue">
-    <path d="M 470.08 552 L 470.08 487 A 6 6 0 0 1 476.08 481 L 579.83 481" fill="none" stroke="#1A73E8" stroke-width="2" stroke-linejoin="round"/>
-    <line x1="579.83" y1="481" x2="589.83" y2="481" stroke="none" marker-end="url(#arrow-center-blue)"/>
-    <rect x="508.58" y="466.45" width="42.75" height="29.1" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
-    <text x="517.33" y="485.37" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">plan</text>
+    <path d="M 470.08 572.4 L 470.08 507.4 A 6 6 0 0 1 476.08 501.4 L 579.83 501.4" fill="none" stroke="#1A73E8" stroke-width="2" stroke-linejoin="round"/>
+    <line x1="579.83" y1="501.4" x2="589.83" y2="501.4" stroke="none" marker-end="url(#arrow-center-blue)"/>
+    <rect x="508.58" y="486.85" width="42.75" height="29.1" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
+    <text x="517.33" y="505.77" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">plan</text>
   </g>
   <g data-id="/links/2" data-tag="Link" data-kind="solid-4">
-    <path d="M 667.12 520 L 667.12 565.5" fill="none" stroke="#A36E14" stroke-width="2" stroke-linejoin="round"/>
-    <line x1="667.12" y1="565.5" x2="667.12" y2="575.5" stroke="none" marker-end="url(#arrow-center-solid-4)"/>
+    <path d="M 667.12 540.4 L 667.12 585.9" fill="none" stroke="#A36E14" stroke-width="2" stroke-linejoin="round"/>
+    <line x1="667.12" y1="585.9" x2="667.12" y2="595.9" stroke="none" marker-end="url(#arrow-center-solid-4)"/>
   </g>
   <g data-id="/links/3" data-tag="Link" data-kind="dash-6">
-    <path d="M 744.41 592.5 L 1056.08 592.5 A 6 6 0 0 1 1062.08 598.5 L 1062.08 655" fill="none" stroke="#497938" stroke-width="2" stroke-dasharray="6 5" stroke-linejoin="round"/>
-    <line x1="1062.08" y1="655" x2="1062.08" y2="665" stroke="none" marker-end="url(#arrow-center-dash-6)"/>
-    <rect x="825.43" y="577.95" width="155.63" height="29.1" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
-    <text x="834.18" y="596.87" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">reads approved version</text>
+    <path d="M 744.41 612.9 L 1052.58 612.9" fill="none" stroke="#497938" stroke-width="2" stroke-dasharray="6 5"/>
+    <path d="M 1052.58 612.9 L 1056.08 612.9 A 6 6 0 0 1 1062.08 618.9 L 1062.08 622.4" fill="none" stroke="#497938" stroke-width="2"/>
+    <path d="M 1062.08 622.4 L 1062.08 675.4" fill="none" stroke="#497938" stroke-width="2" stroke-dasharray="6 5" stroke-dashoffset="6"/>
+    <line x1="1062.08" y1="675.4" x2="1062.08" y2="685.4" stroke="none" marker-end="url(#arrow-center-dash-6)"/>
+    <rect x="825.43" y="598.35" width="155.63" height="29.1" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
+    <text x="834.18" y="617.27" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">reads approved version</text>
   </g>
   <g data-id="/links/4" data-tag="Link" data-kind="solid-6">
-    <path d="M 943.43 707 L 981.43 707" fill="none" stroke="#497938" stroke-width="2" stroke-linejoin="round"/>
-    <line x1="981.43" y1="707" x2="991.43" y2="707" stroke="none" marker-end="url(#arrow-center-solid-6)"/>
+    <path d="M 943.43 727.4 L 981.43 727.4" fill="none" stroke="#497938" stroke-width="2" stroke-linejoin="round"/>
+    <line x1="981.43" y1="727.4" x2="991.43" y2="727.4" stroke="none" marker-end="url(#arrow-center-solid-6)"/>
   </g>
   <g data-id="/links/5" data-tag="Link" data-kind="solid-6">
-    <path d="M 1062.08 749 L 1062.08 771" fill="none" stroke="#497938" stroke-width="2" stroke-linejoin="round"/>
-    <line x1="1062.08" y1="771" x2="1062.08" y2="781" stroke="none" marker-end="url(#arrow-center-solid-6)"/>
+    <path d="M 1062.08 769.4 L 1062.08 791.4" fill="none" stroke="#497938" stroke-width="2" stroke-linejoin="round"/>
+    <line x1="1062.08" y1="791.4" x2="1062.08" y2="801.4" stroke="none" marker-end="url(#arrow-center-solid-6)"/>
   </g>
   <g data-id="/links/6" data-tag="Link" data-kind="solid-5">
-    <path d="M 1132.74 820 L 1152.74 820 A 6 6 0 0 0 1158.74 814 L 1158.74 713 A 6 6 0 0 1 1164.74 707 L 1170.74 707" fill="none" stroke="#593894" stroke-width="2" stroke-linejoin="round"/>
-    <line x1="1170.74" y1="707" x2="1180.74" y2="707" stroke="none" marker-end="url(#arrow-center-solid-5)"/>
+    <path d="M 1132.74 840.4 L 1152.74 840.4 A 6 6 0 0 0 1158.74 834.4 L 1158.74 733.4 A 6 6 0 0 1 1164.74 727.4 L 1170.74 727.4" fill="none" stroke="#593894" stroke-width="2" stroke-linejoin="round"/>
+    <line x1="1170.74" y1="727.4" x2="1180.74" y2="727.4" stroke="none" marker-end="url(#arrow-center-solid-5)"/>
   </g>
   <g data-id="/links/7" data-tag="Link" data-kind="solid-6">
-    <path d="M 1325.09 707 L 1345.09 707 A 6 6 0 0 0 1351.09 701 L 1351.09 487 A 6 6 0 0 1 1357.09 481 L 1363.09 481" fill="none" stroke="#497938" stroke-width="2" stroke-linejoin="round"/>
-    <line x1="1363.09" y1="481" x2="1373.09" y2="481" stroke="none" marker-end="url(#arrow-center-solid-6)"/>
+    <path d="M 1325.09 727.4 L 1345.09 727.4 A 6 6 0 0 0 1351.09 721.4 L 1351.09 507.4 A 6 6 0 0 1 1357.09 501.4 L 1363.09 501.4" fill="none" stroke="#497938" stroke-width="2" stroke-linejoin="round"/>
+    <line x1="1363.09" y1="501.4" x2="1373.09" y2="501.4" stroke="none" marker-end="url(#arrow-center-solid-6)"/>
   </g>
   <g data-id="/links/8" data-tag="Link" data-kind="solid-4">
-    <path d="M 146.42 1060 L 146.42 1000.4 A 6 6 0 0 1 152.42 994.4 L 386.45 994.4" fill="none" stroke="#A36E14" stroke-width="2" stroke-linejoin="round"/>
-    <line x1="386.45" y1="994.4" x2="396.45" y2="994.4" stroke="none" marker-end="url(#arrow-center-solid-4)"/>
-    <rect x="273.58" y="979.85" width="100.48" height="29.1" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
-    <text x="282.33" y="998.77" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">submit trigger</text>
+    <path d="M 146.42 1235.1 L 146.42 1289.1" fill="none" stroke="#A36E14" stroke-width="2" stroke-linejoin="round"/>
+    <line x1="146.42" y1="1289.1" x2="146.42" y2="1299.1" stroke="none" marker-end="url(#arrow-center-solid-4)"/>
+    <rect x="93.03" y="1252.55" width="106.77" height="29.1" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
+    <text x="101.78" y="1271.47" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">writes, reviews</text>
   </g>
-  <g data-id="/links/9" data-tag="Link" data-kind="blue">
-    <path d="M 535.13 994.4 L 750.64 994.4" fill="none" stroke="#1A73E8" stroke-width="2" stroke-linejoin="round"/>
-    <line x1="750.64" y1="994.4" x2="760.64" y2="994.4" stroke="none" marker-end="url(#arrow-center-blue)"/>
-    <rect x="595.78" y="979.85" width="104.22" height="29.1" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
-    <text x="604.53" y="998.77" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">authorized call</text>
+  <g data-id="/links/9" data-tag="Link" data-kind="solid-4">
+    <path d="M 242.83 1323.3 L 279.83 1323.3 A 6 6 0 0 0 285.83 1317.3 L 285.83 1020.8 A 6 6 0 0 1 291.83 1014.8 L 471.99 1014.8" fill="none" stroke="#A36E14" stroke-width="2" stroke-linejoin="round"/>
+    <line x1="471.99" y1="1014.8" x2="481.99" y2="1014.8" stroke="none" marker-end="url(#arrow-center-solid-4)"/>
+    <rect x="321.67" y="1000.25" width="124.48" height="29.1" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
+    <rect x="331.17" y="1006.55" width="16.5" height="16.5" rx="2.25" fill="#FFFFFF" stroke="#A36E14" stroke-width="1.5"/>
+    <text x="337.27" y="1018.44" xml:space="preserve" font-family="Inter" font-size="10" font-weight="700" fill="#202124">1</text>
+    <text x="354.42" y="1019.17" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">submit trigger</text>
   </g>
   <g data-id="/links/10" data-tag="Link" data-kind="blue">
-    <path d="M 837.71 1018.6 L 837.71 1046.6 A 6 6 0 0 1 831.71 1052.6 L 471.79 1052.6 A 6 6 0 0 0 465.79 1058.6 L 465.79 1064.6" fill="none" stroke="#1A73E8" stroke-width="2" stroke-linejoin="round"/>
-    <line x1="465.79" y1="1064.6" x2="465.79" y2="1074.6" stroke="none" marker-end="url(#arrow-center-blue)"/>
-    <rect x="572.35" y="1029.25" width="158.8" height="46.7" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
-    <text x="610.84" y="1048.17" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">queue job</text>
-    <text x="581.1" y="1065.77" xml:space="preserve" font-family="Inter" font-size="12" font-weight="600" fill="#5F6368">approved plans only</text>
-    <path d="M712.4 1044.1 L722.4 1061.1 L702.4 1061.1 Z" fill="#202124"/>
-    <text x="710.46" y="1058.37" xml:space="preserve" font-family="Inter" font-size="9" font-weight="700" fill="#FFFFFF">1</text>
+    <path d="M 620.66 1014.8 L 851.41 1014.8" fill="none" stroke="#1A73E8" stroke-width="2" stroke-linejoin="round"/>
+    <line x1="851.41" y1="1014.8" x2="861.41" y2="1014.8" stroke="none" marker-end="url(#arrow-center-blue)"/>
+    <rect x="676.93" y="1000.25" width="128.22" height="29.1" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
+    <rect x="686.43" y="1006.55" width="16.5" height="16.5" rx="2.25" fill="#FFFFFF" stroke="#1A73E8" stroke-width="1.5"/>
+    <text x="691.53" y="1018.44" xml:space="preserve" font-family="Inter" font-size="10" font-weight="700" fill="#202124">2</text>
+    <text x="709.68" y="1019.17" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">authorized call</text>
   </g>
   <g data-id="/links/11" data-tag="Link" data-kind="blue">
-    <path d="M 562.08 1098.8 L 749.93 1098.8" fill="none" stroke="#1A73E8" stroke-width="2" stroke-linejoin="round"/>
-    <line x1="749.93" y1="1098.8" x2="759.93" y2="1098.8" stroke="none" marker-end="url(#arrow-center-blue)"/>
-    <rect x="621.63" y="1084.25" width="78.75" height="29.1" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
-    <text x="630.38" y="1103.17" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">deliver job</text>
+    <path d="M 912.79 1039 L 912.79 1065 A 6 6 0 0 1 906.79 1071 L 551.48 1071 A 6 6 0 0 0 545.48 1077 L 545.48 1109 A 6 6 0 0 1 539.48 1115 L 480.48 1115" fill="none" stroke="#1A73E8" stroke-width="2" stroke-linejoin="round"/>
+    <rect x="637.73" y="1047.65" width="182.8" height="46.7" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
+    <rect x="647.23" y="1062.75" width="16.5" height="16.5" rx="2.25" fill="#FFFFFF" stroke="#1A73E8" stroke-width="1.5"/>
+    <text x="652.25" y="1074.64" xml:space="preserve" font-family="Inter" font-size="10" font-weight="700" fill="#202124">3</text>
+    <text x="700.22" y="1066.57" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">queue job</text>
+    <text x="670.48" y="1084.17" xml:space="preserve" font-family="Inter" font-size="12" font-weight="600" fill="#5F6368">approved plans only</text>
+    <path d="M801.79 1062.5 L811.79 1079.5 L791.79 1079.5 Z" fill="#202124"/>
+    <text x="799.85" y="1076.77" xml:space="preserve" font-family="Inter" font-size="9" font-weight="700" fill="#FFFFFF">1</text>
+    <path d="M501.08 1108.6 L501.08 1121.4 L508.48 1115 Z" fill="#FFFFFF" stroke="#1A73E8" stroke-width="1.2" stroke-linejoin="round"/>
+    <path d="M515.88 1108.6 L515.88 1121.4 L508.48 1115 Z" fill="#FFFFFF" stroke="#1A73E8" stroke-width="1.2" stroke-linejoin="round"/>
+    <circle cx="477.98" cy="1115" r="4.5" fill="#1A73E8"/>
   </g>
-  <g data-id="/links/12" data-tag="Link" data-kind="solid-6">
-    <path d="M 837.71 1123 L 837.71 1151 A 6 6 0 0 0 843.71 1157 L 928.3 1157 A 6 6 0 0 1 934.3 1163 L 934.3 1169" fill="none" stroke="#497938" stroke-width="2" stroke-linejoin="round"/>
-    <line x1="934.3" y1="1169" x2="934.3" y2="1179" stroke="none" marker-end="url(#arrow-center-solid-6)"/>
-    <rect x="840.23" y="1142.45" width="91.56" height="29.1" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
-    <text x="848.98" y="1161.37" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">evaluate clip</text>
+  <g data-id="/links/12" data-tag="Link" data-kind="blue">
+    <path d="M 480.48 1157.2 L 711.28 1157.2" fill="none" stroke="#1A73E8" stroke-width="2" stroke-linejoin="round"/>
+    <line x1="711.28" y1="1157.2" x2="721.28" y2="1157.2" stroke="none" marker-end="url(#arrow-center-blue)"/>
+    <rect x="546.59" y="1142.65" width="102.75" height="29.1" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
+    <rect x="556.09" y="1148.95" width="16.5" height="16.5" rx="2.25" fill="#FFFFFF" stroke="#1A73E8" stroke-width="1.5"/>
+    <text x="560.96" y="1160.84" xml:space="preserve" font-family="Inter" font-size="10" font-weight="700" fill="#202124">4</text>
+    <text x="579.34" y="1161.57" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">deliver job</text>
+    <circle cx="477.98" cy="1157.2" r="4.5" fill="#1A73E8"/>
   </g>
-  <g data-id="/links/13" data-tag="Link" data-kind="dash-6">
-    <path d="M 837.71 1123 L 837.71 1151 A 6 6 0 0 1 831.71 1157 L 558.68 1157 A 6 6 0 0 0 552.68 1163 L 552.68 1169" fill="none" stroke="#497938" stroke-width="2" stroke-dasharray="6 5" stroke-linejoin="round"/>
-    <line x1="552.68" y1="1169" x2="552.68" y2="1179" stroke="none" marker-end="url(#arrow-center-dash-6)"/>
-    <rect x="649.62" y="1142.45" width="91.15" height="29.1" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
-    <text x="658.37" y="1161.37" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">write verdict</text>
+  <g data-id="/links/13" data-tag="Link" data-kind="solid-6">
+    <path d="M 836.99 1181.4 L 836.99 1235.4" fill="none" stroke="#497938" stroke-width="2" stroke-linejoin="round"/>
+    <line x1="836.99" y1="1235.4" x2="836.99" y2="1245.4" stroke="none" marker-end="url(#arrow-center-solid-6)"/>
+    <rect x="779.21" y="1198.85" width="115.56" height="29.1" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
+    <rect x="788.71" y="1205.15" width="16.5" height="16.5" rx="2.25" fill="#FFFFFF" stroke="#497938" stroke-width="1.5"/>
+    <text x="793.85" y="1217.04" xml:space="preserve" font-family="Inter" font-size="10" font-weight="700" fill="#202124">5</text>
+    <text x="811.96" y="1217.77" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">evaluate clip</text>
   </g>
-  <g data-id="/links/14" data-tag="Link" data-kind="gray">
-    <path d="M 361.15 1179 L 361.15 1151 A 6 6 0 0 1 367.15 1145 L 459.79 1145 A 6 6 0 0 0 465.79 1139 L 465.79 1133" fill="none" stroke="#5F6368" stroke-width="2" stroke-linejoin="round"/>
-    <line x1="465.79" y1="1133" x2="465.79" y2="1123" stroke="none" marker-end="url(#arrow-center-gray)"/>
-    <rect x="368.86" y="1130.45" width="89.22" height="29.1" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
-    <text x="377.61" y="1149.37" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">clip finished</text>
+  <g data-id="/links/14" data-tag="Link" data-kind="dash-6">
+    <path d="M 773.13 1181.4 L 773.13 1233.6" fill="none" stroke="#497938" stroke-width="2" stroke-dasharray="6 5"/>
+    <path d="M 773.13 1233.6 L 773.13 1237.1 A 6 6 0 0 1 767.13 1243.1 L 763.63 1243.1" fill="none" stroke="#497938" stroke-width="2"/>
+    <path d="M 763.63 1243.1 L 683.54 1243.1" fill="none" stroke="#497938" stroke-width="2" stroke-dasharray="6 5" stroke-dashoffset="6"/>
+    <path d="M 683.54 1243.1 L 680.04 1243.1 A 6 6 0 0 0 674.04 1249.1 L 674.04 1252.6" fill="none" stroke="#497938" stroke-width="2"/>
+    <path d="M 674.04 1252.6 L 674.04 1362.37" fill="none" stroke="#497938" stroke-width="2" stroke-dasharray="6 5" stroke-dashoffset="6"/>
+    <line x1="674.04" y1="1362.37" x2="674.04" y2="1372.37" stroke="none" marker-end="url(#arrow-center-dash-6)"/>
+    <rect x="616.46" y="1318.46" width="115.15" height="29.1" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
+    <rect x="625.96" y="1324.76" width="16.5" height="16.5" rx="2.25" fill="#FFFFFF" stroke="#497938" stroke-width="1.5"/>
+    <text x="630.97" y="1336.65" xml:space="preserve" font-family="Inter" font-size="10" font-weight="700" fill="#202124">6</text>
+    <text x="649.21" y="1337.38" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">write verdict</text>
   </g>
-  <g data-id="/links/15" data-tag="Link" data-kind="deny">
-    <path d="M 848.94 1203.2 L 644.91 1203.2" fill="none" stroke="#C5221F" stroke-width="2" stroke-dasharray="6 5" stroke-linejoin="round"/>
-    <line x1="644.91" y1="1203.2" x2="634.91" y2="1203.2" stroke="none" marker-end="url(#arrow-center-deny)"/>
-    <rect x="679" y="1188.65" width="125.85" height="29.1" rx="5.25" fill="#FFFFFF" stroke="#F4C7C3" stroke-width="1.5"/>
-    <text x="687.75" y="1207.57" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#C5221F">no direct write</text>
-    <path d="M786.1 1194.7 L796.1 1211.7 L776.1 1211.7 Z" fill="#202124"/>
-    <text x="783.19" y="1208.97" xml:space="preserve" font-family="Inter" font-size="9" font-weight="700" fill="#FFFFFF">3</text>
+  <g data-id="/links/15" data-tag="Link" data-kind="blue">
+    <path d="M 964.17 1039 L 964.17 1408.8" fill="none" stroke="#1A73E8" stroke-width="4" stroke-dasharray="7 4"/>
+    <path d="M 964.17 1039 L 964.17 1408.8" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-dasharray="5 6" stroke-dashoffset="-1"/>
+    <line x1="964.17" y1="1408.8" x2="964.17" y2="1418.8" stroke="none" marker-end="url(#arrow-center-blue)"/>
+    <rect x="905.45" y="1316.74" width="117.44" height="29.1" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
+    <text x="914.2" y="1335.66" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">schedule replays</text>
+  </g>
+  <g data-id="/links/16" data-tag="Link" data-kind="gray">
+    <path d="M 431.02 1418.8 L 431.02 1321.8 A 6 6 0 0 1 437.02 1315.8 L 473.98 1315.8 A 4 4 0 0 0 477.98 1311.8 L 477.98 1307.8" fill="none" stroke="#5F6368" stroke-width="2" stroke-linejoin="round"/>
+    <rect x="386.41" y="1352.75" width="89.22" height="29.1" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
+    <text x="395.16" y="1371.67" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">clip finished</text>
+    <circle cx="477.98" cy="1307.8" r="4.5" fill="#5F6368"/>
+  </g>
+  <g data-id="/links/17" data-tag="Link" data-kind="deny">
+    <path d="M 801.94 1293.8 L 801.94 1362.37" fill="none" stroke="#C5221F" stroke-width="2" stroke-dasharray="6 5"/>
+    <line x1="801.94" y1="1362.37" x2="801.94" y2="1372.37" stroke="none" marker-end="url(#arrow-center-deny)"/>
+    <rect x="739.01" y="1318.54" width="125.85" height="29.1" rx="5.25" fill="#FFFFFF" stroke="#F4C7C3" stroke-width="1.5"/>
+    <text x="747.76" y="1337.45" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#C5221F">no direct write</text>
+    <path d="M846.11 1324.59 L856.11 1341.59 L836.11 1341.59 Z" fill="#202124"/>
+    <text x="843.2" y="1338.86" xml:space="preserve" font-family="Inter" font-size="9" font-weight="700" fill="#FFFFFF">3</text>
   </g>
 </svg>

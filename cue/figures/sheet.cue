@@ -1,6 +1,8 @@
 // onepager: the design sheet of the trigger evaluation service: a title block,
 // its actors, a Workflow view of who does what in which phase, and a System
-// view with its parts list, and general notes. examples/onepager.json is this figure exported.
+// view of the parts as built (an assembly, a rail, a store and planned work)
+// with its parts list and general notes. examples/onepager.json is this figure
+// exported.
 package gcp
 
 import (
@@ -68,6 +70,7 @@ onepager: gcp.#Page & {
 			part:      "a piece of the service"
 			note:      "asked of an operator"
 			attention: "your attention"
+			step:      "a numbered request step"
 		}
 	}
 	actors: [
@@ -223,7 +226,7 @@ onepager: gcp.#Page & {
 				{
 					tag: "Row"
 					gap: 20
-					grow: [2, 1]
+					grow: [5, 2]
 					children: [
 						{
 							tag: "Col"
@@ -231,13 +234,30 @@ onepager: gcp.#Page & {
 							children: [
 								{
 									tag: "Row"
-									gap: 24
+									gap: 64
 									grow: [0, 1]
 									children: [
 										{
 											tag:     "Col"
+											gap:     64
 											justify: "center"
 											children: [
+												{
+													tag:     "Row"
+													justify: "center"
+													grow: [0]
+													children: [
+														{
+															tag:      "Item"
+															id:       "operator-person"
+															kind:     "person"
+															outline:  "person"
+															title:    "Operator"
+															subtitle: "one per site"
+															actor:    "operator"
+														},
+													]
+												},
 												{
 													tag:     "Row"
 													justify: "center"
@@ -255,7 +275,6 @@ onepager: gcp.#Page & {
 													]
 												},
 											]
-											gap: 24
 										},
 										{
 											tag:   "Box"
@@ -265,11 +284,11 @@ onepager: gcp.#Page & {
 											children: [
 												{
 													tag: "Col"
-													gap: 56
+													gap: 64
 													children: [
 														{
 															tag: "Row"
-															grow: [1, 1]
+															grow: [3, 2]
 															children: [
 																{
 																	tag:     "Row"
@@ -306,24 +325,20 @@ onepager: gcp.#Page & {
 															]
 														},
 														{
-															tag: "Row"
-															grow: [1, 1]
+															tag:     "Row"
+															gap:     32
+															justify: "center"
+															grow: [0, 1]
 															children: [
 																{
-																	tag:     "Row"
-																	justify: "center"
-																	grow: [0]
-																	children: [
-																		{
-																			tag:      "Item"
-																			id:       "queue"
-																			kind:     "product"
-																			icon:     "integration"
-																			title:    "Evaluation queue"
-																			subtitle: "Pub/Sub"
-																			actor:    "api"
-																		},
-																	]
+																	tag:   "Pipe"
+																	id:    "queue"
+																	dir:   "v"
+																	form:  "rail"
+																	line:  "solid"
+																	actor: "api"
+																	label: "Evaluation queue"
+																	sub:   "Pub/Sub"
 																},
 																{
 																	tag:     "Row"
@@ -331,13 +346,52 @@ onepager: gcp.#Page & {
 																	grow: [0]
 																	children: [
 																		{
-																			tag:      "Item"
-																			id:       "worker"
-																			kind:     "product"
-																			icon:     "cloud-run"
-																			title:    "Clip worker"
-																			subtitle: "Cloud Run job"
-																			actor:    "worker"
+																			tag:   "Box"
+																			id:    "evaluation-path"
+																			kind:  "assembly"
+																			label: "Evaluation path · one job per clip"
+																			actor: "worker"
+																			children: [
+																				{
+																					tag: "Col"
+																					gap: 64
+																					children: [
+																						{
+																							tag:     "Row"
+																							justify: "center"
+																							grow: [0]
+																							children: [
+																								{
+																									tag:      "Item"
+																									id:       "worker"
+																									kind:     "product"
+																									icon:     "cloud-run"
+																									outline:  "stack"
+																									title:    "Clip worker"
+																									subtitle: "Cloud Run job"
+																									actor:    "worker"
+																								},
+																							]
+																						},
+																						{
+																							tag:     "Row"
+																							justify: "center"
+																							grow: [0]
+																							children: [
+																								{
+																									tag:      "Item"
+																									id:       "evaluator"
+																									kind:     "product"
+																									icon:     "vertex-ai"
+																									title:    "Clip evaluator"
+																									subtitle: "Vertex AI endpoint"
+																									actor:    "model"
+																								},
+																							]
+																						},
+																					]
+																				},
+																			]
 																		},
 																	]
 																},
@@ -345,13 +399,11 @@ onepager: gcp.#Page & {
 														},
 														{
 															tag: "Row"
-															grow: [1, 1]
+															grow: [2, 3, 2]
 															children: [
 																{
-																	tag:     "Row"
-																	gap:     32
-																	justify: "start"
-																	grow: [0, 0]
+																	tag:     "Col"
+																	justify: "center"
 																	children: [
 																		{
 																			tag:     "Row"
@@ -368,20 +420,34 @@ onepager: gcp.#Page & {
 																				},
 																			]
 																		},
+																	]
+																},
+																{
+																	tag:     "Row"
+																	justify: "center"
+																	grow: [0]
+																	children: [
 																		{
 																			tag:      "Item"
 																			id:       "verdict-store"
 																			kind:     "product"
 																			icon:     "cloud-sql"
+																			outline:  "store"
 																			title:    "Verdict store"
 																			subtitle: "Cloud SQL"
+																			compartments: [
+																				"Triggers",
+																				"Plan versions",
+																				"Verdicts",
+																				{text: "Evidence refs", marks: [{note: "evidence-by-reference"}]},
+																			]
+																			actor: "worker"
 																		},
 																	]
 																},
 																{
-																	tag:     "Row"
-																	justify: "end"
-																	grow: [0]
+																	tag:     "Col"
+																	justify: "center"
 																	children: [
 																		{
 																			tag:     "Row"
@@ -390,12 +456,13 @@ onepager: gcp.#Page & {
 																			children: [
 																				{
 																					tag:      "Item"
-																					id:       "evaluator"
+																					id:       "replay"
 																					kind:     "product"
-																					icon:     "vertex-ai"
-																					title:    "Clip evaluator"
-																					subtitle: "Vertex AI endpoint"
-																					actor:    "model"
+																					icon:     "integration"
+																					title:    "Replay scheduler"
+																					subtitle: "Cloud Scheduler"
+																					planned:  true
+																					actor:    "api"
 																				},
 																			]
 																		},
@@ -470,13 +537,18 @@ onepager: gcp.#Page & {
 											node: "verdict-store"
 											why:  "Every verdict keeps its evidence frames and the plan version that produced it."
 										},
+										{
+											id:   "replay"
+											node: "replay"
+											why:  "Runs a trigger over earlier clips on a schedule, so the operator does not wait on a replay."
+										},
 									]
 								},
 								{
 									tag:    "Frame"
 									id:     "screen-review"
 									label:  "Verdict review in the console: clip, evidence frames, verdict and plan version"
-									height: 151
+									height: 240
 								},
 							]
 						},
@@ -488,69 +560,45 @@ onepager: gcp.#Page & {
 	legend: [
 		{line: "solid", by_actor: true, text: "work moves, in the colour of the actor that sends it"},
 		{line: "dash", by_actor: true, text: "reads or writes the verdict store"},
+		{line: "solid", by_actor: true, form: "rail", text: "one topic that every job passes through"},
+		{line: "solid", by_actor: true, planned: true, text: "planned, not built yet"},
 		{line: "gray", text: "event from the platform"},
 		{line: "deny", text: "blocked path"},
 	]
 	links: [
 		{from: "s-describe", to: "s-compile", line: "solid"},
-		{
-			from:      "s-compile"
-			to:        "s-approve"
-			line:      "solid"
-			label:     "plan"
-			from_side: "top"
-			to_side:   "left"
-		},
+		{from: "s-compile", to: "s-approve", line: "solid", label: "plan", from_side: "top", to_side: "left"},
 		{from: "s-approve", to: "s-store-plan", line: "solid"},
-		{
-			from:    "s-store-plan"
-			to:      "s-evaluate"
-			line:    "dash"
-			actor:   "worker"
-			label:   "reads approved version"
-			to_side: "top"
-		},
+		{from: "s-store-plan", to: "s-evaluate", line: "dash", actor: "worker", label: "reads approved version", to_side: "top"},
 		{from: "s-arrive", to: "s-evaluate", line: "solid"},
 		{from: "s-evaluate", to: "s-judge", line: "solid"},
 		{from: "s-judge", to: "s-write", line: "solid"},
 		{from: "s-write", to: "s-review", line: "solid"},
-		{from: "console", to: "gateway", line: "solid", label: "submit trigger", from_side: "top"},
-		{from: "gateway", to: "api", line: "solid", label: "authorized call"},
+		{from: "operator-person", to: "console", line: "solid", label: "writes, reviews"},
+		{from: "console", to: "gateway", line: "solid", step: 1, label: "submit trigger"},
+		{from: "gateway", to: "api", line: "solid", step: 2, label: "authorized call"},
 		{
-			from:      "api"
-			to:        "queue"
-			line:      "solid"
-			label:     "queue job"
-			from_side: "bottom"
-			to_side:   "top"
-			sub:       "approved plans only"
+			from:  "api"
+			to:    "queue"
+			line:  "solid"
+			step:  3
+			label: "queue job"
+			sub:   "approved plans only"
+			valve: true
 			marks: [{note: "approved-plans-only"}]
-		},
-		{from: "queue", to: "worker", line: "solid", label: "deliver job"},
-		{
-			from:      "worker"
-			to:        "evaluator"
-			line:      "solid"
-			label:     "evaluate clip"
 			from_side: "bottom"
-			to_side:   "top"
+			to_side:   "right"
 		},
-		{
-			from:      "worker"
-			to:        "verdict-store"
-			line:      "dash"
-			label:     "write verdict"
-			from_side: "bottom"
-			to_side:   "top"
-		},
+		{from: "queue", to: "worker", line: "solid", step: 4, label: "deliver job"},
+		{from: "worker", to: "evaluator", line: "solid", step: 5, label: "evaluate clip"},
+		{from: "worker", to: "verdict-store", line: "dash", step: 6, label: "write verdict"},
+		{from: "api", to: "replay", line: "solid", planned: true, label: "schedule replays", from_side: "bottom", to_side: "top"},
 		{from: "bucket", to: "queue", line: "gray", label: "clip finished"},
 		{
-			from:      "evaluator"
-			to:        "verdict-store"
-			line:      "deny"
-			label:     "no direct write"
-			from_side: "left"
-			to_side:   "right"
+			from:  "evaluator"
+			to:    "verdict-store"
+			line:  "deny"
+			label: "no direct write"
 			marks: [{note: "no-store-credentials"}]
 		},
 	]

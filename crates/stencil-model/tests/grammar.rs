@@ -61,7 +61,7 @@ const GCP_TABLE: [(
     f32,
     LabelStyle,
     &[&str],
-); 10] = [
+); 11] = [
     (
         "gcp",
         Role::Frame,
@@ -208,6 +208,31 @@ const GCP_TABLE: [(
         LabelStyle::Plain,
         &["gcp", "project", "perimeter"],
     ),
+    (
+        "assembly",
+        Role::Group,
+        Some(Tone::Neutral),
+        true,
+        None,
+        BorderPattern::DashDot,
+        1.1,
+        14.0,
+        0.0,
+        LabelStyle::Tab,
+        &[
+            "page",
+            "gcp",
+            "vpc",
+            "region",
+            "subnet",
+            "onprem",
+            "project",
+            "optional",
+            "k8s",
+            "perimeter",
+            "apis",
+        ],
+    ),
 ];
 
 #[test]
@@ -289,7 +314,7 @@ fn gcp_has_a_product_kind_with_every_icon_once_in_icon_order_and_a_person_and_a_
 }
 
 #[test]
-fn plain_has_four_containers_and_five_icon_free_items() {
+fn plain_has_five_containers_and_five_icon_free_items() {
     let grammar = builtin_grammar("plain").unwrap().unwrap();
     let containers: Vec<(&str, Role)> = grammar
         .containers
@@ -302,7 +327,8 @@ fn plain_has_four_containers_and_five_icon_free_items() {
             ("system", Role::Frame),
             ("boundary", Role::Boundary),
             ("group", Role::Group),
-            ("tile", Role::Tile)
+            ("tile", Role::Tile),
+            ("assembly", Role::Group)
         ]
     );
     let items: Vec<&str> = grammar
@@ -362,7 +388,7 @@ fn each_grammar_fault_is_reported_with_its_rule() {
                 grammar["containers"].as_array_mut().unwrap().push(copy);
             },
             "grammar-name-duplicate",
-            "/containers/10/name",
+            "/containers/11/name",
         ),
         (
             "unknown parent",

@@ -1,18 +1,18 @@
-check child-inside-container: examined 369 relations, 0 defects
-check siblings-do-not-overlap: examined 136 pairs, 0 defects
-check text-fits-box: examined 261 text runs, 0 defects
-check remembered-constants: examined 123 text fields, 0 defects
-check legend-consistency: examined 20 relations, 0 defects
-check links-routed: examined 16 links, 0 defects
-check links-avoid-boxes: examined 2436 pairs, 0 defects
-check pipes-land: examined 0 pipe ends, not applicable: page has no pipes
+check child-inside-container: examined 407 relations, 0 defects
+check siblings-do-not-overlap: examined 156 pairs, 0 defects
+check text-fits-box: examined 292 text runs, 0 defects
+check remembered-constants: examined 138 text fields, 0 defects
+check legend-consistency: examined 25 relations, 0 defects
+check links-routed: examined 18 links, 0 defects
+check links-avoid-boxes: examined 2952 pairs, 0 defects
+check pipes-land: examined 0 pipe ends, not applicable: page has no gutter pipes
 check iso-labels-clear: examined 0 pairs, not applicable: projection is flat
 check iso-links-clear: examined 0 link legs, not applicable: projection is flat
 check iso-link-ends: examined 0 link ends, not applicable: projection is flat
 check iso-links-apart: examined 0 link pairs, not applicable: projection is flat
 check print-fit: examined 0 text runs, not applicable: no print width
 check icon-matches-product: examined 8 items, 0 defects
-check description-covers-drawing: examined 119 elements, 0 defects
-check keys-used: examined 19 keys, 0 defects
-check marks-clear: examined 50 marks, 0 defects
+check description-covers-drawing: examined 129 elements, 0 defects
+check keys-used: examined 20 keys, 0 defects
+check marks-clear: examined 80 marks, 0 defects
 stencil check: 17 checks, 11 passed, 0 failed, 6 not applicable

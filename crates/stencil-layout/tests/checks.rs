@@ -29,6 +29,7 @@ fn geometry_node(pointer_text: &str, parent: Option<usize>, bounds: BoxRect) -> 
         container: None,
         shape: None,
         pipe_form: None,
+        outline: None,
         parent,
         bounds,
         content: bounds,

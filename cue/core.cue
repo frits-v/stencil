@@ -54,13 +54,20 @@ import (
 
 // The solid an item stands as under iso (section 12.3).
 #Shape:       "card" | "tile" | "tower" | "cylinder" | "stack" | "block" | "figure" | "laptop" | "phone"
-#PipeForm:    "tube" | "band"
+#PipeForm:    "tube" | "band" | "rail"
+
+// The flat outline of an Item on a design sheet: the card, a store cylinder
+// with compartments, a person's head and shoulders, or a stack of three cards.
+#Outline: "card" | "store" | "person" | "stack"
+
+// A step badge's number, unique across the links and pipes of a sheet.
+#LineStep: int & >=1 & <=64
 #ListKind:    "plain" | "numbered" | "bulleted"
 #CalloutKind: "note" | "risk" | "decision" | "open"
 
 // Every surface valid on a design sheet only; a page without sheet that draws
 // one fails _needsSheet. The Rust twin is SheetSurface::as_str.
-#SheetSurface: "sheet" | "actors" | "view" | "phases" | "step" | "actor" | "legend-by-actor" | "marks" | "parts-list" | "general-notes"
+#SheetSurface: "sheet" | "actors" | "view" | "phases" | "step" | "actor" | "legend-by-actor" | "marks" | "parts-list" | "general-notes" | "item-outline" | "compartments" | "planned" | "sheet-look" | "rail-form" | "link-step" | "pipe-step" | "valve"
 
 // A title block cell caption: 1 to 60 characters.
 #Caption: #Text & strings.MaxRunes(60)
@@ -98,6 +105,8 @@ import (
 	part?:      #Text
 	note?:      #Text
 	attention?: #Text
+	// What a step badge means, printed beside the sample badge.
+	step?: #Text
 }
 
 // The keys of a carrier's own marks, its corner mark and its marked lines, as
@@ -213,24 +222,29 @@ import (
 // The legend key of a line: the line and its tint for solid and dash, slot 1
 // when tint is absent, "<line>-by-actor" for a use with an effective actor or a
 // by_actor entry, and the line alone for gray and deny, whose tint has no
-// effect; a band form appends "-band", since a band and a tube of one
-// line are two looks. Pipe (Tee arms included), Tee, Link and LegendEntry
-// each carry one as _lineKey.
+// effect; a band or rail form appends "-band" or "-rail", since a band and a
+// tube of one line are two looks, and a planned line appends "-planned".
+// Pipe (Tee arms included), Tee, Link and LegendEntry each carry one as
+// _lineKey.
 #LineKey: {
 	#line:      #Line
 	#tint?:     #TintSlot
 	#form?:     #PipeForm
 	#by_actor?: bool
+	#planned?:  bool
 	_lineTint: [
 		if #line == "gray" || #line == "deny" {#line},
 		if #by_actor != _|_ if #by_actor {"\(#line)-by-actor"},
 		if #tint != _|_ {"\(#line)-\(#tint)"},
 		"\(#line)-1",
 	][0]
-	key: [
-		if #form != _|_ if #form == "band" {"\(_lineTint)-band"},
-		_lineTint,
+	_formSuffix: [
+		if #form != _|_ if #form == "band" {"-band"},
+		if #form != _|_ if #form == "rail" {"-rail"},
+		"",
 	][0]
+	_plannedSuffix: [if #planned != _|_ if #planned {"-planned"}, ""][0]
+	key: "\(_lineTint)\(_formSuffix)\(_plannedSuffix)"
 	if #tint != _|_ if #line == "gray" || #line == "deny" {
 		_tintWithoutEffect: "tint \(#tint)" & "has no effect on a \(#line) line"
 	}
@@ -303,15 +317,16 @@ import (
 		if !_hasActors for n in body {n._keys}
 		if _hasActors for i, u in _lineUses {
 			let actor = _lineUseActor[i]
-			let form = [if u.form == "band" {"-band"}, ""][0]
+			let form = [if u.form == "band" {"-band"}, if u.form == "rail" {"-rail"}, ""][0]
+			let planned = [if u.planned {"-planned"}, ""][0]
 			if actor == "" {(u.key): true}
-			if actor != "" {"\(u.line)-by-actor\(form)": true}
+			if actor != "" {"\(u.line)-by-actor\(form)\(planned)": true}
 		}
 	}
 	_linkKeys: {
 		for i, l in _links {
 			if !_hasActors || _effectiveActor["\(i)"] == "" {(l._lineKey.key): true}
-			if _hasActors && _effectiveActor["\(i)"] != "" {"\(l.line)-by-actor": true}
+			if _hasActors && _effectiveActor["\(i)"] != "" {"\(l.line)-by-actor\(l._plannedSuffix)": true}
 		}
 	}
 	_usedKeys: [for k, _ in {_pipeKeys, _linkKeys} {k}]
@@ -372,6 +387,18 @@ import (
 		[for l in _links if l.actor != _|_ {"actor"}],
 		[for l in _links if l.marks != _|_ if len(l.marks) > 0 {"marks"}],
 		[for e in legend if e.by_actor != _|_ if e.by_actor {"legend-by-actor"}],
+		[for l in _links if l.step != _|_ {"link-step"}],
+		[for l in _links if l._valve {"valve"}],
+		[for l in _links if l._planned {"planned"}],
+		[for e in legend if e.form != _|_ if e.form == "rail" {"rail-form"}],
+		[for e in legend if e.planned != _|_ if e.planned {"planned"}],
+	])
+	// The ids of planned work (an Item or Box with planned, a Step with look
+	// planned) and the step badge of every pipe and link.
+	_plannedIds: list.Concat([for n in body {n._plannedIds}])
+	_lineSteps: list.Concat([
+		[for u in _lineUses if u.step != _|_ {u.step}],
+		[for l in _links if l.step != _|_ {l.step}],
 	])
 	if sheet == _|_ {
 		_needsSheet: {
@@ -498,7 +525,20 @@ import (
 			_markLegendUnused: {
 				if sheet.marks.part != _|_ if len([for l in _keyedLists if l.tag == "PartsList" {l}]) == 0 {part: "no part key" & "on this sheet"}
 				if sheet.marks.note != _|_ if len([for l in _keyedLists if l.tag == "GeneralNotes" {l}]) == 0 {note: "no note key" & "on this sheet"}
+				if sheet.marks.step != _|_ if len(_lineSteps) == 0 {step: "no step key" & "on this sheet"}
 			}
+		}
+		// A built solid or dash line that ends at planned work: a solid one is
+		// planned too, and a dash one cannot be.
+		_lineIntoPlanned: {
+			for i, l in _links if !l._planned if l.line == "solid" || l.line == "dash"
+			for end in [l.to, l.from] if list.Contains(_plannedIds, end) {"link.\(i).\(end)": "\(l.line) line to planned \(end)" & "planned too"}
+			for i, u in _lineUses if !u.planned if u.line == "solid" || u.line == "dash"
+			for end in [if u.to != _|_ {u.to}, if u.from != _|_ {u.from}] if list.Contains(_plannedIds, end) {"line.\(i).\(end)": "\(u.line) line to planned \(end)" & "planned too"}
+		}
+		_sortedSteps: list.Sort(_lineSteps, list.Ascending)
+		_linkStepUsedTwice: {
+			for i, a in _sortedSteps if i > 0 if _sortedSteps[i-1] == a {"\(a)": "step \(a)" & "used by one line"}
 		}
 		// keys-used: a part never ballooned, a note never flagged, an attention
 		// item never marked.
@@ -523,8 +563,14 @@ import (
 	tint?:     #TintSlot
 	form?:     #PipeForm
 	by_actor?: bool
-	_lineKey: #LineKey & {#line: line, if tint != _|_ {#tint: tint}, if form != _|_ {#form: form}, if by_actor != _|_ {#by_actor: by_actor}}
+	// On a design sheet, keys a planned line, drawn hollow.
+	planned?: bool
+	_lineKey: #LineKey & {#line: line, if tint != _|_ {#tint: tint}, if form != _|_ {#form: form}, if by_actor != _|_ {#by_actor: by_actor}, if planned != _|_ {#planned: planned}}
 	text: #Text
+	_planned: [if planned != _|_ {planned}, false][0]
+	if _planned if line != "solid" {
+		_plannedNotSolid: "a planned \(line) line" & "is solid"
+	}
 }
 
 // A routed line between two nodes, named by id. It takes no layout space.
@@ -545,10 +591,26 @@ import (
 	via?: [...#PagePoint] & list.MaxItems(8)
 	// A message of a Lanes node: its place along the time axis.
 	order?: int & >=1 & <=256
-	// On a design sheet, marks in the tag after the label and sub.
+	// On a design sheet, marks in the tag after the label and sub, or under the
+	// valve when the link has neither label nor step.
 	marks?: #Marks
-	if marks != _|_ if len(marks) > 0 if label == _|_ {
-		_linkMarksWithoutTag: "a link's marks sit in its tag" & "give it a label"
+	// On a design sheet: a numbered badge at the left of the tag, a valve before
+	// the arrowhead, and a planned line drawn hollow.
+	step?:  #LineStep
+	valve?: bool
+	_valve: [if valve != _|_ {valve}, false][0]
+	planned?: bool
+	_planned: [if planned != _|_ {planned}, false][0]
+	if _planned if line != "solid" {
+		_plannedNotSolid: "a planned \(line) line" & "is solid"
+	}
+	_plannedSuffix: [if _planned {"-planned"}, ""][0]
+	_lineKey: {#planned: _planned}
+	if marks != _|_ if len(marks) > 0 if label == _|_ if step == _|_ if !_valve {
+		_linkMarksWithoutTag: "a link's marks sit in its tag or under its valve" & "give it a label"
+	}
+	if _valve if arrow != _|_ if arrow == "none" {
+		_valveWithoutArrow: "a valve" & "sits before an arrowhead"
 	}
 }
 
@@ -623,6 +685,10 @@ import (
 	if !list.Contains(["Row", "Col", "Lanes", "Box", "View", "Step"], tag) {
 		_looseSteps: []
 	}
+	// _plannedIds: the ids of planned Items, Boxes and Steps.
+	if !list.Contains(["Row", "Col", "Lanes", "Box", "View", "Item", "Phases", "Step"], tag) {
+		_plannedIds: []
+	}
 }
 
 // The surfaces, nested View titles, actors, line uses, lanes and loose Steps a
@@ -643,6 +709,7 @@ import (
 	_marks: list.Concat([for c in children {c._marks}])
 	_kinded: list.Concat([for c in children {c._kinded}])
 	_keyedLists: list.Concat([for c in children {c._keyedLists}])
+	_plannedIds: list.Concat([for c in children {c._plannedIds}])
 }
 
 // A numbered view of a design sheet: a heading, then its children in a
@@ -661,6 +728,9 @@ import (
 	_pipeTargets: list.Concat([for c in children {c._pipeTargets}])
 	_surfaces: list.Concat([["view"], for c in children {c._surfaces}])
 	#ActorCollectors
+	_railOutsideRow: {
+		for i, c in children if c.tag == "Pipe" if c.form != _|_ if c.form == "rail" {"\(i)": "a rail" & "a column of a Row"}
+	}
 }
 
 // A swimlane of a design sheet: a lane per actor top to bottom, phases left to
@@ -684,6 +754,7 @@ import (
 	_lanes: lanes
 	_looseSteps: []
 	_marks: list.Concat([for c in children {c._marks}])
+	_plannedIds: list.Concat([for c in children {c._plannedIds}])
 	_phaseIds: list.SortStrings([for p in phases {p.id}])
 	_phaseIdsUsedTwice: {
 		for i, a in _phaseIds if i > 0 if _phaseIds[i-1] == a {(a): "phase id" & "used by two phases of one Phases node"}
@@ -733,6 +804,7 @@ import (
 	_nodes: [if id != _|_ {{"id": id, actor: lane}}]
 	_lanes: []
 	_looseSteps: [title]
+	_plannedIds: [if id != _|_ if look != _|_ if look == "planned" {id}]
 	_marks: [for m in _ownMarks {
 		let k = #MarkKey & {#mark: m}
 		{kind: k.kind, id: k.id, carrier: title}
@@ -799,9 +871,15 @@ import (
 	#Container
 }
 
+// A rail is a column of a Row: a Col, Lanes, View, Box or Tee that holds a
+// Pipe with form rail reports it as _railOutsideRow.
 #Col: {
-	tag: "Col"
+	tag:      "Col"
+	children: #Children
 	#Container
+	_railOutsideRow: {
+		for i, c in children if c.tag == "Pipe" if c.form != _|_ if c.form == "rail" {"\(i)": "a rail" & "a column of a Row"}
+	}
 }
 
 // Columns that share one vertical axis. Each child is a lane head: 1 to 32.
@@ -816,6 +894,9 @@ import (
 	_laneSets: list.Concat([[[for c in children if c.id != _|_ {c.id}]], for c in children {c._laneSets}])
 	_pipeTargets: list.Concat([for c in children {c._pipeTargets}])
 	#SheetCollectors
+	_railOutsideRow: {
+		for i, c in children if c.tag == "Pipe" if c.form != _|_ if c.form == "rail" {"\(i)": "a rail" & "a column of a Row"}
+	}
 }
 
 // Any container. The grammar's container kind decides how it is drawn and
@@ -828,16 +909,23 @@ import (
 	actor?:   #Id
 	label:    #Text
 	children: #Children
+	// On a design sheet, work not built yet: a dashed outline with no fill.
+	planned?: bool
+	_planned: [if planned != _|_ {planned}, false][0]
 	marks?:       #Marks
 	corner_mark?: #Mark
 	#CarrierMarks
 	_ownMarks: list.Concat([[if marks != _|_ for m in marks {m}], [if corner_mark != _|_ {corner_mark}]])
 	_hasMarks: len(_ownMarks) > 0
+	_plannedIds: list.Concat([[if id != _|_ if _planned {id}], for c in children {c._plannedIds}])
+	_railOutsideRow: {
+		for i, c in children if c.tag == "Pipe" if c.form != _|_ if c.form == "rail" {"\(i)": "a rail" & "a column of a Row"}
+	}
 	_keys: {for c in children {c._keys}}
 	_ids: list.Concat([[if id != _|_ {id}], for c in children {c._ids}])
 	_laneSets: list.Concat([for c in children {c._laneSets}])
 	_pipeTargets: list.Concat([for c in children {c._pipeTargets}])
-	_surfaces: list.Concat([[if actor != _|_ {"actor"}, if _hasMarks {"marks"}], for c in children {c._surfaces}])
+	_surfaces: list.Concat([[if actor != _|_ {"actor"}, if _hasMarks {"marks"}, if _planned {"planned"}], for c in children {c._surfaces}])
 	_marks: list.Concat([[for m in _ownMarks {
 		let k = #MarkKey & {#mark: m}
 		{kind: k.kind, id: k.id, carrier: label, if id != _|_ {node: id}}
@@ -864,15 +952,30 @@ import (
 	// the kind's product table, or card.
 	shape?: #Shape
 	actor?: #Id
+	// On a design sheet: the flat outline, the compartments of a store, and
+	// planned work, drawn dashed with no fill.
+	outline?: #Outline
+	compartments?: [...#MarkedText] & list.MaxItems(6)
+	planned?: bool
+	_outline: [if outline != _|_ {outline}, "card"][0]
+	_compartments: [if compartments != _|_ for c in compartments {c}]
+	_planned: [if planned != _|_ {planned}, false][0]
+	if len(_compartments) > 0 if _outline != "store" {
+		_compartmentsWithoutStore: "compartments" & "are drawn in a store"
+	}
+	if _outline == "person" if icon != _|_ {
+		_outlinePersonWithIcon: "a person outline" & "draws no icon"
+	}
 	marks?:       #Marks
 	corner_mark?: #Mark
 	#CarrierMarks
-	_ownMarks: list.Concat([[if marks != _|_ for m in marks {m}], [if corner_mark != _|_ {corner_mark}]])
+	_ownMarks: list.Concat([[if marks != _|_ for m in marks {m}], [if corner_mark != _|_ {corner_mark}], list.Concat([for c in _compartments if c.marks != _|_ {c.marks}])])
 	_hasMarks: len(_ownMarks) > 0
 	_keys: {}
 	_ids: [if id != _|_ {id}]
 	_laneSets: []
-	_surfaces: [if actor != _|_ {"actor"}, if _hasMarks {"marks"}]
+	_surfaces: [if actor != _|_ {"actor"}, if _hasMarks {"marks"}, if _outline != "card" {"item-outline"}, if len(_compartments) > 0 {"compartments"}, if _planned {"planned"}]
+	_plannedIds: [if id != _|_ if _planned {id}]
 	_nodes: [if id != _|_ if actor != _|_ {{"id": id, "actor": actor}}]
 	_marks: [for m in _ownMarks {
 		let k = #MarkKey & {#mark: m}
@@ -916,15 +1019,31 @@ import (
 	line:   #Line
 	tint?:  #TintSlot
 	actor?: #Id
-	_lineKey: #LineKey & {#line: line, if tint != _|_ {#tint: tint}, if form != _|_ {#form: form}}
+	_lineKey: #LineKey & {#line: line, if tint != _|_ {#tint: tint}, if form != _|_ {#form: form}, #planned: _planned}
 	label:  #Text
 	sub?:   #Text
 	arrow?: #Arrow
 	// Under iso, the axis the tag reads along; absent follows dir.
 	axis?: #Axis
 	// Under iso, a round tube (the default) or a band, a flat wide arrow on
-	// the floor.
+	// the floor. On a design sheet, a rail: a heavy vertical bus links attach
+	// to, a column of a Row with no targets.
 	form?: #PipeForm
+	_rail: [if form != _|_ if form == "rail" {true}, false][0]
+	if _rail if dir != "v" {
+		_railNotVertical: "a rail" & "stands vertical"
+	}
+	if _rail if from != _|_ || to != _|_ {
+		_railWithTargets: "a rail" & "is attached by links, not targets"
+	}
+	// On a design sheet, a numbered badge at the left of the tag, and a planned
+	// line drawn hollow.
+	step?: #LineStep
+	planned?: bool
+	_planned: [if planned != _|_ {planned}, false][0]
+	if _planned if line != "solid" {
+		_plannedNotSolid: "a planned \(line) line" & "is solid"
+	}
 	// The nodes the pipe joins: from on its left (h) or upper (v) end, to on
 	// the other. Layout centers the pipe's slot on them.
 	from?: #Id
@@ -941,7 +1060,7 @@ import (
 	_ids: [if id != _|_ {id}]
 	_laneSets: []
 	_pipeTargets: [if from != _|_ {from}, if to != _|_ {to}]
-	_surfaces: [if actor != _|_ {"actor"}, if _hasMarks {"marks"}]
+	_surfaces: [if actor != _|_ {"actor"}, if _hasMarks {"marks"}, if _rail {"rail-form"}, if step != _|_ {"pipe-step"}, if _planned {"planned"}]
 	_marks: [for m in _ownMarks {
 		let k = #MarkKey & {#mark: m}
 		{kind: k.kind, id: k.id, carrier: label, if id != _|_ {node: id}}
@@ -958,6 +1077,9 @@ import (
 		if actor != _|_ {ownActor: actor, "actor": actor}
 		if actor == _|_ if _inherited != _|_ {"actor": _inherited}
 		if from != _|_ {"from": from}
+		if to != _|_ {"to": to}
+		if step != _|_ {"step": step}
+		"planned": _planned
 	}]
 }
 
@@ -995,7 +1117,11 @@ import (
 		form: "tube"
 		if tint != _|_ {"tint": tint}
 		if actor != _|_ {ownActor: actor, "actor": actor}
+		planned: false
 	}], arms[0]._lineUses, arms[1]._lineUses])
+	_railOutsideRow: {
+		for i, c in arms if c.tag == "Pipe" if c.form != _|_ if c.form == "rail" {"\(i)": "a rail" & "a column of a Row"}
+	}
 }
 
 // The lines of a Text block, as in the Rust model: 1 to 64. Declared outside

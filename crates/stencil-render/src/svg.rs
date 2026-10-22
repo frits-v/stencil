@@ -1,5 +1,6 @@
 //! The section 5.2 SVG writer, and through `iso_writer` the section 12.5 one.
 
+mod assembly;
 mod iso_writer;
 
 use std::collections::{BTreeSet, HashMap};
@@ -150,7 +151,7 @@ pub fn render_svg(
         if page.links.get(route.index).is_none() {
             return Err(link_mismatch(route));
         }
-        writer.write_link(1, geometry, route)?;
+        writer.write_link(1, geometry, route, page.links.get(route.index))?;
     }
     writer.line(0, "</svg>");
 
@@ -159,7 +160,7 @@ pub fn render_svg(
 
 /// Where a geometry holds a design sheet surface, which the iso writer refuses (section 14.2
 /// rule 11): `/sheet` when it holds a title block, else the first node in geometry order
-/// with a sheet tag or a sheet part.
+/// with a sheet tag or a sheet part, else the first link whose route draws a sheet part.
 fn sheet_surface_in(geometry: &PageGeometry) -> Option<NodePointer> {
     if geometry
         .nodes
@@ -173,6 +174,14 @@ fn sheet_surface_in(geometry: &PageGeometry) -> Option<NodePointer> {
         .iter()
         .find(|node| is_sheet_tag(node.tag) || node.parts.iter().any(|part| part.name.is_sheet()))
         .map(|node| node.pointer.clone())
+        .or_else(|| {
+            // A step badge, a valve, a rail dot or a hop is a part of a link's route.
+            geometry
+                .links
+                .iter()
+                .find(|route| route.parts.iter().any(|part| part.name.is_sheet()))
+                .map(|route| NodePointer::root().child("links").index(route.index))
+        })
 }
 
 /// True for the node tags a design sheet adds.
@@ -547,6 +556,12 @@ struct PartContext<'a> {
     band: Option<BandLook>,
     /// A legend entry that names every actor's use of its line.
     by_actor: bool,
+    /// An outlined Item's outline on a sheet; None for a card.
+    outline: Option<stencil_model::Outline>,
+    /// A planned Item, Box, Pipe or legend entry.
+    planned: bool,
+    /// A legend entry of the rail form.
+    rail: bool,
 }
 
 struct SvgWriter<'a> {
@@ -910,9 +925,16 @@ impl<'a> SvgWriter<'a> {
                     );
                 }
                 Node::Frame(_) => self.write_frame_box(depth, node.bounds),
-                Node::Box(_) => {
+                Node::Box(box_node) => {
                     let look = node.container.ok_or_else(|| container_mismatch(node))?;
-                    self.write_zone_box(depth, node.bounds, look, node.tint);
+                    let style = self.zone_style(look, node.tint);
+                    match (self.sheet, box_node.planned, style.border) {
+                        // Planned work on a sheet: its border dashed, no fill.
+                        (Some(_), true, Some(border)) => {
+                            self.write_planned_box(depth, node.bounds, border.color);
+                        }
+                        _ => self.write_zone_box(depth, node.bounds, look, node.tint),
+                    }
                 }
                 Node::Phases(phases) => self.phases_step_fill = phases.step_fill,
                 Node::View(_) | Node::Step(_) => {}
@@ -930,6 +952,14 @@ impl<'a> SvgWriter<'a> {
                         color: &color,
                     };
                     self.write_rect(depth, node.bounds, 0.0, Some(&fill), Some(border));
+                }
+                // An outlined Item draws its outline as parts.
+                Node::Item(_) if self.sheet.is_some() && node.outline.is_some() => {}
+                Node::Item(item) if self.sheet.is_some() && item.planned => {
+                    let color = self
+                        .palette
+                        .sheet_color(palette::SheetInk::TintWire, node.tint);
+                    self.write_planned_box(depth, node.bounds, &color);
                 }
                 Node::Item(_) => {
                     let card_paint = self.palette.card();
@@ -994,6 +1024,8 @@ impl<'a> SvgWriter<'a> {
                 line: Some(LineUse::new(entry.line, entry.tint)),
                 pipe_form: Some(entry.form),
                 by_actor: entry.by_actor,
+                planned: entry.planned,
+                rail: entry.form == PipeForm::Rail,
                 ..PartContext::default()
             },
             DocumentNode::Content(NodeRef::TeeArm(pipe)) => PartContext {
@@ -1001,6 +1033,7 @@ impl<'a> SvgWriter<'a> {
                 pipe_dir: Some(pipe.dir),
                 pipe_form: Some(pipe.form),
                 arrows: ArrowEnds::of(pipe),
+                planned: pipe.planned,
                 ..PartContext::default()
             },
             DocumentNode::Content(NodeRef::Node(content)) => match content {
@@ -1030,6 +1063,8 @@ impl<'a> SvgWriter<'a> {
                 },
                 Node::Item(item) => PartContext {
                     icon: item.icon,
+                    outline: node.outline,
+                    planned: item.planned,
                     ..PartContext::default()
                 },
                 Node::Pipe(pipe) => PartContext {
@@ -1037,6 +1072,7 @@ impl<'a> SvgWriter<'a> {
                     pipe_dir: Some(pipe.dir),
                     pipe_form: Some(pipe.form),
                     arrows: ArrowEnds::of(pipe),
+                    planned: pipe.planned,
                     ..PartContext::default()
                 },
                 Node::Tee(tee) => PartContext {
@@ -1148,6 +1184,9 @@ impl<'a> SvgWriter<'a> {
         (context, slot): (PartContext<'a>, Option<u8>),
     ) -> Result<(), RenderError> {
         let bounds = part.bounds;
+        if self.sheet.is_some() && self.write_assembly_part(depth, node, part, (context, slot)) {
+            return Ok(());
+        }
         if let (Some(look), Some(fill)) = (context.step_look, context.step_fill) {
             match part.name {
                 PartName::Front => {
@@ -1280,6 +1319,8 @@ impl<'a> SvgWriter<'a> {
                 let kind = context.line.ok_or_else(|| part_mismatch(node, part))?;
                 match context.pipe_form {
                     Some(PipeForm::Band) => self.write_band_swatch(depth, bounds, kind),
+                    // A rail's sample is drawn by `write_assembly_part` on its sheet.
+                    Some(PipeForm::Rail) => return Err(part_mismatch(node, part)),
                     Some(PipeForm::Tube) | None => {
                         self.write_wire(depth, bounds, PipeDir::Horizontal, kind);
                         // A kind told apart by its hollow dots shows them on its swatch
@@ -1412,7 +1453,20 @@ impl<'a> SvgWriter<'a> {
             | PartName::NoteDetail
             | PartName::NoteZones
             | PartName::FootRule
-            | PartName::Foot => return Err(part_mismatch(node, part)),
+            | PartName::Foot
+            | PartName::Head
+            | PartName::Shoulders
+            | PartName::Compartment
+            | PartName::CompartmentText
+            | PartName::TabBorder
+            | PartName::Tab
+            | PartName::Rail
+            | PartName::StepBadge
+            | PartName::StepNumeral
+            | PartName::ValveNear
+            | PartName::ValveFar
+            | PartName::RailDot
+            | PartName::Hop => return Err(part_mismatch(node, part)),
         }
         Ok(())
     }
@@ -1590,7 +1644,47 @@ impl<'a> SvgWriter<'a> {
                 self.write_glyph_path(depth, &path, fill, stroke);
             }
             PartShape::Grid => self.write_sheet_grid(depth, bounds),
-            PartShape::Text => {}
+            PartShape::DashedRect(dash) => {
+                if let Some(stroke) = stroke {
+                    let rect = inset_rect(bounds, stroke.width_px / 2.0);
+                    self.line(
+                        depth,
+                        &format!(
+                            r#"<rect x="{}" y="{}" width="{}" height="{}" fill="{}"{} stroke-dasharray="{dash}"/>"#,
+                            format_number(rect.x),
+                            format_number(rect.y),
+                            format_number(rect.width),
+                            format_number(rect.height),
+                            fill.unwrap_or("none"),
+                            stroke_attributes(stroke)
+                        ),
+                    );
+                }
+            }
+            PartShape::RoundedRect => {
+                self.write_rect(depth, bounds, palette::STEP_BADGE_RADIUS_PX, fill, stroke);
+            }
+            PartShape::Shoulders => {
+                let inset = stroke.map_or(0.0, |stroke| stroke.width_px / 2.0);
+                let shape = inset_rect(bounds, inset);
+                let middle = shape.x + shape.width / 2.0;
+                let path = format!(
+                    "M {} {} Q {} {} {} {} Q {} {} {} {} Z",
+                    format_number(shape.x),
+                    format_number(shape.bottom()),
+                    format_number(shape.x),
+                    format_number(shape.y),
+                    format_number(middle),
+                    format_number(shape.y),
+                    format_number(shape.right()),
+                    format_number(shape.y),
+                    format_number(shape.right()),
+                    format_number(shape.bottom()),
+                );
+                self.write_glyph_path(depth, &path, fill, stroke);
+            }
+            // A valve and a hop are drawn with their link.
+            PartShape::Valve | PartShape::OnPath | PartShape::Text => {}
         }
     }
 
@@ -1817,6 +1911,7 @@ impl<'a> SvgWriter<'a> {
         depth: usize,
         geometry: &PageGeometry,
         route: &LinkRoute,
+        link: Option<&stencil_model::Link>,
     ) -> Result<(), RenderError> {
         let pointer = NodePointer::root().child("links").index(route.index);
         self.line(
@@ -1829,15 +1924,19 @@ impl<'a> SvgWriter<'a> {
         );
         let line_use = LineUse::new(route.line, route.tint);
         let drawn = drawn_link(geometry, route);
-        let stroke = self.palette.wire_style(line_use).stroke;
-        self.line(
-            depth + 1,
-            &format!(
-                r#"<path d="{}" fill="none"{} stroke-linejoin="round"/>"#,
-                link_path(&drawn),
-                stroke_attributes(stroke)
-            ),
-        );
+        if self.sheet.is_some() {
+            self.write_sheet_link_line(depth + 1, &drawn, line_use, assembly::is_planned(link));
+        } else {
+            let stroke = self.palette.wire_style(line_use).stroke;
+            self.line(
+                depth + 1,
+                &format!(
+                    r#"<path d="{}" fill="none"{} stroke-linejoin="round"/>"#,
+                    link_path(&drawn),
+                    stroke_attributes(stroke)
+                ),
+            );
+        }
         for (base, tip) in [drawn.start_arrow, drawn.end_arrow].into_iter().flatten() {
             self.write_arrow_carrier(depth + 1, base, tip, line_use);
         }
@@ -1850,7 +1949,20 @@ impl<'a> SvgWriter<'a> {
         let mut glyph_index = 0;
         let mut numeral_index = 0;
         for part in &route.parts {
+            if self.sheet.is_some()
+                && part.text.is_none()
+                && self.write_link_mark(depth + 1, route, part, line_use)
+            {
+                continue;
+            }
             match (part.name, &part.text) {
+                (PartName::StepNumeral, Some(run)) => {
+                    let fill = self
+                        .palette
+                        .sheet_ink(palette::SheetInk::TagInk)
+                        .to_string();
+                    self.write_text_run(depth + 1, &pointer, part.bounds, run, &fill)?;
+                }
                 (PartName::Tag, None) => {
                     let tag_paint = self.palette.tag(route.line);
                     self.write_box(depth + 1, part.bounds, TAG_RADIUS_PX, tag_paint);

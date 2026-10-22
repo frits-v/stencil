@@ -100,6 +100,16 @@ fn topic_text(topic: Topic) -> String {
     topic.rendered().unwrap()
 }
 
+/// First-column names of a topic's vocabulary table; a topic that adds only sheet fields
+/// to base rows has none.
+fn topic_row_names(text: &str) -> Vec<String> {
+    if text.lines().any(|line| line == "| Tag | Fields |") {
+        vocabulary_row_names(text)
+    } else {
+        Vec::new()
+    }
+}
+
 /// First-column names of the vocabulary table, split at ", ".
 fn vocabulary_row_names(text: &str) -> Vec<String> {
     let mut lines = text.lines().skip_while(|line| *line != "| Tag | Fields |");
@@ -197,13 +207,31 @@ fn shapes() -> Vec<Shape> {
 }
 
 fn pipe_forms() -> Vec<PipeForm> {
-    let all = [PipeForm::Tube, PipeForm::Band];
+    let all = [PipeForm::Tube, PipeForm::Band, PipeForm::Rail];
     for form in all {
         match form {
-            PipeForm::Tube | PipeForm::Band => {}
+            PipeForm::Tube | PipeForm::Band | PipeForm::Rail => {}
         }
     }
     all.to_vec()
+}
+
+/// The pipe forms a page without a sheet may draw: every form that no sheet surface names.
+fn base_pipe_forms() -> Vec<PipeForm> {
+    pipe_forms()
+        .into_iter()
+        .filter(|form| {
+            !stencil_model::SheetSurface::ALL.iter().any(|surface| {
+                surface.vocabulary().iter().any(|item| {
+                    *item
+                        == stencil_model::SurfaceVocabulary::Value {
+                            definition: "PipeForm",
+                            value: form.as_str(),
+                        }
+                })
+            })
+        })
+        .collect()
 }
 
 fn justifies() -> Vec<Justify> {
@@ -368,9 +396,9 @@ fn the_base_briefing_names_every_node_tag_in_its_vocabulary() {
     for tag in &base_tags {
         assert!(rows.contains(tag), "vocabulary has no row for {tag}");
     }
-    let topic_rows: BTreeSet<String> = [Topic::Sheet, Topic::Phases, Topic::Marks]
+    let topic_rows: BTreeSet<String> = [Topic::Sheet, Topic::Phases, Topic::Marks, Topic::Assembly]
         .into_iter()
-        .flat_map(|topic| vocabulary_row_names(&topic_text(topic)))
+        .flat_map(|topic| topic_row_names(&topic_text(topic)))
         .collect();
     for tag in &sheet {
         assert!(
@@ -398,7 +426,7 @@ fn every_sheet_surface_is_absent_from_base_and_named_in_its_topic() {
     for surface in SheetSurface::ALL {
         let topic = Topic::from_name(surface.topic()).unwrap();
         let text = topic_text(topic);
-        let topic_rows: BTreeSet<String> = vocabulary_row_names(&text).into_iter().collect();
+        let topic_rows: BTreeSet<String> = topic_row_names(&text).into_iter().collect();
         for item in surface.vocabulary() {
             match *item {
                 SurfaceVocabulary::Tag(tag) => {
@@ -621,7 +649,7 @@ fn the_base_briefing_lists_every_enum_value_from_the_model() {
     assert_enum_listed(&text, "ListKind", names(&list_kinds()));
     assert_enum_listed(&text, "CalloutKind", names(&callout_kinds()));
     assert_enum_listed(&text, "Shape", names(&shapes()));
-    assert_enum_listed(&text, "PipeForm", names(&pipe_forms()));
+    assert_enum_listed(&text, "PipeForm", names(&base_pipe_forms()));
     assert!(text.contains(&format!("IconName ({}):", IconName::ALL.len())));
 }
 
@@ -630,7 +658,9 @@ fn the_iso_topic_names_every_shape_and_pipe_form() {
     let text = topic_text(Topic::Iso);
     let text = text.as_str();
     assert_enum_listed(text, "Shape", names(&shapes()));
-    assert_enum_listed(text, "PipeForm", names(&pipe_forms()));
+    assert_enum_listed(text, "PipeForm", names(&PipeForm::ISO));
+    // Every form iso does not draw is a sheet surface, flat only.
+    assert_eq!(base_pipe_forms(), PipeForm::ISO.to_vec());
     for shape in names(&shapes()) {
         let mentions = text
             .split(|character: char| !character.is_ascii_alphanumeric())
@@ -740,8 +770,8 @@ fn no_prime_text_names_a_tag_that_does_not_exist() {
     for name in vocabulary_row_names(&base) {
         assert!(objects.contains(&name), "vocabulary names unknown {name}");
     }
-    for topic in [Topic::Sheet, Topic::Phases, Topic::Marks] {
-        for name in vocabulary_row_names(&topic_text(topic)) {
+    for topic in [Topic::Sheet, Topic::Phases, Topic::Marks, Topic::Assembly] {
+        for name in topic_row_names(&topic_text(topic)) {
             assert!(
                 objects.contains(&name),
                 "the {} topic names unknown {name}",

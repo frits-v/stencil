@@ -31,6 +31,9 @@ pub fn plain() -> Grammar {
 /// A gcp `product` Item with only a title.
 pub fn item(title: &str) -> Node {
     Node::Item(Item {
+        compartments: Default::default(),
+        outline: Default::default(),
+        planned: Default::default(),
         corner_mark: None,
         marks: Vec::new(),
         actor: None,
@@ -54,6 +57,8 @@ pub fn fact(text: &str) -> Node {
 
 pub fn pipe_value(dir: PipeDir, line: Line, tint: Option<u8>, label: &str) -> Pipe {
     Pipe {
+        planned: Default::default(),
+        step: Default::default(),
         marks: Vec::new(),
         actor: None,
         id: None,
@@ -107,6 +112,7 @@ pub fn col(children: Vec<Node>) -> Node {
 
 pub fn box_node(kind: &str, tint: Option<u8>, label: &str, children: Vec<Node>) -> Node {
     Node::Box(BoxNode {
+        planned: Default::default(),
         corner_mark: None,
         marks: Vec::new(),
         actor: None,
@@ -120,6 +126,7 @@ pub fn box_node(kind: &str, tint: Option<u8>, label: &str, children: Vec<Node>) 
 
 pub fn legend_entry(line: Line, tint: Option<u8>, text: &str) -> LegendEntry {
     LegendEntry {
+        planned: Default::default(),
         by_actor: false,
         line,
         tint,
@@ -164,6 +171,9 @@ pub fn nested_cols(levels: usize) -> Node {
 /// A gcp `product` Item carrying `id`.
 pub fn item_with_id(id: &str, title: &str) -> Node {
     Node::Item(Item {
+        compartments: Default::default(),
+        outline: Default::default(),
+        planned: Default::default(),
         corner_mark: None,
         marks: Vec::new(),
         actor: None,
@@ -206,6 +216,9 @@ pub fn frame(label: &str) -> Node {
 /// A solid tint 1 link with no label, sides or via points.
 pub fn link(from: &str, to: &str) -> Link {
     Link {
+        planned: Default::default(),
+        step: Default::default(),
+        valve: Default::default(),
         marks: Vec::new(),
         actor: None,
         from: from.to_string(),

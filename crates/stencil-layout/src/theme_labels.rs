@@ -17,6 +17,7 @@ fn line_uses() -> Vec<LegendEntry> {
         tint,
         form: PipeForm::Tube,
         by_actor,
+        planned: false,
         text: String::new(),
     };
     let mut uses = vec![
@@ -48,7 +49,7 @@ pub fn theme_legend_labels(
             continue;
         }
         let drawn_width = measurer.measure(&drawn, &style, None)?.width_px;
-        let canonical_width = measurer.measure(canonical, &style, None)?.width_px;
+        let canonical_width = measurer.measure(&canonical, &style, None)?.width_px;
         let excess = drawn_width - canonical_width;
         if excess <= LEGEND_RELABEL_SLACK_PX {
             continue;

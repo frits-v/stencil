@@ -102,9 +102,36 @@ fn marks_on_onepager_pass_text_fits_box_and_marks_clear() {
     let clear = marks_clear(&page, &geometry);
     assert_eq!(clear.defects, Vec::new());
     let sites = PageMarks::of(&page).all(&page).len();
-    // Every carrier glyph, every list glyph (3 attention items, 8 parts, 4 notes) and a
-    // sample per kind.
-    assert_eq!(clear.examined, (sites + 3 + 8 + 4 + 3) as u64);
+    let parts = |name: PartName| {
+        geometry
+            .nodes
+            .iter()
+            .flat_map(|node| node.parts.iter())
+            .chain(geometry.links.iter().flat_map(|route| route.parts.iter()))
+            .filter(|part| part.name == name)
+            .count()
+    };
+    let arrowheads: usize = geometry
+        .links
+        .iter()
+        .map(|route| match route.arrow {
+            stencil_model::Arrow::None => 0,
+            stencil_model::Arrow::Start | stencil_model::Arrow::End => 1,
+            stencil_model::Arrow::Both => 2,
+        })
+        .sum();
+    // Six step badges on links and the strip's sample, the queue job's valve, and an end
+    // feature per arrowhead and rail dot.
+    assert_eq!(parts(PartName::StepBadge), 7);
+    assert_eq!(parts(PartName::ValveNear), 1);
+    let line_marks = parts(PartName::StepBadge)
+        + parts(PartName::ValveNear)
+        + parts(PartName::Hop)
+        + arrowheads
+        + parts(PartName::RailDot);
+    // Every carrier glyph, every list glyph (3 attention items, 9 parts, 4 notes), a
+    // sample per kind, and the marks of the lines.
+    assert_eq!(clear.examined, (sites + 3 + 9 + 4 + 3 + line_marks) as u64);
 }
 
 #[test]
@@ -203,7 +230,7 @@ fn the_drawn_zones_are_the_cells_of_the_glyph_centres() {
             examined += 1;
         }
     }
-    assert_eq!(examined, 3 + 8 + 4);
+    assert_eq!(examined, 3 + 9 + 4);
 }
 
 /// (pointer, message) of a marks-clear report.

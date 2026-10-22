@@ -14,6 +14,7 @@ use stencil_model::{
 };
 
 use crate::lanes::{LanesPlan, MessageRow};
+use crate::sheet_lines::{add_hops, place_sheet_tag, valve_box, valve_center, valve_parts};
 use crate::styles::{text_color, text_style_for};
 use crate::{Axis, ISO_APPROACH_PX, ISO_BLOCK_HEIGHT_PX, shape_height_px, turned_box};
 use crate::{
@@ -58,7 +59,14 @@ pub(crate) fn route_links(
     let actors = stencil_model::PageActors::of(page);
     let page_marks = stencil_model::PageMarks::of(page);
     let links_pointer = NodePointer::root().child("links");
-    let mut routes = Vec::with_capacity(page.links.len().min(LINKS_MAX));
+    let spread = if page.sheet.is_some() {
+        spread_ends(page, geometry, &nodes_by_id, lanes_plan)
+    } else {
+        Vec::new()
+    };
+    // First every route, so a sheet can move a leg off another link's before any tag is
+    // placed.
+    let mut paths: Vec<RoutedPath> = Vec::with_capacity(page.links.len().min(LINKS_MAX));
     for (index, link) in page.links.iter().enumerate().take(LINKS_MAX) {
         let link_pointer = links_pointer.index(index);
         let from_node = resolve(&nodes_by_id, &link.from, link_pointer.child("from"))?;
@@ -70,6 +78,11 @@ pub(crate) fn route_links(
                 message: "link endpoint is not a geometry node".to_string(),
             });
         };
+        // A link ends on a rail with a dot, not an arrowhead (section 14.4 rule 27).
+        let arrow = drawn_arrow(
+            link.arrow,
+            (rail_bar(from).is_some(), rail_bar(to).is_some()),
+        );
         let (points, status) = match lanes_plan.message(index) {
             Some(row) => (
                 message_points(geometry, row, &from.bounds, &to.bounds, &link_pointer)?,
@@ -78,18 +91,138 @@ pub(crate) fn route_links(
             None => searched_route(
                 geometry,
                 link,
+                (arrow, spread.get(index).copied().unwrap_or((None, None))),
                 (from_node, from),
                 (to_node, to),
                 page.projection == Projection::Iso,
             ),
         };
+        paths.push(RoutedPath {
+            from_node,
+            to_node,
+            arrow,
+            points,
+            status,
+        });
+    }
+    if page.sheet.is_some() {
+        crate::sheet_lines::separate_shared_legs(geometry, &mut paths);
+    }
+    let all_points: Vec<Vec<PagePoint>> = paths.iter().map(|path| path.points.clone()).collect();
+    let mut routes: Vec<LinkRoute> = Vec::with_capacity(paths.len());
+    for (index, (link, path)) in page.links.iter().zip(paths).enumerate() {
+        let link_pointer = links_pointer.index(index);
+        let RoutedPath {
+            from_node,
+            to_node,
+            arrow,
+            mut points,
+            status,
+        } = path;
+        let (Some(from), Some(to)) = (geometry.nodes.get(from_node), geometry.nodes.get(to_node))
+        else {
+            continue;
+        };
+        let (corner, bend) = link_bend(page, grammar, link.line);
+        // A valve stands back from the arrowhead, or from the dot on a rail end.
+        let end_on_rail = match link.arrow {
+            Arrow::Start => rail_bar(from).is_some(),
+            Arrow::End | Arrow::Both | Arrow::None => rail_bar(to).is_some(),
+        };
+        let end_inset = if end_on_rail {
+            RAIL_DOT_RADIUS_PX - RAIL_BAR_PX / 2.0
+        } else {
+            crate::ARROWHEAD_LENGTH_PX
+        };
+        let valve_of = |points: &[PagePoint]| {
+            if link.valve && page.sheet.is_some() {
+                valve_center(points, link.arrow, end_inset, corner)
+                    .map(|(center, direction)| valve_parts(center, direction))
+            } else {
+                None
+            }
+        };
+        let mut valve = valve_of(&points);
         let mut parts = tag_parts(page, link, &link_pointer, &points, measurer)?;
         add_tag_marks(&page_marks, (link, index), &mut parts, measurer)?;
         if page.sheet.is_some() {
-            clear_box_edges(geometry, &points, &mut parts);
+            // A tag keeps off the tags and valves placed before it and off every other
+            // link's line, which it would hide.
+            let mut taken: Vec<BoxRect> = routes
+                .iter()
+                .flat_map(|route: &LinkRoute| route.tag.into_iter().chain(valve_box(&route.parts)))
+                .collect();
+            for (other, other_points) in all_points.iter().enumerate() {
+                if other != index {
+                    taken.extend(other_points.windows(2).filter_map(|pair| {
+                        let (a, b) = (pair.first()?, pair.get(1)?);
+                        Some(BoxRect {
+                            x: a.x.min(b.x),
+                            y: a.y.min(b.y),
+                            width: (a.x - b.x).abs(),
+                            height: (a.y - b.y).abs(),
+                        })
+                    }));
+                }
+            }
+            let valve_bounds = valve.as_ref().and_then(|valve| valve_box(valve));
+            let placed = place_sheet_tag(
+                geometry,
+                (&points, from_node, to_node),
+                (corner, valve_bounds, &taken),
+                &mut parts,
+            );
+            // A tag no leg holds gets room by moving one leg a few px across its run.
+            if !placed {
+                let others: Vec<Vec<PagePoint>> = all_points
+                    .iter()
+                    .enumerate()
+                    .filter(|(other, _)| *other != index)
+                    .map(|(_, points)| points.clone())
+                    .collect();
+                for candidate in crate::sheet_lines::shifted_routes(
+                    geometry,
+                    (from_node, to_node),
+                    &points,
+                    &others,
+                ) {
+                    let candidate_valve = valve_of(&candidate);
+                    let candidate_bounds =
+                        candidate_valve.as_ref().and_then(|valve| valve_box(valve));
+                    let mut trial = parts.clone();
+                    if place_sheet_tag(
+                        geometry,
+                        (&candidate, from_node, to_node),
+                        (corner, candidate_bounds, &taken),
+                        &mut trial,
+                    ) {
+                        points = candidate;
+                        valve = candidate_valve;
+                        parts = trial;
+                        break;
+                    }
+                }
+            }
         }
         let tag = parts.first().map(|part| part.bounds);
-        let (corner, bend) = link_bend(page, grammar, link.line);
+        if let Some(valve) = valve {
+            let valve_bounds = valve_box(&valve);
+            parts.extend(valve);
+            if let (None, Some(valve_bounds)) = (tag, valve_bounds) {
+                add_valve_marks(
+                    &page_marks,
+                    (link, index),
+                    valve_bounds,
+                    &mut parts,
+                    measurer,
+                )?;
+            }
+        }
+        for (end, node) in [(points.first(), from), (points.last(), to)] {
+            if let (Some(point), Some(bar)) = (end, rail_bar(node)) {
+                parts.push(rail_dot(*point, &bar));
+            }
+        }
         routes.push(LinkRoute {
             index,
             line: link.line,
@@ -105,10 +238,72 @@ pub(crate) fn route_links(
             status,
             corner,
             bend,
-            arrow: link.arrow,
+            arrow,
         });
     }
+    if page.sheet.is_some() {
+        add_hops(page, geometry, &mut routes);
+    }
     Ok(routes)
+}
+
+/// A link's route before its tag and marks are placed.
+pub(crate) struct RoutedPath {
+    pub from_node: usize,
+    pub to_node: usize,
+    pub arrow: Arrow,
+    pub points: Vec<PagePoint>,
+    pub status: RouteStatus,
+}
+
+/// The arrowheads a link draws: the authored ones, less any end on a rail, which draws a
+/// dot instead.
+fn drawn_arrow(arrow: Arrow, (from_rail, to_rail): (bool, bool)) -> Arrow {
+    let start = matches!(arrow, Arrow::Start | Arrow::Both) && !from_rail;
+    let end = matches!(arrow, Arrow::End | Arrow::Both) && !to_rail;
+    match (start, end) {
+        (false, false) => Arrow::None,
+        (false, true) => Arrow::End,
+        (true, false) => Arrow::Start,
+        (true, true) => Arrow::Both,
+    }
+}
+
+/// The drawn width of a rail's bar, centred in its strip.
+pub const RAIL_BAR_PX: f32 = 5.0;
+/// A link attaches to a rail at least this far inside the bar's ends.
+pub const RAIL_END_CLEARANCE_PX: f32 = 12.0;
+/// The radius of the dot a link draws where it meets a rail.
+pub const RAIL_DOT_RADIUS_PX: f32 = 4.5;
+
+/// The bar of a rail: the middle of its `Rail` strip, as wide as the drawn bar. None for
+/// every node that is not a rail.
+pub fn rail_bar(node: &NodeGeometry) -> Option<BoxRect> {
+    if node.tag != NodeTag::Pipe || node.pipe_form != Some(stencil_model::PipeForm::Rail) {
+        return None;
+    }
+    let strip = node.part(PartName::Rail)?.bounds;
+    Some(BoxRect {
+        x: strip.x + (strip.width - RAIL_BAR_PX) / 2.0,
+        y: strip.y,
+        width: RAIL_BAR_PX,
+        height: strip.height,
+    })
+}
+
+/// The dot centred on the rail's bar where a link ends on it.
+fn rail_dot(point: PagePoint, bar: &BoxRect) -> Part {
+    let center_x = bar.x + bar.width / 2.0;
+    Part {
+        name: PartName::RailDot,
+        bounds: BoxRect {
+            x: center_x - RAIL_DOT_RADIUS_PX,
+            y: point.y - RAIL_DOT_RADIUS_PX,
+            width: 2.0 * RAIL_DOT_RADIUS_PX,
+            height: 2.0 * RAIL_DOT_RADIUS_PX,
+        },
+        text: None,
+    }
 }
 
 /// The corner radius and bend of a link's line: the grammar's line kind first, then the
@@ -132,10 +327,28 @@ fn link_bend(page: &Page, grammar: &Grammar, line: Line) -> (f32, Bend) {
 fn searched_route(
     geometry: &PageGeometry,
     link: &Link,
+    (arrow, fractions): (Arrow, (Option<f32>, Option<f32>)),
     from: (usize, &NodeGeometry),
     to: (usize, &NodeGeometry),
     iso: bool,
 ) -> (Vec<PagePoint>, RouteStatus) {
+    // A valve needs a straight run before the end it guards: the valve, its stand-back
+    // and a bend's keep-out (section 14.4 rule 23).
+    let (mut from_stub, mut to_stub) = stubs(arrow, (from.1, to.1), iso);
+    let mut stub_px = (LINK_ARROW_STUB_PX, LINK_ARROW_STUB_PX);
+    if link.valve && !iso {
+        let run = crate::sheet_lines::VALVE_RUN_PX;
+        match link.arrow {
+            Arrow::Start => {
+                from_stub = true;
+                stub_px.0 = run;
+            }
+            Arrow::End | Arrow::Both | Arrow::None => {
+                to_stub = true;
+                stub_px.1 = run;
+            }
+        }
+    }
     let sides = choose_sides(
         link,
         (&attach_box(from.1), allowed_sides(from.1)),
@@ -147,9 +360,22 @@ fn searched_route(
         to,
         sides,
         &link.via,
-        stubs(link.arrow, (from.1, to.1), iso),
+        RouteEnds {
+            stubs: (from_stub, to_stub),
+            fractions,
+            stub_px,
+        },
         iso,
     )
+}
+
+/// How a route meets its two ends: whether each is reached through a straight stub, how
+/// long that stub is, and where along its side an end spread among others sits.
+#[derive(Debug, Clone, Copy)]
+struct RouteEnds {
+    stubs: (bool, bool),
+    fractions: (Option<f32>, Option<f32>),
+    stub_px: (f32, f32),
 }
 
 /// Which ends of a link are reached through a stub: the arrowed ends of a flat link, the
@@ -168,6 +394,15 @@ fn stubs(arrow: Arrow, (from, to): (&NodeGeometry, &NodeGeometry), iso: bool) ->
 /// The box a link attaches to: an item's Footprint part under iso when its shape is not a
 /// card, where its solid stands (section 12.3), else the node's border box.
 pub(crate) fn attach_box(node: &NodeGeometry) -> BoxRect {
+    if let Some(bar) = rail_bar(node) {
+        return bar;
+    }
+    // A stacked Item's links meet its front card, not the cards behind it.
+    if node.tag == NodeTag::Pcard
+        && let Some(front) = node.part(PartName::Front)
+    {
+        return front.bounds;
+    }
     node.part(PartName::Footprint)
         .map_or(node.bounds, |part| part.bounds)
 }
@@ -175,6 +410,9 @@ pub(crate) fn attach_box(node: &NodeGeometry) -> BoxRect {
 /// The sides a link may attach to when the author chose none: every side, except that an
 /// item standing on a footprint keeps its bottom side, where its text lies on the floor.
 fn allowed_sides(node: &NodeGeometry) -> &'static [Side] {
+    if rail_bar(node).is_some() {
+        return &RAIL_SIDES;
+    }
     if node.part(PartName::Footprint).is_some() {
         &FOOTPRINT_SIDES
     } else {
@@ -184,6 +422,43 @@ fn allowed_sides(node: &NodeGeometry) -> &'static [Side] {
 
 /// The attach sides of a footprint item, in SIDE_ORDER without the bottom side.
 const FOOTPRINT_SIDES: [Side; 3] = [Side::Right, Side::Left, Side::Top];
+/// A link meets a rail on its long sides or at either end of its bar.
+const RAIL_SIDES: [Side; 4] = [Side::Right, Side::Left, Side::Bottom, Side::Top];
+
+/// Where a link attaches on `side` of `node`: the side's midpoint, or on a rail the point of
+/// the side level with `toward`, the middle of the other end, clamped
+/// `RAIL_END_CLEARANCE_PX` inside the bar's ends.
+fn attach_point(
+    node: &NodeGeometry,
+    side: Side,
+    toward: &BoxRect,
+    fraction: Option<f32>,
+) -> PagePoint {
+    let bounds = attach_box(node);
+    let midpoint = match fraction {
+        Some(fraction) => side_point(&bounds, side, fraction),
+        None => side_midpoint(&bounds, side),
+    };
+    if node.outline == Some(stencil_model::Outline::Store) {
+        return on_store_outline(&bounds, side, midpoint);
+    }
+    if rail_bar(node).is_none() || !matches!(side, Side::Left | Side::Right) {
+        return midpoint;
+    }
+    let low = bounds.y + RAIL_END_CLEARANCE_PX;
+    // The rail's tag stands left of its bar's foot: a link from the left stays above it.
+    let tag_top = match side {
+        Side::Left => node.part(PartName::Tag).map(|tag| tag.bounds.y),
+        Side::Top | Side::Right | Side::Bottom => None,
+    };
+    let high = (bounds.bottom() - RAIL_END_CLEARANCE_PX)
+        .min(tag_top.map_or(f32::INFINITY, |top| top - RAIL_END_CLEARANCE_PX))
+        .max(low);
+    PagePoint {
+        x: midpoint.x,
+        y: (toward.y + toward.height / 2.0).clamp(low, high),
+    }
+}
 
 /// The height of a block under iso (section 12.3): an item's shape height, the block
 /// height for every other leaf.
@@ -217,12 +492,34 @@ fn route_between(
     (to_node, to): (usize, &NodeGeometry),
     (from_side, to_side): (Side, Side),
     via: &[PagePoint],
-    (from_stub, to_stub): (bool, bool),
+    ends: RouteEnds,
     iso: bool,
 ) -> (Vec<PagePoint>, RouteStatus) {
+    let RouteEnds {
+        stubs: (from_stub, to_stub),
+        fractions,
+        stub_px,
+    } = ends;
     let (from_box, to_box) = (attach_box(from), attach_box(to));
-    let start = side_midpoint(&from_box, from_side);
-    let end = side_midpoint(&to_box, to_side);
+    let mut start = attach_point(from, from_side, &to_box, fractions.0);
+    let mut end = attach_point(to, to_side, &from_box, fractions.1);
+    // Facing ends that share a span line up, so the link runs straight rather than jogging
+    // by the difference of their midpoints; an end spread along its side keeps its place.
+    if to_side == facing_side(from_side) && !iso {
+        match (fractions.0, fractions.1) {
+            (Some(_), None) => {
+                if let Some(aligned) = aligned_on_side(to, &to_box, to_side, start) {
+                    end = aligned;
+                }
+            }
+            (None, Some(_)) => {
+                if let Some(aligned) = aligned_on_side(from, &from_box, from_side, end) {
+                    start = aligned;
+                }
+            }
+            (None, None) | (Some(_), Some(_)) => {}
+        }
+    }
     let mut obstacles = link_obstacles(geometry, from_node, to_node);
     if iso {
         obstacles.extend(block_shadows(geometry, &obstacles));
@@ -251,22 +548,22 @@ fn route_between(
     };
     // A flat arrow stub has its full length or no route at all: a shorter one is the leg
     // that ran into the arrowhead's flank.
-    let arrow_stub = |point: PagePoint, side: Side| {
+    let arrow_stub = |point: PagePoint, side: Side, length: f32| {
         let (dx, dy) = Direction::outward(side).unit();
         PagePoint {
-            x: point.x + dx * LINK_ARROW_STUB_PX,
-            y: point.y + dy * LINK_ARROW_STUB_PX,
+            x: point.x + dx * length,
+            y: point.y + dy * length,
         }
     };
     let search_start = match (from_stub, iso) {
         (false, _) => start,
         (true, true) => outward(start, from_side, (from, to_box)),
-        (true, false) => arrow_stub(start, from_side),
+        (true, false) => arrow_stub(start, from_side, stub_px.0),
     };
     let search_end = match (to_stub, iso) {
         (false, _) => end,
         (true, true) => outward(end, to_side, (to, from_box)),
-        (true, false) => arrow_stub(end, to_side),
+        (true, false) => arrow_stub(end, to_side, stub_px.1),
     };
     if !iso {
         let blocked = |stub: bool, attach: PagePoint, stub_point: PagePoint, other: &BoxRect| {
@@ -393,7 +690,11 @@ pub fn reroute_link(
         (route.to_node, to),
         (from_side, to_side),
         via,
-        stubs(route.arrow, (from, to), iso),
+        RouteEnds {
+            stubs: stubs(route.arrow, (from, to), iso),
+            fractions: (None, None),
+            stub_px: (LINK_ARROW_STUB_PX, LINK_ARROW_STUB_PX),
+        },
         iso,
     );
     let (old_center, _) = longest_segment_midpoint(&route.points);
@@ -531,6 +832,22 @@ pub(crate) fn link_obstacles(geometry: &PageGeometry, from: usize, to: usize) ->
             })
         })
         .collect();
+    // On a design sheet a Box that holds neither end is drawn work a line has no business
+    // crossing: the whole outline is an obstacle (section 14.4 rule 15).
+    let on_sheet = geometry
+        .nodes
+        .iter()
+        .any(|node| node.tag == NodeTag::TitleBlock);
+    if on_sheet {
+        for (index, node) in geometry.nodes.iter().enumerate() {
+            if node.tag == NodeTag::Zone && !excluded.get(index).copied().unwrap_or(true) {
+                obstacles.push(Obstacle {
+                    node: index,
+                    bounds: node.bounds,
+                });
+            }
+        }
+    }
     // A View contains every link inside it, so its heading is never excluded with it.
     for (index, node) in geometry.nodes.iter().enumerate() {
         obstacles.extend(label_boxes(node).into_iter().map(|bounds| Obstacle {
@@ -621,6 +938,11 @@ pub(crate) fn label_boxes(node: &NodeGeometry) -> Vec<BoxRect> {
             })
             .map(|part| part.bounds)
             .collect(),
+        // An assembly's tab names the links inside it, so it is an obstacle to them too.
+        NodeTag::Zone => node
+            .part(PartName::Tab)
+            .map(|part| vec![part.bounds])
+            .unwrap_or_default(),
         NodeTag::Page
         | NodeTag::Kicker
         | NodeTag::Title
@@ -632,7 +954,6 @@ pub(crate) fn label_boxes(node: &NodeGeometry) -> Vec<BoxRect> {
         | NodeTag::Row
         | NodeTag::Col
         | NodeTag::Lanes
-        | NodeTag::Zone
         | NodeTag::Pcard
         | NodeTag::Fact
         | NodeTag::Note
@@ -670,8 +991,13 @@ fn obstacle_box(node: &NodeGeometry) -> Option<BoxRect> {
         | NodeTag::Step
         | NodeTag::PartsList
         | NodeTag::GeneralNotes => Some(node.bounds),
+        // No link crosses a rail it does not attach to (section 14.4 rule 15).
+        NodeTag::Pipe if rail_bar(node).is_some() => Some(node.bounds),
         NodeTag::Pipe => node.part(PartName::Tag).map(|part| part.bounds),
-        NodeTag::Zone => node.part(PartName::Label).map(|part| part.bounds),
+        NodeTag::Zone => node
+            .part(PartName::Tab)
+            .or_else(|| node.part(PartName::Label))
+            .map(|part| part.bounds),
         // An enclosing node already blocks a title block's points and the block itself
         // holds nothing a link reaches; a View's heading is a label obstacle.
         NodeTag::Page
@@ -719,6 +1045,165 @@ fn side_midpoint(bounds: &BoxRect, side: Side) -> PagePoint {
             y: center_y,
         },
     }
+}
+
+/// The point of `side` of `node` level with `other` across the side, when that point lies
+/// inside the side's span by more than the default corner; None otherwise.
+fn aligned_on_side(
+    node: &NodeGeometry,
+    bounds: &BoxRect,
+    side: Side,
+    other: PagePoint,
+) -> Option<PagePoint> {
+    if rail_bar(node).is_some() {
+        return None;
+    }
+    let margin = LINK_CORNER_DEFAULT_PX + GEOMETRY_EPSILON_PX;
+    let point = match side {
+        Side::Top | Side::Bottom => {
+            if other.x < bounds.x + margin || other.x > bounds.right() - margin {
+                return None;
+            }
+            side_point(bounds, side, (other.x - bounds.x) / bounds.width)
+        }
+        Side::Left | Side::Right => {
+            if other.y < bounds.y + margin || other.y > bounds.bottom() - margin {
+                return None;
+            }
+            side_point(bounds, side, (other.y - bounds.y) / bounds.height)
+        }
+    };
+    Some(if node.outline == Some(stencil_model::Outline::Store) {
+        on_store_outline(bounds, side, point)
+    } else {
+        point
+    })
+}
+
+/// The point `fraction` of the way along `side` of `bounds`, left to right or top to bottom.
+fn side_point(bounds: &BoxRect, side: Side, fraction: f32) -> PagePoint {
+    match side {
+        Side::Top => PagePoint {
+            x: bounds.x + bounds.width * fraction,
+            y: bounds.y,
+        },
+        Side::Bottom => PagePoint {
+            x: bounds.x + bounds.width * fraction,
+            y: bounds.bottom(),
+        },
+        Side::Left => PagePoint {
+            x: bounds.x,
+            y: bounds.y + bounds.height * fraction,
+        },
+        Side::Right => PagePoint {
+            x: bounds.right(),
+            y: bounds.y + bounds.height * fraction,
+        },
+    }
+}
+
+/// A point on the top or bottom of a store moved onto its outline: the lid's ellipse on
+/// top, the bottom arc below, so a line off the middle still lands on what is drawn.
+fn on_store_outline(bounds: &BoxRect, side: Side, point: PagePoint) -> PagePoint {
+    let ry = crate::STORE_LID_RY_PX;
+    let half_width = bounds.width / 2.0;
+    if half_width <= GEOMETRY_EPSILON_PX {
+        return point;
+    }
+    let across = ((point.x - (bounds.x + half_width)) / half_width).clamp(-1.0, 1.0);
+    let rise = ry * (1.0 - (1.0 - across * across).sqrt());
+    match side {
+        Side::Top => PagePoint {
+            x: point.x,
+            y: bounds.y + rise,
+        },
+        Side::Bottom => PagePoint {
+            x: point.x,
+            y: bounds.bottom() - rise,
+        },
+        Side::Left | Side::Right => point,
+    }
+}
+
+/// On a design sheet, the ends that share a side of one node spread along it, in the order
+/// of what they face, so no two meet at one point (section 14.4 rule 23 of the ends). Rail
+/// ends attach level with what they face and are not spread. Returns, per link, the
+/// fraction along its side of its from and to ends.
+fn spread_ends(
+    page: &Page,
+    geometry: &PageGeometry,
+    nodes_by_id: &HashMap<&str, usize>,
+    lanes_plan: &LanesPlan,
+) -> Vec<(Option<f32>, Option<f32>)> {
+    let count = page.links.len().min(LINKS_MAX);
+    let mut fractions = vec![(None, None); count];
+    // (link, end is `to`, node, side, the other end's centre along the side).
+    let mut ends: Vec<(usize, bool, usize, Side, f32)> = Vec::new();
+    for (index, link) in page.links.iter().enumerate().take(count) {
+        if lanes_plan.message(index).is_some() {
+            continue;
+        }
+        let (Some(&from_node), Some(&to_node)) = (
+            nodes_by_id.get(link.from.as_str()),
+            nodes_by_id.get(link.to.as_str()),
+        ) else {
+            continue;
+        };
+        let (Some(from), Some(to)) = (geometry.nodes.get(from_node), geometry.nodes.get(to_node))
+        else {
+            continue;
+        };
+        let (from_box, to_box) = (attach_box(from), attach_box(to));
+        let (from_side, to_side) = choose_sides(
+            link,
+            (&from_box, allowed_sides(from)),
+            (&to_box, allowed_sides(to)),
+        );
+        let along = |side: Side, other: &BoxRect| match side {
+            Side::Top | Side::Bottom => other.x + other.width / 2.0,
+            Side::Left | Side::Right => other.y + other.height / 2.0,
+        };
+        if rail_bar(from).is_none() {
+            ends.push((
+                index,
+                false,
+                from_node,
+                from_side,
+                along(from_side, &to_box),
+            ));
+        }
+        if rail_bar(to).is_none() {
+            ends.push((index, true, to_node, to_side, along(to_side, &from_box)));
+        }
+    }
+    // Each (node, side) with the (link index, whether the end is the link's to end, place
+    // along the side) of every end that meets it.
+    type SideEnds = ((usize, Side), Vec<(usize, bool, f32)>);
+    let mut groups: Vec<SideEnds> = Vec::new();
+    for (index, is_to, node, side, along) in ends {
+        match groups.iter_mut().find(|(key, _)| *key == (node, side)) {
+            Some((_, members)) => members.push((index, is_to, along)),
+            None => groups.push(((node, side), vec![(index, is_to, along)])),
+        }
+    }
+    for (_, mut members) in groups {
+        if members.len() < 2 {
+            continue;
+        }
+        members.sort_by(|first, second| first.2.total_cmp(&second.2).then(first.0.cmp(&second.0)));
+        let slots = members.len() as f32 + 1.0;
+        for (position, (index, is_to, _)) in members.into_iter().enumerate() {
+            let fraction = (position as f32 + 1.0) / slots;
+            if let Some(entry) = fractions.get_mut(index) {
+                if is_to {
+                    entry.1 = Some(fraction);
+                } else {
+                    entry.0 = Some(fraction);
+                }
+            }
+        }
+    }
+    fractions
 }
 
 fn facing_side(side: Side) -> Side {
@@ -1330,22 +1815,31 @@ fn fallback_route(start: PagePoint, end: PagePoint) -> Vec<PagePoint> {
 /// The label and sub runs of a labeled link's tag, measured at max-content, and the tag
 /// size they give (section 11.2): the content plus a pipe tag's padding and border.
 pub(crate) struct MeasuredTag {
-    label: TextRun,
+    label: Option<TextRun>,
     sub: Option<TextRun>,
+    /// The step badge's numeral, at the left of the tag.
+    step: Option<TextRun>,
     content_width: f32,
     pub width: f32,
     pub height: f32,
 }
 
-/// The measured tag of `link`, or None when it has no label and so no tag.
+/// The measured tag of `link`, or None when it has neither a label nor a step badge and so
+/// no tag. A step badge widens the tag by the badge and its gap (section 14.4 rule 23).
 pub(crate) fn measure_tag(
     page: &Page,
     link: &Link,
     link_pointer: &NodePointer,
     measurer: &mut dyn TextMeasurer,
 ) -> Result<Option<MeasuredTag>, LayoutError> {
-    let Some(label) = &link.label else {
-        return Ok(None);
+    let step_run = match link.step.filter(|_| page.sheet.is_some()) {
+        Some(step) => Some(step_numeral_run(step, link_pointer, measurer)?),
+        None => None,
+    };
+    let label = match (&link.label, &step_run) {
+        (Some(label), _) => label.as_str(),
+        (None, Some(_)) => "",
+        (None, None) => return Ok(None),
     };
     let label_run = tag_run(
         page,
@@ -1370,115 +1864,57 @@ pub(crate) fn measure_tag(
     let content_width = sub_run.as_ref().map_or(label_size.width_px, |sub| {
         label_size.width_px.max(sub.metrics.width_px)
     });
-    let content_height = label_size.height_px
+    // A tag of a badge alone keeps the height a one-line label gives it.
+    let line_height = label_run.style.line_height_px;
+    let content_height = label_size.height_px.max(line_height)
         + sub_run
             .as_ref()
             .map_or(0.0, |sub| TAG_SUB_GAP_PX + sub.metrics.height_px);
+    let badge_width = match (&step_run, link.label.is_some()) {
+        (Some(_), true) => crate::STEP_BADGE_PX + STEP_BADGE_GAP_PX,
+        (Some(_), false) => crate::STEP_BADGE_PX,
+        (None, _) => 0.0,
+    };
     Ok(Some(MeasuredTag {
-        label: label_run,
+        label: link.label.is_some().then_some(label_run),
         sub: sub_run,
+        step: step_run,
         content_width,
-        width: content_width + 2.0 * (TAG_PADDING_X_PX + TAG_BORDER_PX),
+        width: content_width + badge_width + 2.0 * (TAG_PADDING_X_PX + TAG_BORDER_PX),
         height: content_height + 2.0 * (TAG_PADDING_Y_PX + TAG_BORDER_PX),
     }))
 }
 
+/// The gap between a step badge and the label after it.
+const STEP_BADGE_GAP_PX: f32 = 6.0;
+
+/// The numeral of a step badge, in `mark_numeral`.
+fn step_numeral_run(
+    step: u16,
+    link_pointer: &NodePointer,
+    measurer: &mut dyn TextMeasurer,
+) -> Result<TextRun, LayoutError> {
+    let style_name = crate::marks::numeral_style(stencil_model::MarkKind::Part);
+    let style = text_style_for(style_name, false);
+    let text = step.to_string();
+    let metrics = measurer
+        .measure(&text, &style, None)
+        .map_err(|source_error| LayoutError::Measure {
+            pointer: link_pointer.child("step"),
+            source: source_error,
+        })?;
+    Ok(TextRun {
+        text,
+        style,
+        color: text_color(style_name, None),
+        align: TextAlign::Center,
+        metrics,
+        first_line_indent_px: 0.0,
+    })
+}
+
 /// The tag of a labeled link: sized like a pipe tag from the label and sub measured at
 /// max-content, centered on the midpoint of the longest segment (the first one on a tie).
-/// The air a tag keeps from a Box edge it is slid off.
-const TAG_EDGE_CLEARANCE_PX: f32 = 6.0;
-
-/// True when the border of `zone` runs through the interior of `tag`: the two overlap and
-/// the tag does not lie inside the zone.
-fn straddles(tag: &BoxRect, zone: &BoxRect) -> bool {
-    let overlaps = tag.x < zone.right()
-        && zone.x < tag.right()
-        && tag.y < zone.bottom()
-        && zone.y < tag.bottom();
-    let inside = tag.x >= zone.x
-        && tag.right() <= zone.right()
-        && tag.y >= zone.y
-        && tag.bottom() <= zone.bottom();
-    overlaps && !inside
-}
-
-/// On a design sheet a tag never straddles a Box edge (section 14.4 rule 15): a tag whose
-/// box a Box border runs through slides along its leg, the shortest distance that clears
-/// every Box border by `TAG_EDGE_CLEARANCE_PX` and keeps it on the leg. A tag no slide
-/// clears stays where it is.
-fn clear_box_edges(geometry: &PageGeometry, points: &[PagePoint], parts: &mut [Part]) {
-    let Some(tag) = parts.first().map(|part| part.bounds) else {
-        return;
-    };
-    let zones: Vec<BoxRect> = geometry
-        .nodes
-        .iter()
-        .filter(|node| node.tag == NodeTag::Zone)
-        .map(|node| node.bounds)
-        .collect();
-    if !zones.iter().any(|zone| straddles(&tag, zone)) {
-        return;
-    }
-    let mut longest: Option<(f32, PagePoint, PagePoint)> = None;
-    for segment in points.windows(2) {
-        let (Some(&a), Some(&b)) = (segment.first(), segment.get(1)) else {
-            continue;
-        };
-        let length = (b.x - a.x).abs() + (b.y - a.y).abs();
-        if longest.is_none_or(|(best, _, _)| length > best) {
-            longest = Some((length, a, b));
-        }
-    }
-    let Some((_, a, b)) = longest else {
-        return;
-    };
-    let along_x = (b.x - a.x).abs() >= (b.y - a.y).abs();
-    let (low, high, start, size) = if along_x {
-        (a.x.min(b.x), a.x.max(b.x), tag.x, tag.width)
-    } else {
-        (a.y.min(b.y), a.y.max(b.y), tag.y, tag.height)
-    };
-    let shifted = |offset: f32| {
-        if along_x {
-            BoxRect {
-                x: tag.x + offset,
-                ..tag
-            }
-        } else {
-            BoxRect {
-                y: tag.y + offset,
-                ..tag
-            }
-        }
-    };
-    let mut candidates: Vec<f32> = Vec::new();
-    for zone in &zones {
-        let edges = if along_x {
-            [zone.x, zone.right()]
-        } else {
-            [zone.y, zone.bottom()]
-        };
-        for edge in edges {
-            candidates.push(edge + TAG_EDGE_CLEARANCE_PX - start);
-            candidates.push(edge - TAG_EDGE_CLEARANCE_PX - (start + size));
-        }
-    }
-    let best = candidates
-        .into_iter()
-        .filter(|offset| start + offset >= low && start + offset + size <= high)
-        .filter(|offset| !zones.iter().any(|zone| straddles(&shifted(*offset), zone)))
-        .min_by(|first, second| first.abs().total_cmp(&second.abs()));
-    if let Some(offset) = best {
-        for part in parts.iter_mut() {
-            if along_x {
-                part.bounds.x += offset;
-            } else {
-                part.bounds.y += offset;
-            }
-        }
-    }
-}
-
 /// A link's marks at the right end of its tag (section 14.4 rule 22): the tag widens by
 /// the gap and the glyphs, to the right and left in equal halves so it stays on its leg,
 /// and the glyphs stand in the widened end, centred on the tag's height.
@@ -1526,6 +1962,43 @@ fn add_tag_marks(
     Ok(())
 }
 
+/// A link's marks when it has no tag: centred under its valve, `MARK_GAP_PX` below it
+/// (section 14.4 rule 22).
+fn add_valve_marks(
+    page_marks: &stencil_model::PageMarks<'_>,
+    (link, index): (&Link, usize),
+    valve: BoxRect,
+    parts: &mut Vec<Part>,
+    measurer: &mut dyn TextMeasurer,
+) -> Result<(), LayoutError> {
+    let marks = stencil_model::PageMarks::link_marks(link, index);
+    if marks.is_empty() {
+        return Ok(());
+    }
+    let selected: Vec<&stencil_model::CarrierMark> = marks.iter().collect();
+    let glyphs = crate::marks::numbered(page_marks, &selected);
+    let width = crate::marks::glyphs_width(&glyphs);
+    let mut x = valve.x + valve.width / 2.0 - width / 2.0;
+    let top = valve.bottom() + crate::marks::MARK_GAP_PX;
+    let source = NodePointer::root()
+        .child("links")
+        .index(index)
+        .child("marks");
+    for glyph in glyphs {
+        let (glyph_width, _) = crate::marks::glyph_size(glyph.0, glyph.1);
+        let placed = crate::marks::placed_glyph(
+            (crate::marks::glyph_part(glyph.0), PartName::MarkNumeral),
+            glyph,
+            (x, top),
+            measurer,
+            &source,
+        )?;
+        parts.extend(placed);
+        x += glyph_width + crate::marks::MARK_GAP_PX;
+    }
+    Ok(())
+}
+
 fn tag_parts(
     page: &Page,
     link: &Link,
@@ -1539,6 +2012,7 @@ fn tag_parts(
     let MeasuredTag {
         label: label_run,
         sub: sub_run,
+        step: step_run,
         content_width,
         width: tag_width,
         height: tag_height,
@@ -1550,30 +2024,54 @@ fn tag_parts(
         width: tag_width,
         height: tag_height,
     };
-    let content_x = tag.x + TAG_BORDER_PX + TAG_PADDING_X_PX;
+    let mut content_x = tag.x + TAG_BORDER_PX + TAG_PADDING_X_PX;
     let content_y = tag.y + TAG_BORDER_PX + TAG_PADDING_Y_PX;
+    let mut parts = vec![Part {
+        name: PartName::Tag,
+        bounds: tag,
+        text: None,
+    }];
+    if let Some(step_run) = step_run {
+        let badge = BoxRect {
+            x: content_x,
+            y: tag.y + (tag.height - crate::STEP_BADGE_PX) / 2.0,
+            width: crate::STEP_BADGE_PX,
+            height: crate::STEP_BADGE_PX,
+        };
+        let metrics = &step_run.metrics;
+        let numeral = BoxRect {
+            x: badge.x + (badge.width - metrics.width_px) / 2.0,
+            y: badge.y + (badge.height - metrics.height_px) / 2.0,
+            width: metrics.width_px,
+            height: metrics.height_px,
+        };
+        parts.push(Part {
+            name: PartName::StepBadge,
+            bounds: badge,
+            text: None,
+        });
+        parts.push(Part {
+            name: PartName::StepNumeral,
+            bounds: numeral,
+            text: Some(step_run),
+        });
+        content_x += crate::STEP_BADGE_PX + STEP_BADGE_GAP_PX;
+    }
     let centered = |metrics: &TextMetrics, y: f32| BoxRect {
         x: content_x + (content_width - metrics.width_px) / 2.0,
         y,
         width: metrics.width_px,
         height: metrics.height_px,
     };
-    let mut parts = vec![
-        Part {
-            name: PartName::Tag,
-            bounds: tag,
-            text: None,
-        },
-        Part {
-            name: PartName::TagLabel,
-            bounds: centered(&label_run.metrics, content_y),
-            text: None,
-        },
-    ];
+    let Some(label_run) = label_run else {
+        return Ok(parts);
+    };
     let sub_y = content_y + label_run.metrics.height_px + TAG_SUB_GAP_PX;
-    if let Some(label_part) = parts.get_mut(1) {
-        label_part.text = Some(label_run);
-    }
+    parts.push(Part {
+        name: PartName::TagLabel,
+        bounds: centered(&label_run.metrics, content_y),
+        text: Some(label_run),
+    });
     if let Some(sub_run) = sub_run {
         parts.push(Part {
             name: PartName::TagSub,

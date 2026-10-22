@@ -735,6 +735,16 @@ fn every_sheet_rule_is_listed_in_table_order() {
             "part-node-twice",
             "part-field-from-node",
             "part-name-missing",
+            "planned-not-solid",
+            "line-into-planned",
+            "compartments-without-store",
+            "outline-person-with-icon",
+            "rail-not-vertical",
+            "rail-outside-row",
+            "rail-with-targets",
+            "step-out-of-range",
+            "link-step-duplicate",
+            "valve-without-arrow",
         ]
     );
 }
@@ -842,7 +852,7 @@ fn every_section_14_vet_rule_has_a_cue_case() {
             non_empty,
             others.len()
         ),
-        (9, 11, 6, 32),
+        (17, 12, 6, 42),
         "surfaces, lists, non-empty lists and other rules examined"
     );
     assert_eq!(matched, expected.len());
@@ -1035,7 +1045,7 @@ fn marks_on_a_link_without_a_label_are_refused() {
         one(
             "/links/0/marks",
             "link-marks-without-tag",
-            "a link's marks sit in its tag; give it a label"
+            "a link's marks sit in its tag or under its valve; give it a label"
         )
     );
 }
@@ -1226,4 +1236,329 @@ fn a_step_line_is_a_string_or_a_marked_line_and_round_trips() {
     let mut wrong = document.clone();
     wrong["body"][0]["children"][1]["children"][0]["lines"][1]["mark"] = json!([]);
     assert!(serde_json::from_value::<Page>(wrong).is_err());
+}
+
+/// The smallest sheet with the assembly surfaces: a store with a compartment, a rail in a
+/// Row, an assembly Box holding a stack, a planned Item, and links with a step badge, a
+/// valve and a planned line.
+fn assembly_sheet_value() -> Value {
+    let mut document = actor_sheet_value();
+    document["sheet"]["marks"] = json!({ "step": "a request step" });
+    document["body"][0]["children"][0]["children"] = json!([
+        { "tag": "Item", "id": "api", "kind": "product", "title": "API", "actor": "crew",
+          "outline": "store", "compartments": ["Jobs", { "text": "Plans" }] },
+        { "tag": "Pipe", "id": "queue", "dir": "v", "form": "rail", "line": "solid",
+          "actor": "crew", "label": "Queue" },
+        { "tag": "Box", "id": "path", "kind": "assembly", "label": "Path", "actor": "ops",
+          "children": [{ "tag": "Item", "id": "worker", "kind": "product", "title": "Worker",
+                         "outline": "stack", "actor": "ops" }] },
+        { "tag": "Item", "id": "later", "kind": "product", "title": "Later", "actor": "crew",
+          "planned": true }
+    ]);
+    document["legend"] = json!([
+        { "line": "solid", "by_actor": true, "text": "work moves" },
+        { "line": "solid", "by_actor": true, "form": "rail", "text": "the queue" },
+        { "line": "solid", "by_actor": true, "planned": true, "text": "not built" }
+    ]);
+    document["links"] = json!([
+        { "from": "api", "to": "queue", "line": "solid", "step": 1, "valve": true },
+        { "from": "queue", "to": "worker", "line": "solid", "step": 2, "label": "deliver" },
+        { "from": "api", "to": "later", "line": "solid", "planned": true }
+    ]);
+    document
+}
+
+const ROW: &str = "/body/0/children/0/children";
+
+#[test]
+fn the_smallest_assembly_sheet_vets_clean() {
+    assert_eq!(violations(assembly_sheet_value()), Vec::new());
+}
+
+#[test]
+fn a_planned_line_that_is_not_solid_is_refused() {
+    let mut document = assembly_sheet_value();
+    document["links"][2]["line"] = json!("dash");
+    document["legend"][2]["line"] = json!("dash");
+    let found = violations(document);
+    assert!(found.contains(&(
+        "/links/2/planned".to_string(),
+        "planned-not-solid",
+        "a planned line is a solid line drawn hollow; set line solid".to_string()
+    )));
+    assert!(found.contains(&(
+        "/legend/2/planned".to_string(),
+        "planned-not-solid",
+        "a planned line is a solid line drawn hollow; set line solid".to_string()
+    )));
+}
+
+#[test]
+fn a_built_line_into_planned_work_is_refused() {
+    let mut document = assembly_sheet_value();
+    document["links"][2]
+        .as_object_mut()
+        .unwrap()
+        .remove("planned");
+    document["legend"][2]
+        .as_object_mut()
+        .unwrap()
+        .remove("planned");
+    document["legend"].as_array_mut().unwrap().pop();
+    assert_eq!(
+        violations(document.clone()),
+        one(
+            "/links/2/to",
+            "line-into-planned",
+            "\"later\" is planned, so a line to it is planned too; set planned"
+        )
+    );
+    document["links"][2]["line"] = json!("dash");
+    document["legend"]
+        .as_array_mut()
+        .unwrap()
+        .push(json!({ "line": "dash", "by_actor": true, "text": "reads" }));
+    assert_eq!(
+        violations(document),
+        one(
+            "/links/2/to",
+            "line-into-planned",
+            "\"later\" is planned, and a dash line cannot be planned; draw it solid and planned, or remove it"
+        )
+    );
+}
+
+#[test]
+fn compartments_outside_a_store_or_above_six_are_refused() {
+    let mut document = assembly_sheet_value();
+    document["body"][0]["children"][0]["children"][0]["outline"] = json!("card");
+    assert_eq!(
+        violations(document),
+        one(
+            &format!("{ROW}/0/compartments"),
+            "compartments-without-store",
+            "compartments are drawn in a store"
+        )
+    );
+    let mut long = assembly_sheet_value();
+    long["body"][0]["children"][0]["children"][0]["compartments"] =
+        json!(["a", "b", "c", "d", "e", "f", "g"]);
+    assert_eq!(
+        violations(long),
+        one(
+            &format!("{ROW}/0/compartments"),
+            "list-too-long",
+            "7 compartments, above 6"
+        )
+    );
+}
+
+#[test]
+fn a_person_outline_with_an_icon_is_refused() {
+    let mut document = assembly_sheet_value();
+    document["body"][0]["children"][0]["children"][3]["outline"] = json!("person");
+    document["body"][0]["children"][0]["children"][3]["icon"] = json!("devops");
+    assert_eq!(
+        violations(document),
+        one(
+            &format!("{ROW}/3/icon"),
+            "outline-person-with-icon",
+            "a person outline draws no icon"
+        )
+    );
+}
+
+#[test]
+fn a_rail_stands_vertical_in_a_row_with_no_targets() {
+    let mut flat = assembly_sheet_value();
+    flat["body"][0]["children"][0]["children"][1]["dir"] = json!("h");
+    assert_eq!(
+        violations(flat),
+        one(
+            &format!("{ROW}/1/dir"),
+            "rail-not-vertical",
+            "a rail stands vertical"
+        )
+    );
+    let mut targeted = assembly_sheet_value();
+    targeted["body"][0]["children"][0]["children"][1]["to"] = json!("worker");
+    assert_eq!(
+        violations(targeted),
+        one(
+            &format!("{ROW}/1/to"),
+            "rail-with-targets",
+            "a rail is attached by links, not targets"
+        )
+    );
+    let mut in_col = assembly_sheet_value();
+    let rail = in_col["body"][0]["children"][0]["children"][1].clone();
+    in_col["body"][0]["children"][0]["children"][1] = json!({ "tag": "Col", "children": [rail] });
+    assert_eq!(
+        violations(in_col),
+        one(
+            &format!("{ROW}/1/children/0"),
+            "rail-outside-row",
+            "a rail is a column of a Row"
+        )
+    );
+}
+
+#[test]
+fn a_step_badge_out_of_range_or_used_twice_is_refused() {
+    let mut out_of_range = assembly_sheet_value();
+    out_of_range["links"][0]["step"] = json!(65);
+    assert_eq!(
+        violations(out_of_range),
+        one(
+            "/links/0/step",
+            "step-out-of-range",
+            "step 65 is outside 1 to 64"
+        )
+    );
+    let mut twice = assembly_sheet_value();
+    twice["links"][1]["step"] = json!(1);
+    assert_eq!(
+        violations(twice),
+        one(
+            "/links/1/step",
+            "link-step-duplicate",
+            "step 1 is already used by /links/0"
+        )
+    );
+    let mut pipe_first = assembly_sheet_value();
+    pipe_first["body"][0]["children"][0]["children"][1]["step"] = json!(2);
+    assert_eq!(
+        violations(pipe_first),
+        one(
+            "/links/1/step",
+            "link-step-duplicate",
+            &format!("step 2 is already used by {ROW}/1")
+        )
+    );
+}
+
+#[test]
+fn a_valve_without_an_arrowhead_is_refused() {
+    let mut document = assembly_sheet_value();
+    document["links"][0]["arrow"] = json!("none");
+    assert_eq!(
+        violations(document),
+        one(
+            "/links/0/valve",
+            "valve-without-arrow",
+            "a valve sits before an arrowhead"
+        )
+    );
+}
+
+#[test]
+fn marks_under_a_valve_or_with_a_step_need_no_label() {
+    let mut document = assembly_sheet_value();
+    document["sheet"]["attention"]["items"][0]["actor"] = json!("crew");
+    document["links"][0]["marks"] = json!([{ "attention": "first" }]);
+    assert_eq!(violations(document.clone()), Vec::new());
+    document["links"][0]
+        .as_object_mut()
+        .unwrap()
+        .remove("valve");
+    assert_eq!(violations(document.clone()), Vec::new());
+    document["links"][0].as_object_mut().unwrap().remove("step");
+    assert_eq!(
+        violations(document),
+        one(
+            "/links/0/marks",
+            "link-marks-without-tag",
+            "a link's marks sit in its tag or under its valve; give it a label"
+        )
+    );
+}
+
+#[test]
+fn a_step_legend_text_without_a_step_badge_is_refused() {
+    let mut document = assembly_sheet_value();
+    for link in document["links"].as_array_mut().unwrap() {
+        link.as_object_mut().unwrap().remove("step");
+    }
+    document["links"][0]["label"] = json!("send");
+    assert_eq!(
+        violations(document),
+        one(
+            "/sheet/marks/step",
+            "mark-legend-unused",
+            "no step key on this sheet; remove the text"
+        )
+    );
+}
+
+#[test]
+fn every_assembly_surface_off_a_sheet_needs_a_sheet() {
+    let mut document = assembly_sheet_value();
+    document.as_object_mut().unwrap().remove("sheet");
+    let found: Vec<(String, &'static str)> = violations(document)
+        .into_iter()
+        .filter(|(_, rule, _)| *rule == "needs-sheet")
+        .map(|(pointer, rule, _)| (pointer, rule))
+        .collect();
+    for pointer in [
+        format!("{ROW}/0/outline"),
+        format!("{ROW}/0/compartments"),
+        format!("{ROW}/1/form"),
+        format!("{ROW}/2/kind"),
+        format!("{ROW}/3/planned"),
+        "/links/0/step".to_string(),
+        "/links/0/valve".to_string(),
+        "/links/2/planned".to_string(),
+        "/legend/1/form".to_string(),
+        "/legend/2/planned".to_string(),
+    ] {
+        assert!(
+            found.contains(&(pointer.clone(), "needs-sheet")),
+            "{pointer} in {found:?}"
+        );
+    }
+}
+
+/// The sheet look is read from the grammar's kind, whatever its name: a kind of another
+/// name with a dash-dot border needs a sheet as an assembly does.
+#[test]
+fn a_dash_dot_kind_of_any_name_needs_a_sheet() {
+    let mut grammar: Value =
+        serde_json::from_str(stencil_model::grammar::builtin_grammar_json("plain").unwrap())
+            .unwrap();
+    let containers = grammar["containers"].as_array_mut().unwrap();
+    let mut crew = containers
+        .iter()
+        .find(|kind| kind["name"] == "assembly")
+        .unwrap()
+        .clone();
+    crew["name"] = json!("crew-cell");
+    crew["label"] = json!("plain");
+    containers.push(crew);
+    for item in grammar["items"].as_array_mut().unwrap() {
+        item["parents"]
+            .as_array_mut()
+            .unwrap()
+            .push(json!("crew-cell"));
+    }
+    let grammar =
+        stencil_model::grammar::parse_grammar(&grammar.to_string(), "custom.json").unwrap();
+    let page: Page = serde_json::from_value(json!({
+        "title": "Title",
+        "kicker": "Kicker",
+        "lede": "Lede",
+        "body": [{ "tag": "Box", "kind": "crew-cell", "label": "Cell",
+                   "children": [{ "tag": "Item", "kind": "service", "title": "Worker" }] }],
+        "legend": []
+    }))
+    .unwrap();
+    let found: Vec<(String, &'static str)> = validate_page(&page, &grammar)
+        .into_iter()
+        .map(|violation| {
+            (
+                violation.pointer.as_str().to_string(),
+                violation.rule.as_str(),
+            )
+        })
+        .collect();
+    assert_eq!(found, [("/body/0/kind".to_string(), "needs-sheet")]);
 }

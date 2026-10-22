@@ -151,6 +151,10 @@ pub fn marks_clear(page: &Page, geometry: &PageGeometry) -> CheckReport {
         }
     }
 
+    let (line_marks, line_defects) = crate::sheet_checks::line_mark_defects(page, geometry);
+    examined += line_marks;
+    defects.extend(line_defects);
+
     if examined == 0 {
         return CheckReport::not_applicable(CheckName::MarksClear, NO_MARKS);
     }

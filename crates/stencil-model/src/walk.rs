@@ -244,6 +244,9 @@ pub(crate) fn push_sheet_text_fields<'a>(page: &'a Page, fields: &mut Vec<TextFi
             push(marks.child(kind.as_str()), text);
         }
     }
+    if let Some(step) = &sheet.marks.step {
+        push(marks.child("step"), step);
+    }
 }
 
 /// Each actor's name and text, in list order, one actor past the maximum.
@@ -327,6 +330,19 @@ pub(crate) fn push_node_text_fields<'a>(entry: &NodeEntry<'a>, fields: &mut Vec<
                 fields.push(TextField {
                     pointer: facts_pointer.index(index).child("text"),
                     text: &fact.text,
+                });
+            }
+            let compartments_pointer = entry.pointer.child("compartments");
+            let list = SheetList::Compartments;
+            for (index, compartment) in item.compartments.iter().enumerate().take(list.max() + 1) {
+                let pointer = compartments_pointer.index(index);
+                fields.push(TextField {
+                    pointer: if compartment.is_marked() {
+                        pointer.child("text")
+                    } else {
+                        pointer
+                    },
+                    text: compartment.text(),
                 });
             }
         }

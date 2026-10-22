@@ -1,6 +1,7 @@
 //! A design sheet's title block, the legend strip inside it, and Views (section 14.4 rules
 //! 1 to 10). The frame and its grid references are added after layout by `sheet_frame`.
 
+use crate::marks::STEP_SAMPLE_TEXT;
 use stencil_model::pointer::NodePointer;
 use stencil_model::text::TextStyleName;
 use stencil_model::{
@@ -643,7 +644,8 @@ impl Builder<'_> {
         (block, block_index): (NodeId, usize),
     ) -> Result<(), LayoutError> {
         let kinds = crate::marks::sampled_kinds(self.page);
-        if legend.is_empty() && actors.is_empty() && kinds.is_empty() {
+        let draws_steps = crate::marks::draws_step_badges(self.page);
+        if legend.is_empty() && actors.is_empty() && kinds.is_empty() && !draws_steps {
             return Ok(());
         }
         let pointer = NodePointer::root().child("legend");
@@ -715,7 +717,7 @@ impl Builder<'_> {
                 self.add_legend_entry(entry, pointer.index(index), group, legend_index)?;
             }
         }
-        if !kinds.is_empty() {
+        if !kinds.is_empty() || draws_steps {
             let group = self.strip_group(groups, &pointer)?;
             parts.push(self.sheet_text(
                 group,
@@ -758,6 +760,30 @@ impl Builder<'_> {
                     ),
                     None => (kind.default_legend().to_string(), pointer.clone()),
                 };
+                parts.push(self.sheet_text(
+                    sample,
+                    PartName::MarkSampleText,
+                    &text,
+                    TextStyleName::LegendText,
+                    0.0,
+                    source,
+                )?);
+            }
+            if draws_steps {
+                // The step badge sample reads 1, as every other sample does.
+                let sample = self.container(flex_row(AlignItems::CENTER), group, &pointer)?;
+                parts.extend(self.add_step_badge(sample, 1, &pointer)?);
+                let (text, source) =
+                    match legend_texts.as_ref().and_then(|marks| marks.step.clone()) {
+                        Some(text) => (
+                            text,
+                            NodePointer::root()
+                                .child("sheet")
+                                .child("marks")
+                                .child("step"),
+                        ),
+                        None => (STEP_SAMPLE_TEXT.to_string(), pointer.clone()),
+                    };
                 parts.push(self.sheet_text(
                     sample,
                     PartName::MarkSampleText,

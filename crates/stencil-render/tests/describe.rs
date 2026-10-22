@@ -420,7 +420,11 @@ fn the_legend_key_is_the_measured_kind_for_tube_entries() {
             let index: usize = pointer.strip_prefix("/legend/").unwrap().parse().unwrap();
             let entry = &page.legend[index];
             let key = entry_key(entry);
-            let slot_key = key_cell.strip_suffix("-band").unwrap_or(&key_cell);
+            let unplanned = key_cell.strip_suffix("-planned").unwrap_or(&key_cell);
+            let slot_key = unplanned
+                .strip_suffix("-band")
+                .or_else(|| unplanned.strip_suffix("-rail"))
+                .unwrap_or(unplanned);
             // A by-actor Key names a line and no slot; each use it counts is measured with
             // its own actor's slot.
             if key.colour == KeyColour::ByActor {
@@ -446,13 +450,15 @@ fn the_legend_key_is_the_measured_kind_for_tube_entries() {
                 let used_key = match *reference {
                     NodeRef::Node(Node::Pipe(pipe)) => {
                         use_key(pipe.line, pipe.tint, pipe.form, actors.pipe_actor(pipe))
+                            .with_planned(pipe.planned)
                     }
                     NodeRef::TeeArm(pipe) => use_key(
                         pipe.line,
                         pipe.tint,
                         pipe.form,
                         tee.and_then(|tee| actors.arm_actor(tee, pipe)),
-                    ),
+                    )
+                    .with_planned(pipe.planned),
                     NodeRef::Node(Node::Tee(tee_node)) => {
                         tee = Some(tee_node);
                         use_key(
@@ -480,7 +486,9 @@ fn the_legend_key_is_the_measured_kind_for_tube_entries() {
                     link.tint,
                     PipeForm::Tube,
                     actors.link_actor(link),
-                ) == key
+                )
+                .with_planned(link.planned)
+                    == key
                 {
                     let measured = match key.colour {
                         KeyColour::ByActor => line_key(link.line, route.tint),
@@ -836,7 +844,8 @@ fn every_entry_part_is_drawn_once_per_entry() {
             | stencil_model::SheetList::Actors
             | stencil_model::SheetList::Steps
             | stencil_model::SheetList::StepLines
-            | stencil_model::SheetList::Marks => {
+            | stencil_model::SheetList::Marks
+            | stencil_model::SheetList::Compartments => {
                 panic!("{} keys no entry parts", list.name())
             }
         };

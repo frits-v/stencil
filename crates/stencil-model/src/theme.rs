@@ -578,9 +578,10 @@ impl Theme {
 /// The label the legend draws for a key (section 14.5 rule 7): `drawn_legend_label` for a
 /// slot key; for a by-actor key `<Pattern>, actor colour` under `tint_cue: color` and
 /// `<Pattern> line, by actor` under `line`, where the pattern is `Solid` for a solid line
-/// and the dash role's word for a dash line.
+/// and the dash role's word for a dash line; then `, rail` and `, planned` as the canonical
+/// label adds them.
 pub fn drawn_legend_entry_label(theme: &Theme, key: &crate::checks::LegendKey) -> String {
-    match key.colour {
+    let base = match key.colour {
         crate::checks::KeyColour::Slot(tint) => drawn_legend_label(theme, key.line, tint),
         crate::checks::KeyColour::ByActor => {
             let pattern = match key.line {
@@ -592,7 +593,12 @@ pub fn drawn_legend_entry_label(theme: &Theme, key: &crate::checks::LegendKey) -
                 TintCue::Line => format!("{pattern} line, by actor"),
             }
         }
-    }
+    };
+    format!(
+        "{}{}",
+        crate::document::planned_label(&base, key.planned),
+        crate::document::legend_label_suffix(key.form)
+    )
 }
 
 /// The legend label the renderer draws for a line (rule 9). Under `tint_cue: color` it

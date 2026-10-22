@@ -89,6 +89,9 @@ pub enum BorderPattern {
     Solid,
     Dashed,
     Dotted,
+    /// A long dash and a dot: an assembly outline on a design sheet.
+    #[serde(rename = "dash-dot")]
+    DashDot,
     None,
 }
 
@@ -109,6 +112,8 @@ pub enum LabelStyle {
     Accent,
     /// The gcp bar label, frame kinds only.
     Bar,
+    /// A tab straddling the top border, on a design sheet: an assembly's name.
+    Tab,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
@@ -720,6 +725,7 @@ fn label_name(label: LabelStyle) -> &'static str {
         LabelStyle::Plain => "plain",
         LabelStyle::Accent => "accent",
         LabelStyle::Bar => "bar",
+        LabelStyle::Tab => "tab",
     }
 }
 
@@ -728,6 +734,7 @@ fn pattern_name(pattern: BorderPattern) -> &'static str {
         BorderPattern::Solid => "solid",
         BorderPattern::Dashed => "dashed",
         BorderPattern::Dotted => "dotted",
+        BorderPattern::DashDot => "dash-dot",
         BorderPattern::None => "none",
     }
 }

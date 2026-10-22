@@ -1,10 +1,12 @@
 //! Builds the taffy tree for a vetted page (sections 2.2 to 2.8) and records, per geometry
 //! node, the taffy nodes its bounds, content box and parts are read from.
 
+mod assembly_node;
 mod marks_node;
 mod phases_node;
 mod sheet;
 
+pub use assembly_node::{STEP_BADGE_PX, STEP_BADGE_RADIUS_PX, STORE_LID_RY_PX, compartment_rows};
 pub use sheet::SHEET_BLOCK_BORDER_PX;
 
 use stencil_model::grammar::{LabelStyle, Role};
@@ -88,6 +90,8 @@ pub(crate) struct NodeRecord {
     pub shape: Option<Shape>,
     /// How a Pipe is drawn under iso; None for every other tag.
     pub pipe_form: Option<PipeForm>,
+    /// The flat outline of an outlined Item; None for every other node.
+    pub outline: Option<stencil_model::Outline>,
     pub parent: Option<usize>,
     pub taffy_node: NodeId,
     /// The taffy node whose content box children must stay inside.
@@ -104,6 +108,9 @@ pub(crate) struct ArrowEnds {
     pub end: bool,
     pub horizontal: bool,
 }
+
+/// The height of a rail entry's upright sample in the legend strip.
+const RAIL_SWATCH_HEIGHT_PX: f32 = 14.0;
 
 /// Box sizes of the section 11.3 blocks, in px.
 const BLOCK_BORDER_PX: f32 = 1.25;
@@ -355,6 +362,8 @@ pub fn container_label_style(label: LabelStyle) -> TextStyleName {
         LabelStyle::Bar => TextStyleName::GcpBar,
         LabelStyle::Accent => TextStyleName::PerimeterLabel,
         LabelStyle::Plain => TextStyleName::ZoneLabel,
+        // A tab is drawn on a design sheet only, whose labels are all small capitals.
+        LabelStyle::Tab => TextStyleName::SheetLabel,
     }
 }
 
@@ -524,6 +533,7 @@ impl Builder<'_> {
             container: None,
             shape: None,
             pipe_form: None,
+            outline: None,
             parent,
             taffy_node,
             content_node: taffy_node,
@@ -807,9 +817,14 @@ impl Builder<'_> {
             ..flex_row(AlignItems::CENTER)
         };
         let entry_node = self.container(style, legend_node, &pointer)?;
+        // A rail's sample stands upright, a short piece of its bar.
+        let swatch_size = match entry.form {
+            PipeForm::Rail => fixed_size(crate::RAIL_BAR_PX, RAIL_SWATCH_HEIGHT_PX),
+            PipeForm::Tube | PipeForm::Band => fixed_size(26.0, 2.0),
+        };
         let swatch = self.plain_leaf(
             Style {
-                size: fixed_size(26.0, 2.0),
+                size: swatch_size,
                 ..base_style()
             },
             entry_node,
@@ -819,7 +834,7 @@ impl Builder<'_> {
             base_style(),
             Some(entry_node),
             TextSpec {
-                text: canonical_legend_label(entry),
+                text: &canonical_legend_label(entry),
                 style_name: TextStyleName::LegendLabel,
                 line: None,
                 align: TextAlign::Start,
@@ -1184,15 +1199,23 @@ impl Builder<'_> {
             }]));
         };
         let is_frame = kind.role == Role::Frame;
-        let border = kind.border.width;
+        // A tab Box draws its outline as a part under its tab, so its node has no border
+        // and its children start under the tab's drop (section 14.4 rule 26).
+        let is_tab = kind.label == LabelStyle::Tab && !self.iso;
+        let border = if is_tab { 0.0 } else { kind.border.width };
         let padding = self.space(kind.padding);
+        let padding_top = if is_tab {
+            Self::tab_padding_top(padding)
+        } else {
+            padding
+        };
         let gap = if is_frame { 0.0 } else { self.space(8.0) };
         // A raised child covers the strip of floor its height spans behind and left of it
         // on screen, so under iso the back and left padding grow by the block height.
         let raise = if self.iso { ISO_BLOCK_HEIGHT_PX } else { 0.0 };
         let mut style = Style {
             border: sides(border, border, border, border),
-            padding: sides(padding + raise, padding, padding, padding + raise),
+            padding: sides(padding_top + raise, padding, padding, padding + raise),
             gap: taffy::Size {
                 width: length(0.0),
                 height: length(gap),
@@ -1301,6 +1324,9 @@ impl Builder<'_> {
             ];
             record.parts.extend(glyphs);
             body
+        } else if is_tab {
+            record.parts = self.add_tab((zone_node, padding), &box_node.label, &marks, &pointer)?;
+            zone_node
         } else {
             let label_row =
                 self.marked_text_row(zone_node, &marks, MarkPlace::Trailing, &pointer)?;
@@ -1358,6 +1384,15 @@ impl Builder<'_> {
         parent_container: NodeId,
         placement: Placement,
     ) -> Result<(), LayoutError> {
+        // A sheet is flat only, so an outline other than a card is never laid out under iso.
+        if !self.iso && item.outline != stencil_model::Outline::Card {
+            return self.add_outlined_item(
+                item,
+                pointer,
+                (parent_index, parent_container),
+                placement,
+            );
+        }
         let marks = std::mem::take(&mut self.carrier_marks);
         let shape = item_shape(self.grammar.item(&item.kind), item);
         // Under iso an item whose shape is not a card is a solid rising from a footprint
@@ -1639,6 +1674,9 @@ impl Builder<'_> {
         parent_container: NodeId,
         placement: Placement,
     ) -> Result<(), LayoutError> {
+        if tee.is_none() && pipe.form == PipeForm::Rail {
+            return self.add_rail(pipe, pointer, parent_index, parent_container, placement);
+        }
         let marks = std::mem::take(&mut self.carrier_marks);
         let horizontal = pipe.dir == PipeDir::Horizontal;
         let mut style = if horizontal {
@@ -1750,8 +1788,10 @@ impl Builder<'_> {
             },
         };
         let tag = self.container(tag_style, pipe_node, &pointer)?;
-        // A tag with marks is a row: the label and sub in a column, then the glyphs.
-        let tag_text = if marks.is_empty() {
+        let mut badge_parts = Vec::new();
+        // A tag with marks or a step badge is a row: the badge, the label and sub in a
+        // column, then the glyphs.
+        let tag_text = if marks.is_empty() && pipe.step.is_none() {
             tag
         } else {
             if let Some(tag_style) = self.tree.style(tag).ok().cloned() {
@@ -1762,6 +1802,9 @@ impl Builder<'_> {
                 self.tree
                     .set_style(tag, row_style)
                     .map_err(Self::taffy_error(&pointer))?;
+            }
+            if let Some(step) = pipe.step {
+                badge_parts.extend(self.add_step_badge(tag, step, &pointer)?);
             }
             self.container(flex_column(AlignItems::CENTER), tag, &pointer)?
         };
@@ -1793,12 +1836,13 @@ impl Builder<'_> {
                 taffy_node: tag,
                 text_leaf: None,
             },
-            PartRecord {
-                name: PartName::TagLabel,
-                taffy_node: label,
-                text_leaf: Some(label_leaf),
-            },
         ];
+        parts.extend(badge_parts);
+        parts.push(PartRecord {
+            name: PartName::TagLabel,
+            taffy_node: label,
+            text_leaf: Some(label_leaf),
+        });
         if let Some(sub) = &pipe.sub {
             let sub_margin = match tag_axis {
                 Axis::X => margins(2.0, 0.0, 0.0, 0.0),

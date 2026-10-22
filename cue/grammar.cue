@@ -29,14 +29,15 @@ import (
 	// The slot a tintable kind takes when the Box sets none; absent leaves it untinted.
 	default_tint?: int & >=1 & <=8
 	border: {
-		pattern: "solid" | "dashed" | "dotted" | "none"
+		pattern: "solid" | "dashed" | "dotted" | "dash-dot" | "none"
 		// Layout reserves this width; 0 exactly when pattern is none.
 		width: number & >=0 & <=4
 	}
 	padding: number & >=0 & <=32
 	radius:  number & >=0 & <=16
-	// plain: zone_label; accent: perimeter_label; bar: gcp_bar, frame only.
-	label: "plain" | "accent" | "bar"
+	// plain: zone_label; accent: perimeter_label; bar: gcp_bar, frame only; tab: a
+	// tab straddling the top border, on a design sheet only.
+	label: "plain" | "accent" | "bar" | "tab"
 	// Container kinds a Box of this kind may sit in, or "page" for the top level.
 	parents: [...#KindName] & list.MinItems(1)
 }
@@ -101,6 +102,7 @@ import (
 			children: [...#KindedNode]
 			_tops: {for c in children {c._tops}}
 			_tintedWithoutActor: list.Concat([for c in children {c._tintedWithoutActor}])
+			_sheetLooks: list.Concat([for c in children {c._sheetLooks}])
 		}
 		if tag == "Box" {
 			kind:  or(_containerNames)
@@ -127,6 +129,12 @@ import (
 				[if actor == _|_ for c in #grammar.containers if c.name == kind && c.tintable && c.default_tint != _|_ {label}],
 				for c in children {c._tintedWithoutActor},
 			])
+			// A kind with a dash-dot border or a tab label draws its look on a
+			// design sheet only.
+			_sheetLooks: list.Concat([
+				[for c in #grammar.containers if c.name == kind && (c.border.pattern == "dash-dot" || c.label == "tab") {label}],
+				for c in children {c._sheetLooks},
+			])
 		}
 		if tag == "Item" {
 			kind: or(_itemNames)
@@ -137,12 +145,14 @@ import (
 		}
 		if !list.Contains(["Row", "Col", "Lanes", "View", "Box"], tag) {
 			_tintedWithoutActor: []
+			_sheetLooks: []
 		}
 		...
 	}
 
 	#KindedPage: #Page & {
 		grammar?: #grammar.name
+		sheet?:   _
 		body: [...#KindedNode]
 		actors?: [...]
 		if actors != _|_ if len(actors) > 0 {
@@ -154,6 +164,11 @@ import (
 			for n in body for k, _ in n._tops
 			let parents = list.FlattenN([for d in _kinds if d.name == k {d.parents}], 1)
 			if !list.Contains(parents, "page") {(k): "\(k)" & "cannot sit in page"}
+		}
+		if sheet == _|_ {
+			_needsSheet: {
+				for n in body for l in n._sheetLooks {"sheet-look": "sheet-look is drawn on a design sheet only" & "add sheet or remove it"}
+			}
 		}
 	}
 }

@@ -57,12 +57,21 @@
       ]
     },
     "BorderPattern": {
-      "type": "string",
-      "enum": [
-        "solid",
-        "dashed",
-        "dotted",
-        "none"
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "solid",
+            "dashed",
+            "dotted",
+            "none"
+          ]
+        },
+        {
+          "description": "A long dash and a dot: an assembly outline on a design sheet.",
+          "type": "string",
+          "const": "dash-dot"
+        }
       ]
     },
     "ContainerKind": {
@@ -297,6 +306,11 @@
           "description": "The gcp bar label, frame kinds only.",
           "type": "string",
           "const": "bar"
+        },
+        {
+          "description": "A tab straddling the top border, on a design sheet: an assembly's name.",
+          "type": "string",
+          "const": "tab"
         }
       ]
     },

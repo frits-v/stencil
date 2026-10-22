@@ -113,6 +113,8 @@ pub fn print_fit(
 const NO_LINKS: &str = "page has no links";
 /// Why pipes-land does not apply to a page without a Pipe or Tee arm.
 const NO_PIPES: &str = "page has no pipes";
+/// A page whose only pipes are rails (section 14.6 rule 4).
+const NO_GUTTER_PIPES: &str = "page has no gutter pipes";
 /// Why pipes-land does not apply when no pipe sits beside a Row or Col sibling.
 const NO_PIPE_NEIGHBORS: &str = "no pipe has a neighbor";
 
@@ -441,6 +443,13 @@ pub fn links_routed(page: &Page, geometry: &PageGeometry) -> CheckReport {
                 });
             }
         }
+        if page.sheet.is_some() {
+            defects.extend(crate::sheet_checks::sheet_route_defects(
+                geometry,
+                route,
+                &geometry.links,
+            ));
+        }
     }
     CheckReport {
         check: CheckName::LinksRouted,
@@ -530,16 +539,7 @@ pub fn links_avoid_boxes(geometry: &PageGeometry) -> CheckReport {
             }
             // A container draws no box of its own: a tag inside a gutter column lies on
             // open floor unless it meets one of the column's children.
-            if matches!(
-                node.tag,
-                NodeTag::Page
-                    | NodeTag::Body
-                    | NodeTag::Legend
-                    | NodeTag::Row
-                    | NodeTag::Col
-                    | NodeTag::Lanes
-                    | NodeTag::View
-            ) {
+            if node.tag.is_container_for_tags() {
                 continue;
             }
             examined += 1;
@@ -747,8 +747,13 @@ fn run_axis_defect(
 /// without pipes, or when no pipe has a neighbor or a target.
 pub fn pipes_land(page: &Page, geometry: &PageGeometry) -> CheckReport {
     let mut pipes: Vec<(NodePointer, PipeDir)> = Vec::new();
+    let mut rails = 0_usize;
     for entry in body_nodes(page) {
         match entry.node {
+            // A rail is a bus links attach to, not a gutter pipe that lands on neighbours.
+            NodeRef::Node(Node::Pipe(pipe)) if pipe.form == stencil_model::PipeForm::Rail => {
+                rails += 1;
+            }
             NodeRef::Node(Node::Pipe(pipe)) => pipes.push((entry.pointer, pipe.dir)),
             NodeRef::TeeArm(arm) => pipes.push((entry.pointer, arm.dir)),
             NodeRef::Node(
@@ -772,7 +777,8 @@ pub fn pipes_land(page: &Page, geometry: &PageGeometry) -> CheckReport {
         }
     }
     if pipes.is_empty() {
-        return CheckReport::not_applicable(CheckName::PipesLand, NO_PIPES);
+        let reason = if rails > 0 { NO_GUTTER_PIPES } else { NO_PIPES };
+        return CheckReport::not_applicable(CheckName::PipesLand, reason);
     }
 
     let index_by_pointer: HashMap<&str, usize> = geometry
@@ -1156,7 +1162,7 @@ fn pipe_lands_on(tag: NodeTag) -> bool {
 }
 
 /// Flags every strict ancestor of either endpoint.
-fn endpoint_ancestors(geometry: &PageGeometry, from: usize, to: usize) -> Vec<bool> {
+pub(crate) fn endpoint_ancestors(geometry: &PageGeometry, from: usize, to: usize) -> Vec<bool> {
     let mut ancestors = vec![false; geometry.nodes.len()];
     for endpoint in [from, to] {
         let mut current = geometry.nodes.get(endpoint).and_then(|node| node.parent);
