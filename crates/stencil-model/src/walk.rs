@@ -121,7 +121,8 @@ fn push_children_reversed<'a>(entry: &NodeEntry<'a>, pending: &mut Vec<NodeEntry
             | Node::Frame(_)
             | Node::Step(_)
             | Node::PartsList(_)
-            | Node::GeneralNotes(_),
+            | Node::GeneralNotes(_)
+            | Node::Ladder(_),
         )
         | NodeRef::TeeArm(_) => {}
     }
@@ -465,6 +466,30 @@ pub(crate) fn push_node_text_fields<'a>(entry: &NodeEntry<'a>, fields: &mut Vec<
                 fields.push(TextField {
                     pointer: entry.pointer.child("foot"),
                     text: foot,
+                });
+            }
+        }
+        NodeRef::Node(Node::Ladder(ladder)) => {
+            push("title", &ladder.title);
+            if let Some(note) = &ladder.note {
+                push("note", note);
+            }
+            let rungs = SheetList::Rungs;
+            for (index, rung) in ladder.rungs.iter().enumerate().take(rungs.max() + 1) {
+                let rung_pointer = rungs.pointer_in(&entry.pointer).index(index);
+                fields.push(TextField {
+                    pointer: rung_pointer.child("title"),
+                    text: &rung.title,
+                });
+                if let Some(who) = &rung.who {
+                    fields.push(TextField {
+                        pointer: rung_pointer.child("who"),
+                        text: who,
+                    });
+                }
+                fields.push(TextField {
+                    pointer: rung_pointer.child("text"),
+                    text: &rung.text,
                 });
             }
         }

@@ -5,7 +5,7 @@
 use stencil_model::checks::{CheckName, CheckReport, Defect};
 use stencil_model::marks::{CarrierMark, MarkPlace, PageMarks};
 use stencil_model::pointer::NodePointer;
-use stencil_model::{LINKS_MAX, MarkKind, Page, SheetList, body_nodes};
+use stencil_model::{LINKS_MAX, MarkKind, Node, NodeRef, Page, SheetList, body_nodes};
 
 use crate::marks::glyph_kind;
 use crate::{BoxRect, GEOMETRY_EPSILON_PX, NodeTag, PageGeometry, Part, PartName};
@@ -42,6 +42,23 @@ pub fn marks_clear(page: &Page, geometry: &PageGeometry) -> CheckReport {
         }
     }
     for entry in body_nodes(page) {
+        if let NodeRef::Node(Node::Ladder(ladder)) = entry.node {
+            let rungs = SheetList::Rungs;
+            for index in 0..ladder.rungs.len().min(rungs.max() + 1) {
+                let marks = PageMarks::rung_marks(ladder, &entry.pointer, index);
+                let pointer = rungs.pointer_in(&entry.pointer).index(index);
+                if marks.is_empty() {
+                    continue;
+                }
+                if let Some(node) = geometry
+                    .nodes
+                    .iter()
+                    .position(|node| node.pointer == pointer)
+                {
+                    carriers.push((pointer, marks, node));
+                }
+            }
+        }
         let marks = page_marks.node_marks(&entry);
         if marks.is_empty() {
             continue;
@@ -154,6 +171,9 @@ pub fn marks_clear(page: &Page, geometry: &PageGeometry) -> CheckReport {
     let (line_marks, line_defects) = crate::sheet_checks::line_mark_defects(page, geometry);
     examined += line_marks;
     defects.extend(line_defects);
+    let (frames, frame_defects) = crate::detail_frames::detail_frame_defects(page, geometry);
+    examined += frames;
+    defects.extend(frame_defects);
 
     if examined == 0 {
         return CheckReport::not_applicable(CheckName::MarksClear, NO_MARKS);

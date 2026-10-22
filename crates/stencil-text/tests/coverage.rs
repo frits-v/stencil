@@ -99,7 +99,8 @@ fn drawn_texts(page: &Page) -> (Vec<DrawnText>, usize) {
                 | Node::Phases(_)
                 | Node::Step(_)
                 | Node::PartsList(_)
-                | Node::GeneralNotes(_),
+                | Node::GeneralNotes(_)
+                | Node::Ladder(_),
             ) => {}
         }
     }
@@ -164,17 +165,19 @@ fn the_built_fact_bullet_has_a_glyph_in_the_fact_face() {
     measurer.measure("\u{2022}", &style, None).unwrap();
 }
 
-/// Section 14.4 rule 4: a design sheet prefixes its kicker with `1 · ` in `sheet_kicker`,
-/// and its captions set authored middle dots in `sheet_label`; off a sheet the kicker face
-/// sets authored dots.
+/// Section 14.4 rules 4 and 20: a design sheet prefixes its kicker with `1 · ` in
+/// `sheet_kicker`, its captions set authored middle dots in `sheet_label`, and a ladder
+/// numbers each rung `1 · ` in the Bold `rung_title`; off a sheet the kicker face sets
+/// authored dots.
 #[test]
-fn the_middle_dot_has_a_glyph_in_the_kicker_and_sheet_label_faces() {
+fn the_middle_dot_has_a_glyph_in_the_kicker_sheet_label_and_rung_title_faces() {
     let mut measurer = CosmicTextMeasurer::new().unwrap();
     let mut examined = 0;
     for style_name in [
         TextStyleName::Kicker,
         TextStyleName::SheetKicker,
         TextStyleName::SheetLabel,
+        TextStyleName::RungTitle,
     ] {
         let style = style_name.text_style().style;
         let metrics = measurer.measure("1 \u{b7} premise", &style, None).unwrap();
@@ -182,7 +185,7 @@ fn the_middle_dot_has_a_glyph_in_the_kicker_and_sheet_label_faces() {
         measurer.measure("\u{b7}", &style, None).unwrap();
         examined += 1;
     }
-    assert_eq!(examined, 3);
+    assert_eq!(examined, 4);
 }
 
 /// Section 13.11: the measurer breaks after a dot by shaping U+200B ZERO WIDTH SPACE after

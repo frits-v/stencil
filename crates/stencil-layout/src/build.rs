@@ -2,9 +2,12 @@
 //! node, the taffy nodes its bounds, content box and parts are read from.
 
 mod assembly_node;
+mod ladder_node;
 mod marks_node;
 mod phases_node;
 mod sheet;
+
+pub(crate) use ladder_node::detail_letter;
 
 pub use assembly_node::{STEP_BADGE_PX, STEP_BADGE_RADIUS_PX, STORE_LID_RY_PX, compartment_rows};
 pub use sheet::SHEET_BLOCK_BORDER_PX;
@@ -27,6 +30,7 @@ use taffy::prelude::{
     fr, length, line,
 };
 
+use crate::ladder::LadderPlan;
 use crate::lanes::LanesPlan;
 use crate::phases::PhasesPlan;
 use crate::styles::{text_color, text_style_for};
@@ -144,6 +148,7 @@ pub(crate) fn build_page(
     grammar: &Grammar,
     lanes_plan: &LanesPlan,
     phases_plan: &PhasesPlan,
+    ladder_plan: &LadderPlan,
     widest_cell: &str,
 ) -> Result<BuiltPage, LayoutError> {
     let mut builder = Builder {
@@ -153,6 +158,7 @@ pub(crate) fn build_page(
         grammar,
         lanes_plan,
         phases_plan,
+        ladder_plan,
         actors: PageActors::of(page),
         page_marks: PageMarks::of(page),
         widest_cell: widest_cell.to_string(),
@@ -178,6 +184,7 @@ struct Builder<'page> {
     grammar: &'page Grammar,
     lanes_plan: &'page LanesPlan,
     phases_plan: &'page PhasesPlan,
+    ladder_plan: &'page LadderPlan,
     /// What each node and line acts for; empty on a page without actors.
     actors: PageActors<'page>,
     /// The keyed lists and every carrier's marks; empty off a sheet.
@@ -321,7 +328,8 @@ fn default_weight(container: NodeTag, child: &Node) -> u16 {
         | Node::Phases(_)
         | Node::Step(_)
         | Node::PartsList(_)
-        | Node::GeneralNotes(_) => 1,
+        | Node::GeneralNotes(_)
+        | Node::Ladder(_) => 1,
     };
     match container {
         NodeTag::Row => row_weight,
@@ -351,7 +359,9 @@ fn default_weight(container: NodeTag, child: &Node) -> u16 {
         | NodeTag::Phases
         | NodeTag::Step
         | NodeTag::PartsList
-        | NodeTag::GeneralNotes => 0,
+        | NodeTag::GeneralNotes
+        | NodeTag::Ladder
+        | NodeTag::Rung => 0,
     }
 }
 
@@ -1000,6 +1010,9 @@ impl Builder<'_> {
             }
             Node::GeneralNotes(notes) => {
                 self.add_general_notes(notes, pointer, parent_index, parent_container, placement)
+            }
+            Node::Ladder(ladder) => {
+                self.add_ladder(ladder, pointer, parent_index, parent_container, placement)
             }
         }
     }

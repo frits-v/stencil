@@ -38,7 +38,8 @@ pub fn text_color(name: TextStyleName, line: Option<Line>) -> &'static str {
         | TextStyleName::StepTitle
         | TextStyleName::ListTitle
         | TextStyleName::MarkNumeral
-        | TextStyleName::MarkNumeralSmall => TEXT_DARK,
+        | TextStyleName::MarkNumeralSmall
+        | TextStyleName::RungTitle => TEXT_DARK,
         TextStyleName::TagLabel => match line {
             Some(Line::Deny) => TEXT_DENY,
             Some(Line::Gray | Line::Solid | Line::Dash) | None => TEXT_DARK,
@@ -57,7 +58,8 @@ pub fn text_color(name: TextStyleName, line: Option<Line>) -> &'static str {
         | TextStyleName::SheetKicker
         | TextStyleName::ViewNote
         | TextStyleName::ViewNoteSmall
-        | TextStyleName::StepText => TEXT_MUTED,
+        | TextStyleName::StepText
+        | TextStyleName::RungWho => TEXT_MUTED,
     }
 }
 
@@ -98,7 +100,9 @@ pub(crate) fn text_style_for(name: TextStyleName, iso: bool) -> TextStyle {
         | TextStyleName::ListTitle
         | TextStyleName::MarkNumeral
         | TextStyleName::MarkNumeralSmall
-        | TextStyleName::FlagNumeral => return flat,
+        | TextStyleName::FlagNumeral
+        | TextStyleName::RungTitle
+        | TextStyleName::RungWho => return flat,
         TextStyleName::ZoneLabel | TextStyleName::PerimeterLabel => ISO_ZONE_LABEL_SCALE,
         TextStyleName::GcpBar => ISO_FRAME_LABEL_SCALE,
         TextStyleName::CardFunction
@@ -173,6 +177,8 @@ mod tests {
             ("mark_numeral", "#202124"),
             ("mark_numeral_small", "#202124"),
             ("flag_numeral", "#FFFFFF"),
+            ("rung_title", "#202124"),
+            ("rung_who", "#5F6368"),
         ];
         assert_eq!(TEXT_STYLES.len(), expected.len());
         for (named, (name, color)) in TEXT_STYLES.iter().zip(expected) {
@@ -185,7 +191,10 @@ mod tests {
     /// line height (section 14.4 rule 9).
     #[test]
     fn every_lead_run_pairs_styles_of_one_line_height() {
-        let pairs = [(TextStyleName::LeadBody, TextStyleName::BlockBody)];
+        let pairs = [
+            (TextStyleName::LeadBody, TextStyleName::BlockBody),
+            (TextStyleName::RungTitle, TextStyleName::RungWho),
+        ];
         for (lead, body) in pairs {
             let lead_style = lead.text_style().style;
             let body_style = body.text_style().style;
@@ -198,6 +207,6 @@ mod tests {
             );
             assert_ne!(lead_style.weight, body_style.weight, "{}", lead.as_str());
         }
-        assert_eq!(pairs.len(), 1, "examined {} lead-run pairs", pairs.len());
+        assert_eq!(pairs.len(), 2, "examined {} lead-run pairs", pairs.len());
     }
 }

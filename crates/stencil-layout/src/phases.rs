@@ -32,9 +32,10 @@ pub(crate) const STEP_PADDING_PX: (f32, f32, f32, f32) = (8.0, 9.0, 10.0, 8.0);
 pub(crate) const STACK_OFFSET_PX: (f32, f32) = (8.0, 6.0);
 /// The widest a single column grows for its own Steps; wider text wraps.
 const COLUMN_MAX_PX: f32 = 200.0;
-/// Between a lane's top and its Steps, and between its Steps and its bottom.
-const LANE_TOP_PX: f32 = 16.0;
-const LANE_BOTTOM_PX: f32 = 16.0;
+/// Between a lane's top and its Steps, and between its Steps and its bottom: a detail frame
+/// around a Step and its clearance from the lane's edge fit in it.
+const LANE_TOP_PX: f32 = 22.0;
+const LANE_BOTTOM_PX: f32 = 22.0;
 /// Between two Steps of one lane whose columns overlap; after a text-look Step, 4.
 const STACKING_GAP_PX: f32 = 20.0;
 const STACKING_GAP_AFTER_TEXT_PX: f32 = 4.0;

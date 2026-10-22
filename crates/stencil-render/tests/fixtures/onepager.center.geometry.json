@@ -1,6 +1,6 @@
 {
   "canvas": {
-    "height": 1927.2,
+    "height": 2219.2,
     "width": 1600
   },
   "links": [
@@ -12,19 +12,19 @@
       "points": [
         {
           "x": 350.33,
-          "y": 501.4
+          "y": 507.4
         },
         {
           "x": 376.33,
-          "y": 501.4
+          "y": 507.4
         },
         {
           "x": 376.33,
-          "y": 612.9
+          "y": 630.9
         },
         {
           "x": 398.33,
-          "y": 612.9
+          "y": 630.9
         }
       ],
       "status": "routed",
@@ -39,28 +39,28 @@
           "height": 30.6,
           "width": 44.25,
           "x": 507.83,
-          "y": 486.1
+          "y": 492.1
         },
         "tag_label": {
           "height": 15.6,
           "line_count": 1,
           "width": 25.25,
           "x": 517.33,
-          "y": 493.6
+          "y": 499.6
         }
       },
       "points": [
         {
           "x": 470.08,
-          "y": 572.4
+          "y": 590.4
         },
         {
           "x": 470.08,
-          "y": 501.4
+          "y": 507.4
         },
         {
           "x": 589.83,
-          "y": 501.4
+          "y": 507.4
         }
       ],
       "status": "routed",
@@ -68,7 +68,7 @@
         "height": 30.6,
         "width": 44.25,
         "x": 507.83,
-        "y": 486.1
+        "y": 492.1
       },
       "to": "/body/0/children/0/children/3"
     },
@@ -80,11 +80,11 @@
       "points": [
         {
           "x": 667.12,
-          "y": 540.4
+          "y": 546.4
         },
         {
           "x": 667.12,
-          "y": 595.9
+          "y": 613.9
         }
       ],
       "status": "routed",
@@ -99,28 +99,28 @@
           "height": 30.6,
           "width": 157.13,
           "x": 824.68,
-          "y": 597.6
+          "y": 615.6
         },
         "tag_label": {
           "height": 15.6,
           "line_count": 1,
           "width": 138.13,
           "x": 834.18,
-          "y": 605.1
+          "y": 623.1
         }
       },
       "points": [
         {
           "x": 744.41,
-          "y": 612.9
+          "y": 630.9
         },
         {
           "x": 1062.08,
-          "y": 612.9
+          "y": 630.9
         },
         {
           "x": 1062.08,
-          "y": 685.4
+          "y": 715.4
         }
       ],
       "status": "routed",
@@ -128,7 +128,7 @@
         "height": 30.6,
         "width": 157.13,
         "x": 824.68,
-        "y": 597.6
+        "y": 615.6
       },
       "to": "/body/0/children/0/children/6"
     },
@@ -140,11 +140,11 @@
       "points": [
         {
           "x": 943.43,
-          "y": 727.4
+          "y": 757.4
         },
         {
           "x": 991.43,
-          "y": 727.4
+          "y": 757.4
         }
       ],
       "status": "routed",
@@ -158,11 +158,11 @@
       "points": [
         {
           "x": 1062.08,
-          "y": 769.4
+          "y": 799.4
         },
         {
           "x": 1062.08,
-          "y": 801.4
+          "y": 843.4
         }
       ],
       "status": "routed",
@@ -176,19 +176,19 @@
       "points": [
         {
           "x": 1132.74,
-          "y": 840.4
+          "y": 882.4
         },
         {
           "x": 1158.74,
-          "y": 840.4
+          "y": 882.4
         },
         {
           "x": 1158.74,
-          "y": 727.4
+          "y": 757.4
         },
         {
           "x": 1180.74,
-          "y": 727.4
+          "y": 757.4
         }
       ],
       "status": "routed",
@@ -202,19 +202,19 @@
       "points": [
         {
           "x": 1325.09,
-          "y": 727.4
+          "y": 757.4
         },
         {
           "x": 1351.09,
-          "y": 727.4
+          "y": 757.4
         },
         {
           "x": 1351.09,
-          "y": 501.4
+          "y": 507.4
         },
         {
           "x": 1373.09,
-          "y": 501.4
+          "y": 507.4
         }
       ],
       "status": "routed",
@@ -229,24 +229,24 @@
           "height": 30.6,
           "width": 108.27,
           "x": 92.28,
-          "y": 1251.8
+          "y": 1543.8
         },
         "tag_label": {
           "height": 15.6,
           "line_count": 1,
           "width": 89.27,
           "x": 101.78,
-          "y": 1259.3
+          "y": 1551.3
         }
       },
       "points": [
         {
           "x": 146.42,
-          "y": 1235.1
+          "y": 1527.1
         },
         {
           "x": 146.42,
-          "y": 1299.1
+          "y": 1591.1
         }
       ],
       "status": "routed",
@@ -254,7 +254,7 @@
         "height": 30.6,
         "width": 108.27,
         "x": 92.28,
-        "y": 1251.8
+        "y": 1543.8
       },
       "to": "/body/1/children/0/children/0/children/0/children/0/children/1/children/0"
     },
@@ -267,45 +267,45 @@
           "height": 18,
           "width": 18,
           "x": 330.42,
-          "y": 1005.8
+          "y": 1297.8
         },
         "step_numeral": {
           "height": 10,
           "line_count": 1,
           "width": 4.31,
           "x": 337.27,
-          "y": 1009.8
+          "y": 1301.8
         },
         "tag": {
           "height": 30.6,
           "width": 125.98,
           "x": 320.92,
-          "y": 999.5
+          "y": 1291.5
         },
         "tag_label": {
           "height": 15.6,
           "line_count": 1,
           "width": 82.98,
           "x": 354.42,
-          "y": 1007
+          "y": 1299
         }
       },
       "points": [
         {
           "x": 242.83,
-          "y": 1323.3
+          "y": 1615.3
         },
         {
           "x": 285.83,
-          "y": 1323.3
+          "y": 1615.3
         },
         {
           "x": 285.83,
-          "y": 1014.8
+          "y": 1306.8
         },
         {
           "x": 481.99,
-          "y": 1014.8
+          "y": 1306.8
         }
       ],
       "status": "routed",
@@ -313,7 +313,7 @@
         "height": 30.6,
         "width": 125.98,
         "x": 320.92,
-        "y": 999.5
+        "y": 1291.5
       },
       "to": "/body/1/children/0/children/0/children/0/children/1/children/0/children/0/children/0/children/0"
     },
@@ -326,37 +326,37 @@
           "height": 18,
           "width": 18,
           "x": 685.68,
-          "y": 1005.8
+          "y": 1297.8
         },
         "step_numeral": {
           "height": 10,
           "line_count": 1,
           "width": 6.3,
           "x": 691.53,
-          "y": 1009.8
+          "y": 1301.8
         },
         "tag": {
           "height": 30.6,
           "width": 129.72,
           "x": 676.18,
-          "y": 999.5
+          "y": 1291.5
         },
         "tag_label": {
           "height": 15.6,
           "line_count": 1,
           "width": 86.72,
           "x": 709.68,
-          "y": 1007
+          "y": 1299
         }
       },
       "points": [
         {
           "x": 620.66,
-          "y": 1014.8
+          "y": 1306.8
         },
         {
           "x": 861.41,
-          "y": 1014.8
+          "y": 1306.8
         }
       ],
       "status": "routed",
@@ -364,7 +364,7 @@
         "height": 30.6,
         "width": 129.72,
         "x": 676.18,
-        "y": 999.5
+        "y": 1291.5
       },
       "to": "/body/1/children/0/children/0/children/0/children/1/children/0/children/0/children/1/children/0"
     },
@@ -377,87 +377,87 @@
           "height": 17,
           "width": 20,
           "x": 791.79,
-          "y": 1062.5
+          "y": 1354.5
         },
         "mark_numeral": {
           "height": 9,
           "line_count": 1,
           "width": 3.88,
           "x": 799.85,
-          "y": 1069
+          "y": 1361
         },
         "rail_dot": {
           "height": 9,
           "width": 9,
           "x": 473.48,
-          "y": 1110.5
+          "y": 1402.5
         },
         "step_badge": {
           "height": 18,
           "width": 18,
           "x": 646.48,
-          "y": 1062
+          "y": 1354
         },
         "step_numeral": {
           "height": 10,
           "line_count": 1,
           "width": 6.46,
           "x": 652.25,
-          "y": 1066
+          "y": 1358
         },
         "tag": {
           "height": 48.2,
           "width": 184.3,
           "x": 636.98,
-          "y": 1046.9
+          "y": 1338.9
         },
         "tag_label": {
           "height": 15.6,
           "line_count": 1,
           "width": 57.82,
           "x": 700.22,
-          "y": 1054.4
+          "y": 1346.4
         },
         "tag_sub": {
           "height": 15.6,
           "line_count": 1,
           "width": 117.3,
           "x": 670.48,
-          "y": 1072
+          "y": 1364
         },
         "valve_far": {
           "height": 14,
           "width": 8,
           "x": 508.48,
-          "y": 1108
+          "y": 1400
         },
         "valve_near": {
           "height": 14,
           "width": 8,
           "x": 500.48,
-          "y": 1108
+          "y": 1400
         }
       },
       "points": [
         {
           "x": 912.79,
-          "y": 1039
+          "y": 1331
         },
         {
           "x": 912.79,
-          "y": 1071
+          "y": 1363
         },
         {
           "x": 545.48,
-          "y": 1071
+          "y": 1363
         },
         {
           "x": 545.48,
-          "y": 1115
+          "y": 1407
         },
         {
           "x": 480.48,
-          "y": 1115
+          "y": 1407
         }
       ],
       "status": "routed",
@@ -465,7 +465,7 @@
         "height": 48.2,
         "width": 184.3,
         "x": 636.98,
-        "y": 1046.9
+        "y": 1338.9
       },
       "to": "/body/1/children/0/children/0/children/0/children/1/children/0/children/1/children/0"
     },
@@ -478,43 +478,43 @@
           "height": 9,
           "width": 9,
           "x": 473.48,
-          "y": 1152.7
+          "y": 1444.7
         },
         "step_badge": {
           "height": 18,
           "width": 18,
           "x": 555.34,
-          "y": 1148.2
+          "y": 1440.2
         },
         "step_numeral": {
           "height": 10,
           "line_count": 1,
           "width": 6.76,
           "x": 560.96,
-          "y": 1152.2
+          "y": 1444.2
         },
         "tag": {
           "height": 30.6,
           "width": 104.25,
           "x": 545.84,
-          "y": 1141.9
+          "y": 1433.9
         },
         "tag_label": {
           "height": 15.6,
           "line_count": 1,
           "width": 61.25,
           "x": 579.34,
-          "y": 1149.4
+          "y": 1441.4
         }
       },
       "points": [
         {
           "x": 480.48,
-          "y": 1157.2
+          "y": 1449.2
         },
         {
           "x": 721.28,
-          "y": 1157.2
+          "y": 1449.2
         }
       ],
       "status": "routed",
@@ -522,7 +522,7 @@
         "height": 30.6,
         "width": 104.25,
         "x": 545.84,
-        "y": 1141.9
+        "y": 1433.9
       },
       "to": "/body/1/children/0/children/0/children/0/children/1/children/0/children/1/children/1/children/0/children/0/children/0/children/0"
     },
@@ -535,37 +535,37 @@
           "height": 18,
           "width": 18,
           "x": 787.96,
-          "y": 1204.4
+          "y": 1496.4
         },
         "step_numeral": {
           "height": 10,
           "line_count": 1,
           "width": 6.22,
           "x": 793.85,
-          "y": 1208.4
+          "y": 1500.4
         },
         "tag": {
           "height": 30.6,
           "width": 117.06,
           "x": 778.46,
-          "y": 1198.1
+          "y": 1490.1
         },
         "tag_label": {
           "height": 15.6,
           "line_count": 1,
           "width": 74.06,
           "x": 811.96,
-          "y": 1205.6
+          "y": 1497.6
         }
       },
       "points": [
         {
           "x": 836.99,
-          "y": 1181.4
+          "y": 1473.4
         },
         {
           "x": 836.99,
-          "y": 1245.4
+          "y": 1537.4
         }
       ],
       "status": "routed",
@@ -573,7 +573,7 @@
         "height": 30.6,
         "width": 117.06,
         "x": 778.46,
-        "y": 1198.1
+        "y": 1490.1
       },
       "to": "/body/1/children/0/children/0/children/0/children/1/children/0/children/1/children/1/children/0/children/0/children/1/children/0"
     },
@@ -586,45 +586,45 @@
           "height": 18,
           "width": 18,
           "x": 625.21,
-          "y": 1324.01
+          "y": 1616.01
         },
         "step_numeral": {
           "height": 10,
           "line_count": 1,
           "width": 6.49,
           "x": 630.97,
-          "y": 1328.01
+          "y": 1620.01
         },
         "tag": {
           "height": 30.6,
           "width": 116.65,
           "x": 615.71,
-          "y": 1317.71
+          "y": 1609.71
         },
         "tag_label": {
           "height": 15.6,
           "line_count": 1,
           "width": 73.65,
           "x": 649.21,
-          "y": 1325.21
+          "y": 1617.21
         }
       },
       "points": [
         {
           "x": 773.13,
-          "y": 1181.4
+          "y": 1473.4
         },
         {
           "x": 773.13,
-          "y": 1243.1
+          "y": 1535.1
         },
         {
           "x": 674.04,
-          "y": 1243.1
+          "y": 1535.1
         },
         {
           "x": 674.04,
-          "y": 1372.37
+          "y": 1664.37
         }
       ],
       "status": "routed",
@@ -632,7 +632,7 @@
         "height": 30.6,
         "width": 116.65,
         "x": 615.71,
-        "y": 1317.71
+        "y": 1609.71
       },
       "to": "/body/1/children/0/children/0/children/0/children/1/children/0/children/2/children/1/children/0"
     },
@@ -645,24 +645,24 @@
           "height": 30.6,
           "width": 118.94,
           "x": 904.7,
-          "y": 1315.99
+          "y": 1611.8
         },
         "tag_label": {
           "height": 15.6,
           "line_count": 1,
           "width": 99.94,
           "x": 914.2,
-          "y": 1323.49
+          "y": 1619.3
         }
       },
       "points": [
         {
           "x": 964.17,
-          "y": 1039
+          "y": 1331
         },
         {
           "x": 964.17,
-          "y": 1418.8
+          "y": 1710.8
         }
       ],
       "status": "routed",
@@ -670,7 +670,7 @@
         "height": 30.6,
         "width": 118.94,
         "x": 904.7,
-        "y": 1315.99
+        "y": 1611.8
       },
       "to": "/body/1/children/0/children/0/children/0/children/1/children/0/children/2/children/2/children/0/children/0"
     },
@@ -683,38 +683,38 @@
           "height": 9,
           "width": 9,
           "x": 473.48,
-          "y": 1303.3
+          "y": 1595.3
         },
         "tag": {
           "height": 30.6,
           "width": 90.72,
           "x": 385.66,
-          "y": 1352
+          "y": 1644
         },
         "tag_label": {
           "height": 15.6,
           "line_count": 1,
           "width": 71.72,
           "x": 395.16,
-          "y": 1359.5
+          "y": 1651.5
         }
       },
       "points": [
         {
           "x": 431.02,
-          "y": 1418.8
+          "y": 1710.8
         },
         {
           "x": 431.02,
-          "y": 1315.8
+          "y": 1607.8
         },
         {
           "x": 477.98,
-          "y": 1315.8
+          "y": 1607.8
         },
         {
           "x": 477.98,
-          "y": 1307.8
+          "y": 1599.8
         }
       ],
       "status": "routed",
@@ -722,7 +722,7 @@
         "height": 30.6,
         "width": 90.72,
         "x": 385.66,
-        "y": 1352
+        "y": 1644
       },
       "to": "/body/1/children/0/children/0/children/0/children/1/children/0/children/1/children/0"
     },
@@ -735,37 +735,37 @@
           "height": 17,
           "width": 20,
           "x": 836.11,
-          "y": 1324.59
+          "y": 1616.59
         },
         "mark_numeral": {
           "height": 9,
           "line_count": 1,
           "width": 5.81,
           "x": 843.2,
-          "y": 1331.09
+          "y": 1623.09
         },
         "tag": {
           "height": 30.6,
           "width": 127.35,
           "x": 738.26,
-          "y": 1317.79
+          "y": 1609.79
         },
         "tag_label": {
           "height": 15.6,
           "line_count": 1,
           "width": 84.35,
           "x": 747.76,
-          "y": 1325.29
+          "y": 1617.29
         }
       },
       "points": [
         {
           "x": 801.94,
-          "y": 1293.8
+          "y": 1585.8
         },
         {
           "x": 801.94,
-          "y": 1372.37
+          "y": 1664.37
         }
       ],
       "status": "routed",
@@ -773,24 +773,24 @@
         "height": 30.6,
         "width": 127.35,
         "x": 738.26,
-        "y": 1317.79
+        "y": 1609.79
       },
       "to": "/body/1/children/0/children/0/children/0/children/1/children/0/children/2/children/1/children/0"
     }
   ],
   "nodes": [
     {
-      "height": 1927.2,
+      "height": 2219.2,
       "id": "",
       "parts": {
         "border": {
-          "height": 1903.2,
+          "height": 2195.2,
           "width": 1576,
           "x": 12,
           "y": 12
         },
         "grid": {
-          "height": 1860.2,
+          "height": 2152.2,
           "width": 1533,
           "x": 33.5,
           "y": 33.5
@@ -856,143 +856,143 @@
           "line_count": 1,
           "width": 191.63,
           "x": 33.5,
-          "y": 1898.1
+          "y": 2190.1
         },
         "ref_column_foot/1": {
           "height": 13.2,
           "line_count": 1,
           "width": 191.63,
           "x": 225.13,
-          "y": 1898.1
+          "y": 2190.1
         },
         "ref_column_foot/2": {
           "height": 13.2,
           "line_count": 1,
           "width": 191.63,
           "x": 416.75,
-          "y": 1898.1
+          "y": 2190.1
         },
         "ref_column_foot/3": {
           "height": 13.2,
           "line_count": 1,
           "width": 191.63,
           "x": 608.38,
-          "y": 1898.1
+          "y": 2190.1
         },
         "ref_column_foot/4": {
           "height": 13.2,
           "line_count": 1,
           "width": 191.63,
           "x": 800,
-          "y": 1898.1
+          "y": 2190.1
         },
         "ref_column_foot/5": {
           "height": 13.2,
           "line_count": 1,
           "width": 191.63,
           "x": 991.63,
-          "y": 1898.1
+          "y": 2190.1
         },
         "ref_column_foot/6": {
           "height": 13.2,
           "line_count": 1,
           "width": 191.63,
           "x": 1183.25,
-          "y": 1898.1
+          "y": 2190.1
         },
         "ref_column_foot/7": {
           "height": 13.2,
           "line_count": 1,
           "width": 191.63,
           "x": 1374.88,
-          "y": 1898.1
+          "y": 2190.1
         },
         "ref_row/0": {
           "height": 13.2,
           "line_count": 1,
           "width": 19,
           "x": 13,
-          "y": 181.92
+          "y": 206.25
         },
         "ref_row/1": {
           "height": 13.2,
           "line_count": 1,
           "width": 19,
           "x": 13,
-          "y": 491.95
+          "y": 564.95
         },
         "ref_row/2": {
           "height": 13.2,
           "line_count": 1,
           "width": 19,
           "x": 13,
-          "y": 801.98
+          "y": 923.65
         },
         "ref_row/3": {
           "height": 13.2,
           "line_count": 1,
           "width": 19,
           "x": 13,
-          "y": 1112.02
+          "y": 1282.35
         },
         "ref_row/4": {
           "height": 13.2,
           "line_count": 1,
           "width": 19,
           "x": 13,
-          "y": 1422.05
+          "y": 1641.05
         },
         "ref_row/5": {
           "height": 13.2,
           "line_count": 1,
           "width": 19,
           "x": 13,
-          "y": 1732.08
+          "y": 1999.75
         },
         "ref_row_right/0": {
           "height": 13.2,
           "line_count": 1,
           "width": 19,
           "x": 1568,
-          "y": 181.92
+          "y": 206.25
         },
         "ref_row_right/1": {
           "height": 13.2,
           "line_count": 1,
           "width": 19,
           "x": 1568,
-          "y": 491.95
+          "y": 564.95
         },
         "ref_row_right/2": {
           "height": 13.2,
           "line_count": 1,
           "width": 19,
           "x": 1568,
-          "y": 801.98
+          "y": 923.65
         },
         "ref_row_right/3": {
           "height": 13.2,
           "line_count": 1,
           "width": 19,
           "x": 1568,
-          "y": 1112.02
+          "y": 1282.35
         },
         "ref_row_right/4": {
           "height": 13.2,
           "line_count": 1,
           "width": 19,
           "x": 1568,
-          "y": 1422.05
+          "y": 1641.05
         },
         "ref_row_right/5": {
           "height": 13.2,
           "line_count": 1,
           "width": 19,
           "x": 1568,
-          "y": 1732.08
+          "y": 1999.75
         },
         "ref_rule": {
-          "height": 1863.2,
+          "height": 2155.2,
           "width": 1536,
           "x": 32,
           "y": 32
@@ -1007,7 +1007,7 @@
           "height": 19,
           "width": 0,
           "x": 225.13,
-          "y": 1895.2
+          "y": 2187.2
         },
         "ref_tick/10": {
           "height": 19,
@@ -1019,7 +1019,7 @@
           "height": 19,
           "width": 0,
           "x": 1183.25,
-          "y": 1895.2
+          "y": 2187.2
         },
         "ref_tick/12": {
           "height": 19,
@@ -1031,43 +1031,43 @@
           "height": 19,
           "width": 0,
           "x": 1374.88,
-          "y": 1895.2
+          "y": 2187.2
         },
         "ref_tick/14": {
           "height": 0,
           "width": 19,
           "x": 13,
-          "y": 343.53
+          "y": 392.2
         },
         "ref_tick/15": {
           "height": 0,
           "width": 19,
           "x": 1568,
-          "y": 343.53
+          "y": 392.2
         },
         "ref_tick/16": {
           "height": 0,
           "width": 19,
           "x": 13,
-          "y": 653.57
+          "y": 750.9
         },
         "ref_tick/17": {
           "height": 0,
           "width": 19,
           "x": 1568,
-          "y": 653.57
+          "y": 750.9
         },
         "ref_tick/18": {
           "height": 0,
           "width": 19,
           "x": 13,
-          "y": 963.6
+          "y": 1109.6
         },
         "ref_tick/19": {
           "height": 0,
           "width": 19,
           "x": 1568,
-          "y": 963.6
+          "y": 1109.6
         },
         "ref_tick/2": {
           "height": 19,
@@ -1079,31 +1079,31 @@
           "height": 0,
           "width": 19,
           "x": 13,
-          "y": 1273.63
+          "y": 1468.3
         },
         "ref_tick/21": {
           "height": 0,
           "width": 19,
           "x": 1568,
-          "y": 1273.63
+          "y": 1468.3
         },
         "ref_tick/22": {
           "height": 0,
           "width": 19,
           "x": 13,
-          "y": 1583.67
+          "y": 1827
         },
         "ref_tick/23": {
           "height": 0,
           "width": 19,
           "x": 1568,
-          "y": 1583.67
+          "y": 1827
         },
         "ref_tick/3": {
           "height": 19,
           "width": 0,
           "x": 416.75,
-          "y": 1895.2
+          "y": 2187.2
         },
         "ref_tick/4": {
           "height": 19,
@@ -1115,7 +1115,7 @@
           "height": 19,
           "width": 0,
           "x": 608.38,
-          "y": 1895.2
+          "y": 2187.2
         },
         "ref_tick/6": {
           "height": 19,
@@ -1127,7 +1127,7 @@
           "height": 19,
           "width": 0,
           "x": 800,
-          "y": 1895.2
+          "y": 2187.2
         },
         "ref_tick/8": {
           "height": 19,
@@ -1139,7 +1139,7 @@
           "height": 19,
           "width": 0,
           "x": 991.63,
-          "y": 1895.2
+          "y": 2187.2
         }
       },
       "tag": "Page",
@@ -1968,7 +1968,7 @@
       "y": 317.5
     },
     {
-      "height": 1471.6,
+      "height": 1763.6,
       "id": "/body",
       "parts": {},
       "tag": "Body",
@@ -1977,7 +1977,7 @@
       "y": 380.4
     },
     {
-      "height": 515,
+      "height": 807,
       "id": "/body/0",
       "parts": {
         "view_note": {
@@ -2027,56 +2027,75 @@
       "y": 380.4
     },
     {
-      "height": 479,
+      "height": 527,
       "id": "/body/0/children/0",
       "parts": {
+        "detail_frame": {
+          "height": 234,
+          "width": 361.66,
+          "x": 977.43,
+          "y": 701.4
+        },
+        "detail_letter": {
+          "height": 15.6,
+          "line_count": 1,
+          "width": 22,
+          "x": 966.43,
+          "y": 924.6
+        },
+        "detail_tag": {
+          "height": 22,
+          "width": 22,
+          "x": 966.43,
+          "y": 921.4
+        },
         "lane_band/0": {
-          "height": 110,
+          "height": 122,
           "width": 1500,
           "x": 50,
           "y": 446.4
         },
         "lane_band/1": {
-          "height": 113,
+          "height": 125,
           "width": 1500,
           "x": 50,
-          "y": 556.4
+          "y": 568.4
         },
         "lane_band/2": {
-          "height": 116,
+          "height": 128,
           "width": 1500,
           "x": 50,
-          "y": 669.4
+          "y": 693.4
         },
         "lane_band/3": {
-          "height": 110,
+          "height": 122,
           "width": 1500,
           "x": 50,
-          "y": 785.4
+          "y": 821.4
         },
         "lane_bar/0": {
-          "height": 110,
+          "height": 122,
           "width": 4,
           "x": 50,
           "y": 446.4
         },
         "lane_bar/1": {
-          "height": 113,
+          "height": 125,
           "width": 4,
           "x": 50,
-          "y": 556.4
+          "y": 568.4
         },
         "lane_bar/2": {
-          "height": 116,
+          "height": 128,
           "width": 4,
           "x": 50,
-          "y": 669.4
+          "y": 693.4
         },
         "lane_bar/3": {
-          "height": 110,
+          "height": 122,
           "width": 4,
           "x": 50,
-          "y": 785.4
+          "y": 821.4
         },
         "lane_name/0": {
           "height": 15.6,
@@ -2090,39 +2109,39 @@
           "line_count": 1,
           "width": 120,
           "x": 66,
-          "y": 570.4
+          "y": 582.4
         },
         "lane_name/2": {
           "height": 15.6,
           "line_count": 1,
           "width": 120,
           "x": 66,
-          "y": 683.4
+          "y": 707.4
         },
         "lane_name/3": {
           "height": 15.6,
           "line_count": 1,
           "width": 120,
           "x": 66,
-          "y": 799.4
+          "y": 835.4
         },
         "lane_rule/0": {
           "height": 1,
           "width": 1500,
           "x": 50,
-          "y": 556.4
+          "y": 568.4
         },
         "lane_rule/1": {
           "height": 1,
           "width": 1500,
           "x": 50,
-          "y": 669.4
+          "y": 693.4
         },
         "lane_rule/2": {
           "height": 1,
           "width": 1500,
           "x": 50,
-          "y": 785.4
+          "y": 821.4
         },
         "lane_text/0": {
           "height": 30,
@@ -2136,21 +2155,21 @@
           "line_count": 2,
           "width": 120,
           "x": 66,
-          "y": 589
+          "y": 601
         },
         "lane_text/2": {
           "height": 15,
           "line_count": 1,
           "width": 120,
           "x": 66,
-          "y": 702
+          "y": 726
         },
         "lane_text/3": {
           "height": 30,
           "line_count": 2,
           "width": 120,
           "x": 66,
-          "y": 818
+          "y": 854
         },
         "phase_head/0": {
           "height": 20,
@@ -2205,19 +2224,19 @@
           "y": 423.6
         },
         "phase_separator/0": {
-          "height": 475,
+          "height": 523,
           "width": 1,
           "x": 374.33,
           "y": 420.4
         },
         "phase_separator/1": {
-          "height": 475,
+          "height": 523,
           "width": 1,
           "x": 768.41,
           "y": 420.4
         },
         "phase_separator/2": {
-          "height": 475,
+          "height": 523,
           "width": 1,
           "x": 1349.09,
           "y": 420.4
@@ -2264,47 +2283,47 @@
           "height": 18,
           "width": 18,
           "x": 322.33,
-          "y": 470.4
+          "y": 476.4
         },
         "front": {
           "height": 78,
           "width": 126.33,
           "x": 224,
-          "y": 462.4
+          "y": 468.4
         },
         "mark_numeral": {
           "height": 10,
           "line_count": 1,
           "width": 4.31,
           "x": 329.17,
-          "y": 474.4
+          "y": 480.4
         },
         "step_line/0": {
           "height": 15,
           "line_count": 1,
           "width": 107.33,
           "x": 233,
-          "y": 502.4
+          "y": 508.4
         },
         "step_line/1": {
           "height": 15,
           "line_count": 1,
           "width": 107.33,
           "x": 233,
-          "y": 517.4
+          "y": 523.4
         },
         "text": {
           "height": 30,
           "line_count": 2,
           "width": 85.33,
           "x": 233,
-          "y": 470.4
+          "y": 476.4
         }
       },
       "tag": "Step",
       "width": 126.33,
       "x": 224,
-      "y": 462.4
+      "y": 468.4
     },
     {
       "height": 31,
@@ -2315,13 +2334,13 @@
           "line_count": 1,
           "width": 107.33,
           "x": 233,
-          "y": 605.4
+          "y": 623.4
         }
       },
       "tag": "Step",
       "width": 126.33,
       "x": 224,
-      "y": 597.4
+      "y": 615.4
     },
     {
       "height": 81,
@@ -2331,47 +2350,47 @@
           "height": 18,
           "width": 18,
           "x": 513.83,
-          "y": 580.4
+          "y": 598.4
         },
         "front": {
           "height": 81,
           "width": 143.5,
           "x": 398.33,
-          "y": 572.4
+          "y": 590.4
         },
         "mark_numeral": {
           "height": 10,
           "line_count": 1,
           "width": 6.46,
           "x": 519.6,
-          "y": 584.4
+          "y": 602.4
         },
         "step_line/0": {
           "height": 30,
           "line_count": 2,
           "width": 124.5,
           "x": 407.33,
-          "y": 600.4
+          "y": 618.4
         },
         "step_line/1": {
           "height": 15,
           "line_count": 1,
           "width": 124.5,
           "x": 407.33,
-          "y": 630.4
+          "y": 648.4
         },
         "text": {
           "height": 15,
           "line_count": 1,
           "width": 102.5,
           "x": 407.33,
-          "y": 580.4
+          "y": 598.4
         }
       },
       "tag": "Step",
       "width": 143.5,
       "x": 398.33,
-      "y": 572.4
+      "y": 590.4
     },
     {
       "height": 78,
@@ -2381,46 +2400,46 @@
           "height": 20,
           "width": 20,
           "x": 690.41,
-          "y": 470.4
+          "y": 476.4
         },
         "flag": {
           "height": 17,
           "width": 20,
           "x": 714.41,
-          "y": 471.9
+          "y": 477.9
         },
         "front": {
           "height": 78,
           "width": 154.58,
           "x": 589.83,
-          "y": 462.4
+          "y": 468.4
         },
         "mark_numeral": {
           "height": 9,
           "line_count": 1,
           "width": 3.88,
           "x": 722.47,
-          "y": 478.4
+          "y": 484.4
         },
         "step_line/0": {
           "height": 30,
           "line_count": 2,
           "width": 135.58,
           "x": 598.83,
-          "y": 502.4
+          "y": 508.4
         },
         "text": {
           "height": 30,
           "line_count": 2,
           "width": 87.58,
           "x": 598.83,
-          "y": 470.4
+          "y": 476.4
         }
       },
       "tag": "Step",
       "width": 154.58,
       "x": 589.83,
-      "y": 462.4
+      "y": 468.4
     },
     {
       "height": 34,
@@ -2430,33 +2449,33 @@
           "height": 18,
           "width": 18,
           "x": 716.41,
-          "y": 603.9
+          "y": 621.9
         },
         "front": {
           "height": 34,
           "width": 154.58,
           "x": 589.83,
-          "y": 595.9
+          "y": 613.9
         },
         "mark_numeral": {
           "height": 10,
           "line_count": 1,
           "width": 6.51,
           "x": 722.15,
-          "y": 607.9
+          "y": 625.9
         },
         "text": {
           "height": 15,
           "line_count": 1,
           "width": 113.58,
           "x": 598.83,
-          "y": 603.9
+          "y": 621.9
         }
       },
       "tag": "Step",
       "width": 154.58,
       "x": 589.83,
-      "y": 595.9
+      "y": 613.9
     },
     {
       "height": 84,
@@ -2466,46 +2485,46 @@
           "height": 18,
           "width": 18,
           "x": 915.43,
-          "y": 693.4
+          "y": 723.4
         },
         "flag": {
           "height": 17,
           "width": 20,
           "x": 913.43,
-          "y": 713.4
+          "y": 743.4
         },
         "front": {
           "height": 84,
           "width": 151.02,
           "x": 792.41,
-          "y": 685.4
+          "y": 715.4
         },
         "mark_numeral": {
           "height": 9,
           "line_count": 1,
           "width": 6.09,
           "x": 920.38,
-          "y": 719.9
+          "y": 749.9
         },
         "step_line/0": {
           "height": 45,
           "line_count": 3,
           "width": 108.02,
           "x": 801.41,
-          "y": 713.4
+          "y": 743.4
         },
         "text": {
           "height": 15,
           "line_count": 1,
           "width": 110.02,
           "x": 801.41,
-          "y": 693.4
+          "y": 723.4
         }
       },
       "tag": "Step",
       "width": 151.02,
       "x": 792.41,
-      "y": 685.4
+      "y": 715.4
     },
     {
       "height": 84,
@@ -2515,59 +2534,59 @@
           "height": 18,
           "width": 18,
           "x": 1096.74,
-          "y": 699.4
+          "y": 729.4
         },
         "front": {
           "height": 78,
           "width": 133.31,
           "x": 991.43,
-          "y": 691.4
+          "y": 721.4
         },
         "mark_numeral": {
           "height": 10,
           "line_count": 1,
           "width": 6.76,
           "x": 1102.36,
-          "y": 703.4
+          "y": 733.4
         },
         "stack_back/0": {
           "height": 78,
           "width": 133.31,
           "x": 999.43,
-          "y": 685.4
+          "y": 715.4
         },
         "stack_back/1": {
           "height": 78,
           "width": 133.31,
           "x": 995.43,
-          "y": 688.4
+          "y": 718.4
         },
         "step_line/0": {
           "height": 15,
           "line_count": 1,
           "width": 114.31,
           "x": 1000.43,
-          "y": 731.4
+          "y": 761.4
         },
         "step_line/1": {
           "height": 15,
           "line_count": 1,
           "width": 114.31,
           "x": 1000.43,
-          "y": 746.4
+          "y": 776.4
         },
         "text": {
           "height": 30,
           "line_count": 2,
           "width": 70.31,
           "x": 1000.43,
-          "y": 699.4
+          "y": 729.4
         }
       },
       "tag": "Step",
       "width": 141.31,
       "x": 991.43,
-      "y": 685.4
+      "y": 715.4
     },
     {
       "height": 78,
@@ -2577,46 +2596,46 @@
           "height": 18,
           "width": 18,
           "x": 1080.74,
-          "y": 809.4
+          "y": 851.4
         },
         "flag": {
           "height": 17,
           "width": 20,
           "x": 1102.74,
-          "y": 809.9
+          "y": 851.9
         },
         "front": {
           "height": 78,
           "width": 141.31,
           "x": 991.43,
-          "y": 801.4
+          "y": 843.4
         },
         "mark_numeral": {
           "height": 9,
           "line_count": 1,
           "width": 5.81,
           "x": 1109.83,
-          "y": 816.4
+          "y": 858.4
         },
         "step_line/0": {
           "height": 30,
           "line_count": 2,
           "width": 122.31,
           "x": 1000.43,
-          "y": 841.4
+          "y": 883.4
         },
         "text": {
           "height": 30,
           "line_count": 2,
           "width": 76.31,
           "x": 1000.43,
-          "y": 809.4
+          "y": 851.4
         }
       },
       "tag": "Step",
       "width": 141.31,
       "x": 991.43,
-      "y": 801.4
+      "y": 843.4
     },
     {
       "height": 84,
@@ -2626,46 +2645,46 @@
           "height": 18,
           "width": 18,
           "x": 1273.09,
-          "y": 693.4
+          "y": 723.4
         },
         "flag": {
           "height": 17,
           "width": 20,
           "x": 1295.09,
-          "y": 693.9
+          "y": 723.9
         },
         "front": {
           "height": 84,
           "width": 144.35,
           "x": 1180.74,
-          "y": 685.4
+          "y": 715.4
         },
         "mark_numeral": {
           "height": 9,
           "line_count": 1,
           "width": 5.67,
           "x": 1302.26,
-          "y": 700.4
+          "y": 730.4
         },
         "step_line/0": {
           "height": 30,
           "line_count": 2,
           "width": 125.35,
           "x": 1189.74,
-          "y": 725.4
+          "y": 755.4
         },
         "text": {
           "height": 30,
           "line_count": 2,
           "width": 79.35,
           "x": 1189.74,
-          "y": 693.4
+          "y": 723.4
         }
       },
       "tag": "Step",
       "width": 144.35,
       "x": 1180.74,
-      "y": 685.4
+      "y": 715.4
     },
     {
       "height": 78,
@@ -2675,40 +2694,40 @@
           "height": 20,
           "width": 20,
           "x": 1496,
-          "y": 470.4
+          "y": 476.4
         },
         "front": {
           "height": 78,
           "width": 152.91,
           "x": 1373.09,
-          "y": 462.4
+          "y": 468.4
         },
         "mark_numeral": {
           "height": 9.5,
           "line_count": 1,
           "width": 5.98,
           "x": 1503.01,
-          "y": 475.65
+          "y": 481.65
         },
         "step_line/0": {
           "height": 15,
           "line_count": 1,
           "width": 133.91,
           "x": 1382.09,
-          "y": 492.4
+          "y": 498.4
         },
         "text": {
           "height": 15,
           "line_count": 1,
           "width": 109.91,
           "x": 1382.09,
-          "y": 470.4
+          "y": 476.4
         }
       },
       "tag": "Step",
       "width": 152.91,
       "x": 1373.09,
-      "y": 462.4
+      "y": 468.4
     },
     {
       "height": 81,
@@ -2718,20 +2737,20 @@
           "height": 81,
           "width": 152.91,
           "x": 1373.09,
-          "y": 572.4
+          "y": 590.4
         },
         "text": {
           "height": 30,
           "line_count": 2,
           "width": 133.91,
           "x": 1382.09,
-          "y": 580.4
+          "y": 598.4
         }
       },
       "tag": "Step",
       "width": 152.91,
       "x": 1373.09,
-      "y": 572.4
+      "y": 590.4
     },
     {
       "height": 78,
@@ -2741,33 +2760,255 @@
           "height": 20,
           "width": 20,
           "x": 1496,
-          "y": 809.4
+          "y": 851.4
         },
         "front": {
           "height": 78,
           "width": 152.91,
           "x": 1373.09,
-          "y": 801.4
+          "y": 843.4
         },
         "mark_numeral": {
           "height": 9.5,
           "line_count": 1,
           "width": 6.13,
           "x": 1502.93,
-          "y": 814.65
+          "y": 856.65
         },
         "text": {
           "height": 45,
           "line_count": 3,
           "width": 109.91,
           "x": 1382.09,
-          "y": 809.4
+          "y": 851.4
         }
       },
       "tag": "Step",
       "width": 152.91,
       "x": 1373.09,
-      "y": 801.4
+      "y": 843.4
+    },
+    {
+      "height": 228,
+      "id": "/body/0/children/1",
+      "parts": {
+        "detail_letter": {
+          "height": 15.6,
+          "line_count": 1,
+          "width": 9.71,
+          "x": 68.15,
+          "y": 972.6
+        },
+        "detail_tag": {
+          "height": 20,
+          "width": 20,
+          "x": 63,
+          "y": 970.4
+        },
+        "escalation_arrow": {
+          "height": 175,
+          "width": 8,
+          "x": 76,
+          "y": 1000.4
+        },
+        "note": {
+          "height": 15.6,
+          "line_count": 1,
+          "width": 200.8,
+          "x": 467.91,
+          "y": 972.6
+        },
+        "rail_left": {
+          "height": 175,
+          "width": 1.5,
+          "x": 68.25,
+          "y": 1000.4
+        },
+        "rail_right": {
+          "height": 175,
+          "width": 1.5,
+          "x": 90.25,
+          "y": 1000.4
+        },
+        "rung_tick": {
+          "height": 1.5,
+          "width": 22,
+          "x": 69,
+          "y": 1019.65
+        },
+        "title": {
+          "height": 15.6,
+          "line_count": 1,
+          "width": 368.91,
+          "x": 91,
+          "y": 972.6
+        }
+      },
+      "tag": "Ladder",
+      "width": 1500,
+      "x": 50,
+      "y": 959.4
+    },
+    {
+      "height": 40,
+      "id": "/body/0/children/1/rungs/0",
+      "parts": {
+        "front": {
+          "height": 40,
+          "width": 1430,
+          "x": 107,
+          "y": 1135.4
+        },
+        "rung_text": {
+          "height": 17.4,
+          "line_count": 1,
+          "width": 1149,
+          "x": 378,
+          "y": 1146.7
+        },
+        "rung_title": {
+          "height": 14.4,
+          "line_count": 1,
+          "width": 249,
+          "x": 117,
+          "y": 1148.2
+        },
+        "rung_who": {
+          "height": 14.4,
+          "line_count": 1,
+          "width": 249,
+          "x": 117,
+          "y": 1148.2
+        }
+      },
+      "tag": "Rung",
+      "width": 1430,
+      "x": 107,
+      "y": 1135.4
+    },
+    {
+      "height": 40,
+      "id": "/body/0/children/1/rungs/1",
+      "parts": {
+        "front": {
+          "height": 40,
+          "width": 1430,
+          "x": 107,
+          "y": 1090.4
+        },
+        "rung_text": {
+          "height": 17.4,
+          "line_count": 1,
+          "width": 1149,
+          "x": 378,
+          "y": 1101.7
+        },
+        "rung_title": {
+          "height": 14.4,
+          "line_count": 1,
+          "width": 249,
+          "x": 117,
+          "y": 1103.2
+        },
+        "rung_who": {
+          "height": 14.4,
+          "line_count": 1,
+          "width": 249,
+          "x": 117,
+          "y": 1103.2
+        }
+      },
+      "tag": "Rung",
+      "width": 1430,
+      "x": 107,
+      "y": 1090.4
+    },
+    {
+      "height": 40,
+      "id": "/body/0/children/1/rungs/2",
+      "parts": {
+        "diamond": {
+          "height": 20,
+          "width": 20,
+          "x": 346,
+          "y": 1055.4
+        },
+        "front": {
+          "height": 40,
+          "width": 1430,
+          "x": 107,
+          "y": 1045.4
+        },
+        "mark_numeral": {
+          "height": 9.5,
+          "line_count": 1,
+          "width": 5.98,
+          "x": 353.01,
+          "y": 1060.65
+        },
+        "rung_text": {
+          "height": 17.4,
+          "line_count": 1,
+          "width": 1149,
+          "x": 378,
+          "y": 1056.7
+        },
+        "rung_title": {
+          "height": 14.4,
+          "line_count": 1,
+          "width": 225,
+          "x": 117,
+          "y": 1055.4
+        },
+        "rung_who": {
+          "height": 14.4,
+          "line_count": 1,
+          "width": 225,
+          "x": 117,
+          "y": 1055.4
+        }
+      },
+      "tag": "Rung",
+      "width": 1430,
+      "x": 107,
+      "y": 1045.4
+    },
+    {
+      "height": 40,
+      "id": "/body/0/children/1/rungs/3",
+      "parts": {
+        "front": {
+          "height": 40,
+          "width": 1430,
+          "x": 107,
+          "y": 1000.4
+        },
+        "rung_text": {
+          "height": 17.4,
+          "line_count": 1,
+          "width": 1149,
+          "x": 378,
+          "y": 1011.7
+        },
+        "rung_title": {
+          "height": 14.4,
+          "line_count": 1,
+          "width": 249,
+          "x": 117,
+          "y": 1013.2
+        },
+        "rung_who": {
+          "height": 14.4,
+          "line_count": 1,
+          "width": 249,
+          "x": 117,
+          "y": 1013.2
+        }
+      },
+      "tag": "Rung",
+      "width": 1430,
+      "x": 107,
+      "y": 1000.4
     },
     {
       "height": 943.6,
@@ -2778,46 +3019,46 @@
           "line_count": 1,
           "width": 229.22,
           "x": 1320.78,
-          "y": 914.6
+          "y": 1206.6
         },
         "view_number": {
           "height": 28,
           "width": 28,
           "x": 50,
-          "y": 908.4
+          "y": 1200.4
         },
         "view_numeral": {
           "height": 15.6,
           "line_count": 1,
           "width": 8.39,
           "x": 59.8,
-          "y": 914.6
+          "y": 1206.6
         },
         "view_rule": {
           "height": 1,
           "width": 910.29,
           "x": 398.5,
-          "y": 921.9
+          "y": 1213.9
         },
         "view_subtitle": {
           "height": 18,
           "line_count": 1,
           "width": 211.06,
           "x": 175.44,
-          "y": 913.4
+          "y": 1205.4
         },
         "view_title": {
           "height": 19.2,
           "line_count": 1,
           "width": 77.44,
           "x": 90,
-          "y": 912.8
+          "y": 1204.8
         }
       },
       "tag": "View",
       "width": 1500,
       "x": 50,
-      "y": 908.4
+      "y": 1200.4
     },
     {
       "height": 907.6,
@@ -2826,7 +3067,7 @@
       "tag": "Row",
       "width": 1500,
       "x": 50,
-      "y": 944.4
+      "y": 1236.4
     },
     {
       "height": 907.6,
@@ -2835,7 +3076,7 @@
       "tag": "Col",
       "width": 1057.14,
       "x": 50,
-      "y": 944.4
+      "y": 1236.4
     },
     {
       "height": 586.8,
@@ -2844,7 +3085,7 @@
       "tag": "Row",
       "width": 1057.14,
       "x": 50,
-      "y": 944.4
+      "y": 1236.4
     },
     {
       "height": 586.8,
@@ -2853,7 +3094,7 @@
       "tag": "Col",
       "width": 192.83,
       "x": 50,
-      "y": 944.4
+      "y": 1236.4
     },
     {
       "height": 107,
@@ -2862,7 +3103,7 @@
       "tag": "Row",
       "width": 192.83,
       "x": 50,
-      "y": 1128.1
+      "y": 1420.1
     },
     {
       "height": 107,
@@ -2873,38 +3114,38 @@
           "line_count": 1,
           "width": 56.52,
           "x": 118.16,
-          "y": 1204.1
+          "y": 1496.1
         },
         "head": {
           "height": 30,
           "width": 30,
           "x": 131.42,
-          "y": 1129.1
+          "y": 1421.1
         },
         "product_name": {
           "height": 14.4,
           "line_count": 1,
           "width": 66.94,
           "x": 112.95,
-          "y": 1220.7
+          "y": 1512.7
         },
         "shoulders": {
           "height": 33,
           "width": 60,
           "x": 116.42,
-          "y": 1166.1
+          "y": 1458.1
         },
         "text": {
           "height": 31,
           "width": 66.94,
           "x": 112.95,
-          "y": 1204.1
+          "y": 1496.1
         }
       },
       "tag": "Pcard",
       "width": 85.94,
       "x": 103.45,
-      "y": 1128.1
+      "y": 1420.1
     },
     {
       "height": 48.4,
@@ -2913,7 +3154,7 @@
       "tag": "Row",
       "width": 192.83,
       "x": 50,
-      "y": 1299.1
+      "y": 1591.1
     },
     {
       "height": 48.4,
@@ -2923,46 +3164,46 @@
           "height": 18,
           "width": 18,
           "x": 213.33,
-          "y": 1306.6
+          "y": 1598.6
         },
         "function_name": {
           "height": 15.6,
           "line_count": 1,
           "width": 109.83,
           "x": 99.5,
-          "y": 1306.6
+          "y": 1598.6
         },
         "icon": {
           "height": 28,
           "width": 28,
           "x": 61.5,
-          "y": 1309.3
+          "y": 1601.3
         },
         "mark_numeral": {
           "height": 10,
           "line_count": 1,
           "width": 4.31,
           "x": 220.18,
-          "y": 1310.6
+          "y": 1602.6
         },
         "product_name": {
           "height": 14.4,
           "line_count": 1,
           "width": 131.83,
           "x": 99.5,
-          "y": 1325.6
+          "y": 1617.6
         },
         "text": {
           "height": 33.4,
           "width": 131.83,
           "x": 99.5,
-          "y": 1306.6
+          "y": 1598.6
         }
       },
       "tag": "Pcard",
       "width": 192.83,
       "x": 50,
-      "y": 1299.1
+      "y": 1591.1
     },
     {
       "height": 586.8,
@@ -2973,26 +3214,26 @@
           "height": 27.2,
           "width": 794.31,
           "x": 309.83,
-          "y": 947.4
+          "y": 1239.4
         },
         "body": {
           "height": 553.6,
           "width": 794.31,
           "x": 309.83,
-          "y": 974.6
+          "y": 1266.6
         },
         "label": {
           "height": 13.2,
           "line_count": 1,
           "width": 762.31,
           "x": 325.83,
-          "y": 954.4
+          "y": 1246.4
         }
       },
       "tag": "Zone",
       "width": 800.31,
       "x": 306.83,
-      "y": 944.4
+      "y": 1236.4
     },
     {
       "height": 523.6,
@@ -3001,7 +3242,7 @@
       "tag": "Col",
       "width": 766.31,
       "x": 323.83,
-      "y": 990.6
+      "y": 1282.6
     },
     {
       "height": 48.4,
@@ -3010,7 +3251,7 @@
       "tag": "Row",
       "width": 766.31,
       "x": 323.83,
-      "y": 990.6
+      "y": 1282.6
     },
     {
       "height": 48.4,
@@ -3019,7 +3260,7 @@
       "tag": "Row",
       "width": 454.99,
       "x": 323.83,
-      "y": 990.6
+      "y": 1282.6
     },
     {
       "height": 48.4,
@@ -3029,46 +3270,46 @@
           "height": 18,
           "width": 18,
           "x": 591.16,
-          "y": 998.1
+          "y": 1290.1
         },
         "function_name": {
           "height": 15.6,
           "line_count": 1,
           "width": 55.68,
           "x": 531.49,
-          "y": 998.1
+          "y": 1290.1
         },
         "icon": {
           "height": 28,
           "width": 28,
           "x": 493.49,
-          "y": 1000.8
+          "y": 1292.8
         },
         "mark_numeral": {
           "height": 10,
           "line_count": 1,
           "width": 6.3,
           "x": 597.01,
-          "y": 1002.1
+          "y": 1294.1
         },
         "product_name": {
           "height": 14.4,
           "line_count": 1,
           "width": 77.68,
           "x": 531.49,
-          "y": 1017.1
+          "y": 1309.1
         },
         "text": {
           "height": 33.4,
           "width": 77.68,
           "x": 531.49,
-          "y": 998.1
+          "y": 1290.1
         }
       },
       "tag": "Pcard",
       "width": 138.68,
       "x": 481.99,
-      "y": 990.6
+      "y": 1282.6
     },
     {
       "height": 48.4,
@@ -3077,7 +3318,7 @@
       "tag": "Row",
       "width": 303.32,
       "x": 786.82,
-      "y": 990.6
+      "y": 1282.6
     },
     {
       "height": 48.4,
@@ -3087,46 +3328,46 @@
           "height": 18,
           "width": 18,
           "x": 986.05,
-          "y": 998.1
+          "y": 1290.1
         },
         "function_name": {
           "height": 15.6,
           "line_count": 1,
           "width": 71.14,
           "x": 910.91,
-          "y": 998.1
+          "y": 1290.1
         },
         "icon": {
           "height": 28,
           "width": 28,
           "x": 872.91,
-          "y": 1000.8
+          "y": 1292.8
         },
         "mark_numeral": {
           "height": 10,
           "line_count": 1,
           "width": 6.46,
           "x": 991.82,
-          "y": 1002.1
+          "y": 1294.1
         },
         "product_name": {
           "height": 14.4,
           "line_count": 1,
           "width": 93.14,
           "x": 910.91,
-          "y": 1017.1
+          "y": 1309.1
         },
         "text": {
           "height": 33.4,
           "width": 93.14,
           "x": 910.91,
-          "y": 998.1
+          "y": 1290.1
         }
       },
       "tag": "Pcard",
       "width": 154.14,
       "x": 861.41,
-      "y": 990.6
+      "y": 1282.6
     },
     {
       "height": 204.8,
@@ -3135,7 +3376,7 @@
       "tag": "Row",
       "width": 766.31,
       "x": 323.83,
-      "y": 1103
+      "y": 1395
     },
     {
       "height": 204.8,
@@ -3146,46 +3387,46 @@
           "height": 18,
           "width": 18,
           "x": 438.48,
-          "y": 1274.7
+          "y": 1566.7
         },
         "mark_numeral": {
           "height": 10,
           "line_count": 1,
           "width": 6.76,
           "x": 444.1,
-          "y": 1278.7
+          "y": 1570.7
         },
         "rail": {
           "height": 204.8,
           "width": 12,
           "x": 471.98,
-          "y": 1103
+          "y": 1395
         },
         "tag": {
           "height": 48.2,
           "width": 142.14,
           "x": 323.83,
-          "y": 1259.6
+          "y": 1551.6
         },
         "tag_label": {
           "height": 15.6,
           "line_count": 1,
           "width": 101.14,
           "x": 333.33,
-          "y": 1267.1
+          "y": 1559.1
         },
         "tag_sub": {
           "height": 15.6,
           "line_count": 1,
           "width": 49.76,
           "x": 384.71,
-          "y": 1284.7
+          "y": 1576.7
         }
       },
       "tag": "Pipe",
       "width": 160.14,
       "x": 323.83,
-      "y": 1103
+      "y": 1395
     },
     {
       "height": 204.8,
@@ -3194,7 +3435,7 @@
       "tag": "Row",
       "width": 574.16,
       "x": 515.98,
-      "y": 1103
+      "y": 1395
     },
     {
       "height": 204.8,
@@ -3206,25 +3447,25 @@
           "line_count": 1,
           "width": 254.77,
           "x": 673.67,
-          "y": 1104.4
+          "y": 1396.4
         },
         "tab": {
           "height": 16,
           "width": 266.77,
           "x": 667.67,
-          "y": 1103
+          "y": 1395
         },
         "tab_border": {
           "height": 196.8,
           "width": 290.77,
           "x": 657.67,
-          "y": 1111
+          "y": 1403
         }
       },
       "tag": "Zone",
       "width": 290.77,
       "x": 657.67,
-      "y": 1103
+      "y": 1395
     },
     {
       "height": 166.8,
@@ -3233,7 +3474,7 @@
       "tag": "Col",
       "width": 262.77,
       "x": 671.67,
-      "y": 1127
+      "y": 1419
     },
     {
       "height": 54.4,
@@ -3242,7 +3483,7 @@
       "tag": "Row",
       "width": 262.77,
       "x": 671.67,
-      "y": 1127
+      "y": 1419
     },
     {
       "height": 54.4,
@@ -3252,64 +3493,64 @@
           "height": 18,
           "width": 18,
           "x": 847.34,
-          "y": 1140.5
+          "y": 1432.5
         },
         "front": {
           "height": 48.4,
           "width": 155.57,
           "x": 721.28,
-          "y": 1133
+          "y": 1425
         },
         "function_name": {
           "height": 15.6,
           "line_count": 1,
           "width": 72.57,
           "x": 770.78,
-          "y": 1140.5
+          "y": 1432.5
         },
         "icon": {
           "height": 28,
           "width": 28,
           "x": 732.78,
-          "y": 1143.2
+          "y": 1435.2
         },
         "mark_numeral": {
           "height": 10,
           "line_count": 1,
           "width": 6.49,
           "x": 853.1,
-          "y": 1144.5
+          "y": 1436.5
         },
         "product_name": {
           "height": 14.4,
           "line_count": 1,
           "width": 94.57,
           "x": 770.78,
-          "y": 1159.5
+          "y": 1451.5
         },
         "stack_back/0": {
           "height": 48.4,
           "width": 155.57,
           "x": 729.28,
-          "y": 1127
+          "y": 1419
         },
         "stack_back/1": {
           "height": 48.4,
           "width": 155.57,
           "x": 725.28,
-          "y": 1130
+          "y": 1422
         },
         "text": {
           "height": 33.4,
           "width": 94.57,
           "x": 770.78,
-          "y": 1140.5
+          "y": 1432.5
         }
       },
       "tag": "Pcard",
       "width": 163.57,
       "x": 721.28,
-      "y": 1127
+      "y": 1419
     },
     {
       "height": 48.4,
@@ -3318,7 +3559,7 @@
       "tag": "Row",
       "width": 262.77,
       "x": 671.67,
-      "y": 1245.4
+      "y": 1537.4
     },
     {
       "height": 48.4,
@@ -3328,46 +3569,46 @@
           "height": 18,
           "width": 18,
           "x": 858.92,
-          "y": 1252.9
+          "y": 1544.9
         },
         "function_name": {
           "height": 15.6,
           "line_count": 1,
           "width": 87.72,
           "x": 767.2,
-          "y": 1252.9
+          "y": 1544.9
         },
         "icon": {
           "height": 28,
           "width": 28,
           "x": 729.2,
-          "y": 1255.6
+          "y": 1547.6
         },
         "mark_numeral": {
           "height": 10,
           "line_count": 1,
           "width": 5.82,
           "x": 865.02,
-          "y": 1256.9
+          "y": 1548.9
         },
         "product_name": {
           "height": 14.4,
           "line_count": 1,
           "width": 109.72,
           "x": 767.2,
-          "y": 1271.9
+          "y": 1563.9
         },
         "text": {
           "height": 33.4,
           "width": 109.72,
           "x": 767.2,
-          "y": 1252.9
+          "y": 1544.9
         }
       },
       "tag": "Pcard",
       "width": 170.72,
       "x": 717.7,
-      "y": 1245.4
+      "y": 1537.4
     },
     {
       "height": 142.4,
@@ -3376,7 +3617,7 @@
       "tag": "Row",
       "width": 766.31,
       "x": 323.83,
-      "y": 1371.8
+      "y": 1663.8
     },
     {
       "height": 142.4,
@@ -3385,7 +3626,7 @@
       "tag": "Col",
       "width": 214.37,
       "x": 323.83,
-      "y": 1371.8
+      "y": 1663.8
     },
     {
       "height": 48.4,
@@ -3394,7 +3635,7 @@
       "tag": "Row",
       "width": 214.37,
       "x": 323.83,
-      "y": 1418.8
+      "y": 1710.8
     },
     {
       "height": 48.4,
@@ -3404,46 +3645,46 @@
           "height": 18,
           "width": 18,
           "x": 478.83,
-          "y": 1426.3
+          "y": 1718.3
         },
         "function_name": {
           "height": 15.6,
           "line_count": 1,
           "width": 71.63,
           "x": 403.21,
-          "y": 1426.3
+          "y": 1718.3
         },
         "icon": {
           "height": 28,
           "width": 28,
           "x": 365.21,
-          "y": 1429
+          "y": 1721
         },
         "mark_numeral": {
           "height": 10,
           "line_count": 1,
           "width": 6.22,
           "x": 484.72,
-          "y": 1430.3
+          "y": 1722.3
         },
         "product_name": {
           "height": 14.4,
           "line_count": 1,
           "width": 93.63,
           "x": 403.21,
-          "y": 1445.3
+          "y": 1737.3
         },
         "text": {
           "height": 33.4,
           "width": 93.63,
           "x": 403.21,
-          "y": 1426.3
+          "y": 1718.3
         }
       },
       "tag": "Pcard",
       "width": 154.63,
       "x": 353.71,
-      "y": 1418.8
+      "y": 1710.8
     },
     {
       "height": 142.4,
@@ -3452,7 +3693,7 @@
       "tag": "Row",
       "width": 321.56,
       "x": 546.21,
-      "y": 1371.8
+      "y": 1663.8
     },
     {
       "height": 142.4,
@@ -3462,71 +3703,71 @@
           "height": 18,
           "width": 18,
           "x": 759.71,
-          "y": 1397.8
+          "y": 1689.8
         },
         "compartment": {
           "height": 26,
           "width": 142.82,
           "x": 679.01,
-          "y": 1470.2
+          "y": 1762.2
         },
         "compartment_text": {
           "height": 13.2,
           "line_count": 1,
           "width": 102.82,
           "x": 687.01,
-          "y": 1476.6
+          "y": 1768.6
         },
         "flag": {
           "height": 17,
           "width": 20,
           "x": 793.83,
-          "y": 1474.7
+          "y": 1766.7
         },
         "front": {
           "height": 142.4,
           "width": 257.69,
           "x": 578.14,
-          "y": 1371.8
+          "y": 1663.8
         },
         "function_name": {
           "height": 15.6,
           "line_count": 1,
           "width": 81.45,
           "x": 674.26,
-          "y": 1397.8
+          "y": 1689.8
         },
         "icon": {
           "height": 28,
           "width": 28,
           "x": 636.26,
-          "y": 1400.5
+          "y": 1692.5
         },
         "mark_numeral": {
           "height": 9,
           "line_count": 1,
           "width": 5.67,
           "x": 801,
-          "y": 1481.2
+          "y": 1773.2
         },
         "product_name": {
           "height": 14.4,
           "line_count": 1,
           "width": 60.35,
           "x": 695.82,
-          "y": 1416.8
+          "y": 1708.8
         },
         "text": {
           "height": 33.4,
           "width": 103.45,
           "x": 674.26,
-          "y": 1397.8
+          "y": 1689.8
         }
       },
       "tag": "Pcard",
       "width": 257.69,
       "x": 578.14,
-      "y": 1371.8
+      "y": 1663.8
     },
     {
       "height": 142.4,
@@ -3535,7 +3776,7 @@
       "tag": "Col",
       "width": 214.37,
       "x": 875.77,
-      "y": 1371.8
+      "y": 1663.8
     },
     {
       "height": 48.4,
@@ -3544,7 +3785,7 @@
       "tag": "Row",
       "width": 214.37,
       "x": 875.77,
-      "y": 1418.8
+      "y": 1710.8
     },
     {
       "height": 48.4,
@@ -3554,46 +3795,46 @@
           "height": 18,
           "width": 18,
           "x": 1049.8,
-          "y": 1426.3
+          "y": 1718.3
         },
         "function_name": {
           "height": 15.6,
           "line_count": 1,
           "width": 109.69,
           "x": 936.11,
-          "y": 1426.3
+          "y": 1718.3
         },
         "icon": {
           "height": 28,
           "width": 28,
           "x": 898.11,
-          "y": 1429
+          "y": 1721
         },
         "mark_numeral": {
           "height": 10,
           "line_count": 1,
           "width": 6.49,
           "x": 1055.55,
-          "y": 1430.3
+          "y": 1722.3
         },
         "product_name": {
           "height": 14.4,
           "line_count": 1,
           "width": 131.69,
           "x": 936.11,
-          "y": 1445.3
+          "y": 1737.3
         },
         "text": {
           "height": 33.4,
           "width": 131.69,
           "x": 936.11,
-          "y": 1426.3
+          "y": 1718.3
         }
       },
       "tag": "Pcard",
       "width": 192.69,
       "x": 886.61,
-      "y": 1418.8
+      "y": 1710.8
     },
     {
       "height": 300.8,
@@ -3604,67 +3845,67 @@
           "line_count": 1,
           "width": 1031.14,
           "x": 63,
-          "y": 1824.4
+          "y": 2116.4
         },
         "foot_rule": {
           "height": 1,
           "width": 1031.14,
           "x": 63,
-          "y": 1815.4
+          "y": 2107.4
         },
         "note": {
           "height": 15.6,
           "line_count": 1,
           "width": 212.71,
           "x": 204.01,
-          "y": 1562.2
+          "y": 1854.2
         },
         "note_detail": {
           "height": 15,
           "line_count": 1,
           "width": 1005.14,
           "x": 89,
-          "y": 1776.4
+          "y": 2068.4
         },
         "note_flag": {
           "height": 17,
           "width": 20,
           "x": 63,
-          "y": 1758
+          "y": 2050
         },
         "note_numeral": {
           "height": 9,
           "line_count": 1,
           "width": 6.09,
           "x": 69.96,
-          "y": 1764.5
+          "y": 2056.5
         },
         "note_text": {
           "height": 17.4,
           "line_count": 1,
           "width": 1005.14,
           "x": 89,
-          "y": 1758
+          "y": 2050
         },
         "note_zones": {
           "height": 15,
           "line_count": 1,
           "width": 1005.14,
           "x": 89,
-          "y": 1792.4
+          "y": 2084.4
         },
         "title": {
           "height": 15.6,
           "line_count": 1,
           "width": 129.01,
           "x": 63,
-          "y": 1562.2
+          "y": 1854.2
         }
       },
       "tag": "GeneralNotes",
       "width": 1057.14,
       "x": 50,
-      "y": 1551.2
+      "y": 1843.2
     },
     {
       "height": 907.6,
@@ -3673,7 +3914,7 @@
       "tag": "Col",
       "width": 422.86,
       "x": 1127.14,
-      "y": 944.4
+      "y": 1236.4
     },
     {
       "height": 641.8,
@@ -3684,93 +3925,93 @@
           "line_count": 1,
           "width": 64,
           "x": 1476.5,
-          "y": 1000.1
+          "y": 1292.1
         },
         "note": {
           "height": 31.2,
           "line_count": 2,
           "width": 294.38,
           "x": 1242.12,
-          "y": 953.9
+          "y": 1245.9
         },
         "part_balloon": {
           "height": 18,
           "width": 18,
           "x": 1136.64,
-          "y": 1518.7
+          "y": 1810.7
         },
         "part_numeral": {
           "height": 10,
           "line_count": 1,
           "width": 6.49,
           "x": 1142.4,
-          "y": 1522.7
+          "y": 1814.7
         },
         "part_planned": {
           "height": 13.2,
           "line_count": 1,
           "width": 61.87,
           "x": 1176.64,
-          "y": 1555.1
+          "y": 1847.1
         },
         "part_title": {
           "height": 17.4,
           "line_count": 1,
           "width": 101.25,
           "x": 1176.64,
-          "y": 1518.7
+          "y": 1810.7
         },
         "part_what": {
           "height": 15,
           "line_count": 1,
           "width": 90.27,
           "x": 1176.64,
-          "y": 1536.1
+          "y": 1828.1
         },
         "part_why": {
           "height": 60,
           "line_count": 4,
           "width": 146.86,
           "x": 1321.64,
-          "y": 1518.7
+          "y": 1810.7
         },
         "part_why_rule": {
           "height": 60,
           "width": 1,
           "x": 1312.64,
-          "y": 1518.7
+          "y": 1810.7
         },
         "part_zones": {
           "height": 15,
           "line_count": 1,
           "width": 64,
           "x": 1476.5,
-          "y": 1518.7
+          "y": 1810.7
         },
         "row_rule": {
           "height": 1,
           "width": 419.86,
           "x": 1128.64,
-          "y": 1511.7
+          "y": 1803.7
         },
         "title": {
           "height": 15.6,
           "line_count": 1,
           "width": 89.48,
           "x": 1140.64,
-          "y": 961.7
+          "y": 1253.7
         },
         "title_rule": {
           "height": 1,
           "width": 419.86,
           "x": 1128.64,
-          "y": 993.1
+          "y": 1285.1
         }
       },
       "tag": "PartsList",
       "width": 422.86,
       "x": 1127.14,
-      "y": 944.4
+      "y": 1236.4
     },
     {
       "height": 240,
@@ -3781,19 +4022,19 @@
           "line_count": 2,
           "width": 374.31,
           "x": 1151.41,
-          "y": 1711.8
+          "y": 2003.8
         },
         "label_chip": {
           "height": 36.8,
           "width": 390.31,
           "x": 1143.41,
-          "y": 1707.8
+          "y": 1999.8
         }
       },
       "tag": "Frame",
       "width": 422.86,
       "x": 1127.14,
-      "y": 1606.2
+      "y": 1898.2
     },
     {
       "height": 13.2,
@@ -3804,13 +4045,13 @@
           "line_count": 1,
           "width": 1500,
           "x": 50,
-          "y": 1864
+          "y": 2156
         }
       },
       "tag": "Foot",
       "width": 1500,
       "x": 50,
-      "y": 1864
+      "y": 2156
     }
   ]
 }

@@ -130,8 +130,11 @@ fn marks_on_onepager_pass_text_fits_box_and_marks_clear() {
         + arrowheads
         + parts(PartName::RailDot);
     // Every carrier glyph, every list glyph (3 attention items, 9 parts, 4 notes), a
-    // sample per kind, and the marks of the lines.
-    assert_eq!(clear.examined, (sites + 3 + 9 + 4 + 3 + line_marks) as u64);
+    // sample per kind, the marks of the lines, and the detail frame and its tag.
+    assert_eq!(
+        clear.examined,
+        (sites + 3 + 9 + 4 + 3 + line_marks + 2) as u64
+    );
 }
 
 #[test]
@@ -167,6 +170,17 @@ fn the_drawn_zones_are_the_cells_of_the_glyph_centres() {
     }
     for entry in body_nodes(&page) {
         carriers.push((entry.pointer.clone(), page_marks.node_marks(&entry)));
+        if let stencil_model::NodeRef::Node(stencil_model::Node::Ladder(ladder)) = entry.node {
+            for index in 0..ladder.rungs.len() {
+                let pointer = stencil_model::SheetList::Rungs
+                    .pointer_in(&entry.pointer)
+                    .index(index);
+                carriers.push((
+                    pointer,
+                    PageMarks::rung_marks(ladder, &entry.pointer, index),
+                ));
+            }
+        }
     }
     let mut sites = 0;
     for (pointer, marks) in carriers {

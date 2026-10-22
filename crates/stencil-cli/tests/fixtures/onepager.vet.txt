@@ -1,4 +1,4 @@
-check remembered-constants: examined 138 text fields, 0 defects
+check remembered-constants: examined 152 text fields, 0 defects
 check legend-consistency: examined 25 relations, 0 defects
 check icon-matches-product: examined 8 items, 0 defects
 check keys-used: examined 20 keys, 0 defects

@@ -309,6 +309,12 @@ seven_lines="$(printf '"line %s",' 1 2 3 4 5 6 7)"
 # notes beside its one.
 many_parts="$(printf '{id: "part-%s", name: "Part", why: "Filler."},' $(seq 1 48))"
 many_notes="$(printf '{id: "note-%s", text: "Filler."},' $(seq 1 16))"
+# Fillers for the ladder bounds: seven ladders that, with the one the case
+# writes inline and onepager's own, make nine; 17 framed Steps; and six rungs
+# beside onepager's four.
+seven_ladders="$(printf '{tag: "Ladder", title: "Extra ladder %s", around: ["s-judge"], rungs: [{title: "Retry", text: "Again."}]},' $(seq 1 7))"
+many_around="$(printf '"s-judge",%.0s' {1..17})"
+six_rungs="$(printf '{title: "Rung %s", text: "Filler."},' $(seq 1 6))"
 
 # figure | name | sed expression applied to figures/<figure>.cue | text the
 # vet error must contain [| second text the error must also contain]. A g7 or
@@ -376,6 +382,7 @@ sequence_cases=(
 	'needs-sheet-phases|s/^\tbody: \[{$/\tbody: [{tag: "Phases", lanes: ["crew"], phases: [{id: "run", title: "Run"}], children: [{tag: "Step", lane: "crew", phase: "run", title: "Work"}]}, {/|_needsSheet.phases'
 	'needs-sheet-marks|s/title: "Operator", subtitle: "submits and cancels jobs"/marks: [{part: "console"}], &/|_needsSheet.marks'
 	'needs-sheet-parts-list|s/^\tbody: \[{$/\tbody: [{tag: "PartsList", title: "Parts", parts: [{id: "console", name: "Console", why: "Submits jobs."}]}, {/|_needsSheet."parts-list"'
+	'needs-sheet-ladder|s/^\tbody: \[{$/\tbody: [{tag: "Ladder", title: "When a job fails", around: ["work"], rungs: [{title: "Retry", text: "The job runs again."}]}, {/|_needsSheet.ladder'
 	'needs-sheet-general-notes|s/^\tbody: \[{$/\tbody: [{tag: "GeneralNotes", title: "Notes", notes: [{id: "retry", text: "Jobs retry once."}]}, {/|_needsSheet."general-notes"'
 	'needs-sheet-step|s/^\tbody: \[{$/\tbody: [{tag: "Phases", lanes: ["crew"], phases: [{id: "run", title: "Run"}], children: [{tag: "Step", lane: "crew", phase: "run", title: "Work"}]}, {/|_needsSheet.step'
 	'needs-sheet-item-outline|s/title: "Operator", subtitle: "submits and cancels jobs"/outline: "person", &/|_needsSheet."item-outline"'
@@ -410,6 +417,7 @@ sheet_cases=(
 	'step-span-out-of-range|s/phase: "describe"/&, col: 5, span: 3/|_stepSpanOutOfRange'
 	'step-text-fill|s/look:  "text"/&, fill: "tint"/|_stepTextFill'
 	'step-fill-unknown|s/look:  "text"/look: "box", fill: "paper"/|fill: 3 errors in empty disjunction'
+	'rung-fill-unknown|s/rung_fill: "none"/rung_fill: "paper"/|rung_fill: 3 errors in empty disjunction'
 	'band-unknown|s/lanes: \["operator", "api", "worker", "model"\]/&, band: "solid"/|band: 2 errors in empty disjunction'
 	'list-empty-lanes|s/lanes: \["operator", "api", "worker", "model"\]/lanes: []/|lanes: invalid value []|list.MinItems(1)'
 	'list-empty-phases|/^\t\t\t\t\tphases: \[$/,/^\t\t\t\t\t\]$/d; s/^\t\t\t\t\tlanes: .*/&\n\t\t\t\t\tphases: []/|phases: invalid value []|list.MinItems(1)'
@@ -438,6 +446,13 @@ sheet_cases=(
 	'part-node-twice|s/{id: "queue", node: "queue",/{id: "queue", node: "worker",/|_partNodesTwice.worker'
 	'part-field-from-node|s/{id: "gateway", node: "gateway",/& name: "Gateway",/|_partFieldFromNode'
 	'keys-used-note|s/, {note: "no-store-credentials"}//; /marks: \[{note: "no-store-credentials"}\]/d|_notesUnflagged."no-store-credentials"'
+	"ladders-too-many|s/^\t\t\t\t\ttag:   \"Ladder\"$/\t\t\t\t\ttag: \"Ladder\", title: \"Extra ladder\", around: [\"s-judge\"], rungs: [{title: \"Retry\", text: \"Again.\"}]\n\t\t\t\t}, $seven_ladders {\n&/|_laddersTooMany|9 ladders, above 8"
+	'ladder-around-not-step|s/"s-judge", "s-write"\]/"s-judge", "s-writes"]/|_ladderAroundUnknown."s-writes"'
+	'ladder-around-two-phases|s/^\t\t\t\t\tlanes: \["operator", "api", "worker", "model"\]$/\t\t\t\t\tlanes: ["operator"]\n\t\t\t\t\tphases: [{id: "aside", title: "Aside"}]\n\t\t\t\t\tchildren: [{tag: "Step", id: "s-aside", lane: "operator", phase: "aside", title: "Aside"}]\n\t\t\t\t}, {\n\t\t\t\t\ttag: "Phases"\n&/; s/"s-judge", "s-write"\]/"s-judge", "s-aside"]/|_ladderAroundTwoPhases|lies in one Phases node'
+	'list-empty-around|s/around: \["s-evaluate", "s-judge", "s-write"\]/around: []/|around: invalid value []|list.MinItems(1)'
+	'list-empty-rungs|/^\t\t\t\t\trungs: \[$/,/^\t\t\t\t\t\]$/d; s/^\t\t\t\t\taround: .*/&\n\t\t\t\t\trungs: []/|rungs: invalid value []|list.MinItems(1)'
+	"list-too-long-around|s/around: \[\"s-evaluate\", \"s-judge\", \"s-write\"\]/around: [$many_around]/|around: invalid value|list.MaxItems(16)"
+	"list-too-long-rungs|s/^\t\t\t\t\trungs: \[$/&\n\t\t\t\t\t\t$six_rungs/|rungs: invalid value|list.MaxItems(6)"
 	"list-too-long-step-lines|s/lines: \[\"in plain language\", \"camera and hours\"\]/lines: [$seven_lines]/|lines: invalid value|list.MaxItems(6)"
 )
 sheet_small_cases=(

@@ -1471,6 +1471,21 @@ fn actor_document() -> Value {
     document
 }
 
+/// The smallest sheet with a ladder: `actor_document`'s Step framed by a ladder of one
+/// rung.
+fn ladder_document() -> Value {
+    let mut document = actor_document();
+    let view = &mut document["body"][0];
+    view["children"][1]["children"][0]["id"] = json!("work");
+    view["children"].as_array_mut().unwrap().push(json!({
+        "tag": "Ladder",
+        "title": "When work fails",
+        "around": ["work"],
+        "rungs": [{ "title": "Retry", "text": "The crew runs it again.", "actor": "crew" }]
+    }));
+    document
+}
+
 /// The smallest sheet with marks: the `api` Item marked with the attention item and a
 /// note, a parts list keyed by `worker`, and the general notes.
 fn marks_document() -> Value {
@@ -1630,6 +1645,13 @@ fn every_sheet_surface_is_refused_on_every_path() {
                 without_sheet.as_object_mut().unwrap().remove("sheet");
                 assert!(vet_rules(without_sheet).contains(&(pointer.to_string(), "needs-sheet")));
                 assert_eq!(traced_at(actor_document(), pointer), pointer);
+            }
+            stencil_model::SheetSurface::Ladder => {
+                let pointer = "/body/0/children/2";
+                let mut without_sheet = ladder_document();
+                without_sheet.as_object_mut().unwrap().remove("sheet");
+                assert!(vet_rules(without_sheet).contains(&(pointer.to_string(), "needs-sheet")));
+                assert_eq!(traced_at(ladder_document(), pointer), pointer);
             }
             stencil_model::SheetSurface::Marks
             | stencil_model::SheetSurface::PartsList

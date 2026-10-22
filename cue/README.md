@@ -9,14 +9,14 @@ its rules; a figure file writes one topology against a grammar's `#Page`.
 | File | Package | Contents |
 |---|---|---|
 | `cue.mod/module.cue` | | the module `github.com/frits-v/stencil/cue@v0`, language v0.17.1 |
-| `core.cue` | `stencil` | `#Page` and the core nodes: `Row`, `Col`, `Lanes`, `Box`, `Item`, `Fact`, `Note`, `Pipe`, `Tee`, `Text`, `Callout`, `Frame`, `View`, `Phases`, `Step`, `PartsList`, `GeneralNotes`, plus `#Sheet` and its cells, `#Mark`, `#MarkedText`, `#MarkLegend`, `#PartEntry`, `#GeneralNote`, `#Actor`, `#Phase`, `#SheetSurface`, `#Outline`, `#LineStep`, `#LegendEntry`, `#Link`, `#Line`, `#Bend`, `#Corner`, `#TintSlot` and `#FactEntry` |
+| `core.cue` | `stencil` | `#Page` and the core nodes: `Row`, `Col`, `Lanes`, `Box`, `Item`, `Fact`, `Note`, `Pipe`, `Tee`, `Text`, `Callout`, `Frame`, `View`, `Phases`, `Step`, `PartsList`, `GeneralNotes`, `Ladder`, plus `#Sheet` and its cells, `#Mark`, `#MarkedText`, `#MarkLegend`, `#PartEntry`, `#GeneralNote`, `#Rung`, `#Actor`, `#Phase`, `#SheetSurface`, `#Outline`, `#LineStep`, `#LegendEntry`, `#Link`, `#Line`, `#Bend`, `#Corner`, `#TintSlot` and `#FactEntry` |
 | `grammar.cue` | `stencil` | `#Grammar` and its parts (`#LineKind` among them), and `#GrammarNesting`, the kind and nesting rules every grammar shares |
 | `theme.cue` | `stencil` | `#Theme`, the closed theme definition every theme file vets against: `cue vet -c -d '#Theme' . <file>.json` |
 | `grammars/gcp.cue` | `gcp` | the Google Cloud grammar data and rules, and the gcp `#Page` |
 | `grammars/plain.cue` | `plain` | the domain-neutral grammar data and the plain `#Page` |
 | `figures/g7.cue` | `gcp` | g7, Dedicated Interconnect at 99.99%: `customer` and `internal: customer & {...}` |
 | `figures/sequence.cue` | `plain` | a request flow in five lanes with ten ordered messages: `figure`, exported as `examples/sequence.json` |
-| `figures/sheet.cue` | `gcp` | the trigger evaluation design sheet, a title block, four actors, a Workflow view and a System view (an assembly, a rail, a store with compartments, step badges, a valve and planned work) with its parts list, general notes and a console screen: `onepager`, exported as `examples/onepager.json` |
+| `figures/sheet.cue` | `gcp` | the trigger evaluation design sheet, a title block, four actors, a Workflow view with a detail ladder and a System view (an assembly, a rail, a store with compartments, step badges, a valve and planned work) with its parts list, general notes and a console screen: `onepager`, exported as `examples/onepager.json` |
 | `figures/sheet-small.cue` | `plain` | the smallest design sheet, with a parts list and general notes whose every key is marked once, and a link whose via lies in the sheet's wider margin: `small`, the base of the sheet negative cases |
 | `check.sh` | | the gate, below |
 | `out/` | | exported JSON and renders, not committed |
@@ -120,6 +120,12 @@ for example `CUE="$(mise which cue)" ./cue/check.sh`.
   `_notesUnflagged` and `_attentionUnmarked` name a key no mark uses. Off a sheet marks,
   a parts list and general notes are `_needsSheet.marks`, `."parts-list"` and
   `."general-notes"`.
+- A `Ladder` frames 1 to 16 Steps of one Phases node, its `around`, and climbs 1 to 6
+  `rungs`, each with a title, an optional `who` and `actor`, its text, `planned` and up to 4
+  `marks`. On a sheet `_laddersTooMany` names a ninth ladder, `_ladderAroundUnknown` an
+  `around` id that names no Step and `_ladderAroundTwoPhases` a ladder whose Steps lie in
+  two Phases nodes; a rung's actor counts as named. Off a sheet a ladder is
+  `_needsSheet.ladder`.
 - An Item's `outline` is `card`, `store`, `person` or `stack`; a store holds up to 6
   `compartments`, each a string or `{text, marks}`. An Item or Box may be `planned`, and a
   solid Link or Pipe `planned` too, keying `<key>-planned`. A Pipe with `form: "rail"` keys

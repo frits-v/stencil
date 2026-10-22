@@ -28,7 +28,7 @@ pub const TOPIC_BYTES_MAX: usize = 5000;
 /// Schema definitions that get their own vocabulary row after Page and the node tags.
 pub const ROW_DEFINITIONS: [&str; 3] = ["FactEntry", "LegendEntry", "Link"];
 /// Structs of the design sheet that a topic prints as rows of its own field table.
-pub const TOPIC_ROW_DEFINITIONS: [&str; 11] = [
+pub const TOPIC_ROW_DEFINITIONS: [&str; 12] = [
     "Sheet",
     "Problem",
     "ProblemPoint",
@@ -40,6 +40,7 @@ pub const TOPIC_ROW_DEFINITIONS: [&str; 11] = [
     "MarkLegend",
     "PartEntry",
     "GeneralNote",
+    "Rung",
 ];
 /// Definitions written inline where a field uses them, never as a row or an enum line: a
 /// point as `{x,y}`, a Tee arm as its tag, a paragraph as `text or {lead,text}`, a mark as

@@ -745,6 +745,9 @@ fn every_sheet_rule_is_listed_in_table_order() {
             "step-out-of-range",
             "link-step-duplicate",
             "valve-without-arrow",
+            "ladders-too-many",
+            "ladder-around-not-step",
+            "ladder-around-two-phases",
         ]
     );
 }
@@ -852,7 +855,7 @@ fn every_section_14_vet_rule_has_a_cue_case() {
             non_empty,
             others.len()
         ),
-        (17, 12, 6, 42),
+        (18, 14, 8, 45),
         "surfaces, lists, non-empty lists and other rules examined"
     );
     assert_eq!(matched, expected.len());
@@ -1561,4 +1564,204 @@ fn a_dash_dot_kind_of_any_name_needs_a_sheet() {
         })
         .collect();
     assert_eq!(found, [("/body/0/kind".to_string(), "needs-sheet")]);
+}
+
+/// The smallest sheet with a ladder: the actor sheet's Step, named `work`, framed by a
+/// ladder whose one rung acts for `ops` and marks the attention item.
+fn ladder_sheet_value() -> Value {
+    let mut document = actor_sheet_value();
+    document["body"][0]["children"][1]["children"][0]["id"] = json!("work");
+    document["body"][0]["children"]
+        .as_array_mut()
+        .unwrap()
+        .push(json!({
+            "tag": "Ladder",
+            "title": "When work fails",
+            "around": ["work"],
+            "rungs": [{
+                "title": "Retry",
+                "who": "the crew",
+                "text": "The crew runs the work again.",
+                "actor": "ops",
+                "marks": [{ "attention": "first" }]
+            }]
+        }));
+    document
+}
+
+const LADDER: &str = "/body/0/children/2";
+
+#[test]
+fn the_smallest_ladder_sheet_vets_clean_and_its_rung_names_its_actor() {
+    let document = ladder_sheet_value();
+    assert_eq!(violations(document.clone()), Vec::new());
+    let page: Page = serde_json::from_value(document).unwrap();
+    let report = stencil_model::checks::keys_used(&page);
+    assert_eq!((report.examined, report.defects.len()), (3, 0));
+}
+
+#[test]
+fn a_ninth_ladder_is_refused() {
+    let mut document = ladder_sheet_value();
+    let ladder = document["body"][0]["children"][2].clone();
+    let children = document["body"][0]["children"].as_array_mut().unwrap();
+    for _ in 0..8 {
+        children.push(ladder.clone());
+    }
+    assert_eq!(
+        violations(document),
+        one(
+            "/body/0/children/10",
+            "ladders-too-many",
+            "9 ladders, above 8: details are lettered A to H"
+        )
+    );
+}
+
+#[test]
+fn an_around_id_that_names_no_step_is_refused() {
+    let mut document = ladder_sheet_value();
+    document["body"][0]["children"][2]["around"] = json!(["work", "api"]);
+    assert_eq!(
+        violations(document),
+        one(
+            &format!("{LADDER}/around/1"),
+            "ladder-around-not-step",
+            "\"api\" names no Step"
+        )
+    );
+}
+
+#[test]
+fn a_ladder_around_steps_of_two_phases_nodes_is_refused() {
+    let mut document = ladder_sheet_value();
+    document["body"][0]["children"][2]["around"] = json!(["work", "later"]);
+    document["body"][0]["children"]
+        .as_array_mut()
+        .unwrap()
+        .push(json!({
+            "tag": "Phases",
+            "lanes": ["crew"],
+            "phases": [{ "id": "run", "title": "Run" }],
+            "children": [{ "tag": "Step", "id": "later", "lane": "crew", "phase": "run",
+                           "title": "Later" }]
+        }));
+    assert_eq!(
+        violations(document),
+        one(
+            &format!("{LADDER}/around/1"),
+            "ladder-around-two-phases",
+            "a detail frame lies in one Phases node"
+        )
+    );
+}
+
+#[test]
+fn an_empty_or_long_around_or_rungs_list_is_refused() {
+    let mut empty = ladder_sheet_value();
+    empty["body"][0]["children"][2]["around"] = json!([]);
+    empty["body"][0]["children"][2]["rungs"] = json!([]);
+    assert_eq!(
+        violations(empty),
+        vec![
+            (
+                format!("{LADDER}/around"),
+                "list-empty",
+                "around is empty".to_string()
+            ),
+            (
+                format!("{LADDER}/rungs"),
+                "list-empty",
+                "rungs is empty".to_string()
+            ),
+        ]
+    );
+    let mut long = ladder_sheet_value();
+    long["body"][0]["children"][2]["around"] = json!(vec!["work"; 17]);
+    let rung = long["body"][0]["children"][2]["rungs"][0].clone();
+    let mut rungs = vec![rung];
+    for _ in 0..6 {
+        rungs.push(json!({ "title": "Again", "text": "Once more." }));
+    }
+    long["body"][0]["children"][2]["rungs"] = json!(rungs);
+    assert_eq!(
+        violations(long),
+        vec![
+            (
+                format!("{LADDER}/around"),
+                "list-too-long",
+                "17 around, above 16".to_string()
+            ),
+            (
+                format!("{LADDER}/rungs"),
+                "list-too-long",
+                "7 rungs, above 6".to_string()
+            ),
+        ]
+    );
+}
+
+#[test]
+fn a_rung_names_a_declared_actor_and_known_keys_once() {
+    let mut document = ladder_sheet_value();
+    document["body"][0]["children"][2]["rungs"][0]["actor"] = json!("audit");
+    document["body"][0]["children"][2]["rungs"][0]["marks"] =
+        json!([{ "attention": "first" }, { "attention": "first" }, { "part": "pump" }]);
+    let found: Vec<(String, &'static str)> = violations(document)
+        .into_iter()
+        .map(|(pointer, rule, _)| (pointer, rule))
+        .collect();
+    assert_eq!(
+        found,
+        vec![
+            (format!("{LADDER}/rungs/0/actor"), "actor-unknown"),
+            (format!("{LADDER}/rungs/0/marks/1"), "mark-repeated"),
+            (format!("{LADDER}/rungs/0/marks/2"), "mark-unknown"),
+        ]
+    );
+}
+
+#[test]
+fn a_ladder_and_its_rung_marks_off_a_sheet_need_a_sheet() {
+    let mut document = ladder_sheet_value();
+    document.as_object_mut().unwrap().remove("sheet");
+    let found: Vec<String> = violations(document)
+        .into_iter()
+        .filter(|(_, rule, _)| *rule == "needs-sheet")
+        .map(|(pointer, _, _)| pointer)
+        .collect();
+    assert!(found.contains(&LADDER.to_string()), "{found:?}");
+    assert!(
+        found.contains(&format!("{LADDER}/rungs/0/marks")),
+        "{found:?}"
+    );
+}
+
+#[test]
+fn a_ladder_fills_its_rungs_as_rung_fill_says_and_a_planned_rung_takes_none() {
+    let mut document = ladder_sheet_value();
+    document["body"][0]["children"][2]["rungs"]
+        .as_array_mut()
+        .unwrap()
+        .push(json!({ "title": "Page", "text": "Someone is paged.", "planned": true }));
+    let page: Page = serde_json::from_value(document.clone()).unwrap();
+    let Some(stencil_model::Node::View(view)) = page.body.first() else {
+        panic!("the sheet opens with a View");
+    };
+    let Some(stencil_model::Node::Ladder(ladder)) = view.children.get(2) else {
+        panic!("the View's third child is the Ladder");
+    };
+    use stencil_model::StepFill;
+    assert_eq!(ladder.fill_of(&ladder.rungs[0]), StepFill::Tint);
+    assert_eq!(ladder.fill_of(&ladder.rungs[1]), StepFill::None);
+
+    document["body"][0]["children"][2]["rung_fill"] = json!("none");
+    assert_eq!(violations(document.clone()), Vec::new());
+    let page: Page = serde_json::from_value(document.clone()).unwrap();
+    assert_eq!(
+        serde_json::to_value(&page).unwrap()["body"][0]["children"][2]["rung_fill"],
+        "none"
+    );
+    document["body"][0]["children"][2]["rung_fill"] = json!("paper");
+    assert!(serde_json::from_value::<Page>(document).is_err());
 }

@@ -2,9 +2,9 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use crate::document::{
     AnswerParagraph, Arrow, BUILTIN_GRAMMARS, BUILTIN_THEMES, CAPTION_SCALARS_MAX, Chrome,
-    FACTS_MAX, GeneralNotes, LANES_MAX, LINE_STEP_MAX, Line, Link, MarkKind, Node, Outline,
-    PHASE_COLUMNS_MAX, Page, PartsList, Phases, PipeDir, PipeForm, Projection, Sheet, Step,
-    StepLook, TINT_SLOTS, Tee, Text, WORDMARK_SCALARS_MAX, canvas_width, is_valid_id,
+    FACTS_MAX, GeneralNotes, LADDERS_MAX, LANES_MAX, LINE_STEP_MAX, Line, Link, MarkKind, Node,
+    Outline, PHASE_COLUMNS_MAX, Page, PartsList, Phases, PipeDir, PipeForm, Projection, Sheet,
+    Step, StepLook, TINT_SLOTS, Tee, Text, WORDMARK_SCALARS_MAX, canvas_width, is_valid_id,
 };
 use crate::grammar::{Grammar, IconPack, PAGE_PARENT};
 use crate::marks::{CarrierMark, PageMarks};
@@ -114,11 +114,14 @@ pub enum VetRule {
     StepOutOfRange,
     LinkStepDuplicate,
     ValveWithoutArrow,
+    LaddersTooMany,
+    LadderAroundNotStep,
+    LadderAroundTwoPhases,
 }
 
 impl VetRule {
     /// The rules of section 14.3, in table order.
-    pub const SHEET: [VetRule; 45] = [
+    pub const SHEET: [VetRule; 48] = [
         VetRule::NeedsSheet,
         VetRule::SheetInIso,
         VetRule::SheetChromeNone,
@@ -164,6 +167,9 @@ impl VetRule {
         VetRule::StepOutOfRange,
         VetRule::LinkStepDuplicate,
         VetRule::ValveWithoutArrow,
+        VetRule::LaddersTooMany,
+        VetRule::LadderAroundNotStep,
+        VetRule::LadderAroundTwoPhases,
     ];
 
     /// Kebab-case name used on the CLI, as in section 1.3.
@@ -254,6 +260,9 @@ impl VetRule {
             VetRule::StepOutOfRange => "step-out-of-range",
             VetRule::LinkStepDuplicate => "link-step-duplicate",
             VetRule::ValveWithoutArrow => "valve-without-arrow",
+            VetRule::LaddersTooMany => "ladders-too-many",
+            VetRule::LadderAroundNotStep => "ladder-around-not-step",
+            VetRule::LadderAroundTwoPhases => "ladder-around-two-phases",
         }
     }
 }
@@ -420,6 +429,8 @@ pub fn validate_page(page: &Page, grammar: &Grammar) -> Vec<Violation> {
         planned_ids: planned_ids(&entries),
         rows: BTreeSet::new(),
         steps: BTreeMap::new(),
+        step_parents: step_parents(&entries),
+        ladders: 0,
     };
     for entry in &entries {
         let own_fields = [
@@ -434,10 +445,12 @@ pub fn validate_page(page: &Page, grammar: &Grammar) -> Vec<Violation> {
             entry.pointer.child("step"),
         ];
         let lines_prefix = format!("{}/", entry.pointer.child("lines").as_str());
+        let rungs_prefix = format!("{}/", entry.pointer.child("rungs").as_str());
         report_needs_sheet(&surfaces, &mut reported, &mut violations, |pointer| {
             *pointer == entry.pointer
                 || own_fields.contains(pointer)
                 || pointer.as_str().starts_with(&lines_prefix)
+                || pointer.as_str().starts_with(&rungs_prefix)
         });
         check_sheet_placement(page, entry, &mut violations);
         let context = enclosing_box_kind(entry, &box_context);
@@ -539,6 +552,86 @@ struct SheetNodes<'a> {
     rows: BTreeSet<NodePointer>,
     /// Each step badge number with the pointer of the first pipe or link that draws it.
     steps: BTreeMap<u16, NodePointer>,
+    /// Every Step id of the page with its parent's pointer, for a ladder's `around`.
+    step_parents: BTreeMap<&'a str, NodePointer>,
+    /// Ladders walked so far, for `ladders-too-many`.
+    ladders: usize,
+}
+
+/// Each Step id with its parent's pointer, the first Step holding an id winning.
+fn step_parents<'a>(entries: &[NodeEntry<'a>]) -> BTreeMap<&'a str, NodePointer> {
+    let mut parents = BTreeMap::new();
+    for entry in entries {
+        if let (NodeRef::Node(Node::Step(step)), Some(parent)) = (entry.node, &entry.parent)
+            && let Some(id) = step.id.as_deref()
+        {
+            parents.entry(id).or_insert_with(|| parent.clone());
+        }
+    }
+    parents
+}
+
+/// A ladder's rules in field order: `ladders-too-many` on the ninth, the length of
+/// `around`, each `around` id naming a Step of one Phases node, the length of `rungs`, then
+/// each rung's actor and marks.
+fn check_ladder<'a>(
+    page: &'a Page,
+    entry: &NodeEntry<'a>,
+    ladder: &'a crate::document::Ladder,
+    sheet_nodes: &mut SheetNodes<'a>,
+    violations: &mut Violations,
+) {
+    sheet_nodes.ladders += 1;
+    if sheet_nodes.ladders > LADDERS_MAX {
+        violations.push(
+            entry.pointer.clone(),
+            VetRule::LaddersTooMany,
+            format!(
+                "{} ladders, above {LADDERS_MAX}: details are lettered A to H",
+                sheet_nodes.ladders
+            ),
+        );
+    }
+    let around = SheetList::Around;
+    check_list_length_in(around, &entry.pointer, ladder.around.len(), violations);
+    let mut framed: Option<&NodePointer> = None;
+    for (index, id) in ladder.around.iter().enumerate().take(around.max() + 1) {
+        let pointer = around.pointer_in(&entry.pointer).index(index);
+        match sheet_nodes.step_parents.get(id.as_str()) {
+            None => violations.push(
+                pointer,
+                VetRule::LadderAroundNotStep,
+                format!("\"{id}\" names no Step"),
+            ),
+            Some(parent) => match framed {
+                Some(first) if first != parent => violations.push(
+                    pointer,
+                    VetRule::LadderAroundTwoPhases,
+                    "a detail frame lies in one Phases node".to_string(),
+                ),
+                Some(_) => {}
+                None => framed = Some(parent),
+            },
+        }
+    }
+    let rungs = SheetList::Rungs;
+    check_list_length_in(rungs, &entry.pointer, ladder.rungs.len(), violations);
+    for (index, rung) in ladder.rungs.iter().enumerate().take(rungs.max() + 1) {
+        if let Some(actor) = &rung.actor {
+            check_actor_known(
+                page,
+                &sheet_nodes.actors,
+                actor,
+                rungs.pointer_in(&entry.pointer).index(index).child("actor"),
+                violations,
+            );
+        }
+        check_carrier_marks(
+            &sheet_nodes.marks,
+            &PageMarks::rung_marks(ladder, &entry.pointer, index),
+            violations,
+        );
+    }
 }
 
 /// The ids of planned work on a page: an Item or Box with `planned`, a Step with look
@@ -781,6 +874,9 @@ fn check_sheet_node<'a>(
             if keyed_list_first(sheet_nodes, "GeneralNotes", entry, violations) {
                 check_general_notes(entry, notes, violations);
             }
+        }
+        NodeRef::Node(Node::Ladder(ladder)) => {
+            check_ladder(page, entry, ladder, sheet_nodes, violations);
         }
         NodeRef::Node(Node::Item(item)) => {
             if let Some(actor) = &item.actor {
@@ -1992,7 +2088,8 @@ fn check_entry<'a>(
             | Node::Callout(_)
             | Node::Step(_)
             | Node::PartsList(_)
-            | Node::GeneralNotes(_),
+            | Node::GeneralNotes(_)
+            | Node::Ladder(_),
         )
         | NodeRef::TeeArm(_) => {}
     }
@@ -2085,7 +2182,8 @@ fn check_kind_and_tint(
             | Node::Phases(_)
             | Node::Step(_)
             | Node::PartsList(_)
-            | Node::GeneralNotes(_),
+            | Node::GeneralNotes(_)
+            | Node::Ladder(_),
         ) => {}
     }
 }
