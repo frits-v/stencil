@@ -110,7 +110,7 @@ enum Command {
     Schema,
     /// Print the authoring briefing for an agent, or one deeper topic
     Prime {
-        /// themes, links, blocks, layout, iso, checks, cue, sheet, phases, example, or grammar
+        /// themes, links, blocks, layout, iso, checks, cue, sheet, phases, marks, example, or grammar
         topic: Option<String>,
         /// The grammar to brief on, after `grammar`: gcp or plain
         name: Option<String>,
@@ -435,7 +435,7 @@ fn check_in_memory(
     path: &Path,
     overrides: &Overrides,
     print_width: Option<PrintWidth>,
-) -> Result<[CheckReport; 16], Failure> {
+) -> Result<[CheckReport; 17], Failure> {
     let loaded = load_overridden_document(path, overrides)?;
     let rendered = render_page(&loaded, DeviceScale::DEFAULT)?;
     Ok(all_checks(

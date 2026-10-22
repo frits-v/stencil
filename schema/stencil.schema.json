@@ -366,6 +366,35 @@
         "ask"
       ]
     },
+    "GeneralNote": {
+      "type": "object",
+      "properties": {
+        "detail": {
+          "description": "A smaller line under the text.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 400,
+          "minLength": 1
+        },
+        "id": {
+          "description": "Unique among the general notes.",
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9-]{0,63}$"
+        },
+        "text": {
+          "type": "string",
+          "maxLength": 400,
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "text"
+      ]
+    },
     "IconName": {
       "type": "string",
       "enum": [
@@ -517,6 +546,14 @@
         "line": {
           "$ref": "#/$defs/Line"
         },
+        "marks": {
+          "description": "On a design sheet, marks set in the tag after the label and sub; a link with marks\nhas a label.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Mark"
+          },
+          "maxItems": 4
+        },
         "order": {
           "description": "The message position along the time axis when the link joins two lane heads of one\nLanes node (section 13.6).",
           "type": [
@@ -578,6 +615,118 @@
         "plain",
         "numbered",
         "bulleted"
+      ]
+    },
+    "Mark": {
+      "description": "What a mark keys: a balloon names a part of the parts list, a flag a general note, a\ndiamond an attention item (section 14.2 rule 4). Its drawn number is the key's position\nin its list plus one.",
+      "oneOf": [
+        {
+          "description": "A balloon keyed to the parts list: `{\"part\": \"verdict-store\"}`.",
+          "type": "object",
+          "properties": {
+            "part": {
+              "type": "string",
+              "pattern": "^[a-z0-9][a-z0-9-]{0,63}$"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "part"
+          ]
+        },
+        {
+          "description": "A flag keyed to the general notes: `{\"note\": \"evidence-by-reference\"}`.",
+          "type": "object",
+          "properties": {
+            "note": {
+              "type": "string",
+              "pattern": "^[a-z0-9][a-z0-9-]{0,63}$"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "note"
+          ]
+        },
+        {
+          "description": "A diamond keyed to the attention items: `{\"attention\": \"plan-approval\"}`.",
+          "type": "object",
+          "properties": {
+            "attention": {
+              "type": "string",
+              "pattern": "^[a-z0-9][a-z0-9-]{0,63}$"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "attention"
+          ]
+        }
+      ]
+    },
+    "MarkLegend": {
+      "description": "What each mark kind means, printed beside its sample in the legend strip.",
+      "type": "object",
+      "properties": {
+        "attention": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 400,
+          "minLength": 1
+        },
+        "note": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 400,
+          "minLength": 1
+        },
+        "part": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 400,
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "MarkedLine": {
+      "type": "object",
+      "properties": {
+        "marks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Mark"
+          },
+          "maxItems": 4
+        },
+        "text": {
+          "type": "string",
+          "maxLength": 400,
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "text"
+      ]
+    },
+    "MarkedText": {
+      "description": "A line of text and the marks keyed to it: a string, or `{\"text\": ..., \"marks\": [...]}`.",
+      "anyOf": [
+        {
+          "type": "string",
+          "maxLength": 400,
+          "minLength": 1
+        },
+        {
+          "$ref": "#/$defs/MarkedLine"
+        }
       ]
     },
     "Node": {
@@ -762,6 +911,17 @@
               "maxItems": 256,
               "minItems": 1
             },
+            "corner_mark": {
+              "description": "One mark centred on the top-right corner, half outside it.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Mark"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
             "id": {
               "type": [
                 "string",
@@ -777,6 +937,14 @@
               "type": "string",
               "maxLength": 400,
               "minLength": 1
+            },
+            "marks": {
+              "description": "Balloons, flags and diamonds keyed to the parts list, the general notes and the\nattention items (section 14.2 rule 4).",
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Mark"
+              },
+              "maxItems": 4
             },
             "tag": {
               "type": "string",
@@ -812,6 +980,17 @@
               ],
               "pattern": "^[a-z0-9][a-z0-9-]{0,63}$"
             },
+            "corner_mark": {
+              "description": "One mark centred on the top-right corner, half outside it.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Mark"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
             "facts": {
               "type": "array",
               "items": {
@@ -839,6 +1018,14 @@
             "kind": {
               "type": "string",
               "pattern": "^[a-z][a-z0-9-]{0,31}$"
+            },
+            "marks": {
+              "description": "Balloons, flags and diamonds keyed to the parts list, the general notes and the\nattention items (section 14.2 rule 4).",
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Mark"
+              },
+              "maxItems": 4
             },
             "shape": {
               "description": "Under iso, the solid the item stands as; absent takes the shape of its icon's row\nin the kind's product table, or card.",
@@ -990,6 +1177,14 @@
             },
             "line": {
               "$ref": "#/$defs/Line"
+            },
+            "marks": {
+              "description": "On a design sheet, marks set in the tag after the label and sub.",
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Mark"
+              },
+              "maxItems": 4
             },
             "sub": {
               "type": [
@@ -1340,6 +1535,17 @@
               "maximum": 6,
               "minimum": 1
             },
+            "corner_mark": {
+              "description": "One mark centred on the top-right corner, half outside it.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Mark"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
             "fill": {
               "description": "What the box of the look is filled with; absent takes the parent's `step_fill`, and\nwithout one the look's own fill. A text look draws no box and takes none.",
               "anyOf": [
@@ -1364,16 +1570,23 @@
               "pattern": "^[a-z0-9][a-z0-9-]{0,63}$"
             },
             "lines": {
+              "description": "Each line a string, or `{\"text\": ..., \"marks\": [...]}` to mark that line.",
               "type": "array",
               "items": {
-                "type": "string",
-                "maxLength": 400,
-                "minLength": 1
+                "$ref": "#/$defs/MarkedText"
               },
               "maxItems": 6
             },
             "look": {
               "$ref": "#/$defs/StepLook"
+            },
+            "marks": {
+              "description": "Marks on the title line, right-aligned.",
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Mark"
+              },
+              "maxItems": 4
             },
             "phase": {
               "description": "A phase id of the parent.",
@@ -1404,6 +1617,104 @@
             "phase",
             "title"
           ]
+        },
+        {
+          "description": "The parts list of a design sheet: the keys of its balloons, numbered in list order.",
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "pattern": "^[a-z0-9][a-z0-9-]{0,63}$"
+            },
+            "note": {
+              "description": "Right-aligned on the title row.",
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 400,
+              "minLength": 1
+            },
+            "parts": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/PartEntry"
+              },
+              "maxItems": 48,
+              "minItems": 1
+            },
+            "tag": {
+              "type": "string",
+              "const": "PartsList"
+            },
+            "title": {
+              "type": "string",
+              "maxLength": 400,
+              "minLength": 1
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "tag",
+            "title",
+            "parts"
+          ]
+        },
+        {
+          "description": "The general notes of a design sheet: the keys of its flags, numbered in list order.",
+          "type": "object",
+          "properties": {
+            "foot": {
+              "description": "Under a dashed rule after the notes.",
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 400,
+              "minLength": 1
+            },
+            "id": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "pattern": "^[a-z0-9][a-z0-9-]{0,63}$"
+            },
+            "note": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 400,
+              "minLength": 1
+            },
+            "notes": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/GeneralNote"
+              },
+              "maxItems": 16,
+              "minItems": 1
+            },
+            "tag": {
+              "type": "string",
+              "const": "GeneralNotes"
+            },
+            "title": {
+              "type": "string",
+              "maxLength": 400,
+              "minLength": 1
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "tag",
+            "title",
+            "notes"
+          ]
         }
       ]
     },
@@ -1433,6 +1744,65 @@
       "required": [
         "x",
         "y"
+      ]
+    },
+    "PartEntry": {
+      "description": "A part: the key of a balloon. With `node` the part is that drawn Item, Box or Pipe: its\nname, what, actor and planned come from the node, and the node carries its balloon\nwithout a mark.",
+      "type": "object",
+      "properties": {
+        "actor": {
+          "description": "Rejected with `node`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[a-z0-9][a-z0-9-]{0,63}$"
+        },
+        "id": {
+          "description": "Unique among the parts.",
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9-]{0,63}$"
+        },
+        "name": {
+          "description": "Required without `node`, rejected with it.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 400,
+          "minLength": 1
+        },
+        "node": {
+          "description": "The id of the Item, Box or Pipe the part is.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[a-z0-9][a-z0-9-]{0,63}$"
+        },
+        "planned": {
+          "description": "Not built yet; rejected with `node`.",
+          "type": "boolean"
+        },
+        "what": {
+          "description": "What the part is; rejected with `node`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 400,
+          "minLength": 1
+        },
+        "why": {
+          "type": "string",
+          "maxLength": 400,
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "why"
       ]
     },
     "Phase": {
@@ -1508,6 +1878,14 @@
     "ProblemPoint": {
       "type": "object",
       "properties": {
+        "marks": {
+          "description": "Balloons, flags and diamonds keyed to the parts list, the general notes and the\nattention items (section 14.2 rule 4).",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Mark"
+          },
+          "maxItems": 4
+        },
         "text": {
           "type": "string",
           "maxLength": 400,
@@ -1550,6 +1928,10 @@
         },
         "attention": {
           "$ref": "#/$defs/Attention"
+        },
+        "marks": {
+          "description": "What each mark kind means, printed in the legend strip; absent prints `part`,\n`general note` or `attention`.",
+          "$ref": "#/$defs/MarkLegend"
         },
         "problem": {
           "$ref": "#/$defs/Problem"
@@ -1658,6 +2040,14 @@
             },
             "line": {
               "$ref": "#/$defs/Line"
+            },
+            "marks": {
+              "description": "On a design sheet, marks set in the tag after the label and sub.",
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Mark"
+              },
+              "maxItems": 4
             },
             "sub": {
               "type": [

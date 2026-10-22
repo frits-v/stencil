@@ -243,6 +243,7 @@
     "rule": "#30375A",
     "label_ink": "#B8C0DD",
     "cell": "#272B3D",
+    "mark_ink": "#E3E7F7",
     "grid": {
       "minor": "#181B2B",
       "major": "#22273F"

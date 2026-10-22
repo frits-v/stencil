@@ -75,7 +75,12 @@ fn steps(document: &Value) -> Vec<(String, u8, StepLook, Vec<String>)> {
                 .map(|lines| {
                     lines
                         .iter()
-                        .map(|line| line.as_str().unwrap().to_string())
+                        .map(|line| {
+                            line.as_str()
+                                .or_else(|| line["text"].as_str())
+                                .unwrap()
+                                .to_string()
+                        })
                         .collect()
                 })
                 .unwrap_or_default();
@@ -393,7 +398,14 @@ fn step_lines_take_the_actor_ink_on_a_tint_fill_only() {
                 .filter(|element| element.has_tag_name("text"))
                 .filter(|element| {
                     let content = element.text().unwrap_or_default().trim();
-                    !content.is_empty() && lines.iter().any(|line| line.contains(content))
+                    // A mark's numeral is a number, never a line's text.
+                    let numeral = content.chars().all(|character| character.is_ascii_digit());
+                    // A title is bold; a wrapped title line can repeat a word of a line.
+                    let bold = element.attribute("font-weight") == Some("700");
+                    !content.is_empty()
+                        && !numeral
+                        && !bold
+                        && lines.iter().any(|line| line.contains(content))
                 })
             {
                 assert_eq!(

@@ -4,6 +4,7 @@
 pub mod checks;
 pub mod document;
 pub mod grammar;
+pub mod marks;
 pub mod pointer;
 pub mod products;
 pub mod sheet;
@@ -19,6 +20,7 @@ pub use grammar::{
     Grammar, GrammarError, GrammarRule, GrammarViolation, LineKind, builtin_grammar,
     grammar_schema, parse_grammar, validate_grammar,
 };
+pub use marks::{CarrierMark, MarkPlace, PageMarks};
 pub use pointer::NodePointer;
 pub use sheet::{PageActors, SheetList, SheetSurface, SurfaceVocabulary};
 pub use theme::{

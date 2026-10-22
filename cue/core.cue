@@ -60,7 +60,7 @@ import (
 
 // Every surface valid on a design sheet only; a page without sheet that draws
 // one fails _needsSheet. The Rust twin is SheetSurface::as_str.
-#SheetSurface: "sheet" | "actors" | "view" | "phases" | "step" | "actor" | "legend-by-actor"
+#SheetSurface: "sheet" | "actors" | "view" | "phases" | "step" | "actor" | "legend-by-actor" | "marks" | "parts-list" | "general-notes"
 
 // A title block cell caption: 1 to 60 characters.
 #Caption: #Text & strings.MaxRunes(60)
@@ -72,6 +72,75 @@ import (
 	problem:   #Problem
 	answer:    #Answer
 	attention: #Attention
+	// What each mark kind means, printed in the legend strip.
+	marks?: #MarkLegend
+}
+
+// A mark names a key by id: a balloon a part of the parts list, a flag a
+// general note, a diamond an attention item. Its numeral is the key's place in
+// its list.
+#Mark: {part: #Id} | {note: #Id} | {attention: #Id}
+
+// The marks of one carrier, line or compartment: at most 4.
+#Marks: [...#Mark] & list.MaxItems(4)
+
+// The kind and id of a mark, read from whichever arm it is.
+#MarkKey: {
+	#mark: #Mark
+	kind: [if #mark.part != _|_ {"part"}, if #mark.note != _|_ {"note"}, "attention"][0]
+	id: [if #mark.part != _|_ {#mark.part}, if #mark.note != _|_ {#mark.note}, if #mark.attention != _|_ {#mark.attention}, ""][0]
+}
+
+// A line of text and the marks keyed to it: a string, or text with marks.
+#MarkedText: #Text | {text: #Text, marks?: #Marks}
+
+#MarkLegend: {
+	part?:      #Text
+	note?:      #Text
+	attention?: #Text
+}
+
+// The keys of a carrier's own marks, its corner mark and its marked lines, as
+// "<kind>.<id>"; one key twice is _marksRepeated. A carrier sets _ownMarks.
+#CarrierMarks: {
+	_ownMarks: [...#Mark]
+	_ownKeys: [for m in _ownMarks {
+		let k = #MarkKey & {#mark: m}
+		"\(k.kind).\(k.id)"
+	}]
+	_marksRepeated: {
+		for i, a in _ownKeys for j, b in _ownKeys if i < j && a == b {(b): "mark" & "once per carrier"}
+	}
+}
+
+// The parts list: the keys of the balloons, numbered in list order. A part
+// with node is that drawn Item, Box or Pipe and takes its name, what, actor
+// and planned from it.
+#PartEntry: {
+	id:       #Id
+	node?:    #Id
+	name?:    #Text
+	what?:    #Text
+	why:      #Text
+	actor?:   #Id
+	planned?: bool
+	if node != _|_ {
+		if name != _|_ || what != _|_ || actor != _|_ {
+			_partFieldFromNode: "part \(id)" & "takes its fields from node \(node)"
+		}
+		if planned != _|_ if planned {
+			_partFieldFromNode: "part \(id)" & "takes its fields from node \(node)"
+		}
+	}
+	if node == _|_ if name == _|_ {
+		_partNameMissing: "part \(id)" & "names a node or writes its name"
+	}
+}
+
+#GeneralNote: {
+	id:      #Id
+	text:    #Text
+	detail?: #Text
 }
 
 #Problem: {
@@ -81,7 +150,8 @@ import (
 }
 
 #ProblemPoint: {
-	text: #Text
+	text:   #Text
+	marks?: #Marks
 }
 
 // A paragraph is a string, or a bold lead with its text after it.
@@ -300,6 +370,7 @@ import (
 		[if _hasActors {"actors"}],
 		for n in body {n._surfaces},
 		[for l in _links if l.actor != _|_ {"actor"}],
+		[for l in _links if l.marks != _|_ if len(l.marks) > 0 {"marks"}],
 		[for e in legend if e.by_actor != _|_ if e.by_actor {"legend-by-actor"}],
 	])
 	if sheet == _|_ {
@@ -328,7 +399,11 @@ import (
 		_keysUsedTwice: {
 			for i, a in _attentionIds if i > 0 if _attentionIds[i-1] == a {"attention.\(a)": "key" & "used by two entries of one list"}
 			for i, a in _sortedActorIds if i > 0 if _sortedActorIds[i-1] == a {"actor.\(a)": "key" & "used by two entries of one list"}
+			for i, a in _sortedPartIds if i > 0 if _sortedPartIds[i-1] == a {"part.\(a)": "key" & "used by two entries of one list"}
+			for i, a in _sortedNoteIds if i > 0 if _sortedNoteIds[i-1] == a {"note.\(a)": "key" & "used by two entries of one list"}
 		}
+		_sortedPartIds: list.SortStrings(_partIds)
+		_sortedNoteIds: list.SortStrings(_noteIds)
 		_actorTints: list.SortStrings([for a in _actors {"\(a.tint)"}])
 		_actorTintsTwice: {
 			for i, t in _actorTints if i > 0 if _actorTints[i-1] == t {(t): "tint" & "used by two actors"}
@@ -339,6 +414,7 @@ import (
 			[for l in _links if l.actor != _|_ {l.actor}],
 			[for item in sheet.attention.items if item.actor != _|_ {item.actor}],
 			list.Concat([for n in body {n._lanes}]),
+			list.Concat([for l in _keyedLists {l.actors}]),
 		])
 		_actorsUnknown: {
 			for a in _namedActors if !list.Contains(_actorIds, a) {(a): "actor" & "is not declared"}
@@ -367,6 +443,77 @@ import (
 		_looseSteps: list.Concat([for n in body {n._looseSteps}])
 		_stepOutsidePhases: {
 			for t in _looseSteps {(t): "Step" & "sits directly in a Phases node"}
+		}
+
+		// Marks and the keys they name. A part with node puts its balloon on
+		// the Item, Box or Pipe with that id.
+		_keyedLists: list.Concat([for n in body {n._keyedLists}])
+		_keyedListTwice: {
+			for t in ["PartsList", "GeneralNotes"] if len([for l in _keyedLists if l.tag == t {l}]) > 1 {(t): "the sheet" & "has one \(t)"}
+		}
+		_partIds: list.Concat([for l in _keyedLists if l.tag == "PartsList" {l.ids}])
+		_noteIds: list.Concat([for l in _keyedLists if l.tag == "GeneralNotes" {l.ids}])
+		_attentionItemIds: [for item in sheet.attention.items {item.id}]
+		_partNodes: list.Concat([for l in _keyedLists if l.tag == "PartsList" {l.nodes}])
+		_kinded: list.Concat([for n in body {n._kinded}])
+		_kindedIds: [for k in _kinded {k.id}]
+		_pointMarks: list.Concat([for p in sheet.problem.points if p.marks != _|_ {[for m in p.marks {
+			let k = #MarkKey & {#mark: m}
+			{kind: k.kind, id: k.id, carrier: p.text}
+		}]}])
+		_linkMarks: list.Concat([for l in _links if l.marks != _|_ {[for m in l.marks {
+			let k = #MarkKey & {#mark: m}
+			{kind: k.kind, id: k.id, carrier: "\(l.from) to \(l.to)"}
+		}]}])
+		_allMarks: list.Concat([_pointMarks, list.Concat([for n in body {n._marks}]), _linkMarks])
+		_partMarksUnknown: {
+			for m in _allMarks if m.kind == "part" if !list.Contains(_partIds, m.id) {(m.id): "part \(m.id)" & "in the parts list"}
+		}
+		_noteMarksUnknown: {
+			for m in _allMarks if m.kind == "note" if !list.Contains(_noteIds, m.id) {(m.id): "note \(m.id)" & "in the general notes"}
+		}
+		_attentionMarksUnknown: {
+			for m in _allMarks if m.kind == "attention" if !list.Contains(_attentionItemIds, m.id) {(m.id): "attention \(m.id)" & "in the attention items"}
+		}
+		// A node that a part names carries that part's balloon; marking the same
+		// part on it again repeats the key.
+		_partBalloonRepeated: {
+			for m in _allMarks if m.kind == "part" if m.node != _|_
+			for p in _partNodes if p.node == m.node && p.part == m.id {(m.node): "part \(m.id)" & "marked once on its node"}
+		}
+		_pointMarksRepeated: {
+			for i, p in sheet.problem.points if p.marks != _|_
+			let keys = [for m in p.marks {let k = #MarkKey & {#mark: m}, "\(k.kind).\(k.id)"}]
+			for a, x in keys for b, y in keys if a < b && x == y {"\(i).\(y)": "mark" & "once per carrier"}
+		}
+		_linkMarksRepeated: {
+			for i, l in _links if l.marks != _|_
+			let keys = [for m in l.marks {let k = #MarkKey & {#mark: m}, "\(k.kind).\(k.id)"}]
+			for a, x in keys for b, y in keys if a < b && x == y {"\(i).\(y)": "mark" & "once per carrier"}
+		}
+		_partNodesUnknown: {
+			for p in _partNodes if !list.Contains(_kindedIds, p.node) {(p.node): "part node \(p.node)" & "names an Item, Box or Pipe"}
+		}
+		if sheet.marks != _|_ {
+			_markLegendUnused: {
+				if sheet.marks.part != _|_ if len([for l in _keyedLists if l.tag == "PartsList" {l}]) == 0 {part: "no part key" & "on this sheet"}
+				if sheet.marks.note != _|_ if len([for l in _keyedLists if l.tag == "GeneralNotes" {l}]) == 0 {note: "no note key" & "on this sheet"}
+			}
+		}
+		// keys-used: a part never ballooned, a note never flagged, an attention
+		// item never marked.
+		_balloonedParts: list.Concat([
+			[for m in _allMarks if m.kind == "part" {m.id}],
+			[for n in _partNodes if list.Contains(_kindedIds, n.node) {n.part}],
+		])
+		_partsUnmarked: {
+			for p in _partIds if !list.Contains(_balloonedParts, p) {(p): "part \(p)" & "ballooned on the drawing"}
+		}
+		_notesUnflagged: {
+			for n in _noteIds if !list.Contains([for m in _allMarks if m.kind == "note" {m.id}], n) {(n): "general note \(n)" & "flagged on the drawing"}
+		}
+		_attentionUnmarked: {
+			for a in _attentionItemIds if !list.Contains([for m in _allMarks if m.kind == "attention" {m.id}], a) {(a): "attention item \(a)" & "marked on the drawing"}
 		}
 	}
 }
@@ -398,6 +545,11 @@ import (
 	via?: [...#PagePoint] & list.MaxItems(8)
 	// A message of a Lanes node: its place along the time axis.
 	order?: int & >=1 & <=256
+	// On a design sheet, marks in the tag after the label and sub.
+	marks?: #Marks
+	if marks != _|_ if len(marks) > 0 if label == _|_ {
+		_linkMarksWithoutTag: "a link's marks sit in its tag" & "give it a label"
+	}
 }
 
 #PagePoint: {
@@ -405,12 +557,12 @@ import (
 	y: number & >=0
 }
 
-// A node is one of fifteen tags. Switching on tag, rather than a disjunction of
+// A node is one of seventeen tags. Switching on tag, rather than a disjunction of
 // definitions, keeps vet errors pointed at the offending field. Every node may
 // carry an id; _ids lists the ids in its subtree and _keys the legend keys of
 // the pipes and tees in it.
 #Node: {
-	tag: "Row" | "Col" | "Lanes" | "Box" | "Item" | "Fact" | "Note" | "Pipe" | "Tee" | "Text" | "Callout" | "Frame" | "View" | "Phases" | "Step"
+	tag: "Row" | "Col" | "Lanes" | "Box" | "Item" | "Fact" | "Note" | "Pipe" | "Tee" | "Text" | "Callout" | "Frame" | "View" | "Phases" | "Step" | "PartsList" | "GeneralNotes"
 	if tag == "Row" {#Row}
 	if tag == "Col" {#Col}
 	if tag == "Lanes" {#Lanes}
@@ -426,6 +578,8 @@ import (
 	if tag == "View" {#View}
 	if tag == "Phases" {#Phases}
 	if tag == "Step" {#StepNode}
+	if tag == "PartsList" {#PartsList}
+	if tag == "GeneralNotes" {#GeneralNotes}
 
 	// The ids a Pipe names in from and to, gathered up the tree. A Tee's arms
 	// cannot name one, so a Tee gathers none.
@@ -435,8 +589,20 @@ import (
 
 	// The sheet surfaces in the subtree and the titles of the Views strictly
 	// below the node.
-	if !list.Contains(["Row", "Col", "Lanes", "Box", "View", "Item", "Pipe", "Tee", "Phases", "Step"], tag) {
+	if !list.Contains(["Row", "Col", "Lanes", "Box", "View", "Item", "Pipe", "Tee", "Phases", "Step", "PartsList", "GeneralNotes"], tag) {
 		_surfaces: []
+	}
+	// _marks: every mark on a carrier in the subtree. _kinded: the ids of the
+	// Items, Boxes and Pipes a part may name. _keyedLists: each PartsList and
+	// GeneralNotes node with its keys.
+	if !list.Contains(["Row", "Col", "Lanes", "Box", "View", "Item", "Pipe", "Tee", "Phases", "Step"], tag) {
+		_marks: []
+	}
+	if !list.Contains(["Row", "Col", "Lanes", "Box", "View", "Item", "Pipe", "Tee"], tag) {
+		_kinded: []
+	}
+	if !list.Contains(["Row", "Col", "Lanes", "Box", "View", "PartsList", "GeneralNotes"], tag) {
+		_keyedLists: []
 	}
 	if !list.Contains(["Row", "Col", "Lanes", "Box", "View"], tag) {
 		_viewTitles: []
@@ -474,6 +640,9 @@ import (
 	_lineUses: list.Concat([for c in children {c._lineUses}])
 	_lanes: list.Concat([for c in children {c._lanes}])
 	_looseSteps: list.Concat([for c in children {c._looseSteps}])
+	_marks: list.Concat([for c in children {c._marks}])
+	_kinded: list.Concat([for c in children {c._kinded}])
+	_keyedLists: list.Concat([for c in children {c._keyedLists}])
 }
 
 // A numbered view of a design sheet: a heading, then its children in a
@@ -514,6 +683,7 @@ import (
 	_lineUses: []
 	_lanes: lanes
 	_looseSteps: []
+	_marks: list.Concat([for c in children {c._marks}])
 	_phaseIds: list.SortStrings([for p in phases {p.id}])
 	_phaseIdsUsedTwice: {
 		for i, a in _phaseIds if i > 0 if _phaseIds[i-1] == a {(a): "phase id" & "used by two phases of one Phases node"}
@@ -540,7 +710,7 @@ import (
 	col?:  int & >=1 & <=6
 	span?: int & >=1 & <=6
 	title: #Text
-	lines?: [...#Text] & list.MaxItems(6)
+	lines?: [...#MarkedText] & list.MaxItems(6)
 	look?: #StepLook
 	fill?: #StepFill
 	if look != _|_ if fill != _|_ if look == "text" {
@@ -554,10 +724,57 @@ import (
 	_keys: {}
 	_ids: [if id != _|_ {id}]
 	_laneSets: []
-	_surfaces: ["step"]
+	marks?:       #Marks
+	corner_mark?: #Mark
+	#CarrierMarks
+	_ownMarks: list.Concat([[if marks != _|_ for m in marks {m}], [if corner_mark != _|_ {corner_mark}], list.Concat([if lines != _|_ for l in lines if l.marks != _|_ {l.marks}])])
+	_hasMarks: len(_ownMarks) > 0
+	_surfaces: ["step", if _hasMarks {"marks"}]
 	_nodes: [if id != _|_ {{"id": id, actor: lane}}]
 	_lanes: []
 	_looseSteps: [title]
+	_marks: [for m in _ownMarks {
+		let k = #MarkKey & {#mark: m}
+		{kind: k.kind, id: k.id, carrier: title}
+	}]
+}
+
+// The parts list of a design sheet: the keys of its balloons.
+#PartsList: {
+	id?:   #Id
+	tag:   "PartsList"
+	title: #Text
+	note?: #Text
+	parts: [...#PartEntry] & list.MinItems(1) & list.MaxItems(48)
+	_keys: {}
+	_ids: [if id != _|_ {id}]
+	_laneSets: []
+	_surfaces: ["parts-list"]
+	_nodeNames: list.SortStrings([for p in parts if p.node != _|_ {p.node}])
+	_partNodesTwice: {
+		for i, a in _nodeNames if i > 0 if _nodeNames[i-1] == a {(a): "node \(a)" & "is one part"}
+	}
+	_keyedLists: [{
+		tag: "PartsList"
+		ids: [for p in parts {p.id}]
+		nodes: [for p in parts if p.node != _|_ {{node: p.node, part: p.id}}]
+		actors: [for p in parts if p.actor != _|_ {p.actor}]
+	}]
+}
+
+// The general notes of a design sheet: the keys of its flags.
+#GeneralNotes: {
+	id?:   #Id
+	tag:   "GeneralNotes"
+	title: #Text
+	note?: #Text
+	notes: [...#GeneralNote] & list.MinItems(1) & list.MaxItems(16)
+	foot?: #Text
+	_keys: {}
+	_ids: [if id != _|_ {id}]
+	_laneSets: []
+	_surfaces: ["general-notes"]
+	_keyedLists: [{tag: "GeneralNotes", ids: [for n in notes {n.id}], actors: []}]
 }
 
 // Shared by Row and Col. grow carries one weight per child.
@@ -611,11 +828,22 @@ import (
 	actor?:   #Id
 	label:    #Text
 	children: #Children
+	marks?:       #Marks
+	corner_mark?: #Mark
+	#CarrierMarks
+	_ownMarks: list.Concat([[if marks != _|_ for m in marks {m}], [if corner_mark != _|_ {corner_mark}]])
+	_hasMarks: len(_ownMarks) > 0
 	_keys: {for c in children {c._keys}}
 	_ids: list.Concat([[if id != _|_ {id}], for c in children {c._ids}])
 	_laneSets: list.Concat([for c in children {c._laneSets}])
 	_pipeTargets: list.Concat([for c in children {c._pipeTargets}])
-	_surfaces: list.Concat([[if actor != _|_ {"actor"}], for c in children {c._surfaces}])
+	_surfaces: list.Concat([[if actor != _|_ {"actor"}, if _hasMarks {"marks"}], for c in children {c._surfaces}])
+	_marks: list.Concat([[for m in _ownMarks {
+		let k = #MarkKey & {#mark: m}
+		{kind: k.kind, id: k.id, carrier: label, if id != _|_ {node: id}}
+	}], for c in children {c._marks}])
+	_kinded: list.Concat([[if id != _|_ {{"id": id, tag: "Box"}}], for c in children {c._kinded}])
+	_keyedLists: list.Concat([for c in children {c._keyedLists}])
 	_viewTitles: list.Concat([for c in children if c.tag == "View" {[c.title]}, for c in children {c._viewTitles}])
 	_nodes: list.Concat([[if id != _|_ if actor != _|_ {{"id": id, "actor": actor}}], for c in children {c._nodes}])
 	_lineUses: list.Concat([for c in children {c._lineUses}])
@@ -636,11 +864,21 @@ import (
 	// the kind's product table, or card.
 	shape?: #Shape
 	actor?: #Id
+	marks?:       #Marks
+	corner_mark?: #Mark
+	#CarrierMarks
+	_ownMarks: list.Concat([[if marks != _|_ for m in marks {m}], [if corner_mark != _|_ {corner_mark}]])
+	_hasMarks: len(_ownMarks) > 0
 	_keys: {}
 	_ids: [if id != _|_ {id}]
 	_laneSets: []
-	_surfaces: [if actor != _|_ {"actor"}]
+	_surfaces: [if actor != _|_ {"actor"}, if _hasMarks {"marks"}]
 	_nodes: [if id != _|_ if actor != _|_ {{"id": id, "actor": actor}}]
+	_marks: [for m in _ownMarks {
+		let k = #MarkKey & {#mark: m}
+		{kind: k.kind, id: k.id, carrier: title, if id != _|_ {node: id}}
+	}]
+	_kinded: [if id != _|_ {{"id": id, tag: "Item"}}]
 }
 
 // doc: read from the live documentation when the figure was authored (the
@@ -694,11 +932,21 @@ import (
 	if from != _|_ if to != _|_ if from == to {
 		_pipeTargetsEqual: "pipe from \(from)" & "the same node as pipe to"
 	}
+	// On a design sheet, marks in the tag after the label and sub.
+	marks?: #Marks
+	#CarrierMarks
+	_ownMarks: [if marks != _|_ for m in marks {m}]
+	_hasMarks: len(_ownMarks) > 0
 	_keys: {(_lineKey.key): true}
 	_ids: [if id != _|_ {id}]
 	_laneSets: []
 	_pipeTargets: [if from != _|_ {from}, if to != _|_ {to}]
-	_surfaces: [if actor != _|_ {"actor"}]
+	_surfaces: [if actor != _|_ {"actor"}, if _hasMarks {"marks"}]
+	_marks: [for m in _ownMarks {
+		let k = #MarkKey & {#mark: m}
+		{kind: k.kind, id: k.id, carrier: label, if id != _|_ {node: id}}
+	}]
+	_kinded: [if id != _|_ {{"id": id, tag: "Pipe"}}]
 	_nodes: [if id != _|_ if actor != _|_ {{"id": id, "actor": actor}}]
 	// A Tee passes its own actor to an arm that names none.
 	_inherited?: #Id
@@ -738,6 +986,8 @@ import (
 	_ids: list.Concat([[if id != _|_ {id}], arms[0]._ids, arms[1]._ids])
 	_laneSets: []
 	_surfaces: list.Concat([[if actor != _|_ {"actor"}], arms[0]._surfaces, arms[1]._surfaces])
+	_marks: list.Concat([arms[0]._marks, arms[1]._marks])
+	_kinded: list.Concat([arms[0]._kinded, arms[1]._kinded])
 	_nodes: [if id != _|_ if actor != _|_ {{"id": id, "actor": actor}}]
 	_lineUses: list.Concat([[{
 		key: _lineKey.key

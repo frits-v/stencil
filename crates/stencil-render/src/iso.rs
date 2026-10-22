@@ -364,7 +364,9 @@ pub(crate) fn plane_member(tag: NodeTag, part: PartName) -> bool {
         | NodeTag::View
         | NodeTag::ActorChip
         | NodeTag::Phases
-        | NodeTag::Step => false,
+        | NodeTag::Step
+        | NodeTag::PartsList
+        | NodeTag::GeneralNotes => false,
     }
 }
 
@@ -559,7 +561,9 @@ fn solid_shape(
         | NodeTag::View
         | NodeTag::ActorChip
         | NodeTag::Phases
-        | NodeTag::Step => None,
+        | NodeTag::Step
+        | NodeTag::PartsList
+        | NodeTag::GeneralNotes => None,
     }
 }
 

@@ -491,6 +491,8 @@ fn every_text_field_is_vetted() {
             Some(1),
             untrimmed,
             vec![Node::Item(Item {
+                corner_mark: None,
+                marks: Vec::new(),
                 actor: None,
                 id: None,
                 kind: "product".to_string(),
@@ -516,6 +518,7 @@ fn every_text_field_is_vetted() {
             text: untrimmed.to_string(),
         }),
         Node::Pipe(stencil_model::Pipe {
+            marks: Vec::new(),
             actor: None,
             id: None,
             arrow: stencil_model::Arrow::None,
@@ -543,6 +546,7 @@ fn every_text_field_is_vetted() {
                     untrimmed,
                 )),
                 stencil_model::TeeArm::Pipe(stencil_model::Pipe {
+                    marks: Vec::new(),
                     actor: None,
                     id: None,
                     arrow: stencil_model::Arrow::None,

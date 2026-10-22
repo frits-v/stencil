@@ -92,8 +92,15 @@ fn drawn_texts(page: &Page) -> (Vec<DrawnText>, usize) {
             // Section 11.3 blocks have no TextStyleName yet; the authored-count assertion
             // below fails if g7 ever holds one.
             NodeRef::Node(Node::Text(_) | Node::Callout(_) | Node::Frame(_)) => {}
-            // A View, a Phases node and a Step draw only on a design sheet, which g7 is not.
-            NodeRef::Node(Node::View(_) | Node::Phases(_) | Node::Step(_)) => {}
+            // A View, a Phases node, a Step and the keyed lists draw only on a design sheet,
+            // which g7 is not.
+            NodeRef::Node(
+                Node::View(_)
+                | Node::Phases(_)
+                | Node::Step(_)
+                | Node::PartsList(_)
+                | Node::GeneralNotes(_),
+            ) => {}
         }
     }
     for entry in &page.legend {

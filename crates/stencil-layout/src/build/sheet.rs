@@ -16,8 +16,11 @@ use super::{
     Builder, LeadRunLeaf, PartRecord, Placement, RunPiece, TextLeaf, TextSpec,
     apply_flex_placement, base_style, fixed_size, flex_column, flex_row, margins, sides,
 };
+use crate::marks::WHERE_USED_PREFIX;
 use crate::styles::{text_color, text_style_for};
 use crate::{Axis, LayoutError, NodeTag, PartName, TextAlign};
+use stencil_model::MarkKind;
+use stencil_model::marks::MarkPlace;
 
 /// Space between the title block and the first View.
 pub(crate) const BODY_MARGIN_TOP_PX: f32 = 14.0;
@@ -58,6 +61,9 @@ const VIEW_HEADING_MARGIN_BOTTOM_PX: f32 = 8.0;
 const VIEW_NUMBER_PX: f32 = 28.0;
 const VIEW_SUBTITLE_GAP_PX: f32 = 8.0;
 const VIEW_RULE_PX: f32 = 1.0;
+/// The column an attention item's diamond stands in, and the gap above its zones line.
+const ATTENTION_DIAMOND_COLUMN_PX: f32 = 26.0;
+const ATTENTION_ZONES_GAP_PX: f32 = 1.0;
 /// The title block is view 1, so the first View is view 2.
 const FIRST_VIEW_NUMBER: usize = 2;
 
@@ -409,6 +415,8 @@ impl Builder<'_> {
                 source: pointer.child("text"),
             },
         )?;
+        let marks = self.page_marks.point_marks(self.page, index);
+        let glyphs = self.add_mark_row(row, &marks, MarkPlace::Trailing, &pointer)?;
         let mut record = Self::record(
             pointer,
             NodeTag::ProblemPoint,
@@ -433,6 +441,7 @@ impl Builder<'_> {
                 text_leaf: Some(body_leaf),
             },
         ];
+        record.parts.extend(glyphs);
         self.push_record(record);
         Ok(())
     }
@@ -503,12 +512,58 @@ impl Builder<'_> {
         let items_pointer = pointer.child("items");
         let mut gap = CAPTION_GAP_PX;
         for (index, item) in attention.items.iter().enumerate() {
-            parts.extend(self.lead_run(
+            let item_pointer = items_pointer.index(index);
+            let row = self.container(
+                Style {
+                    margin: top_margin(gap),
+                    ..flex_row(AlignItems::START)
+                },
                 cell,
-                gap,
+                &item_pointer,
+            )?;
+            let diamond_cell = self.container(
+                Style {
+                    size: taffy::Size {
+                        width: length(ATTENTION_DIAMOND_COLUMN_PX),
+                        height: auto(),
+                    },
+                    ..flex_column(AlignItems::START)
+                },
+                row,
+                &item_pointer,
+            )?;
+            parts.extend(self.add_glyph(
+                diamond_cell,
+                (PartName::AttentionDiamond, PartName::AttentionNumeral),
+                (MarkKind::Attention, index + 1),
+                flex_column(AlignItems::CENTER),
+                &item_pointer,
+            )?);
+            let column = self.container(
+                Style {
+                    flex_grow: 1.0,
+                    flex_basis: length(0.0),
+                    ..flex_column(AlignItems::STRETCH)
+                },
+                row,
+                &item_pointer,
+            )?;
+            parts.extend(self.lead_run(
+                column,
+                0.0,
                 (PartName::AttentionLead, &item.lead),
                 (PartName::AttentionText, &item.text),
-                &items_pointer.index(index),
+                &item_pointer,
+            )?);
+            parts.push(self.where_used_part(
+                column,
+                PartName::AttentionZones,
+                (MarkKind::Attention, index, WHERE_USED_PREFIX),
+                Style {
+                    margin: top_margin(ATTENTION_ZONES_GAP_PX),
+                    ..base_style()
+                },
+                item_pointer.clone(),
             )?);
             gap = CELL_ITEM_GAP_PX;
         }
@@ -587,7 +642,8 @@ impl Builder<'_> {
         (actors, legend): (&[Actor], &[LegendEntry]),
         (block, block_index): (NodeId, usize),
     ) -> Result<(), LayoutError> {
-        if legend.is_empty() && actors.is_empty() {
+        let kinds = crate::marks::sampled_kinds(self.page);
+        if legend.is_empty() && actors.is_empty() && kinds.is_empty() {
             return Ok(());
         }
         let pointer = NodePointer::root().child("legend");
@@ -655,13 +711,64 @@ impl Builder<'_> {
                 0.0,
                 pointer.clone(),
             )?);
-            if let Some(record) = self.records.get_mut(legend_index) {
-                record.parts = parts;
-            }
             for (index, entry) in legend.iter().enumerate() {
                 self.add_legend_entry(entry, pointer.index(index), group, legend_index)?;
             }
-        } else if let Some(record) = self.records.get_mut(legend_index) {
+        }
+        if !kinds.is_empty() {
+            let group = self.strip_group(groups, &pointer)?;
+            parts.push(self.sheet_text(
+                group,
+                PartName::GroupCaption,
+                "Marks",
+                TextStyleName::SheetLabel,
+                0.0,
+                pointer.clone(),
+            )?);
+            let legend_texts = self.page.sheet.as_ref().map(|sheet| sheet.marks.clone());
+            for kind in kinds {
+                let sample = self.container(
+                    Style {
+                        gap: taffy::Size {
+                            width: length(ACTOR_CHIP_GAP_PX),
+                            height: length(0.0),
+                        },
+                        ..flex_row(AlignItems::CENTER)
+                    },
+                    group,
+                    &pointer,
+                )?;
+                parts.extend(self.add_glyph(
+                    sample,
+                    (PartName::MarkSample, PartName::MarkSampleNumeral),
+                    (kind, 1),
+                    flex_column(AlignItems::CENTER),
+                    &pointer,
+                )?);
+                let (text, source) = match legend_texts
+                    .as_ref()
+                    .and_then(|marks| marks.text(kind).map(str::to_string))
+                {
+                    Some(text) => (
+                        text,
+                        NodePointer::root()
+                            .child("sheet")
+                            .child("marks")
+                            .child(kind.as_str()),
+                    ),
+                    None => (kind.default_legend().to_string(), pointer.clone()),
+                };
+                parts.push(self.sheet_text(
+                    sample,
+                    PartName::MarkSampleText,
+                    &text,
+                    TextStyleName::LegendText,
+                    0.0,
+                    source,
+                )?);
+            }
+        }
+        if let Some(record) = self.records.get_mut(legend_index) {
             record.parts = parts;
         }
         Ok(())

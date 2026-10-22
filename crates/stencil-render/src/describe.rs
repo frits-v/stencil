@@ -6,16 +6,16 @@ use std::collections::{BTreeMap, HashMap, HashSet};
 
 use stencil_layout::{
     DescriptionUnits, NodeTag, PageGeometry, PipeEndSide, RouteStatus, UnitKind, description_units,
-    title_cell_caption,
+    title_cell_caption, where_used,
 };
 use stencil_model::checks::{CheckName, CheckReport, Defect};
 use stencil_model::pointer::NodePointer;
 use stencil_model::products::{item_shape, named_product};
 use stencil_model::{
     Arrow, BandLook, CalloutKind, Chrome, Grammar, KeyColour, LINKS_MAX, LegendKey, Line, ListKind,
-    Node, NodeRef, NoteKind, Page, PageActors, Phases, Pipe, PipeDir, PipeForm, Projection, Sheet,
-    SheetList, Step, StepLook, TINT_NAMES, Tee, body_nodes, canonical_legend_label, entry_key,
-    line_key,
+    Node, NodeRef, NoteKind, Page, PageActors, PageMarks, PartsList, Phases, Pipe, PipeDir,
+    PipeForm, Projection, Sheet, SheetList, Step, StepLook, TINT_NAMES, Tee, body_nodes,
+    canonical_legend_label, entry_key, line_key,
 };
 
 use crate::format_number;
@@ -26,7 +26,7 @@ pub struct Description {
 }
 
 /// The last sentence of a sheet's figure paragraph (section 14.1 rule 13).
-const REFERENCES_SENTENCE: &str = "References: a reference such as B3 or B2-C5 names the grid cells under an element's top-left and bottom-right corners, columns 1 to 8 left to right, rows A to F top to bottom. The reference before a pointer is where that element is drawn.";
+const REFERENCES_SENTENCE: &str = "References: a reference such as B3 or B2-C5 names the grid cells under an element's top-left and bottom-right corners, columns 1 to 8 left to right, rows A to F top to bottom. The reference before a pointer is where that element is drawn; a Zones cell lists the cells of every balloon, flag or diamond keyed to its entry.";
 
 /// The sentence a `chrome: none` page writes after its uncaptioned head lines.
 const CAPTIONED_HEAD: &str =
@@ -166,6 +166,7 @@ struct Writer<'a> {
     ids: HashMap<&'a str, NodePointer>,
     children: Vec<Vec<usize>>,
     actors: PageActors<'a>,
+    page_marks: PageMarks<'a>,
 }
 
 impl<'a> Writer<'a> {
@@ -200,6 +201,7 @@ impl<'a> Writer<'a> {
             ids,
             children,
             actors: PageActors::of(page),
+            page_marks: PageMarks::of(page),
         }
     }
 
@@ -276,6 +278,72 @@ impl<'a> Writer<'a> {
         }
     }
 
+    /// A mark as the description writes it: its unit name, then its spans.
+    fn mark_text(&self, pointer: &NodePointer) -> String {
+        let name = self
+            .units
+            .unit(pointer)
+            .map(|unit| unit.name.clone())
+            .unwrap_or_default();
+        format!("{} {}", cell_value(&name), self.spans(pointer))
+    }
+
+    /// The Marks cell of a table row: each mark of `marks`, joined by `; `, or `none`.
+    fn marks_cell(&self, marks: &[stencil_model::CarrierMark]) -> String {
+        if marks.is_empty() {
+            return "none".to_string();
+        }
+        marks
+            .iter()
+            .map(|mark| self.mark_text(&mark.pointer))
+            .collect::<Vec<_>>()
+            .join("; ")
+    }
+
+    /// One nested `Mark` line per mark `place` selects.
+    fn mark_lines(
+        &self,
+        marks: &[stencil_model::CarrierMark],
+        select: impl Fn(stencil_model::MarkPlace) -> bool,
+        indent: &str,
+        lines: &mut Vec<String>,
+    ) {
+        for mark in marks.iter().filter(|mark| select(mark.place)) {
+            let name = self
+                .units
+                .unit(&mark.pointer)
+                .map(|unit| unit.name.clone())
+                .unwrap_or_default();
+            lines.push(format!(
+                "{indent}- Mark {} {}",
+                escape_markdown(&name),
+                self.spans(&mark.pointer)
+            ));
+        }
+    }
+
+    /// The where-used cells of the key at `key`, or `none`.
+    fn zones_cell(&self, key: &NodePointer) -> String {
+        let zones = where_used(self.units, key);
+        if zones.is_empty() {
+            "none".to_string()
+        } else {
+            zones
+                .iter()
+                .map(ToString::to_string)
+                .collect::<Vec<_>>()
+                .join(" ")
+        }
+    }
+
+    /// The marks of the body node at `pointer`.
+    fn node_marks(&self, pointer: &NodePointer) -> Vec<stencil_model::CarrierMark> {
+        match self.nodes.get(pointer.as_str()).copied() {
+            Some(node) => self.page_marks.marks_at(pointer, node),
+            None => Vec::new(),
+        }
+    }
+
     /// The unit name of the node at `pointer`, or its tag word for a structural node.
     fn name_of(&self, pointer: &NodePointer) -> String {
         if let Some(unit) = self.units.unit(pointer) {
@@ -319,7 +387,8 @@ impl<'a> Writer<'a> {
         };
         let link_count = count_of(UnitKind::Link);
         let entry_count = count_of(UnitKind::Entry);
-        let node_count = self.units.units.len() - link_count - entry_count;
+        let mark_count = count_of(UnitKind::Mark);
+        let node_count = self.units.units.len() - link_count - entry_count - mark_count;
         let width = format_number(self.geometry.canvas.width);
         let height = format_number(self.geometry.canvas.height);
         let grammar = escape_markdown(&self.grammar.name);
@@ -333,10 +402,11 @@ impl<'a> Writer<'a> {
         };
         let counts = match self.page.sheet {
             Some(_) => format!(
-                "{}, {}, {}",
+                "{}, {}, {}, {}",
                 count_words(node_count, "node", "nodes"),
                 count_words(link_count, "link", "links"),
                 count_words(entry_count, "entry", "entries"),
+                count_words(mark_count, "mark", "marks"),
             ),
             None => format!(
                 "{}, {}",
@@ -394,6 +464,15 @@ impl<'a> Writer<'a> {
             ) {
                 tables.push(self.phases_table(node, phases));
             }
+            if let (Some(node), Some(NodeRef::Node(Node::PartsList(list)))) = (
+                self.geometry.nodes.get(index),
+                self.geometry
+                    .nodes
+                    .get(index)
+                    .and_then(|node| self.nodes.get(node.pointer.as_str()).copied()),
+            ) {
+                tables.push(self.parts_table(node, list));
+            }
             for &child in self.children_of(index).iter().rev() {
                 pending.push((child, depth + 1));
             }
@@ -438,7 +517,9 @@ impl<'a> Writer<'a> {
                         escape_markdown(&self.actor_name(actor))
                     ));
                 }
-                format!("{text}. {pointer}")
+                lines.push(format!("{indent}- {text}. {pointer}"));
+                self.mark_lines(&self.node_marks(&node.pointer), |_| true, &nested, lines);
+                return;
             }
             (NodeTag::Pcard, Some(NodeRef::Node(Node::Item(item)))) => {
                 let mut text = format!("Item {}", escape_markdown(&item.title));
@@ -470,6 +551,7 @@ impl<'a> Writer<'a> {
                     ));
                 }
                 lines.push(format!("{indent}- {text}. {pointer}"));
+                self.mark_lines(&self.node_marks(&node.pointer), |_| true, &nested, lines);
                 for fact in &item.facts {
                     lines.push(format!(
                         "{nested}- Fact, {}: {}.",
@@ -537,8 +619,59 @@ impl<'a> Writer<'a> {
             }
             (NodeTag::Step, Some(NodeRef::Node(Node::Step(step)))) => {
                 lines.push(format!("{indent}- {} {pointer}", self.step_line(step)));
-                for line in &step.lines {
-                    lines.push(format!("{nested}- Line {}.", escape_markdown(line)));
+                let marks = self.node_marks(&node.pointer);
+                self.mark_lines(
+                    &marks,
+                    |place| !matches!(place, stencil_model::MarkPlace::Line(_)),
+                    &nested,
+                    lines,
+                );
+                let deeper = "  ".repeat(depth + 2);
+                for (line_index, line) in step.lines.iter().enumerate() {
+                    lines.push(format!("{nested}- Line {}.", escape_markdown(line.text())));
+                    self.mark_lines(
+                        &marks,
+                        |place| place == stencil_model::MarkPlace::Line(line_index),
+                        &deeper,
+                        lines,
+                    );
+                }
+                return;
+            }
+            (NodeTag::PartsList, Some(NodeRef::Node(Node::PartsList(list)))) => {
+                let mut text = escape_markdown(&list.title);
+                if let Some(note) = &list.note {
+                    text.push_str(&format!(": {}", escape_markdown(note)));
+                }
+                format!("{text}. {pointer}")
+            }
+            (NodeTag::GeneralNotes, Some(NodeRef::Node(Node::GeneralNotes(notes)))) => {
+                let mut text = escape_markdown(&notes.title);
+                if let Some(note) = &notes.note {
+                    text.push_str(&format!(": {}", escape_markdown(note)));
+                }
+                lines.push(format!("{indent}- {text}. {pointer}"));
+                let notes_pointer = SheetList::GeneralNotes.pointer_in(&node.pointer);
+                for (index, note) in notes.notes.iter().enumerate() {
+                    let note_pointer = notes_pointer.index(index);
+                    let mut text = format!(
+                        "Note {} ({}): {}",
+                        index + 1,
+                        escape_markdown(&note.id),
+                        escape_markdown(&note.text)
+                    );
+                    if let Some(detail) = &note.detail {
+                        text.push(' ');
+                        text.push_str(&escape_markdown(detail));
+                    }
+                    lines.push(format!(
+                        "{nested}- {text} Zones {}. {}",
+                        self.zones_cell(&note_pointer),
+                        self.spans(&note_pointer)
+                    ));
+                }
+                if let Some(foot) = &notes.foot {
+                    lines.push(format!("{nested}- Foot: {}", escape_markdown(foot)));
                 }
                 return;
             }
@@ -553,7 +686,9 @@ impl<'a> Writer<'a> {
                 | NodeTag::Pipe
                 | NodeTag::Tee
                 | NodeTag::Phases
-                | NodeTag::Step,
+                | NodeTag::Step
+                | NodeTag::PartsList
+                | NodeTag::GeneralNotes,
                 _,
             ) => format!(
                 "{} {}. {pointer}",
@@ -715,6 +850,44 @@ impl<'a> Writer<'a> {
         table(&header, &rows)
     }
 
+    /// `### Parts list` and a row per part: its number, name, what, why, actor, zones and
+    /// pointer.
+    fn parts_table(&self, node: &stencil_layout::NodeGeometry, list: &PartsList) -> String {
+        let parts_pointer = SheetList::Parts.pointer_in(&node.pointer);
+        let rows: Vec<Vec<String>> = list
+            .parts
+            .iter()
+            .enumerate()
+            .take(SheetList::Parts.max() + 1)
+            .map(|(index, part)| {
+                let pointer = parts_pointer.index(index);
+                let mut name = escape_markdown(&self.page_marks.part_name(part));
+                if part.planned {
+                    name.push_str(", planned");
+                }
+                vec![
+                    (index + 1).to_string(),
+                    name,
+                    self.page_marks
+                        .part_what(part)
+                        .map_or_else(|| "none".to_string(), |what| escape_markdown(&what)),
+                    escape_markdown(&part.why),
+                    self.actor_cell(self.page_marks.part_actor(part)),
+                    self.zones_cell(&pointer),
+                    self.spans(&pointer),
+                ]
+            })
+            .collect();
+        format!(
+            "### {}\n\n{}",
+            escape_markdown(&list.title),
+            table(
+                &["Part", "Name", "What", "Why", "Actor", "Zones", "Pointer"],
+                &rows
+            )
+        )
+    }
+
     /// The legend key of every line use: pipes, Tee spines and arms in body order, then
     /// links in index order.
     fn line_uses(&self) -> Vec<LegendKey> {
@@ -741,7 +914,9 @@ impl<'a> Writer<'a> {
                     | Node::Frame(_)
                     | Node::View(_)
                     | Node::Phases(_)
-                    | Node::Step(_),
+                    | Node::Step(_)
+                    | Node::PartsList(_)
+                    | Node::GeneralNotes(_),
                 ))
                 | None => {}
             }
@@ -818,7 +993,9 @@ impl<'a> Writer<'a> {
                     | Node::Frame(_)
                     | Node::View(_)
                     | Node::Phases(_)
-                    | Node::Step(_),
+                    | Node::Step(_)
+                    | Node::PartsList(_)
+                    | Node::GeneralNotes(_),
                 ))
                 | None => {}
             }
@@ -863,7 +1040,7 @@ impl<'a> Writer<'a> {
                         ends,
                         self.means(&key),
                     ],
-                    actor,
+                    (actor, &PageMarks::link_marks(link, route.index)),
                     self.spans(&links_pointer().index(route.index)),
                 ),
             ));
@@ -871,15 +1048,16 @@ impl<'a> Writer<'a> {
         rows
     }
 
-    /// A Lines row: its cells, then on a sheet the Actor cell, then the pointer.
+    /// A Lines row: its cells, then on a sheet the Actor and Marks cells, then the pointer.
     fn line_row(
         &self,
         mut cells: Vec<String>,
-        actor: Option<&str>,
+        (actor, marks): (Option<&str>, &[stencil_model::CarrierMark]),
         pointer: String,
     ) -> Vec<String> {
         if self.page.sheet.is_some() {
             cells.push(self.actor_cell(actor));
+            cells.push(self.marks_cell(marks));
         }
         cells.push(pointer);
         cells
@@ -915,9 +1093,28 @@ impl<'a> Writer<'a> {
                 &self.legend_rows(),
             ));
         }
+        let kinds = stencil_layout::marks::sampled_kinds(self.page);
+        if !kinds.is_empty() {
+            let kinds: Vec<String> = kinds
+                .into_iter()
+                .map(|kind| {
+                    let text = sheet
+                        .marks
+                        .text(kind)
+                        .unwrap_or_else(|| kind.default_legend());
+                    format!(
+                        "{} ({}, {})",
+                        escape_markdown(text),
+                        kind.glyph(),
+                        kind.list()
+                    )
+                })
+                .collect();
+            blocks.push(format!("Mark kinds: {}.", kinds.join("; ")));
+        }
         let scoped = self.scoped_lines_rows();
         let header = [
-            "Line", "Kind", "From", "To", "Style", "Ends", "Means", "Actor", "Pointer",
+            "Line", "Kind", "From", "To", "Style", "Ends", "Means", "Actor", "Marks", "Pointer",
         ];
         let mut view_number = 1;
         for (index, node) in self.geometry.nodes.iter().enumerate() {
@@ -998,11 +1195,12 @@ impl<'a> Writer<'a> {
                 vec![
                     format!("P{}", index + 1),
                     escape_markdown(&point.text),
+                    self.marks_cell(&self.page_marks.point_marks(self.page, index)),
                     self.spans(&SheetList::ProblemPoints.pointer().index(index)),
                 ]
             })
             .collect();
-        blocks.push(table(&["Point", "Text", "Pointer"], &points));
+        blocks.push(table(&["Point", "Text", "Marks", "Pointer"], &points));
 
         let answer = sheet_pointer.child("answer");
         blocks.push(self.cell_heading(&answer));
@@ -1026,17 +1224,24 @@ impl<'a> Writer<'a> {
             .iter()
             .enumerate()
             .map(|(index, item)| {
+                let pointer = SheetList::AttentionItems.pointer().index(index);
                 vec![
+                    format!("diamond {}", index + 1),
                     format!(
                         "{} {}",
                         escape_markdown(&item.lead),
                         escape_markdown(&item.text)
                     ),
-                    self.spans(&SheetList::AttentionItems.pointer().index(index)),
+                    self.actor_cell(item.actor.as_deref()),
+                    self.zones_cell(&pointer),
+                    self.spans(&pointer),
                 ]
             })
             .collect();
-        blocks.push(table(&["Item", "Pointer"], &items));
+        blocks.push(table(
+            &["Mark", "Item", "Actor", "Zones", "Pointer"],
+            &items,
+        ));
     }
 
     /// `## Who acts`: one row per actor, its pointer the chip's in the legend strip.
@@ -1099,7 +1304,7 @@ impl<'a> Writer<'a> {
                 arrow_ends(pipe.arrow).to_string(),
                 self.means(&key),
             ],
-            actor,
+            (actor, &self.node_marks(pointer)),
             pointer_span,
         )
     }
@@ -1124,7 +1329,7 @@ impl<'a> Writer<'a> {
                 arrow_ends(Arrow::None).to_string(),
                 self.means(&key),
             ],
-            actor,
+            (actor, &[]),
             pointer_span,
         )
     }
@@ -1479,11 +1684,15 @@ pub fn description_covers_drawing(page: &Page, geometry: &PageGeometry, text: &s
                 message: "not described".to_string(),
             }),
             [number] => {
+                // A name in a list-valued cell also escapes its semicolons.
                 let escaped = escape_markdown(&unit.name);
+                let in_cell = cell_value(&unit.name);
                 let holds_name = lines
                     .iter()
                     .find(|line| line.number == *number)
-                    .is_some_and(|line| line.text.contains(&escaped));
+                    .is_some_and(|line| {
+                        line.text.contains(&escaped) || line.text.contains(&in_cell)
+                    });
                 if !holds_name {
                     defects.push(Defect {
                         pointer: unit.pointer.clone(),
@@ -1505,6 +1714,20 @@ pub fn description_covers_drawing(page: &Page, geometry: &PageGeometry, text: &s
                 message: format!("described on {count} lines"),
             });
         }
+    }
+    for (carrier, glyphs, marks) in &units.mark_mismatches {
+        defects.push(Defect {
+            pointer: carrier.clone(),
+            message: format!("draws {glyphs} mark glyphs for {marks} marks"),
+        });
+    }
+    for (key, drawn, expected) in
+        stencil_layout::marks::where_used_mismatches(page, geometry, &units)
+    {
+        defects.push(Defect {
+            pointer: key,
+            message: format!("where-used reads \"{drawn}\", marks at {expected}"),
+        });
     }
     defects.extend(span_defects);
     let examined = u64::try_from(units.units.len()).unwrap_or(u64::MAX);

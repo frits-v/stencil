@@ -12,7 +12,9 @@ use stencil_model::{
 };
 
 use crate::LayoutError;
+use crate::marks::{MARK_GAP_PX, MARKED_LINE_PX, glyphs_height, glyphs_width};
 use crate::styles::text_style_for;
+use stencil_model::{MarkKind, PageMarks};
 
 /// Height of the row of phase heads above the first lane.
 pub(crate) const HEAD_ROW_PX: f32 = 30.0;
@@ -188,26 +190,64 @@ fn step_frame_height(look: StepLook) -> f32 {
     top + bottom + stack
 }
 
+/// The glyphs of a Step's title line and of each of its lines, numbered.
+pub(crate) struct StepGlyphs {
+    pub title: Vec<(MarkKind, usize)>,
+    pub lines: Vec<Vec<(MarkKind, usize)>>,
+}
+
+pub(crate) fn step_glyphs(page_marks: &PageMarks<'_>, step: &Step) -> StepGlyphs {
+    let number = |marks: &[stencil_model::Mark]| -> Vec<(MarkKind, usize)> {
+        marks
+            .iter()
+            .take(SheetList::Marks.max() + 1)
+            .map(|mark| (mark.kind(), page_marks.number(mark).unwrap_or(0)))
+            .collect()
+    };
+    StepGlyphs {
+        title: number(&step.marks),
+        lines: step
+            .lines
+            .iter()
+            .take(SheetList::StepLines.max() + 1)
+            .map(|line| number(line.marks()))
+            .collect(),
+    }
+}
+
+/// The width a run of glyphs takes after its text: the gap and the glyphs, or nothing.
+pub(crate) fn trailing_width(glyphs: &[(MarkKind, usize)]) -> f32 {
+    if glyphs.is_empty() {
+        0.0
+    } else {
+        MARK_GAP_PX + glyphs_width(glyphs)
+    }
+}
+
 fn measure_step_text(
     measurer: &mut dyn TextMeasurer,
     step: &Step,
+    glyphs: &StepGlyphs,
 ) -> Result<StepText, MeasureError> {
     let title_style = step_title_style(step.look);
-    let mut max_content = measure_width(measurer, &step.title, title_style, None)?;
-    let mut min_content = measure_width(measurer, &step.title, title_style, Some(0.0))?;
-    for line in step.lines.iter().take(SheetList::StepLines.max() + 1) {
-        max_content = max_content.max(measure_width(
-            measurer,
-            line,
-            TextStyleName::StepText,
-            None,
-        )?);
-        min_content = min_content.max(measure_width(
-            measurer,
-            line,
-            TextStyleName::StepText,
-            Some(0.0),
-        )?);
+    let title_extra = trailing_width(&glyphs.title);
+    let mut max_content = measure_width(measurer, &step.title, title_style, None)? + title_extra;
+    let mut min_content =
+        measure_width(measurer, &step.title, title_style, Some(0.0))? + title_extra;
+    for (index, line) in step
+        .lines
+        .iter()
+        .take(SheetList::StepLines.max() + 1)
+        .enumerate()
+    {
+        let extra = glyphs
+            .lines
+            .get(index)
+            .map_or(0.0, |line| trailing_width(line));
+        max_content = max_content
+            .max(measure_width(measurer, line.text(), TextStyleName::StepText, None)? + extra);
+        min_content = min_content
+            .max(measure_width(measurer, line.text(), TextStyleName::StepText, Some(0.0))? + extra);
     }
     Ok(StepText {
         max_content,
@@ -219,15 +259,17 @@ fn measure_step_text(
 fn step_height(
     measurer: &mut dyn TextMeasurer,
     step: &Step,
+    glyphs: &StepGlyphs,
     text_width: f32,
 ) -> Result<f32, MeasureError> {
     let mut height = measure_height(
         measurer,
         &step.title,
         step_title_style(step.look),
-        text_width,
-    )?;
-    let lines: Vec<&String> = step
+        text_width - trailing_width(&glyphs.title),
+    )?
+    .max(glyphs_height(&glyphs.title));
+    let lines: Vec<&stencil_model::MarkedText> = step
         .lines
         .iter()
         .take(SheetList::StepLines.max() + 1)
@@ -235,8 +277,19 @@ fn step_height(
     if !lines.is_empty() {
         height += STEP_TITLE_GAP_PX;
     }
-    for line in lines {
-        height += measure_height(measurer, line, TextStyleName::StepText, text_width)?;
+    for (index, line) in lines.into_iter().enumerate() {
+        let line_glyphs = glyphs.lines.get(index).map_or(&[][..], Vec::as_slice);
+        let line_height = measure_height(
+            measurer,
+            line.text(),
+            TextStyleName::StepText,
+            text_width - trailing_width(line_glyphs),
+        )?;
+        height += if line_glyphs.is_empty() {
+            line_height
+        } else {
+            line_height.max(MARKED_LINE_PX)
+        };
     }
     Ok(height + step_frame_height(step.look))
 }
@@ -334,9 +387,14 @@ fn plan_one(
     // Columns per phase, and the width each column needs for its single-column Steps.
     let mut columns: Vec<Vec<Option<f32>>> = vec![vec![None; 1]; phase_count];
     let mut minimums: Vec<Vec<f32>> = vec![vec![EMPTY_COLUMN_PX; 1]; phase_count];
+    let page_marks = PageMarks::of(page);
+    let glyphs: Vec<StepGlyphs> = steps
+        .iter()
+        .map(|(_, step)| step_glyphs(&page_marks, step))
+        .collect();
     let mut texts = Vec::with_capacity(steps.len());
-    for (_, step) in &steps {
-        let text = measure_step_text(measurer, step)?;
+    for ((_, step), step_glyphs) in steps.iter().zip(&glyphs) {
+        let text = measure_step_text(measurer, step, step_glyphs)?;
         let frame = step_frame_width(step.look);
         let (first, last) = step_columns(step);
         let phase = phase_index(step);
@@ -500,7 +558,7 @@ fn plan_one(
 
     // Step widths are known: measure each Step's natural height.
     let mut step_boxes: Vec<(f32, f32, f32)> = Vec::with_capacity(steps.len());
-    for (_, step) in &steps {
+    for ((_, step), step_glyphs) in steps.iter().zip(&glyphs) {
         let (first, last) = step_columns(step);
         let phase = phase_plans.get(phase_index(step));
         let start = phase
@@ -513,7 +571,7 @@ fn plan_one(
             });
         let step_width = end - start;
         let text_width = step_width - step_frame_width(step.look);
-        let height = step_height(measurer, step, text_width)?;
+        let height = step_height(measurer, step, step_glyphs, text_width)?;
         step_boxes.push((start, step_width, height));
     }
 

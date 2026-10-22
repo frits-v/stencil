@@ -7,7 +7,7 @@ A page with `sheet` is a design sheet: one system as an engineering drawing on o
 - Captions: each cell opens with its caption in capitals, authored (at most 60 characters) or the word Problem, Answer or Attention. A wordmark holds 24.
 - Legend: a strip along the foot of the title block, inside its border: a row Who acts with a chip per actor, then a row Lines with the entries. A sheet draws at least one Pipe, Tee or Link for it to key.
 - Actors: `actors` names who acts, each with its own tint slot. An Item, Box, Pipe, Tee or Link with `actor` takes its colours: wire for outlines and lines, ink for titles. A line without one takes the actor of the node it leaves (a Step's lane); gray and deny take none. With actors no tint is written, and a `by_actor` legend entry keys every solid or dashed use.
-- Phases, Steps and lanes: `stencil prime phases`.
+- Phases, Steps and lanes: `stencil prime phases`. Marks, the parts list and general notes: `stencil prime marks`.
 - Views: the body holds Views and nothing else, each a body child, numbered from 2. A View is a heading (a numbered circle, the title, a subtitle, a rule to the right edge and the note) over its children in a column, gap 16. Inside a View every node works as on any page.
 - Boxes: a frame-role Box such as gcp is an unfilled outline, a boundary Box a hairline; group and tile Boxes keep their tone.
 
@@ -38,12 +38,6 @@ A page with `sheet` is a design sheet: one system as an engineering drawing on o
 | legend-by-actor-misused | the by_actor | by_actor names solid or dashed lines on a page with actors |
 
 A via point may lie in the margin: x runs from 0 to the width plus 100.
-
-# Checks
-
-| Check | Unit | Defect at | Message |
-|---|---|---|---|
-| keys-used | key | the actor | actor "ID" is never named by a lane, node, line or attention item |
 
 # Description
 

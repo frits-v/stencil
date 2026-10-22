@@ -700,6 +700,36 @@ fn a_solid_slot_whose_dot_is_none_draws_no_end_dots() {
     assert_eq!(label.text(), Some("Plain line"));
 }
 
+/// The boxes of every flag path, a closed triangle filled with the dark ink.
+fn flag_boxes(document: &resvg::usvg::roxmltree::Document<'_>) -> Vec<(f32, f32, f32, f32)> {
+    document
+        .descendants()
+        .filter(|node| node.has_tag_name("path") && node.attribute("fill") == Some("#222222"))
+        .filter_map(|node| {
+            let data = node.attribute("d")?;
+            let numbers: Vec<f32> = data
+                .split(|character: char| character.is_ascii_alphabetic() || character == ' ')
+                .filter(|piece| !piece.is_empty())
+                .filter_map(|piece| piece.parse().ok())
+                .collect();
+            if numbers.len() != 6 || !data.ends_with('Z') {
+                return None;
+            }
+            let xs = [numbers[0], numbers[2], numbers[4]];
+            let ys = [numbers[1], numbers[3], numbers[5]];
+            let fold = |values: [f32; 3], pick: fn(f32, f32) -> f32| {
+                values.into_iter().reduce(pick).unwrap_or_default()
+            };
+            Some((
+                fold(xs, f32::min),
+                fold(ys, f32::min),
+                fold(xs, f32::max),
+                fold(ys, f32::max),
+            ))
+        })
+        .collect()
+}
+
 fn onepager_document() -> Value {
     serde_json::from_str(include_str!("../../../examples/onepager.json")).unwrap()
 }
@@ -724,11 +754,28 @@ fn wire_paints_only_white_fills_and_two_inks() {
                 examined += 1;
             }
         }
-        for fill in attribute_values(&document, "text", "fill") {
-            assert!(
-                ["#222222", "#555555"].contains(&fill),
-                "{name}: text fill {fill}"
-            );
+        // A flag's numeral is the one white text, on its dark flag (section 14.5 rule 11).
+        let flags = flag_boxes(&document);
+        for text in document
+            .descendants()
+            .filter(|node| node.has_tag_name("text"))
+        {
+            let fill = text.attribute("fill").unwrap_or_default();
+            if fill == "#FFFFFF" {
+                let x: f32 = text.attribute("x").unwrap().parse().unwrap();
+                let y: f32 = text.attribute("y").unwrap().parse().unwrap();
+                assert!(
+                    flags.iter().any(|(left, top, right, bottom)| {
+                        (*left..=*right).contains(&x) && (*top..=*bottom).contains(&y)
+                    }),
+                    "{name}: white text at ({x}, {y}) on no flag"
+                );
+            } else {
+                assert!(
+                    ["#222222", "#555555"].contains(&fill),
+                    "{name}: text fill {fill}"
+                );
+            }
             examined += 1;
         }
         // The one second stroke ink is wire's placeholder diagonal, the cross of a Frame.
@@ -764,6 +811,7 @@ fn every_designed_theme_sets_the_sheet_role() {
         assert_eq!(sheet.rule, theme.card.border.color, "{name}");
         assert_eq!(sheet.label_ink, theme.ink.secondary, "{name}");
         assert_eq!(sheet.cell, theme.card.fill, "{name}");
+        assert_eq!(sheet.mark_ink, theme.ink.primary, "{name}");
         match (name, &sheet.grid) {
             ("wire", grid) => assert_eq!(*grid, None),
             (_, Some(grid)) => {
@@ -808,6 +856,10 @@ fn a_theme_without_sheet_roles_draws_the_derived_colours() {
     let border = rects[0];
     assert_eq!(border.attribute("fill"), Some(theme.page.as_str()));
     assert_eq!(border.attribute("stroke"), Some(theme.ink.primary.as_str()));
+    // A flag, the first glyph of the general notes, fills the derived mark ink.
+    let notes = common::group(&document, "/body/1/children/0/children/0/children/1");
+    let flag = common::children_named(notes, "path")[0];
+    assert_eq!(flag.attribute("fill"), Some(theme.ink.primary.as_str()));
     let ticks = common::children_named(root, "line");
     assert!(!ticks.is_empty());
     for tick in &ticks {
@@ -876,7 +928,10 @@ fn a_sheet_draws_its_frame_block_and_box_in_light_strokes() {
             "1.5",
             "{theme_name} view circle"
         );
-        let cloud = common::group(&document, "/body/1/children/0/children/1");
+        let cloud = common::group(
+            &document,
+            "/body/1/children/0/children/0/children/0/children/1",
+        );
         let stroked: Vec<_> = common::children_named(cloud, "path")
             .into_iter()
             .filter(|path| path.attribute("stroke").is_some())
@@ -1444,7 +1499,8 @@ fn a_by_actor_sample_draws_in_the_frame_ink() {
 fn wire_labels_a_by_actor_entry_by_line() {
     let rendered = render_themed(onepager_document(), "wire");
     let svg = common::parse_xml(&rendered.svg.svg);
-    let labels: Vec<String> = (0..3)
+    let labels: Vec<String> = [0, 1, 3]
+        .into_iter()
         .map(|index| {
             let group = common::group(&svg, &format!("/legend/{index}"));
             common::children_named(group, "text")[0]

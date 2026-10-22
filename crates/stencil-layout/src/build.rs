@@ -1,20 +1,23 @@
 //! Builds the taffy tree for a vetted page (sections 2.2 to 2.8) and records, per geometry
 //! node, the taffy nodes its bounds, content box and parts are read from.
 
+mod marks_node;
 mod phases_node;
 mod sheet;
 
 pub use sheet::SHEET_BLOCK_BORDER_PX;
 
 use stencil_model::grammar::{LabelStyle, Role};
+use stencil_model::marks::{CarrierMark, MarkPlace};
 use stencil_model::pointer::NodePointer;
 use stencil_model::products::item_shape;
 use stencil_model::text::{TextStyle, TextStyleName};
 use stencil_model::{
     Arrow, BoxNode, Callout, Chrome, DEPTH_MAX, Fact, FactSource, Frame, GAP_DEFAULT_PX, Grammar,
     Item, Justify, LANE_GAP_DEFAULT_PX, Lanes, LegendEntry, ListKind, Node, Note, NoteKind, Page,
-    PageActors, Pipe, PipeDir, PipeForm, Projection, Shape, Tee, TeeArm, Text, VetRule, Violation,
-    box_key, box_tint, canonical_legend_label, canvas_width, legend_entry_key, line_key, line_tint,
+    PageActors, PageMarks, Pipe, PipeDir, PipeForm, Projection, Shape, Tee, TeeArm, Text, VetRule,
+    Violation, box_key, box_tint, canonical_legend_label, canvas_width, legend_entry_key, line_key,
+    line_tint,
 };
 use taffy::prelude::{
     AlignItems, AlignSelf, Dimension, Display, FlexDirection, FlexWrap, JustifyContent,
@@ -134,6 +137,7 @@ pub(crate) fn build_page(
     grammar: &Grammar,
     lanes_plan: &LanesPlan,
     phases_plan: &PhasesPlan,
+    widest_cell: &str,
 ) -> Result<BuiltPage, LayoutError> {
     let mut builder = Builder {
         tree: TaffyTree::new(),
@@ -143,6 +147,9 @@ pub(crate) fn build_page(
         lanes_plan,
         phases_plan,
         actors: PageActors::of(page),
+        page_marks: PageMarks::of(page),
+        widest_cell: widest_cell.to_string(),
+        carrier_marks: Vec::new(),
         page,
         iso: page.projection == Projection::Iso,
         sheet: page.sheet.is_some(),
@@ -166,6 +173,12 @@ struct Builder<'page> {
     phases_plan: &'page PhasesPlan,
     /// What each node and line acts for; empty on a page without actors.
     actors: PageActors<'page>,
+    /// The keyed lists and every carrier's marks; empty off a sheet.
+    page_marks: PageMarks<'page>,
+    /// The widest grid cell name, which where-used text is reserved with.
+    widest_cell: String,
+    /// The marks of the node being added, set by `add_body_node` and taken by the carrier.
+    carrier_marks: Vec<CarrierMark>,
     page: &'page Page,
     /// True under iso: every zone label reserves the floor its placard needs.
     iso: bool,
@@ -299,7 +312,9 @@ fn default_weight(container: NodeTag, child: &Node) -> u16 {
         | Node::Frame(_)
         | Node::View(_)
         | Node::Phases(_)
-        | Node::Step(_) => 1,
+        | Node::Step(_)
+        | Node::PartsList(_)
+        | Node::GeneralNotes(_) => 1,
     };
     match container {
         NodeTag::Row => row_weight,
@@ -327,7 +342,9 @@ fn default_weight(container: NodeTag, child: &Node) -> u16 {
         | NodeTag::View
         | NodeTag::ActorChip
         | NodeTag::Phases
-        | NodeTag::Step => 0,
+        | NodeTag::Step
+        | NodeTag::PartsList
+        | NodeTag::GeneralNotes => 0,
     }
 }
 
@@ -872,6 +889,9 @@ impl Builder<'_> {
                 rule: VetRule::DepthExceeded,
             }]));
         }
+        self.carrier_marks = self
+            .page_marks
+            .marks_at(&pointer, stencil_model::NodeRef::Node(node));
         match node {
             Node::Row(row) => self.add_flex_container(
                 FlexContainer {
@@ -960,6 +980,12 @@ impl Builder<'_> {
                 pointer,
                 rule: VetRule::StepOutsidePhases,
             }])),
+            Node::PartsList(list) => {
+                self.add_parts_list(list, pointer, parent_index, parent_container, placement)
+            }
+            Node::GeneralNotes(notes) => {
+                self.add_general_notes(notes, pointer, parent_index, parent_container, placement)
+            }
         }
     }
 
@@ -1145,6 +1171,7 @@ impl Builder<'_> {
         placement: Placement,
         depth: usize,
     ) -> Result<(), LayoutError> {
+        let marks = std::mem::take(&mut self.carrier_marks);
         let grammar = self.grammar;
         let Some(kind) = grammar.container(&box_node.kind) else {
             return Err(LayoutError::Invalid(vec![Violation {
@@ -1219,9 +1246,14 @@ impl Builder<'_> {
                 ..flex_column(AlignItems::STRETCH)
             };
             let bar = self.container(bar_style, zone_node, &pointer)?;
+            let label_row = self.marked_text_row(bar, &marks, MarkPlace::Trailing, &pointer)?;
+            let label_leaf_style = match label_row {
+                Some(_) => Self::marked_text_style(label_leaf_style),
+                None => label_leaf_style,
+            };
             let (label, label_leaf) = self.text_leaf(
                 label_leaf_style,
-                Some(bar),
+                Some(label_row.unwrap_or(bar)),
                 TextSpec {
                     text: &box_node.label,
                     style_name: label_style,
@@ -1246,6 +1278,10 @@ impl Builder<'_> {
             };
             let body = self.container(body_style, zone_node, &pointer)?;
             record.content_node = body;
+            let glyphs = match label_row {
+                Some(row) => self.add_mark_row(row, &marks, MarkPlace::Trailing, &pointer)?,
+                None => Vec::new(),
+            };
             record.parts = vec![
                 PartRecord {
                     name: PartName::Bar,
@@ -1263,11 +1299,18 @@ impl Builder<'_> {
                     text_leaf: None,
                 },
             ];
+            record.parts.extend(glyphs);
             body
         } else {
+            let label_row =
+                self.marked_text_row(zone_node, &marks, MarkPlace::Trailing, &pointer)?;
+            let label_leaf_style = match label_row {
+                Some(_) => Self::marked_text_style(label_leaf_style),
+                None => label_leaf_style,
+            };
             let (label, label_leaf) = self.text_leaf(
                 label_leaf_style,
-                Some(zone_node),
+                Some(label_row.unwrap_or(zone_node)),
                 TextSpec {
                     text: &box_node.label,
                     style_name: label_style,
@@ -1281,8 +1324,14 @@ impl Builder<'_> {
                 taffy_node: label,
                 text_leaf: Some(label_leaf),
             }];
+            if let Some(row) = label_row {
+                let glyphs = self.add_mark_row(row, &marks, MarkPlace::Trailing, &pointer)?;
+                record.parts.extend(glyphs);
+            }
             zone_node
         };
+        let corner = self.add_corner_mark((zone_node, border), &marks, &pointer)?;
+        record.parts.extend(corner);
 
         let index = self.push_record(record);
         let children_pointer = pointer.child("children");
@@ -1309,6 +1358,7 @@ impl Builder<'_> {
         parent_container: NodeId,
         placement: Placement,
     ) -> Result<(), LayoutError> {
+        let marks = std::mem::take(&mut self.carrier_marks);
         let shape = item_shape(self.grammar.item(&item.kind), item);
         // Under iso an item whose shape is not a card is a solid rising from a footprint
         // with its text on the floor in front of it (section 12.3): no card padding or
@@ -1398,9 +1448,14 @@ impl Builder<'_> {
             text_leaf: None,
         });
 
+        let title_row = self.marked_text_row(column, &marks, MarkPlace::Trailing, &pointer)?;
+        let title_style = match title_row {
+            Some(_) => Self::marked_text_style(base_style()),
+            None => base_style(),
+        };
         let (function_name, function_leaf) = self.text_leaf(
-            base_style(),
-            Some(column),
+            title_style,
+            Some(title_row.unwrap_or(column)),
             TextSpec {
                 text: &item.title,
                 style_name: TextStyleName::CardFunction,
@@ -1414,6 +1469,10 @@ impl Builder<'_> {
             taffy_node: function_name,
             text_leaf: Some(function_leaf),
         });
+        let mut glyphs = match title_row {
+            Some(row) => self.add_mark_row(row, &marks, MarkPlace::Trailing, &pointer)?,
+            None => Vec::new(),
+        };
 
         if let Some(subtitle) = &item.subtitle {
             let (product, product_leaf) = self.text_leaf(
@@ -1451,6 +1510,10 @@ impl Builder<'_> {
             )?;
         }
 
+        // Under iso a footprint item draws no card border.
+        let card_border = if footprint.is_some() { 0.0 } else { 1.5 };
+        glyphs.extend(self.add_corner_mark((card, card_border), &marks, &pointer)?);
+        parts.extend(glyphs);
         let mut record = Self::record(pointer, NodeTag::Pcard, None, Some(parent_index), card);
         record.tint = self.actors.slot(item.actor.as_deref());
         record.shape = Some(shape);
@@ -1576,6 +1639,7 @@ impl Builder<'_> {
         parent_container: NodeId,
         placement: Placement,
     ) -> Result<(), LayoutError> {
+        let marks = std::mem::take(&mut self.carrier_marks);
         let horizontal = pipe.dir == PipeDir::Horizontal;
         let mut style = if horizontal {
             flex_row(AlignItems::CENTER)
@@ -1686,9 +1750,24 @@ impl Builder<'_> {
             },
         };
         let tag = self.container(tag_style, pipe_node, &pointer)?;
+        // A tag with marks is a row: the label and sub in a column, then the glyphs.
+        let tag_text = if marks.is_empty() {
+            tag
+        } else {
+            if let Some(tag_style) = self.tree.style(tag).ok().cloned() {
+                let row_style = Style {
+                    flex_direction: taffy::prelude::FlexDirection::Row,
+                    ..tag_style
+                };
+                self.tree
+                    .set_style(tag, row_style)
+                    .map_err(Self::taffy_error(&pointer))?;
+            }
+            self.container(flex_column(AlignItems::CENTER), tag, &pointer)?
+        };
         let (label, label_leaf) = self.text_leaf_along(
             base_style(),
-            Some(tag),
+            Some(tag_text),
             TextSpec {
                 text: &pipe.label,
                 style_name: TextStyleName::TagLabel,
@@ -1730,7 +1809,7 @@ impl Builder<'_> {
                     margin: sub_margin,
                     ..base_style()
                 },
-                Some(tag),
+                Some(tag_text),
                 TextSpec {
                     text: sub,
                     style_name: TextStyleName::TagSub,
@@ -1745,6 +1824,10 @@ impl Builder<'_> {
                 taffy_node: sub_node,
                 text_leaf: Some(sub_leaf),
             });
+        }
+        if !marks.is_empty() {
+            let glyphs = self.add_mark_row(tag, &marks, MarkPlace::Trailing, &pointer)?;
+            parts.extend(glyphs);
         }
         let wire_end = self.plain_leaf(wire_style, pipe_node, &pointer)?;
         let dot_end = self.plain_leaf(dot_style, pipe_node, &pointer)?;
@@ -1876,6 +1959,10 @@ impl Builder<'_> {
         let arms_pointer = pointer.child("arms");
         for (arm_index, (arm, row_line)) in tee.arms.iter().zip([1_i16, 3]).enumerate() {
             let TeeArm::Pipe(arm_pipe) = arm;
+            self.carrier_marks = self.page_marks.marks_at(
+                &arms_pointer.index(arm_index),
+                stencil_model::NodeRef::TeeArm(arm_pipe),
+            );
             self.add_pipe(
                 (arm_pipe, Some(tee)),
                 arms_pointer.index(arm_index),

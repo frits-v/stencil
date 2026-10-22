@@ -35,12 +35,15 @@ pub fn text_color(name: TextStyleName, line: Option<Line>) -> &'static str {
         | TextStyleName::LeadBody
         | TextStyleName::ActorName
         | TextStyleName::LaneName
-        | TextStyleName::StepTitle => TEXT_DARK,
+        | TextStyleName::StepTitle
+        | TextStyleName::ListTitle
+        | TextStyleName::MarkNumeral
+        | TextStyleName::MarkNumeralSmall => TEXT_DARK,
         TextStyleName::TagLabel => match line {
             Some(Line::Deny) => TEXT_DENY,
             Some(Line::Gray | Line::Solid | Line::Dash) | None => TEXT_DARK,
         },
-        TextStyleName::GcpBar => TEXT_WHITE,
+        TextStyleName::GcpBar | TextStyleName::FlagNumeral => TEXT_WHITE,
         TextStyleName::PerimeterLabel | TextStyleName::Ask => TEXT_AMBER,
         TextStyleName::Lede
         | TextStyleName::ZoneLabel
@@ -91,7 +94,11 @@ pub(crate) fn text_style_for(name: TextStyleName, iso: bool) -> TextStyle {
         | TextStyleName::ActorName
         | TextStyleName::LaneName
         | TextStyleName::StepTitle
-        | TextStyleName::StepText => return flat,
+        | TextStyleName::StepText
+        | TextStyleName::ListTitle
+        | TextStyleName::MarkNumeral
+        | TextStyleName::MarkNumeralSmall
+        | TextStyleName::FlagNumeral => return flat,
         TextStyleName::ZoneLabel | TextStyleName::PerimeterLabel => ISO_ZONE_LABEL_SCALE,
         TextStyleName::GcpBar => ISO_FRAME_LABEL_SCALE,
         TextStyleName::CardFunction
@@ -162,6 +169,10 @@ mod tests {
             ("lane_name", "#202124"),
             ("step_title", "#202124"),
             ("step_text", "#5F6368"),
+            ("list_title", "#202124"),
+            ("mark_numeral", "#202124"),
+            ("mark_numeral_small", "#202124"),
+            ("flag_numeral", "#FFFFFF"),
         ];
         assert_eq!(TEXT_STYLES.len(), expected.len());
         for (named, (name, color)) in TEXT_STYLES.iter().zip(expected) {

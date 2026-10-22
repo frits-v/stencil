@@ -56,6 +56,7 @@ pub(crate) fn route_links(
 ) -> Result<Vec<LinkRoute>, LayoutError> {
     let nodes_by_id = nodes_by_id(page, geometry);
     let actors = stencil_model::PageActors::of(page);
+    let page_marks = stencil_model::PageMarks::of(page);
     let links_pointer = NodePointer::root().child("links");
     let mut routes = Vec::with_capacity(page.links.len().min(LINKS_MAX));
     for (index, link) in page.links.iter().enumerate().take(LINKS_MAX) {
@@ -83,6 +84,7 @@ pub(crate) fn route_links(
             ),
         };
         let mut parts = tag_parts(page, link, &link_pointer, &points, measurer)?;
+        add_tag_marks(&page_marks, (link, index), &mut parts, measurer)?;
         if page.sheet.is_some() {
             clear_box_edges(geometry, &points, &mut parts);
         }
@@ -643,7 +645,9 @@ pub(crate) fn label_boxes(node: &NodeGeometry) -> Vec<BoxRect> {
         | NodeTag::TitleCell
         | NodeTag::ProblemPoint
         | NodeTag::ActorChip
-        | NodeTag::Step => Vec::new(),
+        | NodeTag::Step
+        | NodeTag::PartsList
+        | NodeTag::GeneralNotes => Vec::new(),
     }
 }
 
@@ -663,7 +667,9 @@ fn obstacle_box(node: &NodeGeometry) -> Option<BoxRect> {
         | NodeTag::Foot
         | NodeTag::TitleCell
         | NodeTag::ActorChip
-        | NodeTag::Step => Some(node.bounds),
+        | NodeTag::Step
+        | NodeTag::PartsList
+        | NodeTag::GeneralNotes => Some(node.bounds),
         NodeTag::Pipe => node.part(PartName::Tag).map(|part| part.bounds),
         NodeTag::Zone => node.part(PartName::Label).map(|part| part.bounds),
         // An enclosing node already blocks a title block's points and the block itself
@@ -1471,6 +1477,53 @@ fn clear_box_edges(geometry: &PageGeometry, points: &[PagePoint], parts: &mut [P
             }
         }
     }
+}
+
+/// A link's marks at the right end of its tag (section 14.4 rule 22): the tag widens by
+/// the gap and the glyphs, to the right and left in equal halves so it stays on its leg,
+/// and the glyphs stand in the widened end, centred on the tag's height.
+fn add_tag_marks(
+    page_marks: &stencil_model::PageMarks<'_>,
+    (link, index): (&Link, usize),
+    parts: &mut Vec<Part>,
+    measurer: &mut dyn TextMeasurer,
+) -> Result<(), LayoutError> {
+    let marks = stencil_model::PageMarks::link_marks(link, index);
+    let Some(tag) = parts.first().map(|part| part.bounds) else {
+        return Ok(());
+    };
+    if marks.is_empty() {
+        return Ok(());
+    }
+    let selected: Vec<&stencil_model::CarrierMark> = marks.iter().collect();
+    let glyphs = crate::marks::numbered(page_marks, &selected);
+    let extra = crate::marks::MARK_GAP_PX + crate::marks::glyphs_width(&glyphs);
+    for part in parts.iter_mut() {
+        part.bounds.x -= extra / 2.0;
+    }
+    if let Some(tag_part) = parts.first_mut() {
+        tag_part.bounds.width += extra;
+    }
+    let mut x = tag.x - extra / 2.0 + tag.width - TAG_BORDER_PX - TAG_PADDING_X_PX
+        + crate::marks::MARK_GAP_PX;
+    let source = NodePointer::root()
+        .child("links")
+        .index(index)
+        .child("marks");
+    for glyph in glyphs {
+        let (width, height) = crate::marks::glyph_size(glyph.0, glyph.1);
+        let y = tag.y + (tag.height - height) / 2.0;
+        let placed = crate::marks::placed_glyph(
+            (crate::marks::glyph_part(glyph.0), PartName::MarkNumeral),
+            glyph,
+            (x, y),
+            measurer,
+            &source,
+        )?;
+        parts.extend(placed);
+        x += width + crate::marks::MARK_GAP_PX;
+    }
+    Ok(())
 }
 
 fn tag_parts(

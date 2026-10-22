@@ -14,4 +14,5 @@ check print-fit: examined 0 text runs, not applicable: no print width
 check icon-matches-product: examined 6 items, 0 defects
 check description-covers-drawing: examined 22 elements, 0 defects
 check keys-used: examined 0 keys, not applicable: page has no actors or keyed lists
-stencil check: 16 checks, 13 passed, 0 failed, 3 not applicable
+check marks-clear: examined 0 marks, not applicable: page has no marks, step badges, valves, hops or detail frames
+stencil check: 17 checks, 13 passed, 0 failed, 4 not applicable

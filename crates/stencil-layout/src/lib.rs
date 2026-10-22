@@ -9,6 +9,8 @@ mod compute;
 mod drawn;
 mod lanes;
 mod lead_run;
+pub mod marks;
+mod marks_clear;
 mod phases;
 mod pipe_ends;
 mod route;
@@ -35,7 +37,7 @@ pub use stencil_model::text::WRAP_EPSILON_PX;
 pub use theme_labels::theme_legend_labels;
 pub use units::{
     DescribedUnit, DescriptionUnits, ENTRY_PARTS, PipeEndSide, PipeLanding, SheetZone, UnitKind,
-    description_units, sheet_frame, sheet_zone, sheet_zone_at, title_cell_caption,
+    description_units, sheet_frame, sheet_zone, sheet_zone_at, title_cell_caption, where_used,
 };
 
 pub const GEOMETRY_EPSILON_PX: f32 = 0.01;
@@ -155,7 +157,13 @@ pub fn layout_page(
     let lanes_plan = lanes::plan_lanes(page, measurer)?;
     // A Phases node is as wide as the sheet's content: its View stretches to it.
     let phases_plan = phases::plan_phases(page, page.width as f32, measurer)?;
-    let built = build::build_page(page, grammar, &lanes_plan, &phases_plan)?;
+    // Where-used text is reserved with the widest cell name before the glyphs are placed.
+    let widest_cell = if page.sheet.is_some() {
+        marks::widest_cell_name(measurer)?
+    } else {
+        String::new()
+    };
+    let built = build::build_page(page, grammar, &lanes_plan, &phases_plan, &widest_cell)?;
     let mut geometry = compute::compute_geometry(built, canvas_width(page), measurer)?;
     compute::translate_pipe_slots(page, &mut geometry);
     pipe_ends::extend_pipe_ends(page, &mut geometry);
@@ -164,6 +172,9 @@ pub fn layout_page(
         sheet_frame::add_sheet_frame(&mut geometry, measurer)?;
     }
     geometry.links = route::route_links(page, grammar, &geometry, &lanes_plan, measurer)?;
+    if page.sheet.is_some() {
+        marks::fill_where_used(page, &mut geometry, measurer)?;
+    }
     Ok(geometry)
 }
 
@@ -325,6 +336,10 @@ pub enum NodeTag {
     Phases,
     /// One piece of work in a Phases node.
     Step,
+    /// The parts list: the keys of a sheet's balloons (section 14.4 rule 17).
+    PartsList,
+    /// The general notes: the keys of a sheet's flags (section 14.4 rule 18).
+    GeneralNotes,
 }
 
 impl NodeTag {
@@ -358,6 +373,8 @@ impl NodeTag {
             NodeTag::ActorChip => "ActorChip",
             NodeTag::Phases => "Phases",
             NodeTag::Step => "Step",
+            NodeTag::PartsList => "PartsList",
+            NodeTag::GeneralNotes => "GeneralNotes",
         }
     }
 }
@@ -479,10 +496,40 @@ pub enum PartName {
     Front,
     StepLine,
     StackBack,
+    Balloon,
+    Flag,
+    Diamond,
+    MarkNumeral,
+    AttentionDiamond,
+    AttentionNumeral,
+    AttentionZones,
+    MarkSample,
+    MarkSampleNumeral,
+    MarkSampleText,
+    Title,
+    Note,
+    TitleRule,
+    HeaderCell,
+    RowRule,
+    PartBalloon,
+    PartNumeral,
+    PartTitle,
+    PartWhat,
+    PartPlanned,
+    PartWhy,
+    PartWhyRule,
+    PartZones,
+    NoteFlag,
+    NoteNumeral,
+    NoteText,
+    NoteDetail,
+    NoteZones,
+    FootRule,
+    Foot,
 }
 
 /// The number of part names, so a new name has to join `PartName::ALL`.
-pub const PART_NAMES: usize = 79;
+pub const PART_NAMES: usize = 109;
 
 impl PartName {
     /// Every part name, in declaration order.
@@ -566,6 +613,36 @@ impl PartName {
         PartName::Front,
         PartName::StepLine,
         PartName::StackBack,
+        PartName::Balloon,
+        PartName::Flag,
+        PartName::Diamond,
+        PartName::MarkNumeral,
+        PartName::AttentionDiamond,
+        PartName::AttentionNumeral,
+        PartName::AttentionZones,
+        PartName::MarkSample,
+        PartName::MarkSampleNumeral,
+        PartName::MarkSampleText,
+        PartName::Title,
+        PartName::Note,
+        PartName::TitleRule,
+        PartName::HeaderCell,
+        PartName::RowRule,
+        PartName::PartBalloon,
+        PartName::PartNumeral,
+        PartName::PartTitle,
+        PartName::PartWhat,
+        PartName::PartPlanned,
+        PartName::PartWhy,
+        PartName::PartWhyRule,
+        PartName::PartZones,
+        PartName::NoteFlag,
+        PartName::NoteNumeral,
+        PartName::NoteText,
+        PartName::NoteDetail,
+        PartName::NoteZones,
+        PartName::FootRule,
+        PartName::Foot,
     ];
 
     /// True for the parts a design sheet adds (section 14.2 rule 10); only a sheet draws
@@ -613,7 +690,37 @@ impl PartName {
             | PartName::PhaseSeparator
             | PartName::Front
             | PartName::StepLine
-            | PartName::StackBack => true,
+            | PartName::StackBack
+            | PartName::Balloon
+            | PartName::Flag
+            | PartName::Diamond
+            | PartName::MarkNumeral
+            | PartName::AttentionDiamond
+            | PartName::AttentionNumeral
+            | PartName::AttentionZones
+            | PartName::MarkSample
+            | PartName::MarkSampleNumeral
+            | PartName::MarkSampleText
+            | PartName::Title
+            | PartName::Note
+            | PartName::TitleRule
+            | PartName::HeaderCell
+            | PartName::RowRule
+            | PartName::PartBalloon
+            | PartName::PartNumeral
+            | PartName::PartTitle
+            | PartName::PartWhat
+            | PartName::PartPlanned
+            | PartName::PartWhy
+            | PartName::PartWhyRule
+            | PartName::PartZones
+            | PartName::NoteFlag
+            | PartName::NoteNumeral
+            | PartName::NoteText
+            | PartName::NoteDetail
+            | PartName::NoteZones
+            | PartName::FootRule
+            | PartName::Foot => true,
             PartName::Badge
             | PartName::BadgeText
             | PartName::Text
@@ -652,6 +759,11 @@ impl PartName {
             | PartName::Lifeline
             | PartName::Footprint => false,
         }
+    }
+
+    /// True for the glyph of a mark on a carrier (section 14.4 rule 22).
+    pub fn is_mark_glyph(self) -> bool {
+        matches!(self, PartName::Balloon | PartName::Flag | PartName::Diamond)
     }
 
     /// The snake_case name used as a measured JSON key and in check messages.
@@ -736,6 +848,36 @@ impl PartName {
             PartName::Front => "front",
             PartName::StepLine => "step_line",
             PartName::StackBack => "stack_back",
+            PartName::Balloon => "balloon",
+            PartName::Flag => "flag",
+            PartName::Diamond => "diamond",
+            PartName::MarkNumeral => "mark_numeral",
+            PartName::AttentionDiamond => "attention_diamond",
+            PartName::AttentionNumeral => "attention_numeral",
+            PartName::AttentionZones => "attention_zones",
+            PartName::MarkSample => "mark_sample",
+            PartName::MarkSampleNumeral => "mark_sample_numeral",
+            PartName::MarkSampleText => "mark_sample_text",
+            PartName::Title => "title",
+            PartName::Note => "note",
+            PartName::TitleRule => "title_rule",
+            PartName::HeaderCell => "header_cell",
+            PartName::RowRule => "row_rule",
+            PartName::PartBalloon => "part_balloon",
+            PartName::PartNumeral => "part_numeral",
+            PartName::PartTitle => "part_title",
+            PartName::PartWhat => "part_what",
+            PartName::PartPlanned => "part_planned",
+            PartName::PartWhy => "part_why",
+            PartName::PartWhyRule => "part_why_rule",
+            PartName::PartZones => "part_zones",
+            PartName::NoteFlag => "note_flag",
+            PartName::NoteNumeral => "note_numeral",
+            PartName::NoteText => "note_text",
+            PartName::NoteDetail => "note_detail",
+            PartName::NoteZones => "note_zones",
+            PartName::FootRule => "foot_rule",
+            PartName::Foot => "foot",
         }
     }
 }

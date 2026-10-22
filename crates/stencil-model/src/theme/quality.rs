@@ -404,6 +404,27 @@ fn sheet_rows(theme: &Theme, rows: &mut Rows) {
     }
     rows.non_text(("sheet.frame", sheet.frame), ("sheet.paper", sheet.paper));
     actor_rows(theme, rows);
+    mark_rows(theme, rows);
+}
+
+/// The mark rows (section 14.5 rule 4): a flag's numeral in `sheet.cell` on its
+/// `sheet.mark_ink` fill; a diamond's numeral in `ink.primary` on its actor's fill, per
+/// slot; then the mark ink as a stroke on the paper and on the cells.
+fn mark_rows(theme: &Theme, rows: &mut Rows) {
+    let sheet = theme.sheet_colors();
+    rows.text(
+        ("sheet.cell", sheet.cell),
+        ("sheet.mark_ink", sheet.mark_ink),
+    );
+    for (index, tint) in theme.tints.iter().enumerate() {
+        rows.text(
+            ("ink.primary", &theme.ink.primary),
+            (&format!("tints.{}.fill", index + 1), &tint.fill),
+        );
+    }
+    for ground in [("sheet.paper", sheet.paper), ("sheet.cell", sheet.cell)] {
+        rows.non_text(("sheet.mark_ink", sheet.mark_ink), ground);
+    }
 }
 
 /// The actor rows (section 14.5 rule 1), per tint slot: the actor's ink, which its lane

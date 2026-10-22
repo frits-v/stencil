@@ -24,6 +24,13 @@ impl NodePointer {
     pub fn as_str(&self) -> &str {
         &self.0
     }
+
+    /// The pointer without its last reference token; None for the root.
+    pub fn parent(&self) -> Option<Self> {
+        self.0
+            .rfind('/')
+            .map(|slash| NodePointer(self.0.get(..slash).unwrap_or_default().to_string()))
+    }
 }
 
 impl fmt::Display for NodePointer {

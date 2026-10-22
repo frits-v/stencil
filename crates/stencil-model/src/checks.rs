@@ -3,8 +3,10 @@
 
 use std::collections::BTreeSet;
 
+use crate::document::MarkKind;
 use crate::document::{Chrome, Line, Node, Page, PipeForm, line_tint};
 use crate::grammar::{GRAMMAR_REMEMBERED_MAX, Grammar};
+use crate::marks::PageMarks;
 use crate::pointer::NodePointer;
 use crate::sheet::{PageActors, SheetList};
 use crate::walk::{NodeRef, body_nodes, text_fields};
@@ -28,6 +30,7 @@ pub enum CheckName {
     IconMatchesProduct,
     DescriptionCoversDrawing,
     KeysUsed,
+    MarksClear,
 }
 
 impl CheckName {
@@ -50,6 +53,7 @@ impl CheckName {
             CheckName::IconMatchesProduct => "icon-matches-product",
             CheckName::DescriptionCoversDrawing => "description-covers-drawing",
             CheckName::KeysUsed => "keys-used",
+            CheckName::MarksClear => "marks-clear",
         }
     }
 
@@ -57,7 +61,7 @@ impl CheckName {
     /// applicable on every other page, so its row lives in the sheet briefing.
     pub fn is_sheet_only(self) -> bool {
         match self {
-            CheckName::KeysUsed => true,
+            CheckName::KeysUsed | CheckName::MarksClear => true,
             CheckName::ChildInsideContainer
             | CheckName::SiblingsDoNotOverlap
             | CheckName::TextFitsBox
@@ -114,6 +118,8 @@ impl CheckName {
             (CheckName::DescriptionCoversDrawing, false) => "elements",
             (CheckName::KeysUsed, true) => "key",
             (CheckName::KeysUsed, false) => "keys",
+            (CheckName::MarksClear, true) => "mark",
+            (CheckName::MarksClear, false) => "marks",
         }
     }
 }
@@ -355,7 +361,9 @@ pub fn legend_consistency(page: &Page) -> CheckReport {
                 | Node::Frame(_)
                 | Node::View(_)
                 | Node::Phases(_)
-                | Node::Step(_),
+                | Node::Step(_)
+                | Node::PartsList(_)
+                | Node::GeneralNotes(_),
             ) => {}
         }
     }
@@ -428,8 +436,10 @@ pub fn legend_consistency(page: &Page) -> CheckReport {
     }
 }
 
-/// Every actor is a key (section 14.6): one defect per actor that no lane, carrier or
-/// attention item names. Not applicable on a page without actors.
+/// Every actor, attention item, part and general note is a key (section 14.6): one defect
+/// per actor that no lane, carrier, part or attention item names, per part never ballooned,
+/// per note never flagged and per attention item never marked. Not applicable on a page
+/// without actors or keyed lists.
 pub fn keys_used(page: &Page) -> CheckReport {
     let actors: Vec<&str> = page
         .actors
@@ -437,7 +447,20 @@ pub fn keys_used(page: &Page) -> CheckReport {
         .take(SheetList::Actors.max() + 1)
         .map(|actor| actor.id.as_str())
         .collect();
-    if actors.is_empty() {
+    let page_marks = PageMarks::of(page);
+    let attention_count = page.sheet.as_ref().map_or(0, |sheet| {
+        sheet
+            .attention
+            .items
+            .len()
+            .min(SheetList::AttentionItems.max() + 1)
+    });
+    let key_count = |kind: MarkKind| match kind {
+        MarkKind::Attention => attention_count,
+        MarkKind::Part | MarkKind::Note => page_marks.key_count(kind),
+    };
+    let keyed: usize = MarkKind::ALL.into_iter().map(key_count).sum();
+    if actors.is_empty() && keyed == 0 {
         return CheckReport::not_applicable(
             CheckName::KeysUsed,
             "page has no actors or keyed lists",
@@ -458,6 +481,9 @@ pub fn keys_used(page: &Page) -> CheckReport {
             NodeRef::Node(Node::Step(step)) => {
                 named.insert(step.lane.as_str());
             }
+            NodeRef::Node(Node::PartsList(list)) => {
+                named.extend(list.parts.iter().filter_map(|part| part.actor.as_deref()));
+            }
             NodeRef::Node(
                 Node::Row(_)
                 | Node::Col(_)
@@ -467,7 +493,8 @@ pub fn keys_used(page: &Page) -> CheckReport {
                 | Node::Text(_)
                 | Node::Callout(_)
                 | Node::Frame(_)
-                | Node::View(_),
+                | Node::View(_)
+                | Node::GeneralNotes(_),
             ) => {}
         }
     }
@@ -487,7 +514,7 @@ pub fn keys_used(page: &Page) -> CheckReport {
         );
     }
     let actors_pointer = SheetList::Actors.pointer();
-    let defects = actors
+    let mut defects: Vec<Defect> = actors
         .iter()
         .enumerate()
         .filter(|(_, id)| !named.contains(**id))
@@ -498,11 +525,52 @@ pub fn keys_used(page: &Page) -> CheckReport {
             ),
         })
         .collect();
+    let sites = page_marks.all(page);
+    for kind in [MarkKind::Attention, MarkKind::Part, MarkKind::Note] {
+        for position in 0..key_count(kind) {
+            let used = sites.iter().any(|site| {
+                site.mark.kind() == kind && page_marks.position(&site.mark) == Some(position)
+            });
+            if used {
+                continue;
+            }
+            let (Some(pointer), Some(id)) = (
+                page_marks.key_pointer(kind, position),
+                key_id(page, &page_marks, kind, position),
+            ) else {
+                continue;
+            };
+            let message = match kind {
+                MarkKind::Part => format!("part \"{id}\" is never ballooned"),
+                MarkKind::Note => format!("general note \"{id}\" is never flagged"),
+                MarkKind::Attention => format!("attention item \"{id}\" is never marked"),
+            };
+            defects.push(Defect { pointer, message });
+        }
+    }
     CheckReport {
         check: CheckName::KeysUsed,
-        examined: count_as_u64(actors.len()),
+        examined: count_as_u64(actors.len() + keyed),
         defects,
         not_applicable: None,
+    }
+}
+
+/// The id of the key at `position` in the list of `kind`.
+fn key_id(
+    page: &Page,
+    page_marks: &PageMarks<'_>,
+    kind: MarkKind,
+    position: usize,
+) -> Option<String> {
+    match kind {
+        MarkKind::Part => page_marks.parts().get(position).map(|part| part.id.clone()),
+        MarkKind::Note => page_marks.note_id(position),
+        MarkKind::Attention => page
+            .sheet
+            .as_ref()
+            .and_then(|sheet| sheet.attention.items.get(position))
+            .map(|item| item.id.clone()),
     }
 }
 

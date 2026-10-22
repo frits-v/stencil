@@ -726,6 +726,15 @@ fn every_sheet_rule_is_listed_in_table_order() {
             "step-phase-unknown",
             "step-span-out-of-range",
             "step-text-fill",
+            "mark-unknown",
+            "mark-repeated",
+            "mark-legend-unused",
+            "link-marks-without-tag",
+            "keyed-list-twice",
+            "part-node-unknown",
+            "part-node-twice",
+            "part-field-from-node",
+            "part-name-missing",
         ]
     );
 }
@@ -833,7 +842,7 @@ fn every_section_14_vet_rule_has_a_cue_case() {
             non_empty,
             others.len()
         ),
-        (6, 8, 4, 23),
+        (9, 11, 6, 32),
         "surfaces, lists, non-empty lists and other rules examined"
     );
     assert_eq!(matched, expected.len());
@@ -843,18 +852,19 @@ fn every_section_14_vet_rule_has_a_cue_case() {
 /// or attention item names; a page without actors reports it not applicable.
 #[test]
 fn an_actor_nothing_names_is_an_unused_key() {
-    let page: Page = serde_json::from_value(actor_sheet_value()).unwrap();
-    let report = stencil_model::checks::keys_used(&page);
-    assert_eq!((report.examined, report.defects.len()), (2, 0));
-
     let mut document = actor_sheet_value();
+    document["sheet"]["problem"]["points"][0]["marks"] = json!([{ "attention": "first" }]);
+    let page: Page = serde_json::from_value(document.clone()).unwrap();
+    let report = stencil_model::checks::keys_used(&page);
+    assert_eq!((report.examined, report.defects.len()), (3, 0));
+
     document["actors"]
         .as_array_mut()
         .unwrap()
         .push(json!({ "id": "audit", "name": "Audit", "tint": 7 }));
     let page: Page = serde_json::from_value(document).unwrap();
     let report = stencil_model::checks::keys_used(&page);
-    assert_eq!(report.examined, 3);
+    assert_eq!(report.examined, 4);
     let defects: Vec<(&str, &str)> = report
         .defects
         .iter()
@@ -868,10 +878,352 @@ fn an_actor_nothing_names_is_an_unused_key() {
         )]
     );
 
-    let page: Page = serde_json::from_value(sheet_value()).unwrap();
+    let mut document = sheet_value();
+    document.as_object_mut().unwrap().remove("sheet");
+    document["body"] = document["body"][0]["children"].clone();
+    let page: Page = serde_json::from_value(document).unwrap();
     let report = stencil_model::checks::keys_used(&page);
     assert_eq!(
         report.not_applicable,
         Some("page has no actors or keyed lists")
     );
+}
+
+/// The smallest sheet with every key list: a parts list whose first part is the `api`
+/// Item and whose second is named and ballooned on `worker`, general notes with one note
+/// flagged on the link, and the attention item marked on the problem point.
+fn marks_sheet_value() -> Value {
+    let mut document = sheet_value();
+    document["sheet"]["problem"]["points"][0]["marks"] = json!([{ "attention": "first" }]);
+    document["body"][0]["children"][0]["children"][1]["marks"] = json!([{ "part": "cache" }]);
+    let view = document["body"][0]["children"].as_array_mut().unwrap();
+    view.push(json!({
+        "tag": "PartsList",
+        "title": "Parts",
+        "parts": [
+            { "id": "api", "node": "api", "why": "Answers requests." },
+            { "id": "cache", "name": "Cache", "what": "in memory", "why": "Keeps reads fast." }
+        ]
+    }));
+    view.push(json!({
+        "tag": "GeneralNotes",
+        "title": "Notes",
+        "notes": [{ "id": "retry", "text": "Requests retry once." }]
+    }));
+    document["links"][0]["label"] = json!("request");
+    document["links"][0]["marks"] = json!([{ "note": "retry" }]);
+    document
+}
+
+const PARTS: &str = "/body/0/children/1";
+const NOTES: &str = "/body/0/children/2";
+const WORKER: &str = "/body/0/children/0/children/1";
+
+#[test]
+fn the_smallest_marked_sheet_vets_clean_and_uses_every_key() {
+    let document = marks_sheet_value();
+    assert_eq!(violations(document.clone()), Vec::new());
+    let page: Page = serde_json::from_value(document).unwrap();
+    let report = stencil_model::checks::keys_used(&page);
+    assert_eq!((report.examined, report.defects.len()), (4, 0));
+}
+
+#[test]
+fn a_mark_whose_key_is_not_in_its_list_is_refused() {
+    let mut document = marks_sheet_value();
+    document["body"][0]["children"][0]["children"][1]["marks"] =
+        json!([{ "part": "store" }, { "note": "nothing" }, { "attention": "later" }]);
+    document["body"][0]["children"][1]["parts"][1]["name"] = json!("Cache");
+    assert_eq!(
+        violations(document)
+            .into_iter()
+            .filter(|(_, rule, _)| *rule == "mark-unknown")
+            .collect::<Vec<_>>(),
+        vec![
+            (
+                format!("{WORKER}/marks/0"),
+                "mark-unknown",
+                "part \"store\" is not in the parts list".to_string()
+            ),
+            (
+                format!("{WORKER}/marks/1"),
+                "mark-unknown",
+                "note \"nothing\" is not in the general notes".to_string()
+            ),
+            (
+                format!("{WORKER}/marks/2"),
+                "mark-unknown",
+                "attention \"later\" is not in the attention items".to_string()
+            ),
+        ]
+    );
+}
+
+#[test]
+fn a_node_that_marks_one_key_twice_is_refused() {
+    let mut document = marks_sheet_value();
+    document["body"][0]["children"][0]["children"][0]["marks"] = json!([{ "part": "api" }]);
+    document["body"][0]["children"][0]["children"][1]["marks"] =
+        json!([{ "part": "cache" }, { "part": "cache" }]);
+    assert_eq!(
+        violations(document),
+        vec![
+            (
+                "/body/0/children/0/children/0/marks/0".to_string(),
+                "mark-repeated",
+                "part \"api\" is already marked here".to_string()
+            ),
+            (
+                format!("{WORKER}/marks/1"),
+                "mark-repeated",
+                "part \"cache\" is already marked here".to_string()
+            ),
+        ]
+    );
+}
+
+#[test]
+fn more_than_four_marks_on_one_carrier_are_refused() {
+    let mut document = marks_sheet_value();
+    document["sheet"]["problem"]["points"][0]["marks"] = json!([
+        { "attention": "first" }, { "part": "api" }, { "part": "cache" }, { "note": "retry" },
+        { "attention": "first" }
+    ]);
+    let found = violations(document);
+    assert_eq!(
+        found.first(),
+        Some(&(
+            "/sheet/problem/points/0/marks".to_string(),
+            "list-too-long",
+            "5 marks, above 4".to_string()
+        ))
+    );
+}
+
+#[test]
+fn a_mark_legend_text_without_its_list_is_refused() {
+    let mut document = marks_sheet_value();
+    document["sheet"]["marks"] = json!({ "part": "a piece", "attention": "look here" });
+    assert_eq!(violations(document.clone()), Vec::new());
+    document["body"][0]["children"]
+        .as_array_mut()
+        .unwrap()
+        .remove(1);
+    document["body"][0]["children"][0]["children"][1]
+        .as_object_mut()
+        .unwrap()
+        .remove("marks");
+    assert_eq!(
+        violations(document),
+        one(
+            "/sheet/marks/part",
+            "mark-legend-unused",
+            "no part key on this sheet; remove the text"
+        )
+    );
+}
+
+#[test]
+fn marks_on_a_link_without_a_label_are_refused() {
+    let mut document = marks_sheet_value();
+    document["links"][0]
+        .as_object_mut()
+        .unwrap()
+        .remove("label");
+    assert_eq!(
+        violations(document),
+        one(
+            "/links/0/marks",
+            "link-marks-without-tag",
+            "a link's marks sit in its tag; give it a label"
+        )
+    );
+}
+
+#[test]
+fn a_second_parts_list_is_refused() {
+    let mut document = marks_sheet_value();
+    let second = document["body"][0]["children"][1].clone();
+    document["body"][0]["children"]
+        .as_array_mut()
+        .unwrap()
+        .push(second);
+    assert_eq!(
+        violations(document),
+        one(
+            "/body/0/children/3",
+            "keyed-list-twice",
+            &format!("the sheet has its parts list at {PARTS}")
+        )
+    );
+}
+
+#[test]
+fn a_part_node_that_names_no_item_box_or_pipe_is_refused() {
+    let mut document = marks_sheet_value();
+    document["body"][0]["children"][1]["parts"][0]["node"] = json!("missing");
+    assert_eq!(
+        violations(document),
+        one(
+            &format!("{PARTS}/parts/0/node"),
+            "part-node-unknown",
+            "\"missing\" names no Item, Box or Pipe"
+        )
+    );
+}
+
+#[test]
+fn two_parts_that_name_one_node_are_refused() {
+    let mut document = marks_sheet_value();
+    document["body"][0]["children"][1]["parts"]
+        .as_array_mut()
+        .unwrap()
+        .push(json!({ "id": "front", "node": "api", "why": "Again." }));
+    assert_eq!(
+        violations(document),
+        one(
+            &format!("{PARTS}/parts/2/node"),
+            "part-node-twice",
+            "node \"api\" is already part \"api\""
+        )
+    );
+}
+
+#[test]
+fn a_part_that_writes_what_its_node_gives_is_refused() {
+    let mut document = marks_sheet_value();
+    document["body"][0]["children"][1]["parts"][0]["what"] = json!("a server");
+    assert_eq!(
+        violations(document),
+        one(
+            &format!("{PARTS}/parts/0/what"),
+            "part-field-from-node",
+            "part \"api\" takes its what from node \"api\""
+        )
+    );
+}
+
+#[test]
+fn a_part_without_a_node_or_a_name_is_refused() {
+    let mut document = marks_sheet_value();
+    document["body"][0]["children"][1]["parts"][1]
+        .as_object_mut()
+        .unwrap()
+        .remove("name");
+    assert_eq!(
+        violations(document),
+        one(
+            &format!("{PARTS}/parts/1"),
+            "part-name-missing",
+            "part \"cache\" names a node or writes its name"
+        )
+    );
+}
+
+#[test]
+fn empty_key_lists_and_repeated_key_ids_are_refused() {
+    let mut document = marks_sheet_value();
+    document["body"][0]["children"][2]["notes"] = json!([]);
+    document["links"][0]
+        .as_object_mut()
+        .unwrap()
+        .remove("marks");
+    let found = violations(document);
+    assert_eq!(
+        found,
+        one(
+            &format!("{NOTES}/notes"),
+            "list-empty",
+            "general-notes is empty"
+        )
+    );
+    let mut document = marks_sheet_value();
+    document["body"][0]["children"][1]["parts"][1]["id"] = json!("api");
+    document["body"][0]["children"][0]["children"][1]["marks"] = json!([]);
+    assert_eq!(
+        violations(document),
+        one(
+            &format!("{PARTS}/parts/1/id"),
+            "key-duplicate",
+            &format!("\"api\" is already used by {PARTS}/parts/0")
+        )
+    );
+}
+
+#[test]
+fn every_mark_surface_off_a_sheet_needs_a_sheet() {
+    let mut document = marks_sheet_value();
+    document.as_object_mut().unwrap().remove("sheet");
+    let rules: Vec<(String, &'static str)> = violations(document)
+        .into_iter()
+        .map(|(pointer, rule, _)| (pointer, rule))
+        .collect();
+    assert_eq!(
+        rules,
+        [
+            ("/body/0", "needs-sheet"),
+            ("/body/0/children/0/children/1/marks", "needs-sheet"),
+            (PARTS, "needs-sheet"),
+            (NOTES, "needs-sheet"),
+            ("/links/0/marks", "needs-sheet"),
+        ]
+        .map(|(pointer, rule)| (pointer.to_string(), rule))
+    );
+}
+
+#[test]
+fn an_unused_part_note_or_attention_item_is_an_unused_key() {
+    let mut document = marks_sheet_value();
+    document["body"][0]["children"][0]["children"][1]
+        .as_object_mut()
+        .unwrap()
+        .remove("marks");
+    document["links"][0]
+        .as_object_mut()
+        .unwrap()
+        .remove("marks");
+    document["sheet"]["problem"]["points"][0]
+        .as_object_mut()
+        .unwrap()
+        .remove("marks");
+    let page: Page = serde_json::from_value(document).unwrap();
+    let report = stencil_model::checks::keys_used(&page);
+    let defects: Vec<(&str, &str)> = report
+        .defects
+        .iter()
+        .map(|defect| (defect.pointer.as_str(), defect.message.as_str()))
+        .collect();
+    assert_eq!(report.examined, 4);
+    assert_eq!(
+        defects,
+        [
+            (
+                "/sheet/attention/items/0",
+                "attention item \"first\" is never marked"
+            ),
+            (
+                "/body/0/children/1/parts/1",
+                "part \"cache\" is never ballooned"
+            ),
+            (
+                "/body/0/children/2/notes/0",
+                "general note \"retry\" is never flagged"
+            ),
+        ]
+    );
+}
+
+#[test]
+fn a_step_line_is_a_string_or_a_marked_line_and_round_trips() {
+    let mut document = actor_sheet_value();
+    document["body"][0]["children"][1]["children"][0]["lines"] = json!(["plain", { "text": "marked", "marks": [{ "attention": "first" }] }, { "text": "bare" }]);
+    let page: Page = serde_json::from_value(document.clone()).unwrap();
+    assert_eq!(validate_page(&page, &common::gcp()), Vec::new());
+    assert_eq!(
+        serde_json::to_value(&page).unwrap()["body"][0]["children"][1]["children"][0]["lines"],
+        document["body"][0]["children"][1]["children"][0]["lines"]
+    );
+    let mut wrong = document.clone();
+    wrong["body"][0]["children"][1]["children"][0]["lines"][1]["mark"] = json!([]);
+    assert!(serde_json::from_value::<Page>(wrong).is_err());
 }

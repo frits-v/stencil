@@ -5,6 +5,7 @@
 use std::collections::HashMap;
 use std::fmt;
 
+use stencil_model::marks::{CarrierMark, PageMarks};
 use stencil_model::pointer::NodePointer;
 use stencil_model::{
     LINKS_MAX, Node, NodeRef, Page, PagePoint, PipeDir, SHEET_COLUMNS, SHEET_ROW_LETTERS,
@@ -17,13 +18,29 @@ use crate::{BoxRect, NodeTag, PageGeometry, PartName};
 
 /// The parts each keyed entry draws once per entry, in entry order, on its owner node: an
 /// entry's reference is the union of its parts (section 14.1 rule 13).
-pub const ENTRY_PARTS: [(SheetList, &[PartName]); 3] = [
+pub const ENTRY_PARTS: [(SheetList, &[PartName]); 5] = [
     (
         SheetList::AttentionItems,
-        &[PartName::AttentionLead, PartName::AttentionText],
+        &[
+            PartName::AttentionDiamond,
+            PartName::AttentionLead,
+            PartName::AttentionText,
+        ],
     ),
     (SheetList::Lanes, &[PartName::LaneBand]),
     (SheetList::Phases, &[PartName::PhaseHead]),
+    (
+        SheetList::Parts,
+        &[
+            PartName::PartBalloon,
+            PartName::PartTitle,
+            PartName::PartWhy,
+        ],
+    ),
+    (
+        SheetList::GeneralNotes,
+        &[PartName::NoteFlag, PartName::NoteText],
+    ),
 ];
 
 /// A grid reference: one cell such as `B3`, or the cells under a box's top-left and
@@ -113,6 +130,9 @@ pub struct DescriptionUnits {
     /// Pointers of geometry nodes, other than the page root, that draw no part: Body,
     /// Legend, Row and Col. Each may be written on at most one line.
     pub structural: Vec<NodePointer>,
+    /// Carriers whose drawn glyph count differs from their mark count: (carrier, glyphs,
+    /// marks). Glyphs and marks pair up to the shorter list; only pairs are units.
+    pub mark_mismatches: Vec<(NodePointer, usize, usize)>,
     /// What each untargeted end of a pipe names, in body order.
     pub pipe_landings: Vec<PipeLanding>,
 }
@@ -140,6 +160,8 @@ pub struct DescribedUnit {
     pub name: String,
     /// The reference the line must carry on a sheet; None off a sheet.
     pub zone: Option<SheetZone>,
+    /// For a mark, the pointer of the key it names in its list.
+    pub key: Option<NodePointer>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -148,6 +170,8 @@ pub enum UnitKind {
     Link,
     /// A keyed entry that is not a geometry node, such as an attention item.
     Entry,
+    /// A balloon, flag or diamond on a carrier.
+    Mark,
 }
 
 /// One untargeted end of a Pipe or Tee arm.
@@ -196,6 +220,7 @@ pub fn description_units(page: &Page, geometry: &PageGeometry) -> DescriptionUni
                     references.get(node.pointer.as_str()).copied(),
                 ),
                 zone: zone_of(node.bounds),
+                key: None,
             });
         }
     }
@@ -231,6 +256,7 @@ pub fn description_units(page: &Page, geometry: &PageGeometry) -> DescriptionUni
             pointer: links_pointer.index(route.index),
             name,
             zone: frame.map(|frame| sheet_zone_at(anchor, frame)),
+            key: None,
         });
     }
     if let (Some(sheet), Some(frame)) = (&page.sheet, frame) {
@@ -250,9 +276,39 @@ pub fn description_units(page: &Page, geometry: &PageGeometry) -> DescriptionUni
                 pointer: list.pointer().index(index),
                 name: item.lead.clone(),
                 zone: bounds.map(|bounds| sheet_zone(bounds, frame)),
+                key: None,
             });
         }
+        let page_marks = PageMarks::of(page);
         for entry in &entries {
+            if let NodeRef::Node(Node::PartsList(list)) = entry.node {
+                let owner = geometry.node(&entry.pointer);
+                let parts = SheetList::Parts;
+                for (index, part) in list.parts.iter().enumerate().take(parts.max() + 1) {
+                    let bounds = owner.and_then(|owner| entry_bounds(owner, parts, index));
+                    units.push(DescribedUnit {
+                        kind: UnitKind::Entry,
+                        pointer: parts.pointer_in(&entry.pointer).index(index),
+                        name: page_marks.part_name(part),
+                        zone: bounds.map(|bounds| sheet_zone(bounds, frame)),
+                        key: None,
+                    });
+                }
+            }
+            if let NodeRef::Node(Node::GeneralNotes(notes)) = entry.node {
+                let owner = geometry.node(&entry.pointer);
+                let list = SheetList::GeneralNotes;
+                for (index, note) in notes.notes.iter().enumerate().take(list.max() + 1) {
+                    let bounds = owner.and_then(|owner| entry_bounds(owner, list, index));
+                    units.push(DescribedUnit {
+                        kind: UnitKind::Entry,
+                        pointer: list.pointer_in(&entry.pointer).index(index),
+                        name: note.text.clone(),
+                        zone: bounds.map(|bounds| sheet_zone(bounds, frame)),
+                        key: None,
+                    });
+                }
+            }
             let NodeRef::Node(Node::Phases(phases)) = entry.node else {
                 continue;
             };
@@ -270,6 +326,7 @@ pub fn description_units(page: &Page, geometry: &PageGeometry) -> DescriptionUni
                     pointer: lanes.pointer_in(&entry.pointer).index(index),
                     name,
                     zone: bounds.map(|bounds| sheet_zone(bounds, frame)),
+                    key: None,
                 });
             }
             let list = SheetList::Phases;
@@ -280,6 +337,72 @@ pub fn description_units(page: &Page, geometry: &PageGeometry) -> DescriptionUni
                     pointer: list.pointer_in(&entry.pointer).index(index),
                     name: phase.title.clone(),
                     zone: bounds.map(|bounds| sheet_zone(bounds, frame)),
+                    key: None,
+                });
+            }
+        }
+    }
+
+    let mut mark_mismatches = Vec::new();
+    if let (Some(_), Some(frame)) = (&page.sheet, frame) {
+        let page_marks = PageMarks::of(page);
+        let mut carriers: Vec<(NodePointer, Vec<CarrierMark>, Vec<&crate::Part>)> = Vec::new();
+        let points = SheetList::ProblemPoints;
+        for index in 0..page
+            .sheet
+            .as_ref()
+            .map_or(0, |sheet| sheet.problem.points.len().min(points.max() + 1))
+        {
+            let pointer = points.pointer().index(index);
+            let parts = geometry
+                .node(&pointer)
+                .map(|node| glyphs_of(&node.parts))
+                .unwrap_or_default();
+            carriers.push((pointer, page_marks.point_marks(page, index), parts));
+        }
+        for entry in &entries {
+            let marks = page_marks.node_marks(entry);
+            let parts = geometry
+                .node(&entry.pointer)
+                .map(|node| glyphs_of(&node.parts))
+                .unwrap_or_default();
+            if !marks.is_empty() || !parts.is_empty() {
+                carriers.push((entry.pointer.clone(), marks, parts));
+            }
+        }
+        for route in geometry.links.iter().take(LINKS_MAX + 1) {
+            let Some(link) = page.links.get(route.index) else {
+                continue;
+            };
+            carriers.push((
+                links_pointer.index(route.index),
+                PageMarks::link_marks(link, route.index),
+                glyphs_of(&route.parts),
+            ));
+        }
+        for (carrier, marks, glyphs) in carriers {
+            if marks.len() != glyphs.len() {
+                mark_mismatches.push((carrier.clone(), glyphs.len(), marks.len()));
+            }
+            for (mark, glyph) in marks.iter().zip(glyphs) {
+                let kind = mark.mark.kind();
+                let position = page_marks.position(&mark.mark);
+                let name = format!(
+                    "{} {} {}",
+                    kind.glyph(),
+                    position.map_or(0, |position| position + 1),
+                    page_marks.key_name(&mark.mark).unwrap_or_default()
+                );
+                let center = PagePoint {
+                    x: glyph.bounds.x + glyph.bounds.width / 2.0,
+                    y: glyph.bounds.y + glyph.bounds.height / 2.0,
+                };
+                units.push(DescribedUnit {
+                    kind: UnitKind::Mark,
+                    pointer: mark.pointer.clone(),
+                    name,
+                    zone: Some(sheet_zone_at(center, frame)),
+                    key: position.and_then(|position| page_marks.key_pointer(kind, position)),
                 });
             }
         }
@@ -288,8 +411,31 @@ pub fn description_units(page: &Page, geometry: &PageGeometry) -> DescriptionUni
     DescriptionUnits {
         units,
         structural,
+        mark_mismatches,
         pipe_landings: pipe_landings(geometry, &references),
     }
+}
+
+/// The carrier glyph parts of a node or link tag, in drawn order.
+fn glyphs_of(parts: &[crate::Part]) -> Vec<&crate::Part> {
+    parts
+        .iter()
+        .filter(|part| part.name.is_mark_glyph())
+        .collect()
+}
+
+/// The distinct cells of the glyphs keyed to the entry at `key`, sorted by row letter and
+/// then column: where the key is used (section 14.4 rule 19).
+pub fn where_used(units: &DescriptionUnits, key: &NodePointer) -> Vec<SheetZone> {
+    let mut zones: Vec<SheetZone> = units
+        .units
+        .iter()
+        .filter(|unit| unit.kind == UnitKind::Mark && unit.key.as_ref() == Some(key))
+        .filter_map(|unit| unit.zone)
+        .collect();
+    zones.sort();
+    zones.dedup();
+    zones
 }
 
 /// The union of the parts `ENTRY_PARTS` names for `list`, each the `index`-th of its name
@@ -358,7 +504,9 @@ fn node_name(
         | NodeTag::Callout
         | NodeTag::Frame
         | NodeTag::View
-        | NodeTag::Step => node.map(body_node_name).unwrap_or_default(),
+        | NodeTag::Step
+        | NodeTag::PartsList
+        | NodeTag::GeneralNotes => node.map(body_node_name).unwrap_or_default(),
         NodeTag::Phases => "Phases".to_string(),
         NodeTag::ActorChip => page
             .actors
@@ -420,6 +568,8 @@ fn body_node_name(node: NodeRef<'_>) -> String {
         NodeRef::Node(Node::View(view)) => view.title.clone(),
         NodeRef::Node(Node::Step(step)) => step.title.clone(),
         NodeRef::Node(Node::Phases(_)) => "Phases".to_string(),
+        NodeRef::Node(Node::PartsList(list)) => list.title.clone(),
+        NodeRef::Node(Node::GeneralNotes(notes)) => notes.title.clone(),
         NodeRef::Node(Node::Row(_)) => "Row".to_string(),
         NodeRef::Node(Node::Col(_)) => "Col".to_string(),
         NodeRef::Node(Node::Lanes(_)) => "Lanes".to_string(),
@@ -454,7 +604,9 @@ fn pipe_landings(
                 | Node::Frame(_)
                 | Node::View(_)
                 | Node::Phases(_)
-                | Node::Step(_),
+                | Node::Step(_)
+                | Node::PartsList(_)
+                | Node::GeneralNotes(_),
             ))
             | None => continue,
         };

@@ -10,7 +10,7 @@ use stencil_model::grammar::{BorderPattern, Role};
 use stencil_model::text::TextStyleName;
 use stencil_model::theme::{SolidEdges, ThemeStroke, Tint, solid_dot};
 use stencil_model::{
-    CalloutKind, LegendEntry, Line, Projection, Theme, canonical_legend_label,
+    CalloutKind, LegendEntry, Line, MarkKind, Projection, Theme, canonical_legend_label,
     drawn_legend_entry_label, drawn_legend_label, entry_key, legend_label, line_key, line_tint,
 };
 
@@ -481,7 +481,12 @@ impl<'a> Palette<'a> {
             | TextStyleName::ViewNumeral
             | TextStyleName::ViewTitle => theme.sheet_colors().frame,
             TextStyleName::ViewNote | TextStyleName::StepText => &theme.ink.secondary,
-            TextStyleName::LeadBody | TextStyleName::StepTitle => &theme.ink.primary,
+            TextStyleName::LeadBody
+            | TextStyleName::StepTitle
+            | TextStyleName::MarkNumeral
+            | TextStyleName::MarkNumeralSmall => &theme.ink.primary,
+            TextStyleName::ListTitle => theme.sheet_colors().frame,
+            TextStyleName::FlagNumeral => theme.sheet_colors().cell,
             TextStyleName::ActorName | TextStyleName::LaneName => theme.sheet_colors().frame,
         };
         color.as_str()
@@ -497,7 +502,8 @@ impl<'a> Palette<'a> {
             SheetInk::Frame => sheet.frame,
             SheetInk::Rule => sheet.rule,
             SheetInk::LabelInk => sheet.label_ink,
-            SheetInk::Cell => sheet.cell,
+            SheetInk::Cell | SheetInk::KeyFill => sheet.cell,
+            SheetInk::MarkInk | SheetInk::KeyWire => sheet.mark_ink,
             SheetInk::InkPrimary => &theme.ink.primary,
             SheetInk::InkSecondary => &theme.ink.secondary,
             SheetInk::LegendText => &theme.legend.text_ink,
@@ -527,6 +533,8 @@ impl<'a> Palette<'a> {
             SheetInk::TintFill => tint.fill.as_str().to_string(),
             SheetInk::TintWire => tint.wire.as_str().to_string(),
             SheetInk::TintInk => tint.ink.as_str().to_string(),
+            SheetInk::KeyWire => tint.wire.as_str().to_string(),
+            SheetInk::KeyFill => tint.fill.as_str().to_string(),
             SheetInk::LaneBand => theme
                 .lane_band(slot)
                 .map_or_else(|| tint.fill.as_str().to_string(), |band| band.0),
@@ -598,6 +606,12 @@ pub enum SheetInk {
     TintInk,
     /// The actor's fill mixed halfway toward the sheet paper.
     LaneBand,
+    /// Flags, and the outline of a glyph whose key names no actor.
+    MarkInk,
+    /// A glyph's outline: its key's actor's wire, else the mark ink (section 14.5 rule 4).
+    KeyWire,
+    /// A diamond's fill: its key's actor's fill, else the cell.
+    KeyFill,
 }
 
 /// The shape a sheet part draws.
@@ -609,6 +623,10 @@ pub enum PartShape {
     /// A line drawn with this dash array.
     DashedLine(&'static str),
     Circle,
+    /// A triangle with its apex up: a flag.
+    Triangle,
+    /// A square stood on its point: a diamond.
+    Diamond,
     /// The drafting grid inside the part (section 14.5 rule 10).
     Grid,
     Text,
@@ -657,6 +675,50 @@ pub const ACTOR_SWATCH_BORDER_PX: f32 = 1.0;
 /// `stroke-dasharray` of a phase separator, and of a planned Step's outline.
 pub const PHASE_SEPARATOR_DASH: &str = "4 4";
 pub const PLANNED_DASH: &str = "7 4";
+
+/// The outline of a balloon and of a diamond (section 14.5 rule 4).
+pub const BALLOON_STROKE_PX: f32 = 1.3;
+pub const DIAMOND_STROKE_PX: f32 = 1.4;
+/// The border of the parts list, as of the title block, and of the general notes.
+pub const PARTS_LIST_BORDER_PX: f32 = 1.5;
+pub const GENERAL_NOTES_BORDER_PX: f32 = 1.0;
+/// `stroke-dasharray` of the rule above the general notes' foot.
+pub const FOOT_RULE_DASH: &str = "3 3";
+
+/// The paint of a glyph of `kind`: a balloon outlined in its key's wire on the cell, a
+/// flag filled with the mark ink, a diamond filled with its key's fill and outlined in its
+/// wire.
+pub fn glyph_paint(kind: MarkKind) -> PartPaint {
+    match kind {
+        MarkKind::Part => PartPaint {
+            shape: PartShape::Circle,
+            fill: Some(SheetInk::Cell),
+            stroke: Some((SheetInk::KeyWire, BALLOON_STROKE_PX)),
+            text: None,
+        },
+        MarkKind::Note => PartPaint {
+            shape: PartShape::Triangle,
+            fill: Some(SheetInk::MarkInk),
+            stroke: None,
+            text: None,
+        },
+        MarkKind::Attention => PartPaint {
+            shape: PartShape::Diamond,
+            fill: Some(SheetInk::KeyFill),
+            stroke: Some((SheetInk::KeyWire, DIAMOND_STROKE_PX)),
+            text: None,
+        },
+    }
+}
+
+/// The ink of a glyph's numeral: the cell on a flag, the primary ink in a balloon or a
+/// diamond.
+pub fn numeral_ink(kind: MarkKind) -> SheetInk {
+    match kind {
+        MarkKind::Note => SheetInk::Cell,
+        MarkKind::Part | MarkKind::Attention => SheetInk::InkPrimary,
+    }
+}
 
 /// The paint row of every part a design sheet adds (section 14.5 rule 12), matched on the
 /// part name with no wildcard so a new part has to choose its row. None for the parts that
@@ -763,6 +825,31 @@ pub fn sheet_part_paint(owner: NodeTag, part: PartName) -> Option<PartPaint> {
             stroke: Some((TintWire, STEP_BORDER_PX)),
             text: None,
         },
+        PartName::Balloon | PartName::PartBalloon => glyph_paint(MarkKind::Part),
+        PartName::Flag | PartName::NoteFlag => glyph_paint(MarkKind::Note),
+        PartName::Diamond | PartName::AttentionDiamond => glyph_paint(MarkKind::Attention),
+        // A sample paints as its kind's glyph, which the writer reads from the page.
+        PartName::MarkSample => glyph_paint(MarkKind::Part),
+        PartName::MarkNumeral
+        | PartName::MarkSampleNumeral
+        | PartName::AttentionNumeral
+        | PartName::PartNumeral => text_paint(InkPrimary),
+        PartName::NoteNumeral => text_paint(Cell),
+        PartName::AttentionZones
+        | PartName::PartZones
+        | PartName::NoteZones
+        | PartName::Note
+        | PartName::HeaderCell
+        | PartName::PartPlanned
+        | PartName::Foot => text_paint(LabelInk),
+        PartName::MarkSampleText => text_paint(LegendText),
+        PartName::Title => text_paint(Frame),
+        PartName::TitleRule => stroke_paint(PartShape::Line, Frame, 1.0),
+        PartName::RowRule | PartName::PartWhyRule => stroke_paint(PartShape::Line, Rule, 1.0),
+        PartName::FootRule => stroke_paint(PartShape::DashedLine(FOOT_RULE_DASH), Rule, 1.0),
+        PartName::PartTitle => text_paint(TintInk),
+        PartName::PartWhat | PartName::NoteDetail => text_paint(InkSecondary),
+        PartName::PartWhy | PartName::NoteText => text_paint(InkPrimary),
         PartName::Badge
         | PartName::BadgeText
         | PartName::Label
@@ -1123,7 +1210,7 @@ mod tests {
     use stencil_layout::PART_NAMES;
 
     /// The owners and parts of section 14.5 rule 12 that a sheet draws.
-    const SHEET_PARTS: [(NodeTag, PartName); 45] = [
+    const SHEET_PARTS: [(NodeTag, PartName); 77] = [
         (NodeTag::Page, PartName::Border),
         (NodeTag::Page, PartName::RefRule),
         (NodeTag::Page, PartName::RefTick),
@@ -1169,6 +1256,38 @@ mod tests {
         (NodeTag::Step, PartName::StackBack),
         (NodeTag::Step, PartName::Text),
         (NodeTag::Step, PartName::StepLine),
+        (NodeTag::Pcard, PartName::Balloon),
+        (NodeTag::Step, PartName::Flag),
+        (NodeTag::ProblemPoint, PartName::Diamond),
+        (NodeTag::Step, PartName::MarkNumeral),
+        (NodeTag::TitleCell, PartName::AttentionDiamond),
+        (NodeTag::TitleCell, PartName::AttentionNumeral),
+        (NodeTag::TitleCell, PartName::AttentionZones),
+        (NodeTag::Legend, PartName::MarkSample),
+        (NodeTag::Legend, PartName::MarkSampleNumeral),
+        (NodeTag::Legend, PartName::MarkSampleText),
+        (NodeTag::PartsList, PartName::Title),
+        (NodeTag::PartsList, PartName::Note),
+        (NodeTag::PartsList, PartName::TitleRule),
+        (NodeTag::PartsList, PartName::HeaderCell),
+        (NodeTag::PartsList, PartName::RowRule),
+        (NodeTag::PartsList, PartName::PartBalloon),
+        (NodeTag::PartsList, PartName::PartNumeral),
+        (NodeTag::PartsList, PartName::PartTitle),
+        (NodeTag::PartsList, PartName::PartWhat),
+        (NodeTag::PartsList, PartName::PartPlanned),
+        (NodeTag::PartsList, PartName::PartWhy),
+        (NodeTag::PartsList, PartName::PartWhyRule),
+        (NodeTag::PartsList, PartName::PartZones),
+        (NodeTag::GeneralNotes, PartName::Title),
+        (NodeTag::GeneralNotes, PartName::Note),
+        (NodeTag::GeneralNotes, PartName::NoteFlag),
+        (NodeTag::GeneralNotes, PartName::NoteNumeral),
+        (NodeTag::GeneralNotes, PartName::NoteText),
+        (NodeTag::GeneralNotes, PartName::NoteDetail),
+        (NodeTag::GeneralNotes, PartName::NoteZones),
+        (NodeTag::GeneralNotes, PartName::FootRule),
+        (NodeTag::GeneralNotes, PartName::Foot),
     ];
 
     #[test]

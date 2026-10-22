@@ -51,7 +51,7 @@ pub const FONT_SIZE_MAX_PX: f32 = 96.0;
 pub const LETTER_SPACING_MIN_EM: f32 = -0.2;
 pub const LETTER_SPACING_MAX_EM: f32 = 0.5;
 
-/// The 33 styles of section 2.9, in table order.
+/// The 37 styles of section 2.9, in table order.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum TextStyleName {
     Badge,
@@ -87,6 +87,10 @@ pub enum TextStyleName {
     LaneName,
     StepTitle,
     StepText,
+    ListTitle,
+    MarkNumeral,
+    MarkNumeralSmall,
+    FlagNumeral,
 }
 
 impl TextStyleName {
@@ -126,6 +130,10 @@ impl TextStyleName {
             TextStyleName::LaneName => "lane_name",
             TextStyleName::StepTitle => "step_title",
             TextStyleName::StepText => "step_text",
+            TextStyleName::ListTitle => "list_title",
+            TextStyleName::MarkNumeral => "mark_numeral",
+            TextStyleName::MarkNumeralSmall => "mark_numeral_small",
+            TextStyleName::FlagNumeral => "flag_numeral",
         }
     }
 
@@ -167,6 +175,10 @@ impl TextStyleName {
             TextStyleName::LaneName => &LANE_NAME,
             TextStyleName::StepTitle => &STEP_TITLE,
             TextStyleName::StepText => &STEP_TEXT,
+            TextStyleName::ListTitle => &LIST_TITLE,
+            TextStyleName::MarkNumeral => &MARK_NUMERAL,
+            TextStyleName::MarkNumeralSmall => &MARK_NUMERAL_SMALL,
+            TextStyleName::FlagNumeral => &FLAG_NUMERAL,
         }
     }
 }
@@ -477,9 +489,47 @@ const STEP_TEXT: NamedTextStyle = inter(
     false,
 );
 
-/// The 33 styles of section 2.9, in table order, which is TextStyleName order:
+/// The parts list title (section 14.4 rule 17).
+const LIST_TITLE: NamedTextStyle = inter(
+    TextStyleName::ListTitle,
+    FontWeight::Bold,
+    13.0,
+    15.6,
+    0.12,
+    true,
+);
+/// Numerals in a balloon: line height equals size, so the run box is the numeral's box
+/// (section 14.4 rule 22).
+const MARK_NUMERAL: NamedTextStyle = inter(
+    TextStyleName::MarkNumeral,
+    FontWeight::Bold,
+    10.0,
+    10.0,
+    0.0,
+    false,
+);
+/// Numerals in a diamond.
+const MARK_NUMERAL_SMALL: NamedTextStyle = inter(
+    TextStyleName::MarkNumeralSmall,
+    FontWeight::Bold,
+    9.5,
+    9.5,
+    0.0,
+    false,
+);
+/// Numerals on a flag, drawn in the cell colour on the mark ink.
+const FLAG_NUMERAL: NamedTextStyle = inter(
+    TextStyleName::FlagNumeral,
+    FontWeight::Bold,
+    9.0,
+    9.0,
+    0.0,
+    false,
+);
+
+/// The 37 styles of section 2.9, in table order, which is TextStyleName order:
 /// TEXT_STYLES[i].name as usize == i.
-pub const TEXT_STYLES: [NamedTextStyle; 33] = [
+pub const TEXT_STYLES: [NamedTextStyle; 37] = [
     BADGE,
     KICKER,
     TITLE,
@@ -513,6 +563,10 @@ pub const TEXT_STYLES: [NamedTextStyle; 33] = [
     LANE_NAME,
     STEP_TITLE,
     STEP_TEXT,
+    LIST_TITLE,
+    MARK_NUMERAL,
+    MARK_NUMERAL_SMALL,
+    FLAG_NUMERAL,
 ];
 
 #[derive(Debug, Clone, PartialEq)]

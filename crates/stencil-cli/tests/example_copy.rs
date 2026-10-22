@@ -33,12 +33,17 @@ fn copy_fields(node: &Value, out: &mut Vec<(String, String)>) {
                 "lead",
                 "caption",
                 "note",
+                "name",
+                "what",
+                "why",
+                "detail",
+                "foot",
             ] {
                 if let Some(Value::String(text)) = map.get(field) {
                     out.push((field.to_string(), text.clone()));
                 }
             }
-            for field in ["paragraphs"] {
+            for field in ["paragraphs", "lines", "body"] {
                 if let Some(Value::Array(items)) = map.get(field) {
                     for text in items.iter().filter_map(Value::as_str) {
                         out.push((field.to_string(), text.to_string()));

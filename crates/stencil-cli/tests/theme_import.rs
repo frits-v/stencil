@@ -156,7 +156,7 @@ fn every_committed_report_is_what_theme_check_prints_for_the_built_in() {
         assert!(outcome.stdout == committed, "{name}");
         let summary = committed.lines().last().unwrap();
         assert!(
-            summary.starts_with(&format!("stencil theme check {name}: 271 rows, ")),
+            summary.starts_with(&format!("stencil theme check {name}: 282 rows, ")),
             "{summary}"
         );
         examined += 1;

@@ -262,6 +262,7 @@
     "frame": "#222222",
     "rule": "#222222",
     "label_ink": "#555555",
-    "cell": "#FFFFFF"
+    "cell": "#FFFFFF",
+    "mark_ink": "#222222"
   }
 }
