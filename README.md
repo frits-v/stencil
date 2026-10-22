@@ -42,7 +42,7 @@ Narrow regions with long product names, a Tee with a band arm and a figure on th
 
 ![A design sheet for the trigger evaluation service, with its title block, legend strip, Workflow swimlane and System view](docs/gallery/onepager.png)
 
-`examples/onepager.json`: the same service as a design sheet, one system drawn as an engineering drawing on one page: a frame with grid references 1 to 8 and A to F, a title block holding the problem, the answer and what needs the reader's attention, a legend strip naming who acts, the Workflow view numbered 2, a lane per actor across four phases, and the System view numbered 3, each piece in the colour of the actor that runs it. Balloons key the drawings to a parts list beside the System view, flags to general notes under the swimlane, and diamonds to the attention items, and each list prints the grid cells its marks stand in.
+`examples/onepager.json`: the same service as a design sheet, one system drawn as an engineering drawing on one page: a frame with grid references 1 to 8 and A to F, a title block holding the problem, the answer and what needs the reader's attention, a legend strip naming who acts, the Workflow view numbered 2, a lane per actor across four phases, and the System view numbered 3, each piece in the colour of the actor that runs it. Balloons key the drawings to a parts list beside the System view, flags to the general notes under the parts list, and diamonds to the attention items, and each list prints the grid cells its marks stand in.
 
 The next three figures use the `plain` grammar.
 

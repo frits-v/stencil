@@ -1,5 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1989.8" viewBox="0 0 1600 1989.8">
-  <rect x="0" y="0" width="1600" height="1989.8" fill="#FFFFFF"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1807.8" viewBox="0 0 1600 1807.8">
+  <rect x="0" y="0" width="1600" height="1807.8" fill="#FFFFFF"/>
   <defs>
     <marker id="arrow-center-gray" viewBox="0 0 10 8" refX="10" refY="4" markerWidth="10" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto"><path d="M 0 0 L 10 4 L 0 8 Z" fill="#5F6368"/></marker>
     <marker id="arrow-center-blue" viewBox="0 0 10 8" refX="10" refY="4" markerWidth="10" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto"><path d="M 0 0 L 10 4 L 0 8 Z" fill="#1A73E8"/></marker>
@@ -10,34 +10,34 @@
     <marker id="arrow-center-deny" viewBox="0 0 10 8" refX="10" refY="4" markerWidth="10" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto"><path d="M 0 0 L 10 4 L 0 8 Z" fill="#C5221F"/></marker>
   </defs>
   <g data-id="" data-tag="Page">
-    <rect x="12.5" y="12.5" width="1575" height="1964.8" fill="#FFFFFF" stroke="#202124" stroke-width="1"/>
-    <rect x="32.75" y="32.75" width="1534.5" height="1924.3" fill="none" stroke="#202124" stroke-width="1.5"/>
-    <path d="M 53.5 33.5 V 1956.3 M 73.5 33.5 V 1956.3 M 93.5 33.5 V 1956.3 M 113.5 33.5 V 1956.3 M 153.5 33.5 V 1956.3 M 173.5 33.5 V 1956.3 M 193.5 33.5 V 1956.3 M 213.5 33.5 V 1956.3 M 253.5 33.5 V 1956.3 M 273.5 33.5 V 1956.3 M 293.5 33.5 V 1956.3 M 313.5 33.5 V 1956.3 M 353.5 33.5 V 1956.3 M 373.5 33.5 V 1956.3 M 393.5 33.5 V 1956.3 M 413.5 33.5 V 1956.3 M 453.5 33.5 V 1956.3 M 473.5 33.5 V 1956.3 M 493.5 33.5 V 1956.3 M 513.5 33.5 V 1956.3 M 553.5 33.5 V 1956.3 M 573.5 33.5 V 1956.3 M 593.5 33.5 V 1956.3 M 613.5 33.5 V 1956.3 M 653.5 33.5 V 1956.3 M 673.5 33.5 V 1956.3 M 693.5 33.5 V 1956.3 M 713.5 33.5 V 1956.3 M 753.5 33.5 V 1956.3 M 773.5 33.5 V 1956.3 M 793.5 33.5 V 1956.3 M 813.5 33.5 V 1956.3 M 853.5 33.5 V 1956.3 M 873.5 33.5 V 1956.3 M 893.5 33.5 V 1956.3 M 913.5 33.5 V 1956.3 M 953.5 33.5 V 1956.3 M 973.5 33.5 V 1956.3 M 993.5 33.5 V 1956.3 M 1013.5 33.5 V 1956.3 M 1053.5 33.5 V 1956.3 M 1073.5 33.5 V 1956.3 M 1093.5 33.5 V 1956.3 M 1113.5 33.5 V 1956.3 M 1153.5 33.5 V 1956.3 M 1173.5 33.5 V 1956.3 M 1193.5 33.5 V 1956.3 M 1213.5 33.5 V 1956.3 M 1253.5 33.5 V 1956.3 M 1273.5 33.5 V 1956.3 M 1293.5 33.5 V 1956.3 M 1313.5 33.5 V 1956.3 M 1353.5 33.5 V 1956.3 M 1373.5 33.5 V 1956.3 M 1393.5 33.5 V 1956.3 M 1413.5 33.5 V 1956.3 M 1453.5 33.5 V 1956.3 M 1473.5 33.5 V 1956.3 M 1493.5 33.5 V 1956.3 M 1513.5 33.5 V 1956.3 M 1553.5 33.5 V 1956.3 M 33.5 53.5 H 1566.5 M 33.5 73.5 H 1566.5 M 33.5 93.5 H 1566.5 M 33.5 113.5 H 1566.5 M 33.5 153.5 H 1566.5 M 33.5 173.5 H 1566.5 M 33.5 193.5 H 1566.5 M 33.5 213.5 H 1566.5 M 33.5 253.5 H 1566.5 M 33.5 273.5 H 1566.5 M 33.5 293.5 H 1566.5 M 33.5 313.5 H 1566.5 M 33.5 353.5 H 1566.5 M 33.5 373.5 H 1566.5 M 33.5 393.5 H 1566.5 M 33.5 413.5 H 1566.5 M 33.5 453.5 H 1566.5 M 33.5 473.5 H 1566.5 M 33.5 493.5 H 1566.5 M 33.5 513.5 H 1566.5 M 33.5 553.5 H 1566.5 M 33.5 573.5 H 1566.5 M 33.5 593.5 H 1566.5 M 33.5 613.5 H 1566.5 M 33.5 653.5 H 1566.5 M 33.5 673.5 H 1566.5 M 33.5 693.5 H 1566.5 M 33.5 713.5 H 1566.5 M 33.5 753.5 H 1566.5 M 33.5 773.5 H 1566.5 M 33.5 793.5 H 1566.5 M 33.5 813.5 H 1566.5 M 33.5 853.5 H 1566.5 M 33.5 873.5 H 1566.5 M 33.5 893.5 H 1566.5 M 33.5 913.5 H 1566.5 M 33.5 953.5 H 1566.5 M 33.5 973.5 H 1566.5 M 33.5 993.5 H 1566.5 M 33.5 1013.5 H 1566.5 M 33.5 1053.5 H 1566.5 M 33.5 1073.5 H 1566.5 M 33.5 1093.5 H 1566.5 M 33.5 1113.5 H 1566.5 M 33.5 1153.5 H 1566.5 M 33.5 1173.5 H 1566.5 M 33.5 1193.5 H 1566.5 M 33.5 1213.5 H 1566.5 M 33.5 1253.5 H 1566.5 M 33.5 1273.5 H 1566.5 M 33.5 1293.5 H 1566.5 M 33.5 1313.5 H 1566.5 M 33.5 1353.5 H 1566.5 M 33.5 1373.5 H 1566.5 M 33.5 1393.5 H 1566.5 M 33.5 1413.5 H 1566.5 M 33.5 1453.5 H 1566.5 M 33.5 1473.5 H 1566.5 M 33.5 1493.5 H 1566.5 M 33.5 1513.5 H 1566.5 M 33.5 1553.5 H 1566.5 M 33.5 1573.5 H 1566.5 M 33.5 1593.5 H 1566.5 M 33.5 1613.5 H 1566.5 M 33.5 1653.5 H 1566.5 M 33.5 1673.5 H 1566.5 M 33.5 1693.5 H 1566.5 M 33.5 1713.5 H 1566.5 M 33.5 1753.5 H 1566.5 M 33.5 1773.5 H 1566.5 M 33.5 1793.5 H 1566.5 M 33.5 1813.5 H 1566.5 M 33.5 1853.5 H 1566.5 M 33.5 1873.5 H 1566.5 M 33.5 1893.5 H 1566.5 M 33.5 1913.5 H 1566.5 M 33.5 1953.5 H 1566.5" fill="none" stroke="#F4F5F6" stroke-width="1"/>
-    <path d="M 133.5 33.5 V 1956.3 M 233.5 33.5 V 1956.3 M 333.5 33.5 V 1956.3 M 433.5 33.5 V 1956.3 M 533.5 33.5 V 1956.3 M 633.5 33.5 V 1956.3 M 733.5 33.5 V 1956.3 M 833.5 33.5 V 1956.3 M 933.5 33.5 V 1956.3 M 1033.5 33.5 V 1956.3 M 1133.5 33.5 V 1956.3 M 1233.5 33.5 V 1956.3 M 1333.5 33.5 V 1956.3 M 1433.5 33.5 V 1956.3 M 1533.5 33.5 V 1956.3 M 33.5 133.5 H 1566.5 M 33.5 233.5 H 1566.5 M 33.5 333.5 H 1566.5 M 33.5 433.5 H 1566.5 M 33.5 533.5 H 1566.5 M 33.5 633.5 H 1566.5 M 33.5 733.5 H 1566.5 M 33.5 833.5 H 1566.5 M 33.5 933.5 H 1566.5 M 33.5 1033.5 H 1566.5 M 33.5 1133.5 H 1566.5 M 33.5 1233.5 H 1566.5 M 33.5 1333.5 H 1566.5 M 33.5 1433.5 H 1566.5 M 33.5 1533.5 H 1566.5 M 33.5 1633.5 H 1566.5 M 33.5 1733.5 H 1566.5 M 33.5 1833.5 H 1566.5 M 33.5 1933.5 H 1566.5" fill="none" stroke="#E9EAEC" stroke-width="1"/>
+    <rect x="12.5" y="12.5" width="1575" height="1782.8" fill="#FFFFFF" stroke="#202124" stroke-width="1"/>
+    <rect x="32.75" y="32.75" width="1534.5" height="1742.3" fill="none" stroke="#202124" stroke-width="1.5"/>
+    <path d="M 53.5 33.5 V 1774.3 M 73.5 33.5 V 1774.3 M 93.5 33.5 V 1774.3 M 113.5 33.5 V 1774.3 M 153.5 33.5 V 1774.3 M 173.5 33.5 V 1774.3 M 193.5 33.5 V 1774.3 M 213.5 33.5 V 1774.3 M 253.5 33.5 V 1774.3 M 273.5 33.5 V 1774.3 M 293.5 33.5 V 1774.3 M 313.5 33.5 V 1774.3 M 353.5 33.5 V 1774.3 M 373.5 33.5 V 1774.3 M 393.5 33.5 V 1774.3 M 413.5 33.5 V 1774.3 M 453.5 33.5 V 1774.3 M 473.5 33.5 V 1774.3 M 493.5 33.5 V 1774.3 M 513.5 33.5 V 1774.3 M 553.5 33.5 V 1774.3 M 573.5 33.5 V 1774.3 M 593.5 33.5 V 1774.3 M 613.5 33.5 V 1774.3 M 653.5 33.5 V 1774.3 M 673.5 33.5 V 1774.3 M 693.5 33.5 V 1774.3 M 713.5 33.5 V 1774.3 M 753.5 33.5 V 1774.3 M 773.5 33.5 V 1774.3 M 793.5 33.5 V 1774.3 M 813.5 33.5 V 1774.3 M 853.5 33.5 V 1774.3 M 873.5 33.5 V 1774.3 M 893.5 33.5 V 1774.3 M 913.5 33.5 V 1774.3 M 953.5 33.5 V 1774.3 M 973.5 33.5 V 1774.3 M 993.5 33.5 V 1774.3 M 1013.5 33.5 V 1774.3 M 1053.5 33.5 V 1774.3 M 1073.5 33.5 V 1774.3 M 1093.5 33.5 V 1774.3 M 1113.5 33.5 V 1774.3 M 1153.5 33.5 V 1774.3 M 1173.5 33.5 V 1774.3 M 1193.5 33.5 V 1774.3 M 1213.5 33.5 V 1774.3 M 1253.5 33.5 V 1774.3 M 1273.5 33.5 V 1774.3 M 1293.5 33.5 V 1774.3 M 1313.5 33.5 V 1774.3 M 1353.5 33.5 V 1774.3 M 1373.5 33.5 V 1774.3 M 1393.5 33.5 V 1774.3 M 1413.5 33.5 V 1774.3 M 1453.5 33.5 V 1774.3 M 1473.5 33.5 V 1774.3 M 1493.5 33.5 V 1774.3 M 1513.5 33.5 V 1774.3 M 1553.5 33.5 V 1774.3 M 33.5 53.5 H 1566.5 M 33.5 73.5 H 1566.5 M 33.5 93.5 H 1566.5 M 33.5 113.5 H 1566.5 M 33.5 153.5 H 1566.5 M 33.5 173.5 H 1566.5 M 33.5 193.5 H 1566.5 M 33.5 213.5 H 1566.5 M 33.5 253.5 H 1566.5 M 33.5 273.5 H 1566.5 M 33.5 293.5 H 1566.5 M 33.5 313.5 H 1566.5 M 33.5 353.5 H 1566.5 M 33.5 373.5 H 1566.5 M 33.5 393.5 H 1566.5 M 33.5 413.5 H 1566.5 M 33.5 453.5 H 1566.5 M 33.5 473.5 H 1566.5 M 33.5 493.5 H 1566.5 M 33.5 513.5 H 1566.5 M 33.5 553.5 H 1566.5 M 33.5 573.5 H 1566.5 M 33.5 593.5 H 1566.5 M 33.5 613.5 H 1566.5 M 33.5 653.5 H 1566.5 M 33.5 673.5 H 1566.5 M 33.5 693.5 H 1566.5 M 33.5 713.5 H 1566.5 M 33.5 753.5 H 1566.5 M 33.5 773.5 H 1566.5 M 33.5 793.5 H 1566.5 M 33.5 813.5 H 1566.5 M 33.5 853.5 H 1566.5 M 33.5 873.5 H 1566.5 M 33.5 893.5 H 1566.5 M 33.5 913.5 H 1566.5 M 33.5 953.5 H 1566.5 M 33.5 973.5 H 1566.5 M 33.5 993.5 H 1566.5 M 33.5 1013.5 H 1566.5 M 33.5 1053.5 H 1566.5 M 33.5 1073.5 H 1566.5 M 33.5 1093.5 H 1566.5 M 33.5 1113.5 H 1566.5 M 33.5 1153.5 H 1566.5 M 33.5 1173.5 H 1566.5 M 33.5 1193.5 H 1566.5 M 33.5 1213.5 H 1566.5 M 33.5 1253.5 H 1566.5 M 33.5 1273.5 H 1566.5 M 33.5 1293.5 H 1566.5 M 33.5 1313.5 H 1566.5 M 33.5 1353.5 H 1566.5 M 33.5 1373.5 H 1566.5 M 33.5 1393.5 H 1566.5 M 33.5 1413.5 H 1566.5 M 33.5 1453.5 H 1566.5 M 33.5 1473.5 H 1566.5 M 33.5 1493.5 H 1566.5 M 33.5 1513.5 H 1566.5 M 33.5 1553.5 H 1566.5 M 33.5 1573.5 H 1566.5 M 33.5 1593.5 H 1566.5 M 33.5 1613.5 H 1566.5 M 33.5 1653.5 H 1566.5 M 33.5 1673.5 H 1566.5 M 33.5 1693.5 H 1566.5 M 33.5 1713.5 H 1566.5 M 33.5 1753.5 H 1566.5 M 33.5 1773.5 H 1566.5" fill="none" stroke="#F4F5F6" stroke-width="1"/>
+    <path d="M 133.5 33.5 V 1774.3 M 233.5 33.5 V 1774.3 M 333.5 33.5 V 1774.3 M 433.5 33.5 V 1774.3 M 533.5 33.5 V 1774.3 M 633.5 33.5 V 1774.3 M 733.5 33.5 V 1774.3 M 833.5 33.5 V 1774.3 M 933.5 33.5 V 1774.3 M 1033.5 33.5 V 1774.3 M 1133.5 33.5 V 1774.3 M 1233.5 33.5 V 1774.3 M 1333.5 33.5 V 1774.3 M 1433.5 33.5 V 1774.3 M 1533.5 33.5 V 1774.3 M 33.5 133.5 H 1566.5 M 33.5 233.5 H 1566.5 M 33.5 333.5 H 1566.5 M 33.5 433.5 H 1566.5 M 33.5 533.5 H 1566.5 M 33.5 633.5 H 1566.5 M 33.5 733.5 H 1566.5 M 33.5 833.5 H 1566.5 M 33.5 933.5 H 1566.5 M 33.5 1033.5 H 1566.5 M 33.5 1133.5 H 1566.5 M 33.5 1233.5 H 1566.5 M 33.5 1333.5 H 1566.5 M 33.5 1433.5 H 1566.5 M 33.5 1533.5 H 1566.5 M 33.5 1633.5 H 1566.5 M 33.5 1733.5 H 1566.5" fill="none" stroke="#E9EAEC" stroke-width="1"/>
     <line x1="225.13" y1="13" x2="225.13" y2="32" stroke="#DADCE0" stroke-width="0.8"/>
-    <line x1="225.13" y1="1957.8" x2="225.13" y2="1976.8" stroke="#DADCE0" stroke-width="0.8"/>
+    <line x1="225.13" y1="1775.8" x2="225.13" y2="1794.8" stroke="#DADCE0" stroke-width="0.8"/>
     <line x1="416.75" y1="13" x2="416.75" y2="32" stroke="#DADCE0" stroke-width="0.8"/>
-    <line x1="416.75" y1="1957.8" x2="416.75" y2="1976.8" stroke="#DADCE0" stroke-width="0.8"/>
+    <line x1="416.75" y1="1775.8" x2="416.75" y2="1794.8" stroke="#DADCE0" stroke-width="0.8"/>
     <line x1="608.38" y1="13" x2="608.38" y2="32" stroke="#DADCE0" stroke-width="0.8"/>
-    <line x1="608.38" y1="1957.8" x2="608.38" y2="1976.8" stroke="#DADCE0" stroke-width="0.8"/>
+    <line x1="608.38" y1="1775.8" x2="608.38" y2="1794.8" stroke="#DADCE0" stroke-width="0.8"/>
     <line x1="800" y1="13" x2="800" y2="32" stroke="#DADCE0" stroke-width="0.8"/>
-    <line x1="800" y1="1957.8" x2="800" y2="1976.8" stroke="#DADCE0" stroke-width="0.8"/>
+    <line x1="800" y1="1775.8" x2="800" y2="1794.8" stroke="#DADCE0" stroke-width="0.8"/>
     <line x1="991.63" y1="13" x2="991.63" y2="32" stroke="#DADCE0" stroke-width="0.8"/>
-    <line x1="991.63" y1="1957.8" x2="991.63" y2="1976.8" stroke="#DADCE0" stroke-width="0.8"/>
+    <line x1="991.63" y1="1775.8" x2="991.63" y2="1794.8" stroke="#DADCE0" stroke-width="0.8"/>
     <line x1="1183.25" y1="13" x2="1183.25" y2="32" stroke="#DADCE0" stroke-width="0.8"/>
-    <line x1="1183.25" y1="1957.8" x2="1183.25" y2="1976.8" stroke="#DADCE0" stroke-width="0.8"/>
+    <line x1="1183.25" y1="1775.8" x2="1183.25" y2="1794.8" stroke="#DADCE0" stroke-width="0.8"/>
     <line x1="1374.88" y1="13" x2="1374.88" y2="32" stroke="#DADCE0" stroke-width="0.8"/>
-    <line x1="1374.88" y1="1957.8" x2="1374.88" y2="1976.8" stroke="#DADCE0" stroke-width="0.8"/>
-    <line x1="13" y1="353.97" x2="32" y2="353.97" stroke="#DADCE0" stroke-width="0.8"/>
-    <line x1="1568" y1="353.97" x2="1587" y2="353.97" stroke="#DADCE0" stroke-width="0.8"/>
-    <line x1="13" y1="674.43" x2="32" y2="674.43" stroke="#DADCE0" stroke-width="0.8"/>
-    <line x1="1568" y1="674.43" x2="1587" y2="674.43" stroke="#DADCE0" stroke-width="0.8"/>
-    <line x1="13" y1="994.9" x2="32" y2="994.9" stroke="#DADCE0" stroke-width="0.8"/>
-    <line x1="1568" y1="994.9" x2="1587" y2="994.9" stroke="#DADCE0" stroke-width="0.8"/>
-    <line x1="13" y1="1315.37" x2="32" y2="1315.37" stroke="#DADCE0" stroke-width="0.8"/>
-    <line x1="1568" y1="1315.37" x2="1587" y2="1315.37" stroke="#DADCE0" stroke-width="0.8"/>
-    <line x1="13" y1="1635.83" x2="32" y2="1635.83" stroke="#DADCE0" stroke-width="0.8"/>
-    <line x1="1568" y1="1635.83" x2="1587" y2="1635.83" stroke="#DADCE0" stroke-width="0.8"/>
+    <line x1="1374.88" y1="1775.8" x2="1374.88" y2="1794.8" stroke="#DADCE0" stroke-width="0.8"/>
+    <line x1="13" y1="323.63" x2="32" y2="323.63" stroke="#DADCE0" stroke-width="0.8"/>
+    <line x1="1568" y1="323.63" x2="1587" y2="323.63" stroke="#DADCE0" stroke-width="0.8"/>
+    <line x1="13" y1="613.77" x2="32" y2="613.77" stroke="#DADCE0" stroke-width="0.8"/>
+    <line x1="1568" y1="613.77" x2="1587" y2="613.77" stroke="#DADCE0" stroke-width="0.8"/>
+    <line x1="13" y1="903.9" x2="32" y2="903.9" stroke="#DADCE0" stroke-width="0.8"/>
+    <line x1="1568" y1="903.9" x2="1587" y2="903.9" stroke="#DADCE0" stroke-width="0.8"/>
+    <line x1="13" y1="1194.03" x2="32" y2="1194.03" stroke="#DADCE0" stroke-width="0.8"/>
+    <line x1="1568" y1="1194.03" x2="1587" y2="1194.03" stroke="#DADCE0" stroke-width="0.8"/>
+    <line x1="13" y1="1484.17" x2="32" y2="1484.17" stroke="#DADCE0" stroke-width="0.8"/>
+    <line x1="1568" y1="1484.17" x2="1587" y2="1484.17" stroke="#DADCE0" stroke-width="0.8"/>
     <text x="126.33" y="26.5" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">1</text>
     <text x="316.85" y="26.5" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">2</text>
     <text x="508.4" y="26.5" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">3</text>
@@ -46,26 +46,26 @@
     <text x="1083.26" y="26.5" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">6</text>
     <text x="1275.23" y="26.5" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">7</text>
     <text x="1466.51" y="26.5" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">8</text>
-    <text x="126.33" y="1971.3" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">1</text>
-    <text x="316.85" y="1971.3" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">2</text>
-    <text x="508.4" y="1971.3" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">3</text>
-    <text x="699.86" y="1971.3" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">4</text>
-    <text x="891.78" y="1971.3" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">5</text>
-    <text x="1083.26" y="1971.3" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">6</text>
-    <text x="1275.23" y="1971.3" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">7</text>
-    <text x="1466.51" y="1971.3" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">8</text>
-    <text x="17.84" y="197.73" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">A</text>
-    <text x="18.21" y="518.2" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">B</text>
-    <text x="17.79" y="838.67" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">C</text>
-    <text x="17.87" y="1159.13" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">D</text>
-    <text x="18.51" y="1479.6" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">E</text>
-    <text x="18.61" y="1800.07" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">F</text>
-    <text x="1572.84" y="197.73" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">A</text>
-    <text x="1573.21" y="518.2" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">B</text>
-    <text x="1572.79" y="838.67" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">C</text>
-    <text x="1572.87" y="1159.13" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">D</text>
-    <text x="1573.51" y="1479.6" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">E</text>
-    <text x="1573.61" y="1800.07" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">F</text>
+    <text x="126.33" y="1789.3" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">1</text>
+    <text x="316.85" y="1789.3" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">2</text>
+    <text x="508.4" y="1789.3" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">3</text>
+    <text x="699.86" y="1789.3" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">4</text>
+    <text x="891.78" y="1789.3" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">5</text>
+    <text x="1083.26" y="1789.3" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">6</text>
+    <text x="1275.23" y="1789.3" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">7</text>
+    <text x="1466.51" y="1789.3" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">8</text>
+    <text x="17.84" y="182.57" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">A</text>
+    <text x="18.21" y="472.7" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">B</text>
+    <text x="17.79" y="762.83" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">C</text>
+    <text x="17.87" y="1052.97" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">D</text>
+    <text x="18.51" y="1343.1" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">E</text>
+    <text x="18.61" y="1633.23" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">F</text>
+    <text x="1572.84" y="182.57" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">A</text>
+    <text x="1573.21" y="472.7" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">B</text>
+    <text x="1572.79" y="762.83" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">C</text>
+    <text x="1572.87" y="1052.97" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">D</text>
+    <text x="1573.51" y="1343.1" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">E</text>
+    <text x="1573.61" y="1633.23" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">F</text>
     <g data-id="/sheet" data-tag="TitleBlock">
       <rect x="50.75" y="50.75" width="1498.5" height="294.5" fill="#FFFFFF" stroke="#202124" stroke-width="1.5"/>
       <line x1="372.31" y1="51.5" x2="372.31" y2="268.7" stroke="#DADCE0" stroke-width="1"/>
@@ -376,241 +376,245 @@
             <text x="1502.93" y="802.46" xml:space="preserve" font-family="Inter" font-size="9.5" font-weight="700" fill="#202124">3</text>
           </g>
         </g>
-        <g data-id="/body/0/children/1" data-tag="Row">
-          <g data-id="/body/0/children/1/children/0" data-tag="GeneralNotes">
-            <rect x="1037.68" y="891.5" width="511.82" height="299.8" fill="#FFFFFF" stroke="#202124" stroke-width="1"/>
-            <path d="M1060.18 925.6 L1070.18 942.6 L1050.18 942.6 Z" fill="#202124"/>
-            <path d="M1060.18 983 L1070.18 1000 L1050.18 1000 Z" fill="#202124"/>
-            <path d="M1060.18 1040.4 L1070.18 1057.4 L1050.18 1057.4 Z" fill="#202124"/>
-            <path d="M1060.18 1097.8 L1070.18 1114.8 L1050.18 1114.8 Z" fill="#202124"/>
-            <line x1="1050.18" y1="1155.7" x2="1537" y2="1155.7" stroke="#DADCE0" stroke-width="1" stroke-dasharray="3 3"/>
-            <text x="1050.18" y="914.53" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" letter-spacing="1.56" fill="#202124">GENERAL NOTES</text>
-            <text x="1191.19" y="914.17" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">what the service asks of its operators</text>
-            <text x="1058.24" y="939.87" xml:space="preserve" font-family="Inter" font-size="9" font-weight="700" fill="#FFFFFF">1</text>
-            <text x="1076.18" y="938.67" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#202124">A plan change never reaches a running trigger until an operator approves it.</text>
-            <text x="1076.18" y="955.68" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">The worker reads the approved version only.</text>
-            <text x="1076.18" y="971.68" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">marked at A4 B4 E4</text>
-            <text x="1057.35" y="997.27" xml:space="preserve" font-family="Inter" font-size="9" font-weight="700" fill="#FFFFFF">2</text>
-            <text x="1076.18" y="996.07" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#202124">Evidence frames are stored as references into the clip, never copied.</text>
-            <text x="1076.18" y="1013.08" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">Retention follows the clip bucket.</text>
-            <text x="1076.18" y="1029.08" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">marked at A4 C7</text>
-            <text x="1057.28" y="1054.67" xml:space="preserve" font-family="Inter" font-size="9" font-weight="700" fill="#FFFFFF">3</text>
-            <text x="1076.18" y="1053.47" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#202124">The evaluator holds no credentials for the verdict store.</text>
-            <text x="1076.18" y="1070.48" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">The blocked line in view 3 is an IAM binding, not a convention.</text>
-            <text x="1076.18" y="1086.48" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">marked at C6 E4</text>
-            <text x="1057.14" y="1112.07" xml:space="preserve" font-family="Inter" font-size="9" font-weight="700" fill="#FFFFFF">4</text>
-            <text x="1076.18" y="1110.87" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#202124">Out of scope: live streams, identifying people, and training a model per customer.</text>
-            <text x="1076.18" y="1127.88" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">The service evaluates finished clips with one shared model.</text>
-            <text x="1076.18" y="1143.88" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">marked at C5</text>
-            <text x="1050.18" y="1176.37" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">Each flag on the drawings marks where its note applies.</text>
-          </g>
-        </g>
       </g>
       <g data-id="/body/1" data-tag="View">
-        <circle cx="64" cy="1218.8" r="13.25" fill="#FFFFFF" stroke="#202124" stroke-width="1.5"/>
-        <line x1="398.5" y1="1218.8" x2="1308.78" y2="1218.8" stroke="#DADCE0" stroke-width="1"/>
-        <text x="59.8" y="1223.53" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#202124">3</text>
-        <text x="90" y="1224.62" xml:space="preserve" font-family="Inter" font-size="16" font-weight="700" letter-spacing="1.6" fill="#202124">SYSTEM</text>
-        <text x="175.44" y="1223.89" xml:space="preserve" font-family="Inter" font-size="14" font-weight="400" fill="#5F6368">the pieces, and why each exists</text>
-        <text x="1320.78" y="1223.17" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">balloons key the drawing to the parts list</text>
+        <circle cx="64" cy="902" r="13.25" fill="#FFFFFF" stroke="#202124" stroke-width="1.5"/>
+        <line x1="398.5" y1="902" x2="1308.78" y2="902" stroke="#DADCE0" stroke-width="1"/>
+        <text x="59.8" y="906.73" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#202124">3</text>
+        <text x="90" y="907.82" xml:space="preserve" font-family="Inter" font-size="16" font-weight="700" letter-spacing="1.6" fill="#202124">SYSTEM</text>
+        <text x="175.44" y="907.09" xml:space="preserve" font-family="Inter" font-size="14" font-weight="400" fill="#5F6368">the pieces, and why each exists</text>
+        <text x="1320.78" y="906.37" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">balloons key the drawing to the parts list</text>
         <g data-id="/body/1/children/0" data-tag="Row">
-          <g data-id="/body/1/children/0/children/0" data-tag="Row">
-            <g data-id="/body/1/children/0/children/0/children/0" data-tag="Col">
-              <g data-id="/body/1/children/0/children/0/children/0/children/0" data-tag="Row">
-                <g data-id="/body/1/children/0/children/0/children/0/children/0/children/0" data-tag="Pcard">
-                  <rect x="50.63" y="1446.13" width="191.58" height="47.15" rx="7.38" fill="#FFFFFF" stroke="#A36E14" stroke-width="1.25"/>
-                  <image x="61.5" y="1455.7" width="28" height="28" href="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyBpZD0iU3RhbmRhcmRfUHJvZHVjdF9JY29uIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZlcnNpb249IjEuMSIgdmlld0JveD0iMCAwIDUxMiA1MTIiPgogIDwhLS0gR2VuZXJhdG9yOiBBZG9iZSBJbGx1c3RyYXRvciAyOS4xLjAsIFNWRyBFeHBvcnQgUGx1Zy1JbiAuIFNWRyBWZXJzaW9uOiAyLjEuMCBCdWlsZCAxNDIpICAtLT4KICA8ZyBpZD0iYm91bmRpbmdfYm94Ij4KICAgIDxyZWN0IHdpZHRoPSI1MTIiIGhlaWdodD0iNTEyIiBmaWxsPSJub25lIi8+CiAgPC9nPgogIDxnIGlkPSJBcnQiPgogICAgPHBhdGggZD0iTTM0OSwyNzJoLTE1LjVjLTguODM3LDAtMTYtNy4xNjMtMTYtMTZzNy4xNjMtMTYsMTYtMTZoMTUuNWM0Mi40NTgsMCw3Ny0zNC41NDIsNzctNzdzLTM0LjU0Mi03Ny03Ny03N2MtOC44MzcsMC0xNi03LjE2My0xNi0xNnM3LjE2My0xNiwxNi0xNmM2MC4xMDMsMCwxMDksNDguODk3LDEwOSwxMDlzLTQ4Ljg5NywxMDktMTA5LDEwOVoiIGZpbGw9IiM5YWEwYTYiLz4KICAgIDxwYXRoIGQ9Ik0xNjMsNDU4Yy02MC4xMDMsMC0xMDktNDguODk3LTEwOS0xMDlzNDguODk3LTEwOSwxMDktMTA5aDE1LjVjOC44MzcsMCwxNiw3LjE2MywxNiwxNnMtNy4xNjMsMTYtMTYsMTZoLTE1LjVjLTQyLjQ1OCwwLTc3LDM0LjU0Mi03Nyw3N3MzNC41NDIsNzcsNzcsNzdjOC44MzcsMCwxNiw3LjE2MywxNiwxNnMtNy4xNjMsMTYtMTYsMTZaIiBmaWxsPSIjOWFhMGE2Ii8+CiAgICA8cGF0aCBkPSJNMTYzLDQ1OHYtMzJjNDIuNDU4LDAsNzctMzQuNTQyLDc3LTc3di0xODZjMC02MC4xMDMsNDguODk3LTEwOSwxMDktMTA5djMyYy00Mi40NTgsMC03NywzNC41NDItNzcsNzd2MTg2YzAsNjAuMTAzLTQ4Ljg5NywxMDktMTA5LDEwOVoiIGZpbGw9IiM0Mjg1ZjQiLz4KICA8L2c+Cjwvc3ZnPg=="/>
-                  <circle cx="222.33" cy="1462" r="8.35" fill="#FFFFFF" stroke="#A36E14" stroke-width="1.3"/>
-                  <text x="99.5" y="1465.53" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#5A3900">Operator console</text>
-                  <text x="99.5" y="1483.57" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">web client</text>
-                  <text x="220.18" y="1465.64" xml:space="preserve" font-family="Inter" font-size="10" font-weight="700" fill="#202124">1</text>
-                </g>
-              </g>
-            </g>
-            <g data-id="/body/1/children/0/children/0/children/1" data-tag="Zone" data-kind="gcp">
-              <path d="M 270.83 1240.8 H 1030.67 A 4 4 0 0 1 1034.67 1244.8 V 1688.6 A 10 10 0 0 1 1024.67 1698.6 H 276.83 A 10 10 0 0 1 266.83 1688.6 V 1244.8 A 4 4 0 0 1 270.83 1240.8 Z" fill="none"/>
-              <path d="M 270.83 1241.43 H 1030.67 A 3.38 3.38 0 0 1 1034.04 1244.8 V 1688.6 A 9.38 9.38 0 0 1 1024.67 1697.98 H 276.83 A 9.38 9.38 0 0 1 267.46 1688.6 V 1244.8 A 3.38 3.38 0 0 1 270.83 1241.43 Z" fill="none" stroke="#202124" stroke-width="1.25"/>
-              <text x="285.83" y="1261.4" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#202124">GOOGLE CLOUD</text>
-              <g data-id="/body/1/children/0/children/0/children/1/children/0" data-tag="Col">
-                <g data-id="/body/1/children/0/children/0/children/1/children/0/children/0" data-tag="Row">
-                  <g data-id="/body/1/children/0/children/0/children/1/children/0/children/0/children/0" data-tag="Row">
-                    <g data-id="/body/1/children/0/children/0/children/1/children/0/children/0/children/0/children/0" data-tag="Pcard">
-                      <rect x="396.58" y="1287.63" width="137.43" height="47.15" rx="7.38" fill="#FFFFFF" stroke="#1A73E8" stroke-width="1.25"/>
-                      <image x="407.45" y="1297.2" width="28" height="28" href="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyBpZD0ic3RhbmRhcmRfcHJvZHVjdF9pY29uIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZlcnNpb249IjEuMSIgdmlld0JveD0iMCAwIDUxMiA1MTIiPgogIDwhLS0gR2VuZXJhdG9yOiBBZG9iZSBJbGx1c3RyYXRvciAyOS4yLjEsIFNWRyBFeHBvcnQgUGx1Zy1JbiAuIFNWRyBWZXJzaW9uOiAyLjEuMCBCdWlsZCAxMTYpICAtLT4KICA8ZyBpZD0iYm91bmRpbmdfYm94Ij4KICAgIDxyZWN0IHdpZHRoPSI1MTIiIGhlaWdodD0iNTEyIiBmaWxsPSJub25lIi8+CiAgPC9nPgogIDxnIGlkPSJhcnQiPgogICAgPHBhdGggZD0iTTMzMS42NiwzMzEuNjZsLTIyLjYyNy0yMi42MjdjMjkuMjQyLTI5LjI0MywyOS4yNDItNzYuODIzLDAtMTA2LjA2NmwyMi42MjctMjIuNjI3YzQxLjcyLDQxLjcxOSw0MS43MiwxMDkuNjAyLDAsMTUxLjMyaDBaIiBmaWxsPSIjOWFhMGE2Ii8+CiAgICA8cGF0aCBkPSJNMTgwLjM0LDMzMS42NmMtNDEuNzItNDEuNzE5LTQxLjcyLTEwOS42MDIsMC0xNTEuMzJsMjIuNjI3LDIyLjYyN2MtMjkuMjQyLDI5LjI0My0yOS4yNDIsNzYuODIzLDAsMTA2LjA2NmwtMjIuNjI3LDIyLjYyN1oiIGZpbGw9IiM5YWEwYTYiLz4KICAgIDxwYXRoIGQ9Ik0zMDkuMDMzLDIwMi45NjdjLTI5LjI0Mi0yOS4yNDItNzYuODI0LTI5LjI0Mi0xMDYuMDY2LDBsLTIyLjYyNy0yMi42MjdjMjAuMjEtMjAuMjEsNDcuMDgtMzEuMzQsNzUuNjYtMzEuMzRzNTUuNDUsMTEuMTMsNzUuNjYsMzEuMzRsLTIyLjYyNywyMi42MjdoMFoiIGZpbGw9IiM0Mjg1ZjQiLz4KICAgIDxwYXRoIGQ9Ik0yNTYsMzYzYy0yOC41OCwwLTU1LjQ1LTExLjEzLTc1LjY2LTMxLjM0bDIyLjYyNy0yMi42MjdjMjkuMjQyLDI5LjI0Miw3Ni44MjQsMjkuMjQyLDEwNi4wNjYsMGwyMi42MjcsMjIuNjI3Yy0yMC4yMSwyMC4yMS00Ny4wOCwzMS4zNC03NS42NiwzMS4zNFoiIGZpbGw9IiM0Mjg1ZjQiLz4KICAgIDxwYXRoIGQ9Ik0xNzAuMjI5LDE0Ny42MDNjNS40MDYtOS4yNTYsOC41MjEtMjAuMDA3LDguNTIxLTMxLjQ3OCwwLTM0LjUzMS0yOC4wOTQtNjIuNjI1LTYyLjYyNS02Mi42MjVzLTYyLjYyNSwyOC4wOTQtNjIuNjI1LDYyLjYyNSwyOC4wOTQsNjIuNjI1LDYyLjYyNSw2Mi42MjVjMTEuNDcxLDAsMjIuMjIyLTMuMTE0LDMxLjQ3OC04LjUybDQ1LjI4MSw0NS4yODFjNS44MzEtOS4wNywxMy41NTctMTYuNzk2LDIyLjYyNy0yMi42MjdsLTQ1LjI4MS00NS4yODFoLS4wMDFaTTExNi4xMjUsMTQ2Ljc1Yy0xNi44ODcsMC0zMC42MjUtMTMuNzM4LTMwLjYyNS0zMC42MjVzMTMuNzM4LTMwLjYyNSwzMC42MjUtMzAuNjI1LDMwLjYyNSwxMy43MzgsMzAuNjI1LDMwLjYyNS0xMy43MzgsMzAuNjI1LTMwLjYyNSwzMC42MjVaIiBmaWxsPSIjNDI4NWY0Ii8+CiAgICA8cGF0aCBkPSJNMjE1LjUxLDMxOS4xMTdjLTkuMDctNS44MzEtMTYuNzk2LTEzLjU1Ny0yMi42MjctMjIuNjI3bC00NS4yODEsNDUuMjgxYy05LjI1Ni01LjQwNi0yMC4wMDctOC41Mi0zMS40NzgtOC41Mi0zNC41MzEsMC02Mi42MjUsMjguMDk0LTYyLjYyNSw2Mi42MjVzMjguMDk0LDYyLjYyNSw2Mi42MjUsNjIuNjI1LDYyLjYyNS0yOC4wOTQsNjIuNjI1LTYyLjYyNWMwLTExLjQ3MS0zLjExNC0yMi4yMjItOC41MjEtMzEuNDc4bDQ1LjI4MS00NS4yODFoMFpNMTE2LjEyNSw0MjYuNWMtMTYuODg3LDAtMzAuNjI1LTEzLjczOC0zMC42MjUtMzAuNjI1czEzLjczOC0zMC42MjUsMzAuNjI1LTMwLjYyNSwzMC42MjUsMTMuNzM4LDMwLjYyNSwzMC42MjUtMTMuNzM4LDMwLjYyNS0zMC42MjUsMzAuNjI1WiIgZmlsbD0iIzlhYTBhNiIvPgogICAgPHBhdGggZD0iTTM5NS44NzUsMzMzLjI1Yy0xMS40NzEsMC0yMi4yMjIsMy4xMTQtMzEuNDc4LDguNTJsLTQ1LjI4MS00NS4yODFjLTUuODMxLDkuMDctMTMuNTU3LDE2Ljc5Ni0yMi42MjcsMjIuNjI3bDQ1LjI4MSw0NS4yODFjLTUuNDA2LDkuMjU2LTguNTIxLDIwLjAwNy04LjUyMSwzMS40NzgsMCwzNC41MzEsMjguMDk0LDYyLjYyNSw2Mi42MjUsNjIuNjI1czYyLjYyNS0yOC4wOTQsNjIuNjI1LTYyLjYyNS0yOC4wOTQtNjIuNjI1LTYyLjYyNS02Mi42MjVoLjAwMVpNMzk1Ljg3NSw0MjYuNWMtMTYuODg3LDAtMzAuNjI1LTEzLjczOC0zMC42MjUtMzAuNjI1czEzLjczOC0zMC42MjUsMzAuNjI1LTMwLjYyNSwzMC42MjUsMTMuNzM4LDMwLjYyNSwzMC42MjUtMTMuNzM4LDMwLjYyNS0zMC42MjUsMzAuNjI1WiIgZmlsbD0iIzQyODVmNCIvPgogICAgPHBhdGggZD0iTTM5NS44NzUsNTMuNWMtMzQuNTMxLDAtNjIuNjI1LDI4LjA5NC02Mi42MjUsNjIuNjI1LDAsMTEuNjQ1LDMuMjA1LDIyLjU1MSw4Ljc2NCwzMS45MDJsLTQ1LjExOCw0NS4xMThjOS4wMyw1Ljg4NywxNi43MDcsMTMuNjYzLDIyLjQ4MSwyMi43NzNsNDUuNDQ0LTQ1LjQ0NGM5LjE2LDUuMjU1LDE5Ljc1OCw4LjI3NiwzMS4wNTQsOC4yNzYsMzQuNTMxLDAsNjIuNjI1LTI4LjA5NCw2Mi42MjUtNjIuNjI1cy0yOC4wOTQtNjIuNjI1LTYyLjYyNS02Mi42MjVaTTM5NS44NzUsMTQ2Ljc1Yy0xNi44ODcsMC0zMC42MjUtMTMuNzM4LTMwLjYyNS0zMC42MjVzMTMuNzM4LTMwLjYyNSwzMC42MjUtMzAuNjI1LDMwLjYyNSwxMy43MzgsMzAuNjI1LDMwLjYyNS0xMy43MzgsMzAuNjI1LTMwLjYyNSwzMC42MjVaIiBmaWxsPSIjOWFhMGE2Ii8+CiAgPC9nPgo8L3N2Zz4="/>
-                      <circle cx="514.13" cy="1303.5" r="8.35" fill="#FFFFFF" stroke="#1A73E8" stroke-width="1.3"/>
-                      <text x="445.45" y="1307.03" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#5F6368">Gateway</text>
-                      <text x="445.45" y="1325.07" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">API Gateway</text>
-                      <text x="510.98" y="1307.14" xml:space="preserve" font-family="Inter" font-size="10" font-weight="700" fill="#202124">2</text>
-                    </g>
-                  </g>
-                  <g data-id="/body/1/children/0/children/0/children/1/children/0/children/0/children/1" data-tag="Row">
-                    <g data-id="/body/1/children/0/children/0/children/1/children/0/children/0/children/1/children/0" data-tag="Pcard">
-                      <rect x="759.76" y="1287.63" width="152.89" height="47.15" rx="7.38" fill="#FFFFFF" stroke="#1A73E8" stroke-width="1.25"/>
-                      <image x="770.64" y="1297.2" width="28" height="28" href="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyBpZD0ic3RhbmRhcmRfcHJvZHVjdF9pY29uIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZlcnNpb249IjEuMSIgdmlld0JveD0iMCAwIDUxMiA1MTIiPgogIDwhLS0gR2VuZXJhdG9yOiBBZG9iZSBJbGx1c3RyYXRvciAyOS4xLjAsIFNWRyBFeHBvcnQgUGx1Zy1JbiAuIFNWRyBWZXJzaW9uOiAyLjEuMCBCdWlsZCAxNDIpICAtLT4KICA8ZGVmcz4KICAgIDxzdHlsZT4KICAgICAgLnN0MCB7CiAgICAgICAgZmlsbDogbm9uZTsKICAgICAgfQoKICAgICAgLnN0MSB7CiAgICAgICAgZmlsbDogIzQyODVmNDsKICAgICAgfQoKICAgICAgLnN0MiB7CiAgICAgICAgZmlsbDogIzM0YTg1MzsKICAgICAgfQoKICAgICAgLnN0MyB7CiAgICAgICAgZmlsbDogI2ZiYmMwNDsKICAgICAgfQoKICAgICAgLnN0NCB7CiAgICAgICAgZmlsbDogI2VhNDMzNTsKICAgICAgfQogICAgPC9zdHlsZT4KICA8L2RlZnM+CiAgPGcgaWQ9ImJvdW5kaW5nX2JveCI+CiAgICA8cmVjdCBjbGFzcz0ic3QwIiB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIvPgogIDwvZz4KICA8ZyBpZD0iYXJ0Ij4KICAgIDxwYXRoIGNsYXNzPSJzdDMiIGQ9Ik0xNDQuNCwyNzJjLTYuNCwwLTEyLjQtMy44LTE0LjktMTAuMUw1NS40LDc1LjljLTMuMy04LjIuNy0xNy41LDguOS0yMC44LDguMi0zLjMsMTcuNS43LDIwLjgsOC45bDc0LjIsMTg2YzMuMyw4LjItLjcsMTcuNS04LjksMjAuOC0xLjkuOC0zLjksMS4xLTUuOSwxLjFoLS4xWiIvPgogICAgPGcgaWQ9ImIiPgogICAgICA8cGF0aCBjbGFzcz0ic3Q0IiBkPSJNMjU2LDI3MmMtNi40LDAtMTIuNC0zLjgtMTQuOS0xMC4xbC03NC4xLTE4NmMtMi42LTYuNi0uNi0xNC4xLDUtMTguNXMxMy40LTQuNSwxOS4yLS40bDI2MC4xLDE4NmM3LjIsNS4xLDguOSwxNS4xLDMuNywyMi4zcy0xNS4xLDguOS0yMi4zLDMuN0wyMTYuOSwxMTQuN2w1NCwxMzUuM2MzLjMsOC4yLS43LDE3LjUtOC45LDIwLjgtMS45LjgtNCwxLjEtNS45LDEuMWgtLjFaIi8+CiAgICA8L2c+CiAgICA8cGF0aCBjbGFzcz0ic3QyIiBkPSJNMTI3LjIsMjU2bC03MiwxODBjLTMuMyw4LjIuNywxNy41LDguOSwyMC44LDMuMSwxLjIsNCwxLjEsNS45LDEuMSw2LjMsMCwxMi40LTMuOCwxNC45LTEwLjFsNzQuNC0xODZjLjgtMiwxLjEtNCwxLjEtNS45aC0zMy4yWiIvPgogICAgPHBhdGggY2xhc3M9InN0MSIgZD0iTTQxNC41LDI1NmwtMTk3LjcsMTQxLjIsNTQuMS0xMzUuM2MuOC0yLDEuMS00LDEuMS01LjloLTMzLjJsLTcyLDE4MGMtMi42LDYuNi0uNiwxNC4xLDUsMTguNSwyLjksMi4zLDYuNCwzLjQsOS45LDMuNHM2LjUtMSw5LjMtM2wyNjAuNC0xODZjNC40LTMuMSw2LjctOCw2LjctMTNoLTQzLjZaIi8+CiAgPC9nPgo8L3N2Zz4="/>
-                      <circle cx="892.78" cy="1303.5" r="8.35" fill="#FFFFFF" stroke="#1A73E8" stroke-width="1.3"/>
-                      <text x="808.64" y="1307.03" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#5F6368">Trigger API</text>
-                      <text x="808.64" y="1325.07" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">Cloud Run</text>
-                      <text x="889.55" y="1307.14" xml:space="preserve" font-family="Inter" font-size="10" font-weight="700" fill="#202124">3</text>
-                    </g>
-                  </g>
-                </g>
-                <g data-id="/body/1/children/0/children/0/children/1/children/0/children/1" data-tag="Row">
-                  <g data-id="/body/1/children/0/children/0/children/1/children/0/children/1/children/0" data-tag="Row">
-                    <g data-id="/body/1/children/0/children/0/children/1/children/0/children/1/children/0/children/0" data-tag="Pcard">
-                      <rect x="369.63" y="1392.03" width="191.32" height="47.15" rx="7.38" fill="#FFFFFF" stroke="#1A73E8" stroke-width="1.25"/>
-                      <image x="380.51" y="1401.6" width="28" height="28" href="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyBpZD0ic3RhbmRhcmRfcHJvZHVjdF9pY29uIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZlcnNpb249IjEuMSIgdmlld0JveD0iMCAwIDUxMiA1MTIiPgogIDwhLS0gR2VuZXJhdG9yOiBBZG9iZSBJbGx1c3RyYXRvciAyOS4xLjAsIFNWRyBFeHBvcnQgUGx1Zy1JbiAuIFNWRyBWZXJzaW9uOiAyLjEuMCBCdWlsZCAxNDIpICAtLT4KICA8ZyBpZD0iYm91bmRpbmdfYm94Ij4KICAgIDxyZWN0IHdpZHRoPSI1MTIiIGhlaWdodD0iNTEyIiBmaWxsPSJub25lIi8+CiAgPC9nPgogIDxnIGlkPSJhcnQiPgogICAgPHBhdGggZD0iTTM0Ni42ODMsMTEyLjYxMWwtLjAzOS03NS4xNzFjLS4wMDUtOC44MzQtNy4xNjctMTUuOTkyLTE2LTE1Ljk5MmgtLjAwOGMtOC44MzcuMDA0LTE1Ljk5Nyw3LjE3Mi0xNS45OTIsMTYuMDA4bC4wMzksNzUuMTU1SDExOGMtMTcuNjczLDAtMzIsMTQuMzI3LTMyLDMydjExMS44NjVjMCw4OS4wODUsNzYuMjYyLDE2MS41NjIsMTcwLDE2MS41NjJzMTcwLTcyLjQ3NywxNzAtMTYxLjU2MnYtMTExLjg2NWMwLTE3LjY3My0xNC4zMjctMzItMzItMzJoLTQ3LjMxN1pNMzk0LDI1Ni40NzdjMCw3MS40NC02MS45MDYsMTI5LjU2Mi0xMzgsMTI5LjU2MnMtMTM4LTU4LjEyMS0xMzgtMTI5LjU2MnYtMTExLjg2NWgyNzZ2MTExLjg2NVoiIGZpbGw9IiM0Mjg1ZjQiLz4KICAgIDxwYXRoIGQ9Ik0zMTQuNjQ0LDE0NC42MTF2LTMyaC0xMTcuMjk0bC0uMDM5LTc1LjE3MWMtLjAwNS04LjgzNC03LjE2Ny0xNS45OTItMTYtMTUuOTkyaC0uMDA4Yy04LjgzNy4wMDQtMTUuOTk3LDcuMTcyLTE1Ljk5MiwxNi4wMDhsLjAzOSw3NS4xNTVoLTQ3LjM1Yy0xNy42NzMsMC0zMiwxNC4zMjctMzIsMzJ2MTExLjg2NWMwLDgzLjk1OSw2Ny43NDEsMTUzLjE1NSwxNTQuMDA3LDE2MC44NDF2NTYuNjc5YzAsOC42MTYsNi42MjEsMTYuMDI5LDE1LjIyOCwxNi40MzMsOS4xODguNDMyLDE2Ljc3Mi02Ljg4OSwxNi43NzItMTUuOTgydi04OS4yNzdjLTYuNTk0LjYyNy04LjAxNC42NTItMTYsLjg2N2gtLjAwN2MtNzYuMDk0LDAtMTM4LTU4LjEyMS0xMzgtMTI5LjU2MnYtMTExLjg2NWgxOTYuNjQ0LDBaIiBmaWxsPSIjOWFhMGE2Ii8+CiAgPC9nPgo8L3N2Zz4="/>
-                      <circle cx="541.08" cy="1407.9" r="8.35" fill="#FFFFFF" stroke="#1A73E8" stroke-width="1.3"/>
-                      <text x="418.51" y="1411.43" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#5F6368">Evaluation queue</text>
-                      <text x="418.51" y="1429.47" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">Pub/Sub</text>
-                      <text x="537.7" y="1411.54" xml:space="preserve" font-family="Inter" font-size="10" font-weight="700" fill="#202124">4</text>
-                    </g>
-                  </g>
-                  <g data-id="/body/1/children/0/children/0/children/1/children/0/children/1/children/1" data-tag="Row">
-                    <g data-id="/body/1/children/0/children/0/children/1/children/0/children/1/children/1/children/0" data-tag="Pcard">
-                      <rect x="759.05" y="1392.03" width="154.32" height="47.15" rx="7.38" fill="#FFFFFF" stroke="#497938" stroke-width="1.25"/>
-                      <image x="769.93" y="1401.6" width="28" height="28" href="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyBpZD0ic3RhbmRhcmRfcHJvZHVjdF9pY29uIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZlcnNpb249IjEuMSIgdmlld0JveD0iMCAwIDUxMiA1MTIiPgogIDwhLS0gR2VuZXJhdG9yOiBBZG9iZSBJbGx1c3RyYXRvciAyOS4xLjAsIFNWRyBFeHBvcnQgUGx1Zy1JbiAuIFNWRyBWZXJzaW9uOiAyLjEuMCBCdWlsZCAxNDIpICAtLT4KICA8ZGVmcz4KICAgIDxzdHlsZT4KICAgICAgLnN0MCB7CiAgICAgICAgZmlsbDogbm9uZTsKICAgICAgfQoKICAgICAgLnN0MSB7CiAgICAgICAgZmlsbDogIzQyODVmNDsKICAgICAgfQoKICAgICAgLnN0MiB7CiAgICAgICAgZmlsbDogIzM0YTg1MzsKICAgICAgfQoKICAgICAgLnN0MyB7CiAgICAgICAgZmlsbDogI2ZiYmMwNDsKICAgICAgfQoKICAgICAgLnN0NCB7CiAgICAgICAgZmlsbDogI2VhNDMzNTsKICAgICAgfQogICAgPC9zdHlsZT4KICA8L2RlZnM+CiAgPGcgaWQ9ImJvdW5kaW5nX2JveCI+CiAgICA8cmVjdCBjbGFzcz0ic3QwIiB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIvPgogIDwvZz4KICA8ZyBpZD0iYXJ0Ij4KICAgIDxwYXRoIGNsYXNzPSJzdDMiIGQ9Ik0xNDQuNCwyNzJjLTYuNCwwLTEyLjQtMy44LTE0LjktMTAuMUw1NS40LDc1LjljLTMuMy04LjIuNy0xNy41LDguOS0yMC44LDguMi0zLjMsMTcuNS43LDIwLjgsOC45bDc0LjIsMTg2YzMuMyw4LjItLjcsMTcuNS04LjksMjAuOC0xLjkuOC0zLjksMS4xLTUuOSwxLjFoLS4xWiIvPgogICAgPGcgaWQ9ImIiPgogICAgICA8cGF0aCBjbGFzcz0ic3Q0IiBkPSJNMjU2LDI3MmMtNi40LDAtMTIuNC0zLjgtMTQuOS0xMC4xbC03NC4xLTE4NmMtMi42LTYuNi0uNi0xNC4xLDUtMTguNXMxMy40LTQuNSwxOS4yLS40bDI2MC4xLDE4NmM3LjIsNS4xLDguOSwxNS4xLDMuNywyMi4zcy0xNS4xLDguOS0yMi4zLDMuN0wyMTYuOSwxMTQuN2w1NCwxMzUuM2MzLjMsOC4yLS43LDE3LjUtOC45LDIwLjgtMS45LjgtNCwxLjEtNS45LDEuMWgtLjFaIi8+CiAgICA8L2c+CiAgICA8cGF0aCBjbGFzcz0ic3QyIiBkPSJNMTI3LjIsMjU2bC03MiwxODBjLTMuMyw4LjIuNywxNy41LDguOSwyMC44LDMuMSwxLjIsNCwxLjEsNS45LDEuMSw2LjMsMCwxMi40LTMuOCwxNC45LTEwLjFsNzQuNC0xODZjLjgtMiwxLjEtNCwxLjEtNS45aC0zMy4yWiIvPgogICAgPHBhdGggY2xhc3M9InN0MSIgZD0iTTQxNC41LDI1NmwtMTk3LjcsMTQxLjIsNTQuMS0xMzUuM2MuOC0yLDEuMS00LDEuMS01LjloLTMzLjJsLTcyLDE4MGMtMi42LDYuNi0uNiwxNC4xLDUsMTguNSwyLjksMi4zLDYuNCwzLjQsOS45LDMuNHM2LjUtMSw5LjMtM2wyNjAuNC0xODZjNC40LTMuMSw2LjctOCw2LjctMTNoLTQzLjZaIi8+CiAgPC9nPgo8L3N2Zz4="/>
-                      <circle cx="893.49" cy="1407.9" r="8.35" fill="#FFFFFF" stroke="#497938" stroke-width="1.3"/>
-                      <text x="807.93" y="1411.43" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#26481B">Clip worker</text>
-                      <text x="807.93" y="1429.47" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">Cloud Run job</text>
-                      <text x="890.24" y="1411.54" xml:space="preserve" font-family="Inter" font-size="10" font-weight="700" fill="#202124">6</text>
-                    </g>
-                  </g>
-                </g>
-                <g data-id="/body/1/children/0/children/0/children/1/children/0/children/2" data-tag="Row">
-                  <g data-id="/body/1/children/0/children/0/children/1/children/0/children/2/children/0" data-tag="Row">
-                    <g data-id="/body/1/children/0/children/0/children/1/children/0/children/2/children/0/children/0" data-tag="Row">
-                      <g data-id="/body/1/children/0/children/0/children/1/children/0/children/2/children/0/children/0/children/0" data-tag="Pcard">
-                        <rect x="290.5" y="1496.55" width="153.13" height="46.9" rx="7.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
-                        <image x="301.25" y="1506" width="28" height="28" href="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyBpZD0ic3RhbmRhcmRfcHJvZHVjdF9pY29uIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZlcnNpb249IjEuMSIgdmlld0JveD0iMCAwIDUxMiA1MTIiPgogIDwhLS0gR2VuZXJhdG9yOiBBZG9iZSBJbGx1c3RyYXRvciAyOS4xLjAsIFNWRyBFeHBvcnQgUGx1Zy1JbiAuIFNWRyBWZXJzaW9uOiAyLjEuMCBCdWlsZCAxNDIpICAtLT4KICA8ZGVmcz4KICAgIDxzdHlsZT4KICAgICAgLnN0MCB7CiAgICAgICAgZmlsbDogbm9uZTsKICAgICAgfQoKICAgICAgLnN0MSB7CiAgICAgICAgZmlsbDogIzQyODVmNDsKICAgICAgfQoKICAgICAgLnN0MiB7CiAgICAgICAgZmlsbDogIzM0YTg1MzsKICAgICAgfQoKICAgICAgLnN0MyB7CiAgICAgICAgZmlsbDogI2ZiYmMwNDsKICAgICAgfQoKICAgICAgLnN0NCB7CiAgICAgICAgZmlsbDogI2VhNDMzNTsKICAgICAgfQogICAgPC9zdHlsZT4KICA8L2RlZnM+CiAgPGcgaWQ9ImJvdW5kaW5nX2JveCI+CiAgICA8cmVjdCBjbGFzcz0ic3QwIiB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIvPgogIDwvZz4KICA8ZyBpZD0iYXJ0Ij4KICAgIDxwYXRoIGNsYXNzPSJzdDIiIGQ9Ik00NDIsMjc3LjlINzBjLTguOCwwLTE2LDcuMi0xNiwxNnYxNDguMWMwLDguOCw3LjIsMTYsMTYsMTZoMTA3LjJjMS41LjUsMy4xLjcsNC44LjdzMy4zLS4zLDQuOC0uN2gyNTUuMmM4LjgsMCwxNi03LjIsMTYtMTZ2LTE0OC4xYzAtOC44LTcuMi0xNi0xNi0xNlpNODYsMzA5LjloODB2MTE2LjFoLTgwdi0xMTYuMVpNNDI2LDQyNS45aC0yMjh2LTExNi4xaDIyOHYxMTYuMVoiLz4KICAgIDxwYXRoIGNsYXNzPSJzdDMiIGQ9Ik00NDIsNTRINzBjLTguOCwwLTE2LDcuMi0xNiwxNnYxNDguOGMwLDguOCw3LjIsMTYsMTYsMTZoMzcyYzguOCwwLDE2LTcuMiwxNi0xNlY3MGMwLTguOC03LjItMTYtMTYtMTZaTTg2LDg2aDgwdjExNi44aC04MHYtMTE2LjhaTTQyNiwyMDIuOGgtMjI4di0xMTYuOGgyMjh2MTE2LjhaIi8+CiAgICA8cGF0aCBjbGFzcz0ic3Q0IiBkPSJNNDQyLDIzNC44aC0xNlY4Nkg1NHYtMTZjMC04LjgsNy4yLTE2LDE2LTE2aDM3MmM4LjgsMCwxNiw3LjIsMTYsMTZ2MTQ4LjhjMCw4LjgtNy4yLDE2LTE2LDE2WiIvPgogICAgPHBhdGggY2xhc3M9InN0MSIgZD0iTTQ0Miw0NTcuOWgtMTZ2LTE0OC4xSDU0di0xNmMwLTguOCw3LjItMTYsMTYtMTZoMzcyYzguOCwwLDE2LDcuMiwxNiwxNnYxNDguMWMwLDguOC03LjIsMTYtMTYsMTZaIi8+CiAgICA8Y2lyY2xlIGNsYXNzPSJzdDQiIGN4PSIzNDkiIGN5PSIxNDQuNCIgcj0iMzciLz4KICAgIDxjaXJjbGUgY2xhc3M9InN0MSIgY3g9IjM0OSIgY3k9IjM2Ny45IiByPSIzNyIvPgogIDwvZz4KPC9zdmc+"/>
-                        <circle cx="423.88" cy="1512.3" r="8.35" fill="#FFFFFF" stroke="#202124" stroke-width="1.3"/>
-                        <text x="339.25" y="1515.83" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#202124">Clip bucket</text>
-                        <text x="339.25" y="1533.87" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">Cloud Storage</text>
-                        <text x="420.77" y="1515.94" xml:space="preserve" font-family="Inter" font-size="10" font-weight="700" fill="#202124">5</text>
-                      </g>
-                    </g>
-                    <g data-id="/body/1/children/0/children/0/children/1/children/0/children/2/children/0/children/1" data-tag="Pcard">
-                      <rect x="477.13" y="1496.55" width="162.95" height="46.9" rx="7.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
-                      <image x="487.88" y="1506" width="28" height="28" href="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyBpZD0ic3RhbmRhcmRfcHJvZHVjdF9pY29uIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZlcnNpb249IjEuMSIgdmlld0JveD0iMCAwIDUxMiA1MTIiPgogIDwhLS0gR2VuZXJhdG9yOiBBZG9iZSBJbGx1c3RyYXRvciAyOS4xLjAsIFNWRyBFeHBvcnQgUGx1Zy1JbiAuIFNWRyBWZXJzaW9uOiAyLjEuMCBCdWlsZCAxNDIpICAtLT4KICA8ZGVmcz4KICAgIDxzdHlsZT4KICAgICAgLnN0MCB7CiAgICAgICAgZmlsbDogbm9uZTsKICAgICAgfQoKICAgICAgLnN0MSB7CiAgICAgICAgZmlsbDogIzQyODVmNDsKICAgICAgfQoKICAgICAgLnN0MiB7CiAgICAgICAgZmlsbDogIzM0YTg1MzsKICAgICAgfQoKICAgICAgLnN0MyB7CiAgICAgICAgZmlsbDogI2ZiYmMwNDsKICAgICAgfQoKICAgICAgLnN0NCB7CiAgICAgICAgZmlsbDogI2VhNDMzNTsKICAgICAgfQogICAgPC9zdHlsZT4KICA8L2RlZnM+CiAgPGcgaWQ9ImJvdW5kaW5nX2JveCI+CiAgICA8cmVjdCBjbGFzcz0ic3QwIiB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIvPgogIDwvZz4KICA8ZyBpZD0iYXJ0Ij4KICAgIDxwYXRoIGNsYXNzPSJzdDMiIGQ9Ik00NDcuNSwxMjMuN2wtMTg2LTY4LjdjLTMuNi0xLjMtNy41LTEuMy0xMS4xLDBsLTQwLjcsMTUtMTQ1LjIsNTMuNWMtNi4zLDIuMy0xMC41LDguMy0xMC41LDE1czQuMiwxMi43LDEwLjUsMTVsMTQ1LjEsNTMuNHMwLDAsMCwwbDQwLjgsMTVjMS44LjYsMy43LDEsNS41LDFzMy43LS4zLDUuNS0xbDE4NS45LTY4LjJjNi4zLTIuMywxMC41LTguMywxMC41LTE1LDAtNi43LTQuMi0xMi43LTEwLjUtMTVoMFpNMjU2LDE4OS45bC0xMzkuNi01MS40LDEzOS42LTUxLjQsMTM5LjcsNTEuNi0xMzkuNiw1MS4yWiIvPgogICAgPHBhdGggY2xhc3M9InN0MiIgZD0iTTQ0Ny41LDM4OC44bC0xODUuOSw2OC4yYy0xLjguNi0zLjYsMS01LjUsMXMtMy43LS4zLTUuNS0xbC00MC44LTE1aDBsLTE0NS4xLTUzLjRjLTguMy0zLTEyLjUtMTIuMi05LjUtMjAuNSwzLTguMywxMi4yLTEyLjUsMjAuNS05LjVsMTgwLjQsNjYuNCwxODAuNC02Ni4yYzguMy0zLDE3LjUsMS4yLDIwLjUsOS41LDMsOC4zLTEuMiwxNy41LTkuNSwyMC41aDBaIi8+CiAgICA8cGF0aCBjbGFzcz0ic3QyIiBkPSJNNDQ3LjUsMzEwLjRsLTE4NS45LDY4LjJjLTEuOC42LTMuNiwxLTUuNSwxcy0zLjctLjMtNS41LTFsLTQwLjgtMTVoMGwtMTQ1LjEtNTMuNGMtOC4zLTMtMTIuNS0xMi4yLTkuNS0yMC41LDMtOC4zLDEyLjItMTIuNSwyMC41LTkuNWwxODAuNCw2Ni40LDE4MC40LTY2LjJjOC4zLTMsMTcuNSwxLjIsMjAuNSw5LjUsMyw4LjMtMS4yLDE3LjUtOS41LDIwLjVoMFoiLz4KICAgIDxwYXRoIGNsYXNzPSJzdDIiIGQ9Ik00NDcuNSwyMzIuMWwtMTg1LjksNjguMmMtMS44LjctMy42LDEtNS41LDFzLTMuNy0uMy01LjUtMWwtNDAuOC0xNWgwbC0xNDUuMS01My40Yy04LjMtMy4xLTEyLjUtMTIuMi05LjUtMjAuNSwzLTguMywxMi4yLTEyLjUsMjAuNS05LjVsMTgwLjQsNjYuNCwxODAuNC02Ni4yYzguMy0zLDE3LjUsMS4yLDIwLjUsOS41LDMsOC4zLTEuMiwxNy41LTkuNSwyMC41aDBaIi8+CiAgICA8cGF0aCBjbGFzcz0ic3Q0IiBkPSJNNDU4LDEzOC43YzAsNi43LTQuMiwxMi43LTEwLjUsMTVsLTE4Niw2OC4yYy0xLjguNy0zLjYsMS01LjUsMXMtMy43LS4zLTUuNS0xbC00MC44LTE1aDBzNDYuNC0xNyw0Ni40LTE3bDEzOS42LTUxLjItMTM5LjctNTEuNi00Ni4yLTE3LjEsNDAuNy0xNWMzLjYtMS4zLDcuNS0xLjMsMTEuMSwwbDE4Niw2OC43YzYuMywyLjMsMTAuNSw4LjMsMTAuNSwxNWgwWiIvPgogICAgPHBhdGggY2xhc3M9InN0MSIgZD0iTTQ0Ny41LDM4OC44bC0xODUuOSw2OC4yYy0xLjguNi0zLjYsMS01LjUsMXMtMy43LS4zLTUuNS0xbC00MC44LTE1LDQ2LjQtMTcsMTgwLjQtNjYuMmM4LjMtMywxNy41LDEuMiwyMC41LDkuNSwzLDguMy0xLjIsMTcuNS05LjUsMjAuNWgwWiIvPgogICAgPHBhdGggY2xhc3M9InN0MSIgZD0iTTQ0Ny41LDMxMC40bC0xODUuOSw2OC4yYy0xLjguNi0zLjYsMS01LjUsMXMtMy43LS4zLTUuNS0xbC00MC44LTE1aDBsNDYuNC0xNywxODAuNC02Ni4yYzguMy0zLDE3LjUsMS4yLDIwLjUsOS41LDMsOC4zLTEuMiwxNy41LTkuNSwyMC41WiIvPgogICAgPHBhdGggY2xhc3M9InN0MSIgZD0iTTQ0Ny41LDIzMi4xbC0xODUuOSw2OC4yYy0xLjguNy0zLjYsMS01LjUsMXMtMy43LS4zLTUuNS0xbC00MC44LTE1aDBsNDYuNC0xNywxODAuNC02Ni4yYzguMy0zLDE3LjUsMS4yLDIwLjUsOS41LDMsOC4zLTEuMiwxNy41LTkuNSwyMC41aDBaIi8+CiAgICA8cGF0aCBjbGFzcz0ic3QzIiBkPSJNMzAyLjQsMjA2LjlsLTE4Ni02OC41LTUxLjgtMTVjLTYuMywyLjMtMTAuNSw4LjMtMTAuNSwxNXM0LjIsMTIuNywxMC41LDE1bDE0NS4xLDUzLjRzMCwwLDAsMGw0MC44LDE1YzEuOC42LDMuNywxLDUuNSwxczMuNy0uMyw1LjUtMWw0MC45LTE1aDBaIi8+CiAgPC9nPgo8L3N2Zz4="/>
-                      <circle cx="620.33" cy="1512.3" r="8.35" fill="#FFFFFF" stroke="#202124" stroke-width="1.3"/>
-                      <text x="525.88" y="1515.83" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#202124">Verdict store</text>
-                      <text x="525.88" y="1533.87" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">Cloud SQL</text>
-                      <text x="617.07" y="1515.94" xml:space="preserve" font-family="Inter" font-size="10" font-weight="700" fill="#202124">8</text>
-                    </g>
-                  </g>
-                  <g data-id="/body/1/children/0/children/0/children/1/children/0/children/2/children/1" data-tag="Row">
-                    <g data-id="/body/1/children/0/children/0/children/1/children/0/children/2/children/1/children/0" data-tag="Row">
-                      <g data-id="/body/1/children/0/children/0/children/1/children/0/children/2/children/1/children/0/children/0" data-tag="Pcard">
-                        <rect x="751.47" y="1496.43" width="169.47" height="47.15" rx="7.38" fill="#FFFFFF" stroke="#593894" stroke-width="1.25"/>
-                        <image x="762.35" y="1506" width="28" height="28" href="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyBpZD0ic3RhbmRhcmRfcHJvZHVjdF9pY29uIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZlcnNpb249IjEuMSIgdmlld0JveD0iMCAwIDUxMiA1MTIiPgogIDwhLS0gR2VuZXJhdG9yOiBBZG9iZSBJbGx1c3RyYXRvciAyOS4xLjAsIFNWRyBFeHBvcnQgUGx1Zy1JbiAuIFNWRyBWZXJzaW9uOiAyLjEuMCBCdWlsZCAxNDIpICAtLT4KICA8ZyBpZD0iYm91bmRpbmdfYm94Ij4KICAgIDxyZWN0IHdpZHRoPSI1MTIiIGhlaWdodD0iNTEyIiBmaWxsPSJub25lIi8+CiAgPC9nPgogIDxnIGlkPSJhcnQiPgogICAgPHBhdGggZD0iTTEyOCwyNDQuOTljLTguODQsMC0xNi03LjE2LTE2LTE2di05NS45N2MwLTguODQsNy4xNi0xNiwxNi0xNnMxNiw3LjE2LDE2LDE2djk1Ljk3YzAsOC44NC03LjE2LDE2LTE2LDE2WiIgZmlsbD0iI2VhNDMzNSIvPgogICAgPHBhdGggZD0iTTI1Niw0NThjLTIuOTgsMC01Ljk3LS44My04LjU5LTIuNWwtMTg2LTEyMmMtNy40Ni00Ljc0LTkuNjUtMTQuNjMtNC45MS0yMi4wOSw0Ljc1LTcuNDYsMTQuNjQtOS42NSwyMi4wOS00LjkxbDE3Ny40MSwxMTYuNTMsMTc3LjQxLTExNi41M2M3LjQ1LTQuNzQsMTcuMzQtMi41NSwyMi4wOSw0LjkxLDQuNzQsNy40NiwyLjU1LDE3LjM0LTQuOTEsMjIuMDlsLTE4NiwxMjJjLTIuNjIsMS42Ny01LjYxLDIuNS04LjU5LDIuNVoiIGZpbGw9IiNmYmJjMDQiLz4KICAgIDxwYXRoIGQ9Ik0yNTYsMzg4LjAzYy04Ljg0LDAtMTYtNy4xNi0xNi0xNnYtNzMuMDZjMC04Ljg0LDcuMTYtMTYsMTYtMTZzMTYsNy4xNiwxNiwxNnY3My4wNmMwLDguODQtNy4xNiwxNi0xNiwxNloiIGZpbGw9IiMzNGE4NTMiLz4KICAgIDxjaXJjbGUgY3g9IjEyOCIgY3k9IjcwIiByPSIxNiIgZmlsbD0iI2VhNDMzNSIvPgogICAgPGNpcmNsZSBjeD0iMTI4IiBjeT0iMjkyIiByPSIxNiIgZmlsbD0iI2VhNDMzNSIvPgogICAgPHBhdGggZD0iTTM4NC4yMywzMDguMDFjLTguODIsMC0xNS45OC03LjE0LTE2LTE1Ljk3bC0uMjMtOTQuMDFjLS4wMi04Ljg0LDcuMTMtMTYuMDIsMTUuOTctMTYuMDNoLjA0YzguODIsMCwxNS45OCw3LjE0LDE2LDE1Ljk3bC4yMyw5NC4wMWMuMDIsOC44NC03LjEzLDE2LjAyLTE1Ljk3LDE2LjAzaC0uMDRaIiBmaWxsPSIjNDI4NWY0Ii8+CiAgICA8Y2lyY2xlIGN4PSIzODQiIGN5PSI3MCIgcj0iMTYiIGZpbGw9IiM0Mjg1ZjQiLz4KICAgIDxjaXJjbGUgY3g9IjM4NCIgY3k9IjEzNCIgcj0iMTYiIGZpbGw9IiM0Mjg1ZjQiLz4KICAgIDxwYXRoIGQ9Ik0zMjAsMjIwLjM2Yy04Ljg0LDAtMTYtNy4xNi0xNi0xNnYtMTAzLjAyYzAtOC44NCw3LjE2LTE2LDE2LTE2czE2LDcuMTYsMTYsMTZ2MTAzLjAyYzAsOC44NC03LjE2LDE2LTE2LDE2WiIgZmlsbD0iI2ZiYmMwNCIvPgogICAgPGNpcmNsZSBjeD0iMjU2IiBjeT0iMTcxIiByPSIxNiIgZmlsbD0iIzM0YTg1MyIvPgogICAgPGNpcmNsZSBjeD0iMjU2IiBjeT0iMjM1IiByPSIxNiIgZmlsbD0iIzM0YTg1MyIvPgogICAgPGNpcmNsZSBjeD0iMzIwIiBjeT0iMjY1IiByPSIxNiIgZmlsbD0iI2ZiYmMwNCIvPgogICAgPGNpcmNsZSBjeD0iMzIwIiBjeT0iMzI5IiByPSIxNiIgZmlsbD0iI2ZiYmMwNCIvPgogICAgPHBhdGggZD0iTTE5MiwyMTcuMzZjLTguODQsMC0xNi03LjE2LTE2LTE2di0xMDAuMDJjMC04Ljg0LDcuMTYtMTYsMTYtMTZzMTYsNy4xNiwxNiwxNnYxMDAuMDJjMCw4Ljg0LTcuMTYsMTYtMTYsMTZaIiBmaWxsPSIjZmJiYzA0Ii8+CiAgICA8Y2lyY2xlIGN4PSIxOTIiIGN5PSIyNjUiIHI9IjE2IiBmaWxsPSIjZmJiYzA0Ii8+CiAgICA8Y2lyY2xlIGN4PSIxOTIiIGN5PSIzMjkiIHI9IjE2IiBmaWxsPSIjZmJiYzA0Ii8+CiAgPC9nPgo8L3N2Zz4="/>
-                        <circle cx="901.07" cy="1512.3" r="8.35" fill="#FFFFFF" stroke="#593894" stroke-width="1.3"/>
-                        <text x="800.35" y="1515.83" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#4B3275">Clip evaluator</text>
-                        <text x="800.35" y="1533.87" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">Vertex AI endpoint</text>
-                        <text x="898.16" y="1515.94" xml:space="preserve" font-family="Inter" font-size="10" font-weight="700" fill="#202124">7</text>
-                      </g>
-                    </g>
+          <g data-id="/body/1/children/0/children/0" data-tag="Col">
+            <g data-id="/body/1/children/0/children/0/children/0" data-tag="Row">
+              <g data-id="/body/1/children/0/children/0/children/0/children/0" data-tag="Col">
+                <g data-id="/body/1/children/0/children/0/children/0/children/0/children/0" data-tag="Row">
+                  <g data-id="/body/1/children/0/children/0/children/0/children/0/children/0/children/0" data-tag="Pcard">
+                    <rect x="50.63" y="1060.63" width="191.58" height="47.15" rx="7.38" fill="#FFFFFF" stroke="#A36E14" stroke-width="1.25"/>
+                    <image x="61.5" y="1070.2" width="28" height="28" href="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyBpZD0iU3RhbmRhcmRfUHJvZHVjdF9JY29uIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZlcnNpb249IjEuMSIgdmlld0JveD0iMCAwIDUxMiA1MTIiPgogIDwhLS0gR2VuZXJhdG9yOiBBZG9iZSBJbGx1c3RyYXRvciAyOS4xLjAsIFNWRyBFeHBvcnQgUGx1Zy1JbiAuIFNWRyBWZXJzaW9uOiAyLjEuMCBCdWlsZCAxNDIpICAtLT4KICA8ZyBpZD0iYm91bmRpbmdfYm94Ij4KICAgIDxyZWN0IHdpZHRoPSI1MTIiIGhlaWdodD0iNTEyIiBmaWxsPSJub25lIi8+CiAgPC9nPgogIDxnIGlkPSJBcnQiPgogICAgPHBhdGggZD0iTTM0OSwyNzJoLTE1LjVjLTguODM3LDAtMTYtNy4xNjMtMTYtMTZzNy4xNjMtMTYsMTYtMTZoMTUuNWM0Mi40NTgsMCw3Ny0zNC41NDIsNzctNzdzLTM0LjU0Mi03Ny03Ny03N2MtOC44MzcsMC0xNi03LjE2My0xNi0xNnM3LjE2My0xNiwxNi0xNmM2MC4xMDMsMCwxMDksNDguODk3LDEwOSwxMDlzLTQ4Ljg5NywxMDktMTA5LDEwOVoiIGZpbGw9IiM5YWEwYTYiLz4KICAgIDxwYXRoIGQ9Ik0xNjMsNDU4Yy02MC4xMDMsMC0xMDktNDguODk3LTEwOS0xMDlzNDguODk3LTEwOSwxMDktMTA5aDE1LjVjOC44MzcsMCwxNiw3LjE2MywxNiwxNnMtNy4xNjMsMTYtMTYsMTZoLTE1LjVjLTQyLjQ1OCwwLTc3LDM0LjU0Mi03Nyw3N3MzNC41NDIsNzcsNzcsNzdjOC44MzcsMCwxNiw3LjE2MywxNiwxNnMtNy4xNjMsMTYtMTYsMTZaIiBmaWxsPSIjOWFhMGE2Ii8+CiAgICA8cGF0aCBkPSJNMTYzLDQ1OHYtMzJjNDIuNDU4LDAsNzctMzQuNTQyLDc3LTc3di0xODZjMC02MC4xMDMsNDguODk3LTEwOSwxMDktMTA5djMyYy00Mi40NTgsMC03NywzNC41NDItNzcsNzd2MTg2YzAsNjAuMTAzLTQ4Ljg5NywxMDktMTA5LDEwOVoiIGZpbGw9IiM0Mjg1ZjQiLz4KICA8L2c+Cjwvc3ZnPg=="/>
+                    <circle cx="222.33" cy="1076.5" r="8.35" fill="#FFFFFF" stroke="#A36E14" stroke-width="1.3"/>
+                    <text x="99.5" y="1080.03" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#5A3900">Operator console</text>
+                    <text x="99.5" y="1098.07" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">web client</text>
+                    <text x="220.18" y="1080.14" xml:space="preserve" font-family="Inter" font-size="10" font-weight="700" fill="#202124">1</text>
                   </g>
                 </g>
               </g>
+              <g data-id="/body/1/children/0/children/0/children/0/children/1" data-tag="Zone" data-kind="gcp">
+                <path d="M 270.83 924 H 1032.67 A 4 4 0 0 1 1036.67 928 V 1234.4 A 10 10 0 0 1 1026.67 1244.4 H 276.83 A 10 10 0 0 1 266.83 1234.4 V 928 A 4 4 0 0 1 270.83 924 Z" fill="none"/>
+                <path d="M 270.83 924.63 H 1032.67 A 3.38 3.38 0 0 1 1036.04 928 V 1234.4 A 9.38 9.38 0 0 1 1026.67 1243.78 H 276.83 A 9.38 9.38 0 0 1 267.46 1234.4 V 928 A 3.38 3.38 0 0 1 270.83 924.63 Z" fill="none" stroke="#202124" stroke-width="1.25"/>
+                <text x="285.83" y="944.6" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#202124">GOOGLE CLOUD</text>
+                <g data-id="/body/1/children/0/children/0/children/0/children/1/children/0" data-tag="Col">
+                  <g data-id="/body/1/children/0/children/0/children/0/children/1/children/0/children/0" data-tag="Row">
+                    <g data-id="/body/1/children/0/children/0/children/0/children/1/children/0/children/0/children/0" data-tag="Row">
+                      <g data-id="/body/1/children/0/children/0/children/0/children/1/children/0/children/0/children/0/children/0" data-tag="Pcard">
+                        <rect x="397.08" y="970.83" width="137.43" height="47.15" rx="7.38" fill="#FFFFFF" stroke="#1A73E8" stroke-width="1.25"/>
+                        <image x="407.95" y="980.4" width="28" height="28" href="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyBpZD0ic3RhbmRhcmRfcHJvZHVjdF9pY29uIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZlcnNpb249IjEuMSIgdmlld0JveD0iMCAwIDUxMiA1MTIiPgogIDwhLS0gR2VuZXJhdG9yOiBBZG9iZSBJbGx1c3RyYXRvciAyOS4yLjEsIFNWRyBFeHBvcnQgUGx1Zy1JbiAuIFNWRyBWZXJzaW9uOiAyLjEuMCBCdWlsZCAxMTYpICAtLT4KICA8ZyBpZD0iYm91bmRpbmdfYm94Ij4KICAgIDxyZWN0IHdpZHRoPSI1MTIiIGhlaWdodD0iNTEyIiBmaWxsPSJub25lIi8+CiAgPC9nPgogIDxnIGlkPSJhcnQiPgogICAgPHBhdGggZD0iTTMzMS42NiwzMzEuNjZsLTIyLjYyNy0yMi42MjdjMjkuMjQyLTI5LjI0MywyOS4yNDItNzYuODIzLDAtMTA2LjA2NmwyMi42MjctMjIuNjI3YzQxLjcyLDQxLjcxOSw0MS43MiwxMDkuNjAyLDAsMTUxLjMyaDBaIiBmaWxsPSIjOWFhMGE2Ii8+CiAgICA8cGF0aCBkPSJNMTgwLjM0LDMzMS42NmMtNDEuNzItNDEuNzE5LTQxLjcyLTEwOS42MDIsMC0xNTEuMzJsMjIuNjI3LDIyLjYyN2MtMjkuMjQyLDI5LjI0My0yOS4yNDIsNzYuODIzLDAsMTA2LjA2NmwtMjIuNjI3LDIyLjYyN1oiIGZpbGw9IiM5YWEwYTYiLz4KICAgIDxwYXRoIGQ9Ik0zMDkuMDMzLDIwMi45NjdjLTI5LjI0Mi0yOS4yNDItNzYuODI0LTI5LjI0Mi0xMDYuMDY2LDBsLTIyLjYyNy0yMi42MjdjMjAuMjEtMjAuMjEsNDcuMDgtMzEuMzQsNzUuNjYtMzEuMzRzNTUuNDUsMTEuMTMsNzUuNjYsMzEuMzRsLTIyLjYyNywyMi42MjdoMFoiIGZpbGw9IiM0Mjg1ZjQiLz4KICAgIDxwYXRoIGQ9Ik0yNTYsMzYzYy0yOC41OCwwLTU1LjQ1LTExLjEzLTc1LjY2LTMxLjM0bDIyLjYyNy0yMi42MjdjMjkuMjQyLDI5LjI0Miw3Ni44MjQsMjkuMjQyLDEwNi4wNjYsMGwyMi42MjcsMjIuNjI3Yy0yMC4yMSwyMC4yMS00Ny4wOCwzMS4zNC03NS42NiwzMS4zNFoiIGZpbGw9IiM0Mjg1ZjQiLz4KICAgIDxwYXRoIGQ9Ik0xNzAuMjI5LDE0Ny42MDNjNS40MDYtOS4yNTYsOC41MjEtMjAuMDA3LDguNTIxLTMxLjQ3OCwwLTM0LjUzMS0yOC4wOTQtNjIuNjI1LTYyLjYyNS02Mi42MjVzLTYyLjYyNSwyOC4wOTQtNjIuNjI1LDYyLjYyNSwyOC4wOTQsNjIuNjI1LDYyLjYyNSw2Mi42MjVjMTEuNDcxLDAsMjIuMjIyLTMuMTE0LDMxLjQ3OC04LjUybDQ1LjI4MSw0NS4yODFjNS44MzEtOS4wNywxMy41NTctMTYuNzk2LDIyLjYyNy0yMi42MjdsLTQ1LjI4MS00NS4yODFoLS4wMDFaTTExNi4xMjUsMTQ2Ljc1Yy0xNi44ODcsMC0zMC42MjUtMTMuNzM4LTMwLjYyNS0zMC42MjVzMTMuNzM4LTMwLjYyNSwzMC42MjUtMzAuNjI1LDMwLjYyNSwxMy43MzgsMzAuNjI1LDMwLjYyNS0xMy43MzgsMzAuNjI1LTMwLjYyNSwzMC42MjVaIiBmaWxsPSIjNDI4NWY0Ii8+CiAgICA8cGF0aCBkPSJNMjE1LjUxLDMxOS4xMTdjLTkuMDctNS44MzEtMTYuNzk2LTEzLjU1Ny0yMi42MjctMjIuNjI3bC00NS4yODEsNDUuMjgxYy05LjI1Ni01LjQwNi0yMC4wMDctOC41Mi0zMS40NzgtOC41Mi0zNC41MzEsMC02Mi42MjUsMjguMDk0LTYyLjYyNSw2Mi42MjVzMjguMDk0LDYyLjYyNSw2Mi42MjUsNjIuNjI1LDYyLjYyNS0yOC4wOTQsNjIuNjI1LTYyLjYyNWMwLTExLjQ3MS0zLjExNC0yMi4yMjItOC41MjEtMzEuNDc4bDQ1LjI4MS00NS4yODFoMFpNMTE2LjEyNSw0MjYuNWMtMTYuODg3LDAtMzAuNjI1LTEzLjczOC0zMC42MjUtMzAuNjI1czEzLjczOC0zMC42MjUsMzAuNjI1LTMwLjYyNSwzMC42MjUsMTMuNzM4LDMwLjYyNSwzMC42MjUtMTMuNzM4LDMwLjYyNS0zMC42MjUsMzAuNjI1WiIgZmlsbD0iIzlhYTBhNiIvPgogICAgPHBhdGggZD0iTTM5NS44NzUsMzMzLjI1Yy0xMS40NzEsMC0yMi4yMjIsMy4xMTQtMzEuNDc4LDguNTJsLTQ1LjI4MS00NS4yODFjLTUuODMxLDkuMDctMTMuNTU3LDE2Ljc5Ni0yMi42MjcsMjIuNjI3bDQ1LjI4MSw0NS4yODFjLTUuNDA2LDkuMjU2LTguNTIxLDIwLjAwNy04LjUyMSwzMS40NzgsMCwzNC41MzEsMjguMDk0LDYyLjYyNSw2Mi42MjUsNjIuNjI1czYyLjYyNS0yOC4wOTQsNjIuNjI1LTYyLjYyNS0yOC4wOTQtNjIuNjI1LTYyLjYyNS02Mi42MjVoLjAwMVpNMzk1Ljg3NSw0MjYuNWMtMTYuODg3LDAtMzAuNjI1LTEzLjczOC0zMC42MjUtMzAuNjI1czEzLjczOC0zMC42MjUsMzAuNjI1LTMwLjYyNSwzMC42MjUsMTMuNzM4LDMwLjYyNSwzMC42MjUtMTMuNzM4LDMwLjYyNS0zMC42MjUsMzAuNjI1WiIgZmlsbD0iIzQyODVmNCIvPgogICAgPHBhdGggZD0iTTM5NS44NzUsNTMuNWMtMzQuNTMxLDAtNjIuNjI1LDI4LjA5NC02Mi42MjUsNjIuNjI1LDAsMTEuNjQ1LDMuMjA1LDIyLjU1MSw4Ljc2NCwzMS45MDJsLTQ1LjExOCw0NS4xMThjOS4wMyw1Ljg4NywxNi43MDcsMTMuNjYzLDIyLjQ4MSwyMi43NzNsNDUuNDQ0LTQ1LjQ0NGM5LjE2LDUuMjU1LDE5Ljc1OCw4LjI3NiwzMS4wNTQsOC4yNzYsMzQuNTMxLDAsNjIuNjI1LTI4LjA5NCw2Mi42MjUtNjIuNjI1cy0yOC4wOTQtNjIuNjI1LTYyLjYyNS02Mi42MjVaTTM5NS44NzUsMTQ2Ljc1Yy0xNi44ODcsMC0zMC42MjUtMTMuNzM4LTMwLjYyNS0zMC42MjVzMTMuNzM4LTMwLjYyNSwzMC42MjUtMzAuNjI1LDMwLjYyNSwxMy43MzgsMzAuNjI1LDMwLjYyNS0xMy43MzgsMzAuNjI1LTMwLjYyNSwzMC42MjVaIiBmaWxsPSIjOWFhMGE2Ii8+CiAgPC9nPgo8L3N2Zz4="/>
+                        <circle cx="514.63" cy="986.7" r="8.35" fill="#FFFFFF" stroke="#1A73E8" stroke-width="1.3"/>
+                        <text x="445.95" y="990.23" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#5F6368">Gateway</text>
+                        <text x="445.95" y="1008.27" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">API Gateway</text>
+                        <text x="511.48" y="990.34" xml:space="preserve" font-family="Inter" font-size="10" font-weight="700" fill="#202124">2</text>
+                      </g>
+                    </g>
+                    <g data-id="/body/1/children/0/children/0/children/0/children/1/children/0/children/0/children/1" data-tag="Row">
+                      <g data-id="/body/1/children/0/children/0/children/0/children/1/children/0/children/0/children/1/children/0" data-tag="Pcard">
+                        <rect x="761.26" y="970.83" width="152.89" height="47.15" rx="7.38" fill="#FFFFFF" stroke="#1A73E8" stroke-width="1.25"/>
+                        <image x="772.14" y="980.4" width="28" height="28" href="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyBpZD0ic3RhbmRhcmRfcHJvZHVjdF9pY29uIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZlcnNpb249IjEuMSIgdmlld0JveD0iMCAwIDUxMiA1MTIiPgogIDwhLS0gR2VuZXJhdG9yOiBBZG9iZSBJbGx1c3RyYXRvciAyOS4xLjAsIFNWRyBFeHBvcnQgUGx1Zy1JbiAuIFNWRyBWZXJzaW9uOiAyLjEuMCBCdWlsZCAxNDIpICAtLT4KICA8ZGVmcz4KICAgIDxzdHlsZT4KICAgICAgLnN0MCB7CiAgICAgICAgZmlsbDogbm9uZTsKICAgICAgfQoKICAgICAgLnN0MSB7CiAgICAgICAgZmlsbDogIzQyODVmNDsKICAgICAgfQoKICAgICAgLnN0MiB7CiAgICAgICAgZmlsbDogIzM0YTg1MzsKICAgICAgfQoKICAgICAgLnN0MyB7CiAgICAgICAgZmlsbDogI2ZiYmMwNDsKICAgICAgfQoKICAgICAgLnN0NCB7CiAgICAgICAgZmlsbDogI2VhNDMzNTsKICAgICAgfQogICAgPC9zdHlsZT4KICA8L2RlZnM+CiAgPGcgaWQ9ImJvdW5kaW5nX2JveCI+CiAgICA8cmVjdCBjbGFzcz0ic3QwIiB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIvPgogIDwvZz4KICA8ZyBpZD0iYXJ0Ij4KICAgIDxwYXRoIGNsYXNzPSJzdDMiIGQ9Ik0xNDQuNCwyNzJjLTYuNCwwLTEyLjQtMy44LTE0LjktMTAuMUw1NS40LDc1LjljLTMuMy04LjIuNy0xNy41LDguOS0yMC44LDguMi0zLjMsMTcuNS43LDIwLjgsOC45bDc0LjIsMTg2YzMuMyw4LjItLjcsMTcuNS04LjksMjAuOC0xLjkuOC0zLjksMS4xLTUuOSwxLjFoLS4xWiIvPgogICAgPGcgaWQ9ImIiPgogICAgICA8cGF0aCBjbGFzcz0ic3Q0IiBkPSJNMjU2LDI3MmMtNi40LDAtMTIuNC0zLjgtMTQuOS0xMC4xbC03NC4xLTE4NmMtMi42LTYuNi0uNi0xNC4xLDUtMTguNXMxMy40LTQuNSwxOS4yLS40bDI2MC4xLDE4NmM3LjIsNS4xLDguOSwxNS4xLDMuNywyMi4zcy0xNS4xLDguOS0yMi4zLDMuN0wyMTYuOSwxMTQuN2w1NCwxMzUuM2MzLjMsOC4yLS43LDE3LjUtOC45LDIwLjgtMS45LjgtNCwxLjEtNS45LDEuMWgtLjFaIi8+CiAgICA8L2c+CiAgICA8cGF0aCBjbGFzcz0ic3QyIiBkPSJNMTI3LjIsMjU2bC03MiwxODBjLTMuMyw4LjIuNywxNy41LDguOSwyMC44LDMuMSwxLjIsNCwxLjEsNS45LDEuMSw2LjMsMCwxMi40LTMuOCwxNC45LTEwLjFsNzQuNC0xODZjLjgtMiwxLjEtNCwxLjEtNS45aC0zMy4yWiIvPgogICAgPHBhdGggY2xhc3M9InN0MSIgZD0iTTQxNC41LDI1NmwtMTk3LjcsMTQxLjIsNTQuMS0xMzUuM2MuOC0yLDEuMS00LDEuMS01LjloLTMzLjJsLTcyLDE4MGMtMi42LDYuNi0uNiwxNC4xLDUsMTguNSwyLjksMi4zLDYuNCwzLjQsOS45LDMuNHM2LjUtMSw5LjMtM2wyNjAuNC0xODZjNC40LTMuMSw2LjctOCw2LjctMTNoLTQzLjZaIi8+CiAgPC9nPgo8L3N2Zz4="/>
+                        <circle cx="894.28" cy="986.7" r="8.35" fill="#FFFFFF" stroke="#1A73E8" stroke-width="1.3"/>
+                        <text x="810.14" y="990.23" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#5F6368">Trigger API</text>
+                        <text x="810.14" y="1008.27" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">Cloud Run</text>
+                        <text x="891.05" y="990.34" xml:space="preserve" font-family="Inter" font-size="10" font-weight="700" fill="#202124">3</text>
+                      </g>
+                    </g>
+                  </g>
+                  <g data-id="/body/1/children/0/children/0/children/0/children/1/children/0/children/1" data-tag="Row">
+                    <g data-id="/body/1/children/0/children/0/children/0/children/1/children/0/children/1/children/0" data-tag="Row">
+                      <g data-id="/body/1/children/0/children/0/children/0/children/1/children/0/children/1/children/0/children/0" data-tag="Pcard">
+                        <rect x="370.13" y="1075.22" width="191.32" height="47.15" rx="7.38" fill="#FFFFFF" stroke="#1A73E8" stroke-width="1.25"/>
+                        <image x="381.01" y="1084.8" width="28" height="28" href="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyBpZD0ic3RhbmRhcmRfcHJvZHVjdF9pY29uIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZlcnNpb249IjEuMSIgdmlld0JveD0iMCAwIDUxMiA1MTIiPgogIDwhLS0gR2VuZXJhdG9yOiBBZG9iZSBJbGx1c3RyYXRvciAyOS4xLjAsIFNWRyBFeHBvcnQgUGx1Zy1JbiAuIFNWRyBWZXJzaW9uOiAyLjEuMCBCdWlsZCAxNDIpICAtLT4KICA8ZyBpZD0iYm91bmRpbmdfYm94Ij4KICAgIDxyZWN0IHdpZHRoPSI1MTIiIGhlaWdodD0iNTEyIiBmaWxsPSJub25lIi8+CiAgPC9nPgogIDxnIGlkPSJhcnQiPgogICAgPHBhdGggZD0iTTM0Ni42ODMsMTEyLjYxMWwtLjAzOS03NS4xNzFjLS4wMDUtOC44MzQtNy4xNjctMTUuOTkyLTE2LTE1Ljk5MmgtLjAwOGMtOC44MzcuMDA0LTE1Ljk5Nyw3LjE3Mi0xNS45OTIsMTYuMDA4bC4wMzksNzUuMTU1SDExOGMtMTcuNjczLDAtMzIsMTQuMzI3LTMyLDMydjExMS44NjVjMCw4OS4wODUsNzYuMjYyLDE2MS41NjIsMTcwLDE2MS41NjJzMTcwLTcyLjQ3NywxNzAtMTYxLjU2MnYtMTExLjg2NWMwLTE3LjY3My0xNC4zMjctMzItMzItMzJoLTQ3LjMxN1pNMzk0LDI1Ni40NzdjMCw3MS40NC02MS45MDYsMTI5LjU2Mi0xMzgsMTI5LjU2MnMtMTM4LTU4LjEyMS0xMzgtMTI5LjU2MnYtMTExLjg2NWgyNzZ2MTExLjg2NVoiIGZpbGw9IiM0Mjg1ZjQiLz4KICAgIDxwYXRoIGQ9Ik0zMTQuNjQ0LDE0NC42MTF2LTMyaC0xMTcuMjk0bC0uMDM5LTc1LjE3MWMtLjAwNS04LjgzNC03LjE2Ny0xNS45OTItMTYtMTUuOTkyaC0uMDA4Yy04LjgzNy4wMDQtMTUuOTk3LDcuMTcyLTE1Ljk5MiwxNi4wMDhsLjAzOSw3NS4xNTVoLTQ3LjM1Yy0xNy42NzMsMC0zMiwxNC4zMjctMzIsMzJ2MTExLjg2NWMwLDgzLjk1OSw2Ny43NDEsMTUzLjE1NSwxNTQuMDA3LDE2MC44NDF2NTYuNjc5YzAsOC42MTYsNi42MjEsMTYuMDI5LDE1LjIyOCwxNi40MzMsOS4xODguNDMyLDE2Ljc3Mi02Ljg4OSwxNi43NzItMTUuOTgydi04OS4yNzdjLTYuNTk0LjYyNy04LjAxNC42NTItMTYsLjg2N2gtLjAwN2MtNzYuMDk0LDAtMTM4LTU4LjEyMS0xMzgtMTI5LjU2MnYtMTExLjg2NWgxOTYuNjQ0LDBaIiBmaWxsPSIjOWFhMGE2Ii8+CiAgPC9nPgo8L3N2Zz4="/>
+                        <circle cx="541.58" cy="1091.1" r="8.35" fill="#FFFFFF" stroke="#1A73E8" stroke-width="1.3"/>
+                        <text x="419.01" y="1094.63" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#5F6368">Evaluation queue</text>
+                        <text x="419.01" y="1112.67" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">Pub/Sub</text>
+                        <text x="538.2" y="1094.74" xml:space="preserve" font-family="Inter" font-size="10" font-weight="700" fill="#202124">4</text>
+                      </g>
+                    </g>
+                    <g data-id="/body/1/children/0/children/0/children/0/children/1/children/0/children/1/children/1" data-tag="Row">
+                      <g data-id="/body/1/children/0/children/0/children/0/children/1/children/0/children/1/children/1/children/0" data-tag="Pcard">
+                        <rect x="760.55" y="1075.22" width="154.32" height="47.15" rx="7.38" fill="#FFFFFF" stroke="#497938" stroke-width="1.25"/>
+                        <image x="771.43" y="1084.8" width="28" height="28" href="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyBpZD0ic3RhbmRhcmRfcHJvZHVjdF9pY29uIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZlcnNpb249IjEuMSIgdmlld0JveD0iMCAwIDUxMiA1MTIiPgogIDwhLS0gR2VuZXJhdG9yOiBBZG9iZSBJbGx1c3RyYXRvciAyOS4xLjAsIFNWRyBFeHBvcnQgUGx1Zy1JbiAuIFNWRyBWZXJzaW9uOiAyLjEuMCBCdWlsZCAxNDIpICAtLT4KICA8ZGVmcz4KICAgIDxzdHlsZT4KICAgICAgLnN0MCB7CiAgICAgICAgZmlsbDogbm9uZTsKICAgICAgfQoKICAgICAgLnN0MSB7CiAgICAgICAgZmlsbDogIzQyODVmNDsKICAgICAgfQoKICAgICAgLnN0MiB7CiAgICAgICAgZmlsbDogIzM0YTg1MzsKICAgICAgfQoKICAgICAgLnN0MyB7CiAgICAgICAgZmlsbDogI2ZiYmMwNDsKICAgICAgfQoKICAgICAgLnN0NCB7CiAgICAgICAgZmlsbDogI2VhNDMzNTsKICAgICAgfQogICAgPC9zdHlsZT4KICA8L2RlZnM+CiAgPGcgaWQ9ImJvdW5kaW5nX2JveCI+CiAgICA8cmVjdCBjbGFzcz0ic3QwIiB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIvPgogIDwvZz4KICA8ZyBpZD0iYXJ0Ij4KICAgIDxwYXRoIGNsYXNzPSJzdDMiIGQ9Ik0xNDQuNCwyNzJjLTYuNCwwLTEyLjQtMy44LTE0LjktMTAuMUw1NS40LDc1LjljLTMuMy04LjIuNy0xNy41LDguOS0yMC44LDguMi0zLjMsMTcuNS43LDIwLjgsOC45bDc0LjIsMTg2YzMuMyw4LjItLjcsMTcuNS04LjksMjAuOC0xLjkuOC0zLjksMS4xLTUuOSwxLjFoLS4xWiIvPgogICAgPGcgaWQ9ImIiPgogICAgICA8cGF0aCBjbGFzcz0ic3Q0IiBkPSJNMjU2LDI3MmMtNi40LDAtMTIuNC0zLjgtMTQuOS0xMC4xbC03NC4xLTE4NmMtMi42LTYuNi0uNi0xNC4xLDUtMTguNXMxMy40LTQuNSwxOS4yLS40bDI2MC4xLDE4NmM3LjIsNS4xLDguOSwxNS4xLDMuNywyMi4zcy0xNS4xLDguOS0yMi4zLDMuN0wyMTYuOSwxMTQuN2w1NCwxMzUuM2MzLjMsOC4yLS43LDE3LjUtOC45LDIwLjgtMS45LjgtNCwxLjEtNS45LDEuMWgtLjFaIi8+CiAgICA8L2c+CiAgICA8cGF0aCBjbGFzcz0ic3QyIiBkPSJNMTI3LjIsMjU2bC03MiwxODBjLTMuMyw4LjIuNywxNy41LDguOSwyMC44LDMuMSwxLjIsNCwxLjEsNS45LDEuMSw2LjMsMCwxMi40LTMuOCwxNC45LTEwLjFsNzQuNC0xODZjLjgtMiwxLjEtNCwxLjEtNS45aC0zMy4yWiIvPgogICAgPHBhdGggY2xhc3M9InN0MSIgZD0iTTQxNC41LDI1NmwtMTk3LjcsMTQxLjIsNTQuMS0xMzUuM2MuOC0yLDEuMS00LDEuMS01LjloLTMzLjJsLTcyLDE4MGMtMi42LDYuNi0uNiwxNC4xLDUsMTguNSwyLjksMi4zLDYuNCwzLjQsOS45LDMuNHM2LjUtMSw5LjMtM2wyNjAuNC0xODZjNC40LTMuMSw2LjctOCw2LjctMTNoLTQzLjZaIi8+CiAgPC9nPgo8L3N2Zz4="/>
+                        <circle cx="894.99" cy="1091.1" r="8.35" fill="#FFFFFF" stroke="#497938" stroke-width="1.3"/>
+                        <text x="809.43" y="1094.63" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#26481B">Clip worker</text>
+                        <text x="809.43" y="1112.67" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">Cloud Run job</text>
+                        <text x="891.74" y="1094.74" xml:space="preserve" font-family="Inter" font-size="10" font-weight="700" fill="#202124">6</text>
+                      </g>
+                    </g>
+                  </g>
+                  <g data-id="/body/1/children/0/children/0/children/0/children/1/children/0/children/2" data-tag="Row">
+                    <g data-id="/body/1/children/0/children/0/children/0/children/1/children/0/children/2/children/0" data-tag="Row">
+                      <g data-id="/body/1/children/0/children/0/children/0/children/1/children/0/children/2/children/0/children/0" data-tag="Row">
+                        <g data-id="/body/1/children/0/children/0/children/0/children/1/children/0/children/2/children/0/children/0/children/0" data-tag="Pcard">
+                          <rect x="284.58" y="1179.75" width="153.13" height="46.9" rx="7.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
+                          <image x="295.33" y="1189.2" width="28" height="28" href="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyBpZD0ic3RhbmRhcmRfcHJvZHVjdF9pY29uIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZlcnNpb249IjEuMSIgdmlld0JveD0iMCAwIDUxMiA1MTIiPgogIDwhLS0gR2VuZXJhdG9yOiBBZG9iZSBJbGx1c3RyYXRvciAyOS4xLjAsIFNWRyBFeHBvcnQgUGx1Zy1JbiAuIFNWRyBWZXJzaW9uOiAyLjEuMCBCdWlsZCAxNDIpICAtLT4KICA8ZGVmcz4KICAgIDxzdHlsZT4KICAgICAgLnN0MCB7CiAgICAgICAgZmlsbDogbm9uZTsKICAgICAgfQoKICAgICAgLnN0MSB7CiAgICAgICAgZmlsbDogIzQyODVmNDsKICAgICAgfQoKICAgICAgLnN0MiB7CiAgICAgICAgZmlsbDogIzM0YTg1MzsKICAgICAgfQoKICAgICAgLnN0MyB7CiAgICAgICAgZmlsbDogI2ZiYmMwNDsKICAgICAgfQoKICAgICAgLnN0NCB7CiAgICAgICAgZmlsbDogI2VhNDMzNTsKICAgICAgfQogICAgPC9zdHlsZT4KICA8L2RlZnM+CiAgPGcgaWQ9ImJvdW5kaW5nX2JveCI+CiAgICA8cmVjdCBjbGFzcz0ic3QwIiB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIvPgogIDwvZz4KICA8ZyBpZD0iYXJ0Ij4KICAgIDxwYXRoIGNsYXNzPSJzdDIiIGQ9Ik00NDIsMjc3LjlINzBjLTguOCwwLTE2LDcuMi0xNiwxNnYxNDguMWMwLDguOCw3LjIsMTYsMTYsMTZoMTA3LjJjMS41LjUsMy4xLjcsNC44LjdzMy4zLS4zLDQuOC0uN2gyNTUuMmM4LjgsMCwxNi03LjIsMTYtMTZ2LTE0OC4xYzAtOC44LTcuMi0xNi0xNi0xNlpNODYsMzA5LjloODB2MTE2LjFoLTgwdi0xMTYuMVpNNDI2LDQyNS45aC0yMjh2LTExNi4xaDIyOHYxMTYuMVoiLz4KICAgIDxwYXRoIGNsYXNzPSJzdDMiIGQ9Ik00NDIsNTRINzBjLTguOCwwLTE2LDcuMi0xNiwxNnYxNDguOGMwLDguOCw3LjIsMTYsMTYsMTZoMzcyYzguOCwwLDE2LTcuMiwxNi0xNlY3MGMwLTguOC03LjItMTYtMTYtMTZaTTg2LDg2aDgwdjExNi44aC04MHYtMTE2LjhaTTQyNiwyMDIuOGgtMjI4di0xMTYuOGgyMjh2MTE2LjhaIi8+CiAgICA8cGF0aCBjbGFzcz0ic3Q0IiBkPSJNNDQyLDIzNC44aC0xNlY4Nkg1NHYtMTZjMC04LjgsNy4yLTE2LDE2LTE2aDM3MmM4LjgsMCwxNiw3LjIsMTYsMTZ2MTQ4LjhjMCw4LjgtNy4yLDE2LTE2LDE2WiIvPgogICAgPHBhdGggY2xhc3M9InN0MSIgZD0iTTQ0Miw0NTcuOWgtMTZ2LTE0OC4xSDU0di0xNmMwLTguOCw3LjItMTYsMTYtMTZoMzcyYzguOCwwLDE2LDcuMiwxNiwxNnYxNDguMWMwLDguOC03LjIsMTYtMTYsMTZaIi8+CiAgICA8Y2lyY2xlIGNsYXNzPSJzdDQiIGN4PSIzNDkiIGN5PSIxNDQuNCIgcj0iMzciLz4KICAgIDxjaXJjbGUgY2xhc3M9InN0MSIgY3g9IjM0OSIgY3k9IjM2Ny45IiByPSIzNyIvPgogIDwvZz4KPC9zdmc+"/>
+                          <circle cx="417.96" cy="1195.5" r="8.35" fill="#FFFFFF" stroke="#202124" stroke-width="1.3"/>
+                          <text x="333.33" y="1199.03" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#202124">Clip bucket</text>
+                          <text x="333.33" y="1217.07" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">Cloud Storage</text>
+                          <text x="414.85" y="1199.14" xml:space="preserve" font-family="Inter" font-size="10" font-weight="700" fill="#202124">5</text>
+                        </g>
+                      </g>
+                      <g data-id="/body/1/children/0/children/0/children/0/children/1/children/0/children/2/children/0/children/1" data-tag="Pcard">
+                        <rect x="471.21" y="1179.75" width="162.95" height="46.9" rx="7.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
+                        <image x="481.96" y="1189.2" width="28" height="28" href="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyBpZD0ic3RhbmRhcmRfcHJvZHVjdF9pY29uIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZlcnNpb249IjEuMSIgdmlld0JveD0iMCAwIDUxMiA1MTIiPgogIDwhLS0gR2VuZXJhdG9yOiBBZG9iZSBJbGx1c3RyYXRvciAyOS4xLjAsIFNWRyBFeHBvcnQgUGx1Zy1JbiAuIFNWRyBWZXJzaW9uOiAyLjEuMCBCdWlsZCAxNDIpICAtLT4KICA8ZGVmcz4KICAgIDxzdHlsZT4KICAgICAgLnN0MCB7CiAgICAgICAgZmlsbDogbm9uZTsKICAgICAgfQoKICAgICAgLnN0MSB7CiAgICAgICAgZmlsbDogIzQyODVmNDsKICAgICAgfQoKICAgICAgLnN0MiB7CiAgICAgICAgZmlsbDogIzM0YTg1MzsKICAgICAgfQoKICAgICAgLnN0MyB7CiAgICAgICAgZmlsbDogI2ZiYmMwNDsKICAgICAgfQoKICAgICAgLnN0NCB7CiAgICAgICAgZmlsbDogI2VhNDMzNTsKICAgICAgfQogICAgPC9zdHlsZT4KICA8L2RlZnM+CiAgPGcgaWQ9ImJvdW5kaW5nX2JveCI+CiAgICA8cmVjdCBjbGFzcz0ic3QwIiB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIvPgogIDwvZz4KICA8ZyBpZD0iYXJ0Ij4KICAgIDxwYXRoIGNsYXNzPSJzdDMiIGQ9Ik00NDcuNSwxMjMuN2wtMTg2LTY4LjdjLTMuNi0xLjMtNy41LTEuMy0xMS4xLDBsLTQwLjcsMTUtMTQ1LjIsNTMuNWMtNi4zLDIuMy0xMC41LDguMy0xMC41LDE1czQuMiwxMi43LDEwLjUsMTVsMTQ1LjEsNTMuNHMwLDAsMCwwbDQwLjgsMTVjMS44LjYsMy43LDEsNS41LDFzMy43LS4zLDUuNS0xbDE4NS45LTY4LjJjNi4zLTIuMywxMC41LTguMywxMC41LTE1LDAtNi43LTQuMi0xMi43LTEwLjUtMTVoMFpNMjU2LDE4OS45bC0xMzkuNi01MS40LDEzOS42LTUxLjQsMTM5LjcsNTEuNi0xMzkuNiw1MS4yWiIvPgogICAgPHBhdGggY2xhc3M9InN0MiIgZD0iTTQ0Ny41LDM4OC44bC0xODUuOSw2OC4yYy0xLjguNi0zLjYsMS01LjUsMXMtMy43LS4zLTUuNS0xbC00MC44LTE1aDBsLTE0NS4xLTUzLjRjLTguMy0zLTEyLjUtMTIuMi05LjUtMjAuNSwzLTguMywxMi4yLTEyLjUsMjAuNS05LjVsMTgwLjQsNjYuNCwxODAuNC02Ni4yYzguMy0zLDE3LjUsMS4yLDIwLjUsOS41LDMsOC4zLTEuMiwxNy41LTkuNSwyMC41aDBaIi8+CiAgICA8cGF0aCBjbGFzcz0ic3QyIiBkPSJNNDQ3LjUsMzEwLjRsLTE4NS45LDY4LjJjLTEuOC42LTMuNiwxLTUuNSwxcy0zLjctLjMtNS41LTFsLTQwLjgtMTVoMGwtMTQ1LjEtNTMuNGMtOC4zLTMtMTIuNS0xMi4yLTkuNS0yMC41LDMtOC4zLDEyLjItMTIuNSwyMC41LTkuNWwxODAuNCw2Ni40LDE4MC40LTY2LjJjOC4zLTMsMTcuNSwxLjIsMjAuNSw5LjUsMyw4LjMtMS4yLDE3LjUtOS41LDIwLjVoMFoiLz4KICAgIDxwYXRoIGNsYXNzPSJzdDIiIGQ9Ik00NDcuNSwyMzIuMWwtMTg1LjksNjguMmMtMS44LjctMy42LDEtNS41LDFzLTMuNy0uMy01LjUtMWwtNDAuOC0xNWgwbC0xNDUuMS01My40Yy04LjMtMy4xLTEyLjUtMTIuMi05LjUtMjAuNSwzLTguMywxMi4yLTEyLjUsMjAuNS05LjVsMTgwLjQsNjYuNCwxODAuNC02Ni4yYzguMy0zLDE3LjUsMS4yLDIwLjUsOS41LDMsOC4zLTEuMiwxNy41LTkuNSwyMC41aDBaIi8+CiAgICA8cGF0aCBjbGFzcz0ic3Q0IiBkPSJNNDU4LDEzOC43YzAsNi43LTQuMiwxMi43LTEwLjUsMTVsLTE4Niw2OC4yYy0xLjguNy0zLjYsMS01LjUsMXMtMy43LS4zLTUuNS0xbC00MC44LTE1aDBzNDYuNC0xNyw0Ni40LTE3bDEzOS42LTUxLjItMTM5LjctNTEuNi00Ni4yLTE3LjEsNDAuNy0xNWMzLjYtMS4zLDcuNS0xLjMsMTEuMSwwbDE4Niw2OC43YzYuMywyLjMsMTAuNSw4LjMsMTAuNSwxNWgwWiIvPgogICAgPHBhdGggY2xhc3M9InN0MSIgZD0iTTQ0Ny41LDM4OC44bC0xODUuOSw2OC4yYy0xLjguNi0zLjYsMS01LjUsMXMtMy43LS4zLTUuNS0xbC00MC44LTE1LDQ2LjQtMTcsMTgwLjQtNjYuMmM4LjMtMywxNy41LDEuMiwyMC41LDkuNSwzLDguMy0xLjIsMTcuNS05LjUsMjAuNWgwWiIvPgogICAgPHBhdGggY2xhc3M9InN0MSIgZD0iTTQ0Ny41LDMxMC40bC0xODUuOSw2OC4yYy0xLjguNi0zLjYsMS01LjUsMXMtMy43LS4zLTUuNS0xbC00MC44LTE1aDBsNDYuNC0xNywxODAuNC02Ni4yYzguMy0zLDE3LjUsMS4yLDIwLjUsOS41LDMsOC4zLTEuMiwxNy41LTkuNSwyMC41WiIvPgogICAgPHBhdGggY2xhc3M9InN0MSIgZD0iTTQ0Ny41LDIzMi4xbC0xODUuOSw2OC4yYy0xLjguNy0zLjYsMS01LjUsMXMtMy43LS4zLTUuNS0xbC00MC44LTE1aDBsNDYuNC0xNywxODAuNC02Ni4yYzguMy0zLDE3LjUsMS4yLDIwLjUsOS41LDMsOC4zLTEuMiwxNy41LTkuNSwyMC41aDBaIi8+CiAgICA8cGF0aCBjbGFzcz0ic3QzIiBkPSJNMzAyLjQsMjA2LjlsLTE4Ni02OC41LTUxLjgtMTVjLTYuMywyLjMtMTAuNSw4LjMtMTAuNSwxNXM0LjIsMTIuNywxMC41LDE1bDE0NS4xLDUzLjRzMCwwLDAsMGw0MC44LDE1YzEuOC42LDMuNywxLDUuNSwxczMuNy0uMyw1LjUtMWw0MC45LTE1aDBaIi8+CiAgPC9nPgo8L3N2Zz4="/>
+                        <circle cx="614.41" cy="1195.5" r="8.35" fill="#FFFFFF" stroke="#202124" stroke-width="1.3"/>
+                        <text x="519.96" y="1199.03" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#202124">Verdict store</text>
+                        <text x="519.96" y="1217.07" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">Cloud SQL</text>
+                        <text x="611.15" y="1199.14" xml:space="preserve" font-family="Inter" font-size="10" font-weight="700" fill="#202124">8</text>
+                      </g>
+                    </g>
+                    <g data-id="/body/1/children/0/children/0/children/0/children/1/children/0/children/2/children/1" data-tag="Row">
+                      <g data-id="/body/1/children/0/children/0/children/0/children/1/children/0/children/2/children/1/children/0" data-tag="Row">
+                        <g data-id="/body/1/children/0/children/0/children/0/children/1/children/0/children/2/children/1/children/0/children/0" data-tag="Pcard">
+                          <rect x="849.57" y="1179.63" width="169.47" height="47.15" rx="7.38" fill="#FFFFFF" stroke="#593894" stroke-width="1.25"/>
+                          <image x="860.44" y="1189.2" width="28" height="28" href="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyBpZD0ic3RhbmRhcmRfcHJvZHVjdF9pY29uIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZlcnNpb249IjEuMSIgdmlld0JveD0iMCAwIDUxMiA1MTIiPgogIDwhLS0gR2VuZXJhdG9yOiBBZG9iZSBJbGx1c3RyYXRvciAyOS4xLjAsIFNWRyBFeHBvcnQgUGx1Zy1JbiAuIFNWRyBWZXJzaW9uOiAyLjEuMCBCdWlsZCAxNDIpICAtLT4KICA8ZyBpZD0iYm91bmRpbmdfYm94Ij4KICAgIDxyZWN0IHdpZHRoPSI1MTIiIGhlaWdodD0iNTEyIiBmaWxsPSJub25lIi8+CiAgPC9nPgogIDxnIGlkPSJhcnQiPgogICAgPHBhdGggZD0iTTEyOCwyNDQuOTljLTguODQsMC0xNi03LjE2LTE2LTE2di05NS45N2MwLTguODQsNy4xNi0xNiwxNi0xNnMxNiw3LjE2LDE2LDE2djk1Ljk3YzAsOC44NC03LjE2LDE2LTE2LDE2WiIgZmlsbD0iI2VhNDMzNSIvPgogICAgPHBhdGggZD0iTTI1Niw0NThjLTIuOTgsMC01Ljk3LS44My04LjU5LTIuNWwtMTg2LTEyMmMtNy40Ni00Ljc0LTkuNjUtMTQuNjMtNC45MS0yMi4wOSw0Ljc1LTcuNDYsMTQuNjQtOS42NSwyMi4wOS00LjkxbDE3Ny40MSwxMTYuNTMsMTc3LjQxLTExNi41M2M3LjQ1LTQuNzQsMTcuMzQtMi41NSwyMi4wOSw0LjkxLDQuNzQsNy40NiwyLjU1LDE3LjM0LTQuOTEsMjIuMDlsLTE4NiwxMjJjLTIuNjIsMS42Ny01LjYxLDIuNS04LjU5LDIuNVoiIGZpbGw9IiNmYmJjMDQiLz4KICAgIDxwYXRoIGQ9Ik0yNTYsMzg4LjAzYy04Ljg0LDAtMTYtNy4xNi0xNi0xNnYtNzMuMDZjMC04Ljg0LDcuMTYtMTYsMTYtMTZzMTYsNy4xNiwxNiwxNnY3My4wNmMwLDguODQtNy4xNiwxNi0xNiwxNloiIGZpbGw9IiMzNGE4NTMiLz4KICAgIDxjaXJjbGUgY3g9IjEyOCIgY3k9IjcwIiByPSIxNiIgZmlsbD0iI2VhNDMzNSIvPgogICAgPGNpcmNsZSBjeD0iMTI4IiBjeT0iMjkyIiByPSIxNiIgZmlsbD0iI2VhNDMzNSIvPgogICAgPHBhdGggZD0iTTM4NC4yMywzMDguMDFjLTguODIsMC0xNS45OC03LjE0LTE2LTE1Ljk3bC0uMjMtOTQuMDFjLS4wMi04Ljg0LDcuMTMtMTYuMDIsMTUuOTctMTYuMDNoLjA0YzguODIsMCwxNS45OCw3LjE0LDE2LDE1Ljk3bC4yMyw5NC4wMWMuMDIsOC44NC03LjEzLDE2LjAyLTE1Ljk3LDE2LjAzaC0uMDRaIiBmaWxsPSIjNDI4NWY0Ii8+CiAgICA8Y2lyY2xlIGN4PSIzODQiIGN5PSI3MCIgcj0iMTYiIGZpbGw9IiM0Mjg1ZjQiLz4KICAgIDxjaXJjbGUgY3g9IjM4NCIgY3k9IjEzNCIgcj0iMTYiIGZpbGw9IiM0Mjg1ZjQiLz4KICAgIDxwYXRoIGQ9Ik0zMjAsMjIwLjM2Yy04Ljg0LDAtMTYtNy4xNi0xNi0xNnYtMTAzLjAyYzAtOC44NCw3LjE2LTE2LDE2LTE2czE2LDcuMTYsMTYsMTZ2MTAzLjAyYzAsOC44NC03LjE2LDE2LTE2LDE2WiIgZmlsbD0iI2ZiYmMwNCIvPgogICAgPGNpcmNsZSBjeD0iMjU2IiBjeT0iMTcxIiByPSIxNiIgZmlsbD0iIzM0YTg1MyIvPgogICAgPGNpcmNsZSBjeD0iMjU2IiBjeT0iMjM1IiByPSIxNiIgZmlsbD0iIzM0YTg1MyIvPgogICAgPGNpcmNsZSBjeD0iMzIwIiBjeT0iMjY1IiByPSIxNiIgZmlsbD0iI2ZiYmMwNCIvPgogICAgPGNpcmNsZSBjeD0iMzIwIiBjeT0iMzI5IiByPSIxNiIgZmlsbD0iI2ZiYmMwNCIvPgogICAgPHBhdGggZD0iTTE5MiwyMTcuMzZjLTguODQsMC0xNi03LjE2LTE2LTE2di0xMDAuMDJjMC04Ljg0LDcuMTYtMTYsMTYtMTZzMTYsNy4xNiwxNiwxNnYxMDAuMDJjMCw4Ljg0LTcuMTYsMTYtMTYsMTZaIiBmaWxsPSIjZmJiYzA0Ii8+CiAgICA8Y2lyY2xlIGN4PSIxOTIiIGN5PSIyNjUiIHI9IjE2IiBmaWxsPSIjZmJiYzA0Ii8+CiAgICA8Y2lyY2xlIGN4PSIxOTIiIGN5PSIzMjkiIHI9IjE2IiBmaWxsPSIjZmJiYzA0Ii8+CiAgPC9nPgo8L3N2Zz4="/>
+                          <circle cx="999.17" cy="1195.5" r="8.35" fill="#FFFFFF" stroke="#593894" stroke-width="1.3"/>
+                          <text x="898.44" y="1199.03" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#4B3275">Clip evaluator</text>
+                          <text x="898.44" y="1217.07" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">Vertex AI endpoint</text>
+                          <text x="996.26" y="1199.14" xml:space="preserve" font-family="Inter" font-size="10" font-weight="700" fill="#202124">7</text>
+                        </g>
+                      </g>
+                    </g>
+                  </g>
+                </g>
+              </g>
+            </g>
+            <g data-id="/body/1/children/0/children/0/children/1" data-tag="Frame">
+              <line x1="52.06" y1="1266.46" x2="1034.61" y2="1730.34" stroke="#5F6368" stroke-width="1"/>
+              <line x1="52.06" y1="1730.34" x2="1034.61" y2="1266.46" stroke="#5F6368" stroke-width="1"/>
+              <rect x="50.63" y="1265.03" width="985.42" height="466.75" rx="3.38" fill="none" stroke="#9AA0A6" stroke-width="1.25" stroke-dasharray="6 5"/>
+              <rect x="310.8" y="1487.2" width="465.07" height="22.4" rx="4" fill="#FFFFFF"/>
+              <text x="318.8" y="1502.77" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#5F6368">Verdict review in the console: clip, evidence frames, verdict and plan version</text>
             </g>
           </g>
-          <g data-id="/body/1/children/0/children/1" data-tag="PartsList">
-            <rect x="1055.42" y="1241.55" width="493.83" height="456.3" fill="#FFFFFF" stroke="#202124" stroke-width="1.5"/>
-            <line x1="1056.17" y1="1274.4" x2="1548.5" y2="1274.4" stroke="#202124" stroke-width="1"/>
-            <line x1="1056.17" y1="1296.6" x2="1548.5" y2="1296.6" stroke="#DADCE0" stroke-width="1"/>
-            <circle cx="1073.17" cy="1312.1" r="8.35" fill="#FFFFFF" stroke="#A36E14" stroke-width="1.3"/>
-            <line x1="1240.67" y1="1303.1" x2="1240.67" y2="1335.5" stroke="#DADCE0" stroke-width="1"/>
-            <line x1="1056.17" y1="1342" x2="1548.5" y2="1342" stroke="#DADCE0" stroke-width="1"/>
-            <circle cx="1073.17" cy="1357.5" r="8.35" fill="#FFFFFF" stroke="#1A73E8" stroke-width="1.3"/>
-            <line x1="1240.67" y1="1348.5" x2="1240.67" y2="1380.9" stroke="#DADCE0" stroke-width="1"/>
-            <line x1="1056.17" y1="1387.4" x2="1548.5" y2="1387.4" stroke="#DADCE0" stroke-width="1"/>
-            <circle cx="1073.17" cy="1402.9" r="8.35" fill="#FFFFFF" stroke="#1A73E8" stroke-width="1.3"/>
-            <line x1="1240.67" y1="1393.9" x2="1240.67" y2="1438.9" stroke="#DADCE0" stroke-width="1"/>
-            <line x1="1056.17" y1="1445.4" x2="1548.5" y2="1445.4" stroke="#DADCE0" stroke-width="1"/>
-            <circle cx="1073.17" cy="1460.9" r="8.35" fill="#FFFFFF" stroke="#1A73E8" stroke-width="1.3"/>
-            <line x1="1240.67" y1="1451.9" x2="1240.67" y2="1496.9" stroke="#DADCE0" stroke-width="1"/>
-            <line x1="1056.17" y1="1503.4" x2="1548.5" y2="1503.4" stroke="#DADCE0" stroke-width="1"/>
-            <circle cx="1073.17" cy="1518.9" r="8.35" fill="#FFFFFF" stroke="#202124" stroke-width="1.3"/>
-            <line x1="1240.67" y1="1509.9" x2="1240.67" y2="1554.9" stroke="#DADCE0" stroke-width="1"/>
-            <line x1="1056.17" y1="1561.4" x2="1548.5" y2="1561.4" stroke="#DADCE0" stroke-width="1"/>
-            <circle cx="1073.17" cy="1576.9" r="8.35" fill="#FFFFFF" stroke="#497938" stroke-width="1.3"/>
-            <line x1="1240.67" y1="1567.9" x2="1240.67" y2="1600.3" stroke="#DADCE0" stroke-width="1"/>
-            <line x1="1056.17" y1="1606.8" x2="1548.5" y2="1606.8" stroke="#DADCE0" stroke-width="1"/>
-            <circle cx="1073.17" cy="1622.3" r="8.35" fill="#FFFFFF" stroke="#593894" stroke-width="1.3"/>
-            <line x1="1240.67" y1="1613.3" x2="1240.67" y2="1645.7" stroke="#DADCE0" stroke-width="1"/>
-            <line x1="1056.17" y1="1652.2" x2="1548.5" y2="1652.2" stroke="#DADCE0" stroke-width="1"/>
-            <circle cx="1073.17" cy="1667.7" r="8.35" fill="#FFFFFF" stroke="#202124" stroke-width="1.3"/>
-            <line x1="1240.67" y1="1658.7" x2="1240.67" y2="1691.1" stroke="#DADCE0" stroke-width="1"/>
-            <text x="1068.17" y="1262.83" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" letter-spacing="1.56" fill="#202124">PARTS LIST</text>
-            <text x="1232.41" y="1262.47" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">what the service is made of, and why each part exists</text>
-            <text x="1064.17" y="1291.5" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">ITEM</text>
-            <text x="1104.17" y="1291.5" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">PART · WHAT IT IS</text>
-            <text x="1249.17" y="1291.5" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">WHY IT EXISTS</text>
-            <text x="1476.5" y="1291.5" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">ZONES</text>
-            <text x="1071.01" y="1315.74" xml:space="preserve" font-family="Inter" font-size="10" font-weight="700" fill="#202124">1</text>
-            <text x="1104.17" y="1316.17" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#5A3900">Operator console</text>
-            <text x="1104.17" y="1332.18" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">web client</text>
-            <text x="1249.17" y="1314.78" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">Operators write triggers and judge</text>
-            <text x="1249.17" y="1329.78" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">verdicts without an engineer in the loop.</text>
-            <text x="1476.5" y="1314.78" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">A4 B2 E1</text>
-            <text x="1070.02" y="1361.14" xml:space="preserve" font-family="Inter" font-size="10" font-weight="700" fill="#202124">2</text>
-            <text x="1104.17" y="1361.57" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#5F6368">Gateway</text>
-            <text x="1104.17" y="1377.58" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">API Gateway</text>
-            <text x="1249.17" y="1360.18" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">One authenticated entry point; the API</text>
-            <text x="1249.17" y="1375.18" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">never sees an anonymous call.</text>
-            <text x="1476.5" y="1360.18" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">D3</text>
-            <text x="1069.94" y="1406.54" xml:space="preserve" font-family="Inter" font-size="10" font-weight="700" fill="#202124">3</text>
-            <text x="1104.17" y="1406.97" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#5F6368">Trigger API</text>
-            <text x="1104.17" y="1422.98" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">Cloud Run</text>
-            <text x="1249.17" y="1405.58" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">Turns a description into a versioned</text>
-            <text x="1249.17" y="1420.58" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">plan and refuses to queue a plan</text>
-            <text x="1249.17" y="1435.58" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">nobody approved.</text>
-            <text x="1476.5" y="1405.58" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">A4 B3 D5</text>
-            <text x="1069.79" y="1464.54" xml:space="preserve" font-family="Inter" font-size="10" font-weight="700" fill="#202124">4</text>
-            <text x="1104.17" y="1464.97" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#5F6368">Evaluation queue</text>
-            <text x="1104.17" y="1480.98" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">Pub/Sub</text>
-            <text x="1249.17" y="1463.58" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">The API returns once a job is queued,</text>
-            <text x="1249.17" y="1478.58" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">so a slow clip never holds a request</text>
-            <text x="1249.17" y="1493.58" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">open.</text>
-            <text x="1476.5" y="1463.58" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">C6 E3</text>
-            <text x="1070.06" y="1522.54" xml:space="preserve" font-family="Inter" font-size="10" font-weight="700" fill="#202124">5</text>
-            <text x="1104.17" y="1522.97" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">Clip bucket</text>
-            <text x="1104.17" y="1538.98" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">Cloud Storage</text>
-            <text x="1249.17" y="1521.58" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">A clip is evaluated only once it is</text>
-            <text x="1249.17" y="1536.58" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">complete, and the arrival event names</text>
-            <text x="1249.17" y="1551.58" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">it.</text>
-            <text x="1476.5" y="1521.58" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">C5 E3</text>
-            <text x="1069.92" y="1580.54" xml:space="preserve" font-family="Inter" font-size="10" font-weight="700" fill="#202124">6</text>
-            <text x="1104.17" y="1580.97" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#26481B">Clip worker</text>
-            <text x="1104.17" y="1596.98" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">Cloud Run job</text>
-            <text x="1249.17" y="1579.58" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">Clips are independent, so a failed clip</text>
-            <text x="1249.17" y="1594.58" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">retries alone.</text>
-            <text x="1476.5" y="1579.58" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">C6 E5</text>
-            <text x="1070.26" y="1625.94" xml:space="preserve" font-family="Inter" font-size="10" font-weight="700" fill="#202124">7</text>
-            <text x="1104.17" y="1626.37" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#4B3275">Clip evaluator</text>
-            <text x="1104.17" y="1642.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">Vertex AI endpoint</text>
-            <text x="1249.17" y="1624.98" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">Reads frames against the plan, and has</text>
-            <text x="1249.17" y="1639.98" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">no write path to the store.</text>
-            <text x="1476.5" y="1624.98" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">A4 C6 E5</text>
-            <text x="1069.91" y="1671.34" xml:space="preserve" font-family="Inter" font-size="10" font-weight="700" fill="#202124">8</text>
-            <text x="1104.17" y="1671.77" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">Verdict store</text>
-            <text x="1104.17" y="1687.78" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">Cloud SQL</text>
-            <text x="1249.17" y="1670.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">Every verdict keeps its evidence frames</text>
-            <text x="1249.17" y="1685.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">and the plan version that produced it.</text>
-            <text x="1476.5" y="1670.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">A4 B4 C7</text>
-            <text x="1476.5" y="1685.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">E4</text>
+          <g data-id="/body/1/children/0/children/1" data-tag="Col">
+            <g data-id="/body/1/children/0/children/1/children/0" data-tag="PartsList">
+              <rect x="1057.42" y="924.75" width="491.83" height="468.9" fill="#FFFFFF" stroke="#202124" stroke-width="1.5"/>
+              <line x1="1058.17" y1="957.6" x2="1548.5" y2="957.6" stroke="#202124" stroke-width="1"/>
+              <line x1="1058.17" y1="979.8" x2="1548.5" y2="979.8" stroke="#DADCE0" stroke-width="1"/>
+              <circle cx="1075.17" cy="995.3" r="8.35" fill="#FFFFFF" stroke="#A36E14" stroke-width="1.3"/>
+              <line x1="1242.67" y1="986.3" x2="1242.67" y2="1031.3" stroke="#DADCE0" stroke-width="1"/>
+              <line x1="1058.17" y1="1037.8" x2="1548.5" y2="1037.8" stroke="#DADCE0" stroke-width="1"/>
+              <circle cx="1075.17" cy="1053.3" r="8.35" fill="#FFFFFF" stroke="#1A73E8" stroke-width="1.3"/>
+              <line x1="1242.67" y1="1044.3" x2="1242.67" y2="1076.7" stroke="#DADCE0" stroke-width="1"/>
+              <line x1="1058.17" y1="1083.2" x2="1548.5" y2="1083.2" stroke="#DADCE0" stroke-width="1"/>
+              <circle cx="1075.17" cy="1098.7" r="8.35" fill="#FFFFFF" stroke="#1A73E8" stroke-width="1.3"/>
+              <line x1="1242.67" y1="1089.7" x2="1242.67" y2="1134.7" stroke="#DADCE0" stroke-width="1"/>
+              <line x1="1058.17" y1="1141.2" x2="1548.5" y2="1141.2" stroke="#DADCE0" stroke-width="1"/>
+              <circle cx="1075.17" cy="1156.7" r="8.35" fill="#FFFFFF" stroke="#1A73E8" stroke-width="1.3"/>
+              <line x1="1242.67" y1="1147.7" x2="1242.67" y2="1192.7" stroke="#DADCE0" stroke-width="1"/>
+              <line x1="1058.17" y1="1199.2" x2="1548.5" y2="1199.2" stroke="#DADCE0" stroke-width="1"/>
+              <circle cx="1075.17" cy="1214.7" r="8.35" fill="#FFFFFF" stroke="#202124" stroke-width="1.3"/>
+              <line x1="1242.67" y1="1205.7" x2="1242.67" y2="1250.7" stroke="#DADCE0" stroke-width="1"/>
+              <line x1="1058.17" y1="1257.2" x2="1548.5" y2="1257.2" stroke="#DADCE0" stroke-width="1"/>
+              <circle cx="1075.17" cy="1272.7" r="8.35" fill="#FFFFFF" stroke="#497938" stroke-width="1.3"/>
+              <line x1="1242.67" y1="1263.7" x2="1242.67" y2="1296.1" stroke="#DADCE0" stroke-width="1"/>
+              <line x1="1058.17" y1="1302.6" x2="1548.5" y2="1302.6" stroke="#DADCE0" stroke-width="1"/>
+              <circle cx="1075.17" cy="1318.1" r="8.35" fill="#FFFFFF" stroke="#593894" stroke-width="1.3"/>
+              <line x1="1242.67" y1="1309.1" x2="1242.67" y2="1341.5" stroke="#DADCE0" stroke-width="1"/>
+              <line x1="1058.17" y1="1348" x2="1548.5" y2="1348" stroke="#DADCE0" stroke-width="1"/>
+              <circle cx="1075.17" cy="1363.5" r="8.35" fill="#FFFFFF" stroke="#202124" stroke-width="1.3"/>
+              <line x1="1242.67" y1="1354.5" x2="1242.67" y2="1386.9" stroke="#DADCE0" stroke-width="1"/>
+              <text x="1070.17" y="946.03" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" letter-spacing="1.56" fill="#202124">PARTS LIST</text>
+              <text x="1232.41" y="945.67" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">what the service is made of, and why each part exists</text>
+              <text x="1066.17" y="974.7" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">ITEM</text>
+              <text x="1106.17" y="974.7" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">PART · WHAT IT IS</text>
+              <text x="1251.17" y="974.7" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">WHY IT EXISTS</text>
+              <text x="1476.5" y="974.7" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">ZONES</text>
+              <text x="1073.01" y="998.94" xml:space="preserve" font-family="Inter" font-size="10" font-weight="700" fill="#202124">1</text>
+              <text x="1106.17" y="999.37" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#5A3900">Operator console</text>
+              <text x="1106.17" y="1015.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">web client</text>
+              <text x="1251.17" y="997.98" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">Operators write triggers and judge</text>
+              <text x="1251.17" y="1012.98" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">verdicts without an engineer in the</text>
+              <text x="1251.17" y="1027.98" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">loop.</text>
+              <text x="1476.5" y="997.98" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">A4 B2 D1</text>
+              <text x="1072.02" y="1056.94" xml:space="preserve" font-family="Inter" font-size="10" font-weight="700" fill="#202124">2</text>
+              <text x="1106.17" y="1057.37" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#5F6368">Gateway</text>
+              <text x="1106.17" y="1073.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">API Gateway</text>
+              <text x="1251.17" y="1055.98" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">One authenticated entry point; the API</text>
+              <text x="1251.17" y="1070.98" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">never sees an anonymous call.</text>
+              <text x="1476.5" y="1055.98" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">D3</text>
+              <text x="1071.94" y="1102.34" xml:space="preserve" font-family="Inter" font-size="10" font-weight="700" fill="#202124">3</text>
+              <text x="1106.17" y="1102.77" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#5F6368">Trigger API</text>
+              <text x="1106.17" y="1118.78" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">Cloud Run</text>
+              <text x="1251.17" y="1101.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">Turns a description into a versioned</text>
+              <text x="1251.17" y="1116.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">plan and refuses to queue a plan</text>
+              <text x="1251.17" y="1131.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">nobody approved.</text>
+              <text x="1476.5" y="1101.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">A4 B3 D5</text>
+              <text x="1071.79" y="1160.34" xml:space="preserve" font-family="Inter" font-size="10" font-weight="700" fill="#202124">4</text>
+              <text x="1106.17" y="1160.77" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#5F6368">Evaluation queue</text>
+              <text x="1106.17" y="1176.78" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">Pub/Sub</text>
+              <text x="1251.17" y="1159.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">The API returns once a job is queued,</text>
+              <text x="1251.17" y="1174.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">so a slow clip never holds a request</text>
+              <text x="1251.17" y="1189.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">open.</text>
+              <text x="1476.5" y="1159.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">C6 D3</text>
+              <text x="1072.06" y="1218.34" xml:space="preserve" font-family="Inter" font-size="10" font-weight="700" fill="#202124">5</text>
+              <text x="1106.17" y="1218.77" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">Clip bucket</text>
+              <text x="1106.17" y="1234.78" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">Cloud Storage</text>
+              <text x="1251.17" y="1217.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">A clip is evaluated only once it is</text>
+              <text x="1251.17" y="1232.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">complete, and the arrival event names</text>
+              <text x="1251.17" y="1247.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">it.</text>
+              <text x="1476.5" y="1217.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">C5 E3</text>
+              <text x="1071.92" y="1276.34" xml:space="preserve" font-family="Inter" font-size="10" font-weight="700" fill="#202124">6</text>
+              <text x="1106.17" y="1276.77" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#26481B">Clip worker</text>
+              <text x="1106.17" y="1292.78" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">Cloud Run job</text>
+              <text x="1251.17" y="1275.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">Clips are independent, so a failed clip</text>
+              <text x="1251.17" y="1290.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">retries alone.</text>
+              <text x="1476.5" y="1275.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">C6 D5</text>
+              <text x="1072.26" y="1321.74" xml:space="preserve" font-family="Inter" font-size="10" font-weight="700" fill="#202124">7</text>
+              <text x="1106.17" y="1322.17" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#4B3275">Clip evaluator</text>
+              <text x="1106.17" y="1338.18" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">Vertex AI endpoint</text>
+              <text x="1251.17" y="1320.78" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">Reads frames against the plan, and has</text>
+              <text x="1251.17" y="1335.78" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">no write path to the store.</text>
+              <text x="1476.5" y="1320.78" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">A4 C6 E6</text>
+              <text x="1071.91" y="1367.14" xml:space="preserve" font-family="Inter" font-size="10" font-weight="700" fill="#202124">8</text>
+              <text x="1106.17" y="1367.57" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">Verdict store</text>
+              <text x="1106.17" y="1383.58" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">Cloud SQL</text>
+              <text x="1251.17" y="1366.18" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">Every verdict keeps its evidence frames</text>
+              <text x="1251.17" y="1381.18" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">and the plan version that produced it.</text>
+              <text x="1476.5" y="1366.18" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">A4 B4 C7</text>
+              <text x="1476.5" y="1381.18" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">E4</text>
+            </g>
+            <g data-id="/body/1/children/0/children/1/children/1" data-tag="GeneralNotes">
+              <rect x="1057.17" y="1414.9" width="492.33" height="317.2" fill="#FFFFFF" stroke="#202124" stroke-width="1"/>
+              <path d="M1079.67 1449 L1089.67 1466 L1069.67 1466 Z" fill="#202124"/>
+              <path d="M1079.67 1506.4 L1089.67 1523.4 L1069.67 1523.4 Z" fill="#202124"/>
+              <path d="M1079.67 1563.8 L1089.67 1580.8 L1069.67 1580.8 Z" fill="#202124"/>
+              <path d="M1079.67 1621.2 L1089.67 1638.2 L1069.67 1638.2 Z" fill="#202124"/>
+              <line x1="1069.67" y1="1696.5" x2="1537" y2="1696.5" stroke="#DADCE0" stroke-width="1" stroke-dasharray="3 3"/>
+              <text x="1069.67" y="1437.93" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" letter-spacing="1.56" fill="#202124">GENERAL NOTES</text>
+              <text x="1210.68" y="1437.57" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">what the service asks of its operators</text>
+              <text x="1077.73" y="1463.27" xml:space="preserve" font-family="Inter" font-size="9" font-weight="700" fill="#FFFFFF">1</text>
+              <text x="1095.67" y="1462.07" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#202124">A plan change never reaches a running trigger until an operator approves it.</text>
+              <text x="1095.67" y="1479.08" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">The worker reads the approved version only.</text>
+              <text x="1095.67" y="1495.08" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">marked at A4 B4 D4</text>
+              <text x="1076.83" y="1520.67" xml:space="preserve" font-family="Inter" font-size="9" font-weight="700" fill="#FFFFFF">2</text>
+              <text x="1095.67" y="1519.47" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#202124">Evidence frames are stored as references into the clip, never copied.</text>
+              <text x="1095.67" y="1536.48" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">Retention follows the clip bucket.</text>
+              <text x="1095.67" y="1552.48" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">marked at A4 C7</text>
+              <text x="1076.76" y="1578.07" xml:space="preserve" font-family="Inter" font-size="9" font-weight="700" fill="#FFFFFF">3</text>
+              <text x="1095.67" y="1576.87" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#202124">The evaluator holds no credentials for the verdict store.</text>
+              <text x="1095.67" y="1593.88" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">The blocked line in view 3 is an IAM binding, not a convention.</text>
+              <text x="1095.67" y="1609.88" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">marked at C6 E4</text>
+              <text x="1076.62" y="1635.47" xml:space="preserve" font-family="Inter" font-size="9" font-weight="700" fill="#FFFFFF">4</text>
+              <text x="1095.67" y="1634.27" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#202124">Out of scope: live streams, identifying people, and training a model per</text>
+              <text x="1095.67" y="1651.67" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#202124">customer.</text>
+              <text x="1095.67" y="1668.68" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">The service evaluates finished clips with one shared model.</text>
+              <text x="1095.67" y="1684.68" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">marked at C5</text>
+              <text x="1069.67" y="1717.17" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">Each flag on the drawings marks where its note applies.</text>
+            </g>
           </g>
-        </g>
-        <g data-id="/body/1/children/1" data-tag="Frame">
-          <line x1="52.06" y1="1716.66" x2="1547.94" y2="1912.54" stroke="#5F6368" stroke-width="1"/>
-          <line x1="52.06" y1="1912.54" x2="1547.94" y2="1716.66" stroke="#5F6368" stroke-width="1"/>
-          <rect x="50.63" y="1715.23" width="1498.75" height="198.75" rx="3.38" fill="none" stroke="#9AA0A6" stroke-width="1.25" stroke-dasharray="6 5"/>
-          <rect x="567.47" y="1803.4" width="465.07" height="22.4" rx="4" fill="#FFFFFF"/>
-          <text x="575.47" y="1818.97" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#5F6368">Verdict review in the console: clip, evidence frames, verdict and plan version</text>
         </g>
       </g>
     </g>
     <g data-id="/foot" data-tag="Foot">
-      <text x="50" y="1937.2" xml:space="preserve" font-family="Inter" font-size="11" font-weight="400" fill="#5F6368">Balloons key the drawings to the parts list, flags to the general notes, diamonds to the attention items in the title block.</text>
+      <text x="50" y="1755.2" xml:space="preserve" font-family="Inter" font-size="11" font-weight="400" fill="#5F6368">Balloons key the drawings to the parts list, flags to the general notes, diamonds to the attention items in the title block.</text>
     </g>
   </g>
   <g data-id="/links/0" data-tag="Link" data-kind="solid-4">
@@ -650,56 +654,56 @@
     <line x1="1363.09" y1="481" x2="1373.09" y2="481" stroke="none" marker-end="url(#arrow-center-solid-6)"/>
   </g>
   <g data-id="/links/8" data-tag="Link" data-kind="solid-4">
-    <path d="M 146.42 1445.5 L 146.42 1317.2 A 6 6 0 0 1 152.42 1311.2 L 385.95 1311.2" fill="none" stroke="#A36E14" stroke-width="2" stroke-linejoin="round"/>
-    <line x1="385.95" y1="1311.2" x2="395.95" y2="1311.2" stroke="none" marker-end="url(#arrow-center-solid-4)"/>
-    <rect x="273.58" y="1296.65" width="100.48" height="29.1" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
-    <text x="282.33" y="1315.57" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">submit trigger</text>
+    <path d="M 146.42 1060 L 146.42 1000.4 A 6 6 0 0 1 152.42 994.4 L 386.45 994.4" fill="none" stroke="#A36E14" stroke-width="2" stroke-linejoin="round"/>
+    <line x1="386.45" y1="994.4" x2="396.45" y2="994.4" stroke="none" marker-end="url(#arrow-center-solid-4)"/>
+    <rect x="273.58" y="979.85" width="100.48" height="29.1" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
+    <text x="282.33" y="998.77" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">submit trigger</text>
   </g>
   <g data-id="/links/9" data-tag="Link" data-kind="blue">
-    <path d="M 534.63 1311.2 L 749.14 1311.2" fill="none" stroke="#1A73E8" stroke-width="2" stroke-linejoin="round"/>
-    <line x1="749.14" y1="1311.2" x2="759.14" y2="1311.2" stroke="none" marker-end="url(#arrow-center-blue)"/>
-    <rect x="594.78" y="1296.65" width="104.22" height="29.1" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
-    <text x="603.53" y="1315.57" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">authorized call</text>
+    <path d="M 535.13 994.4 L 750.64 994.4" fill="none" stroke="#1A73E8" stroke-width="2" stroke-linejoin="round"/>
+    <line x1="750.64" y1="994.4" x2="760.64" y2="994.4" stroke="none" marker-end="url(#arrow-center-blue)"/>
+    <rect x="595.78" y="979.85" width="104.22" height="29.1" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
+    <text x="604.53" y="998.77" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">authorized call</text>
   </g>
   <g data-id="/links/10" data-tag="Link" data-kind="blue">
-    <path d="M 836.21 1335.4 L 836.21 1363.4 A 6 6 0 0 1 830.21 1369.4 L 471.29 1369.4 A 6 6 0 0 0 465.29 1375.4 L 465.29 1381.4" fill="none" stroke="#1A73E8" stroke-width="2" stroke-linejoin="round"/>
-    <line x1="465.29" y1="1381.4" x2="465.29" y2="1391.4" stroke="none" marker-end="url(#arrow-center-blue)"/>
-    <rect x="571.35" y="1346.05" width="158.8" height="46.7" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
-    <text x="609.84" y="1364.97" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">queue job</text>
-    <text x="580.1" y="1382.57" xml:space="preserve" font-family="Inter" font-size="12" font-weight="600" fill="#5F6368">approved plans only</text>
-    <path d="M711.4 1360.9 L721.4 1377.9 L701.4 1377.9 Z" fill="#202124"/>
-    <text x="709.46" y="1375.17" xml:space="preserve" font-family="Inter" font-size="9" font-weight="700" fill="#FFFFFF">1</text>
+    <path d="M 837.71 1018.6 L 837.71 1046.6 A 6 6 0 0 1 831.71 1052.6 L 471.79 1052.6 A 6 6 0 0 0 465.79 1058.6 L 465.79 1064.6" fill="none" stroke="#1A73E8" stroke-width="2" stroke-linejoin="round"/>
+    <line x1="465.79" y1="1064.6" x2="465.79" y2="1074.6" stroke="none" marker-end="url(#arrow-center-blue)"/>
+    <rect x="572.35" y="1029.25" width="158.8" height="46.7" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
+    <text x="610.84" y="1048.17" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">queue job</text>
+    <text x="581.1" y="1065.77" xml:space="preserve" font-family="Inter" font-size="12" font-weight="600" fill="#5F6368">approved plans only</text>
+    <path d="M712.4 1044.1 L722.4 1061.1 L702.4 1061.1 Z" fill="#202124"/>
+    <text x="710.46" y="1058.37" xml:space="preserve" font-family="Inter" font-size="9" font-weight="700" fill="#FFFFFF">1</text>
   </g>
   <g data-id="/links/11" data-tag="Link" data-kind="blue">
-    <path d="M 561.58 1415.6 L 748.43 1415.6" fill="none" stroke="#1A73E8" stroke-width="2" stroke-linejoin="round"/>
-    <line x1="748.43" y1="1415.6" x2="758.43" y2="1415.6" stroke="none" marker-end="url(#arrow-center-blue)"/>
-    <rect x="620.63" y="1401.05" width="78.75" height="29.1" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
-    <text x="629.38" y="1419.97" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">deliver job</text>
+    <path d="M 562.08 1098.8 L 749.93 1098.8" fill="none" stroke="#1A73E8" stroke-width="2" stroke-linejoin="round"/>
+    <line x1="749.93" y1="1098.8" x2="759.93" y2="1098.8" stroke="none" marker-end="url(#arrow-center-blue)"/>
+    <rect x="621.63" y="1084.25" width="78.75" height="29.1" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
+    <text x="630.38" y="1103.17" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">deliver job</text>
   </g>
   <g data-id="/links/12" data-tag="Link" data-kind="solid-6">
-    <path d="M 913.99 1415.6 L 937.57 1415.6 A 6 6 0 0 1 943.57 1421.6 L 943.57 1514 A 6 6 0 0 1 937.57 1520 L 931.57 1520" fill="none" stroke="#497938" stroke-width="2" stroke-linejoin="round"/>
-    <line x1="931.57" y1="1520" x2="921.57" y2="1520" stroke="none" marker-end="url(#arrow-center-solid-6)"/>
-    <rect x="897.79" y="1453.25" width="91.56" height="29.1" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
-    <text x="906.54" y="1472.17" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">evaluate clip</text>
+    <path d="M 837.71 1123 L 837.71 1151 A 6 6 0 0 0 843.71 1157 L 928.3 1157 A 6 6 0 0 1 934.3 1163 L 934.3 1169" fill="none" stroke="#497938" stroke-width="2" stroke-linejoin="round"/>
+    <line x1="934.3" y1="1169" x2="934.3" y2="1179" stroke="none" marker-end="url(#arrow-center-solid-6)"/>
+    <rect x="840.23" y="1142.45" width="91.56" height="29.1" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
+    <text x="848.98" y="1161.37" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">evaluate clip</text>
   </g>
   <g data-id="/links/13" data-tag="Link" data-kind="dash-6">
-    <path d="M 836.21 1439.8 L 836.21 1467.8 A 6 6 0 0 1 830.21 1473.8 L 564.61 1473.8 A 6 6 0 0 0 558.61 1479.8 L 558.61 1485.8" fill="none" stroke="#497938" stroke-width="2" stroke-dasharray="6 5" stroke-linejoin="round"/>
-    <line x1="558.61" y1="1485.8" x2="558.61" y2="1495.8" stroke="none" marker-end="url(#arrow-center-dash-6)"/>
-    <rect x="651.83" y="1459.25" width="91.15" height="29.1" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
-    <text x="660.58" y="1478.17" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">write verdict</text>
+    <path d="M 837.71 1123 L 837.71 1151 A 6 6 0 0 1 831.71 1157 L 558.68 1157 A 6 6 0 0 0 552.68 1163 L 552.68 1169" fill="none" stroke="#497938" stroke-width="2" stroke-dasharray="6 5" stroke-linejoin="round"/>
+    <line x1="552.68" y1="1169" x2="552.68" y2="1179" stroke="none" marker-end="url(#arrow-center-dash-6)"/>
+    <rect x="649.62" y="1142.45" width="91.15" height="29.1" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
+    <text x="658.37" y="1161.37" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">write verdict</text>
   </g>
   <g data-id="/links/14" data-tag="Link" data-kind="gray">
-    <path d="M 367.07 1495.8 L 367.07 1467.8 A 6 6 0 0 1 373.07 1461.8 L 459.29 1461.8 A 6 6 0 0 0 465.29 1455.8 L 465.29 1449.8" fill="none" stroke="#5F6368" stroke-width="2" stroke-linejoin="round"/>
-    <line x1="465.29" y1="1449.8" x2="465.29" y2="1439.8" stroke="none" marker-end="url(#arrow-center-gray)"/>
-    <rect x="371.57" y="1447.25" width="89.22" height="29.1" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
-    <text x="380.32" y="1466.17" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">clip finished</text>
+    <path d="M 361.15 1179 L 361.15 1151 A 6 6 0 0 1 367.15 1145 L 459.79 1145 A 6 6 0 0 0 465.79 1139 L 465.79 1133" fill="none" stroke="#5F6368" stroke-width="2" stroke-linejoin="round"/>
+    <line x1="465.79" y1="1133" x2="465.79" y2="1123" stroke="none" marker-end="url(#arrow-center-gray)"/>
+    <rect x="368.86" y="1130.45" width="89.22" height="29.1" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
+    <text x="377.61" y="1149.37" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">clip finished</text>
   </g>
   <g data-id="/links/15" data-tag="Link" data-kind="deny">
-    <path d="M 836.21 1544.2 L 836.21 1560.2 A 6 6 0 0 1 830.21 1566.2 L 564.61 1566.2 A 6 6 0 0 1 558.61 1560.2 L 558.61 1554.2" fill="none" stroke="#C5221F" stroke-width="2" stroke-dasharray="6 5" stroke-linejoin="round"/>
-    <line x1="558.61" y1="1554.2" x2="558.61" y2="1544.2" stroke="none" marker-end="url(#arrow-center-deny)"/>
-    <rect x="634.48" y="1551.65" width="125.85" height="29.1" rx="5.25" fill="#FFFFFF" stroke="#F4C7C3" stroke-width="1.5"/>
-    <text x="643.23" y="1570.57" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#C5221F">no direct write</text>
-    <path d="M741.58 1557.7 L751.58 1574.7 L731.58 1574.7 Z" fill="#202124"/>
-    <text x="738.67" y="1571.97" xml:space="preserve" font-family="Inter" font-size="9" font-weight="700" fill="#FFFFFF">3</text>
+    <path d="M 848.94 1203.2 L 644.91 1203.2" fill="none" stroke="#C5221F" stroke-width="2" stroke-dasharray="6 5" stroke-linejoin="round"/>
+    <line x1="644.91" y1="1203.2" x2="634.91" y2="1203.2" stroke="none" marker-end="url(#arrow-center-deny)"/>
+    <rect x="679" y="1188.65" width="125.85" height="29.1" rx="5.25" fill="#FFFFFF" stroke="#F4C7C3" stroke-width="1.5"/>
+    <text x="687.75" y="1207.57" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#C5221F">no direct write</text>
+    <path d="M786.1 1194.7 L796.1 1211.7 L776.1 1211.7 Z" fill="#202124"/>
+    <text x="783.19" y="1208.97" xml:space="preserve" font-family="Inter" font-size="9" font-weight="700" fill="#FFFFFF">3</text>
   </g>
 </svg>

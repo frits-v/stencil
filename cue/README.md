@@ -16,7 +16,7 @@ its rules; a figure file writes one topology against a grammar's `#Page`.
 | `grammars/plain.cue` | `plain` | the domain-neutral grammar data and the plain `#Page` |
 | `figures/g7.cue` | `gcp` | g7, Dedicated Interconnect at 99.99%: `customer` and `internal: customer & {...}` |
 | `figures/sequence.cue` | `plain` | a request flow in five lanes with ten ordered messages: `figure`, exported as `examples/sequence.json` |
-| `figures/sheet.cue` | `gcp` | the trigger evaluation design sheet, a title block, four actors, a Workflow view with its general notes and a System view with its parts list: `onepager`, exported as `examples/onepager.json` |
+| `figures/sheet.cue` | `gcp` | the trigger evaluation design sheet, a title block, four actors, a Workflow view and a System view with its parts list, general notes and a console screen: `onepager`, exported as `examples/onepager.json` |
 | `figures/sheet-small.cue` | `plain` | the smallest design sheet, with a parts list and general notes whose every key is marked once, and a link whose via lies in the sheet's wider margin: `small`, the base of the sheet negative cases |
 | `check.sh` | | the gate, below |
 | `out/` | | exported JSON and renders, not committed |

@@ -857,7 +857,7 @@ fn a_theme_without_sheet_roles_draws_the_derived_colours() {
     assert_eq!(border.attribute("fill"), Some(theme.page.as_str()));
     assert_eq!(border.attribute("stroke"), Some(theme.ink.primary.as_str()));
     // A flag, the first glyph of the general notes, fills the derived mark ink.
-    let notes = common::group(&document, "/body/0/children/1/children/0");
+    let notes = common::group(&document, "/body/1/children/0/children/1/children/1");
     let flag = common::children_named(notes, "path")[0];
     assert_eq!(flag.attribute("fill"), Some(theme.ink.primary.as_str()));
     let ticks = common::children_named(root, "line");
@@ -928,7 +928,10 @@ fn a_sheet_draws_its_frame_block_and_box_in_light_strokes() {
             "1.5",
             "{theme_name} view circle"
         );
-        let cloud = common::group(&document, "/body/1/children/0/children/0/children/1");
+        let cloud = common::group(
+            &document,
+            "/body/1/children/0/children/0/children/0/children/1",
+        );
         let stroked: Vec<_> = common::children_named(cloud, "path")
             .into_iter()
             .filter(|path| path.attribute("stroke").is_some())

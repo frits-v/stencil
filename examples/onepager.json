@@ -353,44 +353,6 @@
               ]
             }
           ]
-        },
-        {
-          "tag": "Row",
-          "justify": "end",
-          "grow": [
-            0
-          ],
-          "children": [
-            {
-              "tag": "GeneralNotes",
-              "id": "notes",
-              "title": "General notes",
-              "note": "what the service asks of its operators",
-              "notes": [
-                {
-                  "id": "approved-plans-only",
-                  "text": "A plan change never reaches a running trigger until an operator approves it.",
-                  "detail": "The worker reads the approved version only."
-                },
-                {
-                  "id": "evidence-by-reference",
-                  "text": "Evidence frames are stored as references into the clip, never copied.",
-                  "detail": "Retention follows the clip bucket."
-                },
-                {
-                  "id": "no-store-credentials",
-                  "text": "The evaluator holds no credentials for the verdict store.",
-                  "detail": "The blocked line in view 3 is an IAM binding, not a convention."
-                },
-                {
-                  "id": "out-of-scope",
-                  "text": "Out of scope: live streams, identifying people, and training a model per customer.",
-                  "detail": "The service evaluates finished clips with one shared model."
-                }
-              ],
-              "foot": "Each flag on the drawings marks where its note applies."
-            }
-          ]
         }
       ]
     },
@@ -410,152 +372,57 @@
           ],
           "children": [
             {
-              "tag": "Row",
-              "gap": 24,
-              "grow": [
-                0,
-                1
-              ],
+              "tag": "Col",
+              "gap": 20,
               "children": [
                 {
-                  "tag": "Col",
-                  "justify": "center",
-                  "children": [
-                    {
-                      "tag": "Row",
-                      "justify": "center",
-                      "grow": [
-                        0
-                      ],
-                      "children": [
-                        {
-                          "tag": "Item",
-                          "id": "console",
-                          "kind": "product",
-                          "icon": "devops",
-                          "title": "Operator console",
-                          "subtitle": "web client",
-                          "actor": "operator"
-                        }
-                      ]
-                    }
+                  "tag": "Row",
+                  "gap": 24,
+                  "grow": [
+                    0,
+                    1
                   ],
-                  "gap": 24
-                },
-                {
-                  "tag": "Box",
-                  "id": "cloud",
-                  "kind": "gcp",
-                  "label": "Google Cloud",
                   "children": [
                     {
                       "tag": "Col",
-                      "gap": 56,
+                      "justify": "center",
                       "children": [
                         {
                           "tag": "Row",
+                          "justify": "center",
                           "grow": [
-                            1,
-                            1
+                            0
                           ],
                           "children": [
                             {
-                              "tag": "Row",
-                              "justify": "center",
-                              "grow": [
-                                0
-                              ],
-                              "children": [
-                                {
-                                  "tag": "Item",
-                                  "id": "gateway",
-                                  "kind": "product",
-                                  "icon": "networking",
-                                  "title": "Gateway",
-                                  "subtitle": "API Gateway",
-                                  "actor": "api"
-                                }
-                              ]
-                            },
-                            {
-                              "tag": "Row",
-                              "justify": "center",
-                              "grow": [
-                                0
-                              ],
-                              "children": [
-                                {
-                                  "tag": "Item",
-                                  "id": "api",
-                                  "kind": "product",
-                                  "icon": "cloud-run",
-                                  "title": "Trigger API",
-                                  "subtitle": "Cloud Run",
-                                  "actor": "api"
-                                }
-                              ]
+                              "tag": "Item",
+                              "id": "console",
+                              "kind": "product",
+                              "icon": "devops",
+                              "title": "Operator console",
+                              "subtitle": "web client",
+                              "actor": "operator"
                             }
                           ]
-                        },
+                        }
+                      ],
+                      "gap": 24
+                    },
+                    {
+                      "tag": "Box",
+                      "id": "cloud",
+                      "kind": "gcp",
+                      "label": "Google Cloud",
+                      "children": [
                         {
-                          "tag": "Row",
-                          "grow": [
-                            1,
-                            1
-                          ],
+                          "tag": "Col",
+                          "gap": 56,
                           "children": [
                             {
                               "tag": "Row",
-                              "justify": "center",
                               "grow": [
-                                0
-                              ],
-                              "children": [
-                                {
-                                  "tag": "Item",
-                                  "id": "queue",
-                                  "kind": "product",
-                                  "icon": "integration",
-                                  "title": "Evaluation queue",
-                                  "subtitle": "Pub/Sub",
-                                  "actor": "api"
-                                }
-                              ]
-                            },
-                            {
-                              "tag": "Row",
-                              "justify": "center",
-                              "grow": [
-                                0
-                              ],
-                              "children": [
-                                {
-                                  "tag": "Item",
-                                  "id": "worker",
-                                  "kind": "product",
-                                  "icon": "cloud-run",
-                                  "title": "Clip worker",
-                                  "subtitle": "Cloud Run job",
-                                  "actor": "worker"
-                                }
-                              ]
-                            }
-                          ]
-                        },
-                        {
-                          "tag": "Row",
-                          "grow": [
-                            1,
-                            1
-                          ],
-                          "children": [
-                            {
-                              "tag": "Row",
-                              "gap": 32,
-                              "justify": "center",
-                              "grow": [
-                                0,
-                                0
+                                1,
+                                1
                               ],
                               "children": [
                                 {
@@ -567,29 +434,40 @@
                                   "children": [
                                     {
                                       "tag": "Item",
-                                      "id": "bucket",
+                                      "id": "gateway",
                                       "kind": "product",
-                                      "icon": "cloud-storage",
-                                      "title": "Clip bucket",
-                                      "subtitle": "Cloud Storage"
+                                      "icon": "networking",
+                                      "title": "Gateway",
+                                      "subtitle": "API Gateway",
+                                      "actor": "api"
                                     }
                                   ]
                                 },
                                 {
-                                  "tag": "Item",
-                                  "id": "verdict-store",
-                                  "kind": "product",
-                                  "icon": "cloud-sql",
-                                  "title": "Verdict store",
-                                  "subtitle": "Cloud SQL"
+                                  "tag": "Row",
+                                  "justify": "center",
+                                  "grow": [
+                                    0
+                                  ],
+                                  "children": [
+                                    {
+                                      "tag": "Item",
+                                      "id": "api",
+                                      "kind": "product",
+                                      "icon": "cloud-run",
+                                      "title": "Trigger API",
+                                      "subtitle": "Cloud Run",
+                                      "actor": "api"
+                                    }
+                                  ]
                                 }
                               ]
                             },
                             {
                               "tag": "Row",
-                              "justify": "center",
                               "grow": [
-                                0
+                                1,
+                                1
                               ],
                               "children": [
                                 {
@@ -601,12 +479,102 @@
                                   "children": [
                                     {
                                       "tag": "Item",
-                                      "id": "evaluator",
+                                      "id": "queue",
                                       "kind": "product",
-                                      "icon": "vertex-ai",
-                                      "title": "Clip evaluator",
-                                      "subtitle": "Vertex AI endpoint",
-                                      "actor": "model"
+                                      "icon": "integration",
+                                      "title": "Evaluation queue",
+                                      "subtitle": "Pub/Sub",
+                                      "actor": "api"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "tag": "Row",
+                                  "justify": "center",
+                                  "grow": [
+                                    0
+                                  ],
+                                  "children": [
+                                    {
+                                      "tag": "Item",
+                                      "id": "worker",
+                                      "kind": "product",
+                                      "icon": "cloud-run",
+                                      "title": "Clip worker",
+                                      "subtitle": "Cloud Run job",
+                                      "actor": "worker"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "tag": "Row",
+                              "grow": [
+                                1,
+                                1
+                              ],
+                              "children": [
+                                {
+                                  "tag": "Row",
+                                  "gap": 32,
+                                  "justify": "start",
+                                  "grow": [
+                                    0,
+                                    0
+                                  ],
+                                  "children": [
+                                    {
+                                      "tag": "Row",
+                                      "justify": "center",
+                                      "grow": [
+                                        0
+                                      ],
+                                      "children": [
+                                        {
+                                          "tag": "Item",
+                                          "id": "bucket",
+                                          "kind": "product",
+                                          "icon": "cloud-storage",
+                                          "title": "Clip bucket",
+                                          "subtitle": "Cloud Storage"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "tag": "Item",
+                                      "id": "verdict-store",
+                                      "kind": "product",
+                                      "icon": "cloud-sql",
+                                      "title": "Verdict store",
+                                      "subtitle": "Cloud SQL"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "tag": "Row",
+                                  "justify": "end",
+                                  "grow": [
+                                    0
+                                  ],
+                                  "children": [
+                                    {
+                                      "tag": "Row",
+                                      "justify": "center",
+                                      "grow": [
+                                        0
+                                      ],
+                                      "children": [
+                                        {
+                                          "tag": "Item",
+                                          "id": "evaluator",
+                                          "kind": "product",
+                                          "icon": "vertex-ai",
+                                          "title": "Clip evaluator",
+                                          "subtitle": "Vertex AI endpoint",
+                                          "actor": "model"
+                                        }
+                                      ]
                                     }
                                   ]
                                 }
@@ -617,64 +585,99 @@
                       ]
                     }
                   ]
+                },
+                {
+                  "tag": "Frame",
+                  "id": "screen-review",
+                  "label": "Verdict review in the console: clip, evidence frames, verdict and plan version",
+                  "height": 468
                 }
               ]
             },
             {
-              "tag": "PartsList",
-              "id": "parts",
-              "title": "Parts list",
-              "note": "what the service is made of, and why each part exists",
-              "parts": [
+              "tag": "Col",
+              "gap": 20,
+              "children": [
                 {
-                  "id": "console",
-                  "node": "console",
-                  "why": "Operators write triggers and judge verdicts without an engineer in the loop."
+                  "tag": "PartsList",
+                  "id": "parts",
+                  "title": "Parts list",
+                  "note": "what the service is made of, and why each part exists",
+                  "parts": [
+                    {
+                      "id": "console",
+                      "node": "console",
+                      "why": "Operators write triggers and judge verdicts without an engineer in the loop."
+                    },
+                    {
+                      "id": "gateway",
+                      "node": "gateway",
+                      "why": "One authenticated entry point; the API never sees an anonymous call."
+                    },
+                    {
+                      "id": "trigger-api",
+                      "node": "api",
+                      "why": "Turns a description into a versioned plan and refuses to queue a plan nobody approved."
+                    },
+                    {
+                      "id": "queue",
+                      "node": "queue",
+                      "why": "The API returns once a job is queued, so a slow clip never holds a request open."
+                    },
+                    {
+                      "id": "clip-bucket",
+                      "node": "bucket",
+                      "why": "A clip is evaluated only once it is complete, and the arrival event names it."
+                    },
+                    {
+                      "id": "worker",
+                      "node": "worker",
+                      "why": "Clips are independent, so a failed clip retries alone."
+                    },
+                    {
+                      "id": "evaluator",
+                      "node": "evaluator",
+                      "why": "Reads frames against the plan, and has no write path to the store."
+                    },
+                    {
+                      "id": "verdict-store",
+                      "node": "verdict-store",
+                      "why": "Every verdict keeps its evidence frames and the plan version that produced it."
+                    }
+                  ]
                 },
                 {
-                  "id": "gateway",
-                  "node": "gateway",
-                  "why": "One authenticated entry point; the API never sees an anonymous call."
-                },
-                {
-                  "id": "trigger-api",
-                  "node": "api",
-                  "why": "Turns a description into a versioned plan and refuses to queue a plan nobody approved."
-                },
-                {
-                  "id": "queue",
-                  "node": "queue",
-                  "why": "The API returns once a job is queued, so a slow clip never holds a request open."
-                },
-                {
-                  "id": "clip-bucket",
-                  "node": "bucket",
-                  "why": "A clip is evaluated only once it is complete, and the arrival event names it."
-                },
-                {
-                  "id": "worker",
-                  "node": "worker",
-                  "why": "Clips are independent, so a failed clip retries alone."
-                },
-                {
-                  "id": "evaluator",
-                  "node": "evaluator",
-                  "why": "Reads frames against the plan, and has no write path to the store."
-                },
-                {
-                  "id": "verdict-store",
-                  "node": "verdict-store",
-                  "why": "Every verdict keeps its evidence frames and the plan version that produced it."
+                  "tag": "GeneralNotes",
+                  "id": "notes",
+                  "title": "General notes",
+                  "note": "what the service asks of its operators",
+                  "notes": [
+                    {
+                      "id": "approved-plans-only",
+                      "text": "A plan change never reaches a running trigger until an operator approves it.",
+                      "detail": "The worker reads the approved version only."
+                    },
+                    {
+                      "id": "evidence-by-reference",
+                      "text": "Evidence frames are stored as references into the clip, never copied.",
+                      "detail": "Retention follows the clip bucket."
+                    },
+                    {
+                      "id": "no-store-credentials",
+                      "text": "The evaluator holds no credentials for the verdict store.",
+                      "detail": "The blocked line in view 3 is an IAM binding, not a convention."
+                    },
+                    {
+                      "id": "out-of-scope",
+                      "text": "Out of scope: live streams, identifying people, and training a model per customer.",
+                      "detail": "The service evaluates finished clips with one shared model."
+                    }
+                  ],
+                  "foot": "Each flag on the drawings marks where its note applies."
                 }
               ]
             }
           ]
-        },
-        {
-          "tag": "Frame",
-          "id": "screen-review",
-          "label": "Verdict review in the console: clip, evidence frames, verdict and plan version",
-          "height": 200
         }
       ]
     }
@@ -784,8 +787,8 @@
       "to": "evaluator",
       "line": "solid",
       "label": "evaluate clip",
-      "from_side": "right",
-      "to_side": "right"
+      "from_side": "bottom",
+      "to_side": "top"
     },
     {
       "from": "worker",
@@ -811,8 +814,8 @@
           "note": "no-store-credentials"
         }
       ],
-      "from_side": "bottom",
-      "to_side": "bottom"
+      "from_side": "left",
+      "to_side": "right"
     }
   ]
 }
