@@ -214,20 +214,20 @@
           <text x="1052.07" y="308.67" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">one topic that every job passes through</text>
         </g>
         <g data-id="/legend/3" data-tag="LegendEntry" data-kind="solid-by-actor">
-          <path d="M 65.5 324.7 H 91.5" fill="none" stroke="#202124" stroke-width="4" stroke-dasharray="7 4"/>
-          <path d="M 65.5 324.7 H 91.5" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-dasharray="5 6" stroke-dashoffset="-1"/>
-          <text x="97.5" y="329.07" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">Solid, actor colour, planned</text>
-          <text x="263.95" y="329.07" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">planned, not built yet</text>
+          <path d="M 69.5 324.7 H 87.5" fill="none" stroke="#202124" stroke-width="4" stroke-dasharray="7 4"/>
+          <path d="M 69.5 324.7 H 87.5" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-dasharray="5 6" stroke-dashoffset="-1"/>
+          <text x="97.5" y="329.07" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">Hollow, actor colour</text>
+          <text x="220.47" y="329.07" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">planned, not built yet</text>
         </g>
         <g data-id="/legend/4" data-tag="LegendEntry" data-kind="gray">
-          <line x1="392.05" y1="324.7" x2="418.05" y2="324.7" stroke="#5F6368" stroke-width="2"/>
-          <text x="424.05" y="329.07" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">Solid gray</text>
-          <text x="488.47" y="329.07" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">event from the platform</text>
+          <line x1="348.57" y1="324.7" x2="374.57" y2="324.7" stroke="#5F6368" stroke-width="2"/>
+          <text x="380.57" y="329.07" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">Solid gray</text>
+          <text x="444.99" y="329.07" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">event from the platform</text>
         </g>
         <g data-id="/legend/5" data-tag="LegendEntry" data-kind="deny">
-          <line x1="630.49" y1="324.7" x2="656.49" y2="324.7" stroke="#C5221F" stroke-width="2" stroke-dasharray="6 5"/>
-          <text x="662.49" y="329.07" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">Dashed red</text>
-          <text x="735.17" y="329.07" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">blocked path</text>
+          <line x1="587.01" y1="324.7" x2="613.01" y2="324.7" stroke="#C5221F" stroke-width="2" stroke-dasharray="6 5"/>
+          <text x="619.01" y="329.07" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">Dashed red</text>
+          <text x="691.69" y="329.07" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">blocked path</text>
         </g>
       </g>
     </g>

@@ -48,6 +48,19 @@ fn dash_attributes((dash, gap): (f32, f32), shift: f32, starts_on: bool, joint: 
     )
 }
 
+/// The span of a planned legend sample: the most whole dashes of `(dash, gap)` that fit in
+/// `width`, centred in it, so the sample starts and ends on a whole dash.
+fn whole_dash_span(x: f32, width: f32, (dash, gap): (f32, f32)) -> (f32, f32) {
+    let period = dash + gap;
+    let dashes = ((width + gap) / period).floor().max(1.0);
+    let span = (dashes * period - gap).min(width);
+    let inset = (width - span) / 2.0;
+    (x + inset, x + inset + span)
+}
+
+/// A patterned run shorter than this draws no visible dash, so the writer leaves it out.
+const RUN_MIN_PX: f32 = 1.0;
+
 /// The path of one run: from its start through its pieces.
 fn run_path(start: PagePoint, pieces: &[PathPiece]) -> String {
     link_path(&DrawnLink {
@@ -87,6 +100,9 @@ impl SvgWriter<'_> {
         }
         let paper = self.palette.sheet_ink(SheetInk::Paper).to_string();
         for (index, run) in dash_runs(drawn).iter().enumerate() {
+            if !run.joint && run.length_px < RUN_MIN_PX {
+                continue;
+            }
             let path = run_path(run.start, &run.pieces);
             let starts_on = index == 0;
             if planned {
@@ -298,11 +314,12 @@ impl SvgWriter<'_> {
                     );
                 } else {
                     let center_y = bounds.y + bounds.height / 2.0;
+                    let (start, end) = whole_dash_span(bounds.x, bounds.width, PLANNED_OUTER);
                     let path = format!(
                         "M {} {} H {}",
-                        format_number(bounds.x),
+                        format_number(start),
                         format_number(center_y),
-                        format_number(bounds.right())
+                        format_number(end)
                     );
                     let paper = self.palette.sheet_ink(SheetInk::Paper).to_string();
                     self.line(

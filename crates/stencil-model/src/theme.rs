@@ -595,8 +595,9 @@ pub fn drawn_legend_entry_label(theme: &Theme, key: &crate::checks::LegendKey) -
         }
     };
     format!(
-        "{base}{}",
-        crate::document::legend_label_suffix(key.form, key.planned)
+        "{}{}",
+        crate::document::planned_label(&base, key.planned),
+        crate::document::legend_label_suffix(key.form)
     )
 }
 

@@ -1764,29 +1764,48 @@ pub fn legend_label(line: Line, tint: Option<u8>) -> &'static str {
 
 /// The canonical label layout measures for a legend entry (section 13.1 rule 7 and section
 /// 14.2 rule 7): `legend_label`, or for a `by_actor` entry `Solid, actor colour` or
-/// `Dashed, actor colour`, since its uses are drawn in several actors' colours, followed by
-/// `legend_label_suffix`.
+/// `Dashed, actor colour`, since its uses are drawn in several actors' colours; a planned
+/// entry, which vet holds to a solid line, names the hollow line it draws; a rail adds
+/// `, rail`.
 pub fn canonical_legend_label(entry: &LegendEntry) -> String {
     let base = match (entry.by_actor, entry.line) {
         (true, Line::Solid) => "Solid, actor colour",
         (true, Line::Dash) => "Dashed, actor colour",
         (true, Line::Gray | Line::Deny) | (false, _) => legend_label(entry.line, entry.tint),
     };
-    format!("{base}{}", legend_label_suffix(entry.form, entry.planned))
+    format!(
+        "{}{}",
+        planned_label(base, entry.planned),
+        legend_label_suffix(entry.form)
+    )
 }
 
-/// What a legend label adds for a rail and for a planned entry (section 14.2 rule 7): `,
-/// rail` and `, planned`. A band and a tube add nothing.
-pub fn legend_label_suffix(form: PipeForm, planned: bool) -> &'static str {
-    let rail = match form {
-        PipeForm::Rail => true,
-        PipeForm::Tube | PipeForm::Band => false,
-    };
-    match (rail, planned) {
-        (false, false) => "",
-        (true, false) => ", rail",
-        (false, true) => ", planned",
-        (true, true) => ", rail, planned",
+/// A legend label for a planned line names what is drawn: its leading `Solid` becomes
+/// `Hollow` (`Hollow, actor colour`, `Hollow blue`), and any other label is prefixed
+/// `Hollow `.
+pub fn planned_label(base: &str, planned: bool) -> String {
+    if !planned {
+        return base.to_string();
+    }
+    match base.strip_prefix("Solid") {
+        Some(rest) => format!("Hollow{rest}"),
+        None => {
+            let mut characters = base.chars();
+            let lowered: String = characters
+                .next()
+                .map(|first| first.to_lowercase().chain(characters).collect())
+                .unwrap_or_default();
+            format!("Hollow {lowered}")
+        }
+    }
+}
+
+/// What a legend label adds for a rail (section 14.2 rule 7): `, rail`. A band and a tube
+/// add nothing.
+pub fn legend_label_suffix(form: PipeForm) -> &'static str {
+    match form {
+        PipeForm::Rail => ", rail",
+        PipeForm::Tube | PipeForm::Band => "",
     }
 }
 

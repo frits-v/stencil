@@ -55,9 +55,9 @@ Asynchronous evaluation. The API returns once a job is queued, and a slow clip n
 | solid-by-actor | Solid, actor colour | work moves, in the colour of the actor that sends it | 13 | `A1-A3` `/legend/0` |
 | dash-by-actor | Dashed, actor colour | reads or writes the verdict store | 2 | `A3-A5` `/legend/1` |
 | solid-by-actor-rail | Solid, actor colour, rail | one topic that every job passes through | 1 | `A5-A7` `/legend/2` |
-| solid-by-actor-planned | Solid, actor colour, planned | planned, not built yet | 1 | `A1-A2` `/legend/3` |
-| gray | Solid gray | event from the platform | 1 | `A2-A4` `/legend/4` |
-| deny | Dashed red | blocked path | 1 | `A4-A5` `/legend/5` |
+| solid-by-actor-planned | Hollow, actor colour | planned, not built yet | 1 | `A1-A2` `/legend/3` |
+| gray | Solid gray | event from the platform | 1 | `A2-A3` `/legend/4` |
+| deny | Dashed red | blocked path | 1 | `A3-A4` `/legend/5` |
 
 Mark kinds: a piece of the service (balloon, parts list); asked of an operator (flag, general notes); your attention (diamond, attention items); a numbered request step (step badge, numbered lines).
 

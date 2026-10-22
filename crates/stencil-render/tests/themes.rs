@@ -1542,7 +1542,7 @@ fn wire_labels_a_by_actor_entry_by_line() {
             "Solid line, by actor",
             "Dashed line, by actor",
             "Solid line, by actor, rail",
-            "Solid line, by actor, planned",
+            "Hollow line, by actor",
             "Thin line",
             "Dotted line"
         ]

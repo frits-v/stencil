@@ -111,6 +111,50 @@ fn a_bent_planned_line_draws_its_casing_and_core_solid_around_each_bend() {
     }
 }
 
+/// The planned legend sample shows whole dashes only: its drawn length is a whole number
+/// of dash periods less one gap, from a dash's start to a dash's end, centred in the
+/// swatch.
+#[test]
+fn the_planned_legend_sample_draws_whole_dashes_only() {
+    let document = onepager_document();
+    let rendered = common::render_document_with_fixed_metrics(document.clone());
+    let svg = common::parse_xml(&rendered.svg.svg);
+    let index = document["legend"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .position(|entry| entry["planned"] == true)
+        .unwrap();
+    let group = common::group(&svg, &format!("/legend/{index}"));
+    let paths = common::children_named(group, "path");
+    assert_eq!(paths.len(), 2);
+    let casing = paths[0];
+    assert_eq!(casing.attribute("stroke-dasharray"), Some("7 4"));
+    assert_eq!(casing.attribute("stroke-dashoffset"), None);
+    let d = casing.attribute("d").unwrap();
+    let numbers: Vec<f32> = d
+        .split(' ')
+        .filter_map(|token| token.parse().ok())
+        .collect();
+    let length = numbers[2] - numbers[0];
+    let periods = (length + 4.0) / 11.0;
+    assert!(
+        (periods - periods.round()).abs() < 0.01 && periods.round() >= 2.0,
+        "{d}: {length} px is {periods} periods"
+    );
+    let swatch = rendered
+        .geometry
+        .nodes
+        .iter()
+        .find(|node| node.pointer.as_str() == format!("/legend/{index}"))
+        .unwrap()
+        .part(stencil_layout::PartName::Swatch)
+        .unwrap()
+        .bounds;
+    let (left, right) = (numbers[0] - swatch.x, swatch.right() - numbers[2]);
+    assert!(left >= 0.0 && (left - right).abs() < 0.01, "{left} {right}");
+}
+
 /// The strip names a rail entry and a planned entry by their look.
 #[test]
 fn the_strip_names_a_planned_entry_planned() {
@@ -136,7 +180,7 @@ fn the_strip_names_a_planned_entry_planned() {
             "Solid, actor colour",
             "Dashed, actor colour",
             "Solid, actor colour, rail",
-            "Solid, actor colour, planned",
+            "Hollow, actor colour",
             "Solid gray",
             "Dashed red"
         ]
