@@ -588,3 +588,31 @@ fn a_tab_lies_inside_its_box_across_the_top_of_its_outline() {
     let label = assembly.part(PartName::Label).unwrap().bounds;
     assert!(label.x >= tab.x && label.right() <= tab.right());
 }
+
+/// A leg that turns straight back on the one before it, as a valve approach longer than
+/// the gap it ran into once drew, is a links-routed defect.
+#[test]
+fn a_leg_that_turns_back_is_a_links_routed_defect() {
+    let (page, mut geometry) = onepager();
+    let index = link_index(&page, "deliver job");
+    let start = route(&geometry, index).points[0];
+    route_mut(&mut geometry, index).points = vec![
+        start,
+        PagePoint {
+            x: start.x + 60.0,
+            y: start.y,
+        },
+        PagePoint {
+            x: start.x + 30.0,
+            y: start.y,
+        },
+    ];
+    let after = messages(&links_routed(&page, &geometry));
+    assert!(
+        after
+            .iter()
+            .any(|(pointer, message)| *pointer == format!("/links/{index}")
+                && message == "leg 1 turns back on leg 0"),
+        "{after:?}"
+    );
+}
