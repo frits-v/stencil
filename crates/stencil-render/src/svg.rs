@@ -1101,19 +1101,20 @@ impl<'a> SvgWriter<'a> {
                 let dir = context.pipe_dir.ok_or_else(|| part_mismatch(node, part))?;
                 self.write_wire(depth, bounds, dir, kind);
             }
-            PartName::Swatch if context.pipe_form == Some(PipeForm::Band) => {
-                let kind = context.line.ok_or_else(|| part_mismatch(node, part))?;
-                self.write_band_swatch(depth, bounds, kind);
-            }
             PartName::Swatch => {
                 let kind = context.line.ok_or_else(|| part_mismatch(node, part))?;
-                self.write_wire(depth, bounds, PipeDir::Horizontal, kind);
-                // A kind told apart by its hollow dots shows them on its swatch too, inset
-                // so they stay within the swatch's width.
-                if self.palette.wire_style(kind).dot == DotStyle::Hollow {
-                    let center_y = bounds.y + bounds.height / 2.0;
-                    self.write_dot(depth, bounds.x + DOT_RADIUS_PX, center_y, kind);
-                    self.write_dot(depth, bounds.right() - DOT_RADIUS_PX, center_y, kind);
+                match context.pipe_form {
+                    Some(PipeForm::Band) => self.write_band_swatch(depth, bounds, kind),
+                    Some(PipeForm::Tube) | None => {
+                        self.write_wire(depth, bounds, PipeDir::Horizontal, kind);
+                        // A kind told apart by its hollow dots shows them on its swatch
+                        // too, inset so they stay within the swatch's width.
+                        if self.palette.wire_style(kind).dot == DotStyle::Hollow {
+                            let center_y = bounds.y + bounds.height / 2.0;
+                            self.write_dot(depth, bounds.x + DOT_RADIUS_PX, center_y, kind);
+                            self.write_dot(depth, bounds.right() - DOT_RADIUS_PX, center_y, kind);
+                        }
+                    }
                 }
             }
             PartName::Spine => {

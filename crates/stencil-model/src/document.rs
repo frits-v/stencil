@@ -938,7 +938,10 @@ pub enum PipeForm {
 impl PipeForm {
     #[allow(clippy::trivially_copy_pass_by_ref)]
     fn is_tube(form: &PipeForm) -> bool {
-        *form == PipeForm::Tube
+        match form {
+            PipeForm::Tube => true,
+            PipeForm::Band => false,
+        }
     }
 }
 
