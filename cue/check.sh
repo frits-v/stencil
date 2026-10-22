@@ -417,6 +417,7 @@ sheet_cases=(
 	'step-span-out-of-range|s/phase: "describe"/&, col: 5, span: 3/|_stepSpanOutOfRange'
 	'step-text-fill|s/look:  "text"/&, fill: "tint"/|_stepTextFill'
 	'step-fill-unknown|s/look:  "text"/look: "box", fill: "paper"/|fill: 3 errors in empty disjunction'
+	'rung-fill-unknown|s/rung_fill: "none"/rung_fill: "paper"/|rung_fill: 3 errors in empty disjunction'
 	'band-unknown|s/lanes: \["operator", "api", "worker", "model"\]/&, band: "solid"/|band: 2 errors in empty disjunction'
 	'list-empty-lanes|s/lanes: \["operator", "api", "worker", "model"\]/lanes: []/|lanes: invalid value []|list.MinItems(1)'
 	'list-empty-phases|/^\t\t\t\t\tphases: \[$/,/^\t\t\t\t\t\]$/d; s/^\t\t\t\t\tlanes: .*/&\n\t\t\t\t\tphases: []/|phases: invalid value []|list.MinItems(1)'

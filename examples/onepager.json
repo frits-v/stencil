@@ -365,6 +365,7 @@
             "s-judge",
             "s-write"
           ],
+          "rung_fill": "none",
           "rungs": [
             {
               "title": "Retry",

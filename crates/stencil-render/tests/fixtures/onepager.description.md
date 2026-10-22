@@ -104,7 +104,7 @@ Subtitle: one trigger, from description to stored verdict. Note: a lane for each
   - Step Replay over earlier clips. Lane Trigger API, phase 4 Review, column 1, look planned. `B7-B8` `/body/0/children/0/children/10`
   - Step A new model version re-plans every trigger. Lane Evaluator, phase 4 Review, column 1, look note. `C7-C8` `/body/0/children/0/children/11`
     - Mark diamond 3 Model updates. `C8` `/body/0/children/0/children/11/marks/0`
-- Ladder, detail A: When a clip fails or a verdict is disputed; a failed clip never blocks the queue. Frames One job per clip, Judge the frames, Write the verdict. `C1-D8` `/body/0/children/1`
+- Ladder, detail A: When a clip fails or a verdict is disputed; a failed clip never blocks the queue; rung fill none. Frames One job per clip, Judge the frames, Write the verdict. `C1-D8` `/body/0/children/1`
   - Rung 1 (bottom) Retry, the clip worker; actor Clip worker: A failed frame fetch or evaluator call retries the clip job with backoff, three attempts in all. `D1-D8` `/body/0/children/1/rungs/0`
   - Rung 2 Dead letter, the Trigger API; actor Trigger API: After the third failure the job moves to a dead-letter subscription and the trigger lists the clip as unevaluated. `C1-D8` `/body/0/children/1/rungs/1`
   - Rung 3 Ask the operator, you; actor Operator: A disputed verdict returns with its frames and plan version; a confirmed dispute opens a plan change for approval. `C1-C8` `/body/0/children/1/rungs/2`

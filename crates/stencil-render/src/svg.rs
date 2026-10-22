@@ -75,8 +75,8 @@ enum DocumentNode<'a> {
     ProblemPoint,
     /// An actor's chip in the legend strip.
     Actor,
-    /// A rung of a ladder, `/…/rungs/<i>`.
-    Rung(&'a stencil_model::Rung),
+    /// A rung of a ladder, `/…/rungs/<i>`, with the fill its box takes.
+    Rung(&'a stencil_model::Rung, StepFill),
 }
 
 /// Walks page and geometry in the section 4.4 geometry order and asserts the pointers match,
@@ -264,7 +264,7 @@ fn geometry_order(page: &Page) -> Vec<(NodePointer, DocumentNode<'_>)> {
                         .map(|(index, rung)| {
                             (
                                 list.pointer_in(&entry.pointer).index(index),
-                                DocumentNode::Rung(rung),
+                                DocumentNode::Rung(rung, ladder.fill_of(rung)),
                             )
                         })
                         .collect()
@@ -1059,17 +1059,13 @@ impl<'a> SvgWriter<'a> {
             | DocumentNode::Actor => PartContext::default(),
             // A rung's box is drawn as a boxed Step is: filled in its actor's fill and
             // outlined in its wire, or dashed and unfilled when planned.
-            DocumentNode::Rung(rung) => PartContext {
+            DocumentNode::Rung(rung, fill) => PartContext {
                 step_look: Some(if rung.planned {
                     StepLook::Planned
                 } else {
                     StepLook::Box
                 }),
-                step_fill: Some(if rung.planned {
-                    StepFill::None
-                } else {
-                    StepFill::Tint
-                }),
+                step_fill: Some(fill),
                 ..PartContext::default()
             },
             DocumentNode::LegendEntry(entry) => PartContext {

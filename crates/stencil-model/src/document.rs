@@ -817,9 +817,23 @@ pub struct Ladder {
     /// The ids of the Steps the detail frame lies around, all in one Phases node.
     #[schemars(length(min = 1, max = 16), inner(regex(pattern = ID_PATTERN)))]
     pub around: Vec<String>,
+    /// What every rung's box is filled with; absent is tint. A planned rung takes none.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub rung_fill: Option<StepFill>,
     /// From rung 1, drawn at the bottom, to the last, drawn at the top.
     #[schemars(length(min = 1, max = 6))]
     pub rungs: Vec<Rung>,
+}
+
+impl Ladder {
+    /// What the box of `rung` is filled with: none when planned, else `rung_fill` or tint.
+    pub fn fill_of(&self, rung: &Rung) -> StepFill {
+        if rung.planned {
+            StepFill::None
+        } else {
+            self.rung_fill.unwrap_or(StepFill::Tint)
+        }
+    }
 }
 
 /// One rung of a ladder: who acts at this level of escalation and what happens.

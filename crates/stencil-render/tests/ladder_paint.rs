@@ -82,10 +82,10 @@ fn the_detail_frame_and_the_ladder_draw_in_the_frame_ink() {
     assert_eq!(examined, 3);
 }
 
-/// A planned rung without an actor is dashed in the frame ink with no fill; an actor's rung
-/// takes its actor's fill and wire.
+/// A planned rung without an actor is dashed in the frame ink with no fill. onepager's
+/// `rung_fill: none` leaves every rung unfilled in its actor's wire.
 #[test]
-fn a_planned_rung_is_dashed_and_unfilled_and_an_actor_rung_takes_its_fill() {
+fn a_planned_rung_is_dashed_and_an_unfilled_ladder_paints_no_rung_fill() {
     let theme = common::theme("center");
     let rendered = rendered("center");
     let svg = common::parse_xml(&rendered.svg.svg);
@@ -100,11 +100,48 @@ fn a_planned_rung_is_dashed_and_unfilled_and_an_actor_rung_takes_its_fill() {
         front.attribute("stroke"),
         Some(theme.sheet_colors().frame.as_str())
     );
-    let operator = common::group(&svg, &format!("{LADDER}/rungs/2"));
-    let front = operator
-        .descendants()
-        .find(|element| element.has_tag_name("rect"))
-        .unwrap();
-    assert_eq!(front.attribute("fill"), Some(theme.tint(4).fill.as_str()));
-    assert_eq!(front.attribute("stroke"), Some(theme.tint(4).wire.as_str()));
+    let mut examined = 0;
+    for (index, slot) in [(0, 6), (1, 1), (2, 4)] {
+        let rung = common::group(&svg, &format!("{LADDER}/rungs/{index}"));
+        let front = rung
+            .descendants()
+            .find(|element| element.has_tag_name("rect"))
+            .unwrap();
+        assert_eq!(front.attribute("fill"), Some("none"), "rung {index}");
+        assert_eq!(
+            front.attribute("stroke"),
+            Some(theme.tint(slot).wire.as_str()),
+            "rung {index}"
+        );
+        examined += 1;
+    }
+    assert_eq!(examined, 3);
+}
+
+/// Without `rung_fill` a rung fills with its actor's tint, and `cell` with the sheet cell.
+#[test]
+fn a_ladder_without_rung_fill_fills_its_rungs_with_their_tint() {
+    let theme = common::theme("center");
+    for (fill, expected) in [
+        (None, theme.tint(4).fill.as_str().to_string()),
+        (Some("cell"), theme.sheet_colors().cell.as_str().to_string()),
+    ] {
+        let mut document: Value =
+            serde_json::from_str(include_str!("../../../examples/onepager.json")).unwrap();
+        let ladder = document["body"][0]["children"][1].as_object_mut().unwrap();
+        match fill {
+            Some(fill) => ladder.insert("rung_fill".to_string(), json!(fill)),
+            None => ladder.remove("rung_fill"),
+        };
+        document["theme"] = json!("center");
+        let rendered = common::render_document_with_fixed_metrics(document);
+        let svg = common::parse_xml(&rendered.svg.svg);
+        let operator = common::group(&svg, &format!("{LADDER}/rungs/2"));
+        let front = operator
+            .descendants()
+            .find(|element| element.has_tag_name("rect"))
+            .unwrap();
+        assert_eq!(front.attribute("fill"), Some(expected.as_str()), "{fill:?}");
+        assert_eq!(front.attribute("stroke"), Some(theme.tint(4).wire.as_str()));
+    }
 }

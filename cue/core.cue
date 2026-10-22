@@ -888,6 +888,8 @@ import (
 	title: #Text
 	note?: #Text
 	around: [...#Id] & list.MinItems(1) & list.MaxItems(16)
+	// What every rung's box is filled with; absent is tint.
+	rung_fill?: #StepFill
 	rungs: [...#Rung] & list.MinItems(1) & list.MaxItems(6)
 	_keys: {}
 	_ids: [if id != _|_ {id}]

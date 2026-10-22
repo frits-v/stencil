@@ -220,6 +220,7 @@ onepager: gcp.#Page & {
 					title: "When a clip fails or a verdict is disputed"
 					note:  "a failed clip never blocks the queue"
 					around: ["s-evaluate", "s-judge", "s-write"]
+					rung_fill: "none"
 					rungs: [
 						{
 							title: "Retry"

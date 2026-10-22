@@ -694,6 +694,9 @@ impl<'a> Writer<'a> {
                 if let Some(note) = &ladder.note {
                     text.push_str(&format!("; {}", escape_markdown(note)));
                 }
+                if let Some(fill) = ladder.rung_fill {
+                    text.push_str(&format!("; rung fill {}", fill.as_str()));
+                }
                 format!(
                     "{text}. Frames {}. {pointer}",
                     self.framed_titles(ladder).join(", ")

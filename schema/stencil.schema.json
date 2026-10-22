@@ -1811,6 +1811,17 @@
               "maxLength": 400,
               "minLength": 1
             },
+            "rung_fill": {
+              "description": "What every rung's box is filled with; absent is tint. A planned rung takes none.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/StepFill"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
             "rungs": {
               "description": "From rung 1, drawn at the bottom, to the last, drawn at the top.",
               "type": "array",

@@ -1736,3 +1736,32 @@ fn a_ladder_and_its_rung_marks_off_a_sheet_need_a_sheet() {
         "{found:?}"
     );
 }
+
+#[test]
+fn a_ladder_fills_its_rungs_as_rung_fill_says_and_a_planned_rung_takes_none() {
+    let mut document = ladder_sheet_value();
+    document["body"][0]["children"][2]["rungs"]
+        .as_array_mut()
+        .unwrap()
+        .push(json!({ "title": "Page", "text": "Someone is paged.", "planned": true }));
+    let page: Page = serde_json::from_value(document.clone()).unwrap();
+    let Some(stencil_model::Node::View(view)) = page.body.first() else {
+        panic!("the sheet opens with a View");
+    };
+    let Some(stencil_model::Node::Ladder(ladder)) = view.children.get(2) else {
+        panic!("the View's third child is the Ladder");
+    };
+    use stencil_model::StepFill;
+    assert_eq!(ladder.fill_of(&ladder.rungs[0]), StepFill::Tint);
+    assert_eq!(ladder.fill_of(&ladder.rungs[1]), StepFill::None);
+
+    document["body"][0]["children"][2]["rung_fill"] = json!("none");
+    assert_eq!(violations(document.clone()), Vec::new());
+    let page: Page = serde_json::from_value(document.clone()).unwrap();
+    assert_eq!(
+        serde_json::to_value(&page).unwrap()["body"][0]["children"][2]["rung_fill"],
+        "none"
+    );
+    document["body"][0]["children"][2]["rung_fill"] = json!("paper");
+    assert!(serde_json::from_value::<Page>(document).is_err());
+}
