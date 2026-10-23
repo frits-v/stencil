@@ -36,7 +36,7 @@ Every node object carries "tag"; the Page does not. * required, =default. A fiel
 | text-fits-box | text larger than its box | shorten the text or widen its container |
 | remembered-constants | holds a literal the grammar lists (a doc example) | write the value from the live doc, or an ask |
 | legend-consistency | a use without an entry, an unused entry, or one listed twice | add or drop the entry |
-| links-routed | no clear route; drawn as a fallback L; an arrowed leg under 22 px | set from_side and to_side, add via, or move an endpoint |
+| links-routed | no clear route; drawn as a fallback L; an arrowed leg under 22 px; an arrowhead or stop plate under a tag or another end | set from_side and to_side, add via, or move an endpoint |
 | links-avoid-boxes | the line crosses a box or its tag covers one | as links-routed; raise gap where links run |
 | pipes-land | the pipe's center misses every box there | name its Boxes in from and to, or match the gutter's grow list |
 | iso-labels-clear | overlap, crowding, a wire in text | open floor |

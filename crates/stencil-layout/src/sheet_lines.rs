@@ -596,7 +596,18 @@ fn shifted(
         if index != leg && index != leg + 1 {
             continue;
         }
-        let bounds = crate::route::attach_box(geometry.nodes.get(node)?);
+        let node = geometry.nodes.get(node)?;
+        let bounds = crate::route::attach_box(node);
+        if !horizontal && node.outline == Some(stencil_model::Outline::Store) {
+            // A store's top and bottom are its lid's curve, so the end follows the curve.
+            let end = moved.get_mut(index)?;
+            let side = if end.y < bounds.y + bounds.height / 2.0 {
+                stencil_model::Side::Top
+            } else {
+                stencil_model::Side::Bottom
+            };
+            *end = crate::route::on_store_outline(&bounds, side, *end);
+        }
         let point = *moved.get(index)?;
         let on_side = if horizontal {
             point.y >= bounds.y + SHARED_LEG_PX && point.y <= bounds.bottom() - SHARED_LEG_PX

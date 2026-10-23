@@ -1113,7 +1113,7 @@ fn side_point(bounds: &BoxRect, side: Side, fraction: f32) -> PagePoint {
 
 /// A point on the top or bottom of a store moved onto its outline: the lid's ellipse on
 /// top, the bottom arc below, so a line off the middle still lands on what is drawn.
-fn on_store_outline(bounds: &BoxRect, side: Side, point: PagePoint) -> PagePoint {
+pub(crate) fn on_store_outline(bounds: &BoxRect, side: Side, point: PagePoint) -> PagePoint {
     let ry = crate::STORE_LID_RY_PX;
     let half_width = bounds.width / 2.0;
     if half_width <= GEOMETRY_EPSILON_PX {

@@ -3,7 +3,8 @@
 //! drawn as a solid joint on a patterned sheet line.
 
 use stencil_layout::{
-    BoxRect, DrawnLink, LinkRoute, NodeGeometry, NodeTag, Part, PartName, PathPiece, dash_runs,
+    BoxRect, DrawnLink, EndCap, LinkRoute, NodeGeometry, NodeTag, Part, PartName, PathPiece,
+    dash_runs,
 };
 use stencil_model::{Link, Outline, PagePoint};
 
@@ -68,6 +69,7 @@ fn run_path(start: PagePoint, pieces: &[PathPiece]) -> String {
         legs: vec![pieces.to_vec()],
         start_arrow: None,
         end_arrow: None,
+        cap: EndCap::Arrowhead,
     })
 }
 

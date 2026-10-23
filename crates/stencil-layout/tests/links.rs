@@ -638,3 +638,66 @@ fn an_arrow_stub_into_an_obstacle_or_past_the_other_stub_falls_back() {
     assert_eq!(both(40), RouteStatus::Fallback);
     assert_eq!(both(44), RouteStatus::Routed);
 }
+
+/// Section 11.2: on a flat page each drawn end mark of a link, an arrowhead or a deny line's
+/// stop plate, is clear of every tag and of every other link's end mark.
+#[test]
+fn a_stop_plate_over_another_links_arrowhead_is_a_links_routed_defect() {
+    let page = page_from(linked_page(
+        json!([{ "tag": "Row", "gap": 64, "children": [
+            { "tag": "Col", "gap": 24, "children": [card("a"), card("b")] },
+            card("c")
+        ] }]),
+        json!([
+            { "from": "a", "to": "c", "line": "deny" },
+            { "from": "b", "to": "c", "line": "solid", "tint": 1 }
+        ]),
+    ));
+    let geometry = layout(&page);
+    let (deny, solid) = (route_of(&geometry, 0), route_of(&geometry, 1));
+    assert_eq!(
+        deny.points.last(),
+        solid.points.last(),
+        "both end on c's one attach point"
+    );
+    let report = links_routed(&page, &geometry);
+    assert_eq!(report.examined, 2);
+    let messages: Vec<&str> = report
+        .defects
+        .iter()
+        .map(|defect| defect.message.as_str())
+        .collect();
+    assert_eq!(messages.len(), 1, "{messages:?}");
+    assert_eq!(report.defects[0].pointer.as_str(), "/links/0");
+    assert!(
+        messages[0].starts_with("stop plate 3.00x16.00")
+            && messages[0].contains("overlaps the arrowhead 10.00x8.00")
+            && messages[0].ends_with("of /links/1"),
+        "{messages:?}"
+    );
+}
+
+#[test]
+fn a_stop_plate_under_a_tag_is_a_links_routed_defect_and_a_clear_one_passes() {
+    let page_with = |label: &str| {
+        page_from(linked_page(
+            json!([{ "tag": "Row", "gap": 64, "children": [card("a"), card("b")] }]),
+            json!([{ "from": "a", "to": "b", "line": "deny", "label": label }]),
+        ))
+    };
+    let tight = page_with("no direct write to the store");
+    let report = links_routed(&tight, &layout(&tight));
+    assert!(
+        report
+            .defects
+            .iter()
+            .any(|defect| defect.message.starts_with("stop plate")
+                && defect.message.contains("overlaps the tag")
+                && defect.message.ends_with("of /links/0")),
+        "{report:?}"
+    );
+    let open = page_with("no");
+    let report = links_routed(&open, &layout(&open));
+    assert!(report.passed(), "{report:?}");
+    assert_eq!(report.examined, 1);
+}

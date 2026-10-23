@@ -30,7 +30,7 @@ Drawn elements: 23 (13 nodes, 10 links). Canvas 1320 x 718 px, projection flat, 
 | deliver job | message, order 6 | Queue (queue) | Worker (worker) | solid, tint 1; blue in center | arrow end | call | `/links/5` |
 | report running | message, order 7 | Worker (worker) | Jobs API (api) | solid, tint 1; blue in center | arrow end | call | `/links/6` |
 | cancel job | message, order 8 | Operator (operator) | Console (console) | solid, tint 1; blue in center | arrow end | call | `/links/7` |
-| DELETE /jobs/{id} · 409: job is running | message, order 9 | Console (console) | Jobs API (api) | deny; red in center | arrow end | rejected call | `/links/8` |
+| DELETE /jobs/{id} · 409: job is running | message, order 9 | Console (console) | Jobs API (api) | deny; red in center | stop plate end | rejected call | `/links/8` |
 | ack · after the result is stored | message, order 10 | Worker (worker) | Queue (queue) | solid, tint 1; blue in center | arrow end | call | `/links/9` |
 
 ## Legend `/legend`

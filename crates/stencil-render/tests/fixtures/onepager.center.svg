@@ -7,7 +7,6 @@
     <marker id="arrow-center-solid-5" viewBox="0 0 10 8" refX="10" refY="4" markerWidth="10" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto"><path d="M 0 0 L 10 4 L 0 8 Z" fill="#593894"/></marker>
     <marker id="arrow-center-solid-6" viewBox="0 0 10 8" refX="10" refY="4" markerWidth="10" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto"><path d="M 0 0 L 10 4 L 0 8 Z" fill="#497938"/></marker>
     <marker id="arrow-center-dash-6" viewBox="0 0 10 8" refX="10" refY="4" markerWidth="10" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto"><path d="M 0 0 L 10 4 L 0 8 Z" fill="#497938"/></marker>
-    <marker id="arrow-center-deny" viewBox="0 0 10 8" refX="10" refY="4" markerWidth="10" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto"><path d="M 0 0 L 10 4 L 0 8 Z" fill="#C5221F"/></marker>
   </defs>
   <g data-id="" data-tag="Page">
     <rect x="12.5" y="12.5" width="1575" height="2556.1" fill="#FFFFFF" stroke="#202124" stroke-width="1"/>
@@ -226,6 +225,7 @@
         </g>
         <g data-id="/legend/5" data-tag="LegendEntry" data-kind="deny">
           <line x1="587.01" y1="324.7" x2="613.01" y2="324.7" stroke="#C5221F" stroke-width="2" stroke-dasharray="6 5"/>
+          <rect x="610.01" y="318.7" width="3" height="12" fill="#C5221F"/>
           <text x="619.01" y="329.07" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">Dashed red</text>
           <text x="691.69" y="329.07" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">blocked path</text>
         </g>
@@ -906,8 +906,8 @@
     <path d="M 773.13 1508.6 L 773.13 1512.1 A 6 6 0 0 1 767.13 1518.1 L 763.63 1518.1" fill="none" stroke="#497938" stroke-width="2"/>
     <path d="M 763.63 1518.1 L 683.54 1518.1" fill="none" stroke="#497938" stroke-width="2" stroke-dasharray="6 5" stroke-dashoffset="6"/>
     <path d="M 683.54 1518.1 L 680.04 1518.1 A 6 6 0 0 0 674.04 1524.1 L 674.04 1527.6" fill="none" stroke="#497938" stroke-width="2"/>
-    <path d="M 674.04 1527.6 L 674.04 1637.37" fill="none" stroke="#497938" stroke-width="2" stroke-dasharray="6 5" stroke-dashoffset="6"/>
-    <line x1="674.04" y1="1637.37" x2="674.04" y2="1647.37" stroke="none" marker-end="url(#arrow-center-dash-6)"/>
+    <path d="M 674.04 1527.6 L 674.04 1637.13" fill="none" stroke="#497938" stroke-width="2" stroke-dasharray="6 5" stroke-dashoffset="6"/>
+    <line x1="674.04" y1="1637.13" x2="674.04" y2="1647.13" stroke="none" marker-end="url(#arrow-center-dash-6)"/>
     <rect x="616.46" y="1593.46" width="115.15" height="29.1" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
     <rect x="625.96" y="1599.76" width="16.5" height="16.5" rx="2.25" fill="#FFFFFF" stroke="#497938" stroke-width="1.5"/>
     <text x="630.97" y="1611.65" xml:space="preserve" font-family="Inter" font-size="10" font-weight="700" fill="#202124">6</text>
@@ -927,11 +927,11 @@
     <circle cx="477.98" cy="1582.8" r="4.5" fill="#5F6368"/>
   </g>
   <g data-id="/links/17" data-tag="Link" data-kind="deny">
-    <path d="M 801.94 1568.8 L 801.94 1637.37" fill="none" stroke="#C5221F" stroke-width="2" stroke-dasharray="6 5"/>
-    <line x1="801.94" y1="1637.37" x2="801.94" y2="1647.37" stroke="none" marker-end="url(#arrow-center-deny)"/>
-    <rect x="739.01" y="1593.54" width="125.85" height="29.1" rx="5.25" fill="#FFFFFF" stroke="#F4C7C3" stroke-width="1.5"/>
-    <text x="747.76" y="1612.45" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#C5221F">no direct write</text>
-    <path d="M846.11 1599.59 L856.11 1616.59 L836.11 1616.59 Z" fill="#202124"/>
-    <text x="843.2" y="1613.86" xml:space="preserve" font-family="Inter" font-size="9" font-weight="700" fill="#FFFFFF">3</text>
+    <path d="M 801.94 1568.8 L 801.94 1647.04" fill="none" stroke="#C5221F" stroke-width="2" stroke-dasharray="6 5"/>
+    <rect x="793.94" y="1647.04" width="16" height="3" fill="#C5221F"/>
+    <rect x="739.01" y="1594.87" width="125.85" height="29.1" rx="5.25" fill="#FFFFFF" stroke="#F4C7C3" stroke-width="1.5"/>
+    <text x="747.76" y="1613.79" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#C5221F">no direct write</text>
+    <path d="M846.11 1600.92 L856.11 1617.92 L836.11 1617.92 Z" fill="#202124"/>
+    <text x="843.2" y="1615.19" xml:space="preserve" font-family="Inter" font-size="9" font-weight="700" fill="#FFFFFF">3</text>
   </g>
 </svg>

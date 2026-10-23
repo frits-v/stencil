@@ -9,7 +9,7 @@ A link is a routed orthogonal line between two nodes, drawn after layout on top 
 | from, to | ids of two different nodes; any node may carry id (a-z, 0-9, -, at most 64, unique in the page) |
 | line, tint | Line and tint slot; the pair needs a legend entry like any pipe |
 | label, sub | tag text, one line each; no label means no tag |
-| arrow | none, end (default), start or both; the arrowhead sits on the endpoint's edge |
+| arrow | none, end (default), start or both; the arrowhead, a stop plate on a deny line, sits on the endpoint's edge |
 | from_side, to_side | top, right, bottom or left: the side whose midpoint the end attaches to |
 | via | up to 8 {"x","y"} points in canvas px, passed in order |
 | axis | iso only: x or y, the axis the tag reads along; absent follows the leg it sits on (a Pipe tag follows its dir); see stencil prime iso |

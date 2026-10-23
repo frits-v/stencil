@@ -279,6 +279,7 @@
       </g>
       <g data-id="/legend/4" data-tag="LegendEntry" data-kind="deny">
         <line x1="831.17" y1="1639.54" x2="857.17" y2="1639.54" stroke="#C5221F" stroke-width="2.5" stroke-dasharray="6 5"/>
+        <rect x="854.17" y="1633.54" width="3" height="12" fill="#C5221F"/>
         <text x="863.17" y="1643.91" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">Dashed red</text>
         <text x="935.86" y="1643.91" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">blocked by the firewall</text>
       </g>

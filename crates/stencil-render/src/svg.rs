@@ -5,9 +5,9 @@ mod iso_writer;
 
 use std::collections::{BTreeSet, HashMap};
 use stencil_layout::{
-    BoxRect, ContainerLook, DrawnLink, LinkRoute, NodeGeometry, NodeTag, PageGeometry, Part,
-    PartName, PathPiece, TextAlign, TextRun, container_label_style, drawn_link, fact_presentation,
-    marks::sampled_kinds,
+    BoxRect, ContainerLook, DrawnLink, EndCap, LinkRoute, NodeGeometry, NodeTag, PageGeometry,
+    Part, PartName, PathPiece, STOP_PLATE_THICKNESS_PX, TextAlign, TextRun, container_label_style,
+    drawn_link, fact_presentation, marks::sampled_kinds,
 };
 use stencil_model::grammar::Role;
 use stencil_model::pointer::NodePointer;
@@ -33,6 +33,8 @@ const BADGE_RADIUS_PX: f32 = 4.0;
 const CARD_RADIUS_PX: f32 = 8.0;
 const FACT_RADIUS_PX: f32 = 4.0;
 const TAG_RADIUS_PX: f32 = 6.0;
+/// A legend sample's stop plate is shorter than a line's, so it stays inside the entry's line.
+const LEGEND_STOP_PLATE_PX: f32 = 12.0;
 /// The height of a legend swatch for a band form: a flat bar rather than a wire.
 const BAND_SWATCH_HEIGHT_PX: f32 = 8.0;
 const BAND_SWATCH_OUTLINE_PX: f32 = 1.5;
@@ -352,7 +354,7 @@ fn push_legend_order<'a>(page: &'a Page, order: &mut Vec<(NodePointer, DocumentN
 }
 
 /// Lines of the Pipes, Tee arms and links that draw an arrowhead, one marker each, by their
-/// effective tint, which an actor gives on a sheet. `expected` and the geometry are in the
+/// effective tint, which an actor gives on a sheet. A deny line draws a stop plate instead. `expected` and the geometry are in the
 /// same order, which the caller has checked.
 fn arrow_kinds(
     page: &Page,
@@ -380,7 +382,10 @@ fn arrow_kinds(
                 .is_some_and(|link| link.arrow != Arrow::None)
         })
         .map(|route| LineUse::new(route.line, route.tint));
-    pipe_kinds.chain(link_kinds).collect()
+    pipe_kinds
+        .chain(link_kinds)
+        .filter(|kind| EndCap::of(kind.line) == EndCap::Arrowhead)
+        .collect()
 }
 
 /// A route whose index names no `Page.links` entry, or whose tag parts do not match.
@@ -421,6 +426,49 @@ impl ArrowEnds {
             },
         }
     }
+}
+
+/// The (base, tip) of the arrowhead or stop plate that replaces a pipe's end dot: the tip on
+/// the dot box's outer edge, the base an arrowhead's length back along the run.
+fn arrowhead_ends(dot_bounds: BoxRect, dir: PipeDir, at_start: bool) -> (PagePoint, PagePoint) {
+    let center_x = dot_bounds.x + dot_bounds.width / 2.0;
+    let center_y = dot_bounds.y + dot_bounds.height / 2.0;
+    let at = |x: f32, y: f32| PagePoint { x, y };
+    match (dir, at_start) {
+        (PipeDir::Horizontal, true) => (
+            at(dot_bounds.x + ARROW_LENGTH_PX, center_y),
+            at(dot_bounds.x, center_y),
+        ),
+        (PipeDir::Horizontal, false) => (
+            at(dot_bounds.right() - ARROW_LENGTH_PX, center_y),
+            at(dot_bounds.right(), center_y),
+        ),
+        (PipeDir::Vertical, true) => (
+            at(center_x, dot_bounds.y + ARROW_LENGTH_PX),
+            at(center_x, dot_bounds.y),
+        ),
+        (PipeDir::Vertical, false) => (
+            at(center_x, dot_bounds.bottom() - ARROW_LENGTH_PX),
+            at(center_x, dot_bounds.bottom()),
+        ),
+    }
+}
+
+/// The stop plate's inner face and tip on the run from `base` to `tip`.
+fn stop_plate_ends(base: PagePoint, tip: PagePoint) -> (PagePoint, PagePoint) {
+    let (delta_x, delta_y) = (tip.x - base.x, tip.y - base.y);
+    let length = delta_x.hypot(delta_y);
+    if length <= f32::EPSILON {
+        return (tip, tip);
+    }
+    let back = STOP_PLATE_THICKNESS_PX / length;
+    (
+        PagePoint {
+            x: tip.x - delta_x * back,
+            y: tip.y - delta_y * back,
+        },
+        tip,
+    )
 }
 
 /// Pointer used in a mismatch when one side has no node at that position.
@@ -1393,7 +1441,11 @@ impl<'a> SvgWriter<'a> {
                 };
                 if arrow_here {
                     let dir = context.pipe_dir.ok_or_else(|| part_mismatch(node, part))?;
-                    self.write_arrowhead(depth, bounds, dir, at_start, kind);
+                    let (base, tip) = arrowhead_ends(bounds, dir, at_start);
+                    match EndCap::of(kind.line) {
+                        EndCap::Arrowhead => self.write_arrow_carrier(depth, base, tip, kind),
+                        EndCap::StopPlate => self.write_pipe_stop_plate(depth, (base, tip), kind),
+                    }
                 } else {
                     let center_x = bounds.x + bounds.width / 2.0;
                     let center_y = bounds.y + bounds.height / 2.0;
@@ -1419,6 +1471,16 @@ impl<'a> SvgWriter<'a> {
                             let center_y = bounds.y + bounds.height / 2.0;
                             self.write_dot(depth, bounds.x + DOT_RADIUS_PX, center_y, kind);
                             self.write_dot(depth, bounds.right() - DOT_RADIUS_PX, center_y, kind);
+                        }
+                        if EndCap::of(kind.line) == EndCap::StopPlate {
+                            let plate = BoxRect {
+                                x: bounds.right() - STOP_PLATE_THICKNESS_PX,
+                                y: bounds.y + bounds.height / 2.0 - LEGEND_STOP_PLATE_PX / 2.0,
+                                width: STOP_PLATE_THICKNESS_PX,
+                                height: LEGEND_STOP_PLATE_PX,
+                            };
+                            let color = self.palette.wire_style(kind).stroke.color;
+                            self.write_rect(depth, plate, 0.0, Some(color), None);
                         }
                     }
                 }
@@ -2025,46 +2087,43 @@ impl<'a> SvgWriter<'a> {
         format!("arrow-{}-{}", self.palette.theme_name(), kind.key())
     }
 
-    /// An arrowhead in place of an end dot, pointing out of the pipe with its tip on the dot
-    /// box's outer edge. The carrier line is unstroked and only places the marker.
-    fn write_arrowhead(
+    /// A deny pipe's stop plate in place of an arrowhead: the wire carried solid from the
+    /// arrowhead's base, where layout stops it, to the plate, then the plate.
+    fn write_pipe_stop_plate(
         &mut self,
         depth: usize,
-        dot_bounds: BoxRect,
-        dir: PipeDir,
-        at_start: bool,
+        (base, tip): (PagePoint, PagePoint),
         kind: LineUse,
     ) {
-        let center_x = dot_bounds.x + dot_bounds.width / 2.0;
-        let center_y = dot_bounds.y + dot_bounds.height / 2.0;
-        let ((base_x, base_y), (tip_x, tip_y)) = match (dir, at_start) {
-            (PipeDir::Horizontal, true) => (
-                (dot_bounds.x + ARROW_LENGTH_PX, center_y),
-                (dot_bounds.x, center_y),
-            ),
-            (PipeDir::Horizontal, false) => (
-                (dot_bounds.right() - ARROW_LENGTH_PX, center_y),
-                (dot_bounds.right(), center_y),
-            ),
-            (PipeDir::Vertical, true) => (
-                (center_x, dot_bounds.y + ARROW_LENGTH_PX),
-                (center_x, dot_bounds.y),
-            ),
-            (PipeDir::Vertical, false) => (
-                (center_x, dot_bounds.bottom() - ARROW_LENGTH_PX),
-                (center_x, dot_bounds.bottom()),
-            ),
+        let (plate_base, _) = stop_plate_ends(base, tip);
+        let stroke = Stroke {
+            line: LineStyle::Solid,
+            ..self.palette.wire_style(kind).stroke
         };
-        let marker_id = self.arrow_marker_id(kind);
         self.line(
             depth,
             &format!(
-                r#"<line x1="{}" y1="{}" x2="{}" y2="{}" stroke="none" marker-end="url(#{marker_id})"/>"#,
-                format_number(base_x),
-                format_number(base_y),
-                format_number(tip_x),
-                format_number(tip_y),
+                r#"<line x1="{}" y1="{}" x2="{}" y2="{}"{}/>"#,
+                format_number(base.x),
+                format_number(base.y),
+                format_number(plate_base.x),
+                format_number(plate_base.y),
+                stroke_attributes(stroke)
             ),
+        );
+        self.write_flat_stop_plate(depth, (plate_base, tip), kind);
+    }
+
+    /// A deny line's stop plate: a bar across the line from `base` to its outer face at
+    /// `tip`, on the endpoint's outline, filled in the wire color (section 11.2).
+    fn write_flat_stop_plate(&mut self, depth: usize, ends: (PagePoint, PagePoint), kind: LineUse) {
+        let color = self.palette.wire_style(kind).stroke.color;
+        self.write_rect(
+            depth,
+            EndCap::StopPlate.bounds(ends),
+            0.0,
+            Some(color),
+            None,
         );
     }
 
@@ -2101,8 +2160,11 @@ impl<'a> SvgWriter<'a> {
                 ),
             );
         }
-        for (base, tip) in [drawn.start_arrow, drawn.end_arrow].into_iter().flatten() {
-            self.write_arrow_carrier(depth + 1, base, tip, line_use);
+        for ends in [drawn.start_arrow, drawn.end_arrow].into_iter().flatten() {
+            match drawn.cap {
+                EndCap::Arrowhead => self.write_arrow_carrier(depth + 1, ends.0, ends.1, line_use),
+                EndCap::StopPlate => self.write_flat_stop_plate(depth + 1, ends, line_use),
+            }
         }
         let glyphs = self
             .mark_paints
@@ -2800,6 +2862,7 @@ mod tests {
             ],
             start_arrow: None,
             end_arrow: None,
+            cap: stencil_layout::EndCap::Arrowhead,
         };
         assert_eq!(
             link_path(&drawn),

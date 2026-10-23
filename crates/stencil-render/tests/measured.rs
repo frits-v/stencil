@@ -158,3 +158,86 @@ fn measured_json_is_deterministic() {
         serde_json::to_string(&second).unwrap()
     );
 }
+
+/// Every `examples/*.json` path, sorted.
+fn example_paths() -> Vec<std::path::PathBuf> {
+    let examples = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../examples");
+    let mut paths: Vec<std::path::PathBuf> = std::fs::read_dir(examples)
+        .unwrap()
+        .map(|entry| entry.unwrap().path())
+        .filter(|path| {
+            path.extension()
+                .is_some_and(|extension| extension == "json")
+        })
+        .collect();
+    paths.sort();
+    paths
+}
+
+/// Section 14.4: a part that repeats takes a `/<i>` suffix, so no part of a node or a link
+/// is lost to a later one written under the same key.
+#[test]
+fn every_part_of_every_example_has_its_own_key_in_the_measured_json() {
+    let mut examined = 0;
+    let mut lost = Vec::new();
+    for path in example_paths() {
+        let text = std::fs::read_to_string(&path).unwrap();
+        let page: stencil_model::Page = serde_json::from_str(&text).unwrap();
+        let page = stencil_model::parse_and_vet(&text, &common::grammar_for(&page)).unwrap();
+        let geometry = common::layout_with_cosmic_text(&page);
+        let scene = match page.projection {
+            stencil_model::Projection::Flat => None,
+            stencil_model::Projection::Iso => Some(
+                stencil_render::iso::project_page(
+                    &geometry,
+                    &common::solid_inputs(&page, &geometry),
+                )
+                .unwrap(),
+            ),
+        };
+        let document: Value = serde_json::from_str(&text).unwrap();
+        let measured = measured_json(&document, &geometry, scene.as_ref());
+        let stem = path.file_stem().unwrap().to_str().unwrap();
+        let nodes = measured["nodes"].as_array().unwrap();
+        let links = measured["links"].as_array().map_or(&[][..], Vec::as_slice);
+        assert_eq!(nodes.len(), geometry.nodes.len(), "{stem}");
+        assert_eq!(links.len(), geometry.links.len(), "{stem}");
+        let owners = geometry
+            .nodes
+            .iter()
+            .map(|node| (node.pointer.to_string(), &node.parts))
+            .zip(nodes)
+            .chain(
+                geometry
+                    .links
+                    .iter()
+                    .map(|route| (format!("/links/{}", route.index), &route.parts))
+                    .zip(links),
+            );
+        for ((owner, parts), written) in owners {
+            examined += 1;
+            let keys = written["parts"].as_object().unwrap().len();
+            if keys != parts.len() {
+                let mut names: Vec<&str> = parts
+                    .iter()
+                    .map(|part| part.name.as_str())
+                    .filter(|name| {
+                        parts
+                            .iter()
+                            .filter(|part| part.name.as_str() == *name)
+                            .count()
+                            > 1
+                    })
+                    .collect();
+                names.sort_unstable();
+                names.dedup();
+                lost.push(format!(
+                    "{stem} {owner}: {} parts under {keys} keys, {names:?} repeat",
+                    parts.len()
+                ));
+            }
+        }
+    }
+    assert!(examined > 600, "examined {examined} nodes and links");
+    assert!(lost.is_empty(), "{}", lost.join("\n"));
+}

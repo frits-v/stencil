@@ -15,8 +15,8 @@ use common::{layout, page_from};
 use serde_json::{Value, json};
 use stencil_layout::checks::{links_routed, marks_clear};
 use stencil_layout::{
-    BoxRect, DashRun, DrawnLink, LinkRoute, NodeGeometry, PageGeometry, PartName, PathPiece,
-    dash_runs, drawn_link, rail_bar, stroke_on_at, turn_positions,
+    BoxRect, DashRun, DrawnLink, EndCap, LinkRoute, NodeGeometry, PageGeometry, PartName,
+    PathPiece, dash_runs, drawn_link, rail_bar, stroke_on_at, turn_positions,
 };
 use stencil_model::{Page, PagePoint};
 
@@ -157,6 +157,7 @@ fn a_bend_falls_in_a_dash_gap_without_a_joint_and_on_a_joint_with_one() {
         ],
         start_arrow: None,
         end_arrow: None,
+        cap: EndCap::Arrowhead,
     };
     let turns = turn_positions(&drawn);
     assert_eq!(turns, [8.0]);
@@ -203,6 +204,7 @@ fn a_rounded_bend_is_one_joint_and_every_onepager_bend_is_drawn() {
         ],
         start_arrow: None,
         end_arrow: None,
+        cap: EndCap::Arrowhead,
     };
     let runs = dash_runs(&drawn);
     let joint = runs.iter().find(|run| run.joint).unwrap();
@@ -615,4 +617,38 @@ fn a_leg_that_turns_back_is_a_links_routed_defect() {
                 && message == "leg 1 turns back on leg 0"),
         "{after:?}"
     );
+}
+
+/// A store's top is its lid's curve, so an end on it lies on the curve wherever along the
+/// side a leg shift moved it, and an arrowhead or stop plate there meets the drawn lid.
+#[test]
+fn every_end_on_a_store_lid_lies_on_the_curve_after_its_leg_moves() {
+    let (_, geometry) = onepager();
+    let mut examined = 0;
+    for route in &geometry.links {
+        for (end, node) in [
+            (route.points.first(), route.from_node),
+            (route.points.last(), route.to_node),
+        ] {
+            let (Some(end), Some(node)) = (end, geometry.nodes.get(node)) else {
+                continue;
+            };
+            if node.outline != Some(stencil_model::Outline::Store) || end.y > node.bounds.y + 10.0 {
+                continue;
+            }
+            let half = node.bounds.width / 2.0;
+            let across = (end.x - (node.bounds.x + half)) / half;
+            let lid = node.bounds.y
+                + stencil_layout::STORE_LID_RY_PX * (1.0 - (1.0 - across * across).sqrt());
+            assert!(
+                (end.y - lid).abs() < 0.01,
+                "/links/{} ends at ({:.2}, {:.2}), off the lid at y {lid:.2}",
+                route.index,
+                end.x,
+                end.y
+            );
+            examined += 1;
+        }
+    }
+    assert!(examined >= 2, "examined {examined} store ends");
 }

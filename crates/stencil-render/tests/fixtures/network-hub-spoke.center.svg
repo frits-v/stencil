@@ -408,6 +408,7 @@
       </g>
       <g data-id="/legend/4" data-tag="LegendEntry" data-kind="deny">
         <line x1="1165.03" y1="1307.4" x2="1191.03" y2="1307.4" stroke="#C5221F" stroke-width="2" stroke-dasharray="6 5"/>
+        <rect x="1188.03" y="1301.4" width="3" height="12" fill="#C5221F"/>
         <text x="1197.03" y="1311.77" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">Dashed red</text>
         <text x="1269.71" y="1311.77" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">prohibited path</text>
       </g>

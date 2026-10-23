@@ -8,7 +8,7 @@ use stencil_model::pointer::NodePointer;
 use stencil_model::{Arrow, Node, NodeRef, Page, PipeDir, Projection, body_nodes};
 
 use crate::compute::{PipeTarget, move_extent, targeted_pipes};
-use crate::drawn::{chain_enters, drawn_link, push_flattened};
+use crate::drawn::{EndCap, chain_enters, drawn_link, push_flattened};
 use crate::route::attach_box;
 use crate::route::link_obstacles;
 use crate::{
@@ -407,7 +407,8 @@ fn examine_text_parts(
 
 /// One link examined per route; a route that fell back to the L shape is a defect at
 /// `/links/<i>`, and so on a flat page is each arrowed end whose leg is shorter than the
-/// arrow stub (section 11.2). Not applicable on a page without links.
+/// arrow stub, and each end mark over a tag or another link's end mark (section 11.2). Not
+/// applicable on a page without links.
 pub fn links_routed(page: &Page, geometry: &PageGeometry) -> CheckReport {
     if geometry.links.is_empty() {
         return CheckReport::not_applicable(CheckName::LinksRouted, NO_LINKS);
@@ -415,6 +416,21 @@ pub fn links_routed(page: &Page, geometry: &PageGeometry) -> CheckReport {
     let links_pointer = NodePointer::root().child("links");
     let mut defects = Vec::new();
     let flat = page.projection == Projection::Flat;
+    let end_marks: Vec<(usize, EndCap, BoxRect)> = if flat {
+        geometry
+            .links
+            .iter()
+            .flat_map(|route| {
+                let drawn = drawn_link(geometry, route);
+                [drawn.start_arrow, drawn.end_arrow]
+                    .into_iter()
+                    .flatten()
+                    .map(move |arrow| (route.index, drawn.cap, drawn.cap.bounds(arrow)))
+            })
+            .collect()
+    } else {
+        Vec::new()
+    };
     for route in &geometry.links {
         if route.status == RouteStatus::Fallback {
             // A flat arrowed link also falls back when its stub has no room, with nothing
@@ -434,6 +450,12 @@ pub fn links_routed(page: &Page, geometry: &PageGeometry) -> CheckReport {
             });
         }
         if flat {
+            for message in end_mark_defects(geometry, route, &end_marks) {
+                defects.push(Defect {
+                    pointer: links_pointer.index(route.index),
+                    message,
+                });
+            }
             for (leg, length) in short_arrow_legs(route) {
                 defects.push(Defect {
                     pointer: links_pointer.index(route.index),
@@ -457,6 +479,48 @@ pub fn links_routed(page: &Page, geometry: &PageGeometry) -> CheckReport {
         defects,
         not_applicable: None,
     }
+}
+
+/// Each drawn end mark of `route`, an arrowhead or a stop plate, that overlaps the tag of
+/// any link or the end mark of a later link (section 11.2), as a links-routed message.
+fn end_mark_defects(
+    geometry: &PageGeometry,
+    route: &LinkRoute,
+    end_marks: &[(usize, EndCap, BoxRect)],
+) -> Vec<String> {
+    let links_pointer = NodePointer::root().child("links");
+    let mut messages = Vec::new();
+    for (_, cap, mark) in end_marks
+        .iter()
+        .filter(|(index, _, _)| *index == route.index)
+    {
+        for other in &geometry.links {
+            if let Some(tag) = other.tag
+                && overlap_both_axes(mark, &tag)
+            {
+                messages.push(format!(
+                    "{} {} overlaps the tag {} of {}",
+                    cap.name(),
+                    describe(mark),
+                    describe(&tag),
+                    links_pointer.index(other.index)
+                ));
+            }
+        }
+        for (other_index, other_cap, other_mark) in end_marks {
+            if *other_index > route.index && overlap_both_axes(mark, other_mark) {
+                messages.push(format!(
+                    "{} {} overlaps the {} {} of {}",
+                    cap.name(),
+                    describe(mark),
+                    other_cap.name(),
+                    describe(other_mark),
+                    links_pointer.index(*other_index)
+                ));
+            }
+        }
+    }
+    messages
 }
 
 /// The leg at each arrowed end of `route` that is shorter than the arrow stub, named first

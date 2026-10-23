@@ -37,7 +37,7 @@ pub use build::{
 };
 pub use detail_frames::{DETAIL_FRAME_GROW_PX, DETAIL_FRAME_RADIUS_PX, DETAIL_TAG_RADIUS_PX};
 pub use drawn::{
-    DashRun, DrawnLink, Fillet, JOINT_REACH_PX, PathPiece, dash_runs, drawn_link, fillet,
+    DashRun, DrawnLink, EndCap, Fillet, JOINT_REACH_PX, PathPiece, dash_runs, drawn_link, fillet,
     joint_intervals, piece_length, push_flattened, stroke_on_at, turn_positions,
 };
 pub use lead_run::{LeadRun, measure_lead_run};
@@ -59,6 +59,10 @@ pub const GEOMETRY_EPSILON_PX: f32 = 0.01;
 pub const ARROWHEAD_LENGTH_PX: f32 = 10.0;
 /// Width of an arrowhead across its line, at the base.
 pub const ARROWHEAD_WIDTH_PX: f32 = 8.0;
+/// A deny line's stop plate (section 11.2): a bar across its line at an arrowed end, in
+/// place of the arrowhead, this wide across the line and this thick along it.
+pub const STOP_PLATE_WIDTH_PX: f32 = 16.0;
+pub const STOP_PLATE_THICKNESS_PX: f32 = 3.0;
 /// The straight a link keeps at an arrowed end (section 11.2): the arrowhead and a default
 /// corner on each side of the bend before it, so the stroke meets the arrowhead's base.
 pub const LINK_ARROW_STUB_PX: f32 =
