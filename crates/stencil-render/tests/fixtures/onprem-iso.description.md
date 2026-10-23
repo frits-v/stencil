@@ -60,7 +60,7 @@ Drawn elements: 29 (28 nodes, 1 link). Laid out at 1740 x 1395.48 px, projection
 | VLAN 10 | pipe h | Core switch (core) | Edge firewall (fw) | solid, tint 1; blue in center | no arrowheads | VLAN 10, staff | `/body/0/children/0/children/1/children/0/children/0` |
 | VLAN 20 | pipe h | Core switch (core) | Edge firewall (fw) | solid, tint 2; pink in center | no arrowheads | VLAN 20, servers | `/body/0/children/0/children/1/children/0/children/1` |
 | VLAN 30 | pipe h | Edge firewall (fw) | VLAN 30 · public services (vlan30) | solid, tint 3; teal in center | no arrowheads | VLAN 30, DMZ | `/body/0/children/0/children/3/children/0/children/0` |
-| DMZ to inside | pipe h | Edge firewall (fw) | VLAN 30 · public services (vlan30) | deny; red in center | arrow start | blocked by the firewall | `/body/0/children/0/children/3/children/0/children/1` |
+| DMZ to inside | pipe h | Edge firewall (fw) | VLAN 30 · public services (vlan30) | deny; red in center | stop plate start | blocked by the firewall | `/body/0/children/0/children/3/children/0/children/1` |
 | VLAN 99 · transit | link | Edge firewall (fw) | Edge router (rt) | solid, tint 4; amber in center | arrow end | VLAN 99, transit | `/links/0` |
 
 ## Legend `/legend`

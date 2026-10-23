@@ -3,7 +3,6 @@
   <defs>
     <marker id="arrow-center-blue" viewBox="0 0 10 8" refX="10" refY="4" markerWidth="10" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto"><path d="M 0 0 L 10 4 L 0 8 Z" fill="#1A73E8"/></marker>
     <marker id="arrow-center-dash" viewBox="0 0 10 8" refX="10" refY="4" markerWidth="10" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto"><path d="M 0 0 L 10 4 L 0 8 Z" fill="#1A73E8"/></marker>
-    <marker id="arrow-center-deny" viewBox="0 0 10 8" refX="10" refY="4" markerWidth="10" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto"><path d="M 0 0 L 10 4 L 0 8 Z" fill="#C5221F"/></marker>
   </defs>
   <g data-id="" data-tag="Page">
     <g data-id="/kicker" data-tag="Kicker">
@@ -72,6 +71,7 @@
       </g>
       <g data-id="/legend/2" data-tag="LegendEntry" data-kind="deny">
         <line x1="306.27" y1="690.8" x2="332.27" y2="690.8" stroke="#C5221F" stroke-width="2" stroke-dasharray="6 5"/>
+        <rect x="329.27" y="684.8" width="3" height="12" fill="#C5221F"/>
         <text x="338.27" y="695.17" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">Dashed red</text>
         <text x="410.96" y="695.17" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">rejected call</text>
       </g>
@@ -127,8 +127,8 @@
     <text x="246.55" y="529.27" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">cancel job</text>
   </g>
   <g data-id="/links/8" data-tag="Link" data-kind="deny">
-    <path d="M 404.4 572.3 L 650 572.3" fill="none" stroke="#C5221F" stroke-width="2" stroke-dasharray="6 5" stroke-linejoin="round"/>
-    <line x1="650" y1="572.3" x2="660" y2="572.3" stroke="none" marker-end="url(#arrow-center-deny)"/>
+    <path d="M 404.4 572.3 L 657 572.3" fill="none" stroke="#C5221F" stroke-width="2" stroke-dasharray="6 5" stroke-linejoin="round"/>
+    <rect x="657" y="564.3" width="3" height="16" fill="#C5221F"/>
     <rect x="468.98" y="548.95" width="126.43" height="46.7" rx="5.25" fill="#FFFFFF" stroke="#F4C7C3" stroke-width="1.5"/>
     <text x="479.87" y="567.87" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#C5221F">DELETE /jobs/{id}</text>
     <text x="477.73" y="585.47" xml:space="preserve" font-family="Inter" font-size="12" font-weight="600" fill="#5F6368">409: job is running</text>

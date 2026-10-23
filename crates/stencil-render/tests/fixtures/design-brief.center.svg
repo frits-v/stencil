@@ -2,7 +2,6 @@
   <rect x="0" y="0" width="1480" height="1042.8" fill="#FFFFFF"/>
   <defs>
     <marker id="arrow-center-blue" viewBox="0 0 10 8" refX="10" refY="4" markerWidth="10" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto"><path d="M 0 0 L 10 4 L 0 8 Z" fill="#1A73E8"/></marker>
-    <marker id="arrow-center-deny" viewBox="0 0 10 8" refX="10" refY="4" markerWidth="10" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto"><path d="M 0 0 L 10 4 L 0 8 Z" fill="#C5221F"/></marker>
   </defs>
   <g data-id="" data-tag="Page">
     <g data-id="/kicker" data-tag="Kicker">
@@ -165,6 +164,7 @@
       </g>
       <g data-id="/legend/1" data-tag="LegendEntry" data-kind="deny">
         <line x1="314.83" y1="994.4" x2="340.83" y2="994.4" stroke="#C5221F" stroke-width="2" stroke-dasharray="6 5"/>
+        <rect x="337.83" y="988.4" width="3" height="12" fill="#C5221F"/>
         <text x="346.83" y="998.77" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">Dashed red</text>
         <text x="419.52" y="998.77" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">blocked path</text>
       </g>
@@ -210,8 +210,8 @@
     <text x="1229.14" y="623.57" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">6 write verdict</text>
   </g>
   <g data-id="/links/6" data-tag="Link" data-kind="deny">
-    <path d="M 913.72 729.2 L 1290.55 729.2" fill="none" stroke="#C5221F" stroke-width="2" stroke-dasharray="6 5" stroke-linejoin="round"/>
-    <line x1="1290.55" y1="729.2" x2="1300.55" y2="729.2" stroke="none" marker-end="url(#arrow-center-deny)"/>
+    <path d="M 913.72 729.2 L 1297.55 729.2" fill="none" stroke="#C5221F" stroke-width="2" stroke-dasharray="6 5" stroke-linejoin="round"/>
+    <rect x="1297.55" y="721.2" width="3" height="16" fill="#C5221F"/>
     <rect x="1056.22" y="714.65" width="101.85" height="29.1" rx="5.25" fill="#FFFFFF" stroke="#F4C7C3" stroke-width="1.5"/>
     <text x="1064.97" y="733.57" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#C5221F">no direct write</text>
   </g>

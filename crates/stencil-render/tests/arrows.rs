@@ -86,25 +86,22 @@ fn carriers<'a, 'input>(group: roxmltree::Node<'a, 'input>) -> Vec<roxmltree::No
         .collect()
 }
 
-/// The wire colors of solid slot 1, solid slot 2, dash slot 1 and deny under a theme.
-fn marker_colors(theme: &str) -> [String; 4] {
+/// The wire colors of solid slot 1, solid slot 2 and dash slot 1 under a theme.
+fn marker_colors(theme: &str) -> [String; 3] {
     let theme = common::theme(theme);
     [
         &theme.tints[0].wire,
         &theme.tints[1].wire,
         &theme.tints[0].wire,
-        &theme.deny.color,
     ]
     .map(|color| color.as_str().to_string())
 }
 
+/// A deny line ends in a stop plate, so its arrowed arm adds no marker.
 #[test]
 fn defs_hold_one_marker_per_arrow_kind_in_the_wire_color() {
-    assert_eq!(
-        marker_colors("center"),
-        ["#1A73E8", "#C2185B", "#1A73E8", "#C5221F"]
-    );
-    assert_eq!(marker_colors("wire"), ["#222222"; 4]);
+    assert_eq!(marker_colors("center"), ["#1A73E8", "#C2185B", "#1A73E8"]);
+    assert_eq!(marker_colors("wire"), ["#222222"; 3]);
     for theme in common::THEMES {
         let colors = marker_colors(theme);
         let rendered = common::render_document_with_fixed_metrics(arrow_document(theme));
@@ -119,7 +116,7 @@ fn defs_hold_one_marker_per_arrow_kind_in_the_wire_color() {
             .collect();
         assert_eq!(
             ids,
-            ["blue", "pink", "dash", "deny"].map(|kind| format!("arrow-{theme}-{kind}")),
+            ["blue", "pink", "dash"].map(|kind| format!("arrow-{theme}-{kind}")),
             "{theme}"
         );
         for (marker, color) in markers.iter().zip(colors) {
@@ -177,6 +174,10 @@ fn an_arrow_replaces_the_dot_at_the_end_it_names() {
         assert_eq!(has_dot_at(dot_end), !arrow_end, "{pointer} end dot");
 
         let lines = carriers(group);
+        if kind == "deny" {
+            assert!(lines.is_empty(), "{pointer}: a deny arm draws no arrowhead");
+            continue;
+        }
         let expected_count = usize::from(arrow_start) + usize::from(arrow_end);
         assert_eq!(lines.len(), expected_count, "{pointer}");
         for line in &lines {
@@ -267,4 +268,135 @@ fn the_arrowhead_paints_in_the_png() {
         (0x1A, 0x73, 0xE8),
         "pixel at ({sample_x}, {sample_y})"
     );
+}
+
+/// The filled rects directly in `group`, as (x, y, width, height, fill).
+fn rects(group: roxmltree::Node<'_, '_>) -> Vec<(f32, f32, f32, f32, String)> {
+    common::children_named(group, "rect")
+        .into_iter()
+        .map(|rect| {
+            (
+                number(rect, "x"),
+                number(rect, "y"),
+                number(rect, "width"),
+                number(rect, "height"),
+                rect.attribute("fill").unwrap_or_default().to_string(),
+            )
+        })
+        .collect()
+}
+
+/// Section 11.2: a deny line ends in a stop plate at its arrowed end, a bar 16 across its
+/// line and 3 thick in the deny color with its outer face on the end, never an arrowhead.
+/// The line's stroke runs to the plate, and the legend sample shows a plate at its end.
+#[test]
+fn a_deny_line_ends_in_a_stop_plate_on_its_end_and_draws_no_arrowhead() {
+    for theme in common::THEMES {
+        let mut document = arrow_document(theme);
+        document["body"] = json!([
+            {
+                "tag": "Row",
+                "gap": 64,
+                "children": [
+                    { "tag": "Item", "kind": "product", "id": "left", "title": "left" },
+                    { "tag": "Pipe", "dir": "h", "line": "deny", "label": "arm", "arrow": "end" },
+                    { "tag": "Item", "kind": "product", "id": "right", "title": "right" }
+                ]
+            },
+            { "tag": "Item", "kind": "product", "id": "below", "title": "below" }
+        ]);
+        document["links"] = json!([{ "from": "right", "to": "below", "line": "deny" }]);
+        let rendered = common::render_document_with_fixed_metrics(document);
+        let svg = &rendered.svg.svg;
+        let deny = common::theme(theme).deny.color.as_str().to_string();
+        let xml = common::parse_xml(svg);
+        assert!(
+            !svg.contains(&format!("arrow-{theme}-deny")),
+            "{theme}: no deny marker"
+        );
+
+        let pipe = common::group(&xml, "/body/0/children/1");
+        assert!(
+            carriers(pipe).is_empty(),
+            "{theme}: the pipe draws no arrowhead"
+        );
+        let dot_end = part_bounds(&rendered, "/body/0/children/1", PartName::DotEnd);
+        let center_y = dot_end.y + dot_end.height / 2.0;
+        let plate = (
+            dot_end.right() - 3.0,
+            center_y - 8.0,
+            3.0,
+            16.0,
+            deny.clone(),
+        );
+        let pipe_rects = rects(pipe);
+        assert!(
+            pipe_rects.iter().any(|rect| close(rect.0, plate.0)
+                && close(rect.1, plate.1)
+                && close(rect.2, plate.2)
+                && close(rect.3, plate.3)
+                && rect.4 == plate.4),
+            "{theme}: {pipe_rects:?} holds no plate {plate:?}"
+        );
+        let stub = common::children_named(pipe, "line")
+            .into_iter()
+            .find(|line| close(number(*line, "x2"), dot_end.right() - 3.0))
+            .unwrap_or_else(|| panic!("{theme}: no stroke into the plate"));
+        assert!(close(number(stub, "x1"), dot_end.right() - 10.0), "{theme}");
+        assert_eq!(stub.attribute("stroke"), Some(deny.as_str()), "{theme}");
+
+        let route = &rendered.geometry.links[0];
+        let tip = *route.points.last().unwrap();
+        let before = route.points[route.points.len() - 2];
+        assert!(
+            close(before.x, tip.x) && tip.y > before.y,
+            "{theme}: a straight approach down"
+        );
+        let link = common::group(&xml, "/links/0");
+        assert!(
+            carriers(link).is_empty(),
+            "{theme}: the link draws no arrowhead"
+        );
+        let link_rects = rects(link);
+        assert!(
+            link_rects.iter().any(|rect| close(rect.0, tip.x - 8.0)
+                && close(rect.1, tip.y - 3.0)
+                && close(rect.2, 16.0)
+                && close(rect.3, 3.0)
+                && rect.4 == deny),
+            "{theme}: {link_rects:?} holds no plate at {tip:?}"
+        );
+        let path = common::children_named(link, "path")[0]
+            .attribute("d")
+            .unwrap();
+        assert!(
+            path.ends_with(&format!("{} {}", tip.x, tip.y - 3.0)),
+            "{theme}: the stroke ends at the plate's inner face: {path}"
+        );
+
+        let entry = common::group(&xml, "/legend/4");
+        let swatch = rendered
+            .geometry
+            .node(&NodePointer::root().child("legend").index(4))
+            .unwrap()
+            .part(PartName::Swatch)
+            .unwrap()
+            .bounds;
+        let sample = (
+            swatch.right() - 3.0,
+            swatch.y + swatch.height / 2.0 - 6.0,
+            3.0,
+            12.0,
+            deny.clone(),
+        );
+        let entry_rects = rects(entry);
+        assert!(
+            entry_rects.iter().any(|rect| close(rect.0, sample.0)
+                && close(rect.1, sample.1)
+                && close(rect.2, sample.2)
+                && close(rect.3, sample.3)
+                && rect.4 == sample.4),
+            "{theme}: {entry_rects:?} holds no sample plate {sample:?}"
+        );
+    }
 }

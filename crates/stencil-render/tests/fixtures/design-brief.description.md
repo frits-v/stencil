@@ -61,7 +61,7 @@ Drawn elements: 29 (22 nodes, 7 links). Canvas 1480 x 1042.8 px, projection flat
 | 4 deliver job | link | Evaluation queue (queue) | Clip worker (worker) | solid, tint 1; blue in center | arrow end | request path, numbered in order | `/links/3` |
 | 5 evaluate clip | link | Clip worker (worker) | Clip evaluator (evaluator) | solid, tint 1; blue in center | arrow end | request path, numbered in order | `/links/4` |
 | 6 write verdict | link | Clip worker (worker) | Verdict store (database) | solid, tint 1; blue in center | arrow end | request path, numbered in order | `/links/5` |
-| no direct write | link | Clip evaluator (evaluator) | Verdict store (database) | deny; red in center | arrow end | blocked path | `/links/6` |
+| no direct write | link | Clip evaluator (evaluator) | Verdict store (database) | deny; red in center | stop plate end | blocked path | `/links/6` |
 
 ## Legend `/legend`
 

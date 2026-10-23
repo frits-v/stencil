@@ -54,7 +54,7 @@ Drawn elements: 29 (29 nodes, 0 links). Canvas 1320 x 570.6 px, projection flat,
 |---|---|---|---|---|---|---|---|
 | VLAN 10 · staff trunk | pipe h | Inside zone (left neighbour) | Edge firewall (right neighbour) | solid, tint 1; blue in center | no arrowheads | VLAN 10, staff | `/body/0/children/0/children/1/children/0` |
 | VLAN 20 · server trunk | pipe h | Inside zone (left neighbour) | Edge firewall (right neighbour) | solid, tint 2; pink in center | no arrowheads | VLAN 20, servers | `/body/0/children/0/children/1/children/1` |
-| DMZ to inside | pipe h | Inside zone (left neighbour) | Edge firewall (right neighbour) | deny; red in center | arrow start | blocked by the firewall | `/body/0/children/0/children/1/children/2` |
+| DMZ to inside | pipe h | Inside zone (left neighbour) | Edge firewall (right neighbour) | deny; red in center | stop plate start | blocked by the firewall | `/body/0/children/0/children/1/children/2` |
 | VLAN 30 · DMZ | pipe h | Edge firewall (left neighbour) | DMZ (right neighbour) | solid, tint 3; teal in center | no arrowheads | VLAN 30, DMZ | `/body/0/children/0/children/3/children/0` |
 | VLAN 99 · transit | pipe h | Edge firewall (left neighbour) | DMZ (right neighbour) | solid, tint 4; amber in center | no arrowheads | VLAN 99, transit | `/body/0/children/0/children/3/children/1` |
 

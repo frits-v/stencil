@@ -158,7 +158,7 @@
                   "children": [
                     {
                       "tag": "Col",
-                      "gap": 48,
+                      "gap": 64,
                       "children": [
                         { "tag": "Item", "kind": "product", "id": "storage", "icon": "cloud-storage", "title": "Lake", "subtitle": "Cloud Storage" },
                         { "tag": "Item", "kind": "product", "id": "warehouse", "icon": "bigquery", "title": "Warehouse", "subtitle": "BigQuery" }

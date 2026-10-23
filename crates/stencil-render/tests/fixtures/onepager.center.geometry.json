@@ -616,7 +616,7 @@
         },
         {
           "x": 674.04,
-          "y": 1647.37
+          "y": 1647.13
         }
       ],
       "status": "routed",
@@ -727,27 +727,27 @@
           "height": 17,
           "width": 20,
           "x": 836.11,
-          "y": 1599.59
+          "y": 1600.92
         },
         "mark_numeral/0": {
           "height": 9,
           "line_count": 1,
           "width": 5.81,
           "x": 843.2,
-          "y": 1606.09
+          "y": 1607.42
         },
         "tag": {
           "height": 30.6,
           "width": 127.35,
           "x": 738.26,
-          "y": 1592.79
+          "y": 1594.12
         },
         "tag_label": {
           "height": 15.6,
           "line_count": 1,
           "width": 84.35,
           "x": 747.76,
-          "y": 1600.29
+          "y": 1601.62
         }
       },
       "points": [
@@ -757,7 +757,7 @@
         },
         {
           "x": 801.94,
-          "y": 1647.37
+          "y": 1650.04
         }
       ],
       "status": "routed",
@@ -765,7 +765,7 @@
         "height": 30.6,
         "width": 127.35,
         "x": 738.26,
-        "y": 1592.79
+        "y": 1594.12
       },
       "to": "/body/1/children/0/children/0/children/0/children/1/children/0/children/2/children/1/children/0"
     }

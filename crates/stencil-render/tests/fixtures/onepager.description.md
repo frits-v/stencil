@@ -220,7 +220,7 @@ Subtitle: the pieces, and why each exists. Note: balloons key the drawing to the
 | step 6: write verdict | link | Clip worker (worker) | Verdict store (verdict-store) | dash, tint 6, Clip worker; green in center | arrow end | reads or writes the verdict store | Clip worker | none | `D4` `/links/14` |
 | schedule replays | link | Trigger API (api) | Replay scheduler (replay) | solid, tint 1, Trigger API, planned; blue in center | arrow end | planned, not built yet | Trigger API | none | `D5` `/links/15` |
 | clip finished | link | Clip bucket (bucket) | Evaluation queue (queue) | gray; gray in center | dot end | event from the platform | none | none | `D3` `/links/16` |
-| no direct write | link | Clip evaluator (evaluator) | Verdict store (verdict-store) | deny; red in center | arrow end | blocked path | none | flag 3 The evaluator holds no credentials for the verdict store. `D5` `/links/17/marks/0` | `D5` `/links/17` |
+| no direct write | link | Clip evaluator (evaluator) | Verdict store (verdict-store) | deny; red in center | stop plate end | blocked path | none | flag 3 The evaluator holds no credentials for the verdict store. `D5` `/links/17/marks/0` | `D5` `/links/17` |
 
 ## View 4: How-tos `F1-F8` `/body/2`
 

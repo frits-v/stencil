@@ -12,8 +12,8 @@ use crate::route::segment_enters;
 use crate::sheet_lines::BEND_AIR_PX;
 use crate::styles::{text_color, text_style_for};
 use crate::{
-    ARROWHEAD_LENGTH_PX, ARROWHEAD_WIDTH_PX, BoxRect, GEOMETRY_EPSILON_PX, LayoutError, NodeTag,
-    PageGeometry, Part, PartName, TextAlign, TextRun,
+    ARROWHEAD_LENGTH_PX, BoxRect, GEOMETRY_EPSILON_PX, LayoutError, NodeTag, PageGeometry, Part,
+    PartName, TextAlign, TextRun,
 };
 
 /// A line into a framed Step crosses the frame on its shaft, past its arrowhead.
@@ -270,27 +270,6 @@ fn outline_distance(frame: &BoxRect, point: PagePoint) -> f32 {
         .min(frame.bottom() - point.y)
 }
 
-fn arrowhead_box((base, tip): (PagePoint, PagePoint)) -> BoxRect {
-    let half = ARROWHEAD_WIDTH_PX / 2.0;
-    let (x_low, x_high) = (base.x.min(tip.x), base.x.max(tip.x));
-    let (y_low, y_high) = (base.y.min(tip.y), base.y.max(tip.y));
-    if (base.x - tip.x).abs() > (base.y - tip.y).abs() {
-        BoxRect {
-            x: x_low,
-            y: base.y - half,
-            width: x_high - x_low,
-            height: 2.0 * half,
-        }
-    } else {
-        BoxRect {
-            x: base.x - half,
-            y: y_low,
-            width: 2.0 * half,
-            height: y_high - y_low,
-        }
-    }
-}
-
 fn describe(bounds: &BoxRect) -> String {
     format!(
         "{:.2}x{:.2} at ({:.2}, {:.2})",
@@ -473,7 +452,7 @@ pub(crate) fn detail_frame_defects(page: &Page, geometry: &PageGeometry) -> (u64
             );
             let drawn = drawn_link(geometry, route);
             for arrow in [drawn.start_arrow, drawn.end_arrow].into_iter().flatten() {
-                boxes.push(("arrowhead", arrowhead_box(arrow)));
+                boxes.push((drawn.cap.name(), drawn.cap.bounds(arrow)));
             }
             for (what, bounds) in boxes {
                 if outline_crosses(&frame, &bounds) {

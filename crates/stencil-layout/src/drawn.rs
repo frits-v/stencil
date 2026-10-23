@@ -2,10 +2,13 @@
 //! arrowheads, each bend square, rounded or splined. The flat writer formats it and
 //! links-avoid-boxes reads it, so the check examines the drawn line.
 
-use stencil_model::{Arrow, Bend, PagePoint};
+use stencil_model::{Arrow, Bend, Line, PagePoint};
 
 use crate::route::{Obstacle, link_obstacles, segment_enters};
-use crate::{ARROWHEAD_LENGTH_PX, BoxRect, GEOMETRY_EPSILON_PX, LinkRoute, PageGeometry};
+use crate::{
+    ARROWHEAD_LENGTH_PX, ARROWHEAD_WIDTH_PX, BoxRect, GEOMETRY_EPSILON_PX, LinkRoute, PageGeometry,
+    STOP_PLATE_THICKNESS_PX, STOP_PLATE_WIDTH_PX,
+};
 
 /// The largest |cos| between two legs that still counts as a right angle.
 const PERPENDICULAR_COS_MAX: f32 = 1e-3;
@@ -104,22 +107,88 @@ pub struct DrawnLink {
     pub start: PagePoint,
     /// The pieces along each route leg in order, the bend at the leg's far corner included.
     pub legs: Vec<Vec<PathPiece>>,
-    /// (base, tip) of the arrowhead at each arrowed end.
+    /// (base, tip) of the mark at each arrowed end: the arrowhead, or a deny line's stop
+    /// plate, whose base is its inner face.
     pub start_arrow: Option<(PagePoint, PagePoint)>,
     pub end_arrow: Option<(PagePoint, PagePoint)>,
+    pub cap: EndCap,
+}
+
+/// What a line draws at an arrowed end.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum EndCap {
+    #[default]
+    Arrowhead,
+    /// A deny line ends in a bar across it on the endpoint's outline (section 11.2).
+    StopPlate,
+}
+
+impl EndCap {
+    pub fn of(line: Line) -> Self {
+        match line {
+            Line::Deny => EndCap::StopPlate,
+            Line::Gray | Line::Solid | Line::Dash => EndCap::Arrowhead,
+        }
+    }
+
+    pub fn name(self) -> &'static str {
+        match self {
+            EndCap::Arrowhead => "arrowhead",
+            EndCap::StopPlate => "stop plate",
+        }
+    }
+
+    /// How far the mark reaches back from the tip along the line.
+    pub fn length_px(self) -> f32 {
+        match self {
+            EndCap::Arrowhead => ARROWHEAD_LENGTH_PX,
+            EndCap::StopPlate => STOP_PLATE_THICKNESS_PX,
+        }
+    }
+
+    /// How wide the mark is across the line.
+    pub fn width_px(self) -> f32 {
+        match self {
+            EndCap::Arrowhead => ARROWHEAD_WIDTH_PX,
+            EndCap::StopPlate => STOP_PLATE_WIDTH_PX,
+        }
+    }
+
+    /// The box the mark covers, from its (base, tip) on a horizontal or vertical run.
+    pub fn bounds(self, (base, tip): (PagePoint, PagePoint)) -> BoxRect {
+        let half = self.width_px() / 2.0;
+        let (x_low, x_high) = (base.x.min(tip.x), base.x.max(tip.x));
+        let (y_low, y_high) = (base.y.min(tip.y), base.y.max(tip.y));
+        if (base.x - tip.x).abs() > (base.y - tip.y).abs() {
+            BoxRect {
+                x: x_low,
+                y: tip.y - half,
+                width: x_high - x_low,
+                height: 2.0 * half,
+            }
+        } else {
+            BoxRect {
+                x: tip.x - half,
+                y: y_low,
+                width: 2.0 * half,
+                height: y_high - y_low,
+            }
+        }
+    }
 }
 
 /// The drawn line of `route`. A spline piece that would enter a box the route avoided
 /// falls back to a curve of the route's corner radius at that bend.
 pub fn drawn_link(geometry: &PageGeometry, route: &LinkRoute) -> DrawnLink {
     let mut points = route.points.clone();
+    let cap = EndCap::of(route.line);
     let start_arrow = if matches!(route.arrow, Arrow::Start | Arrow::Both) {
-        trim_start(&mut points)
+        trim_start(&mut points, cap.length_px())
     } else {
         None
     };
     let end_arrow = if matches!(route.arrow, Arrow::End | Arrow::Both) {
-        trim_end(&mut points)
+        trim_end(&mut points, cap.length_px())
     } else {
         None
     };
@@ -162,6 +231,7 @@ pub fn drawn_link(geometry: &PageGeometry, route: &LinkRoute) -> DrawnLink {
         legs,
         start_arrow,
         end_arrow,
+        cap,
     }
 }
 
@@ -639,14 +709,14 @@ fn chord_enters(a: PagePoint, b: PagePoint, bounds: &BoxRect) -> bool {
     low < high
 }
 
-/// Pulls the last point back along the last segment by the arrowhead length, or to the
-/// previous corner when the segment is shorter, so the stroke ends under the arrowhead's
-/// base. Returns the (base, tip) of the arrowhead, which points along the last segment.
-fn trim_end(points: &mut [PagePoint]) -> Option<(PagePoint, PagePoint)> {
+/// Pulls the last point back along the last segment by the end mark's `length`, or to the
+/// previous corner when the segment is shorter, so the stroke ends under the mark's base.
+/// Returns the (base, tip) of the mark, which points along the last segment.
+fn trim_end(points: &mut [PagePoint], length: f32) -> Option<(PagePoint, PagePoint)> {
     let count = points.len();
     let tip = *points.last()?;
     let previous = *points.get(count.checked_sub(2)?)?;
-    let base = arrow_base(previous, tip);
+    let base = arrow_base(previous, tip, length);
     if let Some(last) = points.last_mut() {
         *last = base.stroke_end;
     }
@@ -654,10 +724,10 @@ fn trim_end(points: &mut [PagePoint]) -> Option<(PagePoint, PagePoint)> {
 }
 
 /// `trim_end` for the first point, with the arrowhead pointing back along the first segment.
-fn trim_start(points: &mut [PagePoint]) -> Option<(PagePoint, PagePoint)> {
+fn trim_start(points: &mut [PagePoint], length: f32) -> Option<(PagePoint, PagePoint)> {
     let tip = *points.first()?;
     let next = *points.get(1)?;
-    let base = arrow_base(next, tip);
+    let base = arrow_base(next, tip, length);
     if let Some(first) = points.first_mut() {
         *first = base.stroke_end;
     }
@@ -674,8 +744,8 @@ struct ArrowBase {
     marker_base: PagePoint,
 }
 
-/// The arrowhead base on the segment from `from` to the tip `tip`.
-fn arrow_base(from: PagePoint, tip: PagePoint) -> ArrowBase {
+/// The base of an end mark `mark_length` long on the segment from `from` to the tip `tip`.
+fn arrow_base(from: PagePoint, tip: PagePoint, mark_length: f32) -> ArrowBase {
     let delta_x = tip.x - from.x;
     let delta_y = tip.y - from.y;
     let length = (delta_x * delta_x + delta_y * delta_y).sqrt();
@@ -688,10 +758,10 @@ fn arrow_base(from: PagePoint, tip: PagePoint) -> ArrowBase {
     let unit_x = delta_x / length;
     let unit_y = delta_y / length;
     let marker_base = PagePoint {
-        x: tip.x - unit_x * ARROWHEAD_LENGTH_PX,
-        y: tip.y - unit_y * ARROWHEAD_LENGTH_PX,
+        x: tip.x - unit_x * mark_length,
+        y: tip.y - unit_y * mark_length,
     };
-    let trimmed = ARROWHEAD_LENGTH_PX.min(length);
+    let trimmed = mark_length.min(length);
     ArrowBase {
         stroke_end: PagePoint {
             x: tip.x - unit_x * trimmed,
@@ -811,15 +881,35 @@ mod tests {
     #[test]
     fn a_short_end_segment_trims_to_its_corner_and_keeps_a_full_length_arrowhead() {
         let mut points = vec![point(0.0, 0.0), point(100.0, 0.0), point(100.0, 6.0)];
-        let (base, tip) = trim_end(&mut points).unwrap();
+        let (base, tip) = trim_end(&mut points, ARROWHEAD_LENGTH_PX).unwrap();
         assert_eq!(tip, point(100.0, 6.0));
         assert_eq!(base, point(100.0, -4.0));
         assert_eq!(points[2], point(100.0, 0.0));
 
         let mut long = vec![point(0.0, 0.0), point(50.0, 0.0)];
-        let (base, tip) = trim_start(&mut long).unwrap();
+        let (base, tip) = trim_start(&mut long, ARROWHEAD_LENGTH_PX).unwrap();
         assert_eq!(tip, point(0.0, 0.0));
         assert_eq!(base, point(10.0, 0.0));
         assert_eq!(long[0], base);
+    }
+
+    #[test]
+    fn a_stop_plate_end_trims_the_stroke_to_the_plate_and_covers_a_bar_across_the_line() {
+        let mut points = vec![point(0.0, 0.0), point(0.0, 50.0)];
+        let cap = EndCap::of(Line::Deny);
+        assert_eq!(cap, EndCap::StopPlate);
+        let (base, tip) = trim_end(&mut points, cap.length_px()).unwrap();
+        assert_eq!(tip, point(0.0, 50.0));
+        assert_eq!(base, point(0.0, 47.0));
+        assert_eq!(points[1], base);
+        assert_eq!(
+            cap.bounds((base, tip)),
+            BoxRect {
+                x: -8.0,
+                y: 47.0,
+                width: 16.0,
+                height: 3.0
+            }
+        );
     }
 }

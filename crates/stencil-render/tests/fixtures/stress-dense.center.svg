@@ -304,6 +304,7 @@
       </g>
       <g data-id="/legend/4" data-tag="LegendEntry" data-kind="deny">
         <line x1="717.68" y1="905.4" x2="743.68" y2="905.4" stroke="#C5221F" stroke-width="2" stroke-dasharray="6 5"/>
+        <rect x="740.68" y="899.4" width="3" height="12" fill="#C5221F"/>
         <text x="749.68" y="909.77" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">Dashed red</text>
         <text x="822.37" y="909.77" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">blocked egress</text>
       </g>

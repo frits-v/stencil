@@ -5,8 +5,8 @@
 use std::collections::{BTreeMap, HashMap, HashSet};
 
 use stencil_layout::{
-    DescriptionUnits, NodeTag, PageGeometry, PipeEndSide, RouteStatus, UnitKind, description_units,
-    title_cell_caption, where_used,
+    DescriptionUnits, EndCap, NodeTag, PageGeometry, PipeEndSide, RouteStatus, UnitKind,
+    description_units, title_cell_caption, where_used,
 };
 use stencil_model::checks::{CheckName, CheckReport, Defect};
 use stencil_model::pointer::NodePointer;
@@ -1315,7 +1315,7 @@ impl<'a> Writer<'a> {
         rows
     }
 
-    /// The Ends cell of a link: its drawn arrowheads, with `dot start` or `dot end` for an
+    /// The Ends cell of a link: its drawn arrowheads or stop plates, with `dot start` or `dot end` for an
     /// end on a rail, which draws a dot in place of an arrowhead.
     fn link_ends(&self, route: &stencil_layout::LinkRoute) -> String {
         let on_rail = |index: usize| {
@@ -1327,7 +1327,7 @@ impl<'a> Writer<'a> {
         };
         let (start_dot, end_dot) = (on_rail(route.from_node), on_rail(route.to_node));
         if !start_dot && !end_dot {
-            return arrow_ends(route.arrow).to_string();
+            return arrow_ends(route.line, route.arrow).to_string();
         }
         let mut ends = Vec::new();
         if start_dot {
@@ -1335,7 +1335,7 @@ impl<'a> Writer<'a> {
         }
         match route.arrow {
             Arrow::None => {}
-            arrow => ends.push(arrow_ends(arrow)),
+            arrow => ends.push(arrow_ends(route.line, arrow)),
         }
         if end_dot {
             ends.push("dot end");
@@ -1647,7 +1647,7 @@ impl<'a> Writer<'a> {
         };
         let ends = match pipe.form {
             PipeForm::Rail => "no arrowheads".to_string(),
-            PipeForm::Tube | PipeForm::Band => arrow_ends(pipe.arrow).to_string(),
+            PipeForm::Tube | PipeForm::Band => arrow_ends(pipe.line, pipe.arrow).to_string(),
         };
         let mut name = pipe_line_name(pipe);
         if let Some(step) = pipe.step.filter(|_| self.page.sheet.is_some()) {
@@ -1685,7 +1685,7 @@ impl<'a> Writer<'a> {
                 format!("hub {}", escape_markdown(&tee.hub)),
                 arms.join(" and "),
                 self.use_style(&key, actor),
-                arrow_ends(Arrow::None).to_string(),
+                arrow_ends(tee.line, Arrow::None).to_string(),
                 self.means(&key),
             ],
             (actor, &[]),
@@ -1787,12 +1787,17 @@ fn style(key: &LegendKey) -> String {
     }
 }
 
-fn arrow_ends(arrow: Arrow) -> &'static str {
-    match arrow {
-        Arrow::None => "no arrowheads",
-        Arrow::End => "arrow end",
-        Arrow::Start => "arrow start",
-        Arrow::Both => "arrows both ends",
+/// The Ends cell: what the line draws at each arrowed end, an arrowhead or, on a deny
+/// line, a stop plate (section 11.2).
+fn arrow_ends(line: Line, arrow: Arrow) -> &'static str {
+    match (EndCap::of(line), arrow) {
+        (_, Arrow::None) => "no arrowheads",
+        (EndCap::Arrowhead, Arrow::End) => "arrow end",
+        (EndCap::Arrowhead, Arrow::Start) => "arrow start",
+        (EndCap::Arrowhead, Arrow::Both) => "arrows both ends",
+        (EndCap::StopPlate, Arrow::End) => "stop plate end",
+        (EndCap::StopPlate, Arrow::Start) => "stop plate start",
+        (EndCap::StopPlate, Arrow::Both) => "stop plates both ends",
     }
 }
 

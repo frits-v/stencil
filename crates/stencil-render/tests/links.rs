@@ -326,13 +326,25 @@ fn design_brief_links_render_to_png_in_every_theme() {
         let geometry = common::layout_with_cosmic_text(&page);
         let svg = common::render_svg(&page, &geometry).unwrap();
         let parsed = common::parse_xml(&svg.svg);
-        for index in 0..page.links.len() {
+        for (index, entry) in page.links.iter().enumerate() {
             let link = link_group(&parsed, index);
+            // A deny line ends in a stop plate, a rect, in place of the arrowhead's carrier.
+            let (carriers, plates) = if entry.line == stencil_model::Line::Deny {
+                (0, 1)
+            } else {
+                (1, 0)
+            };
             assert_eq!(
                 common::children_named(link, "line").len(),
-                1,
+                carriers,
                 "{theme} {index}"
             );
+            let deny = common::theme(theme).deny.color;
+            let plate_count = common::children_named(link, "rect")
+                .into_iter()
+                .filter(|rect| rect.attribute("fill") == Some(deny.as_str()))
+                .count();
+            assert_eq!(plate_count, plates, "{theme} {index}");
         }
         render_png(&svg.svg, svg.text_elements, DeviceScale::new(1).unwrap()).unwrap();
     }

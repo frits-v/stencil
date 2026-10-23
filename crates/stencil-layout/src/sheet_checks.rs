@@ -5,7 +5,7 @@
 
 use stencil_model::checks::Defect;
 use stencil_model::pointer::NodePointer;
-use stencil_model::{Arrow, LINKS_MAX, Node, NodeRef, Page, PagePoint, body_nodes};
+use stencil_model::{LINKS_MAX, Node, NodeRef, Page, PagePoint, body_nodes};
 
 use crate::drawn::{dash_runs, drawn_link, stroke_on_at, turn_positions};
 use crate::route::{RAIL_END_CLEARANCE_PX, rail_bar};
@@ -13,10 +13,7 @@ use crate::sheet_lines::{
     HOP_END_CLEARANCE_PX, HOP_END_STUB_PX, bend_keep_out, bends, covers_a_bend, hop_point,
     legs_shared, valve_box,
 };
-use crate::{
-    ARROWHEAD_LENGTH_PX, ARROWHEAD_WIDTH_PX, BoxRect, GEOMETRY_EPSILON_PX, LinkRoute, NodeTag,
-    PageGeometry, Part, PartName,
-};
+use crate::{BoxRect, GEOMETRY_EPSILON_PX, LinkRoute, NodeTag, PageGeometry, Part, PartName};
 
 /// The dash patterns a sheet line may draw, as (dash, gap): a dash line, a dotted line and
 /// the outer stroke of a planned line. A bend must be drawn under each of them.
@@ -243,70 +240,21 @@ fn rail_end_defects(
     defects
 }
 
-/// The box a route's end feature covers: its arrowhead, or its dot on a rail.
-fn end_features(route: &LinkRoute) -> Vec<BoxRect> {
-    let mut features: Vec<BoxRect> = route
+/// The box a route's end feature covers: its arrowhead or stop plate, or its dot on a rail.
+fn end_features(geometry: &PageGeometry, route: &LinkRoute) -> Vec<BoxRect> {
+    let drawn = drawn_link(geometry, route);
+    route
         .parts
         .iter()
         .filter(|part| part.name == PartName::RailDot)
         .map(|part| part.bounds)
-        .collect();
-    let count = route.points.len();
-    let arrowed = [
-        (
-            matches!(route.arrow, Arrow::Start | Arrow::Both),
-            route.points.first(),
-            route.points.get(1),
-        ),
-        (
-            matches!(route.arrow, Arrow::End | Arrow::Both),
-            route.points.last(),
-            count
-                .checked_sub(2)
-                .and_then(|index| route.points.get(index)),
-        ),
-    ];
-    for (has_arrow, tip, toward) in arrowed {
-        let (true, Some(tip), Some(toward)) = (has_arrow, tip, toward) else {
-            continue;
-        };
-        let horizontal = (tip.y - toward.y).abs() < GEOMETRY_EPSILON_PX;
-        let back = if horizontal {
-            (toward.x - tip.x).signum()
-        } else {
-            (toward.y - tip.y).signum()
-        };
-        let base = if horizontal {
-            PagePoint {
-                x: tip.x + back * ARROWHEAD_LENGTH_PX,
-                y: tip.y,
-            }
-        } else {
-            PagePoint {
-                x: tip.x,
-                y: tip.y + back * ARROWHEAD_LENGTH_PX,
-            }
-        };
-        let half = ARROWHEAD_WIDTH_PX / 2.0;
-        let (low_x, high_x) = (tip.x.min(base.x), tip.x.max(base.x));
-        let (low_y, high_y) = (tip.y.min(base.y), tip.y.max(base.y));
-        features.push(if horizontal {
-            BoxRect {
-                x: low_x,
-                y: tip.y - half,
-                width: high_x - low_x,
-                height: 2.0 * half,
-            }
-        } else {
-            BoxRect {
-                x: tip.x - half,
-                y: low_y,
-                width: 2.0 * half,
-                height: high_y - low_y,
-            }
-        });
-    }
-    features
+        .chain(
+            [drawn.start_arrow, drawn.end_arrow]
+                .into_iter()
+                .flatten()
+                .map(|arrow| drawn.cap.bounds(arrow)),
+        )
+        .collect()
 }
 
 /// The sheet's additions to `marks-clear` (section 14.6): each step badge inside its tag,
@@ -409,7 +357,7 @@ pub(crate) fn line_mark_defects(page: &Page, geometry: &PageGeometry) -> (u64, V
                 }
             }
         }
-        for feature in end_features(route) {
+        for feature in end_features(geometry, route) {
             examined += 1;
             for (owner, glyph) in &glyphs {
                 if overlap(&feature, glyph) {
