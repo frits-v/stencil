@@ -97,7 +97,7 @@ onepager: gcp.#Page & {
 						{id: "evaluate", title: "Evaluate each clip"},
 						{id: "review", title: "Review"},
 					]
-					step_fill: "none"
+					step_fill: "cell"
 					children: [
 						{
 							tag:   "Step"

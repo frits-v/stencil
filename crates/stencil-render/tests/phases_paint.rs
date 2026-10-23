@@ -476,3 +476,62 @@ fn wire_paints_a_tint_fill_and_a_washed_band_white() {
     }
     assert!(examined > 20, "examined {examined}");
 }
+
+/// Onepager as authored, in every theme a design sheet is judged in: each lane is a wash
+/// and each Step on it paints an opaque front, so neither the wash nor the grid shows
+/// through a box.
+#[test]
+fn the_onepager_paints_its_steps_opaque_over_the_lane_wash() {
+    let document: Value =
+        serde_json::from_str(include_str!("../../../examples/onepager.json")).unwrap();
+    let lanes: Vec<String> = document["body"][0]["children"][0]["lanes"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|lane| lane.as_str().unwrap().to_string())
+        .collect();
+    let mut examined = 0;
+    for theme_name in ["center", "paper", "dusk", "clear", "clear-dark", "wire"] {
+        let theme = common::theme(theme_name);
+        let rendered = render(document.clone(), theme_name);
+        let svg = common::parse_xml(&rendered.svg.svg);
+        let bands = parts(node(&rendered.geometry, PHASES), PartName::LaneBand);
+        assert_eq!(bands.len(), lanes.len(), "{theme_name}");
+        let band_rects = shapes(common::group(&svg, PHASES));
+        for (index, (pointer, slot, look, _)) in steps(&document).into_iter().enumerate() {
+            if look == StepLook::Text {
+                continue;
+            }
+            let lane = document["body"][0]["children"][0]["children"][index]["lane"]
+                .as_str()
+                .unwrap();
+            let band = bands[lanes.iter().position(|name| name == lane).unwrap()];
+            let step = node(&rendered.geometry, &pointer).bounds;
+            assert!(
+                step.x >= band.x
+                    && step.right() <= band.right()
+                    && step.y >= band.y
+                    && step.bottom() <= band.bottom(),
+                "{theme_name} {pointer}: off its lane band"
+            );
+            let wash = lane_band(&theme, slot);
+            assert!(
+                band_rects.iter().any(|element| element.has_tag_name("rect")
+                    && element.attribute("y").unwrap().parse::<f32>().unwrap() == band.y
+                    && element.attribute("fill") == Some(wash.as_str())),
+                "{theme_name} {pointer}: lane {lane} is not washed"
+            );
+            let front = *common::children_named(common::group(&svg, &pointer), "rect")
+                .last()
+                .unwrap();
+            let fill = front.attribute("fill").unwrap();
+            assert_ne!(fill, "none", "{theme_name} {pointer} {look:?}: no fill");
+            assert!(
+                front.attribute("fill-opacity").is_none() && front.attribute("opacity").is_none(),
+                "{theme_name} {pointer}: a translucent front"
+            );
+            examined += 1;
+        }
+    }
+    assert_eq!(examined, 6 * 11);
+}

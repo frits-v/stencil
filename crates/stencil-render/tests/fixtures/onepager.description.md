@@ -65,44 +65,44 @@ Mark kinds: a piece of the service (balloon, parts list); asked of an operator (
 
 Subtitle: one trigger, from description to stored verdict. Note: a lane for each actor; time runs left to right.
 
-- Phases: lanes Operator, Trigger API, Clip worker, Evaluator; phases 1 Describe, 2 Plan and approve, 3 Evaluate each clip, 4 Review; step fill none; detail A frames One job per clip, Judge the frames, Write the verdict. `A1-C8` `/body/0/children/0`
-  - Step Describe the event. Lane Operator, phase 1 Describe, column 1, fill none. `B1-B2` `/body/0/children/0/children/0`
+- Phases: lanes Operator, Trigger API, Clip worker, Evaluator; phases 1 Describe, 2 Plan and approve, 3 Evaluate each clip, 4 Review; step fill cell; detail A frames One job per clip, Judge the frames, Write the verdict. `A1-C8` `/body/0/children/0`
+  - Step Describe the event. Lane Operator, phase 1 Describe, column 1. `B1-B2` `/body/0/children/0/children/0`
     - Mark balloon 1 Operator console `B2` `/body/0/children/0/children/0/marks/0`
     - Line in plain language.
     - Line camera and hours.
   - Step nothing runs yet. Lane Trigger API, phase 1 Describe, column 1, look text. `B1-B2` `/body/0/children/0/children/1`
-  - Step Compile a plan. Lane Trigger API, phase 2 Plan and approve, column 1, fill none. `B2-B3` `/body/0/children/0/children/2`
+  - Step Compile a plan. Lane Trigger API, phase 2 Plan and approve, column 1. `B2-B3` `/body/0/children/0/children/2`
     - Mark balloon 3 Trigger API `B3` `/body/0/children/0/children/2/marks/0`
     - Line objects, conditions, frame rate.
     - Line plan version 1.
-  - Step Approve the plan. Lane Operator, phase 2 Plan and approve, column 2, fill none. `B3-B4` `/body/0/children/0/children/3`
+  - Step Approve the plan. Lane Operator, phase 2 Plan and approve, column 2. `B3-B4` `/body/0/children/0/children/3`
     - Mark diamond 1 Plan approval. `B4` `/body/0/children/0/children/3/marks/0`
     - Mark flag 1 A plan change never reaches a running trigger until an operator approves it. `B4` `/body/0/children/0/children/3/marks/1`
     - Line reads the plan, not the prompt.
   - Step Store plan version. Lane Trigger API, phase 2 Plan and approve, column 2, look chip, fill tint. `B3-B4` `/body/0/children/0/children/4`
     - Mark balloon 8 Verdict store `B4` `/body/0/children/0/children/4/marks/0`
-  - Step Clip arrives. Lane Clip worker, phase 3 Evaluate each clip, column 1, fill none. `B4-B5` `/body/0/children/0/children/5`
+  - Step Clip arrives. Lane Clip worker, phase 3 Evaluate each clip, column 1. `B4-B5` `/body/0/children/0/children/5`
     - Mark balloon 5 Clip bucket `B5` `/body/0/children/0/children/5/marks/0`
     - Line the arrival event names a finished clip.
       - Mark flag 4 Out of scope: live streams, identifying people, and training a model per customer. `B5` `/body/0/children/0/children/5/lines/0/marks/0`
-  - Step One job per clip. Lane Clip worker, phase 3 Evaluate each clip, column 2, look stack, fill none. `B6` `/body/0/children/0/children/6`
+  - Step One job per clip. Lane Clip worker, phase 3 Evaluate each clip, column 2, look stack. `B6` `/body/0/children/0/children/6`
     - Mark balloon 6 Clip worker `B6` `/body/0/children/0/children/6/marks/0`
     - Mark balloon 4 Evaluation queue `B6` `/body/0/children/0/children/6/marks/1`
     - Line fetch frames.
     - Line call the evaluator.
-  - Step Judge the frames. Lane Evaluator, phase 3 Evaluate each clip, column 2, fill none. `B6-C6` `/body/0/children/0/children/7`
+  - Step Judge the frames. Lane Evaluator, phase 3 Evaluate each clip, column 2. `B6-C6` `/body/0/children/0/children/7`
     - Mark balloon 7 Clip evaluator `B6` `/body/0/children/0/children/7/marks/0`
     - Mark flag 3 The evaluator holds no credentials for the verdict store. `B6` `/body/0/children/0/children/7/marks/1`
     - Line against the approved plan.
-  - Step Write the verdict. Lane Clip worker, phase 3 Evaluate each clip, column 3, fill none. `B6-B7` `/body/0/children/0/children/8`
+  - Step Write the verdict. Lane Clip worker, phase 3 Evaluate each clip, column 3. `B6-B7` `/body/0/children/0/children/8`
     - Mark balloon 8 Verdict store `B7` `/body/0/children/0/children/8/marks/0`
     - Mark flag 2 Evidence frames are stored as references into the clip, never copied. `B7` `/body/0/children/0/children/8/marks/1`
     - Line verdict, frames, plan version.
-  - Step Review verdicts. Lane Operator, phase 4 Review, column 1, fill none. `B7-B8` `/body/0/children/0/children/9`
+  - Step Review verdicts. Lane Operator, phase 4 Review, column 1. `B7-B8` `/body/0/children/0/children/9`
     - Mark diamond 2 Disputed verdicts. `B8` `/body/0/children/0/children/9/marks/0`
     - Line filter by trigger and time.
-  - Step Replay over earlier clips. Lane Trigger API, phase 4 Review, column 1, look planned. `B7-B8` `/body/0/children/0/children/10`
-  - Step A new model version re-plans every trigger. Lane Evaluator, phase 4 Review, column 1, look note. `B7-C8` `/body/0/children/0/children/11`
+  - Step Replay over earlier clips. Lane Trigger API, phase 4 Review, column 1, look planned, fill cell. `B7-B8` `/body/0/children/0/children/10`
+  - Step A new model version re-plans every trigger. Lane Evaluator, phase 4 Review, column 1, look note, fill cell. `B7-C8` `/body/0/children/0/children/11`
     - Mark diamond 3 Model updates. `B8` `/body/0/children/0/children/11/marks/0`
 - Ladder, detail A: When a clip fails or a verdict is disputed; a failed clip never blocks the queue; rung fill none. Frames One job per clip, Judge the frames, Write the verdict. `C1-C8` `/body/0/children/1`
   - Rung 1 (bottom) Retry, the clip worker; actor Clip worker: A failed frame fetch or evaluator call retries the clip job with backoff, three attempts in all. `C1-C8` `/body/0/children/1/rungs/0`

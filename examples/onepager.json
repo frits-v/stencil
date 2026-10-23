@@ -160,7 +160,7 @@
               "title": "Review"
             }
           ],
-          "step_fill": "none",
+          "step_fill": "cell",
           "children": [
             {
               "tag": "Step",
