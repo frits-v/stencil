@@ -14,6 +14,7 @@ mod common;
 use common::{layout, page_from};
 use serde_json::{Value, json};
 use stencil_layout::checks::{links_routed, marks_clear};
+use stencil_layout::sheet_lines::OUTLINE_AIR_PX;
 use stencil_layout::{
     BoxRect, DashRun, DrawnLink, EndCap, LinkRoute, NodeGeometry, PageGeometry, PartName,
     PathPiece, dash_runs, drawn_link, rail_bar, stroke_on_at, turn_positions,
@@ -455,7 +456,7 @@ fn a_glyph_on_an_arrival_is_a_marks_clear_defect() {
 #[test]
 fn a_leg_along_a_box_outline_is_a_links_routed_defect() {
     let (page, mut geometry) = onepager();
-    let assembly = node_with_id(&page, &geometry, "evaluation-path");
+    let assembly = node_with_id(&page, &geometry, "evaluation-path").clone();
     let outline = assembly.part(PartName::TabBorder).unwrap().bounds;
     let index = link_index(&page, "evaluate clip");
     let along = route_mut(&mut geometry, index);
@@ -475,7 +476,10 @@ fn a_leg_along_a_box_outline_is_a_links_routed_defect() {
         after
             .iter()
             .any(|(pointer, message)| *pointer == format!("/links/{index}")
-                && message.contains("runs within 12.00 px along a Box outline")),
+                && message.contains(&format!(
+                    "runs within 12.00 px along the outline of {}",
+                    assembly.pointer
+                ))),
         "{after:?}"
     );
 }
@@ -651,4 +655,30 @@ fn every_end_on_a_store_lid_lies_on_the_curve_after_its_leg_moves() {
         }
     }
     assert!(examined >= 2, "examined {examined} store ends");
+}
+
+/// The write verdict line leaves the clip worker and turns above the clip evaluator, an
+/// Item: the turn keeps OUTLINE_AIR_PX above the card, and no onepager leg crowds an
+/// outline.
+#[test]
+fn a_sheet_leg_keeps_its_air_from_an_item_outline() {
+    let (page, geometry) = onepager();
+    let evaluator = node_with_id(&page, &geometry, "evaluator").bounds;
+    let index = link_index(&page, "write verdict");
+    let mut examined = 0;
+    for pair in route(&geometry, index).points.windows(2) {
+        let (a, b) = (pair[0], pair[1]);
+        let overlap = a.x.max(b.x).min(evaluator.right()) - a.x.min(b.x).max(evaluator.x);
+        if a.y == b.y && overlap > 0.01 {
+            examined += 1;
+            let air = (evaluator.y - a.y).abs();
+            assert!(air >= OUTLINE_AIR_PX, "{air} px above {evaluator:?}");
+        }
+    }
+    assert_eq!(examined, 1);
+    let crowded: Vec<(String, String)> = messages(&links_routed(&page, &geometry))
+        .into_iter()
+        .filter(|(_, message)| message.contains("along the outline of"))
+        .collect();
+    assert!(crowded.is_empty(), "{crowded:?}");
 }

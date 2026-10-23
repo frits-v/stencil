@@ -11,6 +11,7 @@ use crate::compute::{PipeTarget, move_extent, targeted_pipes};
 use crate::drawn::{EndCap, chain_enters, drawn_link, push_flattened};
 use crate::route::attach_box;
 use crate::route::link_obstacles;
+use crate::sheet_lines::{OUTLINE_AIR_PX, OutlineEdge, crowds, outline_edges};
 use crate::{
     BoxRect, GEOMETRY_EPSILON_PX, LINK_ARROW_STUB_PX, LinkRoute, NodeTag, PageGeometry, Part,
     PartName, RouteStatus,
@@ -431,6 +432,11 @@ pub fn links_routed(page: &Page, geometry: &PageGeometry) -> CheckReport {
     } else {
         Vec::new()
     };
+    let outlines = if flat {
+        outline_edges(geometry)
+    } else {
+        Vec::new()
+    };
     for route in &geometry.links {
         if route.status == RouteStatus::Fallback {
             // A flat arrowed link also falls back when its stub has no room, with nothing
@@ -450,6 +456,12 @@ pub fn links_routed(page: &Page, geometry: &PageGeometry) -> CheckReport {
             });
         }
         if flat {
+            for message in crowded_legs(geometry, route, &outlines) {
+                defects.push(Defect {
+                    pointer: links_pointer.index(route.index),
+                    message,
+                });
+            }
             for message in end_mark_defects(geometry, route, &end_marks) {
                 defects.push(Defect {
                     pointer: links_pointer.index(route.index),
@@ -479,6 +491,32 @@ pub fn links_routed(page: &Page, geometry: &PageGeometry) -> CheckReport {
         defects,
         not_applicable: None,
     }
+}
+
+/// Each leg of `route` that runs within `OUTLINE_AIR_PX` along an outline edge, once per
+/// leg, naming the first such edge's node (section 11.2), as a links-routed message.
+fn crowded_legs(
+    geometry: &PageGeometry,
+    route: &LinkRoute,
+    outlines: &[OutlineEdge],
+) -> Vec<String> {
+    let mut messages = Vec::new();
+    for (leg, pair) in route.points.windows(2).enumerate() {
+        let (Some(&a), Some(&b)) = (pair.first(), pair.get(1)) else {
+            continue;
+        };
+        if let Some(edge) = outlines.iter().find(|edge| crowds((a, b), edge.run)) {
+            messages.push(format!(
+                "leg {leg} runs within {OUTLINE_AIR_PX:.2} px along the outline of {} from ({:.2}, {:.2}) to ({:.2}, {:.2})",
+                node_pointer_text(geometry, edge.node),
+                edge.run.0.x,
+                edge.run.0.y,
+                edge.run.1.x,
+                edge.run.1.y
+            ));
+        }
+    }
+    messages
 }
 
 /// Each drawn end mark of `route`, an arrowhead or a stop plate, that overlaps the tag of

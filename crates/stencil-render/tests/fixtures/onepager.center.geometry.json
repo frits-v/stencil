@@ -578,27 +578,27 @@
           "height": 18,
           "width": 18,
           "x": 625.21,
-          "y": 1599.01
+          "y": 1597.89
         },
         "step_numeral": {
           "height": 10,
           "line_count": 1,
           "width": 6.49,
           "x": 630.97,
-          "y": 1603.01
+          "y": 1601.89
         },
         "tag": {
           "height": 30.6,
           "width": 116.65,
           "x": 615.71,
-          "y": 1592.71
+          "y": 1591.59
         },
         "tag_label": {
           "height": 15.6,
           "line_count": 1,
           "width": 73.65,
           "x": 649.21,
-          "y": 1600.21
+          "y": 1599.09
         }
       },
       "points": [
@@ -608,11 +608,11 @@
         },
         {
           "x": 773.13,
-          "y": 1518.1
+          "y": 1508.1
         },
         {
           "x": 674.04,
-          "y": 1518.1
+          "y": 1508.1
         },
         {
           "x": 674.04,
@@ -624,7 +624,7 @@
         "height": 30.6,
         "width": 116.65,
         "x": 615.71,
-        "y": 1592.71
+        "y": 1591.59
       },
       "to": "/body/1/children/0/children/0/children/0/children/1/children/0/children/2/children/1/children/0"
     },

@@ -98,6 +98,8 @@ fn check_hero_passes_every_applicable_check_in_every_theme() {
     }
 }
 
+/// The hero's failover via is placed for iso: drawn flat, its last turn lies in a 17 px lane
+/// between two zone bottoms, the one defect of the flat projection.
 #[test]
 fn check_hero_with_projection_flat_skips_the_iso_checks() {
     let outcome = run_stencil(&[
@@ -106,8 +108,20 @@ fn check_hero_with_projection_flat_skips_the_iso_checks() {
         "--projection",
         "flat",
     ]);
-    assert_eq!(outcome.code, ExitCode::Clean, "{}", outcome.stdout);
+    assert_eq!(outcome.code, ExitCode::Defects, "{}", outcome.stdout);
     let lines = outcome.stdout_lines();
+    assert!(
+        lines.contains(&"check links-routed: examined 6 links, 1 defect"),
+        "{}",
+        outcome.stdout
+    );
+    assert!(
+        lines.iter().any(|line| line.starts_with(
+            "defect links-routed /links/1: leg 5 runs within 12.00 px along the outline of /body/0/children/1 "
+        )),
+        "{}",
+        outcome.stdout
+    );
     assert!(
         lines.contains(
             &"check iso-labels-clear: examined 0 pairs, not applicable: projection is flat"
@@ -124,7 +138,7 @@ fn check_hero_with_projection_flat_skips_the_iso_checks() {
     ));
     assert_eq!(
         lines.last().copied(),
-        Some("stencil check: 17 checks, 9 passed, 0 failed, 8 not applicable")
+        Some("stencil check: 17 checks, 8 passed, 1 failed, 8 not applicable")
     );
 }
 
