@@ -736,11 +736,11 @@ fn trim_start(points: &mut [PagePoint], length: f32) -> Option<(PagePoint, PageP
 
 #[derive(Debug, Clone, Copy)]
 struct ArrowBase {
-    /// Where the stroke stops: the arrowhead base, or the segment's far end when the
-    /// segment is shorter than the arrowhead.
+    /// Where the stroke stops: the end mark's base, or the segment's far end when the
+    /// segment is shorter than the mark.
     stroke_end: PagePoint,
-    /// A point one arrowhead length back from the tip along the segment's direction, which
-    /// orients the marker.
+    /// A point one mark length back from the tip along the segment's direction, which
+    /// orients the mark.
     marker_base: PagePoint,
 }
 
