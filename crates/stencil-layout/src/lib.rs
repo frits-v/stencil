@@ -45,7 +45,7 @@ pub use route::{
     OBSTACLE_CLEARANCE_PX, RAIL_BAR_PX, RAIL_DOT_RADIUS_PX, RAIL_END_CLEARANCE_PX,
     longest_segment_midpoint, longest_segment_point, rail_bar, reroute_link,
 };
-pub use sheet_frame::{SHEET_BORDER_PX, SHEET_RULE_PX};
+pub use sheet_frame::{SHEET_BORDER_PX, SHEET_RULE_PX, SheetZoneEdges, sheet_zone_edges};
 pub use stencil_model::text::WRAP_EPSILON_PX;
 pub use theme_labels::theme_legend_labels;
 pub use units::{

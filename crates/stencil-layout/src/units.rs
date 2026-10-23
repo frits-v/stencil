@@ -8,12 +8,12 @@ use std::fmt;
 use stencil_model::marks::{CarrierMark, PageMarks};
 use stencil_model::pointer::NodePointer;
 use stencil_model::{
-    LINKS_MAX, Node, NodeRef, Page, PagePoint, PipeDir, SHEET_COLUMNS, SHEET_ROW_LETTERS,
-    SHEET_ROWS, SheetList, body_nodes,
+    LINKS_MAX, Node, NodeRef, Page, PagePoint, PipeDir, SHEET_ROW_LETTERS, SheetList, body_nodes,
 };
 
 use crate::checks::{children_by_parent, landing_box, pipe_ends};
 use crate::route::longest_segment_midpoint;
+use crate::sheet_frame::sheet_zone_edges;
 use crate::{BoxRect, NodeTag, PageGeometry, PartName};
 
 /// The parts each keyed entry draws once per entry, in entry order, on its owner node: an
@@ -68,16 +68,20 @@ impl fmt::Display for SheetZone {
     }
 }
 
-/// The cell under `point` on the grid inside the sheet's inner rule, clamped to the grid.
+/// The cell under `point` on the grid inside the sheet's inner rule, clamped to the grid:
+/// the number of inner zone edges at or before it on each axis, so a reference reads the
+/// same edges the ticks and the drafting grid stand on.
 fn cell_at(point: PagePoint, frame: BoxRect) -> (u8, u8) {
-    let index = |offset: f32, extent: f32, count: u8| -> u8 {
-        let cells = f32::from(count);
-        let position = (offset / (extent / cells)).floor();
-        // The clamp keeps the cast in range, so `as` never saturates.
-        position.clamp(0.0, cells - 1.0) as u8
+    let edges = sheet_zone_edges(frame);
+    let index = |position: f32, edges: &[f32]| -> u8 {
+        let inner = edges
+            .get(1..edges.len().saturating_sub(1))
+            .unwrap_or_default();
+        let passed = inner.iter().filter(|edge| position >= **edge).count();
+        u8::try_from(passed).unwrap_or(u8::MAX)
     };
-    let row = index(point.y - frame.y, frame.height, SHEET_ROWS);
-    let column = index(point.x - frame.x, frame.width, SHEET_COLUMNS) + 1;
+    let row = index(point.y, &edges.rows);
+    let column = index(point.x, &edges.columns) + 1;
     (row, column)
 }
 

@@ -15,6 +15,28 @@ const RULE_INSET_PX: f32 = 32.0;
 /// The stroke of the inner frame rule, drawn inside its 32 px inset; the grid starts past it.
 pub const SHEET_RULE_PX: f32 = 1.5;
 
+/// The zone edges of a sheet's `Grid` (section 14.4 rule 3): 9 column edges across it and
+/// 7 row edges down it, the grid's own sides first and last. The reference ticks stand on
+/// the inner edges and the drafting grid draws its major lines on them, so both read here.
+#[derive(Debug, Clone, PartialEq)]
+pub struct SheetZoneEdges {
+    pub columns: Vec<f32>,
+    pub rows: Vec<f32>,
+}
+
+pub fn sheet_zone_edges(grid: BoxRect) -> SheetZoneEdges {
+    let column_width = grid.width / f32::from(SHEET_COLUMNS);
+    let row_height = grid.height / f32::from(SHEET_ROWS);
+    SheetZoneEdges {
+        columns: (0..=SHEET_COLUMNS)
+            .map(|column| grid.x + f32::from(column) * column_width)
+            .collect(),
+        rows: (0..=SHEET_ROWS)
+            .map(|row| grid.y + f32::from(row) * row_height)
+            .collect(),
+    }
+}
+
 fn inset(bounds: BoxRect, by: f32) -> BoxRect {
     BoxRect {
         x: bounds.x + by,
@@ -44,16 +66,20 @@ pub(crate) fn add_sheet_frame(
     let band_near = BORDER_INSET_PX + SHEET_BORDER_PX;
     let band_far_x = canvas.width - RULE_INSET_PX;
     let band_far_y = canvas.height - RULE_INSET_PX;
-    let column_width = grid.width / f32::from(SHEET_COLUMNS);
-    let row_height = grid.height / f32::from(SHEET_ROWS);
+    let edges = sheet_zone_edges(grid);
+    let inner = |edges: &[f32]| -> Vec<f32> {
+        edges
+            .get(1..edges.len().saturating_sub(1))
+            .unwrap_or_default()
+            .to_vec()
+    };
 
     let mut parts = vec![
         shape(PartName::Border, border),
         shape(PartName::RefRule, rule),
         shape(PartName::Grid, grid),
     ];
-    for column in 1..SHEET_COLUMNS {
-        let x = grid.x + f32::from(column) * column_width;
+    for x in inner(&edges.columns) {
         for y in [band_near, band_far_y] {
             parts.push(shape(
                 PartName::RefTick,
@@ -66,8 +92,7 @@ pub(crate) fn add_sheet_frame(
             ));
         }
     }
-    for row in 1..SHEET_ROWS {
-        let y = grid.y + f32::from(row) * row_height;
+    for y in inner(&edges.rows) {
         for x in [band_near, band_far_x] {
             parts.push(shape(
                 PartName::RefTick,
@@ -112,11 +137,12 @@ pub(crate) fn add_sheet_frame(
         (PartName::RefColumn, band_near),
         (PartName::RefColumnFoot, band_far_y),
     ] {
-        for column in 0..SHEET_COLUMNS {
+        for (column, cell_edges) in edges.columns.windows(2).enumerate() {
+            let [left, right] = cell_edges else { continue };
             let cell = BoxRect {
-                x: grid.x + f32::from(column) * column_width,
+                x: *left,
                 y,
-                width: column_width,
+                width: right - left,
                 height: band,
             };
             parts.push(label(name, (column + 1).to_string(), cell)?);
@@ -126,12 +152,13 @@ pub(crate) fn add_sheet_frame(
         (PartName::RefRow, band_near),
         (PartName::RefRowRight, band_far_x),
     ] {
-        for (row, letter) in SHEET_ROW_LETTERS.iter().enumerate() {
+        for (letter, cell_edges) in SHEET_ROW_LETTERS.iter().zip(edges.rows.windows(2)) {
+            let [top, bottom] = cell_edges else { continue };
             let cell = BoxRect {
                 x,
-                y: grid.y + row as f32 * row_height,
+                y: *top,
                 width: band,
-                height: row_height,
+                height: bottom - top,
             };
             parts.push(label(name, letter.to_string(), cell)?);
         }

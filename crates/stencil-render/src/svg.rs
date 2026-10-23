@@ -49,11 +49,14 @@ const BULLET_RADIUS_PX: f32 = 2.0;
 const BULLET_CENTER_INSET_PX: f32 = 5.0;
 /// Corner radii of the gcp frame in CSS order: top-left, top-right, bottom-right, bottom-left.
 const GCP_RADII_PX: [f32; 4] = [4.0, 4.0, 10.0, 10.0];
-/// The drafting grid's pitch, and how many minor lines lie between two major ones.
-const SHEET_GRID_STEP_PX: f32 = 20.0;
-const SHEET_GRID_MAJOR_EVERY: usize = 5;
-/// More grid lines than a 2660 px canvas could hold on either axis.
-const SHEET_GRID_LINES_MAX: usize = 256;
+/// The pitch the drafting grid's minor lines keep near: each zone is cut into the whole
+/// number of parts closest to its size over this.
+const SHEET_GRID_PITCH_PX: f32 = 20.0;
+/// The bound on one zone's minor parts, reached by a zone 5120 px long.
+const SHEET_GRID_PARTS_MAX: f32 = 256.0;
+/// The strokes of a minor grid line and of a major line on a zone edge.
+const SHEET_GRID_MINOR_PX: f32 = 1.0;
+const SHEET_GRID_ZONE_PX: f32 = 1.5;
 
 /// The document side of one geometry node, in section 4.4 geometry order.
 #[derive(Debug, Clone, Copy)]
@@ -1905,16 +1908,16 @@ impl<'a> SvgWriter<'a> {
         );
     }
 
-    /// The drafting grid (section 14.5 rule 10): a 1 px line every 20 px from the grid's
-    /// top-left corner, every fifth in the major color, drawn as one path per color. A
-    /// theme without a grid draws nothing.
+    /// The drafting grid (section 14.5 rule 6): a major line on every zone edge the
+    /// reference ticks mark and minor lines cutting each zone into equal parts near 20 px,
+    /// drawn as one path per colour. A theme without a grid draws nothing.
     fn write_sheet_grid(&mut self, depth: usize, bounds: BoxRect) {
         self.write_grid_lines(depth, bounds, bounds);
     }
 
     /// The lines of the drafting grid `grid` that fall inside `clip`, each cut to it: the
     /// whole grid when `clip` is the grid, and the grid over a lane band when it is the
-    /// band. Lines keep their place and colour from the grid's own corner, so the lines
+    /// band. Lines keep their place and colour from the grid's own zones, so the lines
     /// over a band continue the lines around it.
     fn write_grid_lines(&mut self, depth: usize, grid: BoxRect, clip: BoxRect) {
         let Some((minor, major)) = self.palette.sheet_grid() else {
@@ -1927,19 +1930,14 @@ impl<'a> SvgWriter<'a> {
         if left >= right || top >= bottom {
             return;
         }
+        let edges = stencil_layout::sheet_zone_edges(grid);
         let mut minor_path = String::new();
         let mut major_path = String::new();
-        let columns = (grid.width / SHEET_GRID_STEP_PX).ceil() as usize;
-        let rows = (grid.height / SHEET_GRID_STEP_PX).ceil() as usize;
-        for step in 1..columns.min(SHEET_GRID_LINES_MAX) {
-            let x = grid.x + step as f32 * SHEET_GRID_STEP_PX;
-            if x >= right {
-                break;
-            }
-            if x < left {
+        for (x, is_major) in grid_lines(&edges.columns) {
+            if x < left || x >= right {
                 continue;
             }
-            let path = if step % SHEET_GRID_MAJOR_EVERY == 0 {
+            let path = if is_major {
                 &mut major_path
             } else {
                 &mut minor_path
@@ -1951,15 +1949,11 @@ impl<'a> SvgWriter<'a> {
                 format_number(bottom)
             ));
         }
-        for step in 1..rows.min(SHEET_GRID_LINES_MAX) {
-            let y = grid.y + step as f32 * SHEET_GRID_STEP_PX;
-            if y >= bottom {
-                break;
-            }
-            if y < top {
+        for (y, is_major) in grid_lines(&edges.rows) {
+            if y < top || y >= bottom {
                 continue;
             }
-            let path = if step % SHEET_GRID_MAJOR_EVERY == 0 {
+            let path = if is_major {
                 &mut major_path
             } else {
                 &mut minor_path
@@ -1971,15 +1965,19 @@ impl<'a> SvgWriter<'a> {
                 format_number(right)
             ));
         }
-        for (path, color) in [(minor_path, minor), (major_path, major)] {
+        for (path, color, width) in [
+            (minor_path, minor, SHEET_GRID_MINOR_PX),
+            (major_path, major, SHEET_GRID_ZONE_PX),
+        ] {
             if path.is_empty() {
                 continue;
             }
             self.line(
                 depth,
                 &format!(
-                    r#"<path d="{}" fill="none" stroke="{color}" stroke-width="1"/>"#,
-                    path.trim_end()
+                    r#"<path d="{}" fill="none" stroke="{color}" stroke-width="{}"/>"#,
+                    path.trim_end(),
+                    format_number(width)
                 ),
             );
         }
@@ -2498,6 +2496,28 @@ fn icon_chip_box(icon_bounds: BoxRect) -> BoxRect {
         width: ICON_CHIP_SIZE_PX,
         height: ICON_CHIP_SIZE_PX,
     }
+}
+
+/// The lines of one grid axis between its zone `edges`, as (position, major): a major line
+/// on each inner edge and minor lines cutting each zone into equal parts. Each line is
+/// placed from its zone's start, so no rounding carries from one zone into the next.
+fn grid_lines(edges: &[f32]) -> Vec<(f32, bool)> {
+    let mut lines = Vec::new();
+    for (zone, bounds) in edges.windows(2).enumerate() {
+        let [start, end] = bounds else { continue };
+        let size = end - start;
+        let parts = (size / SHEET_GRID_PITCH_PX)
+            .round()
+            .clamp(1.0, SHEET_GRID_PARTS_MAX);
+        if zone > 0 {
+            lines.push((*start, true));
+        }
+        // The clamp keeps the count small and whole, so the cast is exact.
+        for part in 1..parts as usize {
+            lines.push((start + part as f32 * size / parts, false));
+        }
+    }
+    lines
 }
 
 fn stroke_attributes(stroke: Stroke<'_>) -> String {

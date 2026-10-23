@@ -526,8 +526,9 @@ pub struct SheetRole {
     /// Flags, and the outline of balloons and diamonds whose key names no actor. Derived:
     /// ink.primary.
     pub mark_ink: Color,
-    /// The drafting grid, minor lines every 20 px and major every 100 px. Absent draws none
-    /// and is the derivation.
+    /// The drafting grid: major lines on the zone edges the references mark, minor lines
+    /// cutting each zone into equal parts near 20 px. Absent draws none and is the
+    /// derivation.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub grid: Option<SheetGrid>,
 }
