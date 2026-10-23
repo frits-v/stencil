@@ -4169,42 +4169,42 @@
           "height": 16.5,
           "line_count": 1,
           "width": 394.86,
-          "x": 72,
+          "x": 75,
           "y": 2260.9
         },
         "terminal_line/1": {
           "height": 16.5,
           "line_count": 1,
           "width": 185.04,
-          "x": 72,
+          "x": 75,
           "y": 2277.4
         },
         "terminal_line/2": {
           "height": 16.5,
           "line_count": 1,
           "width": 403.38,
-          "x": 72,
+          "x": 75,
           "y": 2293.9
         },
         "terminal_line/3": {
           "height": 16.5,
           "line_count": 1,
           "width": 143.8,
-          "x": 72,
+          "x": 75,
           "y": 2310.4
         },
         "terminal_line/4": {
           "height": 16.5,
           "line_count": 1,
           "width": 150.83,
-          "x": 72,
+          "x": 75,
           "y": 2326.9
         },
         "terminal_line/5": {
           "height": 16.5,
           "line_count": 1,
           "width": 148.1,
-          "x": 72,
+          "x": 75,
           "y": 2343.4
         },
         "terminal_prompt/0": {
@@ -4227,6 +4227,13 @@
           "width": 7.38,
           "x": 61,
           "y": 2326.9
+        },
+        "terminal_prompt/5": {
+          "height": 16.5,
+          "line_count": 1,
+          "width": 10.17,
+          "x": 61,
+          "y": 2343.4
         }
       },
       "tag": "HowToItem",
@@ -4288,21 +4295,21 @@
           "height": 16.5,
           "line_count": 1,
           "width": 275.74,
-          "x": 834,
+          "x": 837,
           "y": 2260.9
         },
         "terminal_line/1": {
           "height": 16.5,
           "line_count": 1,
           "width": 203.89,
-          "x": 834,
+          "x": 837,
           "y": 2277.4
         },
         "terminal_line/2": {
           "height": 16.5,
           "line_count": 1,
           "width": 171.44,
-          "x": 834,
+          "x": 837,
           "y": 2293.9
         },
         "terminal_prompt/0": {
@@ -4311,6 +4318,13 @@
           "width": 7.38,
           "x": 823,
           "y": 2260.9
+        },
+        "terminal_prompt/2": {
+          "height": 16.5,
+          "line_count": 1,
+          "width": 10.17,
+          "x": 823,
+          "y": 2293.9
         }
       },
       "tag": "HowToItem",
@@ -4372,21 +4386,21 @@
           "height": 16.5,
           "line_count": 1,
           "width": 284.15,
-          "x": 72,
+          "x": 75,
           "y": 2455.8
         },
         "terminal_line/1": {
           "height": 16.5,
           "line_count": 1,
           "width": 249.61,
-          "x": 72,
+          "x": 75,
           "y": 2472.3
         },
         "terminal_line/2": {
           "height": 16.5,
           "line_count": 1,
           "width": 293.61,
-          "x": 72,
+          "x": 75,
           "y": 2488.8
         },
         "terminal_prompt/0": {
@@ -4442,8 +4456,8 @@
         "how_to_text": {
           "height": 34.8,
           "line_count": 2,
-          "width": 485.19,
-          "x": 1064.81,
+          "width": 482.19,
+          "x": 1067.81,
           "y": 2425.4
         },
         "how_to_title": {
@@ -4455,7 +4469,7 @@
         },
         "terminal": {
           "height": 97.5,
-          "width": 240.81,
+          "width": 243.81,
           "x": 812,
           "y": 2425.4
         },
@@ -4463,35 +4477,35 @@
           "height": 16.5,
           "line_count": 1,
           "width": 198.62,
-          "x": 834,
+          "x": 837,
           "y": 2432.4
         },
         "terminal_line/1": {
           "height": 16.5,
           "line_count": 1,
           "width": 207.81,
-          "x": 834,
+          "x": 837,
           "y": 2448.9
         },
         "terminal_line/2": {
           "height": 16.5,
           "line_count": 1,
           "width": 189.74,
-          "x": 840.47,
+          "x": 843.47,
           "y": 2465.4
         },
         "terminal_line/3": {
           "height": 16.5,
           "line_count": 1,
           "width": 100.52,
-          "x": 840.47,
+          "x": 843.47,
           "y": 2481.9
         },
         "terminal_line/4": {
           "height": 16.5,
           "line_count": 1,
           "width": 138.79,
-          "x": 840.47,
+          "x": 843.47,
           "y": 2498.4
         },
         "terminal_prompt/0": {

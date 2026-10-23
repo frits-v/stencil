@@ -1825,8 +1825,9 @@ struct Span<'t> {
 }
 
 /// A terminal in a fenced `text` block one backtick longer than its longest backtick run,
-/// at least three. A line is written raw after its kind's prefix (`$ `, `# `, two spaces,
-/// `ok `) and two spaces per indent level, so its first two characters give its kind.
+/// at least three. A line is written raw after the prompt its kind draws and a space (two
+/// spaces for an output line, which draws none) and two spaces per indent level, so its
+/// first two characters give its kind.
 fn terminal_fence(lines: &[stencil_model::TerminalLine]) -> String {
     let lines: Vec<&stencil_model::TerminalLine> = lines
         .iter()
@@ -1840,14 +1841,9 @@ fn terminal_fence(lines: &[stencil_model::TerminalLine]) -> String {
     let fence = "`".repeat((longest_run + 1).max(3));
     let mut text = format!("{fence}text");
     for line in lines {
-        let prefix = match line.kind {
-            stencil_model::TerminalKind::Command => "$ ",
-            stencil_model::TerminalKind::Comment => "# ",
-            stencil_model::TerminalKind::Output => "  ",
-            stencil_model::TerminalKind::Ok => "ok ",
-        };
         text.push('\n');
-        text.push_str(prefix);
+        text.push_str(line.kind.prompt().unwrap_or(" "));
+        text.push(' ');
         text.push_str(&"  ".repeat(usize::from(line.indent)));
         text.push_str(&line.text);
     }

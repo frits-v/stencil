@@ -944,8 +944,8 @@ fn is_zero_indent(indent: &u8) -> bool {
     *indent == 0
 }
 
-/// A command line draws a `$` prompt and a comment line a `#` prompt before its text.
-/// Output and ok lines draw none and are told apart by colour.
+/// A command line draws a `$` prompt, a comment line a `#` and an ok line a `✓` before its
+/// text. An output line draws none.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "lowercase")]
 pub enum TerminalKind {
@@ -973,12 +973,14 @@ impl TerminalKind {
         }
     }
 
-    /// The prompt drawn before the line: `$` for a command, `#` for a comment.
+    /// The prompt drawn before the line: `$` for a command, `#` for a comment, `✓` for an
+    /// ok line.
     pub fn prompt(self) -> Option<&'static str> {
         match self {
             TerminalKind::Command => Some("$"),
             TerminalKind::Comment => Some("#"),
-            TerminalKind::Output | TerminalKind::Ok => None,
+            TerminalKind::Ok => Some("\u{2713}"),
+            TerminalKind::Output => None,
         }
     }
 }

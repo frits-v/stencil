@@ -171,7 +171,7 @@ fn how_tos_number_through_their_view() {
 }
 
 /// The command line reads left to right as chip, words, chip on one row, right of the
-/// title, each chip's text inside its chip; a prompt stands on the command and comment
+/// title, each chip's text inside its chip; a prompt stands on the command, comment and ok
 /// lines only, every line starts in one column and an indented line further in.
 #[test]
 fn the_heading_and_terminal_lie_as_drawn() {
@@ -207,14 +207,15 @@ fn the_heading_and_terminal_lie_as_drawn() {
 
     let prompts = parts(PartName::TerminalPrompt);
     let lines = parts(PartName::TerminalLine);
-    assert_eq!((prompts.len(), lines.len()), (2, 5));
+    assert_eq!((prompts.len(), lines.len()), (3, 5));
     let prompt_texts: Vec<&str> = prompts
         .iter()
         .map(|prompt| prompt.text.as_ref().unwrap().text.as_str())
         .collect();
-    assert_eq!(prompt_texts, ["$", "#"]);
+    assert_eq!(prompt_texts, ["$", "#", "\u{2713}"]);
     assert_eq!(prompts[0].bounds.y, lines[0].bounds.y);
     assert_eq!(prompts[1].bounds.y, lines[3].bounds.y);
+    assert_eq!(prompts[2].bounds.y, lines[4].bounds.y);
     let column = lines[0].bounds.x;
     for (index, line) in lines.iter().enumerate() {
         assert!(inside(&terminal.bounds, &line.bounds), "line {index}");
@@ -226,7 +227,12 @@ fn the_heading_and_terminal_lie_as_drawn() {
         lines[2].bounds.x > column + 1.0,
         "an indented line starts further in"
     );
-    assert!(prompts[0].bounds.right() <= column);
+    for prompt in &prompts {
+        assert!(
+            prompt.bounds.right() <= column,
+            "a prompt ends before the text column"
+        );
+    }
 }
 
 /// With beside, the terminal stands at its widest line and the text wraps right of it.

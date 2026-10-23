@@ -2397,7 +2397,7 @@
       ]
     },
     "TerminalKind": {
-      "description": "A command line draws a `$` prompt and a comment line a `#` prompt before its text.\nOutput and ok lines draw none and are told apart by colour.",
+      "description": "A command line draws a `$` prompt, a comment line a `#` and an ok line a `✓` before its\ntext. An output line draws none.",
       "type": "string",
       "enum": [
         "command",
