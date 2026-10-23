@@ -172,6 +172,7 @@ onepager: gcp.#Page & {
 							lane:  "model"
 							phase: "evaluate"
 							col:   2
+							span:  2
 							title: "Judge the frames"
 							lines: ["against the approved plan"]
 							marks: [{part: "evaluator"}, {note: "no-store-credentials"}]
@@ -202,6 +203,7 @@ onepager: gcp.#Page & {
 							phase: "review"
 							title: "Replay over earlier clips"
 							look:  "planned"
+							marks: [{part: "replay"}]
 						},
 						{
 							tag:   "Step"
@@ -334,7 +336,7 @@ onepager: gcp.#Page & {
 																			tag:      "Item"
 																			id:       "gateway"
 																			kind:     "product"
-																			icon:     "networking"
+																			icon:     "integration"
 																			title:    "Gateway"
 																			subtitle: "API Gateway"
 																			actor:    "api"

@@ -285,6 +285,7 @@
               "lane": "model",
               "phase": "evaluate",
               "col": 2,
+              "span": 2,
               "title": "Judge the frames",
               "lines": [
                 "against the approved plan"
@@ -338,7 +339,12 @@
               "lane": "api",
               "phase": "review",
               "title": "Replay over earlier clips",
-              "look": "planned"
+              "look": "planned",
+              "marks": [
+                {
+                  "part": "replay"
+                }
+              ]
             },
             {
               "tag": "Step",
@@ -498,7 +504,7 @@
                                       "tag": "Item",
                                       "id": "gateway",
                                       "kind": "product",
-                                      "icon": "networking",
+                                      "icon": "integration",
                                       "title": "Gateway",
                                       "subtitle": "API Gateway",
                                       "actor": "api"
