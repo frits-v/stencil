@@ -193,6 +193,11 @@ fn parts_json(parts: &[Part]) -> Map<String, Value> {
     // A command run's chip and text share the run's index, and a prompt takes its line's.
     let mut command_runs = 0_usize;
     let mut terminal_lines = 0_usize;
+    // A glyph's numeral, a parts-list row's cells and a general note's lines share the
+    // index of the glyph, the row's balloon or the note's flag, since some are optional.
+    let mut marks = 0_usize;
+    let mut part_rows = 0_usize;
+    let mut notes = 0_usize;
     let mut object = Map::new();
     for part in parts {
         let key = match part.name {
@@ -234,6 +239,32 @@ fn parts_json(parts: &[Part]) -> Map<String, Value> {
                 terminal_lines += 1;
                 format!("{}/{}", part.name.as_str(), terminal_lines - 1)
             }
+            PartName::Balloon | PartName::Flag | PartName::Diamond => {
+                marks += 1;
+                format!("{}/{}", part.name.as_str(), marks - 1)
+            }
+            PartName::MarkNumeral => format!("{}/{}", part.name.as_str(), marks.saturating_sub(1)),
+            PartName::PartBalloon => {
+                part_rows += 1;
+                format!("{}/{}", part.name.as_str(), part_rows - 1)
+            }
+            PartName::PartNumeral
+            | PartName::PartTitle
+            | PartName::PartWhat
+            | PartName::PartPlanned
+            | PartName::PartWhy
+            | PartName::PartWhyRule
+            | PartName::PartZones => {
+                format!("{}/{}", part.name.as_str(), part_rows.saturating_sub(1))
+            }
+            PartName::NoteFlag => {
+                notes += 1;
+                format!("{}/{}", part.name.as_str(), notes - 1)
+            }
+            PartName::NoteNumeral
+            | PartName::NoteText
+            | PartName::NoteDetail
+            | PartName::NoteZones => format!("{}/{}", part.name.as_str(), notes.saturating_sub(1)),
             PartName::ParagraphLead => {
                 let paragraph = repeated.get(&PartName::Paragraph).copied().unwrap_or(0);
                 format!("{}/{paragraph}", part.name.as_str())
@@ -258,7 +289,21 @@ fn parts_json(parts: &[Part]) -> Map<String, Value> {
             | PartName::PhaseTitle
             | PartName::PhaseSeparator
             | PartName::StepLine
-            | PartName::StackBack => {
+            | PartName::StackBack
+            | PartName::AttentionDiamond
+            | PartName::AttentionNumeral
+            | PartName::AttentionZones
+            | PartName::MarkSample
+            | PartName::MarkSampleNumeral
+            | PartName::MarkSampleText
+            | PartName::HeaderCell
+            | PartName::RowRule
+            | PartName::Compartment
+            | PartName::CompartmentText
+            | PartName::RailDot
+            | PartName::Hop
+            | PartName::DetailFrame
+            | PartName::RungTick => {
                 let count = repeated.entry(part.name).or_insert(0);
                 *count += 1;
                 format!("{}/{}", part.name.as_str(), *count - 1)
