@@ -64,8 +64,8 @@ pub(crate) fn route_links(
     } else {
         Vec::new()
     };
-    // First every route, so a sheet can move a leg off another link's before any tag is
-    // placed.
+    // First every route, so a leg can move off an outline, and on a sheet off another
+    // link's leg, before any tag is placed.
     let mut paths: Vec<RoutedPath> = Vec::with_capacity(page.links.len().min(LINKS_MAX));
     for (index, link) in page.links.iter().enumerate().take(LINKS_MAX) {
         let link_pointer = links_pointer.index(index);
@@ -105,8 +105,8 @@ pub(crate) fn route_links(
             status,
         });
     }
-    if page.sheet.is_some() {
-        crate::sheet_lines::separate_shared_legs(geometry, &mut paths);
+    if page.projection == Projection::Flat {
+        crate::sheet_lines::separate_legs(geometry, &mut paths, page.sheet.is_some());
     }
     let all_points: Vec<Vec<PagePoint>> = paths.iter().map(|path| path.points.clone()).collect();
     let mut routes: Vec<LinkRoute> = Vec::with_capacity(paths.len());
@@ -665,10 +665,11 @@ fn free_run(point: PagePoint, direction: (f32, f32), obstacles: &[Obstacle]) -> 
 
 /// Section 13.11 rule 3: the route of the link at `index` in `geometry.links`, searched again
 /// with `from_side` and `via` in place of the authored ones; an end keeps its arrow stub, or
-/// under iso its approach stub. The to end keeps the side its
-/// routed polyline ends on, and the tag keeps its size and moves with the midpoint of the
-/// longest segment. Pure: the geometry is read, never changed. None when no routed link has
-/// that index or an endpoint is not a geometry node.
+/// under iso its approach stub. On a flat page a leg along an outline moves off it as layout
+/// moves it. The to end keeps the side its routed polyline ends on, and the tag keeps its
+/// size and moves with the midpoint of the longest segment. Pure: the geometry is read,
+/// never changed. None when no routed link has that index or an endpoint is not a geometry
+/// node.
 pub fn reroute_link(
     geometry: &PageGeometry,
     index: usize,
@@ -697,6 +698,23 @@ pub fn reroute_link(
         },
         iso,
     );
+    let points = if iso {
+        points
+    } else {
+        let edges = crate::sheet_lines::outline_edges(geometry);
+        let no_lines = crate::sheet_lines::OtherLines {
+            legs: &[],
+            moves_off: false,
+        };
+        crate::sheet_lines::legs_moved_off(
+            geometry,
+            (route.from_node, route.to_node, route.arrow),
+            &points,
+            &edges,
+            no_lines,
+        )
+        .unwrap_or(points)
+    };
     let (old_center, _) = longest_segment_midpoint(&route.points);
     let (new_center, _) = longest_segment_midpoint(&points);
     let (delta_x, delta_y) = (new_center.x - old_center.x, new_center.y - old_center.y);

@@ -470,70 +470,227 @@ fn segments(points: &[PagePoint]) -> Vec<(PagePoint, PagePoint)> {
         .collect()
 }
 
-/// On a design sheet a leg that runs along another link's leg moves off it (section 14.4
-/// rule 24 of the lines): the later link's leg shifts across its run by the first offset of
-/// `LEG_SHIFTS_PX` that keeps it out of every box the link avoids, off every other link's
-/// legs, its ends on their sides, and its neighbouring legs long enough. A leg no shift
-/// frees stays, and links-routed reports it.
-pub(crate) fn separate_shared_legs(
+/// On a flat page a leg that runs along a drawn outline moves off it, and on a design sheet
+/// also a leg that runs along another link's leg (section 11.2, section 14.4 rule 24 of the
+/// lines), through `legs_moved_off`.
+pub(crate) fn separate_legs(
     geometry: &PageGeometry,
     paths: &mut [crate::route::RoutedPath],
+    sheet: bool,
 ) {
-    let edges = zone_edges(geometry);
+    let edges = outline_edges(geometry);
     for later in 0..paths.len() {
-        let Some(path) = paths.get(later) else {
-            continue;
-        };
-        let (from, to) = (path.from_node, path.to_node);
-        let obstacles = crate::route::link_obstacles(geometry, from, to);
-        let mut points = path.points.clone();
-        let mut moved = false;
-        for leg in 0..points.len().saturating_sub(1) {
-            let others: Vec<(PagePoint, PagePoint)> = paths
+        let others: Vec<(PagePoint, PagePoint)> = if sheet {
+            paths
                 .iter()
                 .enumerate()
                 .filter(|(index, _)| *index != later)
                 .flat_map(|(_, other)| segments(&other.points))
-                .collect();
-            let (Some(&a), Some(&b)) = (points.get(leg), points.get(leg + 1)) else {
-                continue;
-            };
-            // The first link has no earlier one to share with, only outlines to crowd.
-            let shares = later > 0 && others.iter().any(|other| legs_shared((a, b), *other));
-            if !shares && !edges.iter().any(|edge| crowds((a, b), *edge)) {
-                continue;
-            }
-            for shift in LEG_SHIFTS_PX {
-                let Some(candidate) = shifted(geometry, (from, to), &points, leg, shift) else {
-                    continue;
-                };
-                let clear = segments(&candidate).iter().all(|segment| {
-                    !obstacles.iter().any(|obstacle| {
-                        crate::route::segment_enters(segment.0, segment.1, &obstacle.bounds)
-                    }) && !others.iter().any(|other| legs_shared(*segment, *other))
-                        && !edges.iter().any(|edge| crowds(*segment, *edge))
-                });
-                if clear {
-                    points = candidate;
-                    moved = true;
-                    break;
-                }
-            }
-        }
-        if moved && let Some(path) = paths.get_mut(later) {
+                .collect()
+        } else {
+            Vec::new()
+        };
+        let Some(path) = paths.get(later) else {
+            continue;
+        };
+        // The first link has no earlier one to share with, only outlines to crowd.
+        let lines = OtherLines {
+            legs: &others,
+            moves_off: later > 0,
+        };
+        let moved = legs_moved_off(
+            geometry,
+            (path.from_node, path.to_node, path.arrow),
+            &path.points,
+            &edges,
+            lines,
+        );
+        if let (Some(points), Some(path)) = (moved, paths.get_mut(later)) {
             path.points = points;
         }
     }
 }
 
-/// A leg keeps at least this far from a Box outline it runs along.
+/// Other links' legs a route keeps clear of: with `moves_off` a leg that shares one moves
+/// off it, and every move stays clear of them either way.
+#[derive(Debug, Clone, Copy)]
+pub(crate) struct OtherLines<'a> {
+    pub legs: &'a [(PagePoint, PagePoint)],
+    pub moves_off: bool,
+}
+
+/// `points` with each leg that crowds an outline in `edges`, or shares a leg in `others`
+/// when `others.moves_off`, moved across its run: by the first offset of `LEG_SHIFTS_PX`,
+/// else to the first of `lane_middles`, that keeps the route out of every box the link
+/// avoids, the moved leg off every outline, the legs it lengthens off any outline they did
+/// not crowd already, every leg off `others`, its ends on their sides, its neighbouring
+/// legs long enough and the leg at an arrowed end as long as the arrow stub. A leg no move
+/// frees stays, and links-routed reports it. None when no leg moved.
+pub(crate) fn legs_moved_off(
+    geometry: &PageGeometry,
+    (from, to, arrow): (usize, usize, Arrow),
+    points: &[PagePoint],
+    edges: &[OutlineEdge],
+    others: OtherLines<'_>,
+) -> Option<Vec<PagePoint>> {
+    let obstacles = crate::route::link_obstacles(geometry, from, to);
+    let mut points = points.to_vec();
+    let mut moved = false;
+    for leg in 0..points.len().saturating_sub(1) {
+        let (Some(&a), Some(&b)) = (points.get(leg), points.get(leg + 1)) else {
+            continue;
+        };
+        let shares =
+            others.moves_off && others.legs.iter().any(|other| legs_shared((a, b), *other));
+        if !shares && !edges.iter().any(|edge| crowds((a, b), edge.run)) {
+            continue;
+        }
+        let shifts = LEG_SHIFTS_PX.into_iter().chain(lane_middles((a, b), edges));
+        for shift in shifts {
+            let Some(candidate) = shifted(geometry, (from, to), &points, leg, shift) else {
+                continue;
+            };
+            if !arrow_stubs_kept(arrow, &candidate) {
+                continue;
+            }
+            let before = segments(&points);
+            let clear = segments(&candidate)
+                .iter()
+                .enumerate()
+                .all(|(index, segment)| {
+                    let was = before.get(index).copied();
+                    let newly_crowds = |edge: &OutlineEdge| {
+                        crowds(*segment, edge.run)
+                            && (index == leg || !was.is_some_and(|was| crowds(was, edge.run)))
+                    };
+                    !obstacles.iter().any(|obstacle| {
+                        crate::route::segment_enters(segment.0, segment.1, &obstacle.bounds)
+                    }) && !others
+                        .legs
+                        .iter()
+                        .any(|other| legs_shared(*segment, *other))
+                        && !edges.iter().any(newly_crowds)
+                });
+            if clear {
+                points = candidate;
+                moved = true;
+                break;
+            }
+        }
+    }
+    moved.then_some(points)
+}
+
+/// True when the first leg is at least `LINK_ARROW_STUB_PX` long if the start carries an
+/// arrow, and the last leg if the end does.
+fn arrow_stubs_kept(arrow: Arrow, points: &[PagePoint]) -> bool {
+    let length = |run: Option<(PagePoint, PagePoint)>| {
+        run.map_or(0.0, |(a, b)| (b.x - a.x).abs() + (b.y - a.y).abs())
+    };
+    let runs = segments(points);
+    let first = length(runs.first().copied());
+    let last = length(runs.last().copied());
+    let stub = crate::LINK_ARROW_STUB_PX - GEOMETRY_EPSILON_PX;
+    let (start, end) = match arrow {
+        Arrow::None => (false, false),
+        Arrow::Start => (true, false),
+        Arrow::End => (false, true),
+        Arrow::Both => (true, true),
+    };
+    (!start || first >= stub) && (!end || last >= stub)
+}
+
+/// The shifts that put `leg` midway between two neighbouring outline edges parallel to it
+/// that run beside it, nearest first.
+fn lane_middles(leg: (PagePoint, PagePoint), edges: &[OutlineEdge]) -> Vec<f32> {
+    let horizontal = (leg.0.y - leg.1.y).abs() < GEOMETRY_EPSILON_PX;
+    let (at, low, high) = if horizontal {
+        (leg.0.y, leg.0.x.min(leg.1.x), leg.0.x.max(leg.1.x))
+    } else {
+        (leg.0.x, leg.0.y.min(leg.1.y), leg.0.y.max(leg.1.y))
+    };
+    let mut across: Vec<f32> = edges
+        .iter()
+        .filter_map(|edge| {
+            let (start, end) = edge.run;
+            let edge_horizontal = (start.y - end.y).abs() < GEOMETRY_EPSILON_PX;
+            if edge_horizontal != horizontal {
+                return None;
+            }
+            let (position, edge_low, edge_high) = if horizontal {
+                (start.y, start.x.min(end.x), start.x.max(end.x))
+            } else {
+                (start.x, start.y.min(end.y), start.y.max(end.y))
+            };
+            (high.min(edge_high) - low.max(edge_low) > GEOMETRY_EPSILON_PX).then_some(position)
+        })
+        .collect();
+    across.sort_by(f32::total_cmp);
+    let mut shifts: Vec<f32> = across
+        .windows(2)
+        .filter_map(|pair| Some((pair.first()? + pair.get(1)?) / 2.0 - at))
+        .collect();
+    shifts.sort_by(|a, b| a.abs().total_cmp(&b.abs()));
+    shifts
+}
+
+/// A leg keeps at least this far from a drawn outline it runs along.
 pub const OUTLINE_AIR_PX: f32 = 12.0;
 
-/// The four edges of every Box's drawn outline on the page.
-pub fn zone_edges(geometry: &PageGeometry) -> Vec<(PagePoint, PagePoint)> {
-    zone_outlines(geometry)
-        .into_iter()
-        .flat_map(|outline| {
+/// One edge of a drawn outline and the node that draws it.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct OutlineEdge {
+    pub node: usize,
+    pub run: (PagePoint, PagePoint),
+}
+
+/// True for a node whose border a reader sees as an outline a line can run along.
+fn draws_outline(tag: NodeTag) -> bool {
+    match tag {
+        NodeTag::Zone | NodeTag::Pcard | NodeTag::Callout | NodeTag::Frame | NodeTag::Step => true,
+        NodeTag::Page
+        | NodeTag::Kicker
+        | NodeTag::Title
+        | NodeTag::Lede
+        | NodeTag::Body
+        | NodeTag::Legend
+        | NodeTag::LegendEntry
+        | NodeTag::Foot
+        | NodeTag::Row
+        | NodeTag::Col
+        | NodeTag::Lanes
+        | NodeTag::Fact
+        | NodeTag::Note
+        | NodeTag::Pipe
+        | NodeTag::Tee
+        | NodeTag::Text
+        | NodeTag::TitleBlock
+        | NodeTag::TitleCell
+        | NodeTag::ProblemPoint
+        | NodeTag::View
+        | NodeTag::ActorChip
+        | NodeTag::Phases
+        | NodeTag::PartsList
+        | NodeTag::GeneralNotes
+        | NodeTag::Ladder
+        | NodeTag::Rung
+        | NodeTag::HowTo
+        | NodeTag::HowToItem => false,
+    }
+}
+
+/// The four edges of every drawn outline on the page: a Box's as `zone_outlines` reads it,
+/// and the border box of every Item, Callout, Frame and Step.
+pub fn outline_edges(geometry: &PageGeometry) -> Vec<OutlineEdge> {
+    geometry
+        .nodes
+        .iter()
+        .enumerate()
+        .filter(|(_, node)| draws_outline(node.tag))
+        .flat_map(|(index, node)| {
+            let outline = node
+                .part(PartName::TabBorder)
+                .map_or(node.bounds, |part| part.bounds);
             let corner = |x: f32, y: f32| PagePoint { x, y };
             let (left, top, right, bottom) =
                 (outline.x, outline.y, outline.right(), outline.bottom());
@@ -543,11 +700,12 @@ pub fn zone_edges(geometry: &PageGeometry) -> Vec<(PagePoint, PagePoint)> {
                 (corner(left, bottom), corner(right, bottom)),
                 (corner(left, top), corner(left, bottom)),
             ]
+            .map(|run| OutlineEdge { node: index, run })
         })
         .collect()
 }
 
-/// True when a leg runs along a Box outline's edge, parallel and nearer than
+/// True when a leg runs along an outline's edge, parallel and nearer than
 /// `OUTLINE_AIR_PX`, over a stretch longer than that: the line would read as the outline.
 pub fn crowds(leg: (PagePoint, PagePoint), edge: (PagePoint, PagePoint)) -> bool {
     let horizontal = |run: (PagePoint, PagePoint)| (run.0.y - run.1.y).abs() < GEOMETRY_EPSILON_PX;

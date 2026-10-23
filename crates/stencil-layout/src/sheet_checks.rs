@@ -82,19 +82,6 @@ pub(crate) fn sheet_route_defects(
             push(format!("leg {} turns back on leg {index}", index + 1));
         }
     }
-    for (leg, segment) in segments(&route.points).into_iter().enumerate() {
-        if let Some(edge) = crate::sheet_lines::zone_edges(geometry)
-            .into_iter()
-            .find(|edge| crate::sheet_lines::crowds(segment, *edge))
-        {
-            push(format!(
-                "leg {leg} runs within {:.2} px along a Box outline from {} to {}",
-                crate::sheet_lines::OUTLINE_AIR_PX,
-                at(edge.0),
-                at(edge.1)
-            ));
-        }
-    }
     let keep_out = bend_keep_out(route.corner);
     if let Some(tag) = route.tag
         && covers_a_bend(&tag, &route.points, keep_out)

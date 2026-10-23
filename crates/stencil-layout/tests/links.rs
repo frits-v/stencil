@@ -10,6 +10,7 @@ mod common;
 use common::{assert_close, layout, node, page_from};
 use serde_json::{Value, json};
 use stencil_layout::checks::{links_avoid_boxes, links_routed, text_fits_box};
+use stencil_layout::sheet_lines::OUTLINE_AIR_PX;
 use stencil_layout::{
     BoxRect, LINK_ARROW_STUB_PX, LinkRoute, OBSTACLE_CLEARANCE_PX, PageGeometry, PartName,
     RouteStatus, shape_height_px,
@@ -522,7 +523,7 @@ fn nested_target_page(gap: u32, arrow: &str) -> Value {
 #[test]
 fn an_arrowed_end_arrives_on_a_straight_of_the_arrow_stub() {
     let mut examined = 0;
-    for (arrow, gaps) in [("end", &[8, 16, 32, 64][..]), ("both", &[32, 64][..])] {
+    for (arrow, gaps) in [("end", &[8, 16, 24, 32, 64][..]), ("both", &[32, 64][..])] {
         for &gap in gaps {
             let page = page_from(nested_target_page(gap, arrow));
             let geometry = layout(&page);
@@ -548,13 +549,31 @@ fn an_arrowed_end_arrives_on_a_straight_of_the_arrow_stub() {
                     route.points
                 );
             }
+            // The step leg needs the first leg's length, the arrow stub at an arrowed start
+            // and 16 px otherwise, plus OUTLINE_AIR_PX before the Region it enters.
+            let first_min = if arrow == "both" {
+                LINK_ARROW_STUB_PX
+            } else {
+                16.0
+            };
             let checked = links_routed(&page, &geometry);
-            assert!(checked.passed(), "{arrow} gap {gap}: {checked:?}");
             assert_eq!(checked.examined, 1);
+            if (gap as f32) < first_min + OUTLINE_AIR_PX {
+                assert!(
+                    !checked.defects.is_empty()
+                        && checked
+                            .defects
+                            .iter()
+                            .all(|defect| defect.message.contains("along the outline of")),
+                    "{arrow} gap {gap}: {checked:?}"
+                );
+            } else {
+                assert!(checked.passed(), "{arrow} gap {gap}: {checked:?}");
+            }
             examined += 1;
         }
     }
-    assert_eq!(examined, 6);
+    assert_eq!(examined, 7);
 }
 
 /// A stub with no room falls back to the L of section 11.2. links-routed reports the
@@ -700,4 +719,90 @@ fn a_stop_plate_under_a_tag_is_a_links_routed_defect_and_a_clear_one_passes() {
     let report = links_routed(&open, &layout(&open));
     assert!(report.passed(), "{report:?}");
     assert_eq!(report.examined, 1);
+}
+
+/// Three rows: a card, two cards a gutter apart, a card. A link from the top card to the
+/// bottom one passes the middle row through its gutter.
+fn rows_with_gutter(row_gap: u32, gutter: u32, grow: Value) -> Value {
+    linked_page(
+        json!([{ "tag": "Col", "gap": row_gap, "children": [
+            { "tag": "Row", "children": [card("p")] },
+            { "tag": "Row", "gap": gutter, "grow": grow, "children": [card("q"), card("r")] },
+            { "tag": "Row", "children": [card("s")] }
+        ]}]),
+        json!([{
+            "from": "p", "to": "s", "line": "solid", "tint": 1,
+            "from_side": "bottom", "to_side": "top"
+        }]),
+    )
+}
+
+/// The distance between a leg and a parallel card edge beside it, for each pair that runs
+/// alongside for more than the epsilon.
+fn parallel_gaps(points: &[PagePoint], cards: &[BoxRect]) -> Vec<f32> {
+    let mut gaps = Vec::new();
+    for pair in points.windows(2) {
+        let (a, b) = (pair[0], pair[1]);
+        for card in cards {
+            if a.y == b.y {
+                let overlap = a.x.max(b.x).min(card.right()) - a.x.min(b.x).max(card.x);
+                if overlap > 0.01 {
+                    gaps.extend([(a.y - card.y).abs(), (a.y - card.bottom()).abs()]);
+                }
+            } else {
+                let overlap = a.y.max(b.y).min(card.bottom()) - a.y.min(b.y).max(card.y);
+                if overlap > 0.01 {
+                    gaps.extend([(a.x - card.x).abs(), (a.x - card.right()).abs()]);
+                }
+            }
+        }
+    }
+    gaps
+}
+
+/// The router lays a leg on the grid line 8 px outside a card; on a flat page that leg
+/// moves until it keeps OUTLINE_AIR_PX from every card it runs beside.
+#[test]
+fn a_leg_beside_a_card_moves_off_its_outline() {
+    let page = page_from(rows_with_gutter(48, 40, json!([1, 3])));
+    let geometry = layout(&page);
+    let route = route_of(&geometry, 0);
+    assert_eq!(route.status, RouteStatus::Routed);
+    let cards: Vec<BoxRect> = [
+        "/body/0/children/0/children/0",
+        "/body/0/children/1/children/0",
+        "/body/0/children/1/children/1",
+        "/body/0/children/2/children/0",
+    ]
+    .iter()
+    .map(|pointer| node(&geometry, pointer).bounds)
+    .collect();
+    let gaps = parallel_gaps(&route.points, &cards);
+    assert!(!gaps.is_empty(), "{:?}", route.points);
+    for gap in gaps {
+        assert!(gap >= OUTLINE_AIR_PX, "{gap} px in {:?}", route.points);
+    }
+    let report = links_routed(&page, &geometry);
+    assert!(report.passed(), "{report:?}");
+}
+
+/// A link straight through a 10 px gutter runs 5 px from each card and no shift frees it:
+/// links-routed names the card whose outline it crowds.
+#[test]
+fn a_link_through_a_gutter_narrower_than_twice_the_air_is_a_defect() {
+    let page = page_from(rows_with_gutter(24, 10, json!([1, 1])));
+    let geometry = layout(&page);
+    let report = links_routed(&page, &geometry);
+    assert_eq!(report.examined, 1);
+    let messages: Vec<&str> = report
+        .defects
+        .iter()
+        .map(|defect| defect.message.as_str())
+        .collect();
+    assert!(
+        messages.iter().any(|message| message.starts_with(
+            "leg 0 runs within 12.00 px along the outline of /body/0/children/1/children/0"
+        )),
+        "{messages:?}"
+    );
 }

@@ -902,16 +902,16 @@
     <text x="811.96" y="1492.77" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">evaluate clip</text>
   </g>
   <g data-id="/links/14" data-tag="Link" data-kind="dash-6">
-    <path d="M 773.13 1456.4 L 773.13 1508.6" fill="none" stroke="#497938" stroke-width="2" stroke-dasharray="6 5"/>
-    <path d="M 773.13 1508.6 L 773.13 1512.1 A 6 6 0 0 1 767.13 1518.1 L 763.63 1518.1" fill="none" stroke="#497938" stroke-width="2"/>
-    <path d="M 763.63 1518.1 L 683.54 1518.1" fill="none" stroke="#497938" stroke-width="2" stroke-dasharray="6 5" stroke-dashoffset="6"/>
-    <path d="M 683.54 1518.1 L 680.04 1518.1 A 6 6 0 0 0 674.04 1524.1 L 674.04 1527.6" fill="none" stroke="#497938" stroke-width="2"/>
-    <path d="M 674.04 1527.6 L 674.04 1637.13" fill="none" stroke="#497938" stroke-width="2" stroke-dasharray="6 5" stroke-dashoffset="6"/>
+    <path d="M 773.13 1456.4 L 773.13 1498.6" fill="none" stroke="#497938" stroke-width="2" stroke-dasharray="6 5"/>
+    <path d="M 773.13 1498.6 L 773.13 1502.1 A 6 6 0 0 1 767.13 1508.1 L 763.63 1508.1" fill="none" stroke="#497938" stroke-width="2"/>
+    <path d="M 763.63 1508.1 L 683.54 1508.1" fill="none" stroke="#497938" stroke-width="2" stroke-dasharray="6 5" stroke-dashoffset="6"/>
+    <path d="M 683.54 1508.1 L 680.04 1508.1 A 6 6 0 0 0 674.04 1514.1 L 674.04 1517.6" fill="none" stroke="#497938" stroke-width="2"/>
+    <path d="M 674.04 1517.6 L 674.04 1637.13" fill="none" stroke="#497938" stroke-width="2" stroke-dasharray="6 5" stroke-dashoffset="6"/>
     <line x1="674.04" y1="1637.13" x2="674.04" y2="1647.13" stroke="none" marker-end="url(#arrow-center-dash-6)"/>
-    <rect x="616.46" y="1593.46" width="115.15" height="29.1" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
-    <rect x="625.96" y="1599.76" width="16.5" height="16.5" rx="2.25" fill="#FFFFFF" stroke="#497938" stroke-width="1.5"/>
-    <text x="630.97" y="1611.65" xml:space="preserve" font-family="Inter" font-size="10" font-weight="700" fill="#202124">6</text>
-    <text x="649.21" y="1612.38" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">write verdict</text>
+    <rect x="616.46" y="1592.34" width="115.15" height="29.1" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
+    <rect x="625.96" y="1598.64" width="16.5" height="16.5" rx="2.25" fill="#FFFFFF" stroke="#497938" stroke-width="1.5"/>
+    <text x="630.97" y="1610.53" xml:space="preserve" font-family="Inter" font-size="10" font-weight="700" fill="#202124">6</text>
+    <text x="649.21" y="1611.26" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">write verdict</text>
   </g>
   <g data-id="/links/15" data-tag="Link" data-kind="blue">
     <path d="M 964.17 1314 L 964.17 1683.8" fill="none" stroke="#1A73E8" stroke-width="4" stroke-dasharray="7 4"/>
