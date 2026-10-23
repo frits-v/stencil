@@ -2,6 +2,7 @@
 //! node, the taffy nodes its bounds, content box and parts are read from.
 
 mod assembly_node;
+mod how_to_node;
 mod ladder_node;
 mod marks_node;
 mod phases_node;
@@ -30,6 +31,7 @@ use taffy::prelude::{
     fr, length, line,
 };
 
+use crate::how_to::HowToPlan;
 use crate::ladder::LadderPlan;
 use crate::lanes::LanesPlan;
 use crate::phases::PhasesPlan;
@@ -59,6 +61,9 @@ pub(crate) struct TextLeaf {
     /// For one piece of a lead run, the whole run: the leaf of the lead piece is the taffy
     /// leaf and measures both pieces together (section 14.4 rule 9).
     pub lead_run: Option<LeadRunLeaf>,
+    /// False for a run set on one line whatever its box: a terminal line or a command run.
+    /// Its box may end up narrower than the run, which text-fits-box reports.
+    pub wraps: bool,
 }
 
 /// A bold lead and its body sharing one line, laid out as one taffy leaf and drawn as two
@@ -149,6 +154,7 @@ pub(crate) fn build_page(
     lanes_plan: &LanesPlan,
     phases_plan: &PhasesPlan,
     ladder_plan: &LadderPlan,
+    how_to_plan: &HowToPlan,
     widest_cell: &str,
 ) -> Result<BuiltPage, LayoutError> {
     let mut builder = Builder {
@@ -159,6 +165,7 @@ pub(crate) fn build_page(
         lanes_plan,
         phases_plan,
         ladder_plan,
+        how_to_plan,
         actors: PageActors::of(page),
         page_marks: PageMarks::of(page),
         widest_cell: widest_cell.to_string(),
@@ -185,6 +192,7 @@ struct Builder<'page> {
     lanes_plan: &'page LanesPlan,
     phases_plan: &'page PhasesPlan,
     ladder_plan: &'page LadderPlan,
+    how_to_plan: &'page HowToPlan,
     /// What each node and line acts for; empty on a page without actors.
     actors: PageActors<'page>,
     /// The keyed lists and every carrier's marks; empty off a sheet.
@@ -329,7 +337,8 @@ fn default_weight(container: NodeTag, child: &Node) -> u16 {
         | Node::Step(_)
         | Node::PartsList(_)
         | Node::GeneralNotes(_)
-        | Node::Ladder(_) => 1,
+        | Node::Ladder(_)
+        | Node::HowTo(_) => 1,
     };
     match container {
         NodeTag::Row => row_weight,
@@ -361,7 +370,9 @@ fn default_weight(container: NodeTag, child: &Node) -> u16 {
         | NodeTag::PartsList
         | NodeTag::GeneralNotes
         | NodeTag::Ladder
-        | NodeTag::Rung => 0,
+        | NodeTag::Rung
+        | NodeTag::HowTo
+        | NodeTag::HowToItem => 0,
     }
 }
 
@@ -519,6 +530,7 @@ impl Builder<'_> {
             min_line_px,
             source: spec.source,
             lead_run: None,
+            wraps: true,
         });
         Ok((node, index))
     }
@@ -1013,6 +1025,9 @@ impl Builder<'_> {
             }
             Node::Ladder(ladder) => {
                 self.add_ladder(ladder, pointer, parent_index, parent_container, placement)
+            }
+            Node::HowTo(how_to) => {
+                self.add_how_to(how_to, pointer, parent_index, parent_container, placement)
             }
         }
     }

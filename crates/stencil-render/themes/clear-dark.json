@@ -248,5 +248,11 @@
       "minor": "#21262F",
       "major": "#2F3641"
     }
+  },
+  "terminal": {
+    "fill": "#262D37",
+    "text": "#E9EDF2",
+    "prompt": "#6AB0FF",
+    "comment": "#A8B1BD"
   }
 }

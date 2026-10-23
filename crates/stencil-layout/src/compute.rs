@@ -183,6 +183,7 @@ fn measure_in_layout(
         Axis::Y => (known.height, known.width, available.height),
     };
     let max_width_px = match (known_along, available_along) {
+        _ if !leaf.wraps => None,
         (Some(width), _) | (None, AvailableSpace::Definite(width)) => {
             Some(width.max(0.0) + WRAP_EPSILON_PX)
         }
@@ -321,12 +322,9 @@ fn remeasure_whole(
         Axis::X => final_box.width,
         Axis::Y => final_box.height,
     };
+    let max_width_px = leaf.wraps.then_some(final_width.max(0.0) + WRAP_EPSILON_PX);
     let metrics = measurer
-        .measure(
-            &leaf.text,
-            &style,
-            Some(final_width.max(0.0) + WRAP_EPSILON_PX),
-        )
+        .measure(&leaf.text, &style, max_width_px)
         .map_err(|source| LayoutError::Measure {
             pointer: leaf.source.clone(),
             source,

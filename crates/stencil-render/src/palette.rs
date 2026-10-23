@@ -498,9 +498,11 @@ impl<'a> Palette<'a> {
             | TextStyleName::MarkNumeralSmall => &theme.ink.primary,
             TextStyleName::ListTitle => theme.sheet_colors().frame,
             TextStyleName::FlagNumeral => theme.sheet_colors().cell,
-            TextStyleName::ActorName | TextStyleName::LaneName | TextStyleName::RungTitle => {
-                theme.sheet_colors().frame
-            }
+            TextStyleName::ActorName
+            | TextStyleName::LaneName
+            | TextStyleName::RungTitle
+            | TextStyleName::HowToTitle => theme.sheet_colors().frame,
+            TextStyleName::TerminalText => theme.terminal_colors().text,
         };
         color.as_str()
     }
@@ -525,6 +527,10 @@ impl<'a> Palette<'a> {
             SheetInk::TintInk => &theme.tint(1).ink,
             SheetInk::TagFill => &theme.tag.fill,
             SheetInk::TagInk => &theme.tag.ink,
+            SheetInk::TerminalFill => theme.terminal_colors().fill,
+            SheetInk::TerminalText => theme.terminal_colors().text,
+            SheetInk::TerminalPrompt => theme.terminal_colors().prompt,
+            SheetInk::TerminalComment => theme.terminal_colors().comment,
         };
         color.as_str()
     }
@@ -638,6 +644,12 @@ pub enum SheetInk {
     /// A tag's fill and ink: a step badge stands on the tag's fill.
     TagFill,
     TagInk,
+    /// A how-to's terminal and command chips, and the inks of its lines by kind (section
+    /// 14.5 rule 5).
+    TerminalFill,
+    TerminalText,
+    TerminalPrompt,
+    TerminalComment,
 }
 
 /// The shape a sheet part draws.
@@ -741,6 +753,21 @@ pub const DETAIL_STROKE_PX: f32 = 1.5;
 /// `stroke-dasharray` of a detail frame and of a ladder's escalation arrow.
 pub const DETAIL_FRAME_DASH: &str = "6 4";
 pub const ESCALATION_DASH: &str = "4 3";
+/// The border of a how-to's command chips and of its terminal (section 14.5 rule 5).
+pub const CHIP_BORDER_PX: f32 = 1.0;
+pub const TERMINAL_BORDER_PX: f32 = 1.0;
+
+/// The ink of a terminal line of `kind`, and of its prompt: a command and an output line in
+/// the text ink, an ok line and a command's `$` in the prompt ink, a comment and its `#` in
+/// the comment ink.
+pub fn terminal_ink(kind: stencil_model::TerminalKind, prompt: bool) -> SheetInk {
+    use stencil_model::TerminalKind;
+    match (kind, prompt) {
+        (TerminalKind::Command, true) | (TerminalKind::Ok, _) => SheetInk::TerminalPrompt,
+        (TerminalKind::Command | TerminalKind::Output, _) => SheetInk::TerminalText,
+        (TerminalKind::Comment, _) => SheetInk::TerminalComment,
+    }
+}
 
 /// The paint of a glyph of `kind`: a balloon outlined in its key's wire on the cell, a
 /// flag filled with the mark ink, a diamond filled with its key's fill and outlined in its
@@ -986,6 +1013,25 @@ pub fn sheet_part_paint(owner: NodeTag, part: PartName) -> Option<PartPaint> {
         PartName::RungTitle => text_paint(TintInk),
         PartName::RungWho => text_paint(InkSecondary),
         PartName::RungText => text_paint(InkPrimary),
+        PartName::HowToNumber => text_paint(LabelInk),
+        PartName::HowToTitle => text_paint(Frame),
+        PartName::HowToRule => stroke_paint(PartShape::Line, Rule, 1.0),
+        PartName::CommandChip => PartPaint {
+            shape: PartShape::Rect,
+            fill: Some(SheetInk::TerminalFill),
+            stroke: Some((Rule, CHIP_BORDER_PX)),
+            text: None,
+        },
+        PartName::CommandText => text_paint(SheetInk::TerminalText),
+        PartName::CommandWord | PartName::HowToText => text_paint(InkSecondary),
+        PartName::Terminal => PartPaint {
+            shape: PartShape::Rect,
+            fill: Some(SheetInk::TerminalFill),
+            stroke: Some((Frame, TERMINAL_BORDER_PX)),
+            text: None,
+        },
+        // A line's ink follows its kind, which the writer reads from the page.
+        PartName::TerminalPrompt | PartName::TerminalLine => text_paint(SheetInk::TerminalText),
         PartName::Badge
         | PartName::BadgeText
         | PartName::Label
@@ -1346,7 +1392,7 @@ mod tests {
     use stencil_layout::PART_NAMES;
 
     /// The owners and parts of section 14.5 rule 12 that a sheet draws.
-    const SHEET_PARTS: [(NodeTag, PartName); 108] = [
+    const SHEET_PARTS: [(NodeTag, PartName); 118] = [
         (NodeTag::Page, PartName::Border),
         (NodeTag::Page, PartName::RefRule),
         (NodeTag::Page, PartName::RefTick),
@@ -1457,6 +1503,16 @@ mod tests {
         (NodeTag::Rung, PartName::RungWho),
         (NodeTag::Rung, PartName::RungText),
         (NodeTag::Rung, PartName::Diamond),
+        (NodeTag::HowToItem, PartName::HowToNumber),
+        (NodeTag::HowToItem, PartName::HowToTitle),
+        (NodeTag::HowToItem, PartName::HowToRule),
+        (NodeTag::HowToItem, PartName::CommandChip),
+        (NodeTag::HowToItem, PartName::CommandText),
+        (NodeTag::HowToItem, PartName::CommandWord),
+        (NodeTag::HowToItem, PartName::HowToText),
+        (NodeTag::HowToItem, PartName::Terminal),
+        (NodeTag::HowToItem, PartName::TerminalPrompt),
+        (NodeTag::HowToItem, PartName::TerminalLine),
     ];
 
     #[test]

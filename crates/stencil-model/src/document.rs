@@ -42,6 +42,8 @@ pub const MARKS_MAX: usize = 4;
 pub const LINE_STEP_MAX: u16 = 64;
 /// Detail ladders a sheet draws, lettered A to H in body order.
 pub const LADDERS_MAX: usize = 8;
+/// The deepest indent of a terminal line, in levels of two spaces.
+pub const TERMINAL_INDENT_MAX: u8 = 8;
 /// Scalar values in an `id`, the `{0,63}` repetition plus the first character.
 pub const ID_SCALARS_MAX: usize = 64;
 /// The JSON Schema and CUE pattern for `id`. `is_valid_id` is its Rust twin.
@@ -434,6 +436,7 @@ pub enum Node {
     PartsList(PartsList),
     GeneralNotes(GeneralNotes),
     Ladder(Ladder),
+    HowTo(HowTo),
 }
 
 /// A numbered view of a design sheet: a heading with its number, title, subtitle and note,
@@ -859,6 +862,125 @@ pub struct Rung {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[schemars(length(max = 4))]
     pub marks: Vec<Mark>,
+}
+
+/// What a reader types, as items numbered `<view>.<n>` (section 14.4 rule 21).
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct HowTo {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(regex(pattern = ID_PATTERN))]
+    pub id: Option<String>,
+    #[schemars(length(min = 1, max = 6))]
+    pub items: Vec<HowToItem>,
+}
+
+/// One how-to: a title, the commands it uses, what it says and what the terminal shows.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct HowToItem {
+    #[schemars(length(min = 1, max = 400))]
+    pub title: String,
+    /// One unwrapped line on the heading row, left to right: a string is a command chip,
+    /// `{"words": "then"}` is plain text between chips.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[schemars(length(max = 5))]
+    pub commands: Vec<CommandRun>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(length(min = 1, max = 400))]
+    pub text: Option<String>,
+    /// Sets the text beside the terminal instead of above it.
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub beside: bool,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[schemars(length(max = 12))]
+    pub terminal: Vec<TerminalLine>,
+}
+
+/// A run of a how-to's command line: a chip, or words between chips.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(untagged)]
+pub enum CommandRun {
+    Chip(#[schemars(length(min = 1, max = 400))] String),
+    Words(CommandWords),
+}
+
+impl CommandRun {
+    pub fn text(&self) -> &str {
+        match self {
+            CommandRun::Chip(text) => text,
+            CommandRun::Words(words) => &words.words,
+        }
+    }
+
+    /// True for an object entry, whose text is at `<entry>/words`.
+    pub fn is_words(&self) -> bool {
+        matches!(self, CommandRun::Words(_))
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct CommandWords {
+    #[schemars(length(min = 1, max = 400))]
+    pub words: String,
+}
+
+/// One line of a how-to's terminal, set unwrapped.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct TerminalLine {
+    pub kind: TerminalKind,
+    /// Leading indent in levels of two spaces; the text itself stays trimmed.
+    #[serde(default, skip_serializing_if = "is_zero_indent")]
+    #[schemars(range(max = 8))]
+    pub indent: u8,
+    #[schemars(length(min = 1, max = 400))]
+    pub text: String,
+}
+
+#[allow(clippy::trivially_copy_pass_by_ref)]
+fn is_zero_indent(indent: &u8) -> bool {
+    *indent == 0
+}
+
+/// A command line draws a `$` prompt and a comment line a `#` prompt before its text.
+/// Output and ok lines draw none and are told apart by colour.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "lowercase")]
+pub enum TerminalKind {
+    Command,
+    Output,
+    Comment,
+    Ok,
+}
+
+impl TerminalKind {
+    pub const ALL: [TerminalKind; 4] = [
+        TerminalKind::Command,
+        TerminalKind::Output,
+        TerminalKind::Comment,
+        TerminalKind::Ok,
+    ];
+
+    /// The serialized name, for example "comment".
+    pub fn as_str(self) -> &'static str {
+        match self {
+            TerminalKind::Command => "command",
+            TerminalKind::Output => "output",
+            TerminalKind::Comment => "comment",
+            TerminalKind::Ok => "ok",
+        }
+    }
+
+    /// The prompt drawn before the line: `$` for a command, `#` for a comment.
+    pub fn prompt(self) -> Option<&'static str> {
+        match self {
+            TerminalKind::Command => Some("$"),
+            TerminalKind::Comment => Some("#"),
+            TerminalKind::Output | TerminalKind::Ok => None,
+        }
+    }
 }
 
 /// A lane's band. wash: the actor's fill mixed halfway toward the paper, with the drafting
@@ -1607,6 +1729,7 @@ impl Node {
             Node::PartsList(_) => "PartsList",
             Node::GeneralNotes(_) => "GeneralNotes",
             Node::Ladder(_) => "Ladder",
+            Node::HowTo(_) => "HowTo",
         }
     }
 
@@ -1631,6 +1754,7 @@ impl Node {
             Node::PartsList(list) => &list.id,
             Node::GeneralNotes(notes) => &notes.id,
             Node::Ladder(ladder) => &ladder.id,
+            Node::HowTo(how_to) => &how_to.id,
         };
         id.as_deref()
     }

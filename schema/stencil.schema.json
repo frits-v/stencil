@@ -339,6 +339,33 @@
         "none"
       ]
     },
+    "CommandRun": {
+      "description": "A run of a how-to's command line: a chip, or words between chips.",
+      "anyOf": [
+        {
+          "type": "string",
+          "maxLength": 400,
+          "minLength": 1
+        },
+        {
+          "$ref": "#/$defs/CommandWords"
+        }
+      ]
+    },
+    "CommandWords": {
+      "type": "object",
+      "properties": {
+        "words": {
+          "type": "string",
+          "maxLength": 400,
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "words"
+      ]
+    },
     "FactEntry": {
       "description": "A fact inside an Item.",
       "type": "object",
@@ -393,6 +420,48 @@
       "required": [
         "id",
         "text"
+      ]
+    },
+    "HowToItem": {
+      "description": "One how-to: a title, the commands it uses, what it says and what the terminal shows.",
+      "type": "object",
+      "properties": {
+        "beside": {
+          "description": "Sets the text beside the terminal instead of above it.",
+          "type": "boolean"
+        },
+        "commands": {
+          "description": "One unwrapped line on the heading row, left to right: a string is a command chip,\n`{\"words\": \"then\"}` is plain text between chips.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CommandRun"
+          },
+          "maxItems": 5
+        },
+        "terminal": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/TerminalLine"
+          },
+          "maxItems": 12
+        },
+        "text": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 400,
+          "minLength": 1
+        },
+        "title": {
+          "type": "string",
+          "maxLength": 400,
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "title"
       ]
     },
     "IconName": {
@@ -1848,6 +1917,36 @@
             "around",
             "rungs"
           ]
+        },
+        {
+          "description": "What a reader types, as items numbered `<view>.<n>` (section 14.4 rule 21).",
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "pattern": "^[a-z0-9][a-z0-9-]{0,63}$"
+            },
+            "items": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/HowToItem"
+              },
+              "maxItems": 6,
+              "minItems": 1
+            },
+            "tag": {
+              "type": "string",
+              "const": "HowTo"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "tag",
+            "items"
+          ]
         }
       ]
     },
@@ -2295,6 +2394,42 @@
             "label"
           ]
         }
+      ]
+    },
+    "TerminalKind": {
+      "description": "A command line draws a `$` prompt and a comment line a `#` prompt before its text.\nOutput and ok lines draw none and are told apart by colour.",
+      "type": "string",
+      "enum": [
+        "command",
+        "output",
+        "comment",
+        "ok"
+      ]
+    },
+    "TerminalLine": {
+      "description": "One line of a how-to's terminal, set unwrapped.",
+      "type": "object",
+      "properties": {
+        "indent": {
+          "description": "Leading indent in levels of two spaces; the text itself stays trimmed.",
+          "type": "integer",
+          "format": "uint8",
+          "maximum": 8,
+          "minimum": 0
+        },
+        "kind": {
+          "$ref": "#/$defs/TerminalKind"
+        },
+        "text": {
+          "type": "string",
+          "maxLength": 400,
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "text"
       ]
     }
   }

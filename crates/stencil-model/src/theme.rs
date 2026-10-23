@@ -478,6 +478,33 @@ pub struct Theme {
     /// the roles above and draws no grid.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub sheet: Option<SheetRole>,
+    /// The terminal of a how-to and its command chips (section 14.5 rule 5); absent derives
+    /// every leaf from the roles above.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub terminal: Option<TerminalRole>,
+}
+
+/// The paint of a how-to's terminal: its fill, and the ink of each kind of line.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct TerminalRole {
+    /// The terminal and command chips. Derived: fact.fill.
+    pub fill: Color,
+    /// Command and output lines, and command chip text. Derived: ink.primary.
+    pub text: Color,
+    /// The `$` prompt and ok lines. Derived: ink.primary.
+    pub prompt: Color,
+    /// Comment lines and their `#` prompt. Derived: ink.secondary.
+    pub comment: Color,
+}
+
+/// The terminal role of a theme with every absent leaf resolved to its derivation.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct TerminalColors<'a> {
+    pub fill: &'a Color,
+    pub text: &'a Color,
+    pub prompt: &'a Color,
+    pub comment: &'a Color,
 }
 
 /// The paint of a design sheet's frame, title block, Views and legend strip.
@@ -545,6 +572,24 @@ impl Theme {
                 cell: &self.card.fill,
                 mark_ink: &self.ink.primary,
                 grid: None,
+            },
+        }
+    }
+
+    /// The terminal role, or its derivation from the fact fill and the inks when absent.
+    pub fn terminal_colors(&self) -> TerminalColors<'_> {
+        match &self.terminal {
+            Some(terminal) => TerminalColors {
+                fill: &terminal.fill,
+                text: &terminal.text,
+                prompt: &terminal.prompt,
+                comment: &terminal.comment,
+            },
+            None => TerminalColors {
+                fill: &self.fact.fill,
+                text: &self.ink.primary,
+                prompt: &self.ink.primary,
+                comment: &self.ink.secondary,
             },
         }
     }
@@ -966,6 +1011,13 @@ pub fn validate_theme(theme: &Theme) -> Vec<ThemeViolation> {
             checker.color(grid_pointer.child("minor"), &grid.minor);
             checker.color(grid_pointer.child("major"), &grid.major);
         }
+    }
+    if let Some(terminal) = &theme.terminal {
+        let pointer = root.child("terminal");
+        checker.color(pointer.child("fill"), &terminal.fill);
+        checker.color(pointer.child("text"), &terminal.text);
+        checker.color(pointer.child("prompt"), &terminal.prompt);
+        checker.color(pointer.child("comment"), &terminal.comment);
     }
     checker.violations
 }

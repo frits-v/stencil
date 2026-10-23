@@ -378,7 +378,8 @@ pub fn legend_consistency(page: &Page) -> CheckReport {
                 | Node::Step(_)
                 | Node::PartsList(_)
                 | Node::GeneralNotes(_)
-                | Node::Ladder(_),
+                | Node::Ladder(_)
+                | Node::HowTo(_),
             ) => {}
         }
     }
@@ -518,7 +519,8 @@ pub fn keys_used(page: &Page) -> CheckReport {
                 | Node::Callout(_)
                 | Node::Frame(_)
                 | Node::View(_)
-                | Node::GeneralNotes(_),
+                | Node::GeneralNotes(_)
+                | Node::HowTo(_),
             ) => {}
         }
     }

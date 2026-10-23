@@ -275,7 +275,8 @@ impl<'a> SvgWriter<'a> {
             | Node::Step(_)
             | Node::PartsList(_)
             | Node::GeneralNotes(_)
-            | Node::Ladder(_) => {
+            | Node::Ladder(_)
+            | Node::HowTo(_) => {
                 return Err(RenderError::SheetSurface {
                     pointer: node.pointer.clone(),
                 });
@@ -706,7 +707,8 @@ impl<'a> SvgWriter<'a> {
             | Node::Step(_)
             | Node::PartsList(_)
             | Node::GeneralNotes(_)
-            | Node::Ladder(_) => {}
+            | Node::Ladder(_)
+            | Node::HowTo(_) => {}
         }
     }
 

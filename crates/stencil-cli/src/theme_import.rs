@@ -536,6 +536,7 @@ pub fn base16_theme(
             },
         },
         sheet: None,
+        terminal: None,
     })
 }
 

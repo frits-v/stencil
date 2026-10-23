@@ -524,6 +524,8 @@ fn node_name(
         | NodeTag::GeneralNotes
         | NodeTag::Ladder => node.map(body_node_name).unwrap_or_default(),
         NodeTag::Rung => rung_title(page, pointer).unwrap_or_default(),
+        NodeTag::HowTo => "How-to column".to_string(),
+        NodeTag::HowToItem => how_to_item_title(page, pointer).unwrap_or_default(),
         NodeTag::Phases => "Phases".to_string(),
         NodeTag::ActorChip => page
             .actors
@@ -562,6 +564,23 @@ fn rung_title(page: &Page, pointer: &NodePointer) -> Option<String> {
             .take(rungs.max() + 1)
             .find(|(index, _)| rungs.pointer_in(&entry.pointer).index(*index) == *pointer)
             .map(|(_, rung)| rung.title.clone())
+    })
+}
+
+/// The title of the how-to at `pointer`, `/…/items/<i>` of a HowTo.
+fn how_to_item_title(page: &Page, pointer: &NodePointer) -> Option<String> {
+    let items = SheetList::HowToItems;
+    body_nodes(page).into_iter().find_map(|entry| {
+        let NodeRef::Node(Node::HowTo(how_to)) = entry.node else {
+            return None;
+        };
+        how_to
+            .items
+            .iter()
+            .enumerate()
+            .take(items.max() + 1)
+            .find(|(index, _)| items.pointer_in(&entry.pointer).index(*index) == *pointer)
+            .map(|(_, item)| item.title.clone())
     })
 }
 
@@ -605,6 +624,7 @@ fn body_node_name(node: NodeRef<'_>) -> String {
         NodeRef::Node(Node::PartsList(list)) => list.title.clone(),
         NodeRef::Node(Node::GeneralNotes(notes)) => notes.title.clone(),
         NodeRef::Node(Node::Ladder(ladder)) => ladder.title.clone(),
+        NodeRef::Node(Node::HowTo(_)) => "How-to column".to_string(),
         NodeRef::Node(Node::Row(_)) => "Row".to_string(),
         NodeRef::Node(Node::Col(_)) => "Col".to_string(),
         NodeRef::Node(Node::Lanes(_)) => "Lanes".to_string(),
@@ -642,7 +662,8 @@ fn pipe_landings(
                 | Node::Step(_)
                 | Node::PartsList(_)
                 | Node::GeneralNotes(_)
-                | Node::Ladder(_),
+                | Node::Ladder(_)
+                | Node::HowTo(_),
             ))
             | None => continue,
         };

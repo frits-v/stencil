@@ -280,4 +280,7 @@ row contrast ink.primary on tints.7.fill: 9.40, at least 4.50, passed
 row contrast ink.primary on tints.8.fill: 13.09, at least 4.50, passed
 row contrast sheet.mark_ink on sheet.paper: 14.24, at least 3.00, passed
 row contrast sheet.mark_ink on sheet.cell: 9.15, at least 3.00, passed
-stencil theme check dracula: 282 rows, 247 passed, 35 failed
+row contrast terminal.text on terminal.fill: 15.79, at least 4.50, passed
+row contrast terminal.prompt on terminal.fill: 15.79, at least 4.50, passed
+row contrast terminal.comment on terminal.fill: 14.81, at least 4.50, passed
+stencil theme check dracula: 285 rows, 250 passed, 35 failed

@@ -51,7 +51,7 @@ pub const FONT_SIZE_MAX_PX: f32 = 96.0;
 pub const LETTER_SPACING_MIN_EM: f32 = -0.2;
 pub const LETTER_SPACING_MAX_EM: f32 = 0.5;
 
-/// The 39 styles of section 2.9, in table order.
+/// The 41 styles of section 2.9, in table order.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum TextStyleName {
     Badge,
@@ -93,6 +93,8 @@ pub enum TextStyleName {
     FlagNumeral,
     RungTitle,
     RungWho,
+    HowToTitle,
+    TerminalText,
 }
 
 impl TextStyleName {
@@ -138,6 +140,8 @@ impl TextStyleName {
             TextStyleName::FlagNumeral => "flag_numeral",
             TextStyleName::RungTitle => "rung_title",
             TextStyleName::RungWho => "rung_who",
+            TextStyleName::HowToTitle => "how_to_title",
+            TextStyleName::TerminalText => "terminal_text",
         }
     }
 
@@ -185,6 +189,8 @@ impl TextStyleName {
             TextStyleName::FlagNumeral => &FLAG_NUMERAL,
             TextStyleName::RungTitle => &RUNG_TITLE,
             TextStyleName::RungWho => &RUNG_WHO,
+            TextStyleName::HowToTitle => &HOW_TO_TITLE,
+            TextStyleName::TerminalText => &TERMINAL_TEXT,
         }
     }
 }
@@ -552,9 +558,28 @@ const RUNG_WHO: NamedTextStyle = inter(
     false,
 );
 
-/// The 39 styles of section 2.9, in table order, which is TextStyleName order:
+/// A how-to's title on its heading row (section 14.4 rule 21).
+const HOW_TO_TITLE: NamedTextStyle = inter(
+    TextStyleName::HowToTitle,
+    FontWeight::Bold,
+    13.0,
+    15.6,
+    0.08,
+    true,
+);
+/// Terminal lines and command chips: Inter Regular, so terminal columns do not align.
+const TERMINAL_TEXT: NamedTextStyle = inter(
+    TextStyleName::TerminalText,
+    FontWeight::Regular,
+    11.5,
+    16.5,
+    0.0,
+    false,
+);
+
+/// The 41 styles of section 2.9, in table order, which is TextStyleName order:
 /// TEXT_STYLES[i].name as usize == i.
-pub const TEXT_STYLES: [NamedTextStyle; 39] = [
+pub const TEXT_STYLES: [NamedTextStyle; 41] = [
     BADGE,
     KICKER,
     TITLE,
@@ -594,6 +619,8 @@ pub const TEXT_STYLES: [NamedTextStyle; 39] = [
     FLAG_NUMERAL,
     RUNG_TITLE,
     RUNG_WHO,
+    HOW_TO_TITLE,
+    TERMINAL_TEXT,
 ];
 
 #[derive(Debug, Clone, PartialEq)]

@@ -100,7 +100,8 @@ fn drawn_texts(page: &Page) -> (Vec<DrawnText>, usize) {
                 | Node::Step(_)
                 | Node::PartsList(_)
                 | Node::GeneralNotes(_)
-                | Node::Ladder(_),
+                | Node::Ladder(_)
+                | Node::HowTo(_),
             ) => {}
         }
     }

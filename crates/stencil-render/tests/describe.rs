@@ -10,7 +10,7 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use pulldown_cmark::{Event, Options, Parser, Tag, TagEnd};
+use pulldown_cmark::{CodeBlockKind, Event, Options, Parser, Tag, TagEnd};
 use serde_json::Value;
 use stencil_layout::{NodeTag, PageGeometry, UnitKind, description_units, layout_page};
 use stencil_model::checks::{CheckName, CheckOutcome, CheckReport};
@@ -211,7 +211,7 @@ fn fill_with_hazards(
 ) {
     // A sheet's wordmark and captions hold at most 24 and 60 characters, shorter than a
     // hazard string, so they keep their text.
-    const TEXT_KEYS: [&str; 16] = [
+    const TEXT_KEYS: [&str; 17] = [
         "title",
         "kicker",
         "lede",
@@ -228,6 +228,7 @@ fn fill_with_hazards(
         "note",
         "why",
         "detail",
+        "words",
     ];
     match value {
         Value::String(text) if key.is_some_and(|key| TEXT_KEYS.contains(&key)) => {
@@ -239,6 +240,18 @@ fn fill_with_hazards(
                 let replacement = hazard_text(written.len() + offset);
                 *item = Value::String(replacement.clone());
                 written.push(replacement);
+            }
+        }
+        // A how-to's command chips are strings beside `{words}` objects.
+        Value::Array(items) if key == Some("commands") => {
+            for item in items {
+                if item.is_string() {
+                    let replacement = hazard_text(written.len() + offset);
+                    *item = Value::String(replacement.clone());
+                    written.push(replacement);
+                } else {
+                    fill_with_hazards(item, offset, written, None);
+                }
             }
         }
         Value::Array(items) => {
@@ -287,7 +300,13 @@ fn blocks_and_stray_inlines(text: &str) -> (Vec<String>, Vec<String>) {
             Event::Start(Tag::List(_)) | Event::End(TagEnd::Paragraph | TagEnd::Heading(_)) => {
                 flush(&mut current, &mut blocks);
             }
-            Event::End(TagEnd::TableCell | TagEnd::Item) => flush(&mut current, &mut blocks),
+            Event::End(TagEnd::TableCell | TagEnd::Item | TagEnd::CodeBlock) => {
+                flush(&mut current, &mut blocks);
+            }
+            // A how-to's terminal is the one fenced block the writer draws.
+            Event::Start(Tag::CodeBlock(CodeBlockKind::Fenced(info))) if &*info == "text" => {
+                flush(&mut current, &mut blocks);
+            }
             Event::Start(
                 tag @ (Tag::Emphasis
                 | Tag::Strong
@@ -718,9 +737,9 @@ fn description_units_cover_every_node_that_draws_a_part() {
                 .filter(|node| node.parts.is_empty() && node.parent.is_some())
                 .all(|node| matches!(
                     node.tag,
-                    NodeTag::Body | NodeTag::Legend | NodeTag::Row | NodeTag::Col
+                    NodeTag::Body | NodeTag::Legend | NodeTag::Row | NodeTag::Col | NodeTag::HowTo
                 )),
-            "{stem}: a partless node that is not Body, Legend, Row or Col"
+            "{stem}: a partless node that is not Body, Legend, Row, Col or HowTo"
         );
         examined += 1;
     }
@@ -847,7 +866,10 @@ fn every_entry_part_is_drawn_once_per_entry() {
             | stencil_model::SheetList::Marks
             | stencil_model::SheetList::Compartments
             | stencil_model::SheetList::Around
-            | stencil_model::SheetList::Rungs => {
+            | stencil_model::SheetList::Rungs
+            | stencil_model::SheetList::HowToItems
+            | stencil_model::SheetList::CommandRuns
+            | stencil_model::SheetList::TerminalLines => {
                 panic!("{} keys no entry parts", list.name())
             }
         };

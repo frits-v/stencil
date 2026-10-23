@@ -230,6 +230,7 @@ theme_cases=(
 	'width-above-4|t["card"]["border"].__setitem__("width", 5)|card.border.width: invalid value 5'
 	'strong-tone-filled|t["tones"]["strong"].__setitem__("fill", "#000000")|tones.strong.fill: field not allowed'
 	'sheet-unknown-leaf|t["sheet"].__setitem__("glow", "#FFFFFF")|sheet.glow: field not allowed'
+	'terminal-lowercase-hex|t["terminal"].__setitem__("fill", "#f1f3f4")|terminal.fill: invalid value "#f1f3f4"'
 )
 for entry in "${theme_cases[@]}"; do
 	IFS='|' read -r name expression expected <<<"$entry"
@@ -315,6 +316,10 @@ many_notes="$(printf '{id: "note-%s", text: "Filler."},' $(seq 1 16))"
 seven_ladders="$(printf '{tag: "Ladder", title: "Extra ladder %s", around: ["s-judge"], rungs: [{title: "Retry", text: "Again."}]},' $(seq 1 7))"
 many_around="$(printf '"s-judge",%.0s' {1..17})"
 six_rungs="$(printf '{title: "Rung %s", text: "Filler."},' $(seq 1 6))"
+# Fillers for the how-to bounds: three items beside onepager's four, and ten
+# terminal lines beside the three of its Replay a trigger.
+three_items="$(printf '{title: "How-to %s", text: "Filler."},' $(seq 1 3))"
+ten_lines="$(printf '{kind: "output", text: "line %s"},' $(seq 1 10))"
 
 # figure | name | sed expression applied to figures/<figure>.cue | text the
 # vet error must contain [| second text the error must also contain]. A g7 or
@@ -382,6 +387,7 @@ sequence_cases=(
 	'needs-sheet-phases|s/^\tbody: \[{$/\tbody: [{tag: "Phases", lanes: ["crew"], phases: [{id: "run", title: "Run"}], children: [{tag: "Step", lane: "crew", phase: "run", title: "Work"}]}, {/|_needsSheet.phases'
 	'needs-sheet-marks|s/title: "Operator", subtitle: "submits and cancels jobs"/marks: [{part: "console"}], &/|_needsSheet.marks'
 	'needs-sheet-parts-list|s/^\tbody: \[{$/\tbody: [{tag: "PartsList", title: "Parts", parts: [{id: "console", name: "Console", why: "Submits jobs."}]}, {/|_needsSheet."parts-list"'
+	'needs-sheet-how-to|s/^\tbody: \[{$/\tbody: [{tag: "HowTo", items: [{title: "Run a job", text: "Submit it from the console."}]}, {/|_needsSheet."how-to"'
 	'needs-sheet-ladder|s/^\tbody: \[{$/\tbody: [{tag: "Ladder", title: "When a job fails", around: ["work"], rungs: [{title: "Retry", text: "The job runs again."}]}, {/|_needsSheet.ladder'
 	'needs-sheet-general-notes|s/^\tbody: \[{$/\tbody: [{tag: "GeneralNotes", title: "Notes", notes: [{id: "retry", text: "Jobs retry once."}]}, {/|_needsSheet."general-notes"'
 	'needs-sheet-step|s/^\tbody: \[{$/\tbody: [{tag: "Phases", lanes: ["crew"], phases: [{id: "run", title: "Run"}], children: [{tag: "Step", lane: "crew", phase: "run", title: "Work"}]}, {/|_needsSheet.step'
@@ -453,6 +459,13 @@ sheet_cases=(
 	'list-empty-rungs|/^\t\t\t\t\trungs: \[$/,/^\t\t\t\t\t\]$/d; s/^\t\t\t\t\taround: .*/&\n\t\t\t\t\trungs: []/|rungs: invalid value []|list.MinItems(1)'
 	"list-too-long-around|s/around: \[\"s-evaluate\", \"s-judge\", \"s-write\"\]/around: [$many_around]/|around: invalid value|list.MaxItems(16)"
 	"list-too-long-rungs|s/^\t\t\t\t\trungs: \[$/&\n\t\t\t\t\t\t$six_rungs/|rungs: invalid value|list.MaxItems(6)"
+	'how-to-item-empty|/text: "Sends the verdict back/,/^\t\t\t\t\t\t\t\]$/d|_howToItemEmpty|says or shows something'
+	'how-to-beside-alone|s/text: "Queues every stored clip.*"$/beside: true/|_besideAlone|the item needs both'
+	'terminal-indent-out-of-range|s/indent: 1, text: "v-88202 no match"/indent: 9, text: "v-88202 no match"/|indent: invalid value 9'
+	'list-empty-how-to-items|/^\t\t\t\t\titems: \[$/,/^\t\t\t\t\t\]$/d; s/^\t\t\t\t\tid:  "operator-commands"$/&\n\t\t\t\t\titems: []/|items: invalid value []|list.MinItems(1)'
+	"list-too-long-how-to-items|s/^\t\t\t\t\titems: \[$/&\n\t\t\t\t\t\t$three_items/|items: invalid value|list.MaxItems(6)"
+	'list-too-long-command-runs|s/commands: \["trig replay"\]/commands: ["trig a", "trig b", "trig c", "trig d", "trig e", "trig replay"]/|commands: invalid value|list.MaxItems(5)'
+	"list-too-long-terminal-lines|s/^\t\t\t\t\t\t\t\t{kind: \"output\", text: \"412 clips queued under plan version 1\"},$/&\n$ten_lines/|terminal: invalid value|list.MaxItems(12)"
 	"list-too-long-step-lines|s/lines: \[\"in plain language\", \"camera and hours\"\]/lines: [$seven_lines]/|lines: invalid value|list.MaxItems(6)"
 )
 sheet_small_cases=(

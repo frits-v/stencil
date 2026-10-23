@@ -591,6 +591,71 @@ onepager: gcp.#Page & {
 				},
 			]
 		},
+		{
+			tag:      "View"
+			id:       "how-tos"
+			title:    "How-tos"
+			subtitle: "what an operator types"
+			note:     "real output, trimmed"
+			children: [
+				{
+					tag: "HowTo"
+					id:  "operator-commands"
+					items: [
+						{
+							title: "Write a trigger"
+							commands: [
+								"trig create",
+								{words: "then"},
+								"trig approve",
+							]
+							text: "Describe the event, read the plan the service returns, then approve it. Nothing runs before the approval."
+							terminal: [
+								{kind: "command", text: "trig create --camera dock-4 \"a forklift enters while the bay door is open\""},
+								{kind: "output", text: "trigger t-31 created, plan version 1"},
+								{kind: "output", text: "objects: forklift, bay door; condition: door open while a forklift is in the bay"},
+								{kind: "comment", text: "the plan waits for approval"},
+								{kind: "command", text: "trig approve t-31 --version 1"},
+								{kind: "ok", text: "t-31 live from plan version 1"},
+							]
+						},
+						{
+							title: "Replay a trigger"
+							commands: ["trig replay"]
+							text: "Queues every stored clip in the range; verdicts arrive as the jobs finish."
+							terminal: [
+								{kind: "command", text: "trig replay t-31 --from 2026-10-01 --to 2026-10-07"},
+								{kind: "output", text: "412 clips queued under plan version 1"},
+								{kind: "ok", text: "verdicts: 409 written, 3 retrying"},
+							]
+						},
+						{
+							title: "Dispute a verdict"
+							commands: ["trig dispute"]
+							text: "Sends the verdict back with its frames. A confirmed dispute opens a plan change."
+							terminal: [
+								{kind: "command", text: "trig dispute v-88201 --reason \"the door was closed\""},
+								{kind: "output", text: "verdict v-88201 returned to t-31 with 6 frames"},
+								{kind: "comment", text: "a confirmed dispute opens plan version 2 for approval"},
+							]
+						},
+						{
+							title: "List verdicts"
+							commands: ["trig verdicts"]
+							text:   "Filters by trigger, clip and capture time. A disputed verdict stays listed until its dispute closes."
+							beside: true
+							terminal: [
+								{kind: "command", text: "trig verdicts t-31 --since 2026-10-07"},
+								{kind: "output", text: "3 verdicts for t-31 under plan version 1"},
+								{kind: "output", indent: 1, text: "v-88201 match, 6 frames, disputed"},
+								{kind: "output", indent: 1, text: "v-88202 no match"},
+								{kind: "output", indent: 1, text: "v-88203 match, 4 frames"},
+							]
+						},
+					]
+				},
+			]
+		},
 	]
 	legend: [
 		{line: "solid", by_actor: true, text: "work moves, in the colour of the actor that sends it"},

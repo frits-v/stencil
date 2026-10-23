@@ -221,4 +221,11 @@ import "list"
 			major: #Color
 		}
 	}
+	// A how-to's terminal and command chips, and the ink of each kind of line.
+	terminal?: {
+		fill:    #Color
+		text:    #Color
+		prompt:  #Color
+		comment: #Color
+	}
 }

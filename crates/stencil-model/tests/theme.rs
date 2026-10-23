@@ -285,16 +285,16 @@ fn override_faults_point_into_theme_overrides() {
 #[test]
 fn quality_counts_match_section_13_5_for_every_builtin() {
     let expected = [
-        ("center", 281, 1, 0),
-        ("paper", 282, 0, 0),
-        ("dusk", 282, 0, 0),
-        ("clear", 282, 0, 0),
-        ("clear-dark", 282, 0, 0),
-        ("wire", 274, 0, 8),
+        ("center", 284, 1, 0),
+        ("paper", 285, 0, 0),
+        ("dusk", 285, 0, 0),
+        ("clear", 285, 0, 0),
+        ("clear-dark", 285, 0, 0),
+        ("wire", 277, 0, 8),
     ];
     for (name, passed, failed, not_applicable) in expected {
         let report = theme_quality(&builtin(name));
-        assert_eq!(report.rows.len(), 282, "{name}");
+        assert_eq!(report.rows.len(), 285, "{name}");
         assert_eq!(report.counts(), (passed, failed, not_applicable), "{name}");
     }
     let center = theme_quality(&builtin("center"));

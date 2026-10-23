@@ -773,7 +773,8 @@ pub fn pipes_land(page: &Page, geometry: &PageGeometry) -> CheckReport {
                 | Node::Step(_)
                 | Node::PartsList(_)
                 | Node::GeneralNotes(_)
-                | Node::Ladder(_),
+                | Node::Ladder(_)
+                | Node::HowTo(_),
             ) => {}
         }
     }
@@ -1160,7 +1161,9 @@ fn pipe_lands_on(tag: NodeTag) -> bool {
         | NodeTag::PartsList
         | NodeTag::GeneralNotes
         | NodeTag::Ladder
-        | NodeTag::Rung => false,
+        | NodeTag::Rung
+        | NodeTag::HowTo
+        | NodeTag::HowToItem => false,
     }
 }
 

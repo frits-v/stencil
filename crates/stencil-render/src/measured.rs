@@ -190,6 +190,9 @@ fn parts_json(parts: &[Part]) -> Map<String, Value> {
     let mut fact_entries = 0_usize;
     let mut seen_sources: [bool; 3] = [false; 3];
     let mut fact_suffix: Option<usize> = None;
+    // A command run's chip and text share the run's index, and a prompt takes its line's.
+    let mut command_runs = 0_usize;
+    let mut terminal_lines = 0_usize;
     let mut object = Map::new();
     for part in parts {
         let key = match part.name {
@@ -218,6 +221,18 @@ fn parts_json(parts: &[Part]) -> Map<String, Value> {
             PartName::Lifeline => {
                 lifelines += 1;
                 format!("{}/{}", part.name.as_str(), lifelines - 1)
+            }
+            PartName::CommandChip | PartName::CommandWord => {
+                command_runs += 1;
+                format!("{}/{}", part.name.as_str(), command_runs - 1)
+            }
+            PartName::CommandText => {
+                format!("{}/{}", part.name.as_str(), command_runs.saturating_sub(1))
+            }
+            PartName::TerminalPrompt => format!("{}/{terminal_lines}", part.name.as_str()),
+            PartName::TerminalLine => {
+                terminal_lines += 1;
+                format!("{}/{}", part.name.as_str(), terminal_lines - 1)
             }
             PartName::ParagraphLead => {
                 let paragraph = repeated.get(&PartName::Paragraph).copied().unwrap_or(0);
