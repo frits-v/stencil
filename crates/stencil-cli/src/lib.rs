@@ -436,7 +436,7 @@ fn check_in_memory(
     path: &Path,
     overrides: &Overrides,
     print_width: Option<PrintWidth>,
-) -> Result<[CheckReport; 17], Failure> {
+) -> Result<[CheckReport; 18], Failure> {
     let loaded = load_overridden_document(path, overrides)?;
     let rendered = render_page(&loaded, DeviceScale::DEFAULT)?;
     Ok(all_checks(

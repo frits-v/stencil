@@ -10,8 +10,8 @@ use std::sync::atomic::{AtomicU64, Ordering};
 
 use serde_json::Value;
 use stencil_layout::checks::{
-    PrintWidth, child_inside_container_on, links_avoid_boxes, links_routed, marks_clear,
-    pipes_land, print_fit, siblings_do_not_overlap, text_fits_box,
+    PrintWidth, child_inside_container_on, junctions_plain, links_avoid_boxes, links_routed,
+    marks_clear, pipes_land, print_fit, siblings_do_not_overlap, text_fits_box,
 };
 use stencil_layout::{LayoutError, PageGeometry, layout_page, theme_legend_labels};
 use stencil_model::checks::{CheckReport, keys_used, legend_consistency, remembered_constants};
@@ -432,7 +432,7 @@ pub fn all_checks(
     geometry: &PageGeometry,
     scene: Option<&IsoScene>,
     print_width: Option<PrintWidth>,
-) -> [CheckReport; 17] {
+) -> [CheckReport; 18] {
     let [remembered, legend, icons, keys] = model_checks(page, grammar);
     let description = describe(page, grammar, geometry);
     [
@@ -453,6 +453,7 @@ pub fn all_checks(
         description_covers_drawing(page, geometry, &description.text),
         keys,
         marks_clear(page, geometry),
+        junctions_plain(geometry, page.projection),
     ]
 }
 

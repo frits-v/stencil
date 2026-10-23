@@ -789,7 +789,7 @@ fn render_stops_on_a_violation_and_writes_nothing() {
 }
 
 #[test]
-fn check_g7_passes_eight_checks_and_skips_the_link_iso_and_print_checks() {
+fn check_g7_passes_nine_checks_and_skips_the_link_iso_and_print_checks() {
     let outcome = run_stencil(&["check", &g7_path()]);
     assert_eq!(outcome.code, ExitCode::Clean, "{}", outcome.stderr);
     assert_eq!(
@@ -812,7 +812,8 @@ fn check_g7_passes_eight_checks_and_skips_the_link_iso_and_print_checks() {
             "check description-covers-drawing: examined 26 elements, 0 defects",
             "check keys-used: examined 0 keys, not applicable: page has no actors or keyed lists",
             "check marks-clear: examined 0 marks, not applicable: page has no marks, step badges, valves, hops or detail frames",
-            "stencil check: 17 checks, 8 passed, 0 failed, 9 not applicable",
+            "check junctions-plain: examined 104 junctions, 0 defects",
+            "stencil check: 18 checks, 9 passed, 0 failed, 9 not applicable",
         ]
     );
     assert_eq!(outcome.stderr, "");
@@ -851,7 +852,7 @@ fn check_reports_overflowing_text_with_its_pointer() {
         .copied()
         .filter(|line| line.starts_with("check "))
         .collect();
-    assert_eq!(check_lines.len(), 17, "{}", outcome.stdout);
+    assert_eq!(check_lines.len(), 18, "{}", outcome.stdout);
     assert!(
         check_lines[0].starts_with("check child-inside-container: examined "),
         "{}",
@@ -899,7 +900,7 @@ fn check_reports_overflowing_text_with_its_pointer() {
     );
     assert_eq!(
         lines.last().copied(),
-        Some("stencil check: 17 checks, 6 passed, 1 failed, 10 not applicable"),
+        Some("stencil check: 18 checks, 7 passed, 1 failed, 10 not applicable"),
         "{}",
         outcome.stdout
     );
@@ -1162,7 +1163,7 @@ fn check_with_print_width_14_fails_print_fit_once_at_the_badge() {
     assert_eq!(lines[print_fit + 1], G7_BADGE_AT_14_INCHES);
     assert_eq!(
         lines.last().copied(),
-        Some("stencil check: 17 checks, 8 passed, 1 failed, 8 not applicable")
+        Some("stencil check: 18 checks, 9 passed, 1 failed, 8 not applicable")
     );
 }
 

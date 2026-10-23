@@ -31,6 +31,7 @@ pub enum CheckName {
     DescriptionCoversDrawing,
     KeysUsed,
     MarksClear,
+    JunctionsPlain,
 }
 
 impl CheckName {
@@ -54,6 +55,7 @@ impl CheckName {
             CheckName::DescriptionCoversDrawing => "description-covers-drawing",
             CheckName::KeysUsed => "keys-used",
             CheckName::MarksClear => "marks-clear",
+            CheckName::JunctionsPlain => "junctions-plain",
         }
     }
 
@@ -76,7 +78,8 @@ impl CheckName {
             | CheckName::IsoLinksApart
             | CheckName::PrintFit
             | CheckName::IconMatchesProduct
-            | CheckName::DescriptionCoversDrawing => false,
+            | CheckName::DescriptionCoversDrawing
+            | CheckName::JunctionsPlain => false,
         }
     }
 
@@ -120,6 +123,8 @@ impl CheckName {
             (CheckName::KeysUsed, false) => "keys",
             (CheckName::MarksClear, true) => "mark",
             (CheckName::MarksClear, false) => "marks",
+            (CheckName::JunctionsPlain, true) => "junction",
+            (CheckName::JunctionsPlain, false) => "junctions",
         }
     }
 }

@@ -9,6 +9,7 @@ mod compute;
 mod detail_frames;
 mod drawn;
 mod how_to;
+pub mod junctions;
 mod ladder;
 mod lanes;
 mod lead_run;

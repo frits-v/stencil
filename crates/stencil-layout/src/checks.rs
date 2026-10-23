@@ -18,6 +18,7 @@ use crate::{
 };
 use stencil_model::PagePoint;
 
+pub use crate::junctions::junctions_plain;
 pub use crate::marks_clear::marks_clear;
 
 /// Why print-fit does not apply when no `--print-width` was given.
@@ -676,7 +677,7 @@ pub fn links_avoid_boxes(geometry: &PageGeometry) -> CheckReport {
 /// The drawn line along each route leg, its bend included, from where the line stands at
 /// the leg's start; the first chain starts and the last ends on the route's own ends, where
 /// an arrowhead covers the straight the stroke leaves out.
-fn drawn_chains(geometry: &PageGeometry, route: &LinkRoute) -> Vec<Vec<PagePoint>> {
+pub(crate) fn drawn_chains(geometry: &PageGeometry, route: &LinkRoute) -> Vec<Vec<PagePoint>> {
     let drawn = drawn_link(geometry, route);
     let mut chains = Vec::with_capacity(drawn.legs.len());
     let mut at = drawn.start;

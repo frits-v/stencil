@@ -31,6 +31,7 @@ Examined counts: a check that examined 0 fails, since a pass over nothing proves
 | print-fit | text run (with --print-width) | the run's node, or /links/i | PART "TEXT" prints at P pt, below 8 pt (S px on a C px canvas at W in) |
 | icon-matches-product | item with an icon or subtitle, kind with an icon table | the item | subtitle names P, whose icon is I; the item carries O; or subtitle names P, which has no product icon; the item carries the product icon I |
 | description-covers-drawing | element | the unit, or "" | not described; on N lines; line lacks NAME; names P, not drawn; says T, examined E |
+| junctions-plain | junction | the arms' first link | four arms of A px around (X, Y)[ in layout space] each turn the same way at their ends, score S of 0.80: OWNERS |
 
 Numbers carry 2 decimals; the tolerance is 0.01 px, and touching edges pass. text-fits-box also checks the tag of every labeled link. PART is a snake_case part name: function_name (an Item's title), product_name (its subtitle), fact, built, ask, tag_label, tag_sub, hub_text, label, text, badge_text, legend_label, legend_text, heading, marker, body_line.
 
@@ -40,6 +41,4 @@ Reading defects:
 - pipes-land: a gutter slot taller or shorter than the Box beside it. Name the Box in from or to, or give the producer Col the gutter Col's grow list.
 - child-inside-container on a gutter or pipe: the gutter weight is too small for the tag. Shorten the label or raise the weight.
 - text-fits-box at /title or another page field: one unbreakable string wider than the page.
-- siblings-do-not-overlap follows an overflow; fix the child-inside-container defect first.
 - print-fit: the canvas is the drawn one, wider under iso. Print wider or narrow the page.
-- icon-matches-product: a product with its own icon (BigQuery, Cloud Run) takes it or none; others take a category icon.
