@@ -61,7 +61,7 @@ fn assert_first_item_paint(theme: &Theme, svg: &str, label: &str) -> usize {
     );
     assert_eq!(
         rects[2].attribute("stroke"),
-        Some(sheet.frame.as_str()),
+        Some(sheet.rule.as_str()),
         "{label}"
     );
     let rule = common::children_named(item, "line")[0];

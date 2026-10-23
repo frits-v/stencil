@@ -5228,7 +5228,7 @@ pub struct SheetGrid { pub minor: Color, pub major: Color }
 | HowToItem | `CommandChip/<k>` | rect | `terminal.fill` | `sheet.rule` 1 | - |
 | HowToItem | `CommandText/<k>` | text | - | - | `terminal.text` |
 | HowToItem | `CommandWord/<k>`, `HowToText` | text | - | - | `ink.secondary` |
-| HowToItem | `Terminal` | rect | `terminal.fill` | `sheet.frame` 1 | - |
+| HowToItem | `Terminal` | rect | `terminal.fill` | `sheet.rule` 1, the sheet's hairline | - |
 | HowToItem | `TerminalPrompt/<k>`, `TerminalLine/<k>` | text | - | - | by kind (rule 10) |
 
 4. Actors. An actor's slot gives the colours of everything it acts for. Its headings take `tint.ink`: lane names, Step titles, the title of an actor's Item and the actor's name in the Who acts row. Its strokes take `tint.wire`: Step outlines, an actor Item's border (1.25 px), lane bars, chip swatch borders and its lines with their arrowheads. Fills are `sheet.cell` for an actor's Item, `tint.fill` for a chip swatch, and `mix(tint.fill, sheet.paper, 0.5)` (`Theme::lane_band`) for a lane band. Step lines and lane texts take `ink.secondary`, so the actor's colour stays on the headings and strokes. A note look strokes `sheet.rule`, a planned look draws its outline dashed `7 4`, a chip is a pill, and a text look draws no box and sets its title in `ink.secondary`.

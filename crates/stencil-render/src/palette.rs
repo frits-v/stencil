@@ -1027,7 +1027,7 @@ pub fn sheet_part_paint(owner: NodeTag, part: PartName) -> Option<PartPaint> {
         PartName::Terminal => PartPaint {
             shape: PartShape::Rect,
             fill: Some(SheetInk::TerminalFill),
-            stroke: Some((Frame, TERMINAL_BORDER_PX)),
+            stroke: Some((Rule, TERMINAL_BORDER_PX)),
             text: None,
         },
         // A line's ink follows its kind, which the writer reads from the page.
