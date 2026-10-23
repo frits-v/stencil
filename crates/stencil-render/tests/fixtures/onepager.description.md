@@ -227,7 +227,7 @@ Subtitle: what an operator types. Note: real output, trimmed.
 
 - How-to column. `/body/2/children/0`
 
-### How-to 4\.1: Write a trigger `F1-F4` `/body/2/children/0/items/0`
+### How-to 4.1: Write a trigger `F1-F4` `/body/2/children/0/items/0`
 
 - Command trig create.
 - Words then.
@@ -244,7 +244,7 @@ $ trig approve t-31 --version 1
 ok t-31 live from plan version 1
 ```
 
-### How-to 4\.2: Replay a trigger `F5-F8` `/body/2/children/0/items/1`
+### How-to 4.2: Replay a trigger `F5-F8` `/body/2/children/0/items/1`
 
 - Command trig replay.
 
@@ -256,7 +256,7 @@ $ trig replay t-31 --from 2026-10-01 --to 2026-10-07
 ok verdicts: 409 written, 3 retrying
 ```
 
-### How-to 4\.3: Dispute a verdict `F1-F4` `/body/2/children/0/items/2`
+### How-to 4.3: Dispute a verdict `F1-F4` `/body/2/children/0/items/2`
 
 - Command trig dispute.
 
@@ -268,7 +268,7 @@ $ trig dispute v-88201 --reason "the door was closed"
 # a confirmed dispute opens plan version 2 for approval
 ```
 
-### How-to 4\.4: List verdicts `F5-F8` `/body/2/children/0/items/3`
+### How-to 4.4: List verdicts `F5-F8` `/body/2/children/0/items/3`
 
 - Command trig verdicts.
 

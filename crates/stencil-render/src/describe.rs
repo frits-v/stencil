@@ -535,9 +535,10 @@ impl<'a> Writer<'a> {
                 .and_then(|part| part.text.as_ref())
                 .map(|run| run.text.clone())
                 .unwrap_or_default();
+            // The number is digits around one dot that layout writes, mid-line.
             let mut block = vec![format!(
                 "### How-to {}: {} {}",
-                escape_markdown(&number),
+                number,
                 escape_markdown(&item.title),
                 self.spans(&node.pointer)
             )];
