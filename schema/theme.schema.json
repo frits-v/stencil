@@ -795,7 +795,7 @@
           "$ref": "#/$defs/Color"
         },
         "grid": {
-          "description": "The drafting grid, minor lines every 20 px and major every 100 px. Absent draws none\nand is the derivation.",
+          "description": "The drafting grid: major lines on the zone edges the references mark, minor lines\ncutting each zone into equal parts near 20 px. Absent draws none and is the\nderivation.",
           "anyOf": [
             {
               "$ref": "#/$defs/SheetGrid"

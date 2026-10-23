@@ -215,7 +215,7 @@ import "list"
 		cell:      #Color
 		// Flags, and balloons and diamonds that no actor owns.
 		mark_ink: #Color
-		// Minor lines every 20 px, major every 100 px.
+		// Major lines on the reference zone edges, minor lines near 20 px apart.
 		grid?: {
 			minor: #Color
 			major: #Color

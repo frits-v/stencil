@@ -12,11 +12,11 @@ mod common;
 
 use resvg::usvg::roxmltree;
 use serde_json::{Value, json};
-use stencil_layout::{BoxRect, NodeGeometry, PageGeometry, PartName};
+use stencil_layout::{BoxRect, NodeGeometry, PageGeometry, PartName, sheet_zone_edges};
 use stencil_model::{StepFill, StepLook, Theme};
 
 const PHASES: &str = "/body/0/children/0";
-const GRID_STEP_PX: f32 = 20.0;
+const GRID_PITCH_PX: f32 = 20.0;
 
 fn onepager() -> Value {
     let mut document: Value =
@@ -125,8 +125,25 @@ fn lane_band(theme: &Theme, slot: u8) -> String {
     theme.lane_band(slot).unwrap().0
 }
 
+/// The page grid's lines along one axis between its zone `edges`, as (position, major):
+/// a major line on each inner edge and minors cutting each zone into equal parts.
+fn grid_lines(edges: &[f32]) -> Vec<(f32, bool)> {
+    let mut lines = Vec::new();
+    for (zone, bounds) in edges.windows(2).enumerate() {
+        let (start, end) = (bounds[0], bounds[1]);
+        let parts = ((end - start) / GRID_PITCH_PX).round().max(1.0);
+        if zone > 0 {
+            lines.push((start, true));
+        }
+        for part in 1..parts as usize {
+            lines.push((start + part as f32 * (end - start) / parts, false));
+        }
+    }
+    lines
+}
+
 /// A washed lane fills its band in the band colour and then draws, over it, the grid
-/// lines that fall inside it, placed from the page grid's corner and cut to the band.
+/// lines that fall inside it, placed from the page grid's zones and cut to the band.
 #[test]
 fn a_washed_lane_draws_its_band_then_the_grid_over_it() {
     let document = onepager();
@@ -137,6 +154,16 @@ fn a_washed_lane_draws_its_band_then_the_grid_over_it() {
         (grid.minor.0.clone(), grid.major.0.clone())
     };
     let grid = parts(node(&rendered.geometry, ""), PartName::Grid)[0];
+    let edges = sheet_zone_edges(grid);
+    let columns = grid_lines(&edges.columns);
+    let rows = grid_lines(&edges.rows);
+    let on_line = |lines: &[(f32, bool)], position: f32| -> bool {
+        let (_, is_major) = lines
+            .iter()
+            .find(|(line, _)| (line - position).abs() <= 0.01)
+            .unwrap_or_else(|| panic!("{position} is off the grid"));
+        *is_major
+    };
     let bands = parts(node(&rendered.geometry, PHASES), PartName::LaneBand);
     let slots: Vec<u8> = document["body"][0]["children"][0]["lanes"]
         .as_array()
@@ -174,22 +201,18 @@ fn a_washed_lane_draws_its_band_then_the_grid_over_it() {
                 assert!(y1 >= band.y && y2 <= band.bottom(), "y {y1} to {y2}");
                 if x1 == x2 {
                     assert_eq!((y1, y2), (band.y, band.bottom()));
-                    let steps = (x1 - grid.x) / GRID_STEP_PX;
-                    assert_eq!(steps, steps.round(), "x {x1} is off the grid");
-                    let major_line = (steps.round() as usize).is_multiple_of(5);
-                    assert_eq!(stroke == major, major_line, "x {x1}");
+                    assert_eq!(stroke == major, on_line(&columns, x1), "x {x1}");
                     verticals.push(x1);
                 } else {
                     assert_eq!((x1, x2), (band.x, band.right()));
-                    let steps = (y1 - grid.y) / GRID_STEP_PX;
-                    assert_eq!(steps, steps.round(), "y {y1} is off the grid");
+                    assert_eq!(stroke == major, on_line(&rows, y1), "y {y1}");
                 }
                 examined += 1;
             }
         }
-        let expected = (1..256)
-            .map(|step| grid.x + step as f32 * GRID_STEP_PX)
-            .filter(|x| *x >= band.x && *x < band.right().min(grid.right()))
+        let expected = columns
+            .iter()
+            .filter(|(x, _)| *x >= band.x && *x < band.right().min(grid.right()))
             .count();
         assert_eq!(verticals.len(), expected, "band at y {}", band.y);
     }
