@@ -924,7 +924,7 @@
           "$ref": "#/$defs/Color"
         },
         "prompt": {
-          "description": "The `$` prompt and ok lines. Derived: ink.primary.",
+          "description": "The `$` prompt, and ok lines with their `✓`. Derived: ink.primary.",
           "$ref": "#/$defs/Color"
         },
         "text": {

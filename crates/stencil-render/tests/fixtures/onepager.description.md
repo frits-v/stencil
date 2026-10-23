@@ -241,7 +241,7 @@ $ trig create --camera dock-4 "a forklift enters while the bay door is open"
   objects: forklift, bay door; condition: door open while a forklift is in the bay
 # the plan waits for approval
 $ trig approve t-31 --version 1
-ok t-31 live from plan version 1
+✓ t-31 live from plan version 1
 ```
 
 ### How-to 4.2: Replay a trigger `F5-F8` `/body/2/children/0/items/1`
@@ -253,7 +253,7 @@ Queues every stored clip in the range; verdicts arrive as the jobs finish.
 ```text
 $ trig replay t-31 --from 2026-10-01 --to 2026-10-07
   412 clips queued under plan version 1
-ok verdicts: 409 written, 3 retrying
+✓ verdicts: 409 written, 3 retrying
 ```
 
 ### How-to 4.3: Dispute a verdict `F1-F4` `/body/2/children/0/items/2`

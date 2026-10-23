@@ -92,6 +92,7 @@ fn assert_first_item_paint(theme: &Theme, svg: &str, label: &str) -> usize {
         ),
         ("#", terminal.comment.as_str()),
         ("the plan waits for approval", terminal.comment.as_str()),
+        ("\u{2713}", terminal.prompt.as_str()),
         ("t-31 live from plan version 1", terminal.prompt.as_str()),
     ];
     for (content, ink) in expected {
@@ -99,11 +100,11 @@ fn assert_first_item_paint(theme: &Theme, svg: &str, label: &str) -> usize {
     }
     let prompts = common::children_named(item, "text")
         .into_iter()
-        .filter(|text| matches!(text.text(), Some("$" | "#")))
+        .filter(|text| matches!(text.text(), Some("$" | "#" | "\u{2713}")))
         .count();
     assert_eq!(
-        prompts, 3,
-        "{label}: two commands and one comment draw a prompt"
+        prompts, 4,
+        "{label}: two commands, one comment and one ok line draw a prompt"
     );
     expected.len()
 }
@@ -160,11 +161,59 @@ fn terminal_lines_take_the_ink_of_their_kind() {
         let svg = render_svg(&page, &theme, &geometry).unwrap().svg;
         examined += assert_first_item_paint(&theme, &svg, name);
     }
-    assert_eq!(examined, 36);
+    assert_eq!(examined, 39);
+}
+
+/// Each line kind of a terminal draws its own prefix before its text, so the kinds read
+/// apart without colour: under wire an ok line and an output line share one ink.
+#[test]
+fn every_terminal_kind_draws_its_own_prefix_in_every_theme() {
+    let document: Value =
+        serde_json::from_str(include_str!("../../../examples/onepager.json")).unwrap();
+    let lines = document["body"][2]["children"][0]["items"][0]["terminal"]
+        .as_array()
+        .unwrap();
+    let page = onepager();
+    let geometry = common::layout_with_fixed_metrics(&page);
+    let mut examined = 0;
+    for name in ["center", "dusk", "wire"] {
+        let theme = common::theme(name);
+        let svg = render_svg(&page, &theme, &geometry).unwrap().svg;
+        let xml = common::parse_xml(&svg);
+        let texts = common::children_named(common::group(&xml, FIRST_ITEM), "text");
+        let x = |text: &roxmltree::Node<'_, '_>| -> f32 {
+            text.attribute("x").unwrap().parse().unwrap()
+        };
+        let mut prefixes = std::collections::BTreeSet::new();
+        for line in lines {
+            let content = line["text"].as_str().unwrap();
+            let drawn = texts
+                .iter()
+                .find(|text| text.text() == Some(content))
+                .unwrap_or_else(|| panic!("{name}: no line {content:?}"));
+            let prefix: String = texts
+                .iter()
+                .filter(|text| text.attribute("y") == drawn.attribute("y") && x(text) < x(drawn))
+                .filter_map(|text| text.text())
+                .collect();
+            prefixes.insert((line["kind"].as_str().unwrap(), prefix));
+            examined += 1;
+        }
+        let expected = [
+            ("command", "$"),
+            ("comment", "#"),
+            ("ok", "\u{2713}"),
+            ("output", ""),
+        ]
+        .map(|(kind, prefix)| (kind, prefix.to_string()));
+        assert_eq!(prefixes, expected.into_iter().collect(), "{name}");
+    }
+    assert_eq!(examined, 18);
 }
 
 /// A theme without the terminal role fills the terminal and chips with the fact fill and
-/// draws commands and ok lines in the primary ink and comments in the secondary ink.
+/// draws commands and ok lines, with their prompts, in the primary ink and comments in the
+/// secondary ink.
 #[test]
 fn a_theme_without_the_terminal_role_draws_the_derived_colours() {
     let page = onepager();
@@ -187,7 +236,7 @@ fn a_theme_without_the_terminal_role_draws_the_derived_colours() {
     );
     assert_eq!(
         assert_first_item_paint(&theme, &svg, "derived"),
-        12,
+        13,
         "the derived role paints as a set one"
     );
 }
@@ -231,6 +280,7 @@ fn how_to_part_keys_follow_the_run_and_line_they_draw() {
             "terminal_prompt/0",
             "terminal_prompt/3",
             "terminal_prompt/4",
+            "terminal_prompt/5",
         ]
     );
 }

@@ -758,8 +758,8 @@ pub const CHIP_BORDER_PX: f32 = 1.0;
 pub const TERMINAL_BORDER_PX: f32 = 1.0;
 
 /// The ink of a terminal line of `kind`, and of its prompt: a command and an output line in
-/// the text ink, an ok line and a command's `$` in the prompt ink, a comment and its `#` in
-/// the comment ink.
+/// the text ink, an ok line with its `✓` and a command's `$` in the prompt ink, a comment
+/// and its `#` in the comment ink.
 pub fn terminal_ink(kind: stencil_model::TerminalKind, prompt: bool) -> SheetInk {
     use stencil_model::TerminalKind;
     match (kind, prompt) {

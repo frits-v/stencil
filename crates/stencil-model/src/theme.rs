@@ -492,7 +492,7 @@ pub struct TerminalRole {
     pub fill: Color,
     /// Command and output lines, and command chip text. Derived: ink.primary.
     pub text: Color,
-    /// The `$` prompt and ok lines. Derived: ink.primary.
+    /// The `$` prompt, and ok lines with their `✓`. Derived: ink.primary.
     pub prompt: Color,
     /// Comment lines and their `#` prompt. Derived: ink.secondary.
     pub comment: Color,
