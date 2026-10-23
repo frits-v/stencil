@@ -280,4 +280,7 @@ row contrast ink.primary on tints.7.fill: 8.21, at least 4.50, passed
 row contrast ink.primary on tints.8.fill: 8.84, at least 4.50, passed
 row contrast sheet.mark_ink on sheet.paper: 11.78, at least 3.00, passed
 row contrast sheet.mark_ink on sheet.cell: 8.38, at least 3.00, passed
-stencil theme check tokyo-night: 282 rows, 265 passed, 17 failed
+row contrast terminal.text on terminal.fill: 12.39, at least 4.50, passed
+row contrast terminal.prompt on terminal.fill: 12.39, at least 4.50, passed
+row contrast terminal.comment on terminal.fill: 8.52, at least 4.50, passed
+stencil theme check tokyo-night: 285 rows, 268 passed, 17 failed

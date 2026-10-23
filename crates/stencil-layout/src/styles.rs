@@ -39,7 +39,9 @@ pub fn text_color(name: TextStyleName, line: Option<Line>) -> &'static str {
         | TextStyleName::ListTitle
         | TextStyleName::MarkNumeral
         | TextStyleName::MarkNumeralSmall
-        | TextStyleName::RungTitle => TEXT_DARK,
+        | TextStyleName::RungTitle
+        | TextStyleName::HowToTitle
+        | TextStyleName::TerminalText => TEXT_DARK,
         TextStyleName::TagLabel => match line {
             Some(Line::Deny) => TEXT_DENY,
             Some(Line::Gray | Line::Solid | Line::Dash) | None => TEXT_DARK,
@@ -102,7 +104,9 @@ pub(crate) fn text_style_for(name: TextStyleName, iso: bool) -> TextStyle {
         | TextStyleName::MarkNumeralSmall
         | TextStyleName::FlagNumeral
         | TextStyleName::RungTitle
-        | TextStyleName::RungWho => return flat,
+        | TextStyleName::RungWho
+        | TextStyleName::HowToTitle
+        | TextStyleName::TerminalText => return flat,
         TextStyleName::ZoneLabel | TextStyleName::PerimeterLabel => ISO_ZONE_LABEL_SCALE,
         TextStyleName::GcpBar => ISO_FRAME_LABEL_SCALE,
         TextStyleName::CardFunction
@@ -179,6 +183,8 @@ mod tests {
             ("flag_numeral", "#FFFFFF"),
             ("rung_title", "#202124"),
             ("rung_who", "#5F6368"),
+            ("how_to_title", "#202124"),
+            ("terminal_text", "#202124"),
         ];
         assert_eq!(TEXT_STYLES.len(), expected.len());
         for (named, (name, color)) in TEXT_STYLES.iter().zip(expected) {

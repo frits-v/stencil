@@ -1486,6 +1486,27 @@ fn ladder_document() -> Value {
     document
 }
 
+/// The smallest sheet with a HowTo: one how-to with a command chip, its text and a terminal.
+fn how_to_document() -> Value {
+    let mut document = sheet_document();
+    document["body"][0]["children"]
+        .as_array_mut()
+        .unwrap()
+        .push(json!({
+            "tag": "HowTo",
+            "items": [{
+                "title": "Run a job",
+                "commands": ["crew run"],
+                "text": "Starts one job.",
+                "terminal": [
+                    { "kind": "command", "text": "crew run j-1" },
+                    { "kind": "ok", "text": "j-1 started" }
+                ]
+            }]
+        }));
+    document
+}
+
 /// The smallest sheet with marks: the `api` Item marked with the attention item and a
 /// note, a parts list keyed by `worker`, and the general notes.
 fn marks_document() -> Value {
@@ -1652,6 +1673,13 @@ fn every_sheet_surface_is_refused_on_every_path() {
                 without_sheet.as_object_mut().unwrap().remove("sheet");
                 assert!(vet_rules(without_sheet).contains(&(pointer.to_string(), "needs-sheet")));
                 assert_eq!(traced_at(ladder_document(), pointer), pointer);
+            }
+            stencil_model::SheetSurface::HowTo => {
+                let pointer = "/body/0/children/1";
+                let mut without_sheet = how_to_document();
+                without_sheet.as_object_mut().unwrap().remove("sheet");
+                assert!(vet_rules(without_sheet).contains(&(pointer.to_string(), "needs-sheet")));
+                assert_eq!(traced_at(how_to_document(), pointer), pointer);
             }
             stencil_model::SheetSurface::Marks
             | stencil_model::SheetSurface::PartsList

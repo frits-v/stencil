@@ -396,10 +396,16 @@ fn the_base_briefing_names_every_node_tag_in_its_vocabulary() {
     for tag in &base_tags {
         assert!(rows.contains(tag), "vocabulary has no row for {tag}");
     }
-    let topic_rows: BTreeSet<String> = [Topic::Sheet, Topic::Phases, Topic::Marks, Topic::Assembly]
-        .into_iter()
-        .flat_map(|topic| topic_row_names(&topic_text(topic)))
-        .collect();
+    let topic_rows: BTreeSet<String> = [
+        Topic::Sheet,
+        Topic::Phases,
+        Topic::Marks,
+        Topic::Assembly,
+        Topic::HowTo,
+    ]
+    .into_iter()
+    .flat_map(|topic| topic_row_names(&topic_text(topic)))
+    .collect();
     for tag in &sheet {
         assert!(
             !rows.contains(tag),
@@ -770,7 +776,13 @@ fn no_prime_text_names_a_tag_that_does_not_exist() {
     for name in vocabulary_row_names(&base) {
         assert!(objects.contains(&name), "vocabulary names unknown {name}");
     }
-    for topic in [Topic::Sheet, Topic::Phases, Topic::Marks, Topic::Assembly] {
+    for topic in [
+        Topic::Sheet,
+        Topic::Phases,
+        Topic::Marks,
+        Topic::Assembly,
+        Topic::HowTo,
+    ] {
         for name in topic_row_names(&topic_text(topic)) {
             assert!(
                 objects.contains(&name),
@@ -865,4 +877,27 @@ fn every_cue_export_line_takes_a_field_placeholder() {
         }
     }
     assert!(examined >= 2, "only {examined} cue export lines found");
+}
+
+/// The how-to topic prints every terminal line kind and names the prompt of each kind that
+/// draws one.
+#[test]
+fn the_howto_topic_names_every_terminal_kind_and_prompt() {
+    let text = topic_text(Topic::HowTo);
+    let mut examined = 0;
+    for kind in stencil_model::TerminalKind::ALL {
+        let kind_line = text
+            .lines()
+            .find(|line| line.starts_with("TerminalKind ("))
+            .unwrap();
+        assert!(
+            kind_line.split(' ').any(|word| word == kind.as_str()),
+            "{kind_line}"
+        );
+        if let Some(prompt) = kind.prompt() {
+            assert!(text.contains(&format!("`{prompt}`")), "{prompt}");
+        }
+        examined += 1;
+    }
+    assert_eq!(examined, 4);
 }

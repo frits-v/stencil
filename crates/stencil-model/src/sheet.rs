@@ -28,10 +28,13 @@ pub enum SheetList {
     Compartments,
     Around,
     Rungs,
+    HowToItems,
+    CommandRuns,
+    TerminalLines,
 }
 
 impl SheetList {
-    pub const ALL: [SheetList; 14] = [
+    pub const ALL: [SheetList; 17] = [
         SheetList::ProblemPoints,
         SheetList::AnswerParagraphs,
         SheetList::AttentionItems,
@@ -46,6 +49,9 @@ impl SheetList {
         SheetList::Compartments,
         SheetList::Around,
         SheetList::Rungs,
+        SheetList::HowToItems,
+        SheetList::CommandRuns,
+        SheetList::TerminalLines,
     ];
 
     /// The list's name in messages and in CUE case names, for example "problem-points".
@@ -65,6 +71,9 @@ impl SheetList {
             SheetList::Compartments => "compartments",
             SheetList::Around => "around",
             SheetList::Rungs => "rungs",
+            SheetList::HowToItems => "how-to-items",
+            SheetList::CommandRuns => "command-runs",
+            SheetList::TerminalLines => "terminal-lines",
         }
     }
 
@@ -79,13 +88,16 @@ impl SheetList {
             | SheetList::Parts
             | SheetList::GeneralNotes
             | SheetList::Around
-            | SheetList::Rungs => 1,
+            | SheetList::Rungs
+            | SheetList::HowToItems => 1,
             SheetList::AnswerParagraphs
             | SheetList::Actors
             | SheetList::Steps
             | SheetList::StepLines
             | SheetList::Marks
-            | SheetList::Compartments => 0,
+            | SheetList::Compartments
+            | SheetList::CommandRuns
+            | SheetList::TerminalLines => 0,
         }
     }
 
@@ -98,7 +110,12 @@ impl SheetList {
             | SheetList::Phases => 8,
             SheetList::AnswerParagraphs | SheetList::Marks => 4,
             SheetList::Steps => 64,
-            SheetList::StepLines | SheetList::Compartments | SheetList::Rungs => 6,
+            SheetList::StepLines
+            | SheetList::Compartments
+            | SheetList::Rungs
+            | SheetList::HowToItems => 6,
+            SheetList::CommandRuns => 5,
+            SheetList::TerminalLines => 12,
             SheetList::Parts => 48,
             SheetList::GeneralNotes | SheetList::Around => 16,
         }
@@ -128,6 +145,9 @@ impl SheetList {
             SheetList::Compartments => owner.child("compartments"),
             SheetList::Around => owner.child("around"),
             SheetList::Rungs => owner.child("rungs"),
+            SheetList::HowToItems => owner.child("items"),
+            SheetList::CommandRuns => owner.child("commands"),
+            SheetList::TerminalLines => owner.child("terminal"),
         }
     }
 }
@@ -281,6 +301,7 @@ pub enum SheetSurface {
     PipeStep,
     Valve,
     Ladder,
+    HowTo,
 }
 
 const SHEET_VOCABULARY: [SurfaceVocabulary; 1] = [SurfaceVocabulary::Field {
@@ -358,6 +379,10 @@ const MARKS_VOCABULARY: [SurfaceVocabulary; 7] = [
 const PARTS_LIST_VOCABULARY: [SurfaceVocabulary; 1] = [SurfaceVocabulary::Tag("PartsList")];
 const GENERAL_NOTES_VOCABULARY: [SurfaceVocabulary; 1] = [SurfaceVocabulary::Tag("GeneralNotes")];
 const LADDER_VOCABULARY: [SurfaceVocabulary; 1] = [SurfaceVocabulary::Tag("Ladder")];
+const HOW_TO_VOCABULARY: [SurfaceVocabulary; 2] = [
+    SurfaceVocabulary::Tag("HowTo"),
+    SurfaceVocabulary::Definition("TerminalKind"),
+];
 const ITEM_OUTLINE_VOCABULARY: [SurfaceVocabulary; 2] = [
     SurfaceVocabulary::Field {
         object: "Item",
@@ -409,7 +434,7 @@ const VALVE_VOCABULARY: [SurfaceVocabulary; 1] = [SurfaceVocabulary::Field {
 }];
 
 impl SheetSurface {
-    pub const ALL: [SheetSurface; 19] = [
+    pub const ALL: [SheetSurface; 20] = [
         SheetSurface::Sheet,
         SheetSurface::Actors,
         SheetSurface::View,
@@ -429,6 +454,7 @@ impl SheetSurface {
         SheetSurface::PipeStep,
         SheetSurface::Valve,
         SheetSurface::Ladder,
+        SheetSurface::HowTo,
     ];
 
     /// The kebab-case name in messages, in CUE's `#SheetSurface` and in check.sh case names.
@@ -453,6 +479,7 @@ impl SheetSurface {
             SheetSurface::PipeStep => "pipe-step",
             SheetSurface::Valve => "valve",
             SheetSurface::Ladder => "ladder",
+            SheetSurface::HowTo => "how-to",
         }
     }
 
@@ -540,6 +567,7 @@ impl SheetSurface {
             }),
             SheetSurface::Valve => link_fields(page, "valve", |link| link.valve),
             SheetSurface::Ladder => tagged(|node| matches!(node, Node::Ladder(_))),
+            SheetSurface::HowTo => tagged(|node| matches!(node, Node::HowTo(_))),
         }
     }
 
@@ -566,6 +594,7 @@ impl SheetSurface {
             SheetSurface::PipeStep => &PIPE_STEP_VOCABULARY,
             SheetSurface::Valve => &VALVE_VOCABULARY,
             SheetSurface::Ladder => &LADDER_VOCABULARY,
+            SheetSurface::HowTo => &HOW_TO_VOCABULARY,
         }
     }
 
@@ -587,6 +616,7 @@ impl SheetSurface {
             | SheetSurface::LinkStep
             | SheetSurface::PipeStep
             | SheetSurface::Valve => "assembly",
+            SheetSurface::HowTo => "howto",
         }
     }
 }

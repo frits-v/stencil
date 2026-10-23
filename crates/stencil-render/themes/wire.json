@@ -264,5 +264,11 @@
     "label_ink": "#555555",
     "cell": "#FFFFFF",
     "mark_ink": "#222222"
+  },
+  "terminal": {
+    "fill": "#FFFFFF",
+    "text": "#222222",
+    "prompt": "#222222",
+    "comment": "#555555"
   }
 }

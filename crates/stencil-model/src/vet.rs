@@ -4,7 +4,8 @@ use crate::document::{
     AnswerParagraph, Arrow, BUILTIN_GRAMMARS, BUILTIN_THEMES, CAPTION_SCALARS_MAX, Chrome,
     FACTS_MAX, GeneralNotes, LADDERS_MAX, LANES_MAX, LINE_STEP_MAX, Line, Link, MarkKind, Node,
     Outline, PHASE_COLUMNS_MAX, Page, PartsList, Phases, PipeDir, PipeForm, Projection, Sheet,
-    Step, StepLook, TINT_SLOTS, Tee, Text, WORDMARK_SCALARS_MAX, canvas_width, is_valid_id,
+    Step, StepLook, TERMINAL_INDENT_MAX, TINT_SLOTS, Tee, Text, WORDMARK_SCALARS_MAX, canvas_width,
+    is_valid_id,
 };
 use crate::grammar::{Grammar, IconPack, PAGE_PARENT};
 use crate::marks::{CarrierMark, PageMarks};
@@ -117,11 +118,14 @@ pub enum VetRule {
     LaddersTooMany,
     LadderAroundNotStep,
     LadderAroundTwoPhases,
+    HowToItemEmpty,
+    HowToBesideAlone,
+    TerminalIndentOutOfRange,
 }
 
 impl VetRule {
     /// The rules of section 14.3, in table order.
-    pub const SHEET: [VetRule; 48] = [
+    pub const SHEET: [VetRule; 51] = [
         VetRule::NeedsSheet,
         VetRule::SheetInIso,
         VetRule::SheetChromeNone,
@@ -170,6 +174,9 @@ impl VetRule {
         VetRule::LaddersTooMany,
         VetRule::LadderAroundNotStep,
         VetRule::LadderAroundTwoPhases,
+        VetRule::HowToItemEmpty,
+        VetRule::HowToBesideAlone,
+        VetRule::TerminalIndentOutOfRange,
     ];
 
     /// Kebab-case name used on the CLI, as in section 1.3.
@@ -263,6 +270,9 @@ impl VetRule {
             VetRule::LaddersTooMany => "ladders-too-many",
             VetRule::LadderAroundNotStep => "ladder-around-not-step",
             VetRule::LadderAroundTwoPhases => "ladder-around-two-phases",
+            VetRule::HowToItemEmpty => "how-to-item-empty",
+            VetRule::HowToBesideAlone => "how-to-beside-alone",
+            VetRule::TerminalIndentOutOfRange => "terminal-indent-out-of-range",
         }
     }
 }
@@ -634,6 +644,55 @@ fn check_ladder<'a>(
     }
 }
 
+/// A HowTo's rules in field order: the length of `items`, then per item whether it says or
+/// shows anything, the length of `commands`, `beside`, the length of `terminal` and each
+/// line's indent.
+fn check_how_to(
+    entry: &NodeEntry<'_>,
+    how_to: &crate::document::HowTo,
+    violations: &mut Violations,
+) {
+    let items = SheetList::HowToItems;
+    check_list_length_in(items, &entry.pointer, how_to.items.len(), violations);
+    for (index, item) in how_to.items.iter().enumerate().take(items.max() + 1) {
+        let item_pointer = items.pointer_in(&entry.pointer).index(index);
+        if item.text.is_none() && item.terminal.is_empty() {
+            violations.push(
+                item_pointer.clone(),
+                VetRule::HowToItemEmpty,
+                "a how-to says or shows something".to_string(),
+            );
+        }
+        check_list_length_in(
+            SheetList::CommandRuns,
+            &item_pointer,
+            item.commands.len(),
+            violations,
+        );
+        if item.beside && (item.text.is_none() || item.terminal.is_empty()) {
+            violations.push(
+                item_pointer.child("beside"),
+                VetRule::HowToBesideAlone,
+                "beside sets text beside a terminal; the item needs both".to_string(),
+            );
+        }
+        let lines = SheetList::TerminalLines;
+        check_list_length_in(lines, &item_pointer, item.terminal.len(), violations);
+        for (line_index, line) in item.terminal.iter().enumerate().take(lines.max() + 1) {
+            if line.indent > TERMINAL_INDENT_MAX {
+                violations.push(
+                    lines
+                        .pointer_in(&item_pointer)
+                        .index(line_index)
+                        .child("indent"),
+                    VetRule::TerminalIndentOutOfRange,
+                    format!("indent {} is above {TERMINAL_INDENT_MAX}", line.indent),
+                );
+            }
+        }
+    }
+}
+
 /// The ids of planned work on a page: an Item or Box with `planned`, a Step with look
 /// planned (section 14.3, `line-into-planned`).
 fn planned_ids<'a>(entries: &[NodeEntry<'a>]) -> BTreeSet<&'a str> {
@@ -878,6 +937,7 @@ fn check_sheet_node<'a>(
         NodeRef::Node(Node::Ladder(ladder)) => {
             check_ladder(page, entry, ladder, sheet_nodes, violations);
         }
+        NodeRef::Node(Node::HowTo(how_to)) => check_how_to(entry, how_to, violations),
         NodeRef::Node(Node::Item(item)) => {
             if let Some(actor) = &item.actor {
                 check_actor_known(
@@ -2089,7 +2149,8 @@ fn check_entry<'a>(
             | Node::Step(_)
             | Node::PartsList(_)
             | Node::GeneralNotes(_)
-            | Node::Ladder(_),
+            | Node::Ladder(_)
+            | Node::HowTo(_),
         )
         | NodeRef::TeeArm(_) => {}
     }
@@ -2183,7 +2244,8 @@ fn check_kind_and_tint(
             | Node::Step(_)
             | Node::PartsList(_)
             | Node::GeneralNotes(_)
-            | Node::Ladder(_),
+            | Node::Ladder(_)
+            | Node::HowTo(_),
         ) => {}
     }
 }

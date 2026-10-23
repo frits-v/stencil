@@ -82,7 +82,7 @@ const VIEW_RULE_PX: f32 = 1.0;
 const ATTENTION_DIAMOND_COLUMN_PX: f32 = 26.0;
 const ATTENTION_ZONES_GAP_PX: f32 = 1.0;
 /// The title block is view 1, so the first View is view 2.
-const FIRST_VIEW_NUMBER: usize = 2;
+pub(super) const FIRST_VIEW_NUMBER: usize = 2;
 
 fn top_margin(top: f32) -> Rect<LengthPercentageAuto> {
     margins(top, 0.0, 0.0, 0.0)
@@ -644,6 +644,7 @@ impl Builder<'_> {
             min_line_px: None,
             source: source.child(field),
             lead_run: Some(run(piece)),
+            wraps: true,
         };
         let lead_leaf = leaf(
             &lead,

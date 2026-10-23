@@ -28,7 +28,7 @@ pub const TOPIC_BYTES_MAX: usize = 5000;
 /// Schema definitions that get their own vocabulary row after Page and the node tags.
 pub const ROW_DEFINITIONS: [&str; 3] = ["FactEntry", "LegendEntry", "Link"];
 /// Structs of the design sheet that a topic prints as rows of its own field table.
-pub const TOPIC_ROW_DEFINITIONS: [&str; 12] = [
+pub const TOPIC_ROW_DEFINITIONS: [&str; 14] = [
     "Sheet",
     "Problem",
     "ProblemPoint",
@@ -41,11 +41,14 @@ pub const TOPIC_ROW_DEFINITIONS: [&str; 12] = [
     "PartEntry",
     "GeneralNote",
     "Rung",
+    "HowToItem",
+    "TerminalLine",
 ];
 /// Definitions written inline where a field uses them, never as a row or an enum line: a
 /// point as `{x,y}`, a Tee arm as its tag, a paragraph as `text or {lead,text}`, a mark as
-/// `{part/note/attention}` and a marked line as `text or {text,marks}`.
-pub const INLINE_DEFINITIONS: [&str; 7] = [
+/// `{part/note/attention}`, a marked line as `text or {text,marks}` and a command run as
+/// `text or {words}`.
+pub const INLINE_DEFINITIONS: [&str; 9] = [
     "PagePoint",
     "TeeArm",
     "AnswerParagraph",
@@ -53,6 +56,8 @@ pub const INLINE_DEFINITIONS: [&str; 7] = [
     "Mark",
     "MarkedText",
     "MarkedLine",
+    "CommandRun",
+    "CommandWords",
 ];
 /// A topic marker that fills in the vocabulary of the names it lists:
 /// `{{vocabulary:View,Sheet}}`.
@@ -75,11 +80,12 @@ pub enum Topic {
     Phases,
     Marks,
     Assembly,
+    HowTo,
     Example,
 }
 
 impl Topic {
-    pub const ALL: [Topic; 12] = [
+    pub const ALL: [Topic; 13] = [
         Topic::Themes,
         Topic::Links,
         Topic::Blocks,
@@ -91,6 +97,7 @@ impl Topic {
         Topic::Phases,
         Topic::Marks,
         Topic::Assembly,
+        Topic::HowTo,
         Topic::Example,
     ];
 
@@ -107,6 +114,7 @@ impl Topic {
             Topic::Phases => "phases",
             Topic::Marks => "marks",
             Topic::Assembly => "assembly",
+            Topic::HowTo => "howto",
             Topic::Example => "example",
         }
     }
@@ -161,6 +169,7 @@ impl Topic {
             Topic::Phases => include_str!("../prime/phases.md"),
             Topic::Marks => include_str!("../prime/marks.md"),
             Topic::Assembly => include_str!("../prime/assembly.md"),
+            Topic::HowTo => include_str!("../prime/howto.md"),
             Topic::Example => include_str!("../../../examples/g7.json"),
         }
     }
@@ -178,7 +187,8 @@ impl Topic {
             | Topic::Sheet
             | Topic::Phases
             | Topic::Marks
-            | Topic::Assembly => true,
+            | Topic::Assembly
+            | Topic::HowTo => true,
             Topic::Example => false,
         }
     }

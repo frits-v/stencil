@@ -485,6 +485,14 @@ impl<'a> Writer<'a> {
             ) {
                 tables.push(self.parts_table(node, list));
             }
+            if let Some(NodeRef::Node(Node::HowTo(how_to))) = self
+                .geometry
+                .nodes
+                .get(index)
+                .and_then(|node| self.nodes.get(node.pointer.as_str()).copied())
+            {
+                tables.push(self.how_to_blocks(index, how_to));
+            }
             for &child in self.children_of(index).iter().rev() {
                 pending.push((child, depth + 1));
             }
@@ -492,6 +500,75 @@ impl<'a> Writer<'a> {
         let mut blocks = vec![lines.join("\n")];
         blocks.extend(tables);
         blocks.retain(|block| !block.is_empty());
+        blocks.join("\n\n")
+    }
+
+    /// One section per how-to of the HowTo at geometry node `index`: its heading with the
+    /// number the sheet draws, its command runs in drawn order, its text and its terminal
+    /// in a fence, one line per terminal line, each led by its kind's prefix.
+    fn how_to_blocks(&self, index: usize, how_to: &stencil_model::HowTo) -> String {
+        let mut blocks = Vec::new();
+        let items_pointer = SheetList::HowToItems.pointer_in(
+            &self
+                .geometry
+                .nodes
+                .get(index)
+                .map(|node| node.pointer.clone())
+                .unwrap_or_else(NodePointer::root),
+        );
+        for &child in self.children_of(index) {
+            let Some(node) = self.geometry.nodes.get(child) else {
+                continue;
+            };
+            let Some(item) = how_to
+                .items
+                .iter()
+                .enumerate()
+                .take(SheetList::HowToItems.max() + 1)
+                .find(|(position, _)| items_pointer.index(*position) == node.pointer)
+                .map(|(_, item)| item)
+            else {
+                continue;
+            };
+            let number = node
+                .part(stencil_layout::PartName::HowToNumber)
+                .and_then(|part| part.text.as_ref())
+                .map(|run| run.text.clone())
+                .unwrap_or_default();
+            // The number is digits around one dot that layout writes, mid-line.
+            let mut block = vec![format!(
+                "### How-to {}: {} {}",
+                number,
+                escape_markdown(&item.title),
+                self.spans(&node.pointer)
+            )];
+            let runs: Vec<String> = item
+                .commands
+                .iter()
+                .take(SheetList::CommandRuns.max() + 1)
+                .map(|run| match run {
+                    stencil_model::CommandRun::Chip(text) => {
+                        format!("- Command {}.", escape_markdown(text))
+                    }
+                    stencil_model::CommandRun::Words(words) => {
+                        format!("- Words {}.", escape_markdown(&words.words))
+                    }
+                })
+                .collect();
+            if !runs.is_empty() {
+                block.push(runs.join("\n"));
+            }
+            if item.beside && item.text.is_some() && !item.terminal.is_empty() {
+                block.push("Text beside the terminal.".to_string());
+            }
+            if let Some(text) = &item.text {
+                block.push(escape_markdown(text));
+            }
+            if !item.terminal.is_empty() {
+                block.push(terminal_fence(&item.terminal));
+            }
+            blocks.push(block.join("\n\n"));
+        }
         blocks.join("\n\n")
     }
 
@@ -738,6 +815,9 @@ impl<'a> Writer<'a> {
                 self.mark_lines(&marks, |_| true, &nested, lines);
                 return;
             }
+            (NodeTag::HowTo, _) => format!("How-to column. {pointer}"),
+            // Each item is a section after the outline, with its terminal in a fence.
+            (NodeTag::HowToItem, _) => return,
             (NodeTag::GeneralNotes, Some(NodeRef::Node(Node::GeneralNotes(notes)))) => {
                 let mut text = escape_markdown(&notes.title);
                 if let Some(note) = &notes.note {
@@ -1089,7 +1169,8 @@ impl<'a> Writer<'a> {
                     | Node::Step(_)
                     | Node::PartsList(_)
                     | Node::GeneralNotes(_)
-                    | Node::Ladder(_),
+                    | Node::Ladder(_)
+                    | Node::HowTo(_),
                 ))
                 | None => {}
             }
@@ -1172,7 +1253,8 @@ impl<'a> Writer<'a> {
                     | Node::Step(_)
                     | Node::PartsList(_)
                     | Node::GeneralNotes(_)
-                    | Node::Ladder(_),
+                    | Node::Ladder(_)
+                    | Node::HowTo(_),
                 ))
                 | None => {}
             }
@@ -1740,6 +1822,52 @@ struct Span<'t> {
     start: usize,
     end: usize,
     closed: bool,
+}
+
+/// A terminal in a fenced `text` block one backtick longer than its longest backtick run,
+/// at least three. A line is written raw after its kind's prefix (`$ `, `# `, two spaces,
+/// `ok `) and two spaces per indent level, so its first two characters give its kind.
+fn terminal_fence(lines: &[stencil_model::TerminalLine]) -> String {
+    let lines: Vec<&stencil_model::TerminalLine> = lines
+        .iter()
+        .take(SheetList::TerminalLines.max() + 1)
+        .collect();
+    let longest_run = lines
+        .iter()
+        .map(|line| longest_backtick_run(&line.text))
+        .max()
+        .unwrap_or(0);
+    let fence = "`".repeat((longest_run + 1).max(3));
+    let mut text = format!("{fence}text");
+    for line in lines {
+        let prefix = match line.kind {
+            stencil_model::TerminalKind::Command => "$ ",
+            stencil_model::TerminalKind::Comment => "# ",
+            stencil_model::TerminalKind::Output => "  ",
+            stencil_model::TerminalKind::Ok => "ok ",
+        };
+        text.push('\n');
+        text.push_str(prefix);
+        text.push_str(&"  ".repeat(usize::from(line.indent)));
+        text.push_str(&line.text);
+    }
+    text.push('\n');
+    text.push_str(&fence);
+    text
+}
+
+fn longest_backtick_run(text: &str) -> usize {
+    let mut longest = 0;
+    let mut current = 0;
+    for character in text.chars() {
+        if character == '`' {
+            current += 1;
+            longest = longest.max(current);
+        } else {
+            current = 0;
+        }
+    }
+    longest
 }
 
 struct ParsedLine<'t> {

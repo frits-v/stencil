@@ -748,6 +748,9 @@ fn every_sheet_rule_is_listed_in_table_order() {
             "ladders-too-many",
             "ladder-around-not-step",
             "ladder-around-two-phases",
+            "how-to-item-empty",
+            "how-to-beside-alone",
+            "terminal-indent-out-of-range",
         ]
     );
 }
@@ -855,7 +858,7 @@ fn every_section_14_vet_rule_has_a_cue_case() {
             non_empty,
             others.len()
         ),
-        (18, 14, 8, 45),
+        (19, 17, 9, 48),
         "surfaces, lists, non-empty lists and other rules examined"
     );
     assert_eq!(matched, expected.len());
@@ -1764,4 +1767,176 @@ fn a_ladder_fills_its_rungs_as_rung_fill_says_and_a_planned_rung_takes_none() {
     );
     document["body"][0]["children"][2]["rung_fill"] = json!("paper");
     assert!(serde_json::from_value::<Page>(document).is_err());
+}
+
+/// The smallest sheet with a HowTo: one how-to with words between two command chips, its
+/// text beside a terminal of every line kind, one output line indented.
+fn how_to_sheet_value() -> Value {
+    let mut document = actor_sheet_value();
+    document["body"][0]["children"]
+        .as_array_mut()
+        .unwrap()
+        .push(json!({
+            "tag": "HowTo",
+            "items": [{
+                "title": "Run work",
+                "commands": ["crew run", { "words": "then" }, "crew check"],
+                "text": "Starts the work and checks it.",
+                "beside": true,
+                "terminal": [
+                    { "kind": "command", "text": "crew run w-1" },
+                    { "kind": "output", "text": "w-1 queued" },
+                    { "kind": "output", "indent": 1, "text": "on the night shift" },
+                    { "kind": "comment", "text": "the crew picks it up" },
+                    { "kind": "ok", "text": "w-1 done" }
+                ]
+            }]
+        }));
+    document
+}
+
+const HOW_TO: &str = "/body/0/children/2";
+
+#[test]
+fn the_smallest_how_to_sheet_vets_clean_and_round_trips() {
+    let document = how_to_sheet_value();
+    assert_eq!(violations(document.clone()), Vec::new());
+    let page: Page = serde_json::from_value(document.clone()).unwrap();
+    assert_eq!(
+        serde_json::to_value(&page).unwrap()["body"][0]["children"][2],
+        document["body"][0]["children"][2]
+    );
+}
+
+#[test]
+fn a_how_to_that_says_and_shows_nothing_is_refused() {
+    let mut document = how_to_sheet_value();
+    let item = &mut document["body"][0]["children"][2]["items"][0];
+    item.as_object_mut().unwrap().remove("text");
+    item.as_object_mut().unwrap().remove("terminal");
+    item.as_object_mut().unwrap().remove("beside");
+    assert_eq!(
+        violations(document),
+        one(
+            &format!("{HOW_TO}/items/0"),
+            "how-to-item-empty",
+            "a how-to says or shows something"
+        )
+    );
+}
+
+#[test]
+fn beside_without_both_text_and_terminal_is_refused() {
+    let mut document = how_to_sheet_value();
+    document["body"][0]["children"][2]["items"][0]
+        .as_object_mut()
+        .unwrap()
+        .remove("terminal");
+    assert_eq!(
+        violations(document),
+        one(
+            &format!("{HOW_TO}/items/0/beside"),
+            "how-to-beside-alone",
+            "beside sets text beside a terminal; the item needs both"
+        )
+    );
+}
+
+#[test]
+fn a_terminal_indent_above_eight_is_refused() {
+    let mut document = how_to_sheet_value();
+    document["body"][0]["children"][2]["items"][0]["terminal"][2]["indent"] = json!(9);
+    assert_eq!(
+        violations(document),
+        one(
+            &format!("{HOW_TO}/items/0/terminal/2/indent"),
+            "terminal-indent-out-of-range",
+            "indent 9 is above 8"
+        )
+    );
+}
+
+#[test]
+fn an_empty_or_long_how_to_list_is_refused() {
+    let mut empty = how_to_sheet_value();
+    empty["body"][0]["children"][2]["items"] = json!([]);
+    assert_eq!(
+        violations(empty),
+        one(
+            &format!("{HOW_TO}/items"),
+            "list-empty",
+            "how-to-items is empty"
+        )
+    );
+    let mut long = how_to_sheet_value();
+    let item = long["body"][0]["children"][2]["items"][0].clone();
+    let mut wide = item.clone();
+    wide["commands"] = json!(["a", "b", "c", "d", "e", "f"]);
+    let line = item["terminal"][0].clone();
+    wide["terminal"] = json!(vec![line; 13]);
+    long["body"][0]["children"][2]["items"] = json!([
+        wide,
+        item.clone(),
+        item.clone(),
+        item.clone(),
+        item.clone(),
+        item.clone(),
+        item
+    ]);
+    assert_eq!(
+        violations(long),
+        vec![
+            (
+                format!("{HOW_TO}/items"),
+                "list-too-long",
+                "7 how-to-items, above 6".to_string()
+            ),
+            (
+                format!("{HOW_TO}/items/0/commands"),
+                "list-too-long",
+                "6 command-runs, above 5".to_string()
+            ),
+            (
+                format!("{HOW_TO}/items/0/terminal"),
+                "list-too-long",
+                "13 terminal-lines, above 12".to_string()
+            ),
+        ]
+    );
+}
+
+#[test]
+fn a_how_to_off_a_sheet_needs_a_sheet() {
+    let mut document = how_to_sheet_value();
+    document.as_object_mut().unwrap().remove("sheet");
+    let found: Vec<String> = violations(document)
+        .into_iter()
+        .filter(|(_, rule, _)| *rule == "needs-sheet")
+        .map(|(pointer, _, _)| pointer)
+        .collect();
+    assert!(found.contains(&HOW_TO.to_string()), "{found:?}");
+}
+
+#[test]
+fn every_terminal_text_is_a_text_field_and_must_be_trimmed() {
+    let mut document = how_to_sheet_value();
+    document["body"][0]["children"][2]["items"][0]["terminal"][1]["text"] = json!("  w-1 queued");
+    document["body"][0]["children"][2]["items"][0]["commands"][1]["words"] = json!("then ");
+    let found: Vec<(String, &'static str)> = violations(document)
+        .into_iter()
+        .map(|(pointer, rule, _)| (pointer, rule))
+        .collect();
+    assert_eq!(
+        found,
+        vec![
+            (
+                format!("{HOW_TO}/items/0/commands/1/words"),
+                "text-untrimmed"
+            ),
+            (
+                format!("{HOW_TO}/items/0/terminal/1/text"),
+                "text-untrimmed"
+            ),
+        ]
+    );
 }

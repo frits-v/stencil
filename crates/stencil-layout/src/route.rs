@@ -971,7 +971,9 @@ pub(crate) fn label_boxes(node: &NodeGeometry) -> Vec<BoxRect> {
         | NodeTag::PartsList
         | NodeTag::GeneralNotes
         | NodeTag::Ladder
-        | NodeTag::Rung => Vec::new(),
+        | NodeTag::Rung
+        | NodeTag::HowTo
+        | NodeTag::HowToItem => Vec::new(),
     }
 }
 
@@ -994,7 +996,8 @@ fn obstacle_box(node: &NodeGeometry) -> Option<BoxRect> {
         | NodeTag::Step
         | NodeTag::PartsList
         | NodeTag::GeneralNotes
-        | NodeTag::Ladder => Some(node.bounds),
+        | NodeTag::Ladder
+        | NodeTag::HowTo => Some(node.bounds),
         // No link crosses a rail it does not attach to (section 14.4 rule 15).
         NodeTag::Pipe if rail_bar(node).is_some() => Some(node.bounds),
         NodeTag::Pipe => node.part(PartName::Tag).map(|part| part.bounds),
@@ -1014,7 +1017,8 @@ fn obstacle_box(node: &NodeGeometry) -> Option<BoxRect> {
         | NodeTag::ProblemPoint
         | NodeTag::View
         | NodeTag::Phases
-        | NodeTag::Rung => None,
+        | NodeTag::Rung
+        | NodeTag::HowToItem => None,
     }
 }
 

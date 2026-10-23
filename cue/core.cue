@@ -67,7 +67,7 @@ import (
 
 // Every surface valid on a design sheet only; a page without sheet that draws
 // one fails _needsSheet. The Rust twin is SheetSurface::as_str.
-#SheetSurface: "sheet" | "actors" | "view" | "phases" | "step" | "actor" | "legend-by-actor" | "marks" | "parts-list" | "general-notes" | "item-outline" | "compartments" | "planned" | "sheet-look" | "rail-form" | "link-step" | "pipe-step" | "valve" | "ladder"
+#SheetSurface: "sheet" | "actors" | "view" | "phases" | "step" | "actor" | "legend-by-actor" | "marks" | "parts-list" | "general-notes" | "item-outline" | "compartments" | "planned" | "sheet-look" | "rail-form" | "link-step" | "pipe-step" | "valve" | "ladder" | "how-to"
 
 // A title block cell caption: 1 to 60 characters.
 #Caption: #Text & strings.MaxRunes(60)
@@ -634,12 +634,12 @@ import (
 	y: number & >=0
 }
 
-// A node is one of eighteen tags. Switching on tag, rather than a disjunction of
+// A node is one of nineteen tags. Switching on tag, rather than a disjunction of
 // definitions, keeps vet errors pointed at the offending field. Every node may
 // carry an id; _ids lists the ids in its subtree and _keys the legend keys of
 // the pipes and tees in it.
 #Node: {
-	tag: "Row" | "Col" | "Lanes" | "Box" | "Item" | "Fact" | "Note" | "Pipe" | "Tee" | "Text" | "Callout" | "Frame" | "View" | "Phases" | "Step" | "PartsList" | "GeneralNotes" | "Ladder"
+	tag: "Row" | "Col" | "Lanes" | "Box" | "Item" | "Fact" | "Note" | "Pipe" | "Tee" | "Text" | "Callout" | "Frame" | "View" | "Phases" | "Step" | "PartsList" | "GeneralNotes" | "Ladder" | "HowTo"
 	if tag == "Row" {#Row}
 	if tag == "Col" {#Col}
 	if tag == "Lanes" {#Lanes}
@@ -658,6 +658,7 @@ import (
 	if tag == "PartsList" {#PartsList}
 	if tag == "GeneralNotes" {#GeneralNotes}
 	if tag == "Ladder" {#Ladder}
+	if tag == "HowTo" {#HowTo}
 
 	// The ids a Pipe names in from and to, gathered up the tree. A Tee's arms
 	// cannot name one, so a Tee gathers none.
@@ -667,7 +668,7 @@ import (
 
 	// The sheet surfaces in the subtree and the titles of the Views strictly
 	// below the node.
-	if !list.Contains(["Row", "Col", "Lanes", "Box", "View", "Item", "Pipe", "Tee", "Phases", "Step", "PartsList", "GeneralNotes", "Ladder"], tag) {
+	if !list.Contains(["Row", "Col", "Lanes", "Box", "View", "Item", "Pipe", "Tee", "Phases", "Step", "PartsList", "GeneralNotes", "Ladder", "HowTo"], tag) {
 		_surfaces: []
 	}
 
@@ -921,6 +922,44 @@ import (
 	actor?:   #Id
 	planned?: bool
 	marks?:   #Marks
+}
+
+// What an operator types, as items numbered <view>.<n>. Each item says or shows
+// something; beside sets its text beside its terminal and needs both.
+#HowTo: {
+	id?: #Id
+	tag: "HowTo"
+	items: [...#HowToItem] & list.MinItems(1) & list.MaxItems(6)
+	_keys: {}
+	_ids: [if id != _|_ {id}]
+	_laneSets: []
+	_surfaces: ["how-to"]
+}
+
+#HowToItem: {
+	title: #Text
+	commands?: [...#CommandRun] & list.MaxItems(5)
+	text?:   #Text
+	beside?: bool
+	terminal?: [...#TerminalLine] & list.MaxItems(12)
+	_shows: [if terminal != _|_ if len(terminal) > 0 {true}]
+	if text == _|_ if len(_shows) == 0 {
+		_howToItemEmpty: "how-to \(title)" & "says or shows something"
+	}
+	if beside != _|_ if beside {
+		if text == _|_ || len(_shows) == 0 {
+			_besideAlone: "beside on how-to \(title)" & "the item needs both text and terminal"
+		}
+	}
+}
+
+// A command chip, or words between chips.
+#CommandRun: #Text | {words: #Text}
+
+#TerminalLine: {
+	kind:    "command" | "output" | "comment" | "ok"
+	indent?: int & >=0 & <=8
+	text:    #Text
 }
 
 // Shared by Row and Col. grow carries one weight per child.

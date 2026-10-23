@@ -405,6 +405,17 @@ fn sheet_rows(theme: &Theme, rows: &mut Rows) {
     rows.non_text(("sheet.frame", sheet.frame), ("sheet.paper", sheet.paper));
     actor_rows(theme, rows);
     mark_rows(theme, rows);
+    terminal_rows(theme, rows);
+}
+
+/// The terminal rows (section 14.5 rule 5): the text, prompt and comment inks on the
+/// terminal's fill. Command chips draw the text ink on the same fill.
+fn terminal_rows(theme: &Theme, rows: &mut Rows) {
+    let terminal = theme.terminal_colors();
+    let fill = ("terminal.fill", terminal.fill);
+    rows.text(("terminal.text", terminal.text), fill);
+    rows.text(("terminal.prompt", terminal.prompt), fill);
+    rows.text(("terminal.comment", terminal.comment), fill);
 }
 
 /// The mark rows (section 14.5 rule 4): a flag's numeral in `sheet.cell` on its

@@ -122,7 +122,8 @@ fn push_children_reversed<'a>(entry: &NodeEntry<'a>, pending: &mut Vec<NodeEntry
             | Node::Step(_)
             | Node::PartsList(_)
             | Node::GeneralNotes(_)
-            | Node::Ladder(_),
+            | Node::Ladder(_)
+            | Node::HowTo(_),
         )
         | NodeRef::TeeArm(_) => {}
     }
@@ -467,6 +468,44 @@ pub(crate) fn push_node_text_fields<'a>(entry: &NodeEntry<'a>, fields: &mut Vec<
                     pointer: entry.pointer.child("foot"),
                     text: foot,
                 });
+            }
+        }
+        NodeRef::Node(Node::HowTo(how_to)) => {
+            let items = SheetList::HowToItems;
+            for (index, item) in how_to.items.iter().enumerate().take(items.max() + 1) {
+                let item_pointer = items.pointer_in(&entry.pointer).index(index);
+                fields.push(TextField {
+                    pointer: item_pointer.child("title"),
+                    text: &item.title,
+                });
+                let commands = SheetList::CommandRuns;
+                for (run_index, run) in item.commands.iter().enumerate().take(commands.max() + 1) {
+                    let run_pointer = commands.pointer_in(&item_pointer).index(run_index);
+                    fields.push(TextField {
+                        pointer: if run.is_words() {
+                            run_pointer.child("words")
+                        } else {
+                            run_pointer
+                        },
+                        text: run.text(),
+                    });
+                }
+                if let Some(text) = &item.text {
+                    fields.push(TextField {
+                        pointer: item_pointer.child("text"),
+                        text,
+                    });
+                }
+                let lines = SheetList::TerminalLines;
+                for (line_index, line) in item.terminal.iter().enumerate().take(lines.max() + 1) {
+                    fields.push(TextField {
+                        pointer: lines
+                            .pointer_in(&item_pointer)
+                            .index(line_index)
+                            .child("text"),
+                        text: &line.text,
+                    });
+                }
             }
         }
         NodeRef::Node(Node::Ladder(ladder)) => {

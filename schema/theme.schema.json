@@ -89,6 +89,17 @@
     "tag": {
       "$ref": "#/$defs/TagRole"
     },
+    "terminal": {
+      "description": "The terminal of a how-to and its command chips (section 14.5 rule 5); absent derives\nevery leaf from the roles above.",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/TerminalRole"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
     "tint_cue": {
       "$ref": "#/$defs/TintCue"
     },
@@ -898,6 +909,35 @@
         "border",
         "ink",
         "sub_ink"
+      ]
+    },
+    "TerminalRole": {
+      "description": "The paint of a how-to's terminal: its fill, and the ink of each kind of line.",
+      "type": "object",
+      "properties": {
+        "comment": {
+          "description": "Comment lines and their `#` prompt. Derived: ink.secondary.",
+          "$ref": "#/$defs/Color"
+        },
+        "fill": {
+          "description": "The terminal and command chips. Derived: fact.fill.",
+          "$ref": "#/$defs/Color"
+        },
+        "prompt": {
+          "description": "The `$` prompt and ok lines. Derived: ink.primary.",
+          "$ref": "#/$defs/Color"
+        },
+        "text": {
+          "description": "Command and output lines, and command chip text. Derived: ink.primary.",
+          "$ref": "#/$defs/Color"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "fill",
+        "text",
+        "prompt",
+        "comment"
       ]
     },
     "ThemeStroke": {

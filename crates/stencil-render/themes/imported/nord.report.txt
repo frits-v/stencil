@@ -280,4 +280,7 @@ row contrast ink.primary on tints.7.fill: 8.29, at least 4.50, passed
 row contrast ink.primary on tints.8.fill: 8.82, at least 4.50, passed
 row contrast sheet.mark_ink on sheet.paper: 10.84, at least 3.00, passed
 row contrast sheet.mark_ink on sheet.cell: 7.49, at least 3.00, passed
-stencil theme check nord: 282 rows, 223 passed, 59 failed
+row contrast terminal.text on terminal.fill: 8.73, at least 4.50, passed
+row contrast terminal.prompt on terminal.fill: 8.73, at least 4.50, passed
+row contrast terminal.comment on terminal.fill: 8.26, at least 4.50, passed
+stencil theme check nord: 285 rows, 226 passed, 59 failed

@@ -8,6 +8,7 @@ mod build;
 mod compute;
 mod detail_frames;
 mod drawn;
+mod how_to;
 mod ladder;
 mod lanes;
 mod lead_run;
@@ -176,12 +177,14 @@ pub fn layout_page(
         String::new()
     };
     let ladder_plan = ladder::plan_ladders(page, measurer)?;
+    let how_to_plan = how_to::plan_how_tos(page, measurer)?;
     let built = build::build_page(
         page,
         grammar,
         &lanes_plan,
         &phases_plan,
         &ladder_plan,
+        &how_to_plan,
         &widest_cell,
     )?;
     let mut geometry = compute::compute_geometry(built, canvas_width(page), measurer)?;
@@ -368,6 +371,10 @@ pub enum NodeTag {
     Ladder,
     /// One rung of a ladder, `/…/rungs/<i>`.
     Rung,
+    /// The how-tos of a view: a structural node whose items are nodes (section 14.4 rule 21).
+    HowTo,
+    /// One how-to, `/…/items/<i>`: its heading row, rule, text and terminal.
+    HowToItem,
 }
 
 impl NodeTag {
@@ -421,6 +428,8 @@ impl NodeTag {
             NodeTag::GeneralNotes => "GeneralNotes",
             NodeTag::Ladder => "Ladder",
             NodeTag::Rung => "Rung",
+            NodeTag::HowTo => "HowTo",
+            NodeTag::HowToItem => "HowToItem",
         }
     }
 }
@@ -611,10 +620,23 @@ pub enum PartName {
     RungTitle,
     RungWho,
     RungText,
+    /// A how-to's heading row: its number, title, rule and command line of chips and words
+    /// (section 14.4 rule 21).
+    HowToNumber,
+    HowToTitle,
+    HowToRule,
+    CommandChip,
+    CommandText,
+    CommandWord,
+    HowToText,
+    /// The terminal block, its prompts (`$`, `#`) and its unwrapped lines.
+    Terminal,
+    TerminalPrompt,
+    TerminalLine,
 }
 
 /// The number of part names, so a new name has to join `PartName::ALL`.
-pub const PART_NAMES: usize = 132;
+pub const PART_NAMES: usize = 142;
 
 impl PartName {
     /// Every part name, in declaration order.
@@ -751,6 +773,16 @@ impl PartName {
         PartName::RungTitle,
         PartName::RungWho,
         PartName::RungText,
+        PartName::HowToNumber,
+        PartName::HowToTitle,
+        PartName::HowToRule,
+        PartName::CommandChip,
+        PartName::CommandText,
+        PartName::CommandWord,
+        PartName::HowToText,
+        PartName::Terminal,
+        PartName::TerminalPrompt,
+        PartName::TerminalLine,
     ];
 
     /// True for the parts a design sheet adds (section 14.2 rule 10); only a sheet draws
@@ -851,7 +883,17 @@ impl PartName {
             | PartName::EscalationArrow
             | PartName::RungTitle
             | PartName::RungWho
-            | PartName::RungText => true,
+            | PartName::RungText
+            | PartName::HowToNumber
+            | PartName::HowToTitle
+            | PartName::HowToRule
+            | PartName::CommandChip
+            | PartName::CommandText
+            | PartName::CommandWord
+            | PartName::HowToText
+            | PartName::Terminal
+            | PartName::TerminalPrompt
+            | PartName::TerminalLine => true,
             PartName::Badge
             | PartName::BadgeText
             | PartName::Text
@@ -1032,6 +1074,16 @@ impl PartName {
             PartName::RungTitle => "rung_title",
             PartName::RungWho => "rung_who",
             PartName::RungText => "rung_text",
+            PartName::HowToNumber => "how_to_number",
+            PartName::HowToTitle => "how_to_title",
+            PartName::HowToRule => "how_to_rule",
+            PartName::CommandChip => "command_chip",
+            PartName::CommandText => "command_text",
+            PartName::CommandWord => "command_word",
+            PartName::HowToText => "how_to_text",
+            PartName::Terminal => "terminal",
+            PartName::TerminalPrompt => "terminal_prompt",
+            PartName::TerminalLine => "terminal_line",
         }
     }
 }

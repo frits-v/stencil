@@ -77,6 +77,8 @@ enum DocumentNode<'a> {
     Actor,
     /// A rung of a ladder, `/…/rungs/<i>`, with the fill its box takes.
     Rung(&'a stencil_model::Rung, StepFill),
+    /// One how-to of a HowTo, `/…/items/<i>`.
+    HowToItem(&'a stencil_model::HowToItem),
 }
 
 /// Walks page and geometry in the section 4.4 geometry order and asserts the pointers match,
@@ -199,7 +201,9 @@ pub(crate) fn is_sheet_tag(tag: NodeTag) -> bool {
         | NodeTag::PartsList
         | NodeTag::GeneralNotes
         | NodeTag::Ladder
-        | NodeTag::Rung => true,
+        | NodeTag::Rung
+        | NodeTag::HowTo
+        | NodeTag::HowToItem => true,
         NodeTag::Page
         | NodeTag::Kicker
         | NodeTag::Title
@@ -265,6 +269,21 @@ fn geometry_order(page: &Page) -> Vec<(NodePointer, DocumentNode<'_>)> {
                             (
                                 list.pointer_in(&entry.pointer).index(index),
                                 DocumentNode::Rung(rung, ladder.fill_of(rung)),
+                            )
+                        })
+                        .collect()
+                }
+                NodeRef::Node(Node::HowTo(how_to)) => {
+                    let list = SheetList::HowToItems;
+                    how_to
+                        .items
+                        .iter()
+                        .take(list.max() + 1)
+                        .enumerate()
+                        .map(|(index, item)| {
+                            (
+                                list.pointer_in(&entry.pointer).index(index),
+                                DocumentNode::HowToItem(item),
                             )
                         })
                         .collect()
@@ -914,6 +933,23 @@ impl<'a> SvgWriter<'a> {
                 .palette
                 .sheet_color(palette::SheetInk::TintInk, Some(slot)));
         }
+        if let DocumentNode::HowToItem(item) = document_node
+            && matches!(part.name, PartName::TerminalLine | PartName::TerminalPrompt)
+        {
+            let line = node
+                .parts
+                .iter()
+                .take_while(|candidate| !std::ptr::eq(*candidate, part))
+                .filter(|candidate| candidate.name == PartName::TerminalLine)
+                .count();
+            let kind = item
+                .terminal
+                .get(line)
+                .map(|line| line.kind)
+                .ok_or_else(|| part_mismatch(node, part))?;
+            let ink = palette::terminal_ink(kind, part.name == PartName::TerminalPrompt);
+            return Ok(self.palette.sheet_ink(ink).to_string());
+        }
         if self.sheet.is_some()
             && let Some(ink) =
                 palette::sheet_part_paint(node.tag, part.name).and_then(|paint| paint.text)
@@ -974,7 +1010,7 @@ impl<'a> SvgWriter<'a> {
                     }
                 }
                 Node::Phases(phases) => self.phases_step_fill = phases.step_fill,
-                Node::View(_) | Node::Step(_) => {}
+                Node::View(_) | Node::Step(_) | Node::HowTo(_) => {}
                 Node::PartsList(_) | Node::GeneralNotes(_) | Node::Ladder(_) => {
                     let width_px = match content {
                         Node::PartsList(_) => palette::PARTS_LIST_BORDER_PX,
@@ -1056,7 +1092,8 @@ impl<'a> SvgWriter<'a> {
             | DocumentNode::Sheet
             | DocumentNode::SheetCell
             | DocumentNode::ProblemPoint
-            | DocumentNode::Actor => PartContext::default(),
+            | DocumentNode::Actor
+            | DocumentNode::HowToItem(_) => PartContext::default(),
             // A rung's box is drawn as a boxed Step is: filled in its actor's fill and
             // outlined in its wire, or dashed and unfilled when planned.
             DocumentNode::Rung(rung, fill) => PartContext {
@@ -1096,7 +1133,8 @@ impl<'a> SvgWriter<'a> {
                 | Node::View(_)
                 | Node::PartsList(_)
                 | Node::GeneralNotes(_)
-                | Node::Ladder(_) => PartContext::default(),
+                | Node::Ladder(_)
+                | Node::HowTo(_) => PartContext::default(),
                 Node::Phases(phases) => PartContext {
                     band: Some(phases.band),
                     ..PartContext::default()
@@ -1441,6 +1479,16 @@ impl<'a> SvgWriter<'a> {
             | PartName::RungTitle
             | PartName::RungWho
             | PartName::RungText
+            | PartName::HowToNumber
+            | PartName::HowToTitle
+            | PartName::HowToRule
+            | PartName::CommandChip
+            | PartName::CommandText
+            | PartName::CommandWord
+            | PartName::HowToText
+            | PartName::Terminal
+            | PartName::TerminalPrompt
+            | PartName::TerminalLine
             | PartName::Border
             | PartName::RefRule
             | PartName::Grid
