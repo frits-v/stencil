@@ -1,0 +1,44 @@
+crates/stencil-cli/prime/base.md
+  s_1be56d58c564da::t_fdf6dc90d36d5c 54
+crates/stencil-cli/prime/sheet.md
+  s_1be56d58c564da::t_ad0c035b639795 5-10
+crates/stencil-cli/prime/grammars/plain.md
+  s_1be56d58c564da::t_c724d457f83f8f 16-17
+  s_1be56d58c564da::t_2bdfe35cb832df 14,18
+crates/stencil-cli/prime/assembly.md
+  s_1be56d58c564da::t_a4872e2d03371a 11
+crates/stencil-cli/prime/blocks.md
+  s_1be56d58c564da::t_9b81e16f143e20 3
+crates/stencil-cli/prime/checks.md
+  s_1be56d58c564da::t_ab08cb64298812 36
+crates/stencil-cli/prime/grammars/gcp.md
+  s_1be56d58c564da::t_3498c3c439dbbc 3
+crates/stencil-cli/prime/howto.md
+  s_1be56d58c564da::t_ddfed2a48b648b 3
+crates/stencil-cli/prime/links.md
+  s_1be56d58c564da::t_1ea108c0966685 40
+crates/stencil-cli/prime/marks.md
+  s_1be56d58c564da::t_88ccc1f1abc060 6
+crates/stencil-cli/src/prime.rs
+  s_1be56d58c564da::t_7a637d3c0324ee 25,85,89,103,121,130,177,181,196
+crates/stencil-cli/tests/prime.rs
+  s_1be56d58c564da::t_1d5c6422b32ce6 360,366,376-385,625-626,854
+docs/SPEC.md
+  s_1be56d58c564da::t_6774baf6af6d71 1610
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "f49a8ff12c66b00db98096130c15545ea7d6d2e3",
+  "prompts": {},
+  "sessions": {
+    "s_1be56d58c564da": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "5722756d-f52e-4599-a761-9d76b4d496c1",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Frits <4488681+frits-v@users.noreply.github.com>"
+    }
+  }
+}
