@@ -37,5 +37,6 @@ What makes lines and tags collide:
 - Items at the default gap 8: no lane between them, and no room for an arrow stub. Set gap 32 to 64 on the Col or Row the links run through.
 - An endpoint boxed in by items on every side: no route exists and the link falls back.
 - A route whose longest segment crosses a Box label: its tag lands on the label. Pick sides so the longest segment runs through open Box body.
+- On a sheet, two links at one side of a node keep a shared leg when no shift frees it: links-routed `leg L runs along a leg of /links/j`. Give one of them another side, or a via point.
 
 Fixes, in order: set from_side and to_side; raise the gap where links run; add a via point in an empty lane; move an endpoint.

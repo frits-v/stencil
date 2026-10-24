@@ -11,9 +11,11 @@ A domain-neutral grammar for system diagrams: set "grammar": "plain" on the page
 | group | a locality, cluster or site; tint it to pair it with lines of the same slot |
 | tile | an ownership scope: a team, account or tenant |
 | assembly | the parts one actor runs, on a design sheet only: a dash-dot outline with a tab label |
-| service, store, external, person | the items: a running service, a data store, a system outside the figure's scope, a human actor |
+| service, store, external, person, device | the items: a running service, a data store, a system outside the figure's scope, a human actor, an end-user device |
 
-Lanes: put the participants of a time-ordered flow as Items directly in a Lanes node, each with an id. A link with order 1-256 between two of its heads is a message: a straight arrow across one row of the band below the heads, rows in order top to bottom, each at least 36 px and tall enough for its tag; each head draws a dashed lifeline down to the band's bottom. Use solid for a call, dash for a reply, deny for a rejected call. Vet rejects an ordered link that is not between two heads of one Lanes node, and two messages of one node with the same order. No iso.
+A design sheet under plain: take `stencil prime onepager`, set "grammar": "plain", make the gcp Box a system Box and each product Item a service, store or external, and drop every icon. vet names each one missed: kind-unknown, icon-outside-pack.
+
+Lanes: put the participants of a time-ordered flow as Items directly in a Lanes node, each with an id; the heads take equal columns. A link with order 1-256 between two of its heads is a message: a straight arrow across one row of the band below the heads, rows in order top to bottom, each at least 36 px and tall enough for its tag; each head draws a dashed lifeline down to the band's bottom. Use solid for a call, dash for a reply, deny for a rejected call. Vet rejects an ordered link that is not between two heads of one Lanes node, and two messages of one node with the same order. No iso.
 
 Figures that show the grammar, one per subject:
 
