@@ -580,6 +580,19 @@ pub mod tests {
         assert!(decode_which(&Exit::Code(1), "").is_err());
     }
 
+    /// `mise which claude` runs with only `child::INHERITED`, and a posting run needs it
+    /// before any pass; the dry run never calls it.
+    #[test]
+    fn mise_names_the_pinned_claude_under_the_inherited_variables_alone() {
+        let root = checkout::running_checkout().unwrap();
+        let claude = resolve_claude(&root).unwrap();
+        assert!(
+            claude.is_absolute() && claude.is_file(),
+            "{}",
+            claude.display()
+        );
+    }
+
     #[test]
     fn a_files_directory_is_private_and_removed_with_its_files() {
         use std::os::unix::fs::PermissionsExt as _;
