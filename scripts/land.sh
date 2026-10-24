@@ -8,16 +8,41 @@ set -euo pipefail
 pr="${1:?usage: scripts/land.sh <pr-number>}"
 head=$(gh pr view "$pr" --json headRefName --jq .headRefName)
 sha=$(gh pr view "$pr" --json headRefOid --jq .headRefOid)
+# GitHub starts no pull_request run for a head that conflicts with its base, so the watch
+# below would find nothing. UNKNOWN is a mergeability GitHub has not computed yet.
+mergeable=$(gh pr view "$pr" --json mergeable --jq .mergeable)
+case "$mergeable" in
+  MERGEABLE | UNKNOWN) ;;
+  CONFLICTING)
+    echo "land: $head conflicts with its base and gets no ci run; rebase it and push" >&2
+    exit 1
+    ;;
+  *)
+    echo "land: unrecognised mergeable state '$mergeable' for $pr" >&2
+    exit 1
+    ;;
+esac
 # The branch filter combined with the workflow filter can list nothing for a run that exists,
 # so the run is found by commit and its branch is checked from the result.
 run=$(gh run list --workflow ci.yml --commit "$sha" --limit 20 --json databaseId,headBranch \
   --jq "[.[] | select(.headBranch == \"$head\")][0].databaseId // empty")
-if [ -z "$run" ]; then
+if [[ -z $run ]]; then
   echo "land: no ci.yml run for $head at $sha" >&2
   exit 1
 fi
 echo "land: watching ci run $run for $head at ${sha:0:7}"
 gh run watch "$run" --exit-status
+
+# A draft cannot merge; it is marked ready once its CI run has passed.
+draft=$(gh pr view "$pr" --json isDraft --jq .isDraft)
+case "$draft" in
+  true) gh pr ready "$pr" ;;
+  false) ;;
+  *)
+    echo "land: unrecognised draft state '$draft' for $pr" >&2
+    exit 1
+    ;;
+esac
 
 # Code scanning and required checks settle after CI; retry the merge for up to 20 minutes.
 for attempt in $(seq 1 60); do
