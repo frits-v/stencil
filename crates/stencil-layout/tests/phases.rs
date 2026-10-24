@@ -43,6 +43,7 @@ fn phases_page(mut steps: Value, mut links: Value) -> Page {
         "kicker": "Kicker",
         "lede": "Lede",
         "badge": "Internal",
+        "grammar": "gcp",
         "sheet": {
             "problem": { "points": [{ "text": "A point." }] },
             "answer": { "statement": "A statement." },

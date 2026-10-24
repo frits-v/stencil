@@ -275,14 +275,16 @@ fn palette_document() -> serde_json::Value {
         .iter()
         .map(|kind| kind.with_line(json!({ "text": kind.as_str() })))
         .collect();
-    common::page_document(
+    let mut document = common::page_document(
         json!([
             { "tag": "Col", "children": zones },
             { "tag": "Col", "children": pipes },
             { "tag": "Col", "children": tees }
         ]),
         json!(legend),
-    )
+    );
+    document["grammar"] = json!("gcp");
+    document
 }
 
 /// (fill, stroke, stroke-width, dasharray) of section 2.4, gcp excluded.

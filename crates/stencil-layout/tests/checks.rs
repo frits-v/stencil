@@ -2,7 +2,7 @@
 
 mod common;
 
-use common::{layout, page_with_body, pointer};
+use common::{gcp_page_with_body, layout, pointer};
 use serde_json::json;
 use stencil_layout::checks::{child_inside_container, siblings_do_not_overlap, text_fits_box};
 use stencil_layout::{
@@ -192,7 +192,7 @@ fn root_only_geometry_examines_nothing_and_fails() {
 #[test]
 fn card_with_a_120_character_word_overflows_its_row() {
     let word = "w".repeat(120);
-    let page = page_with_body(
+    let page = gcp_page_with_body(
         640,
         json!([{ "tag": "Row", "children": [
             { "tag": "Item", "kind": "product", "title": word },
@@ -229,7 +229,7 @@ fn card_with_a_120_character_word_overflows_its_row() {
 /// Text runs: kicker 2, title 1, lede 1, two fn, one tag label, one fact, so 8.
 #[test]
 fn small_document_has_hand_derived_counts() {
-    let page = page_with_body(
+    let page = gcp_page_with_body(
         1280,
         json!([
             { "tag": "Row", "children": [
@@ -271,7 +271,7 @@ fn g7_geometry_checks_have_the_section_9_4_counts_and_pass() {
 /// reports it and child-inside-container does not.
 #[test]
 fn title_with_a_200_character_word_overflows_its_text_box() {
-    let mut page = page_with_body(640, json!([{ "tag": "Fact", "text": "Short" }]));
+    let mut page = gcp_page_with_body(640, json!([{ "tag": "Fact", "text": "Short" }]));
     page.title = "w".repeat(200);
     let geometry = layout(&page);
 

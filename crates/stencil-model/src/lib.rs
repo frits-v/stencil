@@ -64,7 +64,7 @@ pub fn vet_page(page: Page, grammar: &Grammar) -> Result<Page, ModelError> {
     }
 }
 
-/// The grammar reference a page names, `gcp` when it names none.
+/// The grammar reference a page names, `plain` when it names none.
 pub fn grammar_reference(page: &Page) -> &str {
     page.grammar.as_deref().unwrap_or(GRAMMAR_DEFAULT)
 }

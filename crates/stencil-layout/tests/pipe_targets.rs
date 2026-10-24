@@ -41,6 +41,7 @@ fn gutter_page(first_targets: Value, second_targets: Value) -> Value {
         .collect();
     json!({
         "title": "Title", "kicker": "Kicker", "lede": "Lede", "badge": "Customer",
+        "grammar": "gcp",
         "body": [{ "tag": "Row", "grow": [1, 0, 1], "children": [
             { "tag": "Col", "gap": 24, "children": [
                 { "tag": "Box", "id": "tall", "kind": "onprem", "label": "Tall site", "children": facts },
@@ -203,6 +204,7 @@ fn a_pipe_with_only_to_keeps_the_neighbor_rule_on_its_left() {
 fn a_slot_aimed_past_its_parent_is_clamped_and_reported() {
     let page = page_from(json!({
         "title": "Title", "kicker": "Kicker", "lede": "Lede", "badge": "Customer",
+        "grammar": "gcp",
         "body": [
             { "tag": "Row", "grow": [1, 0, 1], "children": [
                 { "tag": "Box", "id": "near", "kind": "onprem", "label": "Near", "children": [
@@ -245,6 +247,7 @@ fn a_slot_aimed_past_its_parent_is_clamped_and_reported() {
 fn a_v_pipe_reports_targets_on_the_wrong_side_as_above_and_below() {
     let page = page_from(json!({
         "title": "Title", "kicker": "Kicker", "lede": "Lede", "badge": "Customer",
+        "grammar": "gcp",
         "body": [{ "tag": "Col", "children": [
             { "tag": "Box", "id": "upper", "kind": "onprem", "label": "Upper", "children": [
                 { "tag": "Fact", "text": "router" }

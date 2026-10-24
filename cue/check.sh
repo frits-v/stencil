@@ -146,7 +146,7 @@ print(f"ok   onepager: equals examples/onepager.json, {len(views)} views, {len(g
 PY
 
 # Every example is a JSON document authored without CUE; each vets against
-# the #Page of the grammar it names, gcp when it names none. An example listed here is a known defect, reported on every
+# the #Page of the grammar it names, plain when it names none. An example listed here is a known defect, reported on every
 # run: it must fail, and every error vet reports must name the listed rule.
 # An entry that starts passing is stale and fails the script. The list is
 # empty: every example vets clean.
@@ -164,7 +164,7 @@ for example in "$repo"/examples/*.json; do
 			known_rule="${entry#*|}"
 		fi
 	done
-	grammar="$(python3 -c 'import json, sys; print(json.load(open(sys.argv[1], encoding="utf-8")).get("grammar", "gcp"))' "$example")"
+	grammar="$(python3 -c 'import json, sys; print(json.load(open(sys.argv[1], encoding="utf-8")).get("grammar", "plain"))' "$example")"
 	if [[ "$grammar" != "gcp" && "$grammar" != "plain" ]]; then
 		echo "FAIL example $stem: names grammar $grammar, which has no package under grammars/" >&2
 		examples_failed=$((examples_failed + 1))
@@ -377,6 +377,9 @@ g7_cases=(
 	'chrome-none-three-keys-empty-legend|s/^\ttitle: /\tchrome: "none"\n&/; /^\tlegend: \[$/,/^\t\]$/d; s/^}$/\tlegend: []\n}/|_pipeKeysMissingFromLegend'
 )
 sequence_cases=(
+	'external-inside-system|s/kind: "service", title: "Console", subtitle: "web front end"/kind: "external", title: "Console", subtitle: "web front end"/|_externalInsideSystem.Console|sits inside the system frame'
+	'solid-tint-1-pipe-beside-group-tint-2|s/^\tbody: \[{$/\tbody: [{tag: "Row", children: [{tag: "Box", kind: "group", tint: 2, label: "Team", children: [{tag: "Item", kind: "service", title: "Aside", subtitle: "beside the pipe"}]}, {tag: "Pipe", dir: "h", line: "solid", label: "stray"}]}, {/|_pipeBesideZoneOfOtherTint.stray|beside group tint 2'
+	'solid-tint-1-pipe-inside-group-tint-2|s/^\tbody: \[{$/\tbody: [{tag: "Box", kind: "group", tint: 2, label: "Team", children: [{tag: "Pipe", dir: "h", line: "solid", label: "stray"}]}, {/|_otherTintInsideZone."solid-1"|inside group tint 2'
 	'ordered-link-to-a-node-that-is-not-a-lane-head|s/label: "Job service"/id: "job-service", &/; s/to: "console", line: "solid", label: "submit job"/to: "job-service", line: "solid", label: "submit job"/|_orderedLinkNotBetweenLaneHeads."0"'
 	'two-ordered-links-with-one-order|s/label: "POST \/jobs", order: 2/label: "POST \/jobs", order: 1/|_linkOrderUsedTwice."1"'
 	'line-kind-corner-above-16|s/^figure: plain.#Page \& {/_house: plain.grammar \& {lines: [{line: "solid", corner: 17}]}\n&/|_house.lines.0.corner: invalid value 17'

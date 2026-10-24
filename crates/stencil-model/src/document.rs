@@ -67,7 +67,7 @@ pub const LINK_CORNER_MAX_PX: f32 = 16.0;
 /// A grammar kind name: a Box or Item `kind`.
 pub const KIND_PATTERN: &str = r"^[a-z][a-z0-9-]{0,31}$";
 pub const BUILTIN_GRAMMARS: [&str; 2] = ["gcp", "plain"];
-pub const GRAMMAR_DEFAULT: &str = "gcp";
+pub const GRAMMAR_DEFAULT: &str = "plain";
 pub const GRAMMAR_REFERENCE_PATTERN: &str = r"^(gcp|plain|[^\u0000-\u001F]{1,395}\.json)$";
 /// Designed built-ins first (section 13.5), then the imported tier (section 13.9).
 pub const BUILTIN_THEMES: [&str; 13] = [
@@ -185,7 +185,7 @@ pub struct Page {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[schemars(length(min = 1, max = 400))]
     pub badge: Option<String>,
-    /// A built-in grammar name or a path ending in `.json`; absent means gcp.
+    /// A built-in grammar name or a path ending in `.json`; absent means plain.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[schemars(regex(pattern = GRAMMAR_REFERENCE_PATTERN))]
     pub grammar: Option<String>,

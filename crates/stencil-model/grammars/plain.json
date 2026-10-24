@@ -111,7 +111,7 @@
             "shape": "block"
         },
         {
-            "name": "store",
+            "name": "managed",
             "icons": "none",
             "products": [],
             "parents": [
@@ -123,6 +123,48 @@
                 "page"
             ],
             "shape": "block"
+        },
+        {
+            "name": "store",
+            "icons": "none",
+            "products": [],
+            "parents": [
+                "system",
+                "boundary",
+                "group",
+                "tile",
+                "assembly",
+                "page"
+            ],
+            "shape": "cylinder"
+        },
+        {
+            "name": "queue",
+            "icons": "none",
+            "products": [],
+            "parents": [
+                "system",
+                "boundary",
+                "group",
+                "tile",
+                "assembly",
+                "page"
+            ],
+            "shape": "stack"
+        },
+        {
+            "name": "network",
+            "icons": "none",
+            "products": [],
+            "parents": [
+                "system",
+                "boundary",
+                "group",
+                "tile",
+                "assembly",
+                "page"
+            ],
+            "shape": "tile"
         },
         {
             "name": "external",

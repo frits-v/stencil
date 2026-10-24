@@ -223,7 +223,7 @@ pub fn load_document_from(
         resolve_grammar(&reference, document_directory)?
     } else {
         // `grammar-unknown` is reported before resolution, with every other violation the
-        // page has under the default grammar.
+        // page has under the default grammar, plain.
         let fallback = resolve_grammar(stencil_model::GRAMMAR_DEFAULT, document_directory)?;
         return Err(Failure::Model(ModelError::Invalid(validate_page(
             &page, &fallback,

@@ -118,6 +118,7 @@ fn palette_document() -> Value {
         ]),
         json!(legend),
     );
+    document["grammar"] = json!("gcp");
     document["foot"] = json!("foot");
     document
 }
@@ -1199,7 +1200,7 @@ fn overrides_recolor_one_slot_wire_and_nothing_else() {
     overrides.insert("tints".to_string(), json!({ "3": { "wire": "#00796B" } }));
     let overridden = apply_overrides(&base, &overrides).unwrap();
     assert_eq!(overridden.tints[2].wire.as_str(), "#00796B");
-    let document = common::page_document(
+    let mut document = common::page_document(
         json!([{ "tag": "Col", "children": [
             { "tag": "Pipe", "dir": "h", "line": "solid", "tint": 3, "label": "slot three" },
             { "tag": "Pipe", "dir": "h", "line": "solid", "tint": 1, "label": "slot one" },
@@ -1212,6 +1213,7 @@ fn overrides_recolor_one_slot_wire_and_nothing_else() {
             { "line": "solid", "tint": 1, "text": "one" }
         ]),
     );
+    document["grammar"] = json!("gcp");
     let page: Page = serde_json::from_value(document).unwrap();
     let geometry = common::layout_with_fixed_metrics(&page);
     let before = render_svg(&page, &base, &geometry).unwrap().svg;

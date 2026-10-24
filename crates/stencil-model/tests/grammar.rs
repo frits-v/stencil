@@ -314,7 +314,7 @@ fn gcp_has_a_product_kind_with_every_icon_once_in_icon_order_and_a_person_and_a_
 }
 
 #[test]
-fn plain_has_five_containers_and_five_icon_free_items() {
+fn plain_has_five_containers_and_eight_icon_free_items_each_with_a_shape() {
     let grammar = builtin_grammar("plain").unwrap().unwrap();
     let containers: Vec<(&str, Role)> = grammar
         .containers
@@ -331,21 +331,24 @@ fn plain_has_five_containers_and_five_icon_free_items() {
             ("assembly", Role::Group)
         ]
     );
-    let items: Vec<&str> = grammar
+    let items: Vec<(&str, Option<Shape>)> = grammar
         .items
         .iter()
-        .map(|item| item.name.as_str())
+        .map(|item| (item.name.as_str(), item.shape))
         .collect();
-    assert_eq!(items, ["service", "store", "external", "person", "device"]);
-    assert_eq!(grammar.item("person").unwrap().shape, Some(Shape::Figure));
-    assert_eq!(grammar.item("device").unwrap().shape, Some(Shape::Laptop));
-    for name in ["service", "store", "external"] {
-        assert_eq!(
-            grammar.item(name).unwrap().shape,
-            Some(Shape::Block),
-            "{name}"
-        );
-    }
+    assert_eq!(
+        items,
+        [
+            ("service", Some(Shape::Block)),
+            ("managed", Some(Shape::Block)),
+            ("store", Some(Shape::Cylinder)),
+            ("queue", Some(Shape::Stack)),
+            ("network", Some(Shape::Tile)),
+            ("external", Some(Shape::Block)),
+            ("person", Some(Shape::Figure)),
+            ("device", Some(Shape::Laptop)),
+        ]
+    );
     assert!(
         grammar
             .items

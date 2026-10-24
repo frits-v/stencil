@@ -24,6 +24,7 @@ fn page(body: Value, iso: bool) -> stencil_model::Page {
         "lede": "Lede",
         "width": 640,
         "badge": "Customer",
+        "grammar": "gcp",
         "body": body,
         "legend": []
     });

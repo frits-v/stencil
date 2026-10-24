@@ -16,7 +16,7 @@
             { "tag": "Item", "id": "operator", "kind": "person", "title": "Operator", "subtitle": "submits and cancels jobs" },
             { "tag": "Item", "id": "console", "kind": "service", "title": "Console", "subtitle": "web front end" },
             { "tag": "Item", "id": "api", "kind": "service", "title": "Jobs API", "subtitle": "owns job state" },
-            { "tag": "Item", "id": "queue", "kind": "store", "title": "Queue", "subtitle": "at-least-once delivery" },
+            { "tag": "Item", "id": "queue", "kind": "queue", "title": "Queue", "subtitle": "at-least-once delivery" },
             { "tag": "Item", "id": "worker", "kind": "service", "title": "Worker", "subtitle": "runs one job at a time" }
           ]
         }

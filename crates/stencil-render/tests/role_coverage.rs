@@ -111,6 +111,7 @@ fn every_role_document(projection: &str) -> Value {
         json!(legend),
     );
     document["badge"] = json!("Draft");
+    document["grammar"] = json!("gcp");
     document["projection"] = json!(projection);
     document["foot"] = json!("foot");
     document
@@ -144,10 +145,9 @@ fn figures() -> Vec<(Page, Grammar)> {
             };
         }
     }
-    let soft = page(common::page_document(
-        json!([boxed("k8s", None, fact())]),
-        json!([]),
-    ));
+    let mut soft_document = common::page_document(json!([boxed("k8s", None, fact())]), json!([]));
+    soft_document["grammar"] = json!("gcp");
+    let soft = page(soft_document);
     figures.push((soft, bordered));
     figures
 }

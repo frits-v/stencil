@@ -254,49 +254,32 @@ _nesting: stencil.#GrammarNesting & {#grammar: grammar}
 #GlobalProductName: "\\b(Network Connectivity Center)\\b"
 
 // The gcp walk over the body. Each node carries:
-//   _tinted       the tinted lines and Boxes in its subtree, keyed "solid-2" or
-//                 "region-1", each mapped to its tint slot
 //   _nameless     the titles of product items with no subtitle and no doc or
 //                 ask fact
 //   _apiProducts  the titles of product items that are Google APIs
+//                 (#ApiProductName, #ApiProductIcons)
 //   _serverlessProducts, _managedDataProducts, _globalProducts  the same for
 //                 serverless products, managed data products and global
 //                 resources (#ServerlessProductName, #ServerlessProductIcons,
 //                 #ManagedDataProductName, #ManagedDataProductIcons,
 //                 #GlobalProductName)
-//                 (#ApiProductName, #ApiProductIcons)
 //   _apisLabels   the labels of apis Boxes below it with no gcp Box between
-// A Box also carries _tint, its effective tint as a list of zero or one slot,
-// and a solid Pipe carries _solidTint the same way. Tint pairing compares
-// slots; dash, gray and deny lines and untinted Boxes are outside it.
+// Tint pairing is the core's, in #GrammarNesting (cue/grammar.cue).
 #Node: {
 	tag: string
 	if tag == "Row" || tag == "Col" || tag == "Lanes" || tag == "View" {
 		children: [...#Node]
-		_tinted: {for c in children {c._tinted}}
 		_nameless: {for c in children {c._nameless}}
 		_apiProducts: {for c in children {c._apiProducts}}
 		_serverlessProducts: {for c in children {c._serverlessProducts}}
 		_managedDataProducts: {for c in children {c._managedDataProducts}}
 		_globalProducts: {for c in children {c._globalProducts}}
 		_apisLabels: {for c in children {c._apisLabels}}
-		#SiblingTint
 	}
 	if tag == "Box" {
 		kind:  string
-		tint?: int
 		label: string
 		children: [...#Node]
-		_kindData: [for c in grammar.containers if c.name == kind {c}]
-		// An actor's colour says who acts, not which network path, so a Box that
-		// names an actor takes no part in tint pairing.
-		actor?: string
-		_tint: list.Take([
-			if actor == _|_ for c in _kindData if c.tintable if tint != _|_ {tint},
-			if actor == _|_ for c in _kindData if c.tintable if c.default_tint != _|_ {c.default_tint},
-		], 1)
-		_below: {for c in children {c._tinted}}
-		_tinted: {_below, for t in _tint {"\(kind)-\(t)": t}}
 		_nameless: {for c in children {c._nameless}}
 		_apiProducts: {for c in children {c._apiProducts}}
 		_serverlessProducts: {for c in children {c._serverlessProducts}}
@@ -306,7 +289,6 @@ _nesting: stencil.#GrammarNesting & {#grammar: grammar}
 			if kind != "gcp" for c in children {c._apisLabels}
 			if kind == "apis" {(label): true}
 		}
-		#SiblingTint
 
 		// Google APIs are reached over Private Google Access, never placed in
 		// a VPC; they belong in an apis Box beside it.
@@ -333,14 +315,6 @@ _nesting: stencil.#GrammarNesting & {#grammar: grammar}
 				for k, _ in _globalProducts {(k): "product" & "sits inside a region; a global resource sits outside every region"}
 			}
 		}
-
-		// A tinted Box holds no solid line, tee arm or Box of another tint at
-		// any depth.
-		for boxTint in _tint {
-			_otherTintInsideZone: {
-				for k, t in _below if t != boxTint {(k): "\(k)" & "inside \(kind) tint \(boxTint)"}
-			}
-		}
 	}
 	if tag == "Item" {
 		kind:      string
@@ -353,7 +327,6 @@ _nesting: stencil.#GrammarNesting & {#grammar: grammar}
 			let source = [if f.source != _|_ {f.source}, "doc"][0]
 			if source != "built" {f},
 		]
-		_tinted: {}
 		_nameless: {if kind == "product" && subtitle == _|_ && len(_hopFacts) == 0 {(title): true}}
 		_isApi: [
 			if subtitle != _|_ if subtitle =~ #ApiProductName {true},
@@ -376,37 +349,7 @@ _nesting: stencil.#GrammarNesting & {#grammar: grammar}
 		_globalProducts: {if kind == "product" && len(_isGlobal) > 0 {(title): true}}
 		_apisLabels: {}
 	}
-	if tag == "Pipe" {
-		line:  string
-		tint?: int
-		_solidTint: [if line == "solid" {[if tint != _|_ {tint}, 1][0]}]
-		_tinted: {for t in _solidTint {"solid-\(t)": t}}
-		_nameless: {}
-		_apiProducts: {}
-		_serverlessProducts: {}
-		_managedDataProducts: {}
-		_globalProducts: {}
-		_apisLabels: {}
-	}
-	if tag == "Tee" {
-		line:  string
-		tint?: int
-		arms: [...]
-		let spineTint = [if tint != _|_ {tint}, 1][0]
-		_tinted: {
-			if line == "solid" {"solid-\(spineTint)": spineTint}
-			for arm in arms if arm.line == "solid"
-			let armTint = [if arm.tint != _|_ {arm.tint}, 1][0] {"solid-\(armTint)": armTint}
-		}
-		_nameless: {}
-		_apiProducts: {}
-		_serverlessProducts: {}
-		_managedDataProducts: {}
-		_globalProducts: {}
-		_apisLabels: {}
-	}
-	if !list.Contains(["Row", "Col", "Lanes", "View", "Box", "Item", "Pipe", "Tee"], tag) {
-		_tinted: {}
+	if !list.Contains(["Row", "Col", "Lanes", "View", "Box", "Item"], tag) {
 		_nameless: {}
 		_apiProducts: {}
 		_serverlessProducts: {}
@@ -415,21 +358,4 @@ _nesting: stencil.#GrammarNesting & {#grammar: grammar}
 		_apisLabels: {}
 	}
 	...
-}
-
-// A solid pipe that sits between two sibling Boxes must not touch a tinted
-// Box of another slot. Row, Col, Lanes, View and Box embed this, so the check holds
-// wherever siblings sit.
-#SiblingTint: {
-	children: [...]
-	_pipeBesideZoneOfOtherTint: {
-		for i, c in children if c.tag == "Pipe" for pipeTint in c._solidTint {
-			for j in [i - 1, i + 1] if j >= 0 && j < len(children) {
-				let neighbor = children[j]
-				if neighbor.tag == "Box" for boxTint in neighbor._tint if boxTint != pipeTint {
-					(c.label): "solid tint \(pipeTint) pipe" & "beside \(neighbor.kind) tint \(boxTint)"
-				}
-			}
-		}
-	}
 }

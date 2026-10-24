@@ -13,7 +13,7 @@ Drawn elements: 29 (29 nodes, 0 links). Canvas 1320 x 570.6 px, projection flat,
 - Box Head office site; kind system. `/body/0`
   - Row, left to right. `/body/0/children/0`
     - Box Inside zone; kind boundary. `/body/0/children/0/children/0`
-      - Item Core switch: Layer 3, routes between VLANs; kind service. `/body/0/children/0/children/0/children/0`
+      - Item Core switch: Layer 3, routes between VLANs; kind network. `/body/0/children/0/children/0/children/0`
         - Fact, built: sw-core-01.
       - Box VLAN 10 · staff; kind group, tint 1. `/body/0/children/0/children/0/children/1`
         - Row, left to right. `/body/0/children/0/children/0/children/1/children/0`
@@ -32,7 +32,7 @@ Drawn elements: 29 (29 nodes, 0 links). Canvas 1320 x 570.6 px, projection flat,
       - Pipe VLAN 20 · server trunk.
       - Pipe DMZ to inside.
     - Col, top to bottom. `/body/0/children/0/children/2`
-      - Item Edge firewall: stateful, zone policy; kind service. `/body/0/children/0/children/2/children/0`
+      - Item Edge firewall: stateful, zone policy; kind network. `/body/0/children/0/children/2/children/0`
         - Fact, built: fw-edge-01.
     - Col, top to bottom. `/body/0/children/0/children/3`
       - Pipe VLAN 30 · DMZ.
@@ -45,7 +45,7 @@ Drawn elements: 29 (29 nodes, 0 links). Canvas 1320 x 570.6 px, projection flat,
           - Item Mail relay; kind service. `/body/0/children/0/children/4/children/0/children/0/children/1`
             - Fact, built: mx-01.
       - Box VLAN 99 · transit; kind group, tint 4. `/body/0/children/0/children/4/children/1`
-        - Item Edge router: ISP uplink; kind service. `/body/0/children/0/children/4/children/1/children/0`
+        - Item Edge router: ISP uplink; kind network. `/body/0/children/0/children/4/children/1/children/0`
           - Fact, built: rt-edge-01.
 
 ## Lines

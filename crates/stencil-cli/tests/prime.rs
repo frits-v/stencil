@@ -531,7 +531,7 @@ fn the_base_briefing_describes_the_core_vocabulary() {
     ] {
         assert!(text.contains(word), "the vocabulary names no {word}");
     }
-    assert!(text.contains("grammar ref =gcp; a built-in name or a .json path"));
+    assert!(text.contains("grammar ref =plain; a built-in name or a .json path"));
     assert!(text.contains("chrome Chrome =full"));
     assert!(text.contains("source FactSource =doc"));
     assert!(text.contains("tint 1-8"));

@@ -2,7 +2,7 @@
 
 mod common;
 
-use common::{assert_close, layout, node, page_with_body, part};
+use common::{assert_close, gcp_page_with_body, layout, node, part};
 use serde_json::{Value, json};
 use stencil_layout::PartName;
 
@@ -17,7 +17,7 @@ fn tee(first_arm: &str, second_arm: &str) -> Value {
 }
 
 fn tee_in_col() -> stencil_layout::PageGeometry {
-    layout(&page_with_body(
+    layout(&gcp_page_with_body(
         1280,
         json!([{ "tag": "Col", "children": [tee("allowed", "reply")] }]),
     ))
@@ -87,7 +87,7 @@ fn arms_occupy_rows_1_and_3_in_column_2() {
 
 #[test]
 fn tee_is_at_least_118_wide() {
-    let geometry = layout(&page_with_body(
+    let geometry = layout(&gcp_page_with_body(
         1280,
         json!([{ "tag": "Row", "children": [
             { "tag": "Item", "kind": "product", "title": "Left" }, tee("a", "b"), { "tag": "Item", "kind": "product", "title": "Right" }

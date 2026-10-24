@@ -6,7 +6,7 @@ The core switch trunks VLAN 10 and VLAN 20 to the edge firewall, which carries t
 
 ## Figure
 
-Drawn elements: 29 (28 nodes, 1 link). Laid out at 1740 x 1395.48 px, projection iso, grammar plain; the projected drawing is larger, by an amount that depends on the theme. Line styles name a tint slot by number; the colour word is the one the center theme draws it in.
+Drawn elements: 29 (28 nodes, 1 link). Laid out at 1740 x 1449.48 px, projection iso, grammar plain; the projected drawing is larger, by an amount that depends on the theme. Line styles name a tint slot by number; the colour word is the one the center theme draws it in.
 
 ## Drawing `/body`
 
@@ -20,20 +20,20 @@ Drawn elements: 29 (28 nodes, 1 link). Laid out at 1740 x 1395.48 px, projection
               - Fact, built: prn-01.
             - Item Directory server; kind service, shape block. `/body/0/children/0/children/0/children/0/children/0/children/0/children/1`
               - Fact, built: dc-01.
-        - Item Core switch: Layer 3, routes between VLANs; kind service, shape block. `/body/0/children/0/children/0/children/0/children/1`
+        - Item Core switch: Layer 3, routes between VLANs; kind network, shape tile. `/body/0/children/0/children/0/children/0/children/1`
           - Fact, built: sw-core-01.
         - Box VLAN 20 · servers; kind group, tint 2. `/body/0/children/0/children/0/children/0/children/2`
           - Row, left to right. `/body/0/children/0/children/0/children/0/children/2/children/0`
             - Item Application server; kind service, shape block. `/body/0/children/0/children/0/children/0/children/2/children/0/children/0`
               - Fact, built: app-01.
-            - Item File server; kind store, shape block. `/body/0/children/0/children/0/children/0/children/2/children/0/children/1`
+            - Item File server; kind store, shape cylinder. `/body/0/children/0/children/0/children/0/children/2/children/0/children/1`
               - Fact, built: fs-01.
     - Col, top to bottom. `/body/0/children/0/children/1`
       - Col, top to bottom. `/body/0/children/0/children/1/children/0`
         - Pipe VLAN 10.
         - Pipe VLAN 20.
     - Col, top to bottom. `/body/0/children/0/children/2`
-      - Item Edge firewall: stateful, zone policy; kind service, shape card. `/body/0/children/0/children/2/children/0`
+      - Item Edge firewall: stateful, zone policy; kind network, shape card. `/body/0/children/0/children/2/children/0`
         - Fact, built: fw-edge-01.
         - Fact, built: permits inside to DMZ.
         - Fact, built: permits inside to transit.
@@ -44,7 +44,7 @@ Drawn elements: 29 (28 nodes, 1 link). Laid out at 1740 x 1395.48 px, projection
         - Pipe DMZ to inside.
     - Box DMZ; kind boundary. `/body/0/children/0/children/4`
       - Box VLAN 99 · transit; kind group, tint 4. `/body/0/children/0/children/4/children/0`
-        - Item Edge router: ISP uplink; kind service, shape block. `/body/0/children/0/children/4/children/0/children/0`
+        - Item Edge router: ISP uplink; kind network, shape tile. `/body/0/children/0/children/4/children/0/children/0`
           - Fact, built: rt-edge-01.
       - Box VLAN 30 · public services; kind group, tint 3. `/body/0/children/0/children/4/children/1`
         - Row, left to right. `/body/0/children/0/children/4/children/1/children/0`

@@ -201,7 +201,9 @@ fn a_missing_grammar_file_could_not_run() {
 fn a_grammar_name_that_is_neither_built_in_nor_a_path_is_grammar_unknown() {
     let directory = scratch_directory("grammar_unknown");
     let document = directory.join("figure.json");
-    write_json(&document, &page("gcpx", "product"));
+    // The other violations are read under the default grammar, so a plain item kind keeps
+    // the unknown name the only one.
+    write_json(&document, &page("gcpx", "service"));
 
     let outcome = run_stencil(&["vet", document.to_str().unwrap()]);
 
@@ -213,10 +215,10 @@ fn a_grammar_name_that_is_neither_built_in_nor_a_path_is_grammar_unknown() {
 }
 
 #[test]
-fn an_absent_grammar_is_gcp() {
+fn an_absent_grammar_is_plain() {
     let directory = scratch_directory("grammar_absent");
     let document = directory.join("figure.json");
-    let mut value = page("gcp", "product");
+    let mut value = page("plain", "service");
     value.as_object_mut().unwrap().remove("grammar");
     write_json(&document, &value);
 
@@ -226,7 +228,29 @@ fn an_absent_grammar_is_gcp() {
     assert!(
         outcome
             .stdout
-            .contains("check remembered-constants: examined 8 text fields, 0 defects")
+            .contains("check remembered-constants: examined 0 text fields, not applicable: grammar has no remembered constants"),
+        "{}",
+        outcome.stdout
+    );
+}
+
+#[test]
+fn a_gcp_page_without_a_grammar_fails_kind_unknown_and_names_the_default() {
+    let directory = scratch_directory("grammar_absent_gcp");
+    let document = directory.join("figure.json");
+    let mut value = page("gcp", "product");
+    value.as_object_mut().unwrap().remove("grammar");
+    write_json(&document, &value);
+
+    let outcome = run_stencil(&["vet", document.to_str().unwrap()]);
+
+    assert_eq!(outcome.code, ExitCode::Defects, "{}", outcome.stdout);
+    assert!(
+        outcome.stdout.contains(
+            "violation kind-unknown /body/0/kind: kind \"product\" is not an item kind of grammar plain; the page names no grammar, so the default applies: set \"grammar\""
+        ),
+        "{}",
+        outcome.stdout
     );
 }
 

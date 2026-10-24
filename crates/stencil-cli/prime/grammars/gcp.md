@@ -1,6 +1,6 @@
 # Grammar gcp
 
-The Google Cloud vocabulary: the default grammar, so a page without "grammar" is a gcp page. Boxes are the frame, networks and places of a Google Cloud figure; an Item is a product with an optional icon from the bundled Google Cloud icons, a person or a device.
+The Google Cloud vocabulary: set "grammar": "gcp" on the page. Boxes are the frame, networks and places of a Google Cloud figure; an Item is a product with an optional icon from the bundled Google Cloud icons, a person or a device.
 
 {{kinds}}
 

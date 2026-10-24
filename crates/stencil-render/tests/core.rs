@@ -39,14 +39,16 @@ fn slots_document() -> Value {
     legend.extend(
         (1..=8).map(|tint| json!({ "line": "dash", "tint": tint, "text": format!("dash {tint}") })),
     );
-    common::page_document(
+    let mut document = common::page_document(
         json!([
             { "tag": "Col", "children": groups },
             { "tag": "Col", "children": solid },
             { "tag": "Col", "children": dash }
         ]),
         json!(legend),
-    )
+    );
+    document["grammar"] = json!("gcp");
+    document
 }
 
 #[test]
@@ -131,13 +133,15 @@ fn the_legend_measures_canonical_labels_per_slot() {
 }
 
 fn item_document(facts: Value) -> Value {
-    common::page_document(
+    let mut document = common::page_document(
         json!([
             { "tag": "Item", "kind": "product", "title": "Bucket", "subtitle": "Cloud Storage", "facts": facts },
             { "tag": "Pipe", "dir": "h", "line": "gray", "label": "read" }
         ]),
         json!([{ "line": "gray", "text": "internal call" }]),
-    )
+    );
+    document["grammar"] = json!("gcp");
+    document
 }
 
 #[test]

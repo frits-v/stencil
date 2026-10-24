@@ -81,6 +81,7 @@ fn minimal_page(body: Value, legend: Value) -> Value {
         "kicker": "Test",
         "lede": "One row.",
         "badge": "Internal",
+        "grammar": "gcp",
         "body": body,
         "legend": legend,
     })

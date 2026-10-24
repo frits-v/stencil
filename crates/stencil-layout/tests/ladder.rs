@@ -42,6 +42,7 @@ fn ladder_document(around: &[&str]) -> Value {
             { "id": "crew", "name": "Crew", "tint": 2 },
             { "id": "ops", "name": "Ops", "tint": 4 }
         ],
+        "grammar": "gcp",
         "body": [{
             "tag": "View",
             "title": "Workflow",

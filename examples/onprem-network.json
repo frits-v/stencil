@@ -19,7 +19,7 @@
               "kind": "boundary",
               "label": "Inside zone",
               "children": [
-                { "tag": "Item", "kind": "service", "title": "Core switch", "subtitle": "Layer 3, routes between VLANs", "facts": [{ "text": "sw-core-01", "source": "built" }] },
+                { "tag": "Item", "kind": "network", "title": "Core switch", "subtitle": "Layer 3, routes between VLANs", "facts": [{ "text": "sw-core-01", "source": "built" }] },
                 {
                   "tag": "Box",
                   "kind": "group",
@@ -66,7 +66,7 @@
               "tag": "Col",
               "grow": [1],
               "children": [
-                { "tag": "Item", "kind": "service", "title": "Edge firewall", "subtitle": "stateful, zone policy", "facts": [{ "text": "fw-edge-01", "source": "built" }] }
+                { "tag": "Item", "kind": "network", "title": "Edge firewall", "subtitle": "stateful, zone policy", "facts": [{ "text": "fw-edge-01", "source": "built" }] }
               ]
             },
             {
@@ -104,7 +104,7 @@
                   "tint": 4,
                   "label": "VLAN 99 · transit",
                   "children": [
-                    { "tag": "Item", "kind": "service", "title": "Edge router", "subtitle": "ISP uplink", "facts": [{ "text": "rt-edge-01", "source": "built" }] }
+                    { "tag": "Item", "kind": "network", "title": "Edge router", "subtitle": "ISP uplink", "facts": [{ "text": "rt-edge-01", "source": "built" }] }
                   ]
                 }
               ]

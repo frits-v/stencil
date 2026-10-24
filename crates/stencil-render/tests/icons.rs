@@ -192,7 +192,9 @@ fn a_card_for_each_icon_renders_to_png() {
         { "tag": "Pipe", "dir": "h", "line": "solid", "tint": 1, "label": "hop" }
     ]);
     let legend = json!([{ "line": "solid", "tint": 1, "text": "request path" }]);
-    let rendered = common::render_document_with_fixed_metrics(common::page_document(body, legend));
+    let mut document = common::page_document(body, legend);
+    document["grammar"] = json!("gcp");
+    let rendered = common::render_document_with_fixed_metrics(document);
 
     let document = common::parse_xml(&rendered.svg.svg);
     let images: Vec<_> = document

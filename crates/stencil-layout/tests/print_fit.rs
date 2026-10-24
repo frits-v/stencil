@@ -4,12 +4,11 @@
 
 mod common;
 
-use common::{layout, page_with_body};
+use common::{gcp_page_with_body, layout};
 use serde_json::json;
 use stencil_layout::checks::{PrintWidth, print_fit, text_fits_box};
 use stencil_model::checks::{CheckName, CheckOutcome};
 
-/// The drawn canvas of a flat g7: width 1280 plus 20 px padding on each side.
 const G7_CANVAS_PX: f32 = 1320.0;
 
 #[test]
@@ -92,7 +91,7 @@ fn a_wider_drawn_canvas_prints_smaller() {
 
 #[test]
 fn link_tag_runs_are_examined_at_the_link() {
-    let mut page = page_with_body(
+    let mut page = gcp_page_with_body(
         1280,
         json!([{ "tag": "Row", "gap": 64, "children": [
             { "tag": "Item", "id": "api", "kind": "product", "title": "API" },

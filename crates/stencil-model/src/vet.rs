@@ -2,10 +2,10 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use crate::document::{
     AnswerParagraph, Arrow, BUILTIN_GRAMMARS, BUILTIN_THEMES, CAPTION_SCALARS_MAX, Chrome,
-    FACTS_MAX, GeneralNotes, LADDERS_MAX, LANES_MAX, LINE_STEP_MAX, Line, Link, MarkKind, Node,
-    Outline, PHASE_COLUMNS_MAX, Page, PartsList, Phases, PipeDir, PipeForm, Projection, Sheet,
-    Step, StepLook, TERMINAL_INDENT_MAX, TINT_SLOTS, Tee, Text, WORDMARK_SCALARS_MAX, canvas_width,
-    is_valid_id,
+    FACTS_MAX, GRAMMAR_DEFAULT, GeneralNotes, LADDERS_MAX, LANES_MAX, LINE_STEP_MAX, Line, Link,
+    MarkKind, Node, Outline, PHASE_COLUMNS_MAX, Page, PartsList, Phases, PipeDir, PipeForm,
+    Projection, Sheet, Step, StepLook, TERMINAL_INDENT_MAX, TINT_SLOTS, Tee, Text,
+    WORDMARK_SCALARS_MAX, canvas_width, is_valid_id,
 };
 use crate::grammar::{Grammar, IconPack, PAGE_PARENT};
 use crate::marks::{CarrierMark, PageMarks};
@@ -311,6 +311,7 @@ pub fn is_theme_reference(reference: &str) -> bool {
 pub fn validate_page(page: &Page, grammar: &Grammar) -> Vec<Violation> {
     let mut violations = Violations(Vec::new());
     let root = NodePointer::root();
+    let grammar_named = page.grammar.is_some();
 
     let mut head_fields = Vec::new();
     push_page_head_text_fields(page, &mut head_fields);
@@ -464,7 +465,14 @@ pub fn validate_page(page: &Page, grammar: &Grammar) -> Vec<Violation> {
         });
         check_sheet_placement(page, entry, &mut violations);
         let context = enclosing_box_kind(entry, &box_context);
-        check_entry(entry, context, grammar, &mut ids, &mut violations);
+        check_entry(
+            entry,
+            context,
+            grammar,
+            grammar_named,
+            &mut ids,
+            &mut violations,
+        );
         check_pipe_targets(entry, &all_ids, &mut violations);
         if sheet_nodes.on_sheet {
             check_sheet_node(page, entry, grammar, &mut sheet_nodes, &mut violations);
@@ -2027,6 +2035,7 @@ fn check_entry<'a>(
     entry: &NodeEntry<'a>,
     enclosing_box: &str,
     grammar: &Grammar,
+    grammar_named: bool,
     ids: &mut BTreeMap<&'a str, NodePointer>,
     violations: &mut Violations,
 ) {
@@ -2052,7 +2061,7 @@ fn check_entry<'a>(
         );
     }
 
-    check_kind_and_tint(entry, enclosing_box, grammar, violations);
+    check_kind_and_tint(entry, enclosing_box, grammar, grammar_named, violations);
 
     let mut fields = Vec::new();
     push_node_text_fields(entry, &mut fields);
@@ -2169,14 +2178,21 @@ fn enclosing_box_kind<'a>(
 }
 
 /// `kind-unknown`, `kind-parent-not-allowed` and `icon-outside-pack` for a Box or Item, and
-/// `tint-out-of-range` for every tint carrier, in field order.
+/// `tint-out-of-range` for every tint carrier, in field order. `grammar_named` is false
+/// when the page carries no `grammar`, so a kind-unknown message says the default applied.
 fn check_kind_and_tint(
     entry: &NodeEntry<'_>,
     enclosing_box: &str,
     grammar: &Grammar,
+    grammar_named: bool,
     violations: &mut Violations,
 ) {
     let kind_pointer = entry.pointer.child("kind");
+    let default_applied = if grammar_named || grammar.name != GRAMMAR_DEFAULT {
+        ""
+    } else {
+        "; the page names no grammar, so the default applies: set \"grammar\""
+    };
     match entry.node {
         NodeRef::Node(Node::Box(box_node)) => {
             match grammar.container(&box_node.kind) {
@@ -2184,7 +2200,7 @@ fn check_kind_and_tint(
                     kind_pointer,
                     VetRule::KindUnknown,
                     format!(
-                        "kind \"{}\" is not a container kind of grammar {}",
+                        "kind \"{}\" is not a container kind of grammar {}{default_applied}",
                         box_node.kind, grammar.name
                     ),
                 ),
@@ -2205,7 +2221,7 @@ fn check_kind_and_tint(
                 kind_pointer,
                 VetRule::KindUnknown,
                 format!(
-                    "kind \"{}\" is not an item kind of grammar {}",
+                    "kind \"{}\" is not an item kind of grammar {}{default_applied}",
                     item.kind, grammar.name
                 ),
             ),

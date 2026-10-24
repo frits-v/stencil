@@ -108,6 +108,7 @@ fn a_sheet_orders_its_title_block_and_strip_before_the_body() {
             "answer": { "statement": "A statement." },
             "attention": { "items": [{ "id": "first", "lead": "Lead.", "text": "Text." }] }
         },
+        "grammar": "gcp",
         "body": [{
             "tag": "View",
             "title": "System",

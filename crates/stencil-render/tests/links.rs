@@ -32,6 +32,7 @@ fn linked_document(theme: &str) -> Value {
             { "line": "gray", "text": "gray" }
         ]),
     );
+    document["grammar"] = json!("gcp");
     document["theme"] = json!(theme);
     document["links"] = json!([
         { "from": "a", "to": "b", "line": "solid", "tint": 1, "label": "call", "sub": "HTTPS" },
@@ -260,6 +261,7 @@ fn a_fallback_route_is_still_drawn() {
         ]}]),
         json!([{ "line": "solid", "tint": 1, "text": "blue" }]),
     );
+    document["grammar"] = json!("gcp");
     document["links"] = json!([{ "from": "center", "to": "target", "line": "solid", "tint": 1 }]);
     let rendered = common::render_document_with_fixed_metrics(document);
     let routed = route(&rendered, 0);

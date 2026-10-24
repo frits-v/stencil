@@ -93,8 +93,8 @@ const EXAMPLES: [Example; 11] = [
 fn page_and_geometry(example: &Example) -> (Page, PageGeometry) {
     let named: Page = serde_json::from_str(example.document).unwrap();
     let grammar = match named.grammar.as_deref() {
-        Some("plain") => common::grammar_for(&named),
-        _ => common::gcp(),
+        Some("gcp") => common::gcp(),
+        _ => common::grammar_for(&named),
     };
     let page = parse_and_vet(example.document, &grammar).unwrap();
     assert_eq!(

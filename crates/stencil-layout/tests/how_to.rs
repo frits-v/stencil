@@ -49,6 +49,7 @@ fn sheet_document(width: u32, children: Value) -> Value {
             "answer": { "statement": "A statement." },
             "attention": { "items": [{ "id": "first", "lead": "Lead.", "text": "Text." }] }
         },
+        "grammar": "gcp",
         "body": [{
             "tag": "View",
             "title": "How-tos",
