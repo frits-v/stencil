@@ -2,7 +2,7 @@
 
 mod common;
 
-use common::{assert_close, layout, node, page_with_body, part};
+use common::{assert_close, gcp_page_with_body, layout, node, part};
 use serde_json::json;
 use stencil_layout::PartName;
 
@@ -11,7 +11,7 @@ fn zone_page(kind: &str) -> stencil_layout::PageGeometry {
 }
 
 fn zone_page_tinted(kind: &str, tint: Option<u8>) -> stencil_layout::PageGeometry {
-    layout(&page_with_body(
+    layout(&gcp_page_with_body(
         1280,
         json!([{
             "tag": "Box", "kind": kind, "tint": tint, "label": "Zone label",

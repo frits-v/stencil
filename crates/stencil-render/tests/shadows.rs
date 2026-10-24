@@ -26,13 +26,14 @@ fn hero_page() -> Page {
 
 /// One Item and one Note on the page, under iso.
 fn lone_item_page() -> Page {
-    let document = common::page_document(
+    let mut document = common::page_document(
         json!([{ "tag": "Row", "gap": 64, "children": [
             { "tag": "Item", "kind": "product", "icon": "gke", "title": "Cluster", "shape": "card" },
             { "tag": "Note", "kind": "legend", "text": "a note" }
         ] }]),
         json!([]),
     );
+    document["grammar"] = json!("gcp");
     let mut page: Page = serde_json::from_value(document).unwrap();
     page.projection = Projection::Iso;
     page

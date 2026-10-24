@@ -2,7 +2,7 @@
 
 mod common;
 
-use common::{assert_close, layout, node, page_with_body, part};
+use common::{assert_close, gcp_page_with_body, layout, node, page_with_body, part};
 use serde_json::{Value, json};
 use stencil_layout::{NodeGeometry, PartName};
 
@@ -26,7 +26,7 @@ fn wire_lengths(pipe_node: &NodeGeometry, horizontal: bool) -> (f32, f32) {
 
 #[test]
 fn horizontal_pipe_in_a_col_spans_the_col_with_equal_wires() {
-    let geometry = layout(&page_with_body(
+    let geometry = layout(&gcp_page_with_body(
         1280,
         json!([{ "tag": "Row", "children": [
             { "tag": "Col", "children": [card("A wide card with a long function name"), pipe("h", "solid", "VLAN 1")] },
@@ -52,7 +52,7 @@ fn horizontal_pipe_in_a_col_spans_the_col_with_equal_wires() {
 
 #[test]
 fn vertical_pipe_in_a_col_is_centered_and_at_least_36_tall() {
-    let geometry = layout(&page_with_body(
+    let geometry = layout(&gcp_page_with_body(
         1280,
         json!([{ "tag": "Col", "children": [card("Upper"), pipe("v", "dash", "failover"), card("Lower")] }]),
     ));
@@ -85,7 +85,7 @@ fn vertical_wire_minimum_is_16_for_deny_and_12_otherwise() {
         ("dash", 12.0),
         ("deny", 16.0),
     ] {
-        let geometry = layout(&page_with_body(
+        let geometry = layout(&gcp_page_with_body(
             1280,
             json!([{ "tag": "Col", "children": [card("Upper"), pipe("v", kind, "hop"), card("Lower")] }]),
         ));
@@ -101,7 +101,7 @@ fn vertical_wire_minimum_is_16_for_deny_and_12_otherwise() {
 #[test]
 fn vertical_pipe_in_a_row_stretches_to_the_row_height() {
     let stack = json!({ "tag": "Col", "children": [card("One"), card("Two"), card("Three"), card("Four")] });
-    let geometry = layout(&page_with_body(
+    let geometry = layout(&gcp_page_with_body(
         1280,
         json!([{ "tag": "Row", "children": [stack, pipe("v", "solid", "down"), card("Right")] }]),
     ));
@@ -117,7 +117,7 @@ fn vertical_pipe_in_a_row_stretches_to_the_row_height() {
 #[test]
 fn horizontal_pipe_in_a_row_is_vertically_centered() {
     let stack = json!({ "tag": "Col", "children": [card("One"), card("Two"), card("Three")] });
-    let geometry = layout(&page_with_body(
+    let geometry = layout(&gcp_page_with_body(
         1280,
         json!([{ "tag": "Row", "children": [stack, pipe("h", "gray", "call"), card("Right")] }]),
     ));
@@ -134,7 +134,7 @@ fn horizontal_pipe_in_a_row_is_vertically_centered() {
 #[test]
 fn tag_in_a_narrow_gutter_wraps_and_wires_stay_at_14() {
     let label = "alpha beta gamma delta epsilon";
-    let geometry = layout(&page_with_body(
+    let geometry = layout(&gcp_page_with_body(
         640,
         json!([{ "tag": "Row", "grow": [1, 1, 1], "children": [
             card("Left"),
@@ -249,7 +249,7 @@ fn an_arrowhead_end_shortens_its_wire_to_the_arrowhead_base_and_keeps_the_dot() 
 
 #[test]
 fn a_vertical_start_arrowhead_shortens_the_start_wire_from_the_top() {
-    let geometry = layout(&page_with_body(
+    let geometry = layout(&gcp_page_with_body(
         640,
         json!([{ "tag": "Col", "children": [
             card("Upper"),
@@ -283,7 +283,7 @@ fn iso_gutter_page(from_to: Option<(&str, &str)>) -> stencil_model::Page {
     }
     let document = json!({
         "title": "Title", "kicker": "Kicker", "lede": "Lede", "width": 1100,
-        "badge": "Customer", "projection": "iso", "legend": [],
+        "badge": "Customer", "grammar": "gcp", "projection": "iso", "legend": [],
         "body": [{ "tag": "Row", "gap": 32, "children": [
             { "tag": "Box", "kind": "onprem", "label": "Site", "children": [
                 { "tag": "Item", "kind": "product", "id": "edge", "title": "Edge" } ] },
@@ -365,7 +365,7 @@ fn a_flat_pipe_end_stays_in_its_box() {
 fn an_iso_tee_spine_stands_on_the_left_neighbour_edge() {
     let geometry = layout(&common::page_from(json!({
         "title": "Title", "kicker": "Kicker", "lede": "Lede", "width": 1100,
-        "badge": "Customer", "projection": "iso", "legend": [],
+        "badge": "Customer", "grammar": "gcp", "projection": "iso", "legend": [],
         "body": [{ "tag": "Row", "gap": 32, "children": [
             { "tag": "Box", "kind": "onprem", "label": "Site", "children": [card("Edge")] },
             { "tag": "Col", "children": [

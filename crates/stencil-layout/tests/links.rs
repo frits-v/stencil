@@ -26,6 +26,7 @@ fn linked_page(body: Value, links: Value) -> Value {
         "lede": "Lede",
         "width": 640,
         "badge": "Customer",
+        "grammar": "gcp",
         "body": body,
         "legend": [{ "line": "solid", "tint": 1, "text": "request path" }],
         "links": links

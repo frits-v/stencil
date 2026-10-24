@@ -88,6 +88,7 @@ fn with_shape(mut item: Value, shape: &str) -> Value {
 
 fn iso_page(body: Value) -> Page {
     let mut document = common::page_document(body, json!([]));
+    document["grammar"] = json!("gcp");
     document["projection"] = json!("iso");
     serde_json::from_value(document).unwrap()
 }
@@ -243,6 +244,7 @@ fn two_zone_link_page(to_side: &str) -> Page {
         ]),
         json!([{ "line": "solid", "tint": 1, "text": "request path" }]),
     );
+    document["grammar"] = json!("gcp");
     document["links"] =
         json!([{ "from": "left", "to": "right", "line": "solid", "tint": 1, "to_side": to_side }]);
     document["projection"] = json!("iso");
@@ -327,6 +329,7 @@ fn a_link_from_a_zone_to_its_own_child_rises_onto_that_zone_where_it_enters_it()
         ]),
         json!([{ "line": "solid", "tint": 1, "text": "request path" }]),
     );
+    document["grammar"] = json!("gcp");
     document["links"] = json!([{ "from": "reg", "to": "wh", "line": "solid", "tint": 1 }]);
     document["projection"] = json!("iso");
     let page: Page = serde_json::from_value(document).unwrap();
@@ -1437,6 +1440,7 @@ fn sheet_document() -> Value {
             "answer": { "statement": "A statement." },
             "attention": { "items": [{ "id": "first", "lead": "Lead.", "text": "Text." }] }
         },
+        "grammar": "gcp",
         "body": [{
             "tag": "View",
             "title": "System",
@@ -2895,6 +2899,7 @@ fn a_link_end_on_a_zone_lies_inside_its_footprint() {
         ]),
         json!([{ "line": "solid", "tint": 1, "text": "request path" }]),
     );
+    document["grammar"] = json!("gcp");
     document["links"] = json!([{ "from": "left", "to": "b", "line": "solid", "tint": 1 }]);
     document["projection"] = json!("iso");
     let page: Page = serde_json::from_value(document).unwrap();
@@ -2969,6 +2974,7 @@ fn two_link_page(sides: &[(Option<&str>, Option<&str>)]) -> Page {
             { "line": "dash", "text": "failover" }
         ]),
     );
+    document["grammar"] = json!("gcp");
     let links: Vec<Value> = sides
         .iter()
         .enumerate()
@@ -3471,7 +3477,7 @@ fn a_band_legend_entry_draws_a_bar_swatch_and_a_tube_entry_a_wire() {
 /// A page with a band pipe of `line` between two items beside a tube pipe, and a legend
 /// entry for each.
 fn band_page(line: &str) -> Value {
-    common::page_document(
+    let mut document = common::page_document(
         json!([{ "tag": "Row", "children": [
             { "tag": "Item", "kind": "product", "id": "a", "title": "Source" },
             { "tag": "Col", "children": [
@@ -3484,7 +3490,9 @@ fn band_page(line: &str) -> Value {
             { "line": line, "tint": 1, "form": "band", "text": "bulk flow" },
             { "line": "gray", "text": "control" }
         ]),
-    )
+    );
+    document["grammar"] = json!("gcp");
+    document
 }
 
 /// Section 12.3 rule 8: a link into a laptop lands on the edge of its base plate, which is
@@ -3615,6 +3623,7 @@ fn a_link_tag_sits_a_tube_diameter_at_the_zoom_above_its_path() {
         ] }]),
         json!([{ "line": "solid", "tint": 1, "text": "request path" }]),
     );
+    document["grammar"] = json!("gcp");
     document["projection"] = json!("iso");
     document["links"] =
         json!([{ "from": "a", "to": "b", "line": "solid", "tint": 1, "label": "HTTPS" }]);
@@ -3673,6 +3682,7 @@ fn a_step_at_the_end_of_a_stub_moves_to_the_middle_of_the_run() {
         ] }]),
         json!([{ "line": "solid", "tint": 1, "text": "request path" }]),
     );
+    document["grammar"] = json!("gcp");
     document["projection"] = json!("iso");
     document["links"] =
         json!([{ "from": "a", "to": "b", "line": "solid", "tint": 1, "label": "HTTPS" }]);
@@ -3714,6 +3724,7 @@ fn a_link_between_two_footprint_items_that_share_a_span_is_one_leg() {
         ] }]),
         json!([{ "line": "solid", "tint": 1, "text": "request path" }]),
     );
+    document["grammar"] = json!("gcp");
     document["projection"] = json!("iso");
     document["links"] = json!([{ "from": "a", "to": "b", "line": "solid", "tint": 1 }]);
     let page: Page = serde_json::from_value(document).unwrap();
@@ -3851,6 +3862,7 @@ fn a_deny_pipe_and_a_deny_link_end_in_a_stop_plate_and_a_deny_pipe_has_no_ring()
         ]),
         json!([{ "line": "deny", "text": "blocked" }]),
     );
+    document["grammar"] = json!("gcp");
     document["links"] = json!([{ "from": "left", "to": "right", "line": "deny" }]);
     document["projection"] = json!("iso");
     let page: Page = serde_json::from_value(document).unwrap();

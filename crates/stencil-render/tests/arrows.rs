@@ -293,6 +293,7 @@ fn rects(group: roxmltree::Node<'_, '_>) -> Vec<(f32, f32, f32, f32, String)> {
 fn a_deny_line_ends_in_a_stop_plate_on_its_end_and_draws_no_arrowhead() {
     for theme in common::THEMES {
         let mut document = arrow_document(theme);
+        document["grammar"] = json!("gcp");
         document["body"] = json!([
             {
                 "tag": "Row",

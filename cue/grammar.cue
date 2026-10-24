@@ -75,7 +75,10 @@ import (
 
 // The rules every grammar shares, read from its data: Box and Item kinds are
 // the grammar's names, each Box and Item sits where its kind's parents allow,
-// and a tint on a kind that is not tintable is reported. A grammar package
+// a tint on a kind that is not tintable is reported, and tint pairing holds: a
+// solid pipe of one slot sits beside or inside no tinted Box of another slot
+// (_pipeBesideZoneOfOtherTint, _otherTintInsideZone), while dash, gray and
+// deny lines and untinted Boxes are outside it. A grammar package
 // instantiates it with its own data:
 //
 //	_nesting: stencil.#GrammarNesting & {#grammar: grammar}
@@ -101,8 +104,10 @@ import (
 		if tag == "Row" || tag == "Col" || tag == "Lanes" || tag == "View" {
 			children: [...#KindedNode]
 			_tops: {for c in children {c._tops}}
+			_tinted: {for c in children {c._tinted}}
 			_tintedWithoutActor: list.Concat([for c in children {c._tintedWithoutActor}])
 			_sheetLooks: list.Concat([for c in children {c._sheetLooks}])
+			#SiblingTint
 		}
 		if tag == "Box" {
 			kind:  or(_containerNames)
@@ -122,6 +127,23 @@ import (
 			// a kind that paints a default tint reads as an actor unless it names one.
 			actor?: string
 			label:  string
+			// The Box's effective tint as a list of zero or one slot: its own, else its
+			// kind's default. An actor's colour says who acts, not which path, so a Box
+			// that names an actor takes no part in tint pairing.
+			_tint: list.Take([
+				if actor == _|_ if _tintable if tint != _|_ {tint},
+				if actor == _|_ for c in #grammar.containers if c.name == kind && c.tintable && c.default_tint != _|_ {c.default_tint},
+			], 1)
+			_below: {for c in children {c._tinted}}
+			_tinted: {_below, for t in _tint {"\(kind)-\(t)": t}}
+			// A tinted Box holds no solid line, tee arm or Box of another tint at any
+			// depth.
+			for boxTint in _tint {
+				_otherTintInsideZone: {
+					for k, t in _below if t != boxTint {(k): "\(k)" & "inside \(kind) tint \(boxTint)"}
+				}
+			}
+			#SiblingTint
 			if actor != _|_ if !_tintable {
 				_actorOnUntintableKind: "\(kind) takes no colour" & "so it cannot name an actor"
 			}
@@ -139,15 +161,55 @@ import (
 		if tag == "Item" {
 			kind: or(_itemNames)
 			_tops: {(kind): true}
+			_tinted: {}
+		}
+		// A solid pipe or tee leg without a tint is slot 1; dash, gray and deny lines
+		// are outside tint pairing.
+		if tag == "Pipe" {
+			line:  string
+			tint?: int
+			_solidTint: [if line == "solid" {[if tint != _|_ {tint}, 1][0]}]
+			_tinted: {for t in _solidTint {"solid-\(t)": t}}
+		}
+		if tag == "Tee" {
+			line:  string
+			tint?: int
+			arms: [...]
+			let spineTint = [if tint != _|_ {tint}, 1][0]
+			_tinted: {
+				if line == "solid" {"solid-\(spineTint)": spineTint}
+				for arm in arms if arm.line == "solid"
+				let armTint = [if arm.tint != _|_ {arm.tint}, 1][0] {"solid-\(armTint)": armTint}
+			}
 		}
 		if !list.Contains(["Row", "Col", "Lanes", "View", "Box", "Item"], tag) {
 			_tops: {}
+		}
+		if !list.Contains(["Row", "Col", "Lanes", "View", "Box", "Item", "Pipe", "Tee"], tag) {
+			_tinted: {}
 		}
 		if !list.Contains(["Row", "Col", "Lanes", "View", "Box"], tag) {
 			_tintedWithoutActor: []
 			_sheetLooks: []
 		}
 		...
+	}
+
+	// Tint pairing, the convention every grammar shares: a solid pipe between two
+	// sibling Boxes must not touch a tinted Box of another slot. Row, Col, Lanes,
+	// View and Box embed this, so the check holds wherever siblings sit.
+	#SiblingTint: {
+		children: [...]
+		_pipeBesideZoneOfOtherTint: {
+			for i, c in children if c.tag == "Pipe" for pipeTint in c._solidTint {
+				for j in [i - 1, i + 1] if j >= 0 && j < len(children) {
+					let neighbor = children[j]
+					if neighbor.tag == "Box" for boxTint in neighbor._tint if boxTint != pipeTint {
+						(c.label): "solid tint \(pipeTint) pipe" & "beside \(neighbor.kind) tint \(boxTint)"
+					}
+				}
+			}
+		}
 	}
 
 	#KindedPage: #Page & {

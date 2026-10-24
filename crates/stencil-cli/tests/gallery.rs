@@ -64,6 +64,7 @@ fn row_page(first_card: &str) -> Value {
         "kicker": "Test",
         "lede": "One row.",
         "badge": "Internal",
+        "grammar": "gcp",
         "width": 640,
         "body": [
             {

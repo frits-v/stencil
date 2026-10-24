@@ -335,6 +335,7 @@ fn links_drawn_as_the_shape_are_a_defect_at_the_first_link() {
         "lede": "Lede",
         "width": 960,
         "badge": "Customer",
+        "grammar": "gcp",
         "body": [{ "tag": "Row", "gap": 64, "children": [
             card("a"), card("b"), card("c"), card("d")
         ]}],

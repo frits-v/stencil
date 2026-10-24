@@ -10,7 +10,7 @@
 
 mod common;
 
-use common::{assert_close, layout, node, page_from, page_with_body, part, plain};
+use common::{assert_close, gcp_page_with_body, layout, node, page_from, part, plain};
 use serde_json::{Value, json};
 use stencil_layout::{NodeTag, PageGeometry, PartName, layout_page};
 use stencil_model::grammar::{Role, Tone};
@@ -24,7 +24,7 @@ fn single_box(kind: &str, tint: Option<u8>) -> PageGeometry {
     if let Some(tint) = tint {
         box_node["tint"] = json!(tint);
     }
-    layout(&page_with_body(1280, json!([box_node])))
+    layout(&gcp_page_with_body(1280, json!([box_node])))
 }
 
 /// Bounds and content box of `/body/0` and its two children.
@@ -107,7 +107,7 @@ fn plain_kinds_take_the_plain_grammar_padding_and_border() {
 }
 
 fn item_with_facts(facts: Value) -> PageGeometry {
-    layout(&page_with_body(
+    layout(&gcp_page_with_body(
         1280,
         json!([{ "tag": "Item", "kind": "product", "title": "Bucket", "subtitle": "Cloud Storage", "facts": facts }]),
     ))
@@ -148,7 +148,7 @@ fn item_facts_add_their_parts_in_list_order_by_source() {
 
 #[test]
 fn a_fact_node_takes_the_style_and_prefix_of_its_source() {
-    let geometry = layout(&page_with_body(
+    let geometry = layout(&gcp_page_with_body(
         1280,
         json!([
             { "tag": "Fact", "text": "read from the doc" },
@@ -215,7 +215,7 @@ fn chrome_none_lays_out_body_legend_and_foot_only() {
 
 #[test]
 fn lanes_lay_their_heads_out_as_equal_columns_32_apart() {
-    let geometry = layout(&page_with_body(
+    let geometry = layout(&gcp_page_with_body(
         1280,
         json!([{ "tag": "Lanes", "children": [
             { "tag": "Item", "kind": "product", "title": "Client" },

@@ -61,7 +61,7 @@
       "minLength": 1
     },
     "grammar": {
-      "description": "A built-in grammar name or a path ending in `.json`; absent means gcp.",
+      "description": "A built-in grammar name or a path ending in `.json`; absent means plain.",
       "type": [
         "string",
         "null"

@@ -35,6 +35,7 @@ fn dogleg_document() -> Value {
         ]}]),
         json!([{ "line": "solid", "tint": 1, "text": "request path" }]),
     );
+    document["grammar"] = json!("gcp");
     document["links"] = json!([
         { "from": "a", "to": "b", "line": "solid", "tint": 1, "from_side": "right", "to_side": "top" }
     ]);
@@ -215,8 +216,8 @@ const SQUARE_EXAMPLES: [Example; 3] = [
 fn vetted(example: &Example) -> (Page, Grammar) {
     let named: Page = serde_json::from_str(example.document).unwrap();
     let grammar = match named.grammar.as_deref() {
-        Some("plain") => builtin_grammar("plain").unwrap().unwrap(),
-        _ => common::gcp(),
+        Some("gcp") => common::gcp(),
+        _ => builtin_grammar("plain").unwrap().unwrap(),
     };
     (parse_and_vet(example.document, &grammar).unwrap(), grammar)
 }
@@ -372,6 +373,7 @@ fn under_the_frame_document() -> Value {
         ]}]),
         json!([{ "line": "solid", "tint": 1, "text": "request path" }]),
     );
+    document["grammar"] = json!("gcp");
     document["bend"] = json!("spline");
     document["links"] = json!([
         { "from": "a", "to": "b", "line": "solid", "tint": 1, "arrow": "none", "from_side": "bottom", "to_side": "bottom" }

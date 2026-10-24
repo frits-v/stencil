@@ -30,6 +30,13 @@ pub fn page_with_body(width: u32, body: Value) -> Page {
     }))
 }
 
+/// `page_with_body` under the gcp grammar, for a body of gcp kinds.
+pub fn gcp_page_with_body(width: u32, body: Value) -> Page {
+    let mut page = page_with_body(width, body);
+    page.grammar = Some("gcp".to_string());
+    page
+}
+
 pub fn gcp() -> Grammar {
     builtin_grammar("gcp")
         .expect("gcp is a built-in grammar")
@@ -54,12 +61,12 @@ pub fn gcp_anywhere() -> Grammar {
     grammar
 }
 
-/// Lays `page` out under the grammar it names: plain, or gcp with every kind allowed at
-/// the top level.
+/// Lays `page` out under the grammar it names: gcp with every kind allowed at the top
+/// level, or plain, the default, for a page that names none.
 pub fn layout(page: &Page) -> PageGeometry {
     let grammar = match page.grammar.as_deref() {
-        Some("plain") => plain(),
-        _ => gcp_anywhere(),
+        Some("gcp") => gcp_anywhere(),
+        _ => plain(),
     };
     layout_page(page, &grammar, &mut FixedMetricsMeasurer::default()).expect("layout succeeds")
 }

@@ -2,7 +2,7 @@
 
 mod common;
 
-use common::{assert_close, layout, node, page_with_body};
+use common::{assert_close, gcp_page_with_body, layout, node};
 use serde_json::{Value, json};
 use stencil_layout::checks::child_inside_container;
 
@@ -20,7 +20,7 @@ fn card_stack(count: usize) -> Value {
 
 #[test]
 fn row_without_grow_gives_two_cards_equal_widths() {
-    let geometry = layout(&page_with_body(
+    let geometry = layout(&gcp_page_with_body(
         1280,
         json!([{ "tag": "Row", "children": [card("Short"), card("A much longer function name")] }]),
     ));
@@ -35,7 +35,7 @@ const ONE_CARD_ZONE_HEIGHT: f32 = 93.4;
 
 #[test]
 fn col_without_grow_keeps_zone_children_at_content_height() {
-    let geometry = layout(&page_with_body(
+    let geometry = layout(&gcp_page_with_body(
         1280,
         json!([{
             "tag": "Row",
@@ -60,7 +60,7 @@ fn col_without_grow_keeps_zone_children_at_content_height() {
 
 #[test]
 fn col_with_grow_splits_the_row_height_equally() {
-    let geometry = layout(&page_with_body(
+    let geometry = layout(&gcp_page_with_body(
         1280,
         json!([{
             "tag": "Row",
@@ -84,7 +84,7 @@ fn col_with_grow_splits_the_row_height_equally() {
 
 #[test]
 fn pipe_in_a_row_keeps_its_max_content_width() {
-    let geometry = layout(&page_with_body(
+    let geometry = layout(&gcp_page_with_body(
         1280,
         json!([{
             "tag": "Row",
@@ -110,7 +110,7 @@ fn pipe_in_a_row_keeps_its_max_content_width() {
 
 #[test]
 fn grow_0_0_1_gives_all_free_width_to_the_third_child() {
-    let geometry = layout(&page_with_body(
+    let geometry = layout(&gcp_page_with_body(
         1280,
         json!([{ "tag": "Row", "grow": [0, 0, 1], "children": [card("One"), card("Two"), card("Three")] }]),
     ));
@@ -130,7 +130,7 @@ fn grow_0_0_1_gives_all_free_width_to_the_third_child() {
 #[test]
 fn justify_center_centers_two_pipes_in_a_taller_col() {
     let pipe = |label: &str| json!({ "tag": "Pipe", "dir": "h", "line": "solid", "tint": 1, "label": label });
-    let geometry = layout(&page_with_body(
+    let geometry = layout(&gcp_page_with_body(
         1280,
         json!([{
             "tag": "Row",
@@ -158,7 +158,7 @@ fn justify_end_and_space_between_place_the_stack() {
         ("space-between", true, true),
         ("start", true, false),
     ] {
-        let geometry = layout(&page_with_body(
+        let geometry = layout(&gcp_page_with_body(
             1280,
             json!([{
                 "tag": "Row",
@@ -186,7 +186,7 @@ fn justify_end_and_space_between_place_the_stack() {
 
 #[test]
 fn row_and_col_gap_default_to_8() {
-    let geometry = layout(&page_with_body(
+    let geometry = layout(&gcp_page_with_body(
         1280,
         json!([{ "tag": "Row", "children": [card_stack(2), card("Right")] }]),
     ));
@@ -205,14 +205,14 @@ fn weight_zero_cards_wider_than_the_row_keep_max_content_and_overflow() {
     let long_name = "A function name long enough to need most of the page width";
     let row =
         json!([{ "tag": "Row", "grow": [0, 0], "children": [card(long_name), card(long_name)] }]);
-    let wide = layout(&page_with_body(1280, row.clone()));
+    let wide = layout(&gcp_page_with_body(1280, row.clone()));
     let max_content = node(&wide, "/body/0/children/0").bounds.width;
     assert!(2.0 * max_content + 8.0 < 1280.0, "both cards fit at 1280");
     assert!(child_inside_container(&wide).passed());
 
     let narrow_width = 640;
     assert!(2.0 * max_content + 8.0 > narrow_width as f32);
-    let narrow = layout(&page_with_body(narrow_width, row));
+    let narrow = layout(&gcp_page_with_body(narrow_width, row));
     let first = node(&narrow, "/body/0/children/0");
     let second = node(&narrow, "/body/0/children/1");
     assert_close(first.bounds.width, max_content, "first card");

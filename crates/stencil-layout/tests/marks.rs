@@ -41,6 +41,7 @@ fn corner_document() -> Value {
             "attention": { "items": [{ "id": "first", "lead": "Lead.", "text": "Text." }] }
         },
         "actors": [{ "id": "crew", "name": "Crew", "tint": 2 }],
+        "grammar": "gcp",
         "body": [{
             "tag": "View",
             "title": "System",

@@ -2,7 +2,7 @@
 
 mod common;
 
-use common::{assert_close, layout, node, page_from, page_with_body, part};
+use common::{assert_close, gcp_page_with_body, layout, node, page_from, page_with_body, part};
 use serde_json::json;
 use stencil_layout::PartName;
 
@@ -69,6 +69,7 @@ fn long_kicker_wraps_inside_the_kicker() {
         "lede": "Lede",
         "width": 640,
         "badge": "Internal",
+        "grammar": "gcp",
         "body": one_pipe_body(),
         "legend": []
     }));
@@ -108,6 +109,7 @@ fn a_badge_prints_its_own_text_uppercase() {
         "kicker": "Kicker",
         "lede": "Lede",
         "badge": "Design review",
+        "grammar": "gcp",
         "body": one_pipe_body(),
         "legend": []
     }));
@@ -194,6 +196,7 @@ fn a_sheet_pads_its_root_50_px_and_draws_its_frame_inside_the_padding() {
             "answer": { "statement": "A statement." },
             "attention": { "items": [{ "id": "first", "lead": "Lead.", "text": "Text." }] }
         },
+        "grammar": "gcp",
         "body": [{
             "tag": "View",
             "title": "System",
@@ -237,6 +240,7 @@ fn sheet_page(children: serde_json::Value) -> stencil_model::Page {
         "kicker": "Kicker",
         "lede": "Lede",
         "badge": "Internal",
+        "grammar": "gcp",
         "sheet": {
             "problem": { "points": [{ "text": "A point." }] },
             "answer": { "statement": "A statement." },
@@ -330,7 +334,7 @@ fn a_sheet_sets_its_kicker_and_box_labels_in_sheet_styles() {
         style(TextStyleName::SheetLabel)
     );
 
-    let plain = layout(&page_with_body(1280, json!([google_cloud_box()])));
+    let plain = layout(&gcp_page_with_body(1280, json!([google_cloud_box()])));
     assert_eq!(
         run_style(&plain, "/kicker", PartName::Text),
         style(TextStyleName::Kicker)

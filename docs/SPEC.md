@@ -3020,7 +3020,7 @@ Field summary additions and changes (section 1.1):
 
 | Tag | Field | Type | Required | Default |
 |---|---|---|---|---|
-| Page | grammar | `gcp`, `plain` or a path ending in `.json` | no | `gcp` |
+| Page | grammar | `gcp`, `plain` or a path ending in `.json` | no | `plain` |
 | Page | theme | a built-in theme name or a path ending in `.json` | no | `center` |
 | Page | theme_overrides | object, a partial theme (section 13.4 rule 8) | no | absent |
 | Page | chrome | `full` or `none` | no | `full` |
@@ -3392,7 +3392,7 @@ Layout. A Box reads everything layout needs from its container kind: the role (a
 
 A grammar is a data module. Its source is a CUE file under `cue/grammars/`, which declares a `grammar` value against `#Grammar` and adds the domain's rules in CUE. The data part is exported to JSON (`cue export ./cue/grammars:<name> -e grammar --out json`) and committed as `crates/stencil-model/grammars/<name>.json`, which the Rust side embeds and reads; Rust never evaluates CUE (section 9.2). `cue/check.sh` re-exports every built-in grammar and fails when the export differs from the committed JSON, as it does for g7.
 
-`Page.grammar` names a built-in grammar or a `.json` grammar file (an export of a CUE grammar), resolved like a theme reference (section 13.4 rule 1). Absent means `gcp`, so every existing figure keeps its meaning. A grammar given by path carries its data only; its CUE rules apply when the figure is authored in CUE against that grammar's package.
+`Page.grammar` names a built-in grammar or a `.json` grammar file (an export of a CUE grammar), resolved like a theme reference (section 13.4 rule 1). Absent means `plain`, the vendor-neutral grammar of section 13.3; `gcp` is named. A Google Cloud figure that names no grammar never renders under the wrong grammar: the two built-in grammars share only the `assembly`, `person` and `device` kinds, and every gcp figure has a `gcp` frame or `product` items, so vet rejects it with `kind-unknown`, and the message of a page that names no grammar ends `; the page names no grammar, so the default applies: set "grammar"`. A grammar given by path carries its data only; its CUE rules apply when the figure is authored in CUE against that grammar's package.
 
 The renderer draws roles, never kinds. Each container kind declares one of four roles. The `frame` role names the outermost container, the gcp frame; it is unrelated to the `Frame` node tag of section 11.3, the wireframe placeholder, whose theme role is called `placeholder` for that reason. Every theme paints roles and tones (section 13.4), so a theme needs no knowledge of a grammar's kinds:
 
@@ -3668,13 +3668,13 @@ gcp has three item kinds. `product`: icons `gcp`, shape block, parents every con
 
 1. Remembered constants: the four literals stay in `#NoRememberedConstant` in `core.cue`, because the core `#Text` applies it inside every node and a grammar package cannot reach into it. CUE therefore rejects them under every grammar, while the Rust check reads the grammar's `remembered` list and is not applicable under plain; a grammar with its own literals adds a CUE rule over its text fields.
 2. The hop-fact rule: every `product` item carries a `subtitle` or a fact whose source is `doc` or `ask` (`_itemsWithoutSubtitleOrFact`, which replaces `_pcardsWithoutPnFactOrAsk`). A `built` fact does not satisfy it: as-built names need no live doc, and they say nothing about what the product is.
-3. Tint pairing, moved from color names to slot numbers: a `solid` pipe beside or inside a tinted Box (a `region`, or an `onprem` with a tint) of another slot is the defect it was for blue and pink (`_pipeBesideZoneOfOtherTint`, `_otherTintInsideZone`). `dash`, `gray` and `deny` stay outside the rule, as `dash` was before: the g7 failover pipe sits between Region A and Region B.
+3. Tint pairing, moved from color names to slot numbers: a `solid` pipe beside or inside a tinted Box (a `region`, or an `onprem` with a tint) of another slot is the defect it was for blue and pink (`_pipeBesideZoneOfOtherTint`, `_otherTintInsideZone`). `dash`, `gray` and `deny` stay outside the rule, as `dash` was before: the g7 failover pipe sits between Region A and Region B. The rule is the core's: `#GrammarNesting` in `cue/grammar.cue` carries the tint walk (`_tint`, `_tinted`, `_solidTint`, `#SiblingTint`) and reads `tintable` and `default_tint` from the grammar's data, so it holds under every grammar, and gcp's rules walk the products only.
 4. Products outside a VPC: a `product` item whose `subtitle` names Cloud Storage, BigQuery, Pub/Sub, Artifact Registry or Cloud Logging at word boundaries, or whose `icon` is `cloud-storage` or `bigquery`, is a defect when a `vpc` Box is among its ancestors: `_productInsideVpc.<title>: "product" & "sits inside a vpc; draw it in an apis box"`. These are Google APIs reached over Private Google Access, never addresses in a VPC. A serverless product, whose `subtitle` names Cloud Run, Cloud Run functions, Cloud Functions, App Engine or Vertex AI or whose `icon` is `cloud-run`, `vertex-ai` or `serverless`, runs outside the customer's VPC and is reached over Private Service Connect, an internal load balancer or Direct VPC egress: inside a `vpc` it is `_serverlessInsideVpc.<title>`, "sits inside a vpc; a serverless product is reached over Private Service Connect; draw it beside the vpc". A managed data product with a private IP, whose `subtitle` names Cloud SQL, AlloyDB or Memorystore or whose `icon` is `cloud-sql`, lives in a Google-managed producer network that the customer's VPC reaches over private services access peering or a Private Service Connect endpoint: inside a `vpc` it is `_managedDataInsideVpc.<title>`, "sits inside a vpc; a managed data product lives in a producer network reached over private services access or Private Service Connect; draw it beside the vpc and name the attachment". A global resource, whose `subtitle` names Network Connectivity Center, has no region (Cloud Armor and Cloud DNS also have regional policies and zones, so they are not listed): inside a `region` Box it is `_globalInsideRegion.<title>`, "sits inside a region; a global resource sits outside every region".
 5. The `apis` kind holds them: a Box for Google APIs reached over Private Google Access, drawn inside the gcp frame and outside every vpc. Its parents keep it out of a vpc in Rust vet already (`kind-parent-not-allowed`); the CUE rule `_apisOutsideGcp` adds that it has a `gcp` Box among its ancestors, which a parents list cannot say when a project or perimeter sits between.
 
 Step (d) of section 13.15 corrects two examples that broke rule 4: `hero-iso.json` drew Warehouse (icon `bigquery`) inside the Shared VPC ring, and `hybrid-ai.json` drew the feature store (`BigQuery · vectors`), the checkpoint bucket (`Cloud Storage · dual-region`), the audit logs (`Cloud Logging · org sink`) and cost and usage (`Billing export · BigQuery`) inside its vpc. Each moves into an `apis` Box outside the vpc inside the gcp frame: in hybrid-ai the feature store and the checkpoint bucket sit in one beside the vpc within the service perimeter, and the audit logs and cost and usage in one inside the evidence project, which sits beside the perimeter. `cue/check.sh` vets every example against the gcp `#Page`, so the rules examine them.
 
-plain. A domain-neutral grammar for system diagrams, with no icons required and no domain rules beyond the core:
+plain, the default. The grammar of a system figure that names no vendor: a page without `grammar` is a plain page, and a figure moves to gcp when it draws Google Cloud products with their icons. No item takes an icon.
 
 | Kind | Role | Tone | Tint | Border | Padding | Radius | Label | Parents |
 |---|---|---|---|---|---|---|---|---|
@@ -3686,7 +3686,31 @@ plain. A domain-neutral grammar for system diagrams, with no icons required and 
 
 The `assembly` kind of both grammars, the parts one actor runs, draws on a design sheet only (section 14.4 rule 26): its `dash-dot` border and `tab` label are the sheet look of section 14.2 rule 7, and a Box of any kind with either needs a sheet.
 
-Item kinds `service`, `store`, `external`, `person` and `device`, each with icons `none`, an empty products table and every container kind and `page` as parents; `service`, `store` and `external` have shape block, `person` figure and `device` laptop. `remembered` is empty, so remembered-constants is not applicable under plain, and so is icon-matches-product. `cue/grammars/plain.cue` declares the data and no extra rules.
+Eight item kinds, each with icons `none`, an empty products table and every container kind and `page` as parents. An icon-free kind has no icon row to take a shape from, so each kind names the solid it stands as under iso (section 12.3); an item overrides it with `shape`.
+
+| Kind | Means | Shape |
+|---|---|---|
+| service | a running service the figure's owner builds and operates | block |
+| managed | a service the owner uses but does not run: a vendor's database engine, model endpoint or scheduler | block |
+| store | a database, bucket or file share | cylinder |
+| queue | a queue, topic or stream | stack |
+| network | a router, switch, firewall, load balancer or gateway | tile |
+| external | a system outside the figure's scope | block |
+| person | a human actor | figure |
+| device | an end-user device; an item asks for a phone with `shape` | laptop |
+
+`remembered` is empty, so remembered-constants is not applicable under plain, and so is icon-matches-product. `cue/grammars/plain.cue` declares the data and one rule of its own, a vet-time defect under `cue vet`: an `external` item with a `system` Box among its ancestors is `_externalInsideSystem.<title>`, "sits inside the system frame; a system outside the figure's scope sits beside it". Tint pairing (gcp rule 3) is the core's and holds under plain: a solid pipe beside or inside a tinted `group` or `assembly` of another slot is a defect. `cue/check.sh` runs a negative case for each on `figures/sequence.cue`.
+
+House style. What a figure looks like when its author sets nothing but the body, and which conventions are stencil's rather than gcp's. Stencil's, under every grammar:
+
+- The theme is `center` (section 13.5). Layout is the same under every theme, so the theme is a presentation choice made last.
+- One `system` frame when the figure has one owner; none when it compares peers or shows a flow between organizations.
+- Lines: `gray` for internal calls, `solid` tint 1 for the primary path and tint 2 for a second path, `dash` for failover, control plane or identity, `deny` for a blocked path. The legend lists each line and tint in use once and writes its meaning, never its colour (section 13.4 rule 7).
+- Tint pairing: a tinted group and the solid lines through it share one slot, slots are taken in order from 1, and a figure takes no more slots than its story has paths.
+- Copy: the title states what the reader should take away, the kicker names the subject, the lede is one or two sentences. An item's title names the part (Jobs API) and its subtitle says what it is (owns job state); as-built names are facts with source `built`, and a reading from the live documentation a fact with source `doc`.
+- Spacing: gap 8 between items, 32 to 64 on the Col or Row that links run through; a pipe tag is one to three words with the detail in `sub` (section 2 and the prime layout topic).
+
+gcp's own, which a plain figure does not carry: the blue bar frame that reads as Google Cloud, the `region` default tint 1 and the metro and region pairing of slots 1 and 2 with `onprem`, the `apis` Box, the hop-fact rule (rule 2), official product names in subtitles, the four remembered constants, and the placement rules for Google APIs, serverless products, managed data products and global resources (rule 4).
 
 Other domains, sketched to show the model carries them. None ships in this section; each would be a CUE file and an exported JSON like gcp and plain.
 
@@ -4610,7 +4634,7 @@ stencil-model:
 
 - The migrated examples parse, round-trip and validate against the regenerated schema; a copy with `"tag": "Zone"`, `"tag": "Pcard"`, `"kind": "blue"` on a pipe or `"fn"` on an item is a `ModelError::Json`.
 - Grammars: `gcp.json` and `plain.json` parse and pass `validate_grammar`; gcp's container kinds equal section 13.3's table field for field, and its border widths, paddings, radii and label styles equal section 2.4's; a copy with each grammar fault (a duplicate name, an unknown parent, no kind under `page`, a frame with a tone, a group without one, a default tint on an untintable kind, a solid border of width 0, an item with icons none and a products row, a repeated icon) is rejected with the named rule. `grammar_schema()` equals the committed `schema/grammar.schema.json`.
-- Vet with a grammar: `kind-unknown` for a Box of kind `zone` and an Item of kind `service` under gcp; `kind-parent-not-allowed` for a subnet at the top level and for a vpc inside a region, and none for a subnet inside a project inside a Row (Row is transparent); `icon-outside-pack` for a plain `service` with an icon; `grammar-unknown` for `"gcpx"`. Every example vets clean under gcp.
+- Vet with a grammar: `kind-unknown` for a Box of kind `zone` and an Item of kind `service` under gcp; `kind-parent-not-allowed` for a subnet at the top level and for a vpc inside a region, and none for a subnet inside a project inside a Row (Row is transparent); `icon-outside-pack` for a plain `service` with an icon; `grammar-unknown` for `"gcpx"`. A page without `grammar` vets under plain, and a gcp page without it fails `kind-unknown` with the default-applied message. Every example vets clean under the grammar it names.
 - `tint`: 1 and 8 vet clean on every carrier, 0 and 9 give `tint-out-of-range`; `box_tint` for region (absent gives 1), onprem (absent gives none) and subnet (ignored); `line_tint`, `box_key`, `line_key` and `legend_label` against section 13.1's tables for every line and slot.
 - Legend consistency: solid tint 2 used with only a solid tint 1 entry gives one defect at the pipe and one at the entry; a tint on a deny pipe and on its entry are the same key; an entry for solid with no tint matches a pipe with tint 1; a dash tint 2 needs its own entry. Under `chrome: none`, one key in use with an empty legend passes with examined equal to the uses; two keys with an empty legend fail; one key with a legend entry follows the normal rule.
 - Facts: an Item's fact entries appear in `text_fields` after title and subtitle at `/…/facts/<i>/text`; remembered constants are found in a built fact; a Fact node without `source` serializes without it.

@@ -2,13 +2,13 @@
 
 mod common;
 
-use common::{assert_close, layout, node, page_with_body, part};
+use common::{assert_close, gcp_page_with_body, layout, node, part};
 use serde_json::{Value, json};
 use stencil_layout::PartName;
 use stencil_model::text::{FixedMetricsMeasurer, TextMeasurer};
 
 fn single_card(card: Value) -> stencil_layout::PageGeometry {
-    layout(&page_with_body(1280, json!([card])))
+    layout(&gcp_page_with_body(1280, json!([card])))
 }
 
 #[test]
@@ -92,7 +92,7 @@ fn text_starts_at_left_padding_without_icon() {
 fn text_column_takes_remaining_width_and_the_fact_wraps() {
     // 84 scalars at 6 px is 504 px of max-content, wider than the 239 px column.
     let fact = ["abcdefghij"; 8].join(" ") + " abc";
-    let page = page_with_body(
+    let page = gcp_page_with_body(
         640,
         json!([{
             "tag": "Row",
@@ -123,7 +123,7 @@ fn text_column_takes_remaining_width_and_the_fact_wraps() {
 /// A Row of four cards on a 640 px page, each titled `title`.
 fn four_narrow_cards(title: &str) -> stencil_layout::PageGeometry {
     let card = json!({ "tag": "Item", "kind": "product", "icon": "gke", "title": title });
-    layout(&page_with_body(
+    layout(&gcp_page_with_body(
         640,
         json!([{ "tag": "Row", "children": [card.clone(), card.clone(), card.clone(), card] }]),
     ))

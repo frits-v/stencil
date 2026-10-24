@@ -15,6 +15,7 @@ fn every_tag_geometry() -> PageGeometry {
         "lede": "One of each.",
         "foot": "Foot text",
         "badge": "Customer",
+        "grammar": "gcp",
         "body": [
             {
                 "tag": "Row",

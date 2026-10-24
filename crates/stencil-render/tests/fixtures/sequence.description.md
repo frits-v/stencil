@@ -15,7 +15,7 @@ Drawn elements: 23 (13 nodes, 10 links). Canvas 1320 x 718 px, projection flat, 
     - Item Operator: submits and cancels jobs; kind person. `/body/0/children/0/children/0`
     - Item Console: web front end; kind service. `/body/0/children/0/children/1`
     - Item Jobs API: owns job state; kind service. `/body/0/children/0/children/2`
-    - Item Queue: at-least-once delivery; kind store. `/body/0/children/0/children/3`
+    - Item Queue: at-least-once delivery; kind queue. `/body/0/children/0/children/3`
     - Item Worker: runs one job at a time; kind service. `/body/0/children/0/children/4`
 
 ## Lines

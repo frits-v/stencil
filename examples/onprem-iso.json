@@ -69,7 +69,7 @@
                     },
                     {
                       "tag": "Item",
-                      "kind": "service",
+                      "kind": "network",
                       "title": "Core switch",
                       "subtitle": "Layer 3, routes between VLANs",
                       "facts": [
@@ -154,7 +154,7 @@
               "children": [
                 {
                   "tag": "Item",
-                  "kind": "service",
+                  "kind": "network",
                   "title": "Edge firewall",
                   "subtitle": "stateful, zone policy",
                   "facts": [
@@ -223,7 +223,7 @@
                   "children": [
                     {
                       "tag": "Item",
-                      "kind": "service",
+                      "kind": "network",
                       "title": "Edge router",
                       "subtitle": "ISP uplink",
                       "facts": [

@@ -2,7 +2,7 @@
 
 mod common;
 
-use common::{G7_JSON, layout, page_from, page_with_body};
+use common::{G7_JSON, gcp_page_with_body, layout, page_from, page_with_body};
 use serde_json::{Value, json};
 use stencil_layout::checks::pipes_land;
 use stencil_model::checks::{CheckName, CheckOutcome};
@@ -83,7 +83,7 @@ fn a_gutter_with_no_neighbor_is_not_applicable() {
 
 #[test]
 fn a_page_without_pipes_is_not_applicable() {
-    let page = page_with_body(
+    let page = gcp_page_with_body(
         1280,
         json!([{ "tag": "Item", "kind": "product", "title": "Cloud Run", "subtitle": "service" }]),
     );
@@ -94,7 +94,7 @@ fn a_page_without_pipes_is_not_applicable() {
 
 #[test]
 fn a_pipe_missing_from_the_geometry_fails() {
-    let with_pipe = page_with_body(
+    let with_pipe = gcp_page_with_body(
         1280,
         json!([{
             "tag": "Row",
@@ -105,7 +105,7 @@ fn a_pipe_missing_from_the_geometry_fails() {
             ]
         }]),
     );
-    let without_pipe = page_with_body(
+    let without_pipe = gcp_page_with_body(
         1280,
         json!([{ "tag": "Item", "kind": "product", "title": "Cloud Run", "subtitle": "service" }]),
     );
@@ -121,7 +121,7 @@ fn a_pipe_missing_from_the_geometry_fails() {
 /// cards stretch to the Row height, so all four ends land.
 #[test]
 fn tee_arms_are_examined_against_the_tee_neighbors() {
-    let page = page_with_body(
+    let page = gcp_page_with_body(
         1280,
         json!([{
             "tag": "Row",
@@ -150,7 +150,7 @@ fn tee_arms_are_examined_against_the_tee_neighbors() {
 /// The card below spans the full width, so the lower end lands.
 #[test]
 fn a_vertical_pipe_is_examined_against_the_col_neighbors_above_and_below() {
-    let page = page_with_body(
+    let page = gcp_page_with_body(
         1280,
         json!([{
             "tag": "Col",
@@ -189,7 +189,7 @@ fn a_vertical_pipe_is_examined_against_the_col_neighbors_above_and_below() {
 fn an_iso_pipe_end_reaches_the_solid_inside_a_col_and_a_short_end_is_a_defect() {
     let page = page_from(json!({
         "title": "Title", "kicker": "Kicker", "lede": "Lede", "width": 1100,
-        "badge": "Customer", "projection": "iso", "legend": [],
+        "badge": "Customer", "grammar": "gcp", "projection": "iso", "legend": [],
         "body": [{ "tag": "Row", "gap": 32, "children": [
             { "tag": "Box", "kind": "onprem", "label": "Site", "children": [
                 { "tag": "Item", "kind": "product", "id": "edge", "title": "Edge" } ] },
@@ -247,7 +247,7 @@ fn an_iso_pipe_end_that_lands_on_a_zone_of_devices_without_a_target_is_a_defect(
         }
         json!({
             "title": "Title", "kicker": "Kicker", "lede": "Lede", "width": 1100,
-            "badge": "Customer", "projection": "iso", "legend": [],
+            "badge": "Customer", "grammar": "gcp", "projection": "iso", "legend": [],
             "body": [{ "tag": "Row", "gap": 32, "children": [
                 { "tag": "Box", "kind": "onprem", "label": "Site", "children": [
                     { "tag": "Item", "kind": "product", "id": "e", "title": "Edge" } ] },

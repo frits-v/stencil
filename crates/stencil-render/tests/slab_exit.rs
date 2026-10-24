@@ -43,6 +43,7 @@ fn site_page(fillers: usize, extra: Value) -> Page {
         ] }]),
         json!([{ "line": "solid", "tint": 1, "text": "attachment" }]),
     );
+    document["grammar"] = json!("gcp");
     document["links"] = json!([link]);
     let mut page: Page = serde_json::from_value(document).unwrap();
     page.projection = Projection::Iso;

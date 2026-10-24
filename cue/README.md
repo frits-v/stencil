@@ -12,8 +12,8 @@ its rules; a figure file writes one topology against a grammar's `#Page`.
 | `core.cue` | `stencil` | `#Page` and the core nodes: `Row`, `Col`, `Lanes`, `Box`, `Item`, `Fact`, `Note`, `Pipe`, `Tee`, `Text`, `Callout`, `Frame`, `View`, `Phases`, `Step`, `PartsList`, `GeneralNotes`, `Ladder`, `HowTo`, plus `#Sheet` and its cells, `#Mark`, `#MarkedText`, `#MarkLegend`, `#PartEntry`, `#GeneralNote`, `#Rung`, `#HowToItem`, `#CommandRun`, `#TerminalLine`, `#Actor`, `#Phase`, `#SheetSurface`, `#Outline`, `#LineStep`, `#LegendEntry`, `#Link`, `#Line`, `#Bend`, `#Corner`, `#TintSlot` and `#FactEntry` |
 | `grammar.cue` | `stencil` | `#Grammar` and its parts (`#LineKind` among them), and `#GrammarNesting`, the kind and nesting rules every grammar shares |
 | `theme.cue` | `stencil` | `#Theme`, the closed theme definition every theme file vets against: `cue vet -c -d '#Theme' . <file>.json` |
-| `grammars/gcp.cue` | `gcp` | the Google Cloud grammar data and rules, and the gcp `#Page` |
-| `grammars/plain.cue` | `plain` | the domain-neutral grammar data and the plain `#Page` |
+| `grammars/gcp.cue` | `gcp` | the Google Cloud grammar data and product rules, and the gcp `#Page` |
+| `grammars/plain.cue` | `plain` | the default, vendor-neutral grammar data and the plain `#Page` with its external-outside-system rule |
 | `figures/g7.cue` | `gcp` | g7, Dedicated Interconnect at 99.99%: `customer` and `internal: customer & {...}` |
 | `figures/sequence.cue` | `plain` | a request flow in five lanes with ten ordered messages: `figure`, exported as `examples/sequence.json` |
 | `figures/sheet.cue` | `gcp` | the trigger evaluation design sheet, a title block, four actors, a Workflow view with a detail ladder, a System view (an assembly, a rail, a store with compartments, step badges, a valve and planned work) with its parts list, general notes and a console screen, and a How-tos view of four terminals: `onepager`, exported as `examples/onepager.json` |
