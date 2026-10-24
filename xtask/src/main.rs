@@ -2,7 +2,15 @@
 //! Builds go through `mbx` by name: a child of `cargo run` finds rustup's cargo on PATH, not
 //! the mise wrapper that routes cargo through the mbx cache.
 
+mod anthropic_token;
+mod app_token;
+mod checkout;
+mod child;
 mod decode;
+mod github_api;
+mod process;
+mod review;
+mod secrets;
 
 use std::env;
 use std::fs;
@@ -14,6 +22,15 @@ const RULE_FIXTURES: &str = "opengrep";
 const CI_OUT: &str = "target/ci";
 const SARIF_DIR: &str = "target/ci/sarif";
 const STENCIL: &str = "target/release/stencil";
+const WORKFLOW_DIR: &str = ".github/workflows";
+const WORKFLOW_POLICY: &str = ".github/workflow-policy.cue";
+const POLICY_FIXTURES: &str = "xtask/fixtures/workflow-policy";
+const WORKFLOW_FILES_MAX: usize = 64;
+/// The messages of the policy's own refusals; cue failing in any other way is not a refusal.
+const POLICY_REFUSALS: [&str; 2] = [
+    "a workflow a pull request can start sets concurrency on the job",
+    "a privileged workflow checks out only the base branch",
+];
 const GALLERY_DIRS_MAX: usize = 256;
 const GALLERY_IMAGES_MAX: usize = 64;
 
@@ -21,13 +38,20 @@ const USAGE: &str = "usage: xtask <command>
 
   ci              every check CI runs, writing the gallery and any docs mismatch under target/ci
   opengrep        the opengrep rules against their fixtures, then over the repository
-  workflows       zizmor and jactionlint over .github at pedantic
+  workflows       the CUE workflow policy, then zizmor and jactionlint over .github at pedantic
   gallery <dir>   build the release binary and render every example into <dir>
-  release         publish the GitHub release of tag GITHUB_REF_NAME with the gallery attached";
+  release         publish the GitHub release of tag GITHUB_REF_NAME with the gallery attached
+  review --dry-run | --post
+                  Claude reviews this branch and prints the findings, or reviews the pull
+                  request of the triggering event and posts the verdict as the review App";
 
 fn main() -> ExitCode {
     let args: Vec<String> = env::args().skip(1).collect();
     let words: Vec<&str> = args.iter().map(String::as_str).collect();
+    if let ["review", ..] = words.as_slice() {
+        let code = review::command(args.get(1..).unwrap_or_default());
+        return u8::try_from(code).map_or(ExitCode::FAILURE, ExitCode::from);
+    }
     let result = match words.as_slice() {
         ["ci"] => ci(),
         ["opengrep"] => opengrep().map(|summary| println!("{summary}")),
@@ -258,9 +282,114 @@ fn github_token() -> Result<String, String> {
     )
 }
 
+/// The `.yml` and `.yaml` files directly under `dir`, sorted.
+fn yaml_files(dir: &str) -> Result<Vec<PathBuf>, String> {
+    let entries = fs::read_dir(dir).map_err(|error| format!("cannot read {dir}: {error}"))?;
+    let mut files = Vec::new();
+    for entry in entries.take(WORKFLOW_FILES_MAX.saturating_add(1)) {
+        let path = entry
+            .map_err(|error| format!("cannot read {dir}: {error}"))?
+            .path();
+        let extension = path.extension().and_then(|extension| extension.to_str());
+        if matches!(extension, Some("yml" | "yaml")) {
+            files.push(path);
+        }
+    }
+    if files.len() > WORKFLOW_FILES_MAX {
+        return Err(format!("more than {WORKFLOW_FILES_MAX} files under {dir}"));
+    }
+    files.sort();
+    Ok(files)
+}
+
+/// Whether `cue vet -c` accepts `file` against the policy. A refusal is an exit of 1 whose
+/// output names one of `POLICY_REFUSALS`; any other failure is an error.
+fn policy_accepts(file: &Path) -> Result<bool, String> {
+    let output = capture(
+        Command::new("cue")
+            .args(["vet", "-c", WORKFLOW_POLICY])
+            .arg(file),
+    )?;
+    let reasons = String::from_utf8_lossy(&output.stderr);
+    match output.status.code() {
+        Some(0) => Ok(true),
+        Some(1)
+            if POLICY_REFUSALS
+                .iter()
+                .any(|refusal| reasons.contains(refusal)) =>
+        {
+            eprint!("{reasons}");
+            Ok(false)
+        }
+        _ => Err(format!(
+            "cue vet of {} ended {} without a policy refusal:\n{}",
+            file.display(),
+            output.status,
+            reasons.trim()
+        )),
+    }
+}
+
+/// The policy against its fixtures, `accepted-*` accepted and `refused-*` refused, then
+/// against every workflow file; returns how many workflow files it examined.
+fn workflow_policy() -> Result<usize, String> {
+    let fixtures = yaml_files(POLICY_FIXTURES)?;
+    if fixtures.is_empty() {
+        return Err(format!("{POLICY_FIXTURES} holds no fixtures"));
+    }
+    for fixture in &fixtures {
+        let name = fixture
+            .file_name()
+            .map(|name| name.to_string_lossy().into_owned())
+            .unwrap_or_default();
+        let expected = if name.starts_with("accepted-") {
+            true
+        } else if name.starts_with("refused-") {
+            false
+        } else {
+            return Err(format!(
+                "{} is neither an accepted- nor a refused- fixture",
+                fixture.display()
+            ));
+        };
+        if policy_accepts(fixture)? != expected {
+            return Err(format!(
+                "the workflow policy {} {}",
+                if expected { "refuses" } else { "accepts" },
+                fixture.display()
+            ));
+        }
+    }
+    let files = yaml_files(WORKFLOW_DIR)?;
+    if files.is_empty() {
+        return Err(format!("{WORKFLOW_DIR} holds no workflow files"));
+    }
+    let refused: Vec<String> = files
+        .iter()
+        .map(|file| policy_accepts(file).map(|accepted| (file, accepted)))
+        .collect::<Result<Vec<_>, String>>()?
+        .into_iter()
+        .filter(|(_, accepted)| !accepted)
+        .map(|(file, _)| file.display().to_string())
+        .collect();
+    if !refused.is_empty() {
+        return Err(format!(
+            "the workflow policy refuses {}",
+            refused.join(", ")
+        ));
+    }
+    println!(
+        "workflows: the policy holds over {} files and {} fixtures",
+        files.len(),
+        fixtures.len()
+    );
+    Ok(files.len())
+}
+
 /// The SARIF logs are written before the gating runs, so a run that fails still uploads
 /// the findings it failed on.
 fn workflows() -> Result<String, String> {
+    let policy_files = workflow_policy()?;
     let token = github_token()?;
     let zizmor_sarif = capture(
         Command::new("zizmor")
@@ -303,8 +432,13 @@ fn workflows() -> Result<String, String> {
         return Err("jactionlint examined no workflow files".to_string());
     }
     exit_code(&lint, &[0], "jactionlint")?;
+    if files != policy_files {
+        return Err(format!(
+            "jactionlint examined {files} workflow files and the policy {policy_files}"
+        ));
+    }
     Ok(format!(
-        "workflows: zizmor and jactionlint pass, {files} files"
+        "workflows: the policy, zizmor and jactionlint pass, {files} files"
     ))
 }
 

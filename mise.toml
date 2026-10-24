@@ -8,6 +8,7 @@ cue = "0.17.1"
 opengrep = "1.30.2"
 zizmor = "1.30.1"
 "github:jdx/jactionlint" = "2.0.2"
+claude = "2.1.280"
 
 [tasks.ci]
 description = "Every check CI runs: fmt, clippy, tests, CUE, gallery docs, opengrep, zizmor and jactionlint"
@@ -18,8 +19,12 @@ description = "Test the opengrep rules against their fixtures, then scan the rep
 run = "cargo run -q -p xtask -- opengrep"
 
 [tasks.workflows]
-description = "Audit the GitHub workflows with zizmor and jactionlint at pedantic"
+description = "Check the GitHub workflows against the CUE workflow policy, then audit them with zizmor and jactionlint at pedantic"
 run = "cargo run -q -p xtask -- workflows"
+
+[tasks.review]
+description = "Claude reviews this branch against origin/main and prints the findings; posts nothing"
+run = "cargo run -q -p xtask -- review --dry-run"
 
 [tasks.gallery]
 description = "Build the release binary and render every example into target/gallery"

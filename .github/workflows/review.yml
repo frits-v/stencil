@@ -1,0 +1,76 @@
+name: review
+# A review runs only when a pull request is marked ready or a writer asks for one in a
+# comment; opening a pull request or pushing to it starts nothing.
+on:
+  # The workflow and the xtask come from the base branch; xtask review fetches the pull
+  # request's head by its commit as data the model reads, and never builds or runs it.
+  pull_request_target: # zizmor: ignore[dangerous-triggers]
+    types: [ready_for_review]
+  issue_comment:
+    types: [created]
+permissions: {}
+defaults:
+  run:
+    shell: bash
+jobs:
+  review:
+    name: review
+    # A writer's pull request marked ready, or a writer's comment on a pull request that
+    # mentions the reviewer; xtask review checks the event again before anything else.
+    if: >-
+      ${{ (github.event_name == 'pull_request_target' &&
+      contains(fromJSON('["OWNER", "MEMBER", "COLLABORATOR"]'), github.event.pull_request.author_association)) ||
+      (github.event.issue.pull_request &&
+      (contains(github.event.comment.body, '@frits-code-review') || contains(github.event.comment.body, '@claude')) &&
+      contains(fromJSON('["OWNER", "MEMBER", "COLLABORATOR"]'), github.event.comment.author_association)) }}
+    # The App key and the Langfuse key are secrets of this environment, which admits only the
+    # default branch: both events run there, and no branch's workflow can read them.
+    environment:
+      name: review
+      deployment: false
+    # On the job, after its condition: a comment that starts no review cancels nothing.
+    concurrency:
+      group: review-${{ github.event.pull_request.number || github.event.issue.number }}
+      cancel-in-progress: true
+    runs-on: ubuntu-24.04
+    timeout-minutes: 75
+    env:
+      MISE_TASK_RUN_AUTO_INSTALL: "false"
+    permissions:
+      contents: read # the base branch's checkout
+      id-token: write # the OIDC token xtask review trades for an Anthropic access token
+    steps:
+      # The base branch with its history; the pull request's head is fetched into it later by
+      # its commit, which the xtask resolves.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            ~/.cargo/.global-cache
+            ~/.cache/mbx
+          key: ${{ runner.os }}-${{ runner.arch }}-mbx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-${{ runner.arch }}-mbx-
+      - uses: jdx/mise-action@2d8d4cafcbd33be2ea37d2b6f5ad595363d1f1ca # v5.1.1
+        with:
+          version: 2026.9.13
+          cache: false
+          install_args: rust mr-boxington claude
+      # The base branch's xtask, built before the App key is mapped.
+      - run: cargo build --locked -p xtask
+      - run: target/debug/xtask review --post
+        env:
+          FRITS_CODE_REVIEW_CLIENT_ID: ${{ vars.FRITS_CODE_REVIEW_CLIENT_ID }}
+          FRITS_CODE_REVIEW_APP_PRIVATE_KEY: ${{ secrets.FRITS_CODE_REVIEW_APP_PRIVATE_KEY }}
+          ANTHROPIC_FEDERATION_RULE_ID: ${{ vars.ANTHROPIC_FEDERATION_RULE_ID }}
+          ANTHROPIC_ORGANIZATION_ID: ${{ vars.ANTHROPIC_ORGANIZATION_ID }}
+          ANTHROPIC_SERVICE_ACCOUNT_ID: ${{ vars.ANTHROPIC_SERVICE_ACCOUNT_ID }}
+          ANTHROPIC_WORKSPACE_ID: ${{ vars.ANTHROPIC_WORKSPACE_ID }}
+          LANGFUSE_BASE_URL: ${{ vars.LANGFUSE_BASE_URL }}
+          LANGFUSE_PUBLIC_KEY: ${{ vars.LANGFUSE_PUBLIC_KEY }}
+          LANGFUSE_SECRET_KEY: ${{ secrets.LANGFUSE_SECRET_KEY }}

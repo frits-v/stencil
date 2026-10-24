@@ -1,0 +1,29 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$defs": {
+        "Text": {
+            "type": "string",
+            "description": "No control characters (Unicode category Cc), so text cannot carry terminal escapes.",
+            "pattern": "^[^\\x00-\\x1f\\x7f-\\x9f]+$"
+        }
+    },
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+        "reasoning": {
+            "type": "string",
+            "$ref": "#/$defs/Text",
+            "maxLength": 2000
+        },
+        "verdict": {
+            "enum": [
+                "confirmed",
+                "refuted"
+            ]
+        }
+    },
+    "required": [
+        "reasoning",
+        "verdict"
+    ]
+}

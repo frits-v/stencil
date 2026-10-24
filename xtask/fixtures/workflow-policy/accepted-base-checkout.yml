@@ -1,0 +1,17 @@
+on:
+  pull_request_target:
+    types: [ready_for_review]
+  issue_comment:
+    types: [created]
+jobs:
+  review:
+    runs-on: ubuntu-24.04
+    concurrency:
+      group: review
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - run: target/debug/xtask review --post

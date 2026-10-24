@@ -32,3 +32,19 @@ rules:
       - metavariable-regex:
           metavariable: $SUBCOMMAND
           regex: '^"(bench|build|check|clippy|doc|install|run|rustc|test)"$'
+
+  - id: rust-review-child-environment
+    message: >-
+      A process the review starts inherits the whole environment, the App key and the
+      Langfuse and OIDC secrets among them. Start it with `crate::child::command` or
+      `crate::child::empty`, which clear the environment and pass on only what is named.
+    languages: [rust]
+    severity: ERROR
+    paths:
+      include:
+        - "xtask/src/review.rs"
+        - "xtask/src/review/"
+    patterns:
+      - pattern-either:
+          - pattern: Command::new(...)
+          - pattern: std::process::Command::new(...)

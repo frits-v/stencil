@@ -24,13 +24,28 @@ fn history_comments() {
     // A tag lies nearest its own connector.
 }
 
+// `opengrep test` ignores a rule's `paths`, so every `Command::new` here is also a finding of
+// rust-review-child-environment, which the scan applies to the review modules only.
 fn cargo_commands() {
-    // ruleid: rust-cargo-build-bypasses-mbx
+    // ruleid: rust-cargo-build-bypasses-mbx, rust-review-child-environment
     run(Command::new("cargo").args(["clippy", "--workspace", "--all-targets"]));
-    // ruleid: rust-cargo-build-bypasses-mbx
+    // ruleid: rust-cargo-build-bypasses-mbx, rust-review-child-environment
     run(Command::new("cargo").arg("test"));
     // ok: rust-cargo-build-bypasses-mbx
+    // ruleid: rust-review-child-environment
     run(Command::new("cargo").args(["fmt", "--all", "--check"]));
     // ok: rust-cargo-build-bypasses-mbx
+    // ruleid: rust-review-child-environment
     run(Command::new("mbx").args(["build", "--release"]));
+}
+
+fn review_children() {
+    // ruleid: rust-review-child-environment
+    let git = Command::new("git");
+    // ruleid: rust-review-child-environment
+    let mise = std::process::Command::new("mise");
+    // ok: rust-review-child-environment
+    let git = crate::child::command("git");
+    // ok: rust-review-child-environment
+    let claude = crate::child::empty(program);
 }
