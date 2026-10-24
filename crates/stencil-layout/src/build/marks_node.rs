@@ -6,7 +6,8 @@ use stencil_model::pointer::NodePointer;
 use stencil_model::text::TextStyleName;
 use stencil_model::{GeneralNotes, MarkKind, PartsList, SheetList};
 use taffy::prelude::{
-    AlignItems, AlignSelf, JustifyContent, NodeId, Position, Rect, Style, length,
+    AlignItems, AlignSelf, JustifyContent, LengthPercentageAuto, NodeId, Position, Rect, Style,
+    auto, length,
 };
 
 use super::{
@@ -369,7 +370,7 @@ impl Builder<'_> {
                 Some(_) => part_pointer.child("node"),
                 None => part_pointer.child("name"),
             };
-            parts.push(self.list_text(
+            parts.push(self.name_cell_text(
                 name_cell,
                 PartName::PartTitle,
                 (&name, TextStyleName::LeadBody),
@@ -381,7 +382,7 @@ impl Builder<'_> {
                     Some(_) => name_source.clone(),
                     None => part_pointer.child("what"),
                 };
-                parts.push(self.list_text(
+                parts.push(self.name_cell_text(
                     name_cell,
                     PartName::PartWhat,
                     (&what, TextStyleName::StepText),
@@ -390,7 +391,7 @@ impl Builder<'_> {
                 )?);
             }
             if self.page_marks.part_planned(part) {
-                parts.push(self.list_text(
+                parts.push(self.name_cell_text(
                     name_cell,
                     PartName::PartPlanned,
                     ("planned", TextStyleName::SheetLabel),
@@ -686,15 +687,48 @@ impl Builder<'_> {
         &mut self,
         parent: NodeId,
         name: PartName,
-        (text, style_name): (&str, TextStyleName),
+        text: (&str, TextStyleName),
         top: f32,
         source: NodePointer,
     ) -> Result<PartRecord, LayoutError> {
-        let (leaf, leaf_index) = self.text_leaf(
-            Style {
-                margin: margins(top, 0.0, 0.0, 0.0),
-                ..base_style()
+        let style = Style {
+            margin: margins(top, 0.0, 0.0, 0.0),
+            ..base_style()
+        };
+        self.list_text_styled(parent, name, text, style, source)
+    }
+
+    /// A text part of a parts list's name cell, no wider than the cell: a word wider than
+    /// the cell overflows its box, which text-fits-box reports.
+    fn name_cell_text(
+        &mut self,
+        parent: NodeId,
+        name: PartName,
+        text: (&str, TextStyleName),
+        top: f32,
+        source: NodePointer,
+    ) -> Result<PartRecord, LayoutError> {
+        let style = Style {
+            margin: margins(top, 0.0, 0.0, 0.0),
+            max_size: taffy::Size {
+                width: LengthPercentageAuto::percent(1.0),
+                height: auto(),
             },
+            ..base_style()
+        };
+        self.list_text_styled(parent, name, text, style, source)
+    }
+
+    fn list_text_styled(
+        &mut self,
+        parent: NodeId,
+        name: PartName,
+        (text, style_name): (&str, TextStyleName),
+        style: Style,
+        source: NodePointer,
+    ) -> Result<PartRecord, LayoutError> {
+        let (leaf, leaf_index) = self.text_leaf(
+            style,
             Some(parent),
             TextSpec {
                 text,
