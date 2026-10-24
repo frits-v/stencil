@@ -153,6 +153,54 @@ fn a_corner_mark_passes_text_fits_box_and_marks_clear() {
     common::assert_close(center.1, item.bounds.y, "corner y");
 }
 
+/// The corner sheet with its one part named and described as given.
+fn corner_parts_list(name: &str, what: &str) -> PageGeometry {
+    let mut document = corner_document();
+    document["body"][0]["children"][2]["parts"][0]["name"] = json!(name);
+    document["body"][0]["children"][2]["parts"][0]["what"] = json!(what);
+    layout(&page_from(document))
+}
+
+/// The name cell is 136 px wide and its boxes stop there, so a name or what that is one
+/// word wider than the cell overflows its box and runs into the why column: text-fits-box
+/// reports it at the list. The same words with spaces wrap inside the cell.
+#[test]
+fn a_part_name_of_one_word_wider_than_its_column_is_a_text_fits_box_defect() {
+    let name = "trigger_evaluation_plan_store_for_operators";
+    let what = "postgres_with_a_logical_replication_slot";
+    let geometry = corner_parts_list(name, what);
+    let fits = text_fits_box(&geometry);
+    let found: Vec<(&str, &str)> = fits
+        .defects
+        .iter()
+        .map(|defect| {
+            let part = defect.message.split(' ').next().unwrap_or_default();
+            (defect.pointer.as_str(), part)
+        })
+        .collect();
+    assert_eq!(
+        found,
+        [
+            ("/body/0/children/2", "part_title"),
+            ("/body/0/children/2", "part_what")
+        ],
+        "{:?}",
+        fits.defects
+    );
+    let list = geometry
+        .node(&common::pointer("/body/0/children/2"))
+        .unwrap();
+    let title = list.part(PartName::PartTitle).unwrap().bounds;
+    let why_rule = list.part(PartName::PartWhyRule).unwrap().bounds;
+    assert!(
+        title.right() <= why_rule.x,
+        "{title:?} crosses {why_rule:?}"
+    );
+
+    let spaced = corner_parts_list(&name.replace('_', " "), &what.replace('_', " "));
+    assert_eq!(text_fits_box(&spaced).defects, Vec::new());
+}
+
 /// Every where-used text is the distinct cells of the glyph centres of its key, read here
 /// from the drawn glyphs and the marks of each carrier, sorted by row and column.
 #[test]
