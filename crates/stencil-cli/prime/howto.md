@@ -1,6 +1,6 @@
 # How-tos
 
-A HowTo shows what an operator types: a View child holding 1 to 6 items, numbered `<view>.<n>` on the sheet. Items lie in equal columns, as many to a row as fit their widest terminal line and heading on the sheet's width, the rows balanced (four that fit three to a row lie two and two).
+A HowTo shows what an operator types: a View child holding 1 to 6 items, numbered `<view>.<n>` on the sheet. Items lie in equal columns, as many to a row as fit their widest terminal line and heading on the sheet's width, the rows balanced (four that fit three to a row lie two and two). So one wide line or heading leaves every item fewer to a row, and no check reports it: shorten it, or move its item to a HowTo of its own in the same View.
 
 - Heading: the number, the title in capitals, and right of it the command line: up to 5 `commands`, each a string drawn as a chip or {words} drawn as plain text between chips, set on one line.
 - Body: `text` above the terminal, or beside it with `beside: true`, which needs both.
