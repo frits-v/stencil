@@ -153,6 +153,7 @@ fn ci() -> Result<(), String> {
         "theme docs",
         run(Command::new("scripts/check-theme-docs.sh").args([STENCIL, &theme_docs])),
     ));
+    outcomes.push(("land", run(&mut Command::new("scripts/check-land.sh"))));
     outcomes.push(("opengrep", opengrep().map(|summary| println!("{summary}"))));
     outcomes.push((
         "workflows",
