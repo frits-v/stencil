@@ -1,0 +1,12 @@
+on:
+  issue_comment:
+    types: [created]
+jobs:
+  review:
+    runs-on: ubuntu-24.04
+    environment: review
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: refs/pull/${{ github.event.issue.number }}/head
+      - run: target/debug/xtask review --post

@@ -1,0 +1,57 @@
+name: review-dry-run
+# Runs the reviewer of the branch it is started on against that branch and prints the verdict
+# it would give; it posts nothing and holds no App key, so a reviewer change can be tried
+# before it reaches the base branch: gh workflow run review-dry-run.yml --ref <branch>
+on:
+  workflow_dispatch:
+permissions: {}
+concurrency:
+  group: review-dry-run-${{ github.ref }}
+  cancel-in-progress: true
+defaults:
+  run:
+    shell: bash
+jobs:
+  review-dry-run:
+    name: review-dry-run
+    # Holds only the Langfuse key, for any branch.
+    environment:
+      name: review-dry-run
+      deployment: false
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    env:
+      MISE_TASK_RUN_AUTO_INSTALL: "false"
+    permissions:
+      contents: read # checkout
+      id-token: write # the OIDC token xtask review trades for an Anthropic access token
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            ~/.cargo/.global-cache
+            ~/.cache/mbx
+          key: ${{ runner.os }}-${{ runner.arch }}-mbx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-${{ runner.arch }}-mbx-
+      - uses: jdx/mise-action@2d8d4cafcbd33be2ea37d2b6f5ad595363d1f1ca # v5.1.1
+        with:
+          version: 2026.9.13
+          cache: false
+          install_args: rust mr-boxington claude
+      - run: cargo build --locked -p xtask
+      - run: target/debug/xtask review --dry-run
+        env:
+          ANTHROPIC_FEDERATION_RULE_ID: ${{ vars.ANTHROPIC_FEDERATION_RULE_ID }}
+          ANTHROPIC_ORGANIZATION_ID: ${{ vars.ANTHROPIC_ORGANIZATION_ID }}
+          ANTHROPIC_SERVICE_ACCOUNT_ID: ${{ vars.ANTHROPIC_SERVICE_ACCOUNT_ID }}
+          ANTHROPIC_WORKSPACE_ID: ${{ vars.ANTHROPIC_WORKSPACE_ID }}
+          LANGFUSE_BASE_URL: ${{ vars.LANGFUSE_BASE_URL }}
+          LANGFUSE_PUBLIC_KEY: ${{ vars.LANGFUSE_PUBLIC_KEY }}
+          LANGFUSE_SECRET_KEY: ${{ secrets.LANGFUSE_SECRET_KEY }}
