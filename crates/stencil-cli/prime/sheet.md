@@ -2,10 +2,12 @@
 
 A page with `sheet` is a design sheet: one system as an engineering drawing on one page, flat only, chrome kept.
 
-- Frame: the canvas is the width plus 50 px on each side. A border 12 px in and a rule 32 px in hold a band of grid references, columns 1 to 8 along the top and bottom and rows A to F down both sides. The theme's sheet role paints it and may draw a faint drafting grid inside.
-- Title block, view 1, across the top in four cells. The first is the page head: the badge, the kicker after `1 · `, the wordmark set large when given, the title (the motto under a wordmark), and the lede. The problem cell holds a lead and points P1 to P8; the answer cell a statement and up to four paragraphs; the attention cell items, each an id, a lead and a text. A paragraph is a string or {lead,text}; a lead is set bold with its text running on after it on the same line.
-- Captions: each cell opens with its caption in capitals, authored (at most 60 characters) or the word Problem, Answer or Attention. A wordmark holds 24.
-- Legend: a strip along the foot of the title block, inside its border: a row Who acts with a chip per actor, then a row Lines with the entries. A sheet draws at least one Pipe, Tee or Link for it to key.
+Start from `stencil prime onepager`, a whole sheet: title block, actors, legend and Views Workflow (Phases, Ladder), System (the drawing, PartsList, GeneralNotes) and How-tos. Keep the structure, replace the content. For a non-GCP subject: `stencil prime grammar plain`.
+
+- Frame: the canvas is the width plus 50 px on each side. A border 12 px in and a rule 32 px in hold a band of grid references, columns 1 to 8 along the top and bottom and rows A to F down both sides.
+- Title block, view 1, across the top in four cells. The first is the page head: the badge, the kicker after `1 · `, the wordmark set large when given, the title (the motto under a wordmark), and the lede. The problem cell holds a lead and points P1 to P8; the answer cell a statement and up to four paragraphs; the attention cell items, each an id, a lead and a text. A paragraph is a string or {lead,text}; the lead is set bold, its text running on after it.
+- Captions: each cell opens with its caption in capitals, authored or the word Problem, Answer or Attention.
+- Legend: a strip at the foot of the title block: a row Who acts with a chip per actor, then a row Lines with the entries.
 - Actors: `actors` names who acts, each with its own tint slot. An Item, Box, Pipe, Tee or Link with `actor` takes its colours: wire for outlines and lines, ink for titles. A line without one takes the actor of the node it leaves (a Step's lane); gray and deny take none. With actors no tint is written, and a `by_actor` legend entry keys every solid or dashed use.
 - Phases, Steps and lanes: `stencil prime phases`. Marks, the parts list and general notes: `stencil prime marks`.
 - Views: the body holds Views and nothing else, each a body child, numbered from 2. A View is a heading (a numbered circle, the title, a subtitle, a rule to the right edge and the note) over its children in a column, gap 16. Inside a View every node works as on any page.

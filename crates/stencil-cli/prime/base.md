@@ -23,7 +23,6 @@ Every node object carries "tag"; the Page does not. * required, =default. A fiel
 - A pipe tag sizes to its one-line label and widens its gutter: 1-3 words, detail in sub.
 - Gutter: Row [producer Col, gutter Col, target Box]. The gutter Col holds one slot per producer Box: a Col, gap 12, of that Box's h Pipes. Name the Boxes in each Pipe's from and to so its slot centers on them.
 - The legend lists each line and tint in use once, and nothing else; its label (Solid blue) is fixed; write the text as meaning.
-- Lanes: equal head columns; a link with order between two heads is a message row below.
 
 # Checks
 
@@ -52,7 +51,7 @@ Every node object carries "tag"; the Page does not. * required, =default. A fiel
 
 - One figure, one story: what the reader should take away fits the title.
 - Sequence and timeline figures: Lanes with ordered links, see `stencil prime grammar plain`.
-- Design sheets, flat only: `stencil prime sheet`.
+- One-pager or design sheet: start from `stencil prime onepager > fig.json`, then read `stencil prime sheet`.
 
 # Themes
 

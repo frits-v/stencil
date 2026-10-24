@@ -357,13 +357,13 @@ fn every_listed_topic_prints_non_empty_text_within_its_budget() {
 }
 
 #[test]
-fn only_the_example_topic_is_exempt_from_the_byte_budget() {
+fn only_the_example_topics_are_exempt_from_the_byte_budget() {
     let exempt: Vec<&str> = Topic::ALL
         .into_iter()
         .filter(|topic| !topic.has_byte_budget())
         .map(Topic::name)
         .collect();
-    assert_eq!(exempt, vec!["example"]);
+    assert_eq!(exempt, vec!["example", "onepager"]);
 }
 
 #[test]
@@ -371,6 +371,16 @@ fn the_example_topic_prints_g7_verbatim() {
     let outcome = run_stencil(&["prime", "example"]);
     assert_eq!(outcome.code, ExitCode::Clean);
     assert_eq!(outcome.stdout, fs::read_to_string(g7_path()).unwrap());
+}
+
+/// The design-sheet template reaches an agent running the installed binary outside the
+/// repository, and it is the document the binary itself vets.
+#[test]
+fn the_onepager_topic_prints_the_onepager_example_verbatim() {
+    let outcome = run_stencil(&["prime", "onepager"]);
+    assert_eq!(outcome.code, ExitCode::Clean);
+    let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../examples/onepager.json");
+    assert_eq!(outcome.stdout, fs::read_to_string(path).unwrap());
 }
 
 #[test]
@@ -612,8 +622,8 @@ fn prime_grammar_with_an_unknown_or_missing_name_exits_2_with_one_line() {
     assert_eq!(extra.stdout, "");
 }
 
-/// The base briefing has 3 bytes to spare, so it names the designed themes and leaves the
-/// imported tier to the themes topic.
+/// The base briefing names the designed themes and leaves the imported tier to the themes
+/// topic.
 #[test]
 fn the_base_briefing_names_every_designed_theme() {
     let text = base_output();
@@ -841,7 +851,7 @@ fn every_field_note_names_a_field_the_schema_has() {
 #[test]
 fn prime_texts_follow_the_house_style() {
     for (topic, text) in all_texts() {
-        if topic == "example" {
+        if Topic::from_name(&topic).is_some_and(|topic| !topic.has_byte_budget()) {
             continue;
         }
         assert!(!text.contains('\u{2014}'), "{topic} has an emdash");

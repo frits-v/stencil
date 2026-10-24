@@ -22,7 +22,7 @@ const KINDS_MARKER: &str = "{{kinds}}";
 /// Largest `stencil prime` output, in bytes.
 pub const BASE_BYTES_MAX: usize = 7000;
 /// Largest `stencil prime <topic>` and `stencil prime grammar <name>` output, in bytes, for
-/// every topic except `example`.
+/// every topic except `example` and `onepager`.
 pub const TOPIC_BYTES_MAX: usize = 5000;
 
 /// Schema definitions that get their own vocabulary row after Page and the node tags.
@@ -82,10 +82,11 @@ pub enum Topic {
     Assembly,
     HowTo,
     Example,
+    Onepager,
 }
 
 impl Topic {
-    pub const ALL: [Topic; 13] = [
+    pub const ALL: [Topic; 14] = [
         Topic::Themes,
         Topic::Links,
         Topic::Blocks,
@@ -99,6 +100,7 @@ impl Topic {
         Topic::Assembly,
         Topic::HowTo,
         Topic::Example,
+        Topic::Onepager,
     ];
 
     pub fn name(self) -> &'static str {
@@ -116,6 +118,7 @@ impl Topic {
             Topic::Assembly => "assembly",
             Topic::HowTo => "howto",
             Topic::Example => "example",
+            Topic::Onepager => "onepager",
         }
     }
 
@@ -124,7 +127,7 @@ impl Topic {
     }
 
     /// The topic as printed: its text with every vocabulary marker filled from the schema.
-    /// `example` is `examples/g7.json` verbatim.
+    /// `example` is `examples/g7.json` verbatim, `onepager` `examples/onepager.json`.
     pub fn rendered(self) -> Result<String, PrimeError> {
         let template = self.template();
         if !template.contains(TOPIC_VOCABULARY_MARKER) {
@@ -171,10 +174,11 @@ impl Topic {
             Topic::Assembly => include_str!("../prime/assembly.md"),
             Topic::HowTo => include_str!("../prime/howto.md"),
             Topic::Example => include_str!("../../../examples/g7.json"),
+            Topic::Onepager => include_str!("../../../examples/onepager.json"),
         }
     }
 
-    /// Whether the text is held to TOPIC_BYTES_MAX. The example is a whole document.
+    /// Whether the text is held to TOPIC_BYTES_MAX. The two examples are whole documents.
     pub fn has_byte_budget(self) -> bool {
         match self {
             Topic::Themes
@@ -189,7 +193,7 @@ impl Topic {
             | Topic::Marks
             | Topic::Assembly
             | Topic::HowTo => true,
-            Topic::Example => false,
+            Topic::Example | Topic::Onepager => false,
         }
     }
 }

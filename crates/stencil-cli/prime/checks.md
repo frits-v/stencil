@@ -33,7 +33,7 @@ Examined counts: a check that examined 0 fails, since a pass over nothing proves
 | description-covers-drawing | element | the unit, or "" | not described; on N lines; line lacks NAME; names P, not drawn; says T, examined E |
 | junctions-plain | junction | the arms' first link | four arms of A px around (X, Y)[ in layout space] each turn the same way at their ends, score S of 0.80: OWNERS |
 
-Numbers carry 2 decimals; the tolerance is 0.01 px, and touching edges pass. text-fits-box also checks the tag of every labeled link. PART is a snake_case part name: function_name (an Item's title), product_name (its subtitle), fact, built, ask, tag_label, tag_sub, hub_text, label, text, badge_text, legend_label, legend_text, heading, marker, body_line.
+Numbers carry 2 decimals; the tolerance is 0.01 px, and touching edges pass. text-fits-box also checks the tag of every labeled link. PART is a snake_case part name, such as function_name (an Item's title), product_name (its subtitle), fact, built, ask, tag_label, tag_sub, hub_text, label, text, badge_text, legend_label, legend_text, heading, marker, body_line.
 
 Reading defects:
 
