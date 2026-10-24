@@ -140,6 +140,7 @@ fn golden_g7() {
             (CheckName::DescriptionCoversDrawing, 26),
             (CheckName::KeysUsed, 0),
             (CheckName::MarksClear, 0),
+            (CheckName::JunctionsPlain, 104),
         ]
     );
     for report in &reports {
@@ -160,7 +161,8 @@ fn golden_g7() {
             | CheckName::LegendConsistency
             | CheckName::PipesLand
             | CheckName::IconMatchesProduct
-            | CheckName::DescriptionCoversDrawing => CheckOutcome::Passed,
+            | CheckName::DescriptionCoversDrawing
+            | CheckName::JunctionsPlain => CheckOutcome::Passed,
         };
         assert_eq!(report.outcome(), expected, "{report:?}");
     }

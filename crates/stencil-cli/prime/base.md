@@ -4,7 +4,7 @@ stencil turns structural JSON (boxes, items, facts, pipes, links; no coordinates
 
 # Loop
 
-Write fig.json, `stencil vet fig.json`, `stencil check fig.json`, `stencil render fig.json --out-dir out --scale 2`, Read out/fig.png, fix, repeat until check shows 0 failed and the PNG reads right. `render` also writes out/fig.description.md, the figure in words; `stencil describe fig.json` prints it. Exit 0 clean; 1 defect in the document (fix the JSON at the pointer); 2 could not run (arguments, paths, fonts).
+Write fig.json, `stencil vet fig.json`, `stencil check fig.json`, `stencil render fig.json --out-dir out --scale 2`, Read out/fig.png, fix, repeat until check shows 0 failed and the PNG reads right. `render` also writes out/fig.description.md, the figure in words. Exit 0 clean; 1 defect in the document (fix the JSON at the pointer); 2 could not run (arguments, paths, fonts).
 
 # Grammars
 
@@ -44,8 +44,9 @@ Every node object carries "tag"; the Page does not. * required, =default. A fiel
 | iso-link-ends | end off its node or on a corner | move the end |
 | iso-links-apart | two links share a stretch or an end | opposite sides |
 | print-fit | with --print-width: prints below 8 pt at that width | widen the print or shorten the figure |
-| icon-matches-product | the subtitle names a product whose own icon is another, or a product icon on a product without one | use the product's icon or a category icon |
-| description-covers-drawing | fig.description.md misses or misnames a drawn unit | a stencil bug: report it |
+| icon-matches-product | the subtitle's product has another icon, or none of its own | use that icon or a category icon |
+| description-covers-drawing | the description misses a drawn unit | a stencil bug: report it |
+| junctions-plain | four arms from one point, all turning the same way | move a link end or add via |
 
 # Rules no check enforces
 
