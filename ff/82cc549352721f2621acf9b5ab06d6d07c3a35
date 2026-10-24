@@ -1,0 +1,29 @@
+crates/stencil-cli/prime/base.md
+  s_1be56d58c564da::t_fdf6dc90d36d5c 55
+crates/stencil-cli/prime/grammars/plain.md
+  s_1be56d58c564da::t_c724d457f83f8f 16-17
+crates/stencil-cli/prime/howto.md
+  s_1be56d58c564da::t_c53b07b69fe089 8
+crates/stencil-cli/prime/links.md
+  s_1be56d58c564da::t_566430292f3fd2 27
+crates/stencil-cli/prime/marks.md
+  s_1be56d58c564da::t_1fe4d7933d412a 7
+crates/stencil-cli/prime/sheet.md
+  s_1be56d58c564da::t_ad0c035b639795 5-10,46
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "ff82cc549352721f2621acf9b5ab06d6d07c3a35",
+  "prompts": {},
+  "sessions": {
+    "s_1be56d58c564da": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "5722756d-f52e-4599-a761-9d76b4d496c1",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Frits <4488681+frits-v@users.noreply.github.com>"
+    }
+  }
+}
