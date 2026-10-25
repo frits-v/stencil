@@ -594,7 +594,13 @@ fn prime_grammar_plain_covers_lanes_and_names_each_plain_example_on_one_line() {
     ] {
         assert!(lanes_lines[0].contains(phrase), "Lanes line lacks {phrase}");
     }
-    for stem in ["sequence", "org", "onprem-network"] {
+    for stem in [
+        "sequence",
+        "org",
+        "onprem-network",
+        "onepager",
+        "design-brief",
+    ] {
         let path = format!("examples/{stem}.json");
         let lines = plain.lines().filter(|line| line.contains(&path)).count();
         assert_eq!(lines, 1, "{stem}: {plain}");

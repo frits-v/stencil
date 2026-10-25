@@ -14,7 +14,7 @@ fn design_brief_lays_out_with_every_link_routed_and_no_geometry_defect() {
     let page = parse_page(DESIGN_BRIEF_JSON).expect("design-brief vets");
     let geometry = layout_page(
         &page,
-        &stencil_model::builtin_grammar("gcp").unwrap().unwrap(),
+        &stencil_model::builtin_grammar("plain").unwrap().unwrap(),
         &mut FixedMetricsMeasurer::default(),
     )
     .expect("design-brief lays out");

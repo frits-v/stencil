@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Regenerates the committed fixtures of the given example stems (every example when none
 # is named): the center SVG, measured JSON and description under
-# crates/stencil-render/tests/fixtures, and the check and vet lines under
-# crates/stencil-cli/tests/fixtures for the stems that have them.
+# crates/stencil-render/tests/fixtures, the corner-0 SVG for the stems that have one, and
+# the check and vet lines under crates/stencil-cli/tests/fixtures for the stems that have them.
 # The SVG fixture is the font-free document render_svg returns, so the @font-face block the
 # written file carries is removed; the measured JSON fixture leaves out the document key.
 # Run from the repository root. The first argument is the stencil binary.
@@ -45,6 +45,22 @@ if lines[end] == "  }":
 open(sys.argv[2], "w", encoding="utf-8").write("\n".join(kept))
 PY
   cp "$out/$stem.description.md" "$render_fixtures/$stem.description.md"
+  if [[ -e "$render_fixtures/$stem.square.svg" ]]; then
+    python3 - "examples/$stem.json" "$out/$stem.square.json" <<'PY'
+import json, sys
+document = json.load(open(sys.argv[1], encoding="utf-8"))
+document["corner"] = 0
+json.dump(document, open(sys.argv[2], "w", encoding="utf-8"), ensure_ascii=False)
+PY
+    "$stencil" render "$out/$stem.square.json" --out-dir "$out/square" --scale 2 --theme center >/dev/null
+    python3 - "$out/square/$stem.square.svg" "$render_fixtures/$stem.square.svg" <<'PY'
+import sys
+lines = open(sys.argv[1], encoding="utf-8").read().split("\n")
+if lines[1] == "  <defs>" and lines[2] == "    <style>":
+    lines = lines[:1] + lines[lines.index("  </defs>") + 1:]
+open(sys.argv[2], "w", encoding="utf-8").write("\n".join(lines))
+PY
+  fi
   if [[ -e "$cli_fixtures/$stem.check.txt" ]]; then
     "$stencil" check "examples/$stem.json" >| "$cli_fixtures/$stem.check.txt" || true
     "$stencil" vet "examples/$stem.json" >| "$cli_fixtures/$stem.vet.txt" || true
