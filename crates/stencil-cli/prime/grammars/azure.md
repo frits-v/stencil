@@ -20,7 +20,7 @@ The Azure vocabulary: set "grammar": "azure" on the page. A design sheet under a
 | services | PaaS services reached from a VNet over private endpoints, beside every vnet |
 | assembly | the parts one actor runs, on a design sheet only |
 
-Nesting: azure, then subscription, then region, then vnet, then subnet; a resource-group wraps what it holds. onprem sits outside azure. Tint pairing is gcp's: a solid pipe of one slot sits beside or inside no tinted region or onprem of another slot.
+Nesting: azure, then subscription, then region, then vnet, then subnet; a resource-group wraps what it holds. onprem sits outside azure. Tint pairing is the core's: a solid pipe of one slot sits beside or inside no tinted region or onprem of another slot.
 
 Placement: Storage, SQL Database, Cosmos DB, Key Vault, Service Bus, Event Hubs, App Service, Functions, Logic Apps, Azure OpenAI and the other PaaS services are not addresses in a VNet: draw them in a services box beside the vnet, with the private endpoint or VNet integration inside. Virtual machines, AKS node pools, Container Apps environments, App Service Environments, Application Gateway, Azure Firewall, Bastion and SQL Managed Instance sit in a subnet. Entra ID, Front Door, Traffic Manager, DNS zones and Azure Policy are global or tenant-wide: outside every region. vet rejects both placements and a product with no subtitle, doc fact or ask.
 

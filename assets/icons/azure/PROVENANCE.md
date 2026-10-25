@@ -74,12 +74,13 @@ Mapping, verified 2026-10-25:
 Several icons appear in more than one category folder with identical content; the
 path listed is the most specific folder.
 
-Regenerate the check by unzipping the archive and comparing sha256 sums of each
-file against this directory:
+Azure archive paths are relative to the archive's top folder,
+`Azure_Public_Service_Icons/`. Regenerate the check by unzipping both archives and
+comparing sha256 sums of each file against this directory:
 
 ```
 shasum -a 256 assets/icons/azure/*.svg
-shasum -a 256 "Azure_Public_Service_Icons/Icons/<archive path>"
+shasum -a 256 "Azure_Public_Service_Icons/<archive path>"
 ```
 
 ### Stated terms
