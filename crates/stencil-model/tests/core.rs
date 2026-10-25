@@ -18,11 +18,7 @@ use stencil_model::{
     validate_page,
 };
 
-const EXAMPLES: [(&str, &str); 8] = [
-    (
-        "aws-hybrid",
-        include_str!("../../../examples/aws-hybrid.json"),
-    ),
+const EXAMPLES: [(&str, &str); 7] = [
     ("g7", include_str!("../../../examples/g7.json")),
     ("hero-iso", include_str!("../../../examples/hero-iso.json")),
     (
@@ -93,6 +89,16 @@ fn every_gcp_example_parses_round_trips_and_vets_clean() {
         let reparsed = parse_and_vet(&written, &grammar).unwrap();
         assert_eq!(reparsed, page, "{name}: round trip");
     }
+}
+
+#[test]
+fn the_aws_example_parses_round_trips_and_vets_clean() {
+    let grammar = stencil_model::builtin_grammar("aws").unwrap().unwrap();
+    let document = include_str!("../../../examples/aws-hybrid.json");
+    let page = parse_and_vet(document, &grammar).unwrap_or_else(|error| panic!("{error:?}"));
+    assert_eq!(page.grammar.as_deref(), Some("aws"));
+    let written = serde_json::to_string(&page).unwrap();
+    assert_eq!(parse_and_vet(&written, &grammar).unwrap(), page);
 }
 
 #[test]
