@@ -170,10 +170,26 @@ fn data_uri_decodes_to_the_exact_icon_bytes() {
     }
 }
 
+/// Each bundled pack is drawn by the built-in grammar of the same name, whose product kind
+/// draws from it.
 #[test]
-fn a_card_for_each_icon_renders_to_png() {
-    let gcp_icons = IconPack::Gcp.icons();
-    let cards: Vec<_> = gcp_icons
+fn a_card_for_each_icon_of_every_bundled_pack_renders_to_png() {
+    let mut examined = 0;
+    for pack in IconPack::BUNDLED {
+        examined += render_a_card_for_each_icon(pack);
+    }
+    println!(
+        "examined {examined} icons in {} packs",
+        IconPack::BUNDLED.len()
+    );
+    assert!(examined > 0);
+}
+
+/// Renders one product card per icon of the pack under its grammar and returns the number of
+/// icons drawn.
+fn render_a_card_for_each_icon(pack: IconPack) -> usize {
+    let pack_icons = pack.icons();
+    let cards: Vec<_> = pack_icons
         .iter()
         .map(|icon| {
             let stem = icon.as_str();
@@ -186,7 +202,7 @@ fn a_card_for_each_icon_renders_to_png() {
     ]);
     let legend = json!([{ "line": "solid", "tint": 1, "text": "request path" }]);
     let mut document = common::page_document(body, legend);
-    document["grammar"] = json!("gcp");
+    document["grammar"] = json!(pack.as_str());
     let rendered = common::render_document_with_fixed_metrics(document);
 
     let document = common::parse_xml(&rendered.svg.svg);
@@ -194,8 +210,8 @@ fn a_card_for_each_icon_renders_to_png() {
         .descendants()
         .filter(|node| node.has_tag_name("image"))
         .collect();
-    assert_eq!(images.len(), gcp_icons.len());
-    for (image, icon) in images.iter().zip(gcp_icons) {
+    assert_eq!(images.len(), pack_icons.len(), "{}", pack.as_str());
+    for (image, icon) in images.iter().zip(pack_icons.iter().copied()) {
         assert_eq!(image.attribute("href"), Some(icon_data_uri(icon).as_str()));
         assert_eq!(image.attribute("width"), Some("28"));
         assert_eq!(image.attribute("height"), Some("28"));
@@ -209,4 +225,5 @@ fn a_card_for_each_icon_renders_to_png() {
     .unwrap();
     let pixmap = common::decode_png(&png);
     assert!(pixmap.width() > 0 && pixmap.height() > 0);
+    pack_icons.len()
 }

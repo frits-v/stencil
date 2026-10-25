@@ -5,10 +5,12 @@ use base64::Engine;
 use base64::engine::general_purpose::STANDARD;
 use stencil_model::IconName;
 
+mod aws;
 mod gcp;
 
 pub fn icon_svg_bytes(icon: IconName) -> &'static [u8] {
     match icon {
+        IconName::Aws(icon) => aws::svg_bytes(icon),
         IconName::Gcp(icon) => gcp::svg_bytes(icon),
     }
 }

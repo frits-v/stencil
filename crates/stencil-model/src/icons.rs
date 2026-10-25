@@ -8,8 +8,10 @@ use std::fmt;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
+mod aws;
 mod gcp;
 
+pub use aws::AwsIcon;
 pub use gcp::GcpIcon;
 
 /// An icon file stem: lowercase ASCII letters and digits in runs joined by single `-`.
@@ -93,17 +95,19 @@ impl JsonSchema for IconStem {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "lowercase")]
 pub enum IconPack {
+    Aws,
     Gcp,
     None,
 }
 
 impl IconPack {
     /// Every pack with files under `assets/icons/<pack>/`.
-    pub const BUNDLED: [IconPack; 1] = [IconPack::Gcp];
+    pub const BUNDLED: [IconPack; 2] = [IconPack::Aws, IconPack::Gcp];
 
     /// The serialized name, which is also the pack's directory under `assets/icons/`.
     pub fn as_str(self) -> &'static str {
         match self {
+            IconPack::Aws => "aws",
             IconPack::Gcp => "gcp",
             IconPack::None => "none",
         }
@@ -112,6 +116,7 @@ impl IconPack {
     /// The pack's icons in its `ALL` order; empty for `None`.
     pub fn icons(self) -> Vec<IconName> {
         match self {
+            IconPack::Aws => AwsIcon::ALL.into_iter().map(IconName::Aws).collect(),
             IconPack::Gcp => GcpIcon::ALL.into_iter().map(IconName::Gcp).collect(),
             IconPack::None => Vec::new(),
         }
@@ -120,6 +125,7 @@ impl IconPack {
     /// The icon `stem` names in this pack, or None when the pack has no such file.
     pub fn resolve(self, stem: &IconStem) -> Option<IconName> {
         match self {
+            IconPack::Aws => AwsIcon::from_stem(stem.as_str()).map(IconName::Aws),
             IconPack::Gcp => GcpIcon::from_stem(stem.as_str()).map(IconName::Gcp),
             IconPack::None => None,
         }
@@ -129,12 +135,14 @@ impl IconPack {
 /// One bundled icon file: a stem scoped by its pack.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum IconName {
+    Aws(AwsIcon),
     Gcp(GcpIcon),
 }
 
 impl IconName {
     pub fn pack(self) -> IconPack {
         match self {
+            IconName::Aws(_) => IconPack::Aws,
             IconName::Gcp(_) => IconPack::Gcp,
         }
     }
@@ -148,6 +156,7 @@ impl IconName {
     /// The icon's file name in `assets/icons/<pack>/`: the stem plus `.svg`.
     pub fn file_name(self) -> &'static str {
         match self {
+            IconName::Aws(icon) => icon.file_name(),
             IconName::Gcp(icon) => icon.file_name(),
         }
     }

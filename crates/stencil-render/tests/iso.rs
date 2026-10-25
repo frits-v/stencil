@@ -361,6 +361,7 @@ fn flat_written_out_renders_the_same_bytes_as_absent() {
         common::G7_JSON,
         include_str!("../../../examples/hybrid-ai.json"),
         include_str!("../../../examples/network-hub-spoke.json"),
+        include_str!("../../../examples/aws-hybrid.json"),
     ] {
         let absent: Page = serde_json::from_str(document).unwrap();
         let mut value: Value = serde_json::from_str(document).unwrap();
@@ -1414,6 +1415,7 @@ fn every_example_renders_under_iso_in_every_theme() {
         include_str!("../../../examples/stress-dense.json"),
         include_str!("../../../examples/hybrid-ai.json"),
         include_str!("../../../examples/network-hub-spoke.json"),
+        include_str!("../../../examples/aws-hybrid.json"),
     ] {
         // Geometry is theme-independent (section 11.1), so one layout serves every theme.
         let geometry = common::layout_with_cosmic_text(&serde_json::from_str(document).unwrap());

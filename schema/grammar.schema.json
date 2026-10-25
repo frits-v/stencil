@@ -162,6 +162,7 @@
       "description": "The pack an item kind draws its icons from.",
       "type": "string",
       "enum": [
+        "aws",
         "gcp",
         "none"
       ]

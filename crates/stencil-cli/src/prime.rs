@@ -212,13 +212,14 @@ pub fn topic_names() -> String {
 /// The grammar briefing text of a built-in grammar, before its kind tables are filled in.
 fn grammar_briefing_text(name: &str) -> Option<&'static str> {
     match name {
+        "aws" => Some(include_str!("../prime/grammars/aws.md")),
         "gcp" => Some(include_str!("../prime/grammars/gcp.md")),
         "plain" => Some(include_str!("../prime/grammars/plain.md")),
         _ => None,
     }
 }
 
-/// `gcp, plain`, the built-in grammar names in `BUILTIN_GRAMMARS` order.
+/// `aws, gcp, plain`, the built-in grammar names in `BUILTIN_GRAMMARS` order.
 pub fn grammar_names() -> String {
     BUILTIN_GRAMMARS.join(", ")
 }

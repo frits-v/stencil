@@ -9,7 +9,7 @@ use std::collections::BTreeSet;
 use std::fs;
 use std::path::PathBuf;
 
-use stencil_model::{GcpIcon, IconName, IconPack, IconStem};
+use stencil_model::{AwsIcon, GcpIcon, IconName, IconPack, IconStem};
 
 fn pack_directory(pack: IconPack) -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -130,6 +130,30 @@ fn gcp_icons_keep_their_order_and_file_names() {
 }
 
 #[test]
+fn aws_icons_keep_their_order_and_file_names() {
+    assert_eq!(AwsIcon::ALL.len(), 46);
+    assert_eq!(AwsIcon::ALL.first(), Some(&AwsIcon::Analytics));
+    assert_eq!(AwsIcon::Route53.file_name(), "route-53.svg");
+    assert_eq!(
+        IconPack::Aws.icons(),
+        AwsIcon::ALL.map(IconName::Aws).to_vec()
+    );
+}
+
+#[test]
+fn a_stem_in_two_packs_is_two_icons() {
+    let compute = IconStem::try_from("compute").unwrap();
+    let aws = IconPack::Aws.resolve(&compute).unwrap();
+    let gcp = IconPack::Gcp.resolve(&compute).unwrap();
+    assert_eq!(aws, IconName::Aws(AwsIcon::Compute));
+    assert_eq!(gcp, IconName::Gcp(GcpIcon::Compute));
+    assert_ne!(aws, gcp);
+    let s3 = IconStem::try_from("s3").unwrap();
+    assert_eq!(IconPack::Aws.resolve(&s3), Some(IconName::Aws(AwsIcon::S3)));
+    assert_eq!(IconPack::Gcp.resolve(&s3), None);
+}
+
+#[test]
 fn a_stem_resolves_only_in_a_pack_that_has_its_file() {
     let gke = IconStem::try_from("gke").unwrap();
     assert_eq!(
@@ -137,6 +161,7 @@ fn a_stem_resolves_only_in_a_pack_that_has_its_file() {
         Some(IconName::Gcp(GcpIcon::Gke))
     );
     assert_eq!(IconPack::None.resolve(&gke), None);
+    assert_eq!(IconPack::Aws.resolve(&gke), None);
     let bigtable = IconStem::try_from("bigtable").unwrap();
     assert_eq!(IconPack::Gcp.resolve(&bigtable), None);
 }

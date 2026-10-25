@@ -92,6 +92,16 @@ fn every_gcp_example_parses_round_trips_and_vets_clean() {
 }
 
 #[test]
+fn the_aws_example_parses_round_trips_and_vets_clean() {
+    let grammar = stencil_model::builtin_grammar("aws").unwrap().unwrap();
+    let document = include_str!("../../../examples/aws-hybrid.json");
+    let page = parse_and_vet(document, &grammar).unwrap_or_else(|error| panic!("{error:?}"));
+    assert_eq!(page.grammar.as_deref(), Some("aws"));
+    let written = serde_json::to_string(&page).unwrap();
+    assert_eq!(parse_and_vet(&written, &grammar).unwrap(), page);
+}
+
+#[test]
 fn tints_1_and_8_vet_clean_and_0_and_9_are_out_of_range_on_every_carrier() {
     let grammar = gcp();
     for (tint, expected) in [(1, 0), (8, 0), (0, 6), (9, 6)] {

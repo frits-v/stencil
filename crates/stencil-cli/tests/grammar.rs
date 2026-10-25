@@ -111,6 +111,50 @@ fn a_gcp_item_kind_under_plain_is_kind_unknown() {
 }
 
 #[test]
+fn an_aws_product_vets_clean_and_a_gcp_container_kind_under_aws_is_kind_unknown() {
+    let directory = scratch_directory("aws_kinds");
+    let document = directory.join("aws.json");
+    let mut value = page("aws", "product");
+    value["body"][0]["subtitle"] = json!("AWS Lambda");
+    value["body"][0]["icon"] = json!("lambda");
+    write_json(&document, &value);
+
+    let outcome = run_stencil(&["vet", document.to_str().unwrap()]);
+
+    assert_eq!(outcome.code, ExitCode::Clean, "{}", outcome.stdout);
+    assert!(
+        outcome
+            .stdout
+            .contains("check remembered-constants: examined 8 text fields, 0 defects"),
+        "{}",
+        outcome.stdout
+    );
+    assert!(
+        outcome
+            .stdout
+            .contains("check icon-matches-product: examined 1 item, 0 defects"),
+        "{}",
+        outcome.stdout
+    );
+
+    value["body"] = json!([
+        { "tag": "Box", "kind": "project", "label": "Project", "children": [value["body"][0].clone()] },
+        value["body"][1].clone()
+    ]);
+    write_json(&document, &value);
+
+    let outcome = run_stencil(&["vet", document.to_str().unwrap()]);
+
+    assert_eq!(outcome.code, ExitCode::Defects);
+    assert_eq!(
+        outcome.stdout.lines().next(),
+        Some(
+            "violation kind-unknown /body/0/kind: kind \"project\" is not a container kind of grammar aws"
+        )
+    );
+}
+
+#[test]
 fn a_grammar_path_resolves_against_the_document_directory() {
     let directory = scratch_directory("grammar_path");
     write_json(&directory.join("grammars/mine.json"), &gcp_value());

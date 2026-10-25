@@ -2,7 +2,7 @@
 
 Stencil turns a JSON description of an architecture figure into an SVG, a PNG, a measured JSON and a Markdown description. The document describes structure only: boxes, items, facts, notes and the labeled pipes and links between them. It carries no coordinates. taffy computes every box, cosmic-text measures every string with the Inter font files bundled in this repository, and resvg renders with the same files, so a measured width is the rendered width. The contract is `docs/SPEC.md`.
 
-The vocabulary splits into a core and grammars (`docs/SPEC.md` section 13). The core is what every figure shares: `Row`, `Col`, `Lanes`, a generic container `Box`, a generic named leaf `Item` with facts whose `source` is `doc`, `built` or `ask`, notes and text blocks, and pipes, tees and links drawn with a `line` (`gray`, `solid`, `dash`, `deny`) and an optional `tint` slot 1 to 8. A grammar is a data module that gives a domain its kinds: which container kinds a `Box` may take, how each is drawn, where each may sit, which item kinds exist and which icons they carry. Two grammars ship. `plain`, the default, is vendor-neutral (`system`, `boundary`, `group`, `tile`, and the items `service`, `managed`, `store`, `queue`, `network`, `external`, `person`, `device`). `gcp` is the Google Cloud Architecture Center vocabulary (`gcp`, `vpc`, `region`, `subnet`, `onprem`, `project`, `optional`, `k8s`, `perimeter`, `apis`, and the `product` item). A `Lanes` node lays its children out as lane heads, and a link with `order` between two of them is a message drawn across the band below, in order, with a lifeline under each head. A page names its grammar with `"grammar"`, a built-in name or a path to a grammar `.json` file beside the document.
+The vocabulary splits into a core and grammars (`docs/SPEC.md` section 13). The core is what every figure shares: `Row`, `Col`, `Lanes`, a generic container `Box`, a generic named leaf `Item` with facts whose `source` is `doc`, `built` or `ask`, notes and text blocks, and pipes, tees and links drawn with a `line` (`gray`, `solid`, `dash`, `deny`) and an optional `tint` slot 1 to 8. A grammar is a data module that gives a domain its kinds: which container kinds a `Box` may take, how each is drawn, where each may sit, which item kinds exist and which icons they carry. Three grammars ship. `plain`, the default, is vendor-neutral (`system`, `boundary`, `group`, `tile`, and the items `service`, `managed`, `store`, `queue`, `network`, `external`, `person`, `device`). `aws` is the AWS vocabulary (`aws`, `account`, `region`, `vpc`, `az`, `subnet`, `onprem`, `optional`, `k8s`, `services`, and the `product` item). `gcp` is the Google Cloud Architecture Center vocabulary (`gcp`, `vpc`, `region`, `subnet`, `onprem`, `project`, `optional`, `k8s`, `perimeter`, `apis`, and the `product` item). A `Lanes` node lays its children out as lane heads, and a link with `order` between two of them is a message drawn across the band below, in order, with a lifeline under each head. A page names its grammar with `"grammar"`, a built-in name or a path to a grammar `.json` file beside the document.
 
 Build the binary with `cargo build --release`; it lands at `target/release/stencil`.
 
@@ -19,6 +19,10 @@ Build the binary with `cargo build --release`; it lands at `target/release/stenc
 ![Hub-and-spoke landing zone](docs/gallery/network-hub-spoke.png)
 
 `examples/network-hub-spoke.json`: a transit hub with one Shared VPC per environment and every path between them labeled.
+
+![A data center reaches a two-zone VPC over Direct Connect](docs/gallery/aws-hybrid.png)
+
+`examples/aws-hybrid.json`: a data center over Direct Connect into one region, a VPC across two Availability Zones, and the regional services the VPC reaches over endpoints beside it.
 
 ![Design one-pager for a trigger evaluation service](docs/gallery/design-brief.png)
 
@@ -136,7 +140,7 @@ A theme sets paint only: every theme draws every grammar, and the layout is the 
 
 ## The CUE gate
 
-Figures are authored in CUE against a grammar package. `cue/core.cue` holds the core vocabulary, `cue/grammar.cue` the `#Grammar` definition, and `cue/grammars/gcp.cue` and `cue/grammars/plain.cue` each grammar's data and the domain rules the Rust side does not evaluate, such as tint pairing and the requirement that every gcp product carries a subtitle, a doc fact or an ask. `cue/` is the module root, so the commands run from inside it. A figure passes three steps in order, and each one stops the pipeline on failure:
+Figures are authored in CUE against a grammar package. `cue/core.cue` holds the core vocabulary, `cue/grammar.cue` the `#Grammar` definition, and `cue/grammars/aws.cue`, `cue/grammars/gcp.cue` and `cue/grammars/plain.cue` each grammar's data and the domain rules the Rust side does not evaluate, such as tint pairing and the requirement that every gcp product carries a subtitle, a doc fact or an ask. `cue/` is the module root, so the commands run from inside it. A figure passes three steps in order, and each one stops the pipeline on failure:
 
 ```bash
 cd cue
@@ -145,8 +149,8 @@ cue export ./figures:gcp -e <field> --out json -o ../figure.json
 cd .. && stencil render figure.json --out-dir out
 ```
 
-`<field>` is the path of the field the figure file binds its page to, a name the figure chooses: `topology: gcp.#Page & {...}` exports with `-e topology`, and `figures: topology: ...` with `-e figures.topology`. `cue vet` enforces the authoring rules, `cue export` writes the structural JSON, and `stencil render` vets that JSON again before it lays out and renders. Run `stencil check figure.json` between the export and the render to see every check result before any file is written. `cue/README.md` describes the CUE packages; `cue/check.sh` re-exports both grammars and fails when either differs from the JSON the Rust side embeds (`crates/stencil-model/grammars/`), vets every example and runs the negative cases.
+`<field>` is the path of the field the figure file binds its page to, a name the figure chooses: `topology: gcp.#Page & {...}` exports with `-e topology`, and `figures: topology: ...` with `-e figures.topology`. `cue vet` enforces the authoring rules, `cue export` writes the structural JSON, and `stencil render` vets that JSON again before it lays out and renders. Run `stencil check figure.json` between the export and the render to see every check result before any file is written. `cue/README.md` describes the CUE packages; `cue/check.sh` re-exports every grammar and fails when one differs from the JSON the Rust side embeds (`crates/stencil-model/grammars/`), vets every example and runs the negative cases.
 
 ## Fonts and icons
 
-The four Inter faces in `assets/fonts/` are unmodified files from the Inter 4.1 release under the SIL Open Font License 1.1, whose text ships next to them as `OFL.txt`. Each icon pack is a directory under `assets/icons/` with its own `PROVENANCE.md`. The Google Cloud icons in `assets/icons/gcp/` are unaltered copies from the official icon library at cloud.google.com/icons, used on labeled product items in technical figures under the terms recorded in `assets/icons/gcp/PROVENANCE.md`.
+The four Inter faces in `assets/fonts/` are unmodified files from the Inter 4.1 release under the SIL Open Font License 1.1, whose text ships next to them as `OFL.txt`. Each icon pack is a directory under `assets/icons/` with its own `PROVENANCE.md`. The Google Cloud icons in `assets/icons/gcp/` are unaltered copies from the official icon library at cloud.google.com/icons, used on labeled product items in technical figures under the terms recorded in `assets/icons/gcp/PROVENANCE.md`. The AWS Architecture Icons in `assets/icons/aws/` are unaltered copies from the icon package at aws.amazon.com/architecture/icons, used to create architecture diagrams under the terms recorded in `assets/icons/aws/PROVENANCE.md`.

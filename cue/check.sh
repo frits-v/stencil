@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-# Vets the core package, both grammar packages and the g7, sequence, sheet,
+# Vets the core package, every grammar package and the aws, g7, sequence, sheet,
 # sheet-small and sheet-gcp figures; exports each grammar and compares it byte for byte with
 # crates/stencil-model/grammars/; compares the g7 customer export with
 # examples/g7.json, the sequence export with examples/sequence.json and the
 # sheet export with examples/onepager.json; vets every example against the
 # #Page of the grammar it names; vets every built-in theme file against #Theme
 # and rejects the theme negative cases; then runs the negative cases: a copy of
-# the cue tree with one edit to figures/g7.cue, figures/sequence.cue,
+# the cue tree with one edit to figures/aws.cue, figures/g7.cue, figures/sequence.cue,
 # figures/sheet.cue, figures/sheet-small.cue or figures/sheet-gcp.cue that vet
 # must reject with the named error.
 # Exits non-zero if the cue binary is missing, if any positive step fails, or
@@ -33,16 +33,18 @@ fi
 
 cd "$here"
 "$CUE" vet -c .
+"$CUE" vet -c ./grammars:aws
 "$CUE" vet -c ./grammars:gcp
 "$CUE" vet -c ./grammars:plain
+"$CUE" vet -c ./figures:aws
 "$CUE" vet -c ./figures:gcp
 "$CUE" vet -c ./figures:plain
-echo "ok   vet: core, grammars gcp and plain, figures gcp and plain"
+echo "ok   vet: core, grammars aws, gcp and plain, figures aws, gcp and plain"
 
 # The committed grammar JSON is what the Rust side embeds; it must be exactly
 # this export, so the comparison is byte for byte. To regenerate, from cue/:
 #   cue export ./grammars:<name> -e grammar --out json -o ../crates/stencil-model/grammars/<name>.json --force
-for name in gcp plain; do
+for name in aws gcp plain; do
 	"$CUE" export "./grammars:$name" -e grammar --out json -o "$out/grammar-$name.json" --force
 	if ! cmp -s "$committed_grammars/$name.json" "$out/grammar-$name.json"; then
 		diff -u "$committed_grammars/$name.json" "$out/grammar-$name.json" >&2 || true
@@ -165,7 +167,7 @@ for example in "$repo"/examples/*.json; do
 		fi
 	done
 	grammar="$(python3 -c 'import json, sys; print(json.load(open(sys.argv[1], encoding="utf-8")).get("grammar", "plain"))' "$example")"
-	if [[ "$grammar" != "gcp" && "$grammar" != "plain" ]]; then
+	if [[ "$grammar" != "aws" && "$grammar" != "gcp" && "$grammar" != "plain" ]]; then
 		echo "FAIL example $stem: names grammar $grammar, which has no package under grammars/" >&2
 		examples_failed=$((examples_failed + 1))
 		continue
@@ -322,9 +324,24 @@ three_items="$(printf '{title: "How-to %s", text: "Filler."},' $(seq 1 3))"
 ten_lines="$(printf '{kind: "output", text: "line %s"},' $(seq 1 10))"
 
 # figure | name | sed expression applied to figures/<figure>.cue | text the
-# vet error must contain [| second text the error must also contain]. A g7 or
-# sheet-gcp case vets ./figures:gcp and a sequence, sheet or sheet-small case
-# ./figures:plain.
+# vet error must contain [| second text the error must also contain]. An aws
+# case vets ./figures:aws, a g7 or sheet-gcp case ./figures:gcp and a sequence,
+# sheet or sheet-small case ./figures:plain.
+aws_subnet_fact='{tag: "Fact", text: "No route to an internet gateway"},'
+aws_region_fact='{tag: "Fact", text: "Region and zones from the landing-zone design"},'
+aws_cases=(
+	"regional-service-inside-vpc|s/$aws_subnet_fact/&\n{tag: \"Item\", kind: \"product\", title: \"Order queue\", subtitle: \"Amazon SQS\"},/|_regionalServiceInsideVpc.\"Order queue\"|draw it in a services box beside the vpc and the gateway or interface endpoint inside"
+	"dynamodb-icon-inside-vpc|s/$aws_subnet_fact/&\n{tag: \"Item\", kind: \"product\", icon: \"dynamodb\", title: \"Cart table\", facts: [{text: \"on-demand capacity\"}]},/|_regionalServiceInsideVpc.\"Cart table\""
+	"cloudfront-inside-region|s/$aws_region_fact/&\n{tag: \"Item\", kind: \"product\", title: \"Edge\", subtitle: \"Amazon CloudFront\"},/|_globalInsideRegion.Edge|sits outside every region"
+	"waf-inside-region|s/$aws_region_fact/&\n{tag: \"Item\", kind: \"product\", title: \"Web ACL\", subtitle: \"AWS WAF\"},/|_globalInsideRegion.\"Web ACL\""
+	"iam-icon-inside-region|s/$aws_region_fact/&\n{tag: \"Item\", kind: \"product\", icon: \"iam\", title: \"Roles\", facts: [{text: \"one role per workload\"}]},/|_globalInsideRegion.Roles"
+	"subnet-directly-in-region|s/$aws_region_fact/&\n{tag: \"Box\", kind: \"subnet\", label: \"Stray subnet\", children: [{tag: \"Fact\", text: \"no zone around it\"}]},/|_kindParentNotAllowed.subnet|cannot sit in region"
+	'az-outside-region|/label: "AWS Cloud"/,/children: \[{/s/children: \[{/children: [{tag: "Box", kind: "az", label: "Stray zone", children: [{tag: "Fact", text: "no region around it"}]}, {/|_kindParentNotAllowed.az|cannot sit in aws'
+	'lambda-without-subtitle-or-fact|s/title: "Order worker", subtitle: "AWS Lambda · VPC-attached"/title: "Order worker"/|_itemsWithoutSubtitleOrFact."Order worker"'
+	'vpc-doc-cidr-in-label|s/label: "Application VPC"/label: "Application VPC · 10.0.0.0\/16"/|.label: invalid value "Application VPC · 10.0.0.0/16"'
+	'subnet-doc-cidr-in-subtitle|s/subtitle: "Amazon RDS for PostgreSQL · primary"/subtitle: "Amazon RDS for PostgreSQL · 10.0.1.0\/24"/|.subtitle: invalid value "Amazon RDS for PostgreSQL · 10.0.1.0/24"'
+	'metadata-address-in-fact|s/text: "No route to an internet gateway"/text: "metadata at 169.254.169.254"/|.text: invalid value "metadata at 169.254.169.254"'
+)
 g7_cases=(
 	'asn-64512|s/subtitle: "private ASN · RFC 6996"/subtitle: "private ASN 64512"/|.subtitle: invalid value "private ASN 64512"'
 	'legend-unused-line|s/{line: "dash", text: "region failover, not a fifth line"},/&\n\t\t{line: "deny", text: "prohibited path"},/|_legendKeysUnusedInBody.deny'
@@ -510,6 +527,9 @@ sheet_small_cases=(
 	'keys-used-attention|s/items: \[{id: "staleness", \(.*\)}\]$/items: [{id: "staleness", \1}, {id: "later", lead: "Later.", text: "Not marked anywhere."}]/|_attentionUnmarked.later'
 )
 cases=()
+for entry in "${aws_cases[@]}"; do
+	cases+=("aws|$entry")
+done
 for entry in "${g7_cases[@]}"; do
 	cases+=("g7|$entry")
 done
@@ -526,6 +546,17 @@ for entry in "${sheet_gcp_cases[@]}"; do
 	cases+=("sheet-gcp|$entry")
 done
 
+# A case's work directory is named after the case alone, so two cases with one
+# name would share a directory and the second would overwrite the first.
+duplicate_names="$(for entry in "${cases[@]}"; do
+	IFS='|' read -r _ name _ <<<"$entry"
+	echo "$name"
+done | sort | uniq -d)"
+if [[ -n "$duplicate_names" ]]; then
+	echo "FAIL negative cases share a name: $duplicate_names" >&2
+	exit 1
+fi
+
 work="$(mktemp -d)"
 trap 'rm -rf "$work"' EXIT
 failed=0
@@ -533,6 +564,7 @@ for entry in "${cases[@]}"; do
 	also=""
 	IFS='|' read -r figure name expression expected also <<<"$entry"
 	case "$figure" in
+	aws) package=aws ;;
 	g7) package=gcp ;;
 	sequence) package=plain ;;
 	sheet) package=plain ;;
