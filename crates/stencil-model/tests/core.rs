@@ -18,7 +18,7 @@ use stencil_model::{
     validate_page,
 };
 
-const EXAMPLES: [(&str, &str); 9] = [
+const EXAMPLES: [(&str, &str); 7] = [
     ("g7", include_str!("../../../examples/g7.json")),
     ("hero-iso", include_str!("../../../examples/hero-iso.json")),
     (
@@ -29,11 +29,6 @@ const EXAMPLES: [(&str, &str); 9] = [
         "network-hub-spoke",
         include_str!("../../../examples/network-hub-spoke.json"),
     ),
-    (
-        "design-brief",
-        include_str!("../../../examples/design-brief.json"),
-    ),
-    ("onepager", include_str!("../../../examples/onepager.json")),
     (
         "platform-iso",
         include_str!("../../../examples/platform-iso.json"),
@@ -84,7 +79,7 @@ fn plain_item(kind: &str, icon: Option<IconName>) -> Node {
 }
 
 #[test]
-fn every_example_parses_round_trips_and_vets_clean_under_gcp() {
+fn every_gcp_example_parses_round_trips_and_vets_clean() {
     let grammar = gcp();
     for (name, document) in EXAMPLES {
         let page =

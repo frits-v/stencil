@@ -264,13 +264,13 @@ fn a_link_between_two_steps_routes_around_a_lane_name() {
 }
 
 /// On a sheet a link's tag never straddles a Box border (section 14.4 rule 15): onepager's
-/// console link runs into the Google Cloud box, and its tag lies wholly inside it.
+/// console link runs into the system box, and its tag lies wholly inside it.
 #[test]
 fn no_tag_on_onepager_straddles_a_box_edge() {
     let page: Page = serde_json::from_str(include_str!("../../../examples/onepager.json")).unwrap();
     let geometry = stencil_layout::layout_page(
         &page,
-        &common::gcp(),
+        &common::plain(),
         &mut stencil_model::text::FixedMetricsMeasurer::default(),
     )
     .unwrap();

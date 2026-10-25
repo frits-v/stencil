@@ -3,20 +3,20 @@
 // view of the parts as built (an assembly, a rail, a store and planned work)
 // with its parts list and general notes. examples/onepager.json is this figure
 // exported.
-package gcp
+package plain
 
 import (
-	"github.com/frits-v/stencil/cue/grammars:gcp"
+	"github.com/frits-v/stencil/cue/grammars:plain"
 )
 
-onepager: gcp.#Page & {
+onepager: plain.#Page & {
 	title:   "Plain-language event triggers, evaluated over video clips"
 	kicker:  "Premise · trigger evaluation"
 	lede:    "An operator describes an event in their own words. The service turns the description into an evaluation plan, runs the plan over each new clip, and stores a verdict with the frames that support it."
 	foot:    "Balloons key the drawings to the parts list, flags to the general notes, diamonds to the attention items in the title block."
 	width:   1500
 	badge:   "Internal"
-	grammar: "gcp"
+	grammar: "plain"
 	sheet: {
 		wordmark: "trig"
 		problem: {
@@ -303,8 +303,7 @@ onepager: gcp.#Page & {
 														{
 															tag:      "Item"
 															id:       "console"
-															kind:     "product"
-															icon:     "devops"
+															kind:     "service"
 															title:    "Operator console"
 															subtitle: "web client"
 															actor:    "operator"
@@ -316,8 +315,8 @@ onepager: gcp.#Page & {
 										{
 											tag:   "Box"
 											id:    "cloud"
-											kind:  "gcp"
-											label: "Google Cloud"
+											kind:  "system"
+											label: "Trigger evaluation service"
 											children: [
 												{
 													tag: "Col"
@@ -335,10 +334,9 @@ onepager: gcp.#Page & {
 																		{
 																			tag:      "Item"
 																			id:       "gateway"
-																			kind:     "product"
-																			icon:     "integration"
+																			kind:     "network"
 																			title:    "Gateway"
-																			subtitle: "API Gateway"
+																			subtitle: "authenticates calls"
 																			actor:    "api"
 																		},
 																	]
@@ -351,10 +349,9 @@ onepager: gcp.#Page & {
 																		{
 																			tag:      "Item"
 																			id:       "api"
-																			kind:     "product"
-																			icon:     "cloud-run"
+																			kind:     "service"
 																			title:    "Trigger API"
-																			subtitle: "Cloud Run"
+																			subtitle: "compiles plans"
 																			actor:    "api"
 																		},
 																	]
@@ -375,7 +372,7 @@ onepager: gcp.#Page & {
 																	line:  "solid"
 																	actor: "api"
 																	label: "Evaluation queue"
-																	sub:   "Pub/Sub"
+																	sub:   "at-least-once delivery"
 																},
 																{
 																	tag:     "Row"
@@ -401,11 +398,10 @@ onepager: gcp.#Page & {
 																								{
 																									tag:      "Item"
 																									id:       "worker"
-																									kind:     "product"
-																									icon:     "cloud-run"
+																									kind:     "service"
 																									outline:  "stack"
 																									title:    "Clip worker"
-																									subtitle: "Cloud Run job"
+																									subtitle: "one job per clip"
 																									actor:    "worker"
 																								},
 																							]
@@ -418,10 +414,9 @@ onepager: gcp.#Page & {
 																								{
 																									tag:      "Item"
 																									id:       "evaluator"
-																									kind:     "product"
-																									icon:     "vertex-ai"
+																									kind:     "managed"
 																									title:    "Clip evaluator"
-																									subtitle: "Vertex AI endpoint"
+																									subtitle: "hosted model endpoint"
 																									actor:    "model"
 																								},
 																							]
@@ -450,10 +445,9 @@ onepager: gcp.#Page & {
 																				{
 																					tag:      "Item"
 																					id:       "bucket"
-																					kind:     "product"
-																					icon:     "cloud-storage"
+																					kind:     "store"
 																					title:    "Clip bucket"
-																					subtitle: "Cloud Storage"
+																					subtitle: "object store"
 																				},
 																			]
 																		},
@@ -467,11 +461,10 @@ onepager: gcp.#Page & {
 																		{
 																			tag:      "Item"
 																			id:       "verdict-store"
-																			kind:     "product"
-																			icon:     "cloud-sql"
+																			kind:     "store"
 																			outline:  "store"
 																			title:    "Verdict store"
-																			subtitle: "Cloud SQL"
+																			subtitle: "relational database"
 																			compartments: [
 																				"Triggers",
 																				"Plan versions",
@@ -494,10 +487,9 @@ onepager: gcp.#Page & {
 																				{
 																					tag:      "Item"
 																					id:       "replay"
-																					kind:     "product"
-																					icon:     "integration"
+																					kind:     "managed"
 																					title:    "Replay scheduler"
-																					subtitle: "Cloud Scheduler"
+																					subtitle: "hosted scheduler"
 																					planned:  true
 																					actor:    "api"
 																				},

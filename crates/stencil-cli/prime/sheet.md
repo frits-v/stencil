@@ -2,7 +2,7 @@
 
 A page with `sheet` is a design sheet: one system as an engineering drawing on one page, flat only, chrome kept.
 
-Start from `stencil prime onepager`, a whole sheet: title block, actors, legend and Views Workflow (Phases, Ladder), System (the drawing, PartsList, GeneralNotes) and How-tos. Keep the structure, replace the content. For a non-GCP subject: `stencil prime grammar plain`.
+Start from `stencil prime onepager`, a whole sheet: title block, actors, legend and Views Workflow (Phases, Ladder), System (the drawing, PartsList, GeneralNotes) and How-tos. Keep the structure, replace the content. Google Cloud subject: `stencil prime grammar gcp`.
 
 - Frame: the canvas is the width plus 50 px on each side. A border 12 px in and a rule 32 px in hold a band of grid references, columns 1 to 8 along the top and bottom and rows A to F down both sides.
 - Title block, view 1, across the top in four cells. The first is the page head: the badge, the kicker after `1 · `, the wordmark set large when given, the title (the motto under a wordmark), and the lede. The problem cell holds a lead and points P1 to P8; the answer cell a statement and up to four paragraphs; the attention cell items, each an id, a lead and a text. A paragraph is a string or {lead,text}; the lead is set bold, its text running on after it.
@@ -11,7 +11,7 @@ Start from `stencil prime onepager`, a whole sheet: title block, actors, legend 
 - Actors: `actors` names who acts, each with its own tint slot. An Item, Box, Pipe, Tee or Link with `actor` takes its colours: wire for outlines and lines, ink for titles. A line without one takes the actor of the node it leaves (a Step's lane); gray and deny take none. With actors no tint is written, and a `by_actor` legend entry keys every solid or dashed use.
 - Phases, Steps and lanes: `stencil prime phases`. Marks, the parts list and general notes: `stencil prime marks`.
 - Views: the body holds Views and nothing else, each a body child, numbered from 2. A View is a heading (a numbered circle, the title, a subtitle, a rule to the right edge and the note) over its children in a column, gap 16. Inside a View every node works as on any page.
-- Boxes: a frame-role Box such as gcp is an unfilled outline, a boundary Box a hairline; group and tile Boxes keep their tone.
+- Boxes: a frame-role Box such as system is an unfilled outline, a boundary Box a hairline; group and tile Boxes keep their tone.
 
 {{vocabulary:View,Sheet,Problem,ProblemPoint,Answer,Attention,AttentionItem,Actor,Page,Item,Box,Pipe,Tee,Link,LegendEntry}}
 
