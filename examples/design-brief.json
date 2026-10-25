@@ -5,7 +5,7 @@
   "foot": "The numbered links follow one request from the console to a stored verdict.",
   "width": 1440,
   "badge": "Internal",
-  "grammar": "gcp",
+  "grammar": "plain",
   "body": [
     {
       "tag": "Row",
@@ -83,14 +83,14 @@
               "justify": "end",
               "grow": [0],
               "children": [
-                { "tag": "Item", "id": "console", "kind": "product", "icon": "devops", "title": "Operator console", "subtitle": "web client" }
+                { "tag": "Item", "id": "console", "kind": "service", "title": "Operator console", "subtitle": "web client" }
               ]
             },
             {
               "tag": "Box",
               "id": "cloud",
-              "kind": "gcp",
-              "label": "Google Cloud",
+              "kind": "system",
+              "label": "Trigger evaluation service",
               "children": [
                 {
                   "tag": "Col",
@@ -101,7 +101,7 @@
                       "justify": "center",
                       "grow": [0],
                       "children": [
-                        { "tag": "Item", "id": "gateway", "kind": "product", "icon": "networking", "title": "Gateway", "subtitle": "API Gateway" }
+                        { "tag": "Item", "id": "gateway", "kind": "network", "title": "Gateway", "subtitle": "authenticates calls" }
                       ]
                     },
                     {
@@ -109,7 +109,7 @@
                       "justify": "center",
                       "grow": [0],
                       "children": [
-                        { "tag": "Item", "id": "api", "kind": "product", "icon": "cloud-run", "title": "Trigger API", "subtitle": "Cloud Run" }
+                        { "tag": "Item", "id": "api", "kind": "service", "title": "Trigger API", "subtitle": "compiles plans" }
                       ]
                     },
                     {
@@ -117,7 +117,7 @@
                       "justify": "center",
                       "grow": [0],
                       "children": [
-                        { "tag": "Item", "id": "queue", "kind": "product", "icon": "integration", "title": "Evaluation queue", "subtitle": "Pub/Sub" }
+                        { "tag": "Item", "id": "queue", "kind": "queue", "title": "Evaluation queue", "subtitle": "at-least-once delivery" }
                       ]
                     },
                     {
@@ -125,7 +125,7 @@
                       "justify": "center",
                       "grow": [0],
                       "children": [
-                        { "tag": "Item", "id": "worker", "kind": "product", "icon": "cloud-run", "title": "Clip worker", "subtitle": "Cloud Run" }
+                        { "tag": "Item", "id": "worker", "kind": "service", "title": "Clip worker", "subtitle": "one job per clip" }
                       ]
                     },
                     {
@@ -133,8 +133,8 @@
                       "grow": [0, 0],
                       "justify": "space-between",
                       "children": [
-                        { "tag": "Item", "id": "evaluator", "kind": "product", "icon": "vertex-ai", "title": "Clip evaluator", "subtitle": "Vertex AI" },
-                        { "tag": "Item", "id": "database", "kind": "product", "icon": "cloud-sql", "title": "Verdict store", "subtitle": "Cloud SQL" }
+                        { "tag": "Item", "id": "evaluator", "kind": "managed", "title": "Clip evaluator", "subtitle": "hosted model endpoint" },
+                        { "tag": "Item", "id": "database", "kind": "store", "title": "Verdict store", "subtitle": "relational database" }
                       ]
                     }
                   ]

@@ -4,22 +4,22 @@
 
 use std::collections::BTreeSet;
 
-use stencil_model::checks::{legend_consistency, remembered_constants};
+use stencil_model::checks::{CheckOutcome, legend_consistency, remembered_constants};
 use stencil_model::{Line, Node, NodeRef, body_nodes, builtin_grammar, parse_and_vet, text_fields};
 
 const DESIGN_BRIEF_JSON: &str = include_str!("../../../examples/design-brief.json");
 
-fn gcp() -> stencil_model::Grammar {
-    builtin_grammar("gcp").unwrap().unwrap()
+fn plain() -> stencil_model::Grammar {
+    builtin_grammar("plain").unwrap().unwrap()
 }
 
 #[test]
 fn design_brief_vets_and_passes_both_model_checks() {
-    let page = parse_and_vet(DESIGN_BRIEF_JSON, &gcp()).unwrap();
+    let page = parse_and_vet(DESIGN_BRIEF_JSON, &plain()).unwrap();
     assert_eq!(page.width, 1440);
-    let constants = remembered_constants(&page, &gcp());
-    assert_eq!(constants.examined, text_fields(&page).len() as u64);
-    assert!(constants.passed(), "{:?}", constants.defects);
+    assert!(!text_fields(&page).is_empty());
+    let constants = remembered_constants(&page, &plain());
+    assert_eq!(constants.outcome(), CheckOutcome::NotApplicable);
     let legend = legend_consistency(&page);
     assert_eq!(legend.examined, 7 + 2);
     assert!(legend.passed(), "{:?}", legend.defects);
@@ -27,7 +27,7 @@ fn design_brief_vets_and_passes_both_model_checks() {
 
 #[test]
 fn design_brief_has_the_section_11_5_shape() {
-    let page = parse_and_vet(DESIGN_BRIEF_JSON, &gcp()).unwrap();
+    let page = parse_and_vet(DESIGN_BRIEF_JSON, &plain()).unwrap();
     let entries = body_nodes(&page);
     let count = |tag: &str| {
         entries

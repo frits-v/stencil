@@ -6,7 +6,7 @@ An operator describes an event in their own words. The service turns the descrip
 
 ## Figure
 
-Drawn elements: 29 (22 nodes, 7 links). Canvas 1480 x 1042.8 px, projection flat, grammar gcp. Line styles name a tint slot by number; the colour word is the one the center theme draws it in.
+Drawn elements: 29 (22 nodes, 7 links). Canvas 1480 x 1042.8 px, projection flat, grammar plain. Line styles name a tint slot by number; the colour word is the one the center theme draws it in.
 
 ## Drawing `/body`
 
@@ -33,20 +33,20 @@ Drawn elements: 29 (22 nodes, 7 links). Canvas 1480 x 1042.8 px, projection flat
     - Callout, decision: Decision: queue between API and worker. Evaluation runs asynchronously. The API returns once the plan is queued, so a slow clip never holds an operator request open. `/body/0/children/0/children/5`
   - Col, top to bottom. `/body/0/children/1`
     - Row, left to right. `/body/0/children/1/children/0`
-      - Item Operator console: web client; kind product, icon devops. `/body/0/children/1/children/0/children/0`
-    - Box Google Cloud; kind gcp. `/body/0/children/1/children/1`
+      - Item Operator console: web client; kind service. `/body/0/children/1/children/0/children/0`
+    - Box Trigger evaluation service; kind system. `/body/0/children/1/children/1`
       - Col, top to bottom. `/body/0/children/1/children/1/children/0`
         - Row, left to right. `/body/0/children/1/children/1/children/0/children/0`
-          - Item Gateway: API Gateway; kind product, icon networking, product API Gateway. `/body/0/children/1/children/1/children/0/children/0/children/0`
+          - Item Gateway: authenticates calls; kind network. `/body/0/children/1/children/1/children/0/children/0/children/0`
         - Row, left to right. `/body/0/children/1/children/1/children/0/children/1`
-          - Item Trigger API: Cloud Run; kind product, icon cloud-run, product Cloud Run. `/body/0/children/1/children/1/children/0/children/1/children/0`
+          - Item Trigger API: compiles plans; kind service. `/body/0/children/1/children/1/children/0/children/1/children/0`
         - Row, left to right. `/body/0/children/1/children/1/children/0/children/2`
-          - Item Evaluation queue: Pub/Sub; kind product, icon integration, product Pub/Sub. `/body/0/children/1/children/1/children/0/children/2/children/0`
+          - Item Evaluation queue: at-least-once delivery; kind queue. `/body/0/children/1/children/1/children/0/children/2/children/0`
         - Row, left to right. `/body/0/children/1/children/1/children/0/children/3`
-          - Item Clip worker: Cloud Run; kind product, icon cloud-run, product Cloud Run. `/body/0/children/1/children/1/children/0/children/3/children/0`
+          - Item Clip worker: one job per clip; kind service. `/body/0/children/1/children/1/children/0/children/3/children/0`
         - Row, left to right. `/body/0/children/1/children/1/children/0/children/4`
-          - Item Clip evaluator: Vertex AI; kind product, icon vertex-ai, product Vertex AI. `/body/0/children/1/children/1/children/0/children/4/children/0`
-          - Item Verdict store: Cloud SQL; kind product, icon cloud-sql, product Cloud SQL. `/body/0/children/1/children/1/children/0/children/4/children/1`
+          - Item Clip evaluator: hosted model endpoint; kind managed. `/body/0/children/1/children/1/children/0/children/4/children/0`
+          - Item Verdict store: relational database; kind store. `/body/0/children/1/children/1/children/0/children/4/children/1`
 - Row, left to right. `/body/1`
   - Frame Trigger editor: description, generated plan, approve: 200 px placeholder. `/body/1/children/0`
   - Frame Verdict review: clip, evidence frames, verdict: 200 px placeholder. `/body/1/children/1`

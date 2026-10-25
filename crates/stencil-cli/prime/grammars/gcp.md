@@ -1,6 +1,6 @@
 # Grammar gcp
 
-The Google Cloud vocabulary: set "grammar": "gcp" on the page. Boxes are the frame, networks and places of a Google Cloud figure; an Item is a product with an optional icon from the bundled Google Cloud icons, a person or a device.
+The Google Cloud vocabulary: set "grammar": "gcp" on the page. A design sheet under gcp: take `stencil prime onepager`, a plain sheet, set "grammar": "gcp", make the system Box a gcp Box and each item a product with its icon; vet names each one missed as kind-unknown. Boxes are the frame, networks and places of a Google Cloud figure; an Item is a product with an optional icon from the bundled Google Cloud icons, a person or a device.
 
 {{kinds}}
 

@@ -35,4 +35,4 @@ Two versions from one source, as cue/figures/g7.cue does with its fields custome
 
 When one node fails, the per-page sets built from it come up empty, so a single error can also report every legend key as unused. The first error on a body path is the cause.
 
-cue/check.sh vets the packages, re-exports both grammars and fails when either differs from crates/stencil-model/grammars, compares g7's customer field, exported, with examples/g7.json, vets every example against the gcp #Page, then runs each negative case. Set CUE to the binary if the shim is not active: `CUE="$(mise which cue)" ./cue/check.sh`.
+cue/check.sh vets the packages, re-exports both grammars and fails when either differs from crates/stencil-model/grammars, compares g7's customer field, exported, with examples/g7.json, vets every example against the #Page of the grammar it names (plain when it names none), then runs each negative case. Set CUE to the binary if the shim is not active: `CUE="$(mise which cue)" ./cue/check.sh`.

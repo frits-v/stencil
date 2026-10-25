@@ -30,6 +30,17 @@ if [[ -z $run ]]; then
   echo "land: no ci.yml run for $head at $sha" >&2
   exit 1
 fi
+# The base branch rules require signed commits, and an unsigned one blocks the squash merge
+# behind "not mergeable" on every retry; refuse it before the watch.
+unsigned=$(gh pr view "$pr" --json commits --jq '.commits[].oid' | while read -r commit; do
+  if [ "$(gh api "repos/{owner}/{repo}/commits/$commit" --jq .commit.verification.verified)" != "true" ]; then
+    echo "${commit:0:7}"
+  fi
+done)
+if [ -n "$unsigned" ]; then
+  echo "land: unsigned commit(s) on $head, which main refuses: $(echo "$unsigned" | paste -sd ' ' -); sign and push again" >&2
+  exit 1
+fi
 echo "land: watching ci run $run for $head at ${sha:0:7}"
 gh run watch "$run" --exit-status
 

@@ -16,8 +16,9 @@ its rules; a figure file writes one topology against a grammar's `#Page`.
 | `grammars/plain.cue` | `plain` | the default, vendor-neutral grammar data and the plain `#Page` with its external-outside-system rule |
 | `figures/g7.cue` | `gcp` | g7, Dedicated Interconnect at 99.99%: `customer` and `internal: customer & {...}` |
 | `figures/sequence.cue` | `plain` | a request flow in five lanes with ten ordered messages: `figure`, exported as `examples/sequence.json` |
-| `figures/sheet.cue` | `gcp` | the trigger evaluation design sheet, a title block, four actors, a Workflow view with a detail ladder, a System view (an assembly, a rail, a store with compartments, step badges, a valve and planned work) with its parts list, general notes and a console screen, and a How-tos view of four terminals: `onepager`, exported as `examples/onepager.json` |
+| `figures/sheet.cue` | `plain` | the trigger evaluation design sheet, a title block, four actors, a Workflow view with a detail ladder, a System view (an assembly, a rail, a store with compartments, step badges, a valve and planned work) with its parts list, general notes and a console screen, and a How-tos view of four terminals: `onepager`, exported as `examples/onepager.json` |
 | `figures/sheet-small.cue` | `plain` | the smallest design sheet, with a parts list and general notes whose every key is marked once, and a link whose via lies in the sheet's wider margin: `small`, the base of the sheet negative cases |
+| `figures/sheet-gcp.cue` | `gcp` | the smallest design sheet under gcp, a person and a Google Cloud frame holding a region and a product with an icon: `cloud`, the base of the sheet negative cases that need a gcp kind |
 | `check.sh` | | the gate, below |
 | `out/` | | exported JSON and renders, not committed |
 
@@ -29,8 +30,8 @@ Layout notes forced by CUE's package rules:
   package name, so its import path carries the package: `github.com/frits-v/stencil/cue:stencil`.
 - `grammars/` holds two packages, `gcp` and `plain`, so every command names one:
   `./grammars:gcp`. A bare `./grammars` is an error.
-- `figures/` holds `g7.cue` and `sheet.cue` (package `gcp`) and `sequence.cue` and
-  `sheet-small.cue` (package `plain`), so commands name the package: `./figures:gcp`,
+- `figures/` holds `g7.cue` and `sheet-gcp.cue` (package `gcp`) and `sequence.cue`, `sheet.cue`
+  and `sheet-small.cue` (package `plain`), so commands name the package: `./figures:gcp`,
   `./figures:plain`. Each is a separate instance from its grammar and imports it
   (`github.com/frits-v/stencil/cue/grammars:gcp` or `:plain`) to reach its `#Page`.
 
@@ -41,7 +42,7 @@ The pinned CUE version is 0.17.1. From `cue/`:
 ```bash
 cue vet -c ./figures:gcp
 cue export ./figures:gcp -e customer --out json -o out/g7-customer.json --force
-cue vet -c -d '#Page' ./grammars:gcp ../examples/design-brief.json
+cue vet -c -d '#Page' ./grammars:plain ../examples/design-brief.json
 cue export ./grammars:gcp -e grammar --out json -o ../crates/stencil-model/grammars/gcp.json --force
 stencil render out/g7-customer.json --out-dir out
 ```
@@ -62,15 +63,15 @@ it, vet only says that some instances are incomplete. `stencil render` writes `<
    `crates/stencil-model/grammars/<name>.json`, which the Rust side embeds; a difference prints a
    unified diff and fails. Regenerate the committed file with the export command above.
 3. Exports `customer` and compares it with `examples/g7.json`, `figure` from
-   `./figures:plain` with `examples/sequence.json`, and `onepager` from `./figures:gcp` with
+   `./figures:plain` with `examples/sequence.json`, and `onepager` from `./figures:plain` with
    `examples/onepager.json`, normalizing key order only.
-4. Vets every `examples/*.json` against the `#Page` of the grammar it names (`gcp` when absent). An example with a standing defect is
+4. Vets every `examples/*.json` against the `#Page` of the grammar it names (`plain` when absent). An example with a standing defect is
    listed in `known_failures` with the rule it breaks: it is printed as `KNOWN` on every run,
    any other error fails, and an entry that starts vetting clean fails as stale.
 5. Vets a one-key `chrome: "none"` document with an empty legend, which must pass.
 6. Runs every negative case: a copy of the cue tree with one edit to `figures/g7.cue`,
-   `figures/sequence.cue`, `figures/sheet.cue` or `figures/sheet-small.cue` that vet must
-   reject with a named error.
+   `figures/sequence.cue`, `figures/sheet.cue`, `figures/sheet-small.cue` or
+   `figures/sheet-gcp.cue` that vet must reject with a named error.
 
 The script fails if the `cue` binary is missing, if an edit does not apply, if vet passes, or if
 vet fails for a different reason. Set `CUE` to the binary path if the `cue` shim is not active,

@@ -1,5 +1,5 @@
-check remembered-constants: examined 186 text fields, 0 defects
+check remembered-constants: examined 0 text fields, not applicable: grammar has no remembered constants
 check legend-consistency: examined 25 relations, 0 defects
-check icon-matches-product: examined 8 items, 0 defects
+check icon-matches-product: examined 0 items, not applicable: grammar has no icon table
 check keys-used: examined 20 keys, 0 defects
-stencil vet: 0 violations, 4 checks, 4 passed, 0 failed
+stencil vet: 0 violations, 4 checks, 2 passed, 0 failed, 2 not applicable

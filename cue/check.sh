@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
-# Vets the core package, both grammar packages and the g7, sequence, sheet and
-# sheet-small figures; exports each grammar and compares it byte for byte with
+# Vets the core package, both grammar packages and the g7, sequence, sheet,
+# sheet-small and sheet-gcp figures; exports each grammar and compares it byte for byte with
 # crates/stencil-model/grammars/; compares the g7 customer export with
 # examples/g7.json, the sequence export with examples/sequence.json and the
 # sheet export with examples/onepager.json; vets every example against the
 # #Page of the grammar it names; vets every built-in theme file against #Theme
 # and rejects the theme negative cases; then runs the negative cases: a copy of
 # the cue tree with one edit to figures/g7.cue, figures/sequence.cue,
-# figures/sheet.cue or figures/sheet-small.cue that vet must reject with the
-# named error.
+# figures/sheet.cue, figures/sheet-small.cue or figures/sheet-gcp.cue that vet
+# must reject with the named error.
 # Exits non-zero if the cue binary is missing, if any positive step fails, or
 # if any negative case passes or fails for a different reason.
 #
@@ -123,7 +123,7 @@ print(f"ok   sequence: equals examples/sequence.json, {messages} ordered links, 
 PY
 
 # sheet.cue is the authored source of examples/onepager.json, compared as g7 is.
-"$CUE" export ./figures:gcp -e onepager --out json -o "$out/onepager.json" --force
+"$CUE" export ./figures:plain -e onepager --out json -o "$out/onepager.json" --force
 python3 - "$onepager_golden" "$out/onepager.json" <<'PY'
 import difflib, json, sys
 
@@ -323,7 +323,7 @@ ten_lines="$(printf '{kind: "output", text: "line %s"},' $(seq 1 10))"
 
 # figure | name | sed expression applied to figures/<figure>.cue | text the
 # vet error must contain [| second text the error must also contain]. A g7 or
-# sheet case vets ./figures:gcp and a sequence or sheet-small case
+# sheet-gcp case vets ./figures:gcp and a sequence, sheet or sheet-small case
 # ./figures:plain.
 g7_cases=(
 	'asn-64512|s/subtitle: "private ASN · RFC 6996"/subtitle: "private ASN 64512"/|.subtitle: invalid value "private ASN 64512"'
@@ -404,17 +404,13 @@ sequence_cases=(
 	'needs-sheet-valve|s/label: "submit job", order: 1/&, valve: true/|_needsSheet.valve'
 	'line-kind-listed-twice|s/^figure: plain.#Page \& {/_house: plain.grammar \& {lines: [{line: "dash", corner: 4}, {line: "dash", bend: "curve"}]}\n&/|_house._linesAreUnique'
 )
-# A subnet directly in a View sits in the page, since a View is transparent for
-# kind nesting as Row, Col and Lanes are.
 sheet_cases=(
-	'kind-parent-through-view|s/^\t\t\tchildren: \[$/\t\t\tchildren: [{tag: "Box", kind: "subnet", label: "stray subnet", children: [{tag: "Fact", text: "no region around it"}]},/|onepager._kindParentNotAllowed.subnet|cannot sit in page'
 	'actor-tint-duplicate|s/text: "one job per clip", tint: 6/text: "one job per clip", tint: 4/|_actorTintsTwice."4"'
 	'actor-unknown|s/actor:    "api"/actor:    "apis"/|_actorsUnknown.apis'
 	'tint-on-actor-page|s/{from: "s-describe", to: "s-compile", line: "solid"}/{from: "s-describe", to: "s-compile", line: "solid", tint: 2}/|_tintOnActorPage'
-	'kind-tint-without-actor|s/^\t\t\tchildren: \[$/\t\t\tchildren: [{tag: "Box", kind: "gcp", label: "Edge", children: [{tag: "Box", kind: "region", label: "Edge region", children: [{tag: "Fact", text: "no actor"}]}]},/|_kindTintWithoutActor."Edge region"'
 	'line-without-actor|s/^\tlinks: \[$/&\n\t\t{from: "bucket", to: "worker", line: "solid"},/|_lineWithoutActor'
 	'actor-on-neutral-line|s/line:  "deny"/&\n\t\t\tactor: "api"/|_actorOnNeutralLine'
-	'actor-on-untintable-kind|s/label: "Google Cloud"/&\n\t\t\t\t\t\t\tactor: "api"/|_actorOnUntintableKind'
+	'actor-on-untintable-kind|s/label: "Trigger evaluation service"/&\n\t\t\t\t\t\t\tactor: "api"/|_actorOnUntintableKind'
 	'legend-by-actor-misused|s/{line: "deny", text: "blocked path"}/{line: "deny", by_actor: true, text: "blocked path"}/|_legendByActorMisused'
 	'key-duplicate-actor|s/{id: "model", name: "Evaluator"/{id: "worker", name: "Evaluator"/|_keysUsedTwice."actor.worker"'
 	'key-duplicate-phase|s/{id: "review", title: "Review"}/{id: "plan", title: "Review"}/|_phaseIdsUsedTwice.plan'
@@ -444,7 +440,6 @@ sheet_cases=(
 	'line-into-planned|s/planned: true, label: "schedule replays"/label: "schedule replays"/|_lineIntoPlanned."link.15.replay"'
 	'compartments-without-store|s/outline:  "store"/outline:  "card"/|_compartmentsWithoutStore'
 	"list-too-long-compartments|s/\"Triggers\",/\"Triggers\", \"one\", \"two\", \"three\",/|compartments: invalid value|list.MaxItems(6)"
-	'outline-person-with-icon|s/outline:  "stack"/outline:  "person"/|_outlinePersonWithIcon'
 	'rail-not-vertical|s/dir:   "v"/dir:   "h"/|_railNotVertical'
 	'rail-with-targets|s/form:  "rail"/&, to: "worker"/|_railWithTargets'
 	'step-out-of-range|s/step: 1, label: "submit trigger"/step: 65, label: "submit trigger"/|step: invalid value 65'
@@ -470,6 +465,14 @@ sheet_cases=(
 	'list-too-long-command-runs|s/commands: \["trig replay"\]/commands: ["trig a", "trig b", "trig c", "trig d", "trig e", "trig replay"]/|commands: invalid value|list.MaxItems(5)'
 	"list-too-long-terminal-lines|s/^\t\t\t\t\t\t\t\t{kind: \"output\", text: \"412 clips queued under plan version 1\"},$/&\n$ten_lines/|terminal: invalid value|list.MaxItems(12)"
 	"list-too-long-step-lines|s/lines: \[\"in plain language\", \"camera and hours\"\]/lines: [$seven_lines]/|lines: invalid value|list.MaxItems(6)"
+)
+# The rules that need a gcp kind on a sheet: a subnet directly in a View sits in
+# the page, since a View is transparent for kind nesting as Row, Col and Lanes
+# are; a region paints tint 1 by default; a product carries an icon.
+sheet_gcp_cases=(
+	'kind-parent-through-view|s/^\t\tchildren: \[{$/\t\tchildren: [{tag: "Box", kind: "subnet", label: "stray subnet", children: [{tag: "Fact", text: "no region around it"}]}, {/|cloud._kindParentNotAllowed.subnet|cannot sit in page'
+	'kind-tint-without-actor|/^\t\t\t\t\tactor: "crew"$/d|_kindTintWithoutActor.Region'
+	'outline-person-with-icon|s/icon: "cloud-run"/&, outline: "person"/|_outlinePersonWithIcon'
 )
 sheet_small_cases=(
 	'sheet-in-iso|s/^\tgrammar: "plain"$/&\n\tprojection: "iso"/|_sheetInIso'
@@ -516,6 +519,9 @@ done
 for entry in "${sheet_small_cases[@]}"; do
 	cases+=("sheet-small|$entry")
 done
+for entry in "${sheet_gcp_cases[@]}"; do
+	cases+=("sheet-gcp|$entry")
+done
 
 work="$(mktemp -d)"
 trap 'rm -rf "$work"' EXIT
@@ -526,7 +532,8 @@ for entry in "${cases[@]}"; do
 	case "$figure" in
 	g7) package=gcp ;;
 	sequence) package=plain ;;
-	sheet) package=gcp ;;
+	sheet) package=plain ;;
+	sheet-gcp) package=gcp ;;
 	sheet-small) package=plain ;;
 	*)
 		echo "FAIL $name: no package for figure $figure" >&2
