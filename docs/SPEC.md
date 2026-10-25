@@ -89,7 +89,7 @@ icon: a file stem of the icon pack the item's kind draws from, one of the files 
 
 Section 13.1 replaces `Zone`, `Pcard`, `ZoneKind`, `PipeKind` and the `kind` fields of Pipe, Tee, Link and LegendEntry in the block below; `crates/stencil-model/src/document.rs` follows section 13.1, and the grammar types live in `crates/stencil-model/src/grammar.rs` (section 13.2).
 
-These definitions are copied verbatim into `crates/stencil-model/src/document.rs`. `schema/stencil.schema.json` is generated from them by schemars.
+These definitions are copied verbatim into `crates/stencil-model/src/`, the icon types into `icons.rs` and the rest into `document.rs`. `schema/stencil.schema.json` is generated from them by schemars.
 
 ```rust
 use schemars::JsonSchema;
@@ -1919,7 +1919,8 @@ Each behavior change comes with a test that fails before the change. Each positi
 ### stencil-model
 
 - Parse `examples/g7.json`, serialize and parse again, and assert equality. Assert that `width` defaults to 1280 when absent.
-- Negative parses, each returning `ModelError::Json`: an unknown field on Zone (`"colour"`), an unknown field on Pipe, an unknown field on Page, unknown tag `"Box"`, unknown icon `"bigtable"`, unknown zone kind, a Pipe without `kind`, and a Tee with three arms.
+- Negative parses, each returning `ModelError::Json`: an unknown field on Zone (`"colour"`), an unknown field on Pipe, an unknown field on Page, unknown tag `"Box"`, an icon that is not a file stem (`"Big Table"`), unknown zone kind, a Pipe without `kind`, and a Tee with three arms. A well-formed stem the kind's pack has no file of (`"bigtable"` on a gcp product) parses and fails vet with `icon-outside-pack`.
+- Icon packs: for every bundled pack, the files in `assets/icons/<pack>/`, the mapping rows of its `PROVENANCE.md` and its enum name the same files, each stem resolves to its icon in its own pack and to nothing in `none`, `IconPack::BUNDLED` is alphabetical without `none`, and a stem that breaks the pattern or exceeds 64 bytes is a JSON error. Each test prints how many it examined and fails on zero.
 - A Tee arm written with `"tag": "Pipe"` parses. An arm with `"tag": "Zone"` is rejected.
 - An optional field written as `null` (`"pn": null`, `"gap": null`) parses as absent and validates against the schema. `"width": null` is a `ModelError::Json`.
 - For every `VetRule`, one document accepted at the limit and one rejected just past it: gap 64 against 65, width 640 against 639 and 2560 against 2561, 400 against 401 scalars, 256 against 257 children, 256 against 257 body nodes (`children-too-many` at `/body`), 16 against 17 legend entries, depth 24 against 25 (section 1.3 depth, body elements at depth 1), 4096 against 4097 nodes with Tee arms counted (a page far past the limit still gives `body_nodes` length 4097 and one `nodes-exceeded`), `grow` length equal against off by one, weight 100 against 101, text `"a"` against `" a"`, text with `\n`, and a Tee arm `v`. Each rejection asserts the violation's pointer and message against the section 1.3 table, and `VetRule::as_str` against its first column. `validate_page` returns all violations of a document with three distinct faults, in document order as section 4.2 defines it, using a document whose keys are written in an order different from the struct order (for example `kicker` before `title`, both untrimmed).
