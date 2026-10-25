@@ -14,8 +14,9 @@ specifically the "Icon package" ZIP that page links:
 All 46 SVGs in `assets/icons/aws/` are byte-identical (SHA-256) to a file inside
 that archive. Nothing was recolored, resized, cropped, or re-exported. The files
 are the 64 px SVGs (`Arch_<Category>/64/` and `Arch-Category_64/`), the largest
-size the package ships; each is an 80 by 80 viewBox with the white glyph on a
-square in its category color. The `Architecture-Service-Icons` folder maps to
+size the package ships. Each draws its white glyph on a square in its category
+color, on an 80 by 80 viewBox for a service icon and 90 by 90 for a category
+icon. The `Architecture-Service-Icons` folder maps to
 class product (36 icons) and the `Category-Icons` folder to class category (10
 icons). The local filenames are shortened (`ec2.svg` rather than
 `Architecture-Service-Icons_07312026/Arch_Compute/64/Arch_Amazon-EC2_64.svg`);
