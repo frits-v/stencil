@@ -546,6 +546,17 @@ for entry in "${sheet_gcp_cases[@]}"; do
 	cases+=("sheet-gcp|$entry")
 done
 
+# A case's work directory is named after the case alone, so two cases with one
+# name would share a directory and the second would overwrite the first.
+duplicate_names="$(for entry in "${cases[@]}"; do
+	IFS='|' read -r _ name _ <<<"$entry"
+	echo "$name"
+done | sort | uniq -d)"
+if [[ -n "$duplicate_names" ]]; then
+	echo "FAIL negative cases share a name: $duplicate_names" >&2
+	exit 1
+fi
+
 work="$(mktemp -d)"
 trap 'rm -rf "$work"' EXIT
 failed=0
