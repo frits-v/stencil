@@ -67,6 +67,12 @@ pub fn g7_page() -> Page {
     serde_json::from_str(G7_JSON).expect("g7.json parses as a Page")
 }
 
+pub fn azure() -> Grammar {
+    builtin_grammar("azure")
+        .expect("azure is a built-in grammar")
+        .expect("the azure grammar is valid")
+}
+
 pub fn gcp() -> Grammar {
     builtin_grammar("gcp")
         .expect("gcp is a built-in grammar")
@@ -85,14 +91,15 @@ pub fn gcp_anywhere() -> Grammar {
     grammar
 }
 
-/// The grammar a test page names: aws as built in, gcp with every kind allowed at the top
-/// level, or plain, the default, for a page that names none.
+/// The grammar a test page names: aws or azure as built in, gcp with every kind allowed at the
+/// top level, or plain, the default, for a page that names none.
 pub fn grammar_for(page: &Page) -> Grammar {
     match page.grammar.as_deref() {
         Some("aws") => builtin_grammar("aws")
             .expect("aws is a built-in grammar")
             .expect("the aws grammar is valid"),
         Some("gcp") => gcp_anywhere(),
+        Some("azure") => azure(),
         _ => builtin_grammar("plain")
             .expect("plain is a built-in grammar")
             .expect("the plain grammar is valid"),

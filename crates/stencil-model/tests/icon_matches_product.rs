@@ -455,6 +455,15 @@ fn an_aws_subtitle_names_its_longest_service_name_and_never_an_instance() {
     assert!(aws_defects_for(Some("RDS instance"), Some("rds")).is_empty());
 }
 
+#[test]
+fn the_azure_example_passes_with_items_examined() {
+    let text = fs::read_to_string(repository_path("examples/azure-hub-spoke.json")).unwrap();
+    let page = parse_page(&text).unwrap();
+    let report = icon_matches_product(&page, &common::azure());
+    assert!(report.passed(), "{:?}", report.defects);
+    assert_eq!(report.examined, 14);
+}
+
 fn azure_table() -> Vec<IconProducts> {
     let grammar = common::azure();
     let product = grammar.item("product").expect("azure has the product kind");

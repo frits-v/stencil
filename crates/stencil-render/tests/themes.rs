@@ -26,10 +26,14 @@ use stencil_render::iso::{SolidInputs, project_page};
 use stencil_render::palette::Palette;
 use stencil_render::{DeviceScale, builtin_theme_json, measured_json, render_png, render_svg};
 
-const EXAMPLES: [(&str, &str); 12] = [
+const EXAMPLES: [(&str, &str); 13] = [
     (
         "aws-hybrid",
         include_str!("../../../examples/aws-hybrid.json"),
+    ),
+    (
+        "azure-hub-spoke",
+        include_str!("../../../examples/azure-hub-spoke.json"),
     ),
     ("g7", include_str!("../../../examples/g7.json")),
     ("hero-iso", include_str!("../../../examples/hero-iso.json")),

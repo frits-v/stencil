@@ -24,6 +24,10 @@ Build the binary with `cargo build --release`; it lands at `target/release/stenc
 
 `examples/aws-hybrid.json`: a data center over Direct Connect into one region, a VPC across two Availability Zones, and the regional services the VPC reaches over endpoints beside it.
 
+![Azure hub-and-spoke network with ExpressRoute and private endpoints](docs/gallery/azure-hub-spoke.png)
+
+`examples/azure-hub-spoke.json`: an on-prem site reaching a hub VNet over ExpressRoute with a VPN backup, spoke traffic through the hub firewall, and a spoke cluster reaching PaaS services over private endpoints.
+
 ![Design one-pager for a trigger evaluation service](docs/gallery/design-brief.png)
 
 Five item shapes on one floor, under the isometric projection:
