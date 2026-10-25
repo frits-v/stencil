@@ -11,6 +11,7 @@ its rules; a figure file writes one topology against a grammar's `#Page`.
 | `cue.mod/module.cue` | | the module `github.com/frits-v/stencil/cue@v0`, language v0.17.1 |
 | `core.cue` | `stencil` | `#Page` and the core nodes: `Row`, `Col`, `Lanes`, `Box`, `Item`, `Fact`, `Note`, `Pipe`, `Tee`, `Text`, `Callout`, `Frame`, `View`, `Phases`, `Step`, `PartsList`, `GeneralNotes`, `Ladder`, `HowTo`, plus `#Sheet` and its cells, `#Mark`, `#MarkedText`, `#MarkLegend`, `#PartEntry`, `#GeneralNote`, `#Rung`, `#HowToItem`, `#CommandRun`, `#TerminalLine`, `#Actor`, `#Phase`, `#SheetSurface`, `#Outline`, `#LineStep`, `#LegendEntry`, `#Link`, `#Line`, `#Bend`, `#Corner`, `#TintSlot` and `#FactEntry` |
 | `grammar.cue` | `stencil` | `#Grammar` and its parts (`#LineKind` among them), and `#GrammarNesting`, the kind and nesting rules every grammar shares |
+| `icons_gcp.cue` | `stencil` | `#IconGcpStems` and `#IconGcp`, the file stems of the gcp icon pack; each pack has its own `icons_<pack>.cue`, and `#Icon` in `core.cue` is their union |
 | `theme.cue` | `stencil` | `#Theme`, the closed theme definition every theme file vets against: `cue vet -c -d '#Theme' . <file>.json` |
 | `grammars/gcp.cue` | `gcp` | the Google Cloud grammar data and product rules, and the gcp `#Page` |
 | `grammars/plain.cue` | `plain` | the default, vendor-neutral grammar data and the plain `#Page` with its external-outside-system rule |
@@ -190,8 +191,9 @@ a hidden struct keyed by the offending item, so the error path names it.
   1 to 400 characters. A page body and the children of a `Row`, `Col` or `Box` hold 1 to 256
   nodes, so an empty container is rejected. A `Text` block holds 1 to 64 body lines, a `Frame`
   height is 40 to 1200, and an Item holds at most 8 facts.
-- Closed vocabulary. Tags, lines, fact sources, note kinds, icon stems, themes, arrows, link
-  sides, list kinds and callout kinds are enumerations; an unknown field on a node is rejected.
+- Closed vocabulary. Tags, lines, fact sources, note kinds, the icon stems of the bundled
+  packs, themes, arrows, link sides, list kinds and callout kinds are enumerations; an unknown
+  field on a node is rejected.
 
 ## What every grammar enforces
 
@@ -210,6 +212,9 @@ _nesting: stencil.#GrammarNesting & {#grammar: grammar}
   `_kindParentNotAllowed.<kind>` names the offender: `subnet: cannot sit in page`.
 - Tint without effect. A tint on a Box whose kind is not tintable is reported as
   `_tintWithoutEffect` on the Box.
+- Icons. An Item's `icon` and each products row's `icon` are stems of the pack the kind draws
+  from, `#PackStems` selecting the pack's list by comprehension; `_iconOutsidePack` on the
+  Item and `_iconsOutsidePack.<stem>` on the item kind name the offender.
 - Grammar name. A page that sets `grammar` must name the package's grammar.
 
 ## gcp rules

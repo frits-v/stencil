@@ -13,7 +13,7 @@ use common::{
 };
 use stencil_model::checks::remembered_constants;
 use stencil_model::{
-    Chrome, FactEntry, FactSource, IconName, Item, Lanes, Line, Node, Page, PipeDir, Projection,
+    Chrome, FactEntry, FactSource, IconStem, Item, Lanes, Line, Node, Page, PipeDir, Projection,
     box_key, box_tint, legend_label, line_key, line_tint, parse_and_vet, text_fields,
     validate_page,
 };
@@ -60,7 +60,7 @@ fn one(pointer: &str, rule: &'static str, message: &str) -> Vec<(String, &'stati
     vec![(pointer.to_string(), rule, message.to_string())]
 }
 
-fn plain_item(kind: &str, icon: Option<IconName>) -> Node {
+fn plain_item(kind: &str, icon: Option<&str>) -> Node {
     Node::Item(Item {
         compartments: Default::default(),
         outline: Default::default(),
@@ -70,7 +70,7 @@ fn plain_item(kind: &str, icon: Option<IconName>) -> Node {
         actor: None,
         id: None,
         kind: kind.to_string(),
-        icon,
+        icon: icon.map(|stem| IconStem::try_from(stem).unwrap()),
         title: "Thing".to_string(),
         subtitle: None,
         facts: Vec::new(),
@@ -283,7 +283,7 @@ fn kind_parent_not_allowed_reads_the_nearest_box_through_rows() {
 #[test]
 fn icon_outside_pack_for_a_plain_item_with_an_icon() {
     let mut page = page_with_body(vec![
-        plain_item("service", Some(IconName::Gke)),
+        plain_item("service", Some("gke")),
         pipe(Line::Solid, Some(1), "p"),
     ]);
     page.grammar = Some("plain".to_string());
@@ -292,9 +292,36 @@ fn icon_outside_pack_for_a_plain_item_with_an_icon() {
         one(
             "/body/0/icon",
             "icon-outside-pack",
-            "item kind service takes no icon"
+            "item kind service draws from icon pack none and takes no icon"
         )
     );
+}
+
+#[test]
+fn icon_outside_pack_for_a_stem_the_kinds_pack_has_no_file_of() {
+    let mut page = page_with_body(vec![
+        plain_item("product", Some("bigtable")),
+        pipe(Line::Solid, Some(1), "p"),
+    ]);
+    page.grammar = Some("gcp".to_string());
+    assert_eq!(
+        rules(&page, &gcp()),
+        one(
+            "/body/0/icon",
+            "icon-outside-pack",
+            "icon bigtable is not in icon pack gcp, which item kind product draws from"
+        )
+    );
+}
+
+#[test]
+fn a_stem_of_the_kinds_pack_is_not_outside_it() {
+    let mut page = page_with_body(vec![
+        plain_item("product", Some("gke")),
+        pipe(Line::Solid, Some(1), "p"),
+    ]);
+    page.grammar = Some("gcp".to_string());
+    assert_eq!(rules(&page, &gcp()), vec![]);
 }
 
 #[test]

@@ -2,6 +2,7 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use crate::grammar::ContainerKind;
+use crate::icons::IconStem;
 
 pub const PAGE_WIDTH_DEFAULT: u32 = 1280;
 pub const PAGE_WIDTH_MIN: u32 = 640;
@@ -1201,8 +1202,9 @@ pub struct Item {
     pub id: Option<String>,
     #[schemars(regex(pattern = KIND_PATTERN))]
     pub kind: String,
+    /// A file stem of the icon pack the item's kind draws from (section 8.2).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub icon: Option<IconName>,
+    pub icon: Option<IconStem>,
     #[schemars(length(min = 1, max = 400))]
     pub title: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -1681,34 +1683,6 @@ pub struct PagePoint {
     pub y: f32,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
-#[serde(rename_all = "kebab-case")]
-pub enum IconName {
-    Agents,
-    AiMl,
-    Bigquery,
-    CloudRunFlat,
-    CloudRun,
-    CloudSql,
-    CloudStorage,
-    ComputeEngine,
-    Compute,
-    Containers,
-    DataAnalytics,
-    Databases,
-    Devops,
-    Gke,
-    Hybrid,
-    Integration,
-    Networking,
-    Observability,
-    Scc,
-    SecurityIdentity,
-    Serverless,
-    Storage,
-    VertexAi,
-}
-
 impl Node {
     /// The serialized `tag` value.
     pub fn tag_name(&self) -> &'static str {
@@ -1790,69 +1764,6 @@ impl FactSource {
             FactSource::Doc => "doc",
             FactSource::Built => "built",
             FactSource::Ask => "ask",
-        }
-    }
-}
-
-impl IconName {
-    pub const ALL: [IconName; 23] = [
-        IconName::Agents,
-        IconName::AiMl,
-        IconName::Bigquery,
-        IconName::CloudRunFlat,
-        IconName::CloudRun,
-        IconName::CloudSql,
-        IconName::CloudStorage,
-        IconName::ComputeEngine,
-        IconName::Compute,
-        IconName::Containers,
-        IconName::DataAnalytics,
-        IconName::Databases,
-        IconName::Devops,
-        IconName::Gke,
-        IconName::Hybrid,
-        IconName::Integration,
-        IconName::Networking,
-        IconName::Observability,
-        IconName::Scc,
-        IconName::SecurityIdentity,
-        IconName::Serverless,
-        IconName::Storage,
-        IconName::VertexAi,
-    ];
-
-    /// The serialized name, for example "cloud-run".
-    pub fn as_str(self) -> &'static str {
-        let file_name = self.file_name();
-        file_name.strip_suffix(".svg").unwrap_or(file_name)
-    }
-
-    /// The icon's file name in `assets/icons/`: the serialized stem plus `.svg`.
-    pub fn file_name(self) -> &'static str {
-        match self {
-            IconName::Agents => "agents.svg",
-            IconName::AiMl => "ai-ml.svg",
-            IconName::Bigquery => "bigquery.svg",
-            IconName::CloudRunFlat => "cloud-run-flat.svg",
-            IconName::CloudRun => "cloud-run.svg",
-            IconName::CloudSql => "cloud-sql.svg",
-            IconName::CloudStorage => "cloud-storage.svg",
-            IconName::ComputeEngine => "compute-engine.svg",
-            IconName::Compute => "compute.svg",
-            IconName::Containers => "containers.svg",
-            IconName::DataAnalytics => "data-analytics.svg",
-            IconName::Databases => "databases.svg",
-            IconName::Devops => "devops.svg",
-            IconName::Gke => "gke.svg",
-            IconName::Hybrid => "hybrid.svg",
-            IconName::Integration => "integration.svg",
-            IconName::Networking => "networking.svg",
-            IconName::Observability => "observability.svg",
-            IconName::Scc => "scc.svg",
-            IconName::SecurityIdentity => "security-identity.svg",
-            IconName::Serverless => "serverless.svg",
-            IconName::Storage => "storage.svg",
-            IconName::VertexAi => "vertex-ai.svg",
         }
     }
 }

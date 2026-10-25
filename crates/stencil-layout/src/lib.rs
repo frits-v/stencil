@@ -28,8 +28,8 @@ use stencil_model::grammar::{BorderPattern, LabelStyle, Role, Tone};
 use stencil_model::pointer::NodePointer;
 use stencil_model::text::{MeasureError, TextMeasurer, TextMetrics, TextStyle};
 use stencil_model::{
-    Arrow, Bend, Grammar, Line, Page, PagePoint, PipeForm, Violation, canvas_width, line_key,
-    validate_page,
+    Arrow, Bend, Grammar, IconName, Line, Page, PagePoint, PipeForm, Violation, canvas_width,
+    line_key, validate_page,
 };
 
 pub use build::{
@@ -289,6 +289,9 @@ pub struct NodeGeometry {
     pub container: Option<ContainerLook>,
     /// The solid an Item stands as under iso (section 12.3); None for every other tag.
     pub shape: Option<Shape>,
+    /// The icon an Item draws, resolved against its kind's pack (section 8.2); None for
+    /// every other tag and for an Item with no icon. The measured JSON does not write it.
+    pub icon: Option<IconName>,
     /// How a Pipe is drawn under iso (section 12.3 rule 5); None for every other tag.
     pub pipe_form: Option<PipeForm>,
     /// The flat outline of an Item on a design sheet (section 14.4 rule 25); None for every

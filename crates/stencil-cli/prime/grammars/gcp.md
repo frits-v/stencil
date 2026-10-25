@@ -1,12 +1,14 @@
 # Grammar gcp
 
-The Google Cloud vocabulary: set "grammar": "gcp" on the page. A design sheet under gcp: take `stencil prime onepager`, a plain sheet, set "grammar": "gcp", make the system Box a gcp Box and each item a product with its icon; vet names each one missed as kind-unknown. Boxes are the frame, networks and places of a Google Cloud figure; an Item is a product with an optional icon from the bundled Google Cloud icons, a person or a device.
+The Google Cloud vocabulary: set "grammar": "gcp" on the page. A design sheet under gcp: take `stencil prime onepager`, a plain sheet, set "grammar": "gcp", make the system Box a gcp Box and each item a product with its icon; vet names each one missed as kind-unknown.
 
 {{kinds}}
 
+{{icons}}
+
 | Kind | Means |
 |---|---|
-| gcp | the Google Cloud frame: blue bar holding the label, light body |
+| gcp | the Google Cloud frame |
 | vpc | a VPC network: dashed gray border, no fill; under iso a ring |
 | region | a region, tinted: tint 1 (default) blue, tint 2 pink |
 | subnet | a subnet: dashed border, lavender |
@@ -16,7 +18,7 @@ The Google Cloud vocabulary: set "grammar": "gcp" on the page. A design sheet un
 | k8s | a cluster or namespace: pink, no border; never tinted |
 | perimeter | a VPC Service Controls perimeter: dashed orange, orange label |
 | apis | Google APIs reached over Private Google Access, inside the gcp frame and outside every vpc |
-| assembly | the parts one actor runs, on a design sheet only: a dash-dot outline with a tab label |
+| assembly | the parts one actor runs, on a design sheet only |
 
 Nesting inside Google Cloud: gcp, then vpc, then region, then subnet. project, perimeter and k8s wrap whatever they scope. onprem sites and other clouds sit outside gcp, usually in the producer column. A Box whose parent is not in its kind's list fails vet with kind-parent-not-allowed; Row, Col and Lanes are transparent.
 

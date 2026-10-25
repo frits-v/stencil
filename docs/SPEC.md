@@ -16,7 +16,7 @@ crates/stencil-layout/          taffy tree from the model, geometry, geometry ch
 crates/stencil-render/          SVG writer, PNG via resvg, measured JSON, figure description
 crates/stencil-cli/             binary `stencil`
 assets/fonts/                   Inter static TTFs, OFL.txt, FONTS.md (asset pre-step, section 8.3)
-assets/icons/                   23 Google Cloud icons, PROVENANCE.md (asset pre-step, section 8.3)
+assets/icons/<pack>/            one directory per icon pack: its SVGs and PROVENANCE.md (section 8.2)
 schema/stencil.schema.json      generated JSON Schema, committed
 examples/g7.json                golden document
 examples/golden/                reference render of the g7 gold
@@ -57,7 +57,7 @@ The vocabulary is split into a core and grammars in section 13. The tables below
 | Box | label | text | yes | |
 | Box | children | list of Node, 1 to 256 | yes | |
 | Item | kind | an item kind of the grammar (`product` in gcp) | yes | |
-| Item | icon | IconName | no | absent |
+| Item | icon | IconStem, a file stem of the kind's icon pack | no | absent |
 | Item | title | text | yes | |
 | Item | subtitle | text | no | absent |
 | Item | facts | list of fact entries (`text`, `source`), 0 to 8 (section 13.7) | no | empty |
@@ -83,7 +83,7 @@ Line: `gray`, `solid`, `dash`, `deny`. The retired PipeKind maps to it as sectio
 
 Container and item kinds come from the page's grammar (section 13.2). The retired ZoneKind maps onto the gcp grammar of section 13.3: `region-a` and `region-b` are `region` with tint 1 and 2, `onprem-a` and `onprem-b` are `onprem` with tint 1 and 2, and every other zone kind keeps its name.
 
-IconName: the file stem of one of the 23 icons in `assets/icons/` (section 8).
+icon: a file stem of the icon pack the item's kind draws from, one of the files in `assets/icons/<pack>/` (section 8.2).
 
 ### 1.2 Rust types
 
@@ -224,7 +224,7 @@ pub struct Zone {
 #[serde(deny_unknown_fields)]
 pub struct Pcard {
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub icon: Option<IconName>,
+    pub icon: Option<IconStem>,
     #[serde(rename = "fn")]
     #[schemars(length(min = 1, max = 400))]
     pub function_name: String,
@@ -310,36 +310,18 @@ pub struct Tee {
     pub arms: [TeeArm; 2],
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
-#[serde(rename_all = "kebab-case")]
-pub enum IconName {
-    Agents,
-    AiMl,
-    Bigquery,
-    CloudRunFlat,
-    CloudRun,
-    CloudSql,
-    CloudStorage,
-    ComputeEngine,
-    Compute,
-    Containers,
-    DataAnalytics,
-    Databases,
-    Devops,
-    Gke,
-    Hybrid,
-    Integration,
-    Networking,
-    Observability,
-    Scc,
-    SecurityIdentity,
-    Serverless,
-    Storage,
-    VertexAi,
-}
+/// A file stem: lowercase ASCII letters and digits in runs joined by single `-`, at most
+/// ICON_STEM_BYTES_MAX bytes. A string that is not one is a JSON error; the schema inlines it
+/// as a string with this pattern and length.
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
+#[serde(try_from = "String")]
+pub struct IconStem(String);
+
+pub const ICON_STEM_PATTERN: &str = r"^[a-z0-9]+(-[a-z0-9]+)*$";
+pub const ICON_STEM_BYTES_MAX: usize = 64;
 ```
 
-`IconName::file_name(self) -> &'static str` returns the stem plus `.svg` (`IconName::AiMl` is `ai-ml.svg`). `Node::tag_name(&self) -> &'static str` returns the `tag` string.
+`IconStem`, `IconPack` and the pack-scoped `IconName` live in `crates/stencil-model/src/icons.rs` (section 8.2): `IconPack::resolve(self, &IconStem) -> Option<IconName>` finds the stem's file in the pack, and `IconName::file_name(self) -> &'static str` returns the stem plus `.svg` (`IconName::Gcp(GcpIcon::AiMl)` is `ai-ml.svg`). `Node::tag_name(&self) -> &'static str` returns the `tag` string.
 
 Two serde behaviors are load-bearing and each has a test (section 10). First, `deny_unknown_fields` on the payload structs must reject an unknown field inside a tagged node, even though the tag is on the enum. Second, the generated schema must accept the `tag` property on every node object and reject unknown properties.
 
@@ -1698,9 +1680,15 @@ Family: Inter, SIL Open Font License 1.1. Four static instances from the Inter 4
 
 ### 8.2 Icons
 
-The 23 icons are copied byte for byte from `drafting-diagrams/stencil/icons/` to `assets/icons/`, together with `PROVENANCE.md` from `drafting-diagrams/stencil/`. That file records their source (the two ZIP archives linked from cloud.google.com/icons), the stated terms, and the conclusion that the icons may be used unaltered on labeled product cards in architecture and technical figures. A marketing or co-branded surface needs a Partner Marketing Hub request first. Stencil never recolors, resizes by rewriting, crops, re-exports or minifies an icon. It places the original bytes in a data URI and scales them with the `<image>` element's width and height.
+An icon pack is a directory `assets/icons/<pack>/` of SVG files and a `PROVENANCE.md` that records the source archive and its URL, the fetch date, the stated terms quoted, the conclusion, and one row per file mapping the local file to its archive path. `IconPack` lists the bundled packs in alphabetical order, then `none`. An icon is named by its file stem, and a stem means an icon only in the pack of the item's kind: `Item.icon` and a products row's `icon` are stems, the same stem in two packs is two icons, and a page never names a pack. Vet resolves an item's stem against its kind's pack (`icon-outside-pack`, section 13.1), the grammar check resolves each products row against its kind's pack (`grammar-icon-table`, section 13.2), and layout carries the resolved icon on the Item's node for the writer. A kind draws from one pack, so a figure mixes no packs.
 
-`stencil-render` embeds the files with `include_bytes!`. A test compares each embedded file with this table:
+Every file is copied byte for byte from the vendor's archive. Stencil never recolors, resizes by rewriting, crops, re-exports or minifies an icon. It places the original bytes in a data URI and scales them with the `<image>` element's width and height.
+
+`stencil-render` embeds the files with `include_bytes!`, one module per pack under `crates/stencil-render/src/icons/`. A test reads the tables below, one under a heading per bundled pack in `IconPack` order, and compares each embedded file with its row; a bundled pack with no rows, an icon with no row and a row with no icon each fail it. A second test requires every SVG in a pack's directory to have a row in that pack's `PROVENANCE.md` and every row there to have a file.
+
+#### Pack gcp
+
+The 23 Google Cloud icons in `assets/icons/gcp/`, from the two ZIP archives linked from cloud.google.com/icons. `assets/icons/gcp/PROVENANCE.md` records the stated terms and the conclusion that the icons may be used unaltered on labeled product cards in architecture and technical figures; a marketing or co-branded surface needs a Partner Marketing Hub request first.
 
 | Local file | Archive path | SHA-256 |
 |---|---|---|
@@ -1728,7 +1716,7 @@ The 23 icons are copied byte for byte from `drafting-diagrams/stencil/icons/` to
 | `storage.svg` | `Category Icons/Storage/SVG/Storage-512-color.svg` | `d99325d1f951ec5ddff47e1d787a90acd819449ee38c6ce20a981e803f5d7ed1` |
 | `vertex-ai.svg` | `Unique Icons/Vertex AI/SVG/VertexAI-512-color.svg` | `17922247f3110026fd637c531d0604c67a00c9a58a6e152030f2242b9fd48a8e` |
 
-`cloud-run.svg` and `cloud-run-flat.svg` are the same file under two names, which the upstream provenance also records.
+`cloud-run.svg` and `cloud-run-flat.svg` are the same file under two names, which the pack's provenance also records.
 
 ### 8.3 Asset pre-step
 
@@ -1737,7 +1725,7 @@ stencil-text and stencil-render embed the assets with `include_bytes!`, so neith
 1. Download `https://github.com/rsms/inter/releases/download/v4.1/Inter-4.1.zip`.
 2. Copy `extras/ttf/Inter-Regular.ttf`, `Inter-SemiBold.ttf`, `Inter-Bold.ttf` and `Inter-ExtraBold.ttf` unmodified to `assets/fonts/`, and the archive's `LICENSE.txt` to `assets/fonts/OFL.txt`.
 3. Write `assets/fonts/FONTS.md`: the section 8.1 table with each file's SHA-256 (`shasum -a 256`), the release version 4.1 and the archive URL.
-4. Copy the 23 icons from `drafting-diagrams/stencil/icons/` to `assets/icons/` and `drafting-diagrams/stencil/PROVENANCE.md` to `assets/icons/PROVENANCE.md`. Confirm every icon's SHA-256 equals the section 8.2 table.
+4. Copy the 23 Google Cloud icons from `drafting-diagrams/stencil/icons/` to `assets/icons/gcp/` and `drafting-diagrams/stencil/PROVENANCE.md` to `assets/icons/gcp/PROVENANCE.md`. Confirm every icon's SHA-256 equals its row in the section 8.2 table of pack gcp.
 5. Confirm with a throwaway probe that both font databases read the four files as this spec expects. cosmic-text's re-exported `fontdb` and usvg's re-exported `fontdb` each load the files with `load_font_data` and must report family `Inter` for every face and weights 400, 600, 700 and 800. The cosmic-text scout checked only Regular, SemiBold and Bold, so ExtraBold at weight 800 is unconfirmed until this step. If any face reports another family (for example `Inter ExtraBold` from the legacy name table) or another weight, the pre-step stops and this spec is revised before fan-out.
 6. Write `examples/g7.json` as the section 9.3 JSON block, byte for byte, with a trailing newline. stencil-model, stencil-text, stencil-render, stencil-cli and the golden test all read this one file, and a change to it is made in section 9.3 first.
 7. Copy the existing Chrome headless render of the g7 gold to `examples/golden/g7-gold-chrome.png`, or regenerate it with the recipe in section 9.4. Confirm it is 2640 by 1800 px (`sips -g pixelWidth -g pixelHeight` or `file`).
@@ -1988,7 +1976,7 @@ All tests except the wrap-epsilon regression use `FixedMetricsMeasurer::default(
 - SVG parses with usvg. There is one `<g data-id>` per geometry node, in the same order with the same pointers. The only `http` substring is the namespace URI.
 - Every `<text>` has `xml:space="preserve"` and `font-family="Inter"` with no fallback list. `letter-spacing` is present exactly for the styles with nonzero spacing.
 - The SVG `render` writes holds one `@font-face` per weight its `<text>` elements use and none for another, each decoding to the bundled file of that weight: hybrid-ai uses 400, 600, 700 and 800, design-brief and hero-iso 400, 700 and 800 (`the_svg_embeds_a_font_face_for_each_weight_its_text_uses_and_no_other` in `crates/stencil-cli/tests/cli.rs`).
-- Icons: each data URI decodes to bytes whose SHA-256 equals the section 8.2 table. A render of a Pcard for each of the 23 icons parses.
+- Icons: for every bundled pack, each data URI decodes to bytes whose SHA-256 equals the pack's section 8.2 table, which has one row per icon of the pack and fails when it has none. A render of a Pcard for each gcp icon parses.
 - Colors: for each ZoneKind the rect fill, stroke, stroke width and dasharray match section 2.4. For each PipeKind the wire color and dasharray match section 5.2, and a Tee of that kind draws its spine, and a legend entry of that kind its swatch `<line>`, in the same color and dasharray. A `deny` Tee's hub has stroke #F4C7C3 and text fill #C5221F.
 - Numbers: no attribute value has more than 2 decimals, and `-0` never appears. `format_number` gives `Integer(0)` for -0.0 and -0.001, `Integer(1320)` for 1320.0, `Integer(652)` for 652.004 and `Decimal(652.4)` for 652.4.
 - PNG: dimensions are `ceil(c * scale)` for scales 1 and 4, where `c` is the canvas size rounded by section 5.1. A geometry whose height rounds down (for example 652.004) gives the PNG height from the rounded value. `DeviceScale::new(0)` and `new(5)` are rejected. Two renders are byte-identical. The pixel budget accepts 8192 by 16384 at scale 1 and rejects 8192 by 16385, and rejects zero, negative, NaN and infinite extents. A 1320 by 60000 SVG at scale 2 returns `PixmapAllocation { width: 2640, height: 120000 }` without allocating. An `<image>` whose href is the path of a red SVG file renders white, because only `data:` hrefs resolve. The file is SVG, not PNG, because resvg is built without `raster-images`: a PNG href never decodes whichever resolver runs, while usvg decodes an SVG sub-image itself, so only an SVG file makes the test fail when a file-reading resolver is installed.
@@ -3028,7 +3016,7 @@ Field summary additions and changes (section 1.1):
 | Box | tint | integer 1 to 8 | no | the kind's default (rule 2) |
 | Box | label, children | as Zone | yes | |
 | Item | kind | an item kind of the grammar | yes | |
-| Item | icon | IconName, from the kind's icon pack | no | absent |
+| Item | icon | IconStem, a file stem of the kind's icon pack (section 8.2) | no | absent |
 | Item | title | text | yes | |
 | Item | subtitle | text | no | absent |
 | Item | facts | list of Fact entries, 0 to 8 | no | empty |
@@ -3180,8 +3168,9 @@ pub struct Item {
     pub id: Option<String>,
     #[schemars(regex(pattern = KIND_PATTERN))]
     pub kind: String,
+    /// A file stem of the icon pack the item's kind draws from (section 8.2).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub icon: Option<IconName>,
+    pub icon: Option<IconStem>,
     #[schemars(length(min = 1, max = 400))]
     pub title: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -3372,7 +3361,7 @@ Vet rules added to section 1.3. `validate_page` takes the resolved grammar: `val
 | `theme-unknown` | `theme` is neither a `BUILTIN_THEMES` name nor a string ending in `.json` | `/theme` | `theme "<value>" is neither a built-in theme nor a .json path` |
 | `kind-unknown` | a Box kind is not a container kind of the grammar, or an Item kind not an item kind | `/…/kind` | `kind "<kind>" is not a <container or item> kind of grammar <name>` |
 | `kind-parent-not-allowed` | the nearest Box ancestor's kind, or `page` when there is none, is not in the kind's `parents` (Row, Col and Lanes are transparent) | `/…/kind` | `<kind> cannot sit in <parent kind>` |
-| `icon-outside-pack` | an Item carries `icon` and its kind's icon pack is `none` | `/…/icon` | `item kind <kind> takes no icon` |
+| `icon-outside-pack` | an Item carries `icon` and its kind's icon pack is `none`, or the pack has no file of that stem | `/…/icon` | `item kind <kind> draws from icon pack none and takes no icon`, or `icon <stem> is not in icon pack <pack>, which item kind <kind> draws from` |
 | `pipe-target-unknown` | a Pipe `from` or `to` names no node id | `/…/from` or `/…/to` | `pipe target "<id>" names no node id` |
 | `pipe-targets-equal` | a Pipe's `from` and `to` are the same id | `/…/to` | `pipe from and to both name "<id>"` |
 | `pipe-target-on-tee-arm` | a Tee arm carries `from` or `to` | `/…/arms/<i>/from` or `/…/arms/<i>/to` | `a Tee arm cannot name a target` |
@@ -3553,6 +3542,9 @@ pub struct ContainerKind {
     pub parents: Vec<String>,
 }
 
+/// The pack an item kind draws its icons from.
+// The bundled packs in alphabetical order, then None; the per-pack match arms and the
+// section 8.2 tables follow the same order.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "lowercase")]
 pub enum IconPack {
@@ -3572,7 +3564,8 @@ pub enum IconClass {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct IconProducts {
-    pub icon: IconName,
+    /// A file stem of the kind's icon pack.
+    pub icon: IconStem,
     pub class: IconClass,
     #[schemars(length(min = 1))]
     pub names: Vec<String>,
@@ -3632,7 +3625,7 @@ impl Grammar {
 
 `GrammarViolation` and `GrammarError` have the shape of the theme ones in section 13.4 (pointer into the grammar document, a `GrammarRule`, a message; `Json` and `Invalid` variants with an `origin` naming the file or built-in).
 
-Grammar rules, in `validate_grammar`, all reported in field order: container and item names are unique across both lists (`grammar-name-duplicate`); every parent is a container kind of the grammar or `page` (`grammar-parent-unknown`); at least one kind lists `page` (`grammar-no-top-level`); a `frame` kind has no tone and label `bar`, and every other kind has a tone and a label other than `bar` (`grammar-role-mismatch`); `default_tint` only on a tintable kind (`grammar-default-tint-untintable`); border width 0 exactly when the pattern is `none` (`grammar-border-mismatch`); an item kind with icons `none` has no products, and within one item kind each icon appears at most once (`grammar-icon-table`); `remembered` literals are distinct (`grammar-remembered-duplicate`); each line appears in `lines` at most once (`grammar-line-duplicate`) and its `corner` is 0 to 16 (`grammar-corner-out-of-range`). A grammar file that fails stops `vet`, `render`, `check` and `gallery` before layout, printed and mapped to exit codes exactly as a theme failure is (section 13.4 rule 5).
+Grammar rules, in `validate_grammar`, all reported in field order: container and item names are unique across both lists (`grammar-name-duplicate`); every parent is a container kind of the grammar or `page` (`grammar-parent-unknown`); at least one kind lists `page` (`grammar-no-top-level`); a `frame` kind has no tone and label `bar`, and every other kind has a tone and a label other than `bar` (`grammar-role-mismatch`); `default_tint` only on a tintable kind (`grammar-default-tint-untintable`); border width 0 exactly when the pattern is `none` (`grammar-border-mismatch`); an item kind with icons `none` has no products, within one item kind each icon appears at most once, and each row's icon is a stem of the kind's pack (`grammar-icon-table`); `remembered` literals are distinct (`grammar-remembered-duplicate`); each line appears in `lines` at most once (`grammar-line-duplicate`) and its `corner` is 0 to 16 (`grammar-corner-out-of-range`). A grammar file that fails stops `vet`, `render`, `check` and `gallery` before layout, printed and mapped to exit codes exactly as a theme failure is (section 13.4 rule 5).
 
 What a grammar decides and what it does not:
 
@@ -4474,7 +4467,7 @@ print-fit:
 
 icon-matches-product:
 
-1. The table is grammar data: each item kind's `products` (section 13.2) lists icons with their class and the product names each may stand for. The class follows the archive path in section 8.2: `Unique Icons/` is `product` and `Category Icons/` is `category`. The gcp `product` kind carries this table, one row per `IconName` in `IconName::ALL` order:
+1. The table is grammar data: each item kind's `products` (section 13.2) lists icons with their class and the product names each may stand for. The class follows the archive path in section 8.2: `Unique Icons/` is `product` and `Category Icons/` is `category`. The gcp `product` kind carries this table, one row per gcp icon in `GcpIcon::ALL` order:
 
    | Icon | Class | Names |
    |---|---|---|
@@ -4558,7 +4551,7 @@ stencil prime grammar <name>
 | `theme import` | section 13.9 | the report lines, then the two written paths, absolute |
 | `theme preview` | renders the preview figure embedded at `crates/stencil-cli/preview/theme-preview.json` under the theme, with the kicker `theme preview · <theme name>`, to one PNG. The figure is a gcp page 1,100 px wide that uses every container kind, the eight tint slots as region fills, every line kind, a Tee, a routed link, a callout and a text block; a test runs `check` on it under every built-in theme. `mise run theme-docs` writes every built-in's preview to `docs/themes/<name>.png` at scale 1, the README's theme table embeds them, and CI regenerates and compares them byte for byte | the written path, absolute |
 | `prime` | prints the core briefing (`prime/base.md`), which names the built-in grammars and points at `stencil prime grammar <name>` | the briefing |
-| `prime grammar <name>` | prints `prime/grammars/<name>.md` for a built-in grammar, with its kind tables rendered from the grammar data as the vocabulary table is rendered from the schema; an unknown name writes one line to stderr naming the grammars and exits 2 | the grammar briefing |
+| `prime grammar <name>` | prints `prime/grammars/<name>.md` for a built-in grammar, with its kind tables rendered from the grammar data as the vocabulary table is rendered from the schema, and at its `{{icons}}` marker one line per item kind that draws from a pack, listing the pack's stems grouped by the class of their products rows; the base lists no icon and points here; an unknown name writes one line to stderr naming the grammars and exits 2 | the grammar briefing |
 
 Row lines, stable for scripts:
 
@@ -4580,7 +4573,7 @@ New error mappings for section 7's exhaustive table: `GrammarError` and `ThemeEr
 CUE. `cue/stencil.cue` splits:
 
 - `cue/core.cue` (package `stencil`): the core `#Page`, `#Node` and every core tag, with `#Box` and `#Item` taking `kind: #KindName`; `#Line: "gray" | "solid" | "dash" | "deny"` as `line` on `#Pipe`, `#Tee`, `#Link` and `#LegendEntry`; `#TintSlot: int & >=1 & <=8` as `tint?` on `#Box` and the four line carriers; `#FactEntry` and `source?` on `#Fact`; `from?` and `to?` on `#Pipe`; `order?` on `#Link`; `#Lanes`; `grammar?`, `theme?` (the reference patterns), `theme_overrides?: {...}` and `chrome?: "full" | "none"` on `#Page`. The core checks stay here: ids, link endpoints, pipe targets (`_pipeTargetsUnknown`), ordered links, legend keys (`"\(line)-\(tint)"` for solid and dash, slot 1 when absent, the line alone for gray and deny; `_legendKeysAreUnique`; the `chrome: "none"` exception) and `_tintWithoutEffect` for a tint on a gray or deny line. The old `#Theme` enum is gone; `#Theme` names the theme definition.
-- `cue/theme.cue` (package `stencil`): `#Theme` (section 13.4). `cue/grammar.cue` (package `stencil`): `#Grammar` (section 13.2).
+- `cue/theme.cue` (package `stencil`): `#Theme` (section 13.4). `cue/grammar.cue` (package `stencil`): `#Grammar` (section 13.2), `#IconPack`, and `#PackStems`, which selects a pack's stem list by comprehension so that an Item's `icon` (`_iconOutsidePack`) and each products row's `icon` (`_iconsOutsidePack`) are checked against the kind's pack. `cue/icons_<pack>.cue` (package `stencil`) holds one pack's stems, `#IconGcpStems` and `#IconGcp` for gcp, and `#Icon` in `core.cue` is the union of the packs.
 - `cue/grammars/gcp.cue` (package `gcp`) and `cue/grammars/plain.cue` (package `plain`): each imports the core package, declares `grammar: stencil.#Grammar & {...}`, narrows `#Box.kind` and `#Item.kind` to its kind names, and adds its rules: for gcp the hop-fact rule, tint pairing over slot keys, `_productInsideVpc` and `_apisOutsideGcp` (section 13.3); for plain none. `_tintWithoutEffect` also names a tint on a Box whose kind is not tintable. A `cue.mod/module.cue` declares the module so the grammar packages can import the core; where CUE's package rules force a different file layout, `cue/README.md` records it.
 - `cue/g7.cue` moves to `cue/figures/g7.cue` under package `gcp` and unifies with the gcp `#Page`.
 - `cue/check.sh` vets the core and both grammar packages; exports both grammars and compares them with `crates/stencil-model/grammars/<name>.json`; exports g7 and compares it with `examples/g7.json`; vets every example against the gcp `#Page` and every built-in theme file against `#Theme`; and runs the negative cases, migrated to the new vocabulary (the pink cases become solid tint 2 cases) plus: tint 9 on a pipe, a tint on a deny pipe, a BigQuery product inside the vpc, an apis Box outside gcp, a Box of kind `zone`, a subnet at the top level, a pipe target naming no id, two ordered links with one order, a legend entry for solid tint 3 that no pipe uses, a theme file with seven tints and a theme file with an unknown role.
@@ -4634,13 +4627,13 @@ stencil-model:
 
 - The migrated examples parse, round-trip and validate against the regenerated schema; a copy with `"tag": "Zone"`, `"tag": "Pcard"`, `"kind": "blue"` on a pipe or `"fn"` on an item is a `ModelError::Json`.
 - Grammars: `gcp.json` and `plain.json` parse and pass `validate_grammar`; gcp's container kinds equal section 13.3's table field for field, and its border widths, paddings, radii and label styles equal section 2.4's; a copy with each grammar fault (a duplicate name, an unknown parent, no kind under `page`, a frame with a tone, a group without one, a default tint on an untintable kind, a solid border of width 0, an item with icons none and a products row, a repeated icon) is rejected with the named rule. `grammar_schema()` equals the committed `schema/grammar.schema.json`.
-- Vet with a grammar: `kind-unknown` for a Box of kind `zone` and an Item of kind `service` under gcp; `kind-parent-not-allowed` for a subnet at the top level and for a vpc inside a region, and none for a subnet inside a project inside a Row (Row is transparent); `icon-outside-pack` for a plain `service` with an icon; `grammar-unknown` for `"gcpx"`. A page without `grammar` vets under plain, and a gcp page without it fails `kind-unknown` with the default-applied message. Every example vets clean under the grammar it names.
+- Vet with a grammar: `kind-unknown` for a Box of kind `zone` and an Item of kind `service` under gcp; `kind-parent-not-allowed` for a subnet at the top level and for a vpc inside a region, and none for a subnet inside a project inside a Row (Row is transparent); `icon-outside-pack` for a plain `service` with an icon and for a gcp `product` whose stem the gcp pack has no file of; `grammar-unknown` for `"gcpx"`. A page without `grammar` vets under plain, and a gcp page without it fails `kind-unknown` with the default-applied message. Every example vets clean under the grammar it names.
 - `tint`: 1 and 8 vet clean on every carrier, 0 and 9 give `tint-out-of-range`; `box_tint` for region (absent gives 1), onprem (absent gives none) and subnet (ignored); `line_tint`, `box_key`, `line_key` and `legend_label` against section 13.1's tables for every line and slot.
 - Legend consistency: solid tint 2 used with only a solid tint 1 entry gives one defect at the pipe and one at the entry; a tint on a deny pipe and on its entry are the same key; an entry for solid with no tint matches a pipe with tint 1; a dash tint 2 needs its own entry. Under `chrome: none`, one key in use with an empty legend passes with examined equal to the uses; two keys with an empty legend fail; one key with a legend entry follows the normal rule.
 - Facts: an Item's fact entries appear in `text_fields` after title and subtitle at `/…/facts/<i>/text`; remembered constants are found in a built fact; a Fact node without `source` serializes without it.
 - Themes: every built-in parses and passes `validate_theme`; a copy of center with each structural fault (lowercase hex, width 5, step 41, opacity 1.5, slab thickness 1, blur 0, an uppercase tint name, two equal tint names, seven tints, a fill on the strong tone, an unknown key at the top and inside `iso`) is rejected with the named rule and pointer, all faults of one document reported together in field order. `apply_overrides`: one wire through the `tints` slot form changes that slot only; a nested object merges; an unknown key reports `/theme_overrides/...`; a string where the base holds an object is `theme-override-not-object`. `theme_schema()` equals `schema/theme.schema.json`.
 - `theme_quality`: center gives 285 rows, 284 passed, and exactly one failure, `ask.ink on ask.fill` at 4.34; paper, dusk, clear and clear-dark give 285 rows and no failure; wire gives 277 passed and 8 not applicable; the center and dusk values match the research checker to 2 decimals (recorded in the test, with the checker's file named as the source). A hand-built theme with eight equal wires fails the four wire separation rows, and the same theme with `tint_cue: line` reports them not applicable. Center's inks equal `stencil_layout::styles`, and `TINT_NAMES` equals center's slot names.
-- icon-matches-product: gcp's table has every icon once in `IconName::ALL` order, with the class of its section 8.2 archive path; `named_product` picks the longest match (`Vertex AI Agent Engine`, `Cloud Run functions`), respects word boundaries (`BigQueryX` names nothing) and ignores ASCII case; each defect kind fires once and its clean neighbor does not (subtitle BigQuery with icon bigquery, with no icon, with data-analytics; subtitle Pub/Sub with integration, with cloud-run); g7 examines 6 items clean; a plain page is not applicable; the three example mismatches of section 13.10 are found at their pointers before step (d) corrects them.
+- icon-matches-product: gcp's table has every icon once in `GcpIcon::ALL` order, with the class of its section 8.2 archive path; `named_product` picks the longest match (`Vertex AI Agent Engine`, `Cloud Run functions`), respects word boundaries (`BigQueryX` names nothing) and ignores ASCII case; each defect kind fires once and its clean neighbor does not (subtitle BigQuery with icon bigquery, with no icon, with data-analytics; subtitle Pub/Sub with integration, with cloud-run); g7 examines 6 items clean; a plain page is not applicable; the three example mismatches of section 13.10 are found at their pointers before step (d) corrects them.
 - Lanes and ordered links: `link-order-outside-lanes` for an ordered link between a head and a node outside the Lanes, `link-order-duplicate` for two messages with one order, `lanes-in-iso` for a Lanes page with `projection: iso`.
 
 stencil-text:

@@ -108,6 +108,7 @@ pub(crate) fn compute_geometry(
             tint: record.tint,
             container: record.container,
             shape: record.shape,
+            icon: record.icon,
             pipe_form: record.pipe_form,
             outline: record.outline,
             parent: record.parent,

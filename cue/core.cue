@@ -213,11 +213,10 @@ import (
 // A node id, the pattern of the Rust model's `id` field. Links name nodes by it.
 #Id: =~"^[a-z0-9][a-z0-9-]{0,63}$"
 
-// Filename stems under drafting-diagrams/stencil/icons/.
-#Icon: "agents" | "ai-ml" | "bigquery" | "cloud-run-flat" | "cloud-run" | "cloud-sql" |
-	"cloud-storage" | "compute-engine" | "compute" | "containers" | "data-analytics" |
-	"databases" | "devops" | "gke" | "hybrid" | "integration" | "networking" |
-	"observability" | "scc" | "security-identity" | "serverless" | "storage" | "vertex-ai"
+// A file stem of any bundled icon pack, one disjunct per pack in alphabetical
+// order; each pack's stems live in icons_<pack>.cue. Which pack an icon must
+// come from is the item kind's, checked in grammar.cue.
+#Icon: #IconGcp
 
 // The legend key of a line: the line and its tint for solid and dash, slot 1
 // when tint is absent, "<line>-by-actor" for a use with an effective actor or a

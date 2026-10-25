@@ -468,11 +468,14 @@ sheet_cases=(
 )
 # The rules that need a gcp kind on a sheet: a subnet directly in a View sits in
 # the page, since a View is transparent for kind nesting as Row, Col and Lanes
-# are; a region paints tint 1 by default; a product carries an icon.
+# are; a region paints tint 1 by default; a product carries an icon; an item's
+# icon and a products row's icon are stems of the kind's pack.
 sheet_gcp_cases=(
 	'kind-parent-through-view|s/^\t\tchildren: \[{$/\t\tchildren: [{tag: "Box", kind: "subnet", label: "stray subnet", children: [{tag: "Fact", text: "no region around it"}]}, {/|cloud._kindParentNotAllowed.subnet|cannot sit in page'
 	'kind-tint-without-actor|/^\t\t\t\t\tactor: "crew"$/d|_kindTintWithoutActor.Region'
 	'outline-person-with-icon|s/icon: "cloud-run"/&, outline: "person"/|_outlinePersonWithIcon'
+	'item-icon-outside-its-kinds-pack|s/kind: "person", title: "Client"/&, icon: "gke"/|_iconOutsidePack|is not in icon pack none, which item kind person draws from'
+	'products-row-icon-outside-its-kinds-pack|s/^import ($/&\n\t"github.com\/frits-v\/stencil\/cue:stencil"/; s/^cloud: gcp.#Page \& {$/_probe: stencil.#ItemKind \& {name: "probe", icons: "none", products: [{icon: "gke", class: "product", names: ["GKE"]}], parents: ["page"]}\n&/|_probe._iconsOutsidePack.gke|is not in icon pack none, which item kind probe draws from'
 )
 sheet_small_cases=(
 	'sheet-in-iso|s/^\tgrammar: "plain"$/&\n\tprojection: "iso"/|_sheetInIso'
@@ -543,7 +546,7 @@ for entry in "${cases[@]}"; do
 	esac
 	dir="$work/$name"
 	mkdir -p "$dir"
-	cp -R "$here/cue.mod" "$here/core.cue" "$here/grammar.cue" "$here/theme.cue" "$here/grammars" "$here/figures" "$dir/"
+	cp -R "$here/cue.mod" "$here"/*.cue "$here/grammars" "$here/figures" "$dir/"
 	sed -e "$expression" "$here/figures/$figure.cue" >"$dir/figures/$figure.cue"
 	if cmp -s "$here/figures/$figure.cue" "$dir/figures/$figure.cue"; then
 		echo "FAIL $name: edit did not change figures/$figure.cue" >&2

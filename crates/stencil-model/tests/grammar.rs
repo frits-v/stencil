@@ -6,9 +6,11 @@
 
 use serde_json::{Value, json};
 use stencil_model::grammar::{
-    BorderPattern, GrammarError, IconClass, IconPack, LabelStyle, Role, Tone, builtin_grammar_json,
+    BorderPattern, GrammarError, IconClass, LabelStyle, Role, Tone, builtin_grammar_json,
 };
-use stencil_model::{Grammar, IconName, Shape, builtin_grammar, grammar_schema, parse_grammar};
+use stencil_model::{
+    GcpIcon, Grammar, IconPack, Shape, builtin_grammar, grammar_schema, parse_grammar,
+};
 
 const COMMITTED_GRAMMAR_SCHEMA: &str = include_str!("../../../schema/grammar.schema.json");
 
@@ -289,8 +291,13 @@ fn gcp_has_a_product_kind_with_every_icon_once_in_icon_order_and_a_person_and_a_
     let mut expected_parents: Vec<&str> = GCP_TABLE.iter().map(|row| row.0).collect();
     expected_parents.push("page");
     assert_eq!(product.parents, expected_parents);
-    let icons: Vec<IconName> = product.products.iter().map(|row| row.icon).collect();
-    assert_eq!(icons, IconName::ALL);
+    let icons: Vec<&str> = product
+        .products
+        .iter()
+        .map(|row| row.icon.as_str())
+        .collect();
+    let pack_icons: Vec<&str> = GcpIcon::ALL.iter().map(|icon| icon.as_str()).collect();
+    assert_eq!(icons, pack_icons);
     let product_class: Vec<&str> = product
         .products
         .iter()
@@ -383,7 +390,7 @@ fn an_unknown_field_is_a_json_error_naming_the_origin() {
 #[test]
 #[allow(clippy::type_complexity)]
 fn each_grammar_fault_is_reported_with_its_rule() {
-    let cases: [(&str, fn(&mut Value), &str, &str); 12] = [
+    let cases: [(&str, fn(&mut Value), &str, &str); 13] = [
         (
             "duplicate name",
             |grammar| {
@@ -437,6 +444,12 @@ fn each_grammar_fault_is_reported_with_its_rule() {
         (
             "repeated icon",
             |grammar| grammar["items"][0]["products"][1]["icon"] = json!("agents"),
+            "grammar-icon-table",
+            "/items/0/products/1/icon",
+        ),
+        (
+            "products row icon outside the kind's pack",
+            |grammar| grammar["items"][0]["products"][1]["icon"] = json!("bigtable"),
             "grammar-icon-table",
             "/items/0/products/1/icon",
         ),
@@ -525,4 +538,33 @@ fn container_and_item_lookups_find_kinds_by_name() {
     assert!(grammar.container("product").is_none());
     assert!(grammar.item("product").is_some());
     assert!(grammar.item("region").is_none());
+}
+
+#[test]
+fn a_products_row_outside_its_kinds_pack_names_the_pack() {
+    let mut document = gcp_value();
+    document["items"][0]["products"][1]["icon"] = json!("bigtable");
+    let Err(GrammarError::Invalid { violations, .. }) =
+        parse_grammar(&document.to_string(), "test")
+    else {
+        panic!("a row outside the pack parsed clean");
+    };
+    let messages: Vec<&str> = violations
+        .iter()
+        .map(|violation| violation.message.as_str())
+        .collect();
+    assert_eq!(
+        messages,
+        ["icon bigtable is not in icon pack gcp, which item kind product draws from"]
+    );
+}
+
+#[test]
+fn a_malformed_products_row_icon_is_a_json_error() {
+    let mut document = gcp_value();
+    document["items"][0]["products"][1]["icon"] = json!("Big Table");
+    assert!(matches!(
+        parse_grammar(&document.to_string(), "test"),
+        Err(GrammarError::Json { .. })
+    ));
 }

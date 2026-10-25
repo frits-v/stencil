@@ -9,7 +9,8 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use crate::Shape;
-use crate::document::{Bend, IconName, KIND_PATTERN, LINK_CORNER_MAX_PX, Line};
+use crate::document::{Bend, KIND_PATTERN, LINK_CORNER_MAX_PX, Line};
+use crate::icons::{IconPack, IconStem};
 use crate::pointer::NodePointer;
 use crate::vet::is_corner_in_range;
 
@@ -140,13 +141,6 @@ pub struct ContainerKind {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "lowercase")]
-pub enum IconPack {
-    Gcp,
-    None,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
-#[serde(rename_all = "lowercase")]
 pub enum IconClass {
     /// From the archive's Unique Icons: stands for one product.
     Product,
@@ -157,7 +151,8 @@ pub enum IconClass {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct IconProducts {
-    pub icon: IconName,
+    /// A file stem of the kind's icon pack.
+    pub icon: IconStem,
     pub class: IconClass,
     #[schemars(length(min = 1))]
     pub names: Vec<String>,
@@ -629,16 +624,25 @@ fn check_icon_table(pointer: &NodePointer, item: &ItemKind, violations: &mut Vio
             ),
         );
     }
-    let mut icons: BTreeSet<&'static str> = BTreeSet::new();
+    let mut icons: BTreeSet<&str> = BTreeSet::new();
     for (index, row) in item.products.iter().enumerate().take(GRAMMAR_PRODUCTS_MAX) {
         let row_pointer = products_pointer.index(index);
-        if !icons.insert(row.icon.file_name()) {
+        if !icons.insert(row.icon.as_str()) {
+            violations.push(
+                row_pointer.child("icon"),
+                GrammarRule::IconTable,
+                format!("icon {} appears twice in item kind {}", row.icon, item.name),
+            );
+        }
+        // A kind of pack none with rows is reported once above, not once per row.
+        if item.icons != IconPack::None && item.icons.resolve(&row.icon).is_none() {
             violations.push(
                 row_pointer.child("icon"),
                 GrammarRule::IconTable,
                 format!(
-                    "icon {} appears twice in item kind {}",
-                    row.icon.as_str(),
+                    "icon {} is not in icon pack {}, which item kind {} draws from",
+                    row.icon,
+                    item.icons.as_str(),
                     item.name
                 ),
             );

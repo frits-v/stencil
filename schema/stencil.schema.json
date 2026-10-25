@@ -464,34 +464,6 @@
         "title"
       ]
     },
-    "IconName": {
-      "type": "string",
-      "enum": [
-        "agents",
-        "ai-ml",
-        "bigquery",
-        "cloud-run-flat",
-        "cloud-run",
-        "cloud-sql",
-        "cloud-storage",
-        "compute-engine",
-        "compute",
-        "containers",
-        "data-analytics",
-        "databases",
-        "devops",
-        "gke",
-        "hybrid",
-        "integration",
-        "networking",
-        "observability",
-        "scc",
-        "security-identity",
-        "serverless",
-        "storage",
-        "vertex-ai"
-      ]
-    },
     "Justify": {
       "type": "string",
       "enum": [
@@ -1111,14 +1083,14 @@
               "maxItems": 8
             },
             "icon": {
-              "anyOf": [
-                {
-                  "$ref": "#/$defs/IconName"
-                },
-                {
-                  "type": "null"
-                }
-              ]
+              "description": "A file stem of the icon pack the item's kind draws from (section 8.2).",
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 64,
+              "minLength": 1,
+              "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
             },
             "id": {
               "type": [

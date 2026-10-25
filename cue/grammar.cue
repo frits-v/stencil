@@ -48,12 +48,32 @@ import (
 	bend?:   #Bend
 }
 
+// A bundled icon pack, in alphabetical order, or none.
+#IconPack: "gcp" | "none"
+
+// The stems of one pack, selected by comprehension: a lookup by struct key of
+// a pack with no entry would be incomplete, and the check built on it would
+// pass without having run. none has no stems.
+#PackStems: {
+	#pack: #IconPack
+	stems: list.Concat([
+		if #pack == "gcp" {#IconGcpStems},
+	])
+}
+
 #ItemKind: {
 	name: #KindName
 	// The bundled icon pack the kind draws from; none takes no icon.
-	icons: "gcp" | "none"
+	icons: #IconPack
 	// The icon-to-name table of icon-matches-product; empty when icons is none.
+	// Each row's icon is a stem of the kind's pack.
 	products: [...#IconProducts]
+	_packStems: (#PackStems & {#pack: icons}).stems
+	_iconsOutsidePack: {
+		for row in products if !list.Contains(_packStems, row.icon) {
+			(row.icon): "icon \(row.icon)" & "is not in icon pack \(icons), which item kind \(name) draws from"
+		}
+	}
 	parents: [...#KindName] & list.MinItems(1)
 	// Under iso, the solid an item of this kind stands as when neither the item
 	// nor its icon's row names one; absent is card.
@@ -162,6 +182,13 @@ import (
 			kind: or(_itemNames)
 			_tops: {(kind): true}
 			_tinted: {}
+			// An icon is a stem of the pack the item's kind draws from.
+			icon?: string
+			if icon != _|_ for i in #grammar.items if i.name == kind
+			let stems = (#PackStems & {#pack: i.icons}).stems
+			if !list.Contains(stems, icon) {
+				_iconOutsidePack: "icon \(icon)" & "is not in icon pack \(i.icons), which item kind \(kind) draws from"
+			}
 		}
 		// A solid pipe or tee leg without a tint is slot 1; dash, gray and deny lines
 		// are outside tint pairing.

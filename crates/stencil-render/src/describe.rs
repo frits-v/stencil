@@ -619,7 +619,7 @@ impl<'a> Writer<'a> {
                     text.push_str(&format!(": {}", escape_markdown(subtitle)));
                 }
                 text.push_str(&format!("; kind {}", escape_markdown(&item.kind)));
-                if let Some(icon) = item.icon {
+                if let Some(icon) = &item.icon {
                     text.push_str(&format!(", icon {}", icon.as_str()));
                 }
                 let kind = self.grammar.item(&item.kind);

@@ -1,8 +1,10 @@
-# Stencil provenance
+# Google Cloud icon pack provenance
 
-Where the files under `stencil/` came from and what may be done with them.
+Where the files in `assets/icons/gcp/` came from and what may be done with them. The
+last two sections record the drafting-diagrams kit files (`drafting-diagrams/stencil/`)
+the icons were vendored beside; those files are not part of this repository.
 
-## Icons (`stencil/icons/*.svg`)
+## Icons (`assets/icons/gcp/*.svg`)
 
 Source: the Google Cloud product icon library published at
 <https://cloud.google.com/icons>, specifically the two ZIP downloads that page
@@ -11,7 +13,7 @@ links:
 - Core product icons: <https://services.google.com/fh/files/misc/core-products-icons.zip>
 - Product category icons: <https://services.google.com/fh/files/misc/category-icons.zip>
 
-All 23 SVGs in `stencil/icons/` are byte-identical (MD5) to a file inside one of
+All 23 SVGs in `assets/icons/gcp/` are byte-identical (MD5) to a file inside one of
 those two archives. Nothing was recolored, resized, cropped, or re-exported. The
 local filenames are shortened (`gke.svg` rather than
 `Unique Icons/GKE/SVG/GKE-512-color.svg`); file content is untouched.
@@ -114,7 +116,7 @@ Re-check these pages before any use outside architecture and technical figures.
 The icon system was reworked in early 2025 and Google says it is still
 redesigning icons, so the set turns over.
 
-## CSS (`stencil/_gcp.css`)
+## CSS (`drafting-diagrams/stencil/_gcp.css`)
 
 Layout and pipe grammar written for the DataPiper kit's diagrams skill. No
 third-party code and no license file: the kit ships exactly one LICENSE, an MIT
@@ -132,11 +134,11 @@ than a lift of a Google page's trade dress. Two edits on vendoring:
   guidance reserves its brand fonts. Type now resolves through
   `"Helvetica Neue", Helvetica, Arial, system-ui, sans-serif`.
 
-## Gold prototypes (`stencil/golds/*.html`)
+## Gold prototypes (`drafting-diagrams/stencil/golds/*.html`)
 
 Same origin and same status as the CSS. Two changes on vendoring: stylesheet and
-icon `src` paths were rewritten one level up for the `stencil/golds/` layout,
-and every hard-coded Google constant on a hop (probe ranges, VIP ranges, BGP
+icon `src` paths were rewritten one level up for the
+`drafting-diagrams/stencil/golds/` layout, and every hard-coded Google constant on a hop (probe ranges, VIP ranges, BGP
 timers) was replaced with an instruction to read the value from the live product
 doc. A gold that ships a remembered range teaches the exact habit the hop-fact
 rule exists to stop, and `scripts/constants_lint.py` fires on it.
