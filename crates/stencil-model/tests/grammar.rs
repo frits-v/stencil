@@ -9,7 +9,8 @@ use stencil_model::grammar::{
     BorderPattern, GrammarError, IconClass, LabelStyle, Role, Tone, builtin_grammar_json,
 };
 use stencil_model::{
-    GcpIcon, Grammar, IconPack, Shape, builtin_grammar, grammar_schema, parse_grammar,
+    AwsIcon, BUILTIN_GRAMMARS, GcpIcon, Grammar, IconPack, Shape, builtin_grammar, grammar_schema,
+    parse_grammar,
 };
 
 const COMMITTED_GRAMMAR_SCHEMA: &str = include_str!("../../../schema/grammar.schema.json");
@@ -40,11 +41,15 @@ fn grammar_faults(document: &Value) -> Vec<(&'static str, String)> {
 }
 
 #[test]
-fn both_built_in_grammars_parse_and_validate() {
-    for name in ["gcp", "plain"] {
+fn every_built_in_grammar_parses_and_validates() {
+    let mut examined = 0;
+    for name in BUILTIN_GRAMMARS {
         let grammar = builtin_grammar(name).unwrap().unwrap();
         assert_eq!(grammar.name, name);
+        examined += 1;
     }
+    println!("examined {examined} grammars");
+    assert!(examined > 0);
     assert!(builtin_grammar("gcpx").is_none());
 }
 
@@ -317,6 +322,302 @@ fn gcp_has_a_product_kind_with_every_icon_once_in_icon_order_and_a_person_and_a_
             "scc",
             "vertex-ai"
         ]
+    );
+}
+
+/// Section 13.3's aws table: name, role, tone, tintable, default tint, border pattern, border
+/// width, padding, radius, label style, parents.
+#[allow(clippy::type_complexity)]
+const AWS_TABLE: [(
+    &str,
+    Role,
+    Option<Tone>,
+    bool,
+    Option<u8>,
+    BorderPattern,
+    f32,
+    f32,
+    f32,
+    LabelStyle,
+    &[&str],
+); 11] = [
+    (
+        "aws",
+        Role::Frame,
+        None,
+        false,
+        None,
+        BorderPattern::Solid,
+        3.0,
+        0.0,
+        10.0,
+        LabelStyle::Bar,
+        &["page"],
+    ),
+    (
+        "account",
+        Role::Tile,
+        Some(Tone::Highlight),
+        false,
+        None,
+        BorderPattern::Solid,
+        1.5,
+        12.0,
+        8.0,
+        LabelStyle::Plain,
+        &["page", "aws", "account"],
+    ),
+    (
+        "region",
+        Role::Group,
+        Some(Tone::Neutral),
+        true,
+        Some(1),
+        BorderPattern::Solid,
+        1.5,
+        12.0,
+        8.0,
+        LabelStyle::Plain,
+        &["aws", "account"],
+    ),
+    (
+        "vpc",
+        Role::Boundary,
+        Some(Tone::Strong),
+        false,
+        None,
+        BorderPattern::Dashed,
+        2.0,
+        10.0,
+        8.0,
+        LabelStyle::Plain,
+        &["region", "account"],
+    ),
+    (
+        "az",
+        Role::Group,
+        Some(Tone::Cool),
+        false,
+        None,
+        BorderPattern::Solid,
+        1.5,
+        12.0,
+        8.0,
+        LabelStyle::Plain,
+        &["region", "vpc"],
+    ),
+    (
+        "subnet",
+        Role::Group,
+        Some(Tone::Cool),
+        false,
+        None,
+        BorderPattern::Dashed,
+        1.5,
+        12.0,
+        8.0,
+        LabelStyle::Plain,
+        &["az", "vpc"],
+    ),
+    (
+        "onprem",
+        Role::Group,
+        Some(Tone::Warm),
+        true,
+        None,
+        BorderPattern::Solid,
+        1.5,
+        12.0,
+        8.0,
+        LabelStyle::Plain,
+        &["page", "optional"],
+    ),
+    (
+        "optional",
+        Role::Group,
+        Some(Tone::Emphasis),
+        false,
+        None,
+        BorderPattern::Dashed,
+        2.0,
+        12.0,
+        8.0,
+        LabelStyle::Plain,
+        &["page", "aws", "region", "vpc", "az", "subnet", "account"],
+    ),
+    (
+        "k8s",
+        Role::Group,
+        Some(Tone::Soft),
+        false,
+        None,
+        BorderPattern::None,
+        0.0,
+        12.0,
+        8.0,
+        LabelStyle::Plain,
+        &[
+            "aws", "region", "vpc", "az", "subnet", "account", "optional",
+        ],
+    ),
+    (
+        "services",
+        Role::Group,
+        Some(Tone::Neutral),
+        false,
+        None,
+        BorderPattern::Solid,
+        1.5,
+        12.0,
+        8.0,
+        LabelStyle::Plain,
+        &["aws", "region", "account"],
+    ),
+    (
+        "assembly",
+        Role::Group,
+        Some(Tone::Neutral),
+        true,
+        None,
+        BorderPattern::DashDot,
+        1.1,
+        14.0,
+        0.0,
+        LabelStyle::Tab,
+        &[
+            "page", "aws", "account", "region", "vpc", "az", "subnet", "onprem", "optional", "k8s",
+            "services",
+        ],
+    ),
+];
+
+#[test]
+fn aws_container_kinds_equal_the_section_13_3_table_field_for_field() {
+    let grammar = builtin_grammar("aws").unwrap().unwrap();
+    assert_eq!(grammar.containers.len(), AWS_TABLE.len());
+    for (container, row) in grammar.containers.iter().zip(AWS_TABLE) {
+        let (
+            name,
+            role,
+            tone,
+            tintable,
+            default_tint,
+            pattern,
+            width,
+            padding,
+            radius,
+            label,
+            parents,
+        ) = row;
+        assert_eq!(container.name, name);
+        assert_eq!(container.role, role, "{name}");
+        assert_eq!(container.tone, tone, "{name}");
+        assert_eq!(container.tintable, tintable, "{name}");
+        assert_eq!(container.default_tint, default_tint, "{name}");
+        assert_eq!(container.border.pattern, pattern, "{name}");
+        assert_eq!(container.border.width, width, "{name}");
+        assert_eq!(container.padding, padding, "{name}");
+        assert_eq!(container.radius, radius, "{name}");
+        assert_eq!(container.label, label, "{name}");
+        assert_eq!(container.parents, parents, "{name}");
+    }
+}
+
+/// Every aws icon in `AwsIcon::ALL` order with the class of its archive folder and the iso
+/// shape its row names: databases and warehouses cylinder, object, block and file storage
+/// stack, compute and containers tower, networking tile, every other row none (card).
+const AWS_PRODUCTS: [(&str, IconClass, Option<Shape>); 46] = [
+    ("analytics", IconClass::Category, Some(Shape::Cylinder)),
+    ("api-gateway", IconClass::Product, None),
+    ("application-integration", IconClass::Category, None),
+    ("athena", IconClass::Product, None),
+    ("aurora", IconClass::Product, Some(Shape::Cylinder)),
+    ("bedrock", IconClass::Product, None),
+    ("cloudfront", IconClass::Product, Some(Shape::Tile)),
+    ("cloudwatch", IconClass::Product, None),
+    ("compute", IconClass::Category, Some(Shape::Tower)),
+    ("containers", IconClass::Category, Some(Shape::Tower)),
+    ("database", IconClass::Category, Some(Shape::Cylinder)),
+    ("direct-connect", IconClass::Product, Some(Shape::Tile)),
+    ("dynamodb", IconClass::Product, Some(Shape::Cylinder)),
+    ("ebs", IconClass::Product, Some(Shape::Stack)),
+    ("ec2", IconClass::Product, Some(Shape::Tower)),
+    ("ecr", IconClass::Product, None),
+    ("ecs", IconClass::Product, Some(Shape::Tower)),
+    ("efs", IconClass::Product, Some(Shape::Stack)),
+    ("eks", IconClass::Product, Some(Shape::Tower)),
+    ("elasticache", IconClass::Product, Some(Shape::Cylinder)),
+    ("elb", IconClass::Product, Some(Shape::Tile)),
+    ("eventbridge", IconClass::Product, None),
+    ("fargate", IconClass::Product, None),
+    ("glue", IconClass::Product, None),
+    ("iam", IconClass::Product, None),
+    ("kinesis", IconClass::Product, None),
+    ("kms", IconClass::Product, None),
+    ("lambda", IconClass::Product, None),
+    ("machine-learning", IconClass::Category, None),
+    ("management-governance", IconClass::Category, None),
+    (
+        "networking-content-delivery",
+        IconClass::Category,
+        Some(Shape::Tile),
+    ),
+    ("privatelink", IconClass::Product, Some(Shape::Tile)),
+    ("rds", IconClass::Product, Some(Shape::Cylinder)),
+    ("redshift", IconClass::Product, Some(Shape::Cylinder)),
+    ("route-53", IconClass::Product, Some(Shape::Tile)),
+    ("s3", IconClass::Product, Some(Shape::Stack)),
+    ("sagemaker", IconClass::Product, None),
+    ("secrets-manager", IconClass::Product, None),
+    ("security-identity-compliance", IconClass::Category, None),
+    ("sns", IconClass::Product, None),
+    ("sqs", IconClass::Product, None),
+    ("step-functions", IconClass::Product, None),
+    ("storage", IconClass::Category, Some(Shape::Stack)),
+    ("transit-gateway", IconClass::Product, Some(Shape::Tile)),
+    ("vpc", IconClass::Product, Some(Shape::Tile)),
+    ("waf", IconClass::Product, None),
+];
+
+#[test]
+fn aws_has_a_product_kind_with_every_icon_once_in_icon_order_and_a_person_and_a_device() {
+    let grammar = builtin_grammar("aws").unwrap().unwrap();
+    let names: Vec<&str> = grammar
+        .items
+        .iter()
+        .map(|item| item.name.as_str())
+        .collect();
+    assert_eq!(names, ["product", "person", "device"]);
+    for (name, shape) in [("person", Shape::Figure), ("device", Shape::Laptop)] {
+        let kind = grammar.item(name).unwrap();
+        assert_eq!(kind.icons, IconPack::None, "{name}");
+        assert!(kind.products.is_empty(), "{name}");
+        assert_eq!(kind.shape, Some(shape), "{name}");
+    }
+    let product = &grammar.items[0];
+    assert_eq!(product.name, "product");
+    assert_eq!(product.shape, Some(Shape::Block));
+    assert_eq!(product.icons, IconPack::Aws);
+    let mut expected_parents: Vec<&str> = AWS_TABLE.iter().map(|row| row.0).collect();
+    expected_parents.push("page");
+    assert_eq!(product.parents, expected_parents);
+    let pack_icons: Vec<&str> = AwsIcon::ALL.iter().map(|icon| icon.as_str()).collect();
+    let table_icons: Vec<&str> = AWS_PRODUCTS.iter().map(|row| row.0).collect();
+    assert_eq!(table_icons, pack_icons);
+    assert_eq!(product.products.len(), AWS_PRODUCTS.len());
+    for (row, (icon, class, shape)) in product.products.iter().zip(AWS_PRODUCTS) {
+        assert_eq!(row.icon.as_str(), icon);
+        assert_eq!(row.class, class, "{icon}");
+        assert_eq!(row.shape, shape, "{icon}");
+    }
+    let remembered: Vec<&str> = grammar
+        .remembered
+        .iter()
+        .map(|entry| entry.literal.as_str())
+        .collect();
+    assert_eq!(
+        remembered,
+        ["64512", "10.0.0.0/16", "10.0.1.0/24", "169.254.169.254"]
     );
 }
 

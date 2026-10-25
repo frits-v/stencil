@@ -1,0 +1,785 @@
+{
+    "name": "aws",
+    "containers": [
+        {
+            "name": "aws",
+            "role": "frame",
+            "tintable": false,
+            "border": {
+                "pattern": "solid",
+                "width": 3
+            },
+            "padding": 0,
+            "radius": 10,
+            "label": "bar",
+            "parents": [
+                "page"
+            ]
+        },
+        {
+            "name": "account",
+            "role": "tile",
+            "tone": "highlight",
+            "tintable": false,
+            "border": {
+                "pattern": "solid",
+                "width": 1.5
+            },
+            "padding": 12,
+            "radius": 8,
+            "label": "plain",
+            "parents": [
+                "page",
+                "aws",
+                "account"
+            ]
+        },
+        {
+            "name": "region",
+            "role": "group",
+            "tone": "neutral",
+            "tintable": true,
+            "default_tint": 1,
+            "border": {
+                "pattern": "solid",
+                "width": 1.5
+            },
+            "padding": 12,
+            "radius": 8,
+            "label": "plain",
+            "parents": [
+                "aws",
+                "account"
+            ]
+        },
+        {
+            "name": "vpc",
+            "role": "boundary",
+            "tone": "strong",
+            "tintable": false,
+            "border": {
+                "pattern": "dashed",
+                "width": 2
+            },
+            "padding": 10,
+            "radius": 8,
+            "label": "plain",
+            "parents": [
+                "region",
+                "account"
+            ]
+        },
+        {
+            "name": "az",
+            "role": "group",
+            "tone": "cool",
+            "tintable": false,
+            "border": {
+                "pattern": "solid",
+                "width": 1.5
+            },
+            "padding": 12,
+            "radius": 8,
+            "label": "plain",
+            "parents": [
+                "region",
+                "vpc"
+            ]
+        },
+        {
+            "name": "subnet",
+            "role": "group",
+            "tone": "cool",
+            "tintable": false,
+            "border": {
+                "pattern": "dashed",
+                "width": 1.5
+            },
+            "padding": 12,
+            "radius": 8,
+            "label": "plain",
+            "parents": [
+                "az",
+                "vpc"
+            ]
+        },
+        {
+            "name": "onprem",
+            "role": "group",
+            "tone": "warm",
+            "tintable": true,
+            "border": {
+                "pattern": "solid",
+                "width": 1.5
+            },
+            "padding": 12,
+            "radius": 8,
+            "label": "plain",
+            "parents": [
+                "page",
+                "optional"
+            ]
+        },
+        {
+            "name": "optional",
+            "role": "group",
+            "tone": "emphasis",
+            "tintable": false,
+            "border": {
+                "pattern": "dashed",
+                "width": 2
+            },
+            "padding": 12,
+            "radius": 8,
+            "label": "plain",
+            "parents": [
+                "page",
+                "aws",
+                "region",
+                "vpc",
+                "az",
+                "subnet",
+                "account"
+            ]
+        },
+        {
+            "name": "k8s",
+            "role": "group",
+            "tone": "soft",
+            "tintable": false,
+            "border": {
+                "pattern": "none",
+                "width": 0
+            },
+            "padding": 12,
+            "radius": 8,
+            "label": "plain",
+            "parents": [
+                "aws",
+                "region",
+                "vpc",
+                "az",
+                "subnet",
+                "account",
+                "optional"
+            ]
+        },
+        {
+            "name": "services",
+            "role": "group",
+            "tone": "neutral",
+            "tintable": false,
+            "border": {
+                "pattern": "solid",
+                "width": 1.5
+            },
+            "padding": 12,
+            "radius": 8,
+            "label": "plain",
+            "parents": [
+                "aws",
+                "region",
+                "account"
+            ]
+        },
+        {
+            "name": "assembly",
+            "role": "group",
+            "tone": "neutral",
+            "tintable": true,
+            "border": {
+                "pattern": "dash-dot",
+                "width": 1.1
+            },
+            "padding": 14,
+            "radius": 0,
+            "label": "tab",
+            "parents": [
+                "page",
+                "aws",
+                "account",
+                "region",
+                "vpc",
+                "az",
+                "subnet",
+                "onprem",
+                "optional",
+                "k8s",
+                "services"
+            ]
+        }
+    ],
+    "items": [
+        {
+            "name": "product",
+            "icons": "aws",
+            "products": [
+                {
+                    "icon": "analytics",
+                    "class": "category",
+                    "names": [
+                        "Amazon Athena",
+                        "AWS Glue",
+                        "Amazon Redshift",
+                        "Amazon Kinesis",
+                        "Amazon Data Firehose",
+                        "Amazon EMR",
+                        "Amazon OpenSearch Service",
+                        "Amazon QuickSight",
+                        "AWS Lake Formation",
+                        "Amazon Managed Streaming for Apache Kafka",
+                        "Amazon MSK"
+                    ],
+                    "shape": "cylinder"
+                },
+                {
+                    "icon": "api-gateway",
+                    "class": "product",
+                    "names": [
+                        "Amazon API Gateway",
+                        "API Gateway"
+                    ]
+                },
+                {
+                    "icon": "application-integration",
+                    "class": "category",
+                    "names": [
+                        "Amazon Simple Queue Service",
+                        "Amazon SQS",
+                        "Amazon Simple Notification Service",
+                        "Amazon SNS",
+                        "Amazon EventBridge",
+                        "AWS Step Functions",
+                        "Amazon MQ",
+                        "Amazon AppFlow"
+                    ]
+                },
+                {
+                    "icon": "athena",
+                    "class": "product",
+                    "names": [
+                        "Amazon Athena",
+                        "Athena"
+                    ]
+                },
+                {
+                    "icon": "aurora",
+                    "class": "product",
+                    "names": [
+                        "Amazon Aurora",
+                        "Aurora"
+                    ],
+                    "shape": "cylinder"
+                },
+                {
+                    "icon": "bedrock",
+                    "class": "product",
+                    "names": [
+                        "Amazon Bedrock",
+                        "Bedrock"
+                    ]
+                },
+                {
+                    "icon": "cloudfront",
+                    "class": "product",
+                    "names": [
+                        "Amazon CloudFront",
+                        "CloudFront"
+                    ],
+                    "shape": "tile"
+                },
+                {
+                    "icon": "cloudwatch",
+                    "class": "product",
+                    "names": [
+                        "Amazon CloudWatch",
+                        "CloudWatch"
+                    ]
+                },
+                {
+                    "icon": "compute",
+                    "class": "category",
+                    "names": [
+                        "Amazon EC2",
+                        "AWS Lambda",
+                        "AWS Fargate",
+                        "AWS Batch",
+                        "Amazon Lightsail",
+                        "AWS Elastic Beanstalk",
+                        "AWS Outposts"
+                    ],
+                    "shape": "tower"
+                },
+                {
+                    "icon": "containers",
+                    "class": "category",
+                    "names": [
+                        "Amazon Elastic Container Service",
+                        "Amazon Elastic Kubernetes Service",
+                        "AWS Fargate",
+                        "Amazon Elastic Container Registry",
+                        "AWS App Runner",
+                        "Red Hat OpenShift Service on AWS"
+                    ],
+                    "shape": "tower"
+                },
+                {
+                    "icon": "database",
+                    "class": "category",
+                    "names": [
+                        "Amazon Relational Database Service",
+                        "Amazon Aurora",
+                        "Amazon DynamoDB",
+                        "Amazon ElastiCache",
+                        "Amazon DocumentDB",
+                        "Amazon Neptune",
+                        "Amazon Keyspaces",
+                        "Amazon MemoryDB",
+                        "Amazon Timestream",
+                        "AWS Database Migration Service"
+                    ],
+                    "shape": "cylinder"
+                },
+                {
+                    "icon": "direct-connect",
+                    "class": "product",
+                    "names": [
+                        "AWS Direct Connect",
+                        "Direct Connect",
+                        "DX"
+                    ],
+                    "shape": "tile"
+                },
+                {
+                    "icon": "dynamodb",
+                    "class": "product",
+                    "names": [
+                        "Amazon DynamoDB",
+                        "DynamoDB"
+                    ],
+                    "shape": "cylinder"
+                },
+                {
+                    "icon": "ebs",
+                    "class": "product",
+                    "names": [
+                        "Amazon Elastic Block Store",
+                        "Amazon EBS",
+                        "EBS"
+                    ],
+                    "shape": "stack"
+                },
+                {
+                    "icon": "ec2",
+                    "class": "product",
+                    "names": [
+                        "Amazon Elastic Compute Cloud",
+                        "Amazon EC2",
+                        "EC2"
+                    ],
+                    "shape": "tower"
+                },
+                {
+                    "icon": "ecr",
+                    "class": "product",
+                    "names": [
+                        "Amazon Elastic Container Registry",
+                        "Amazon ECR",
+                        "ECR"
+                    ]
+                },
+                {
+                    "icon": "ecs",
+                    "class": "product",
+                    "names": [
+                        "Amazon Elastic Container Service",
+                        "Amazon ECS",
+                        "ECS"
+                    ],
+                    "shape": "tower"
+                },
+                {
+                    "icon": "efs",
+                    "class": "product",
+                    "names": [
+                        "Amazon Elastic File System",
+                        "Amazon EFS",
+                        "EFS"
+                    ],
+                    "shape": "stack"
+                },
+                {
+                    "icon": "eks",
+                    "class": "product",
+                    "names": [
+                        "Amazon Elastic Kubernetes Service",
+                        "Amazon EKS",
+                        "EKS"
+                    ],
+                    "shape": "tower"
+                },
+                {
+                    "icon": "elasticache",
+                    "class": "product",
+                    "names": [
+                        "Amazon ElastiCache",
+                        "ElastiCache"
+                    ],
+                    "shape": "cylinder"
+                },
+                {
+                    "icon": "elb",
+                    "class": "product",
+                    "names": [
+                        "Elastic Load Balancing",
+                        "ELB",
+                        "Application Load Balancer",
+                        "Network Load Balancer",
+                        "Gateway Load Balancer",
+                        "ALB",
+                        "NLB",
+                        "GWLB"
+                    ],
+                    "shape": "tile"
+                },
+                {
+                    "icon": "eventbridge",
+                    "class": "product",
+                    "names": [
+                        "Amazon EventBridge",
+                        "EventBridge"
+                    ]
+                },
+                {
+                    "icon": "fargate",
+                    "class": "product",
+                    "names": [
+                        "AWS Fargate",
+                        "Fargate"
+                    ]
+                },
+                {
+                    "icon": "glue",
+                    "class": "product",
+                    "names": [
+                        "AWS Glue",
+                        "Glue"
+                    ]
+                },
+                {
+                    "icon": "iam",
+                    "class": "product",
+                    "names": [
+                        "AWS Identity and Access Management",
+                        "AWS IAM",
+                        "IAM"
+                    ]
+                },
+                {
+                    "icon": "kinesis",
+                    "class": "product",
+                    "names": [
+                        "Amazon Kinesis",
+                        "Kinesis"
+                    ]
+                },
+                {
+                    "icon": "kms",
+                    "class": "product",
+                    "names": [
+                        "AWS Key Management Service",
+                        "AWS KMS",
+                        "KMS"
+                    ]
+                },
+                {
+                    "icon": "lambda",
+                    "class": "product",
+                    "names": [
+                        "AWS Lambda",
+                        "Lambda"
+                    ]
+                },
+                {
+                    "icon": "machine-learning",
+                    "class": "category",
+                    "names": [
+                        "Amazon SageMaker AI",
+                        "Amazon Bedrock",
+                        "Amazon Q",
+                        "Amazon Rekognition",
+                        "Amazon Textract",
+                        "Amazon Comprehend",
+                        "Amazon Transcribe",
+                        "Amazon Polly",
+                        "Amazon Translate"
+                    ]
+                },
+                {
+                    "icon": "management-governance",
+                    "class": "category",
+                    "names": [
+                        "Amazon CloudWatch",
+                        "AWS CloudTrail",
+                        "AWS Config",
+                        "AWS Organizations",
+                        "AWS Systems Manager",
+                        "AWS CloudFormation",
+                        "AWS Control Tower",
+                        "AWS Trusted Advisor"
+                    ]
+                },
+                {
+                    "icon": "networking-content-delivery",
+                    "class": "category",
+                    "names": [
+                        "Amazon Virtual Private Cloud",
+                        "Amazon CloudFront",
+                        "Amazon Route 53",
+                        "Elastic Load Balancing",
+                        "AWS Direct Connect",
+                        "AWS Transit Gateway",
+                        "AWS PrivateLink",
+                        "Amazon API Gateway",
+                        "AWS Global Accelerator",
+                        "AWS Site-to-Site VPN",
+                        "AWS Cloud WAN",
+                        "AWS Client VPN",
+                        "Amazon VPC Lattice"
+                    ],
+                    "shape": "tile"
+                },
+                {
+                    "icon": "privatelink",
+                    "class": "product",
+                    "names": [
+                        "AWS PrivateLink",
+                        "PrivateLink",
+                        "interface VPC endpoint",
+                        "interface endpoint",
+                        "VPC endpoint"
+                    ],
+                    "shape": "tile"
+                },
+                {
+                    "icon": "rds",
+                    "class": "product",
+                    "names": [
+                        "Amazon Relational Database Service",
+                        "Amazon RDS",
+                        "RDS"
+                    ],
+                    "shape": "cylinder"
+                },
+                {
+                    "icon": "redshift",
+                    "class": "product",
+                    "names": [
+                        "Amazon Redshift",
+                        "Redshift"
+                    ],
+                    "shape": "cylinder"
+                },
+                {
+                    "icon": "route-53",
+                    "class": "product",
+                    "names": [
+                        "Amazon Route 53",
+                        "Route 53"
+                    ],
+                    "shape": "tile"
+                },
+                {
+                    "icon": "s3",
+                    "class": "product",
+                    "names": [
+                        "Amazon Simple Storage Service",
+                        "Amazon S3",
+                        "S3"
+                    ],
+                    "shape": "stack"
+                },
+                {
+                    "icon": "sagemaker",
+                    "class": "product",
+                    "names": [
+                        "Amazon SageMaker AI",
+                        "SageMaker AI",
+                        "SageMaker"
+                    ]
+                },
+                {
+                    "icon": "secrets-manager",
+                    "class": "product",
+                    "names": [
+                        "AWS Secrets Manager",
+                        "Secrets Manager"
+                    ]
+                },
+                {
+                    "icon": "security-identity-compliance",
+                    "class": "category",
+                    "names": [
+                        "AWS Identity and Access Management",
+                        "AWS Key Management Service",
+                        "AWS Secrets Manager",
+                        "AWS WAF",
+                        "AWS Shield",
+                        "Amazon GuardDuty",
+                        "AWS Security Hub",
+                        "AWS Certificate Manager",
+                        "Amazon Cognito",
+                        "AWS IAM Identity Center",
+                        "IAM Identity Center",
+                        "AWS Network Firewall",
+                        "Amazon Inspector",
+                        "Amazon Macie"
+                    ]
+                },
+                {
+                    "icon": "sns",
+                    "class": "product",
+                    "names": [
+                        "Amazon Simple Notification Service",
+                        "Amazon SNS",
+                        "SNS"
+                    ]
+                },
+                {
+                    "icon": "sqs",
+                    "class": "product",
+                    "names": [
+                        "Amazon Simple Queue Service",
+                        "Amazon SQS",
+                        "SQS"
+                    ]
+                },
+                {
+                    "icon": "step-functions",
+                    "class": "product",
+                    "names": [
+                        "AWS Step Functions",
+                        "Step Functions"
+                    ]
+                },
+                {
+                    "icon": "storage",
+                    "class": "category",
+                    "names": [
+                        "Amazon Simple Storage Service",
+                        "Amazon Elastic Block Store",
+                        "Amazon Elastic File System",
+                        "Amazon FSx",
+                        "Amazon S3 Glacier",
+                        "AWS Backup",
+                        "AWS Storage Gateway",
+                        "AWS DataSync"
+                    ],
+                    "shape": "stack"
+                },
+                {
+                    "icon": "transit-gateway",
+                    "class": "product",
+                    "names": [
+                        "AWS Transit Gateway",
+                        "Transit Gateway",
+                        "TGW"
+                    ],
+                    "shape": "tile"
+                },
+                {
+                    "icon": "vpc",
+                    "class": "product",
+                    "names": [
+                        "Amazon Virtual Private Cloud",
+                        "Amazon VPC",
+                        "VPC",
+                        "gateway endpoint"
+                    ],
+                    "shape": "tile"
+                },
+                {
+                    "icon": "waf",
+                    "class": "product",
+                    "names": [
+                        "AWS WAF",
+                        "WAF"
+                    ]
+                }
+            ],
+            "parents": [
+                "aws",
+                "account",
+                "region",
+                "vpc",
+                "az",
+                "subnet",
+                "onprem",
+                "optional",
+                "k8s",
+                "services",
+                "assembly",
+                "page"
+            ],
+            "shape": "block"
+        },
+        {
+            "name": "person",
+            "icons": "none",
+            "products": [],
+            "parents": [
+                "aws",
+                "account",
+                "region",
+                "vpc",
+                "az",
+                "subnet",
+                "onprem",
+                "optional",
+                "k8s",
+                "services",
+                "assembly",
+                "page"
+            ],
+            "shape": "figure"
+        },
+        {
+            "name": "device",
+            "icons": "none",
+            "products": [],
+            "parents": [
+                "aws",
+                "account",
+                "region",
+                "vpc",
+                "az",
+                "subnet",
+                "onprem",
+                "optional",
+                "k8s",
+                "services",
+                "assembly",
+                "page"
+            ],
+            "shape": "laptop"
+        }
+    ],
+    "remembered": [
+        {
+            "literal": "64512",
+            "reason": "Amazon-side default ASN of a virtual private gateway, Direct Connect gateway or transit gateway, and settable on each; a default, not a design value. Read the ASN from the gateway's configuration."
+        },
+        {
+            "literal": "10.0.0.0/16",
+            "reason": "example VPC CIDR of the Amazon VPC documentation, not a design value. The VPC's range comes from the customer's IP plan."
+        },
+        {
+            "literal": "10.0.1.0/24",
+            "reason": "example subnet CIDR of the Amazon VPC documentation, not a design value. The subnet's range comes from the customer's IP plan."
+        },
+        {
+            "literal": "169.254.169.254",
+            "reason": "the EC2 instance metadata service address, a fact of the platform, not a design value. Name the instance metadata service (IMDSv2) instead."
+        }
+    ]
+}

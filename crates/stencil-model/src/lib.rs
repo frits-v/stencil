@@ -21,7 +21,7 @@ pub use grammar::{
     Grammar, GrammarError, GrammarRule, GrammarViolation, LineKind, builtin_grammar,
     grammar_schema, parse_grammar, validate_grammar,
 };
-pub use icons::{GcpIcon, ICON_STEM_PATTERN, IconName, IconPack, IconStem};
+pub use icons::{AwsIcon, GcpIcon, ICON_STEM_PATTERN, IconName, IconPack, IconStem};
 pub use marks::{CarrierMark, MarkPlace, PageMarks};
 pub use pointer::NodePointer;
 pub use sheet::{PageActors, SheetList, SheetSurface, SurfaceVocabulary};

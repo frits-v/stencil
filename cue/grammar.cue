@@ -49,7 +49,9 @@ import (
 }
 
 // A bundled icon pack, in alphabetical order, or none.
-#IconPack: "gcp" | "none"
+#IconPack: "aws" |
+	"gcp" |
+	"none"
 
 // The stems of one pack, selected by comprehension: a lookup by struct key of
 // a pack with no entry would be incomplete, and the check built on it would
@@ -57,6 +59,7 @@ import (
 #PackStems: {
 	#pack: #IconPack
 	stems: list.Concat([
+		if #pack == "aws" {#IconAwsStems},
 		if #pack == "gcp" {#IconGcpStems},
 	])
 }

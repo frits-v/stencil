@@ -40,7 +40,7 @@ The vocabulary is split into a core and grammars in section 13. The tables below
 | Page | foot | text | no | absent |
 | Page | width | integer 640 to 2560 | no | 1280 |
 | Page | canvas | `customer` or `internal` | yes | |
-| Page | grammar | `gcp`, `plain` or a path ending in `.json` (section 13.2) | no | `gcp` |
+| Page | grammar | `aws`, `gcp`, `plain` or a path ending in `.json` (section 13.2) | no | `gcp` |
 | Page | chrome | `full` or `none` (section 13.7) | no | `full` |
 | Page | body | list of Node, 1 to 256 | yes | |
 | Page | legend | list of LegendEntry, 0 to 16 | yes | |
@@ -1686,6 +1686,59 @@ Every file is copied byte for byte from the vendor's archive. Stencil never reco
 
 `stencil-render` embeds the files with `include_bytes!`, one module per pack under `crates/stencil-render/src/icons/`. A test reads the tables below, one under a heading per bundled pack in `IconPack` order, and compares each embedded file with its row; a bundled pack with no rows, an icon with no row and a row with no icon each fail it. A second test requires every SVG in a pack's directory to have a row in that pack's `PROVENANCE.md` and every row there to have a file.
 
+#### Pack aws
+
+The 46 AWS Architecture Icons in `assets/icons/aws/`, the 64 px SVGs of the icon package linked from aws.amazon.com/architecture/icons. `assets/icons/aws/PROVENANCE.md` records the stated terms and the conclusion that customers and partners may use the icons unaltered, scaled in proportion, to create architecture diagrams; the terms give no separate licence to redistribute the files.
+
+| Local file | Archive path | SHA-256 |
+|---|---|---|
+| `analytics.svg` | `Category-Icons_07312026/Arch-Category_64/Arch-Category_Analytics_64.svg` | `13e427b084030c54880f06b68dfab1df42ceec0bcc9b01aa5033eecf0b841dc9` |
+| `api-gateway.svg` | `Architecture-Service-Icons_07312026/Arch_Networking-Content-Delivery/64/Arch_Amazon-API-Gateway_64.svg` | `a91afd652b8d3412179d0257a818165149224d521e4e1906ee8ea0cd28666a31` |
+| `application-integration.svg` | `Category-Icons_07312026/Arch-Category_64/Arch-Category_Application-Integration_64.svg` | `26269f088b2acb3789b5c71badfd72bf1d8a9b82b31287bf5ce58dad7de9bbce` |
+| `athena.svg` | `Architecture-Service-Icons_07312026/Arch_Analytics/64/Arch_Amazon-Athena_64.svg` | `03844d38ca3ed4fdcd102d9e654c35aa091c1f11b4c04fa4eb76dab864d6deba` |
+| `aurora.svg` | `Architecture-Service-Icons_07312026/Arch_Databases/64/Arch_Amazon-Aurora_64.svg` | `0cbdccc29da3a25d4954dee4ac7afa4c2ae53dca9238bc4d995c3692e905ed4b` |
+| `bedrock.svg` | `Architecture-Service-Icons_07312026/Arch_Artificial-Intelligence/64/Arch_Amazon-Bedrock_64.svg` | `80fa4190bb55bde5c3004ed8d2f16bf25db28d230cf46760813f2171636ea105` |
+| `cloudfront.svg` | `Architecture-Service-Icons_07312026/Arch_Networking-Content-Delivery/64/Arch_Amazon-CloudFront_64.svg` | `664919982792a69058077eaf39240afd320bbcbd082d36a9148184ec32708cd5` |
+| `cloudwatch.svg` | `Architecture-Service-Icons_07312026/Arch_Management-Tools/64/Arch_Amazon-CloudWatch_64.svg` | `a84b5b88172ab39170eaa6154345332d755758a37cda6a5580981cf679e01c0b` |
+| `compute.svg` | `Category-Icons_07312026/Arch-Category_64/Arch-Category_Compute_64.svg` | `d93c1fe6e30d68d4616dcded29e8953c1c6c368753e05aaa98e9813f5fc35332` |
+| `containers.svg` | `Category-Icons_07312026/Arch-Category_64/Arch-Category_Containers_64.svg` | `b0eacdd88f44e78f5bd1c743acce0e3902ddd4140ff0be2b78cd1f0f37714630` |
+| `database.svg` | `Category-Icons_07312026/Arch-Category_64/Arch-Category_Databases_64.svg` | `1dc53209f81fa97a96b0e0b92c3e62233122b970288d9a4ffcceeb1b3cb29ad1` |
+| `direct-connect.svg` | `Architecture-Service-Icons_07312026/Arch_Networking-Content-Delivery/64/Arch_AWS-Direct-Connect_64.svg` | `70487445bcbeef8941e9b815f4523f08de5018d435f44777a62694a0fc855954` |
+| `dynamodb.svg` | `Architecture-Service-Icons_07312026/Arch_Databases/64/Arch_Amazon-DynamoDB_64.svg` | `ed169f049cc24c954cfbe3d14695d5b022558c45e5605936a565d1347c14b664` |
+| `ebs.svg` | `Architecture-Service-Icons_07312026/Arch_Storage/64/Arch_Amazon-Elastic-Block-Store_64.svg` | `a8ee0d51f7e2359b0e4d2e6a569941ee4e9888eafd4ec49aaa503934bc70edc0` |
+| `ec2.svg` | `Architecture-Service-Icons_07312026/Arch_Compute/64/Arch_Amazon-EC2_64.svg` | `5a7a0cef7a9f44ccdd544564ce9076abec3024090be0d6454504c49d149ce9ec` |
+| `ecr.svg` | `Architecture-Service-Icons_07312026/Arch_Containers/64/Arch_Amazon-Elastic-Container-Registry_64.svg` | `bec34a867cb424de91592470a14e82556dd9b041231b5e070ca846752d1c719f` |
+| `ecs.svg` | `Architecture-Service-Icons_07312026/Arch_Containers/64/Arch_Amazon-Elastic-Container-Service_64.svg` | `768688ef725e0e02c5817b218d2cb9dda45c1b76921872f607253da91d881552` |
+| `efs.svg` | `Architecture-Service-Icons_07312026/Arch_Storage/64/Arch_Amazon-EFS_64.svg` | `f34fea54855e629cd5b83ef6e6a59e3e78ff3f62666e0d9676c28fd97b085fe0` |
+| `eks.svg` | `Architecture-Service-Icons_07312026/Arch_Containers/64/Arch_Amazon-Elastic-Kubernetes-Service_64.svg` | `abda372bab3e7e0e873edf2b078972625b2cff255d8626fbf955546e71bdf9cb` |
+| `elasticache.svg` | `Architecture-Service-Icons_07312026/Arch_Databases/64/Arch_Amazon-ElastiCache_64.svg` | `d7f3d85f54a818a33d0772c56688cdd0453558295a39ec9894f4d107ea7ebef5` |
+| `elb.svg` | `Architecture-Service-Icons_07312026/Arch_Networking-Content-Delivery/64/Arch_Elastic-Load-Balancing_64.svg` | `eaaf3465e26d6e7cfae47d2da7bb8d727fe1bd3a118ed06614349e07039f8caa` |
+| `eventbridge.svg` | `Architecture-Service-Icons_07312026/Arch_Application-Integration/64/Arch_Amazon-EventBridge_64.svg` | `7e8eed6f3d27692c6abbfa2b04095760b727ba23a37d54129ef3530c001a9a1d` |
+| `fargate.svg` | `Architecture-Service-Icons_07312026/Arch_Containers/64/Arch_AWS-Fargate_64.svg` | `003cc5280deebfdd044db0a393be0cd7c35fd376013dd72950d7e5b60c7c1917` |
+| `glue.svg` | `Architecture-Service-Icons_07312026/Arch_Analytics/64/Arch_AWS-Glue_64.svg` | `ca70fd98e901b5f1862d1e3183f45fff8ea37003e7ec39358c2d65544a729fbc` |
+| `iam.svg` | `Architecture-Service-Icons_07312026/Arch_Security-Identity/64/Arch_AWS-Identity-and-Access-Management_64.svg` | `3135793557c065d0481a3985ccc0574b36278d56a2e2c5d59107d0d28f51b827` |
+| `kinesis.svg` | `Architecture-Service-Icons_07312026/Arch_Analytics/64/Arch_Amazon-Kinesis_64.svg` | `c90e01cc56255a286d77bbd62016d16625bd92bc9eae9a57bd12bb42858d5847` |
+| `kms.svg` | `Architecture-Service-Icons_07312026/Arch_Security-Identity/64/Arch_AWS-Key-Management-Service_64.svg` | `5b3ed298ae380707f77ca21c2f417d0a7a36e70e59bfe9a5d8f281b8447ae750` |
+| `lambda.svg` | `Architecture-Service-Icons_07312026/Arch_Compute/64/Arch_AWS-Lambda_64.svg` | `5818c80cd8e7d08891a2492c7694f472ca914fb3a99d9ef8e597db0b37ad7f13` |
+| `machine-learning.svg` | `Category-Icons_07312026/Arch-Category_64/Arch-Category_Artificial-Intelligence_64.svg` | `297a7be55f8a8153430b59f05d889979bf392a8fb465c48bfeca862ac343139a` |
+| `management-governance.svg` | `Category-Icons_07312026/Arch-Category_64/Arch-Category_Management-Tools_64.svg` | `def0e9511ec7f037d924c3bbcf025e614c20e567df5d4bc4a96eef9d72961a1c` |
+| `networking-content-delivery.svg` | `Category-Icons_07312026/Arch-Category_64/Arch-Category_Networking-Content-Delivery_64.svg` | `17916ff473a9f760632dbe8871b327b288dcb8b5d94da5f1b959d11db76b49f9` |
+| `privatelink.svg` | `Architecture-Service-Icons_07312026/Arch_Networking-Content-Delivery/64/Arch_AWS-PrivateLink_64.svg` | `a9946f7cac68f7937f2509fdb3bebdd4bcfd70e845819a09f11fe67d7b01c0b5` |
+| `rds.svg` | `Architecture-Service-Icons_07312026/Arch_Databases/64/Arch_Amazon-RDS_64.svg` | `1b24caf4baf274a12164053f05bf0cba331f4d5e30fdd4164000702c1ec192a6` |
+| `redshift.svg` | `Architecture-Service-Icons_07312026/Arch_Analytics/64/Arch_Amazon-Redshift_64.svg` | `3f56419f1a7853e3abd86c1b5c5ec6019ffce8e83cdd371176a1fb4a78a3d9ef` |
+| `route-53.svg` | `Architecture-Service-Icons_07312026/Arch_Networking-Content-Delivery/64/Arch_Amazon-Route-53_64.svg` | `24c50725731048a342c329ad400a08e820b5832af04e5890a7b93d7f39e7fc56` |
+| `s3.svg` | `Architecture-Service-Icons_07312026/Arch_Storage/64/Arch_Amazon-Simple-Storage-Service_64.svg` | `b92c5101cc6565dd12df37655802279f8fba0c719279f62f93106d26750b36c6` |
+| `sagemaker.svg` | `Architecture-Service-Icons_07312026/Arch_Artificial-Intelligence/64/Arch_Amazon-SageMaker-AI_64.svg` | `0f20b8580a9caee9e15be0f866112e29c44c73900869e76df3cd197eaf778684` |
+| `secrets-manager.svg` | `Architecture-Service-Icons_07312026/Arch_Security-Identity/64/Arch_AWS-Secrets-Manager_64.svg` | `c3941b75fe0ad1181696c1dbbd5f9d1fe4561879e195b1e68bb6dc35a99da6b3` |
+| `security-identity-compliance.svg` | `Category-Icons_07312026/Arch-Category_64/Arch-Category_Security-Identity_64.svg` | `d790d5c502c31990f10bfdd8e39084a5d493ef4c7348969ff9f5aa4354abae41` |
+| `sns.svg` | `Architecture-Service-Icons_07312026/Arch_Application-Integration/64/Arch_Amazon-Simple-Notification-Service_64.svg` | `f0781cd57174dd2ddfe2d2033566c73f5c0bf8192610eec5194e7a7756187dfe` |
+| `sqs.svg` | `Architecture-Service-Icons_07312026/Arch_Application-Integration/64/Arch_Amazon-Simple-Queue-Service_64.svg` | `bbab2545dccba2e11aff74e42c7f8078a9051b14b16114e539da1c4b09bdbdcd` |
+| `step-functions.svg` | `Architecture-Service-Icons_07312026/Arch_Application-Integration/64/Arch_AWS-Step-Functions_64.svg` | `19da6b2ef57df3a441b122b33def713b9715e95f74b5033d98e81629babe7ba5` |
+| `storage.svg` | `Category-Icons_07312026/Arch-Category_64/Arch-Category_Storage_64.svg` | `b08aa63f1f5a0141b39ffc4ac5f6202b68752af640fda72d0e206ad4affad15c` |
+| `transit-gateway.svg` | `Architecture-Service-Icons_07312026/Arch_Networking-Content-Delivery/64/Arch_AWS-Transit-Gateway_64.svg` | `91cff23be6eb90b4a27ad6d8bf72790e52853d039817cee22487ccfb3233cea5` |
+| `vpc.svg` | `Architecture-Service-Icons_07312026/Arch_Networking-Content-Delivery/64/Arch_Amazon-Virtual-Private-Cloud_64.svg` | `4a2c292527ce28a95d9038ab7e6be818751ffef0a91aabb5de2e61045150a98d` |
+| `waf.svg` | `Architecture-Service-Icons_07312026/Arch_Security-Identity/64/Arch_AWS-WAF_64.svg` | `3bfa7a5af38e550346b1828bead1cd3a35436fa19e1bf82f6cf6a366250cf65a` |
+
 #### Pack gcp
 
 The 23 Google Cloud icons in `assets/icons/gcp/`, from the two ZIP archives linked from cloud.google.com/icons. `assets/icons/gcp/PROVENANCE.md` records the stated terms and the conclusion that the icons may be used unaltered on labeled product cards in architecture and technical figures; a marketing or co-branded surface needs a Partner Marketing Hub request first.
@@ -2477,7 +2530,7 @@ The page-level nodes draw no solid. Nested filled zones stack: a top-level zone 
 6. Tee. The spine is a tube down the projected spine center line, from the spine box's top to its bottom, built and painted as a Pipe's tube with a cap at each end. Under iso the spine moves to stand on the right edge of the Tee's left neighbour, and its arms' start dots with it. The hub lies on the plane at the tube's top, with `ISO_TAG_CLEARANCE_PX` of margin above and below it under iso so the arms' tags stay clear of it (section 12.4).
 7. Links. A link runs over the terrain: the footprints of the slabs with height. Its routed polyline of section 11.2 is lifted whole to the top of the highest slab it runs over (`drape::route_z`: every segment is sampled at the midpoint of each span between its footprint-edge crossings, and the route's first point), so it lies on the highest terrain it crosses and floats over lower floor by at most that difference; there are no risers and no pass-unders. Collinear points are merged. Each end is then cut back to where the path enters the silhouette of its endpoint block on screen: an end on a block's bottom or right side lies on the silhouette already and stays; an end on a top or left side reaches a face the viewer cannot see, and without the cut its last stretch would be drawn across the block's top face. A zone endpoint is not cut. An end that still lies outside the silhouette after the cut, as on a figure, laptop or phone whose hull is narrower than the footprint the route ends on, is extended along its last stretch until it meets the silhouette, by at most `LAND_REACH_PX` = 64 zoomed px (`drape::land_end_at`); an end that would not meet it within reach stays, and `iso-link-ends` reports it. `IsoScene.link_paths` holds the result. The writer draws a solid link under a theme that shades faces as a tube per leg of radius `link_tube_radius(kind)` at the zoom (4.5 for solid slot 1, 3 for dash, 2.5 for every other line, the same in every theme), built and painted as a Pipe's tube of rule 5 with a shadow under each leg, a round joint at each corner (a `<circle>` of the radius on the tube's axis, in the wire color), and a cone of `iso_link_arrowhead_length(kind)` (18 for blue, 15 for dash, 14 for gray, pink and deny) and base radius 1.9 times the tube's at each arrowed end; the path is shortened by the cone's length along the last horizontal stretch first. A dashed or deny link, and every link under a theme whose face steps are all zero, is one `<path>` stroked with its kind's stroke and pattern along the path lifted by the tube radius, since a hollow tube would double a patterned line, ending in the same cone. An iso SVG writes no `<marker>`, because a marker draws its triangle unprojected. A link is drawn after every node, as in flat, so it paints over faces; its tag lies on the tube's top, the path height plus twice the radius at the zoom, under the midpoint of its longest leg (section 12.4).
 8. Link adjustments. Before the path is laid over the terrain, the routed polyline changes in two ways, both iso only (the flat route and `PageGeometry` are unchanged). First, when its ends sit on two facing sides of the attach boxes (an item's footprint when it stands on one, else its bounds; right and left, or bottom and top, with the second box beyond the first) that share at least `ISO_STRAIGHT_SHARED_MIN_PX` = 16 across the gap, the route becomes one leg through the target's center, held inside the shared span by a margin at each end of `ISO_LINK_CORNER_CLEARANCE_PX`, plus the block's height where the end sits on a box form's hidden top or left side, since the cut of rule 7 lands such an end that much nearer the front corner; a span with no room between its margins, or a leg that enters a block, is left as routed. Side midpoints of two blocks that nearly line up would otherwise leave a short jog that the projection turns into a kink. Then a route of three legs whose first and last run the same way, a Z, has its step moved to the first of `STEP_FRACTIONS` = 1/2, 3/4, 1/4 of the run between its ends at which the moved route enters no block and the step, once cleared of the zone edges, keeps `ISO_LINK_CLEARANCE_PX` from every zone edge beside it and from every leg of another link along its axis, side by side or end to end (`route::step_at`, `step_clear`, `route::near_parallel`; each link is adjusted knowing the earlier links as adjusted and the later ones as routed); the router leaves the step at the end of the target's stub, where it reads as a kink at the block. A route through `via` points keeps the author's corners (`SolidInputs.vias`). Second, each inner leg (neither the first nor the last) that runs parallel to a zone edge closer than `ISO_LINK_CLEARANCE_PX` = 24, over an overlapping extent, moves to the nearest line at 24 from each parallel edge beside it, provided the two legs around it keep their direction, no moved leg enters a block, and the leg stays over the same zones; otherwise it stays, and `iso-links-clear` reports it. Third, ends that share a side of one node spread along that side (`end_offsets`): the ends on each (node, side) pair, the side read from the leg that leaves or reaches the end, sit in link order `bundle_spacing` apart, their tube radii at the zoom plus `ISO_LINK_GAP_PX` = 4 and never less than `LINK_CONE_RADIUS_SCALE` times the two radii, so two cones on one node do not overlap. On a visible side the group is centered on the mean of its attach points; on a block's top or left side the cut of rule 7 lands an arrival the block's height nearer the front corner than its attach point, so there the group is centered half the block's height behind that mean. The spacing between neighbours is also never less than either link's tag half-height plus the other's tube radius and the air, so a tag lying on one tube does not cover the other (`bundle_spacing`, `link_width`). A route of three or more corners moves only the leg at each shifted end, with the corner after it (`route::shift_end_leg`), so the leg beside the corner only changes length. A route of one leg, and every member of a bundle, is shifted whole (`route::offset_polyline`), by the offset of an end on a hidden side if it has one, else of the end that shares a side; a bundle is the set of links whose adjusted routes coincide corner for corner (`shared_route_places`, read from the routes adjusted at the base clearance), and its members are laid out from one shared route whose inner legs keep the bundle's widest offset added to the zone clearance; a lane too narrow for the wider clearance takes the base one. A shift that would leave an end off its attach box or send a leg through a block is dropped, and `iso-links-apart` reports the pair. The tags of a bundle sit at `(position + 0.5) / size` of the longest leg instead of its middle (`longest_segment_point`), so the pills do not stack.
-9. Shapes. An Item stands as the `Shape` of section 13.1: its own `shape`, else the `shape` of its icon's row in the kind's product table, else the kind's `shape`, else card (`products::item_shape`). The gcp `product` kind and plain's `service`, `store` and `external` name `block`, so under iso an item stands as a block of a fixed footprint with its text on the floor unless its icon's row or the author says otherwise; `"shape": "card"` keeps the raised card with its content on top. The gcp table makes databases and analytics cylinders, storage stacks, compute and containers towers, networking and hybrid tiles; the `person` kind of gcp and plain stands as a figure and the `device` kind as a laptop, with `"shape": "phone"` on the item for a phone. A card is laid out and drawn as before. Every other shape is laid out under iso as a column: a square `Footprint` part (`shape_footprint_px`: 64 tile and block, 44 tower, 56 cylinder and stack, 44 figure, 56 laptop, 36 phone; `shape_height_px`: 6 tile, 18 block, 44 tower, 36 cylinder, 30 stack, 56 figure, 40 laptop, 44 phone) holding the Icon when the item has one, then the text column centered under it after a gap, with `ISO_FLOOR_TEXT_RESERVE_PX` = 64 kept clear below the text for the strip a raised solid in the next row covers. Its solid rises from the footprint (`Solid.footprint`), with `Solid.form` the shape, `Solid.silhouette` the six vertices of the footprint box and `Solid.outline` the convex outline the checks and the link cut-back read: the six vertices for a box form, for a round form the hull of the base and top ellipses, each the circle inscribed in the footprint mapped by rule 6 of section 12.2 (`ellipse_radii`). A tile, a block and a tower draw the three faces of rule 1 at their heights. A cylinder draws its visible side as two `<path>` halves, left and right of the front line, in the left and right face paints, then its top `<ellipse>` in the top paint; a stack draws three such cylinders of (height - 2 gaps) / 3 with `STACK_GAP_PX` = 2 between them, bottom to top. A round solid's shadow is its base ellipse, lowered and blurred like a block's. The sprites (`iso::sprites`) are composed of these primitives inside the footprint. A figure is a torso cylinder of 0.62 of the footprint side, centered, up to 0.56 of the height, then a 2 px neck and a head sphere filling the rest, drawn as a `<circle>`; a figure is painted as a dark silhouette in the theme's secondary ink (`Palette::figure_paint`: the top 14 points lighter, the right side 12 points darker), not in the card's fill; its outline is the hull of the torso ellipses and the head, and its shadow the torso's base ellipse. A laptop is a base plate `LAPTOP_BASE_PX` = 6 thick over the footprint, thick enough to read at deck size, and a 4 px deep screen slab standing on the plate's back edge up to the height, with a screen panel on the slab's front face inset 3 px and 28 points darker than the right face; its outline is the plate's silhouette, where a link lands (the hull of plate and screen bridges the plate's front to the screen's top with an edge in the air, and an end on that edge touched nothing); its shadow is the plate's. A phone is a 6 px deep slab of 0.6 of the footprint's width standing across its middle, facing +y, with the same panel; its outline and shadow are the slab's. Links attach to the footprint, not the item's box, and never to its bottom side unless the author says so, because the text lies there; the item's Text part is an obstacle for its own links.
+9. Shapes. An Item stands as the `Shape` of section 13.1: its own `shape`, else the `shape` of its icon's row in the kind's product table, else the kind's `shape`, else card (`products::item_shape`). The gcp and aws `product` kinds and plain's `service`, `store` and `external` name `block`, so under iso an item stands as a block of a fixed footprint with its text on the floor unless its icon's row or the author says otherwise; `"shape": "card"` keeps the raised card with its content on top. The gcp table makes databases and analytics cylinders, storage stacks, compute and containers towers, networking and hybrid tiles, and the aws table gives each row the shape of its gcp sibling; the `person` kind of every grammar stands as a figure and the `device` kind as a laptop, with `"shape": "phone"` on the item for a phone. A card is laid out and drawn as before. Every other shape is laid out under iso as a column: a square `Footprint` part (`shape_footprint_px`: 64 tile and block, 44 tower, 56 cylinder and stack, 44 figure, 56 laptop, 36 phone; `shape_height_px`: 6 tile, 18 block, 44 tower, 36 cylinder, 30 stack, 56 figure, 40 laptop, 44 phone) holding the Icon when the item has one, then the text column centered under it after a gap, with `ISO_FLOOR_TEXT_RESERVE_PX` = 64 kept clear below the text for the strip a raised solid in the next row covers. Its solid rises from the footprint (`Solid.footprint`), with `Solid.form` the shape, `Solid.silhouette` the six vertices of the footprint box and `Solid.outline` the convex outline the checks and the link cut-back read: the six vertices for a box form, for a round form the hull of the base and top ellipses, each the circle inscribed in the footprint mapped by rule 6 of section 12.2 (`ellipse_radii`). A tile, a block and a tower draw the three faces of rule 1 at their heights. A cylinder draws its visible side as two `<path>` halves, left and right of the front line, in the left and right face paints, then its top `<ellipse>` in the top paint; a stack draws three such cylinders of (height - 2 gaps) / 3 with `STACK_GAP_PX` = 2 between them, bottom to top. A round solid's shadow is its base ellipse, lowered and blurred like a block's. The sprites (`iso::sprites`) are composed of these primitives inside the footprint. A figure is a torso cylinder of 0.62 of the footprint side, centered, up to 0.56 of the height, then a 2 px neck and a head sphere filling the rest, drawn as a `<circle>`; a figure is painted as a dark silhouette in the theme's secondary ink (`Palette::figure_paint`: the top 14 points lighter, the right side 12 points darker), not in the card's fill; its outline is the hull of the torso ellipses and the head, and its shadow the torso's base ellipse. A laptop is a base plate `LAPTOP_BASE_PX` = 6 thick over the footprint, thick enough to read at deck size, and a 4 px deep screen slab standing on the plate's back edge up to the height, with a screen panel on the slab's front face inset 3 px and 28 points darker than the right face; its outline is the plate's silhouette, where a link lands (the hull of plate and screen bridges the plate's front to the screen's top with an edge in the air, and an end on that edge touched nothing); its shadow is the plate's. A phone is a 6 px deep slab of 0.6 of the footprint's width standing across its middle, facing +y, with the same panel; its outline and shadow are the slab's. Links attach to the footprint, not the item's box, and never to its bottom side unless the author says so, because the text lies there; the item's Text part is an obstacle for its own links.
 
 ### 12.4 Labels on their planes
 
@@ -3009,7 +3062,7 @@ Field summary additions and changes (section 1.1):
 
 | Tag | Field | Type | Required | Default |
 |---|---|---|---|---|
-| Page | grammar | `gcp`, `plain` or a path ending in `.json` | no | `plain` |
+| Page | grammar | `aws`, `gcp`, `plain` or a path ending in `.json` | no | `plain` |
 | Page | theme | a built-in theme name or a path ending in `.json` | no | `center` |
 | Page | theme_overrides | object, a partial theme (section 13.4 rule 8) | no | absent |
 | Page | chrome | `full` or `none` | no | `full` |
@@ -3051,14 +3104,14 @@ pub const LANES_MAX: usize = 32;
 pub const LINK_ORDER_MAX: u16 = 256;
 /// A grammar kind name: a Box or Item `kind`.
 pub const KIND_PATTERN: &str = r"^[a-z][a-z0-9-]{0,31}$";
-pub const BUILTIN_GRAMMARS: [&str; 2] = ["gcp", "plain"];
+pub const BUILTIN_GRAMMARS: [&str; 3] = ["aws", "gcp", "plain"];
 /// Designed built-ins first (section 13.5), then the imported tier (section 13.9).
 pub const BUILTIN_THEMES: [&str; 13] = [
     "center", "paper", "dusk", "clear", "clear-dark", "wire",
     "tokyo-night", "solarized-light", "solarized-dark", "material-dark",
     "gruvbox-dark", "dracula", "nord",
 ];
-pub const GRAMMAR_REFERENCE_PATTERN: &str = r"^(gcp|plain|[^\u0000-\u001F]{1,395}\.json)$";
+pub const GRAMMAR_REFERENCE_PATTERN: &str = r"^(aws|gcp|plain|[^\u0000-\u001F]{1,395}\.json)$";
 pub const THEME_REFERENCE_PATTERN: &str = r"^(center|paper|dusk|clear|clear-dark|wire|tokyo-night|solarized-light|solarized-dark|material-dark|gruvbox-dark|dracula|nord|[^\u0000-\u001F]{1,395}\.json)$";
 /// Largest grammar or theme file the CLI reads, in bytes.
 pub const DATA_FILE_BYTES_MAX: usize = 65_536;
@@ -3382,7 +3435,7 @@ Layout. A Box reads everything layout needs from its container kind: the role (a
 
 A grammar is a data module. Its source is a CUE file under `cue/grammars/`, which declares a `grammar` value against `#Grammar` and adds the domain's rules in CUE. The data part is exported to JSON (`cue export ./cue/grammars:<name> -e grammar --out json`) and committed as `crates/stencil-model/grammars/<name>.json`, which the Rust side embeds and reads; Rust never evaluates CUE (section 9.2). `cue/check.sh` re-exports every built-in grammar and fails when the export differs from the committed JSON, as it does for g7.
 
-`Page.grammar` names a built-in grammar or a `.json` grammar file (an export of a CUE grammar), resolved like a theme reference (section 13.4 rule 1). Absent means `plain`, the vendor-neutral grammar of section 13.3; `gcp` is named. A Google Cloud figure that names no grammar never renders under the wrong grammar: the two built-in grammars share only the `assembly`, `person` and `device` kinds, and every gcp figure has a `gcp` frame or `product` items, so vet rejects it with `kind-unknown`, and the message of a page that names no grammar ends `; the page names no grammar, so the default applies: set "grammar"`. A grammar given by path carries its data only; its CUE rules apply when the figure is authored in CUE against that grammar's package.
+`Page.grammar` names a built-in grammar or a `.json` grammar file (an export of a CUE grammar), resolved like a theme reference (section 13.4 rule 1). Absent means `plain`, the vendor-neutral grammar of section 13.3; `aws` and `gcp` are named. A vendor figure that names no grammar never renders under the wrong grammar: plain shares only the `assembly`, `person` and `device` kinds with the vendor grammars, and every aws or gcp figure has its `aws` or `gcp` frame or `product` items, so vet rejects it with `kind-unknown`, and the message of a page that names no grammar ends `; the page names no grammar, so the default applies: set "grammar"`. A grammar given by path carries its data only; its CUE rules apply when the figure is authored in CUE against that grammar's package.
 
 The renderer draws roles, never kinds. Each container kind declares one of four roles. The `frame` role names the outermost container, the gcp frame; it is unrelated to the `Frame` node tag of section 11.3, the wireframe placeholder, whose theme role is called `placeholder` for that reason. Every theme paints roles and tones (section 13.4), so a theme needs no knowledge of a grammar's kinds:
 
@@ -3668,6 +3721,36 @@ gcp has three item kinds. `product`: icons `gcp`, shape block, parents every con
 
 Step (d) of section 13.15 corrects two examples that broke rule 4: `hero-iso.json` drew Warehouse (icon `bigquery`) inside the Shared VPC ring, and `hybrid-ai.json` drew the feature store (`BigQuery · vectors`), the checkpoint bucket (`Cloud Storage · dual-region`), the audit logs (`Cloud Logging · org sink`) and cost and usage (`Billing export · BigQuery`) inside its vpc. Each moves into an `apis` Box outside the vpc inside the gcp frame: in hybrid-ai the feature store and the checkpoint bucket sit in one beside the vpc within the service perimeter, and the audit logs and cost and usage in one inside the evidence project, which sits beside the perimeter. `cue/check.sh` vets every example against the gcp `#Page`, so the rules examine them.
 
+aws. The AWS vocabulary, shaped like gcp so the two render alike: the same roles and tones for the frame, networks and places, one `product` item kind that draws from the `aws` pack, `person` and `device`. Nesting differs from gcp in one place: an AWS VPC is regional, so a region holds a vpc, a vpc holds an az and an az holds a subnet.
+
+| Kind | Role | Tone | Tint | Border | Padding | Radius | Label | Parents |
+|---|---|---|---|---|---|---|---|---|
+| aws | frame | | no | solid 3 | 0 | 10 | bar | page |
+| account | tile | highlight | no | solid 1.5 | 12 | 8 | plain | page, aws, account |
+| region | group | neutral | yes, default 1 | solid 1.5 | 12 | 8 | plain | aws, account |
+| vpc | boundary | strong | no | dashed 2 | 10 | 8 | plain | region, account |
+| az | group | cool | no | solid 1.5 | 12 | 8 | plain | region, vpc |
+| subnet | group | cool | no | dashed 1.5 | 12 | 8 | plain | az, vpc |
+| onprem | group | warm | yes, no default | solid 1.5 | 12 | 8 | plain | page, optional |
+| optional | group | emphasis | no | dashed 2 | 12 | 8 | plain | page, aws, region, vpc, az, subnet, account |
+| k8s | group | soft | no | none 0 | 12 | 8 | plain | aws, region, vpc, az, subnet, account, optional |
+| services | group | neutral | no | solid 1.5 | 12 | 8 | plain | aws, region, account |
+| assembly | group | neutral | yes, no default | dash-dot 1.1 | 14 | 0 | tab | page, aws, account, region, vpc, az, subnet, onprem, optional, k8s, services |
+
+`account` is an AWS account or organizational unit and nests in itself; `az` is an availability zone; `services` holds the regional services a VPC reaches over gateway or interface endpoints, aws's counterpart of gcp's `apis`. A subnet sits in one az and an az in one region, which `kind-parent-not-allowed` reads from the parents.
+
+aws has three item kinds. `product`: icons `aws`, shape block, parents every container kind and `page`, and the 46-row products table of section 13.10. `person` (shape figure) and `device` (shape laptop): icons `none`, an empty table, the same parents. Its `remembered` list is 64512 (the Amazon-side default ASN of a virtual private gateway, Direct Connect gateway or transit gateway, settable on each), 10.0.0.0/16 and 10.0.1.0/24 (the VPC and subnet CIDRs of the Amazon VPC documentation's examples) and 169.254.169.254 (the instance metadata address, a fact of the platform), each a doc example or a fact and not a design value.
+
+`cue/grammars/aws.cue` carries the aws rules, every one a vet-time defect under `cue vet`:
+
+1. Remembered constants: 64512 is in the core `#NoRememberedConstant`; the other three are `#AwsText`, which the aws `#Page` and `#Node` apply to the page head, the legend, links, Box labels, Item titles, subtitles and facts, Fact and Note text, Pipe labels and subs, and Tee hubs and arms. The Rust check reads every text field.
+2. The hop-fact rule, as gcp has it: every `product` item carries a `subtitle` or a fact whose source is `doc` or `ask` (`_itemsWithoutSubtitleOrFact`).
+3. Tint pairing is the core's (gcp rule 3).
+4. Regional services outside a VPC: a `product` item whose `subtitle` names S3, Simple Storage Service, DynamoDB, SQS, Simple Queue Service, SNS, Simple Notification Service, EventBridge, ECR, Elastic Container Registry, Secrets Manager, KMS, Key Management Service, Step Functions, Kinesis, Athena, Bedrock, CloudWatch or API Gateway at word boundaries, or whose `icon` is `api-gateway`, `athena`, `bedrock`, `cloudwatch`, `dynamodb`, `ecr`, `eventbridge`, `kinesis`, `kms`, `s3`, `secrets-manager`, `sns`, `sqs` or `step-functions`, is a defect when a `vpc` Box is among its ancestors: `_regionalServiceInsideVpc.<title>`, "sits inside a vpc; draw it in a services box beside the vpc and the gateway or interface endpoint inside". These are regional services reached over an endpoint, never addresses in a VPC. A subtitle that names an endpoint (`endpoint` or `endpoints` at word boundaries) draws the endpoint, which does sit in the VPC, so its subtitle is not read; its icon still is. Lambda, Glue and SageMaker AI are left out, since each has a VPC-attached form whose interfaces sit in subnets, and RDS, Aurora, ElastiCache, Redshift, OpenSearch and MSK launch into subnets, so no rule copies gcp's `_managedDataInsideVpc`.
+5. Global services: a `product` item whose `subtitle` names Identity and Access Management, IAM, Route 53, CloudFront, WAF, Organizations or Global Accelerator, or whose `icon` is `iam` or `cloudfront`, has no region: inside a `region` Box it is `_globalInsideRegion.<title>`, "sits inside a region; a global service sits outside every region". A subtitle that also names Resolver, Identity Center or regional is a regional form and is not read: Route 53 Resolver endpoints sit in subnets, IAM Identity Center has a home region and a WAF web ACL for a load balancer or an API is regional. The `route-53` and `waf` icons stand for both forms and are not read.
+
+`cue/check.sh` runs a negative case for each rule on `figures/aws.cue`, which also carries the clean neighbours: a gateway endpoint inside the vpc whose subtitle names Amazon S3, a VPC-attached Lambda function and an RDS database in a subnet, and a Route 53 Resolver endpoint inside the region.
+
 plain, the default. The grammar of a system figure that names no vendor: a page without `grammar` is a plain page, and a figure moves to gcp when it draws Google Cloud products with their icons. No item takes an icon.
 
 | Kind | Role | Tone | Tint | Border | Padding | Radius | Label | Parents |
@@ -3678,7 +3761,7 @@ plain, the default. The grammar of a system figure that names no vendor: a page 
 | tile | tile | highlight | no | solid 1.5 | 12 | 8 | plain | page, system, boundary, tile |
 | assembly | group | neutral | yes, no default | dash-dot 1.1 | 14 | 0 | tab | page, system, boundary, group, tile |
 
-The `assembly` kind of both grammars, the parts one actor runs, draws on a design sheet only (section 14.4 rule 26): its `dash-dot` border and `tab` label are the sheet look of section 14.2 rule 7, and a Box of any kind with either needs a sheet.
+The `assembly` kind of every grammar, the parts one actor runs, draws on a design sheet only (section 14.4 rule 26): its `dash-dot` border and `tab` label are the sheet look of section 14.2 rule 7, and a Box of any kind with either needs a sheet.
 
 Eight item kinds, each with icons `none`, an empty products table and every container kind and `page` as parents. An icon-free kind has no icon row to take a shape from, so each kind names the solid it stands as under iso (section 12.3); an item overrides it with `shape`.
 
@@ -3704,9 +3787,9 @@ House style. What a figure looks like when its author sets nothing but the body,
 - Copy: the title states what the reader should take away, the kicker names the subject, the lede is one or two sentences. An item's title names the part (Jobs API) and its subtitle says what it is (owns job state); as-built names are facts with source `built`, and a reading from the live documentation a fact with source `doc`.
 - Spacing: gap 8 between items, 32 to 64 on the Col or Row that links run through; a pipe tag is one to three words with the detail in `sub` (section 2 and the prime layout topic).
 
-gcp's own, which a plain figure does not carry: the blue bar frame that reads as Google Cloud, the `region` default tint 1 and the metro and region pairing of slots 1 and 2 with `onprem`, the `apis` Box, the hop-fact rule (rule 2), official product names in subtitles, the four remembered constants, and the placement rules for Google APIs, serverless products, managed data products and global resources (rule 4).
+gcp's own, which a plain figure does not carry: the blue bar frame that reads as Google Cloud, the `region` default tint 1 and the metro and region pairing of slots 1 and 2 with `onprem`, the `apis` Box, the hop-fact rule (rule 2), official product names in subtitles, the four remembered constants, and the placement rules for Google APIs, serverless products, managed data products and global resources (rule 4). aws's own: the bar frame that reads as AWS Cloud, the `region` default tint 1 paired with `onprem`, the `services` Box, the hop-fact rule, full service names before short forms, its four remembered constants and the placement rules for regional and global services.
 
-Other domains, sketched to show the model carries them. None ships in this section; each would be a CUE file and an exported JSON like gcp and plain.
+Other domains, sketched to show the model carries them. None ships in this section; each would be a CUE file and an exported JSON like aws, gcp and plain.
 
 `org` (an organization chart):
 
@@ -4495,6 +4578,57 @@ icon-matches-product:
    | serverless | category | Cloud Run, Cloud Run functions, Cloud Functions, App Engine, Workflows, Eventarc |
    | storage | category | Cloud Storage, Filestore, Persistent Disk, Hyperdisk, Backup and DR Service, Storage Transfer Service, Google Cloud NetApp Volumes |
    | vertex-ai | product | Vertex AI |
+
+   The aws `product` kind carries its own table, one row per aws icon in `AwsIcon::ALL` order. The class follows the archive folder: `Architecture-Service-Icons_07312026/` is `product` and `Category-Icons_07312026/` is `category`. A service row lists the full service name first, as the vendor's deck asks of a document, then its short forms. The endpoint phrases sit on endpoint rows (`gateway endpoint` on vpc, `interface endpoint` and `VPC endpoint` on privatelink), so under rule 2 `gateway endpoint · Amazon S3` names the gateway endpoint and not the service behind it:
+
+   | Icon | Class | Names |
+   |---|---|---|
+   | analytics | category | Amazon Athena, AWS Glue, Amazon Redshift, Amazon Kinesis, Amazon Data Firehose, Amazon EMR, Amazon OpenSearch Service, Amazon QuickSight, AWS Lake Formation, Amazon Managed Streaming for Apache Kafka, Amazon MSK |
+   | api-gateway | product | Amazon API Gateway, API Gateway |
+   | application-integration | category | Amazon Simple Queue Service, Amazon SQS, Amazon Simple Notification Service, Amazon SNS, Amazon EventBridge, AWS Step Functions, Amazon MQ, Amazon AppFlow |
+   | athena | product | Amazon Athena, Athena |
+   | aurora | product | Amazon Aurora, Aurora |
+   | bedrock | product | Amazon Bedrock, Bedrock |
+   | cloudfront | product | Amazon CloudFront, CloudFront |
+   | cloudwatch | product | Amazon CloudWatch, CloudWatch |
+   | compute | category | Amazon EC2, AWS Lambda, AWS Fargate, AWS Batch, Amazon Lightsail, AWS Elastic Beanstalk, AWS Outposts |
+   | containers | category | Amazon Elastic Container Service, Amazon Elastic Kubernetes Service, AWS Fargate, Amazon Elastic Container Registry, AWS App Runner, Red Hat OpenShift Service on AWS |
+   | database | category | Amazon Relational Database Service, Amazon Aurora, Amazon DynamoDB, Amazon ElastiCache, Amazon DocumentDB, Amazon Neptune, Amazon Keyspaces, Amazon MemoryDB, Amazon Timestream, AWS Database Migration Service |
+   | direct-connect | product | AWS Direct Connect, Direct Connect, DX |
+   | dynamodb | product | Amazon DynamoDB, DynamoDB |
+   | ebs | product | Amazon Elastic Block Store, Amazon EBS, EBS |
+   | ec2 | product | Amazon Elastic Compute Cloud, Amazon EC2, EC2 |
+   | ecr | product | Amazon Elastic Container Registry, Amazon ECR, ECR |
+   | ecs | product | Amazon Elastic Container Service, Amazon ECS, ECS |
+   | efs | product | Amazon Elastic File System, Amazon EFS, EFS |
+   | eks | product | Amazon Elastic Kubernetes Service, Amazon EKS, EKS |
+   | elasticache | product | Amazon ElastiCache, ElastiCache |
+   | elb | product | Elastic Load Balancing, ELB, Application Load Balancer, Network Load Balancer, Gateway Load Balancer, ALB, NLB, GWLB |
+   | eventbridge | product | Amazon EventBridge, EventBridge |
+   | fargate | product | AWS Fargate, Fargate |
+   | glue | product | AWS Glue, Glue |
+   | iam | product | AWS Identity and Access Management, AWS IAM, IAM |
+   | kinesis | product | Amazon Kinesis, Kinesis |
+   | kms | product | AWS Key Management Service, AWS KMS, KMS |
+   | lambda | product | AWS Lambda, Lambda |
+   | machine-learning | category | Amazon SageMaker AI, Amazon Bedrock, Amazon Q, Amazon Rekognition, Amazon Textract, Amazon Comprehend, Amazon Transcribe, Amazon Polly, Amazon Translate |
+   | management-governance | category | Amazon CloudWatch, AWS CloudTrail, AWS Config, AWS Organizations, AWS Systems Manager, AWS CloudFormation, AWS Control Tower, AWS Trusted Advisor |
+   | networking-content-delivery | category | Amazon Virtual Private Cloud, Amazon CloudFront, Amazon Route 53, Elastic Load Balancing, AWS Direct Connect, AWS Transit Gateway, AWS PrivateLink, Amazon API Gateway, AWS Global Accelerator, AWS Site-to-Site VPN, AWS Cloud WAN, AWS Client VPN, Amazon VPC Lattice |
+   | privatelink | product | AWS PrivateLink, PrivateLink, interface VPC endpoint, interface endpoint, VPC endpoint |
+   | rds | product | Amazon Relational Database Service, Amazon RDS, RDS |
+   | redshift | product | Amazon Redshift, Redshift |
+   | route-53 | product | Amazon Route 53, Route 53 |
+   | s3 | product | Amazon Simple Storage Service, Amazon S3, S3 |
+   | sagemaker | product | Amazon SageMaker AI, SageMaker AI, SageMaker |
+   | secrets-manager | product | AWS Secrets Manager, Secrets Manager |
+   | security-identity-compliance | category | AWS Identity and Access Management, AWS Key Management Service, AWS Secrets Manager, AWS WAF, AWS Shield, Amazon GuardDuty, AWS Security Hub, AWS Certificate Manager, Amazon Cognito, AWS IAM Identity Center, IAM Identity Center, AWS Network Firewall, Amazon Inspector, Amazon Macie |
+   | sns | product | Amazon Simple Notification Service, Amazon SNS, SNS |
+   | sqs | product | Amazon Simple Queue Service, Amazon SQS, SQS |
+   | step-functions | product | AWS Step Functions, Step Functions |
+   | storage | category | Amazon Simple Storage Service, Amazon Elastic Block Store, Amazon Elastic File System, Amazon FSx, Amazon S3 Glacier, AWS Backup, AWS Storage Gateway, AWS DataSync |
+   | transit-gateway | product | AWS Transit Gateway, Transit Gateway, TGW |
+   | vpc | product | Amazon Virtual Private Cloud, Amazon VPC, VPC, gateway endpoint |
+   | waf | product | AWS WAF, WAF |
 
 2. `pub fn named_product(table: &[IconProducts], subtitle: &str) -> Option<&str>` finds every name of the table in the subtitle, ASCII case-insensitive, at the word boundaries of the remembered-constants rule (section 6), and returns the longest; on a tie, the one that starts first. `Vertex AI Agent Engine` therefore names Vertex AI Agent Engine, not Vertex AI, and `Cloud Run jobs` names Cloud Run. The scan is bounded by the table (at most 32 item kinds of at most 64 rows, enforced by `validate_grammar`) times the 400-scalar text limit, and uses no regex dependency.
 3. The product icons of a name are the `product`-class rows that list it. An item is examined when its kind has a non-empty products table and it has an `icon` or a `subtitle`. It is a defect when the subtitle names a product with product icons and the item's icon is set and not one of them, or when the subtitle names a product with no product icon and the item's icon is a `product`-class icon. Category icons are allowed for any product with no product icon. An item with no subtitle, or whose subtitle names nothing in the table, is examined and clean, as is one that names a product with a product icon and carries no icon.

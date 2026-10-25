@@ -5,8 +5,8 @@
     clippy::indexing_slicing
 )]
 
-//! icon-matches-product and `named_product` (section 13.10): the gcp products table, the
-//! longest-match rule, each defect kind beside its clean neighbor, and the examples.
+//! icon-matches-product and `named_product` (section 13.10): the gcp and aws products tables,
+//! the longest-match rule, each defect kind beside its clean neighbor, and the examples.
 
 mod common;
 
@@ -17,7 +17,7 @@ use serde_json::{Value, json};
 use stencil_model::checks::{CheckName, CheckOutcome};
 use stencil_model::grammar::{IconClass, IconProducts};
 use stencil_model::products::{icon_matches_product, named_product};
-use stencil_model::{GcpIcon, IconStem, Page, parse_page};
+use stencil_model::{AwsIcon, GcpIcon, Grammar, IconStem, Page, builtin_grammar, parse_page};
 
 fn repository_path(relative: &str) -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR"))
@@ -302,4 +302,139 @@ fn every_gcp_example_passes_with_items_examined() {
         examined += 1;
     }
     assert_eq!(examined, 5);
+}
+
+fn aws() -> Grammar {
+    builtin_grammar("aws").unwrap().unwrap()
+}
+
+fn aws_table() -> Vec<IconProducts> {
+    let grammar = aws();
+    let product = grammar.item("product").expect("aws has the product kind");
+    product.products.clone()
+}
+
+/// The defect messages of an aws page holding the one item.
+fn aws_defects_for(subtitle: Option<&str>, icon: Option<&str>) -> Vec<String> {
+    let page = page_of_items(json!([item(subtitle, icon)]));
+    let report = icon_matches_product(&page, &aws());
+    assert_eq!(report.examined, 1, "{subtitle:?} {icon:?}");
+    report
+        .defects
+        .into_iter()
+        .map(|defect| defect.message)
+        .collect()
+}
+
+#[test]
+fn the_aws_table_has_every_icon_once_in_icon_order_with_its_archive_class() {
+    let table = aws_table();
+    let icons: Vec<&str> = table.iter().map(|row| row.icon.as_str()).collect();
+    let pack_icons: Vec<&str> = AwsIcon::ALL.iter().map(|icon| icon.as_str()).collect();
+    assert_eq!(icons, pack_icons);
+
+    let provenance = fs::read_to_string(repository_path("assets/icons/aws/PROVENANCE.md")).unwrap();
+    let mut examined = 0;
+    for row in &table {
+        let file_cell = format!("| `{}.svg` | `", row.icon);
+        let line = provenance
+            .lines()
+            .find(|line| line.starts_with(&file_cell))
+            .unwrap_or_else(|| panic!("{} has no provenance row", row.icon));
+        let archive_path = line.strip_prefix(&file_cell).unwrap();
+        let expected = if archive_path.starts_with("Architecture-Service-Icons_") {
+            IconClass::Product
+        } else if archive_path.starts_with("Category-Icons_") {
+            IconClass::Category
+        } else {
+            panic!("{} comes from neither archive folder", row.icon)
+        };
+        assert_eq!(row.class, expected, "{}", row.icon);
+        examined += 1;
+    }
+    assert_eq!(examined, AwsIcon::ALL.len());
+}
+
+#[test]
+fn an_aws_full_service_name_and_its_short_form_name_the_same_icon() {
+    let table = aws_table();
+    for (full, short, icon) in [
+        ("Amazon Simple Storage Service", "S3", "s3"),
+        ("Amazon S3", "S3", "s3"),
+        ("AWS Lambda", "Lambda", "lambda"),
+        ("Amazon Relational Database Service", "RDS", "rds"),
+        ("AWS Key Management Service", "KMS", "kms"),
+    ] {
+        assert_eq!(named_product(&table, full), Some(full));
+        assert_eq!(named_product(&table, short), Some(short));
+        assert!(aws_defects_for(Some(full), Some(icon)).is_empty(), "{full}");
+        assert!(
+            aws_defects_for(Some(short), Some(icon)).is_empty(),
+            "{short}"
+        );
+    }
+}
+
+#[test]
+fn an_aws_service_with_its_own_icon_matches_it_and_rejects_another() {
+    assert!(aws_defects_for(Some("Amazon RDS for PostgreSQL"), Some("rds")).is_empty());
+    assert!(aws_defects_for(Some("Amazon DynamoDB"), None).is_empty());
+    assert_eq!(
+        aws_defects_for(Some("Amazon S3 · exports"), Some("storage")),
+        ["subtitle names Amazon S3, whose icon is s3; the item carries storage"]
+    );
+    assert_eq!(
+        aws_defects_for(Some("Amazon Aurora"), Some("rds")),
+        ["subtitle names Amazon Aurora, whose icon is aurora; the item carries rds"]
+    );
+}
+
+#[test]
+fn an_aws_service_without_its_own_icon_takes_a_category_icon_but_no_service_icon() {
+    assert!(aws_defects_for(Some("Amazon DocumentDB"), Some("database")).is_empty());
+    assert!(aws_defects_for(Some("AWS Batch"), Some("compute")).is_empty());
+    assert_eq!(
+        aws_defects_for(Some("Amazon DocumentDB"), Some("dynamodb")),
+        [
+            "subtitle names Amazon DocumentDB, which has no product icon; the item carries the product icon dynamodb"
+        ]
+    );
+    assert_eq!(
+        aws_defects_for(Some("AWS IAM Identity Center"), Some("iam")),
+        [
+            "subtitle names AWS IAM Identity Center, which has no product icon; the item carries the product icon iam"
+        ]
+    );
+}
+
+#[test]
+fn an_aws_endpoint_subtitle_names_the_endpoint_not_the_service_behind_it() {
+    let table = aws_table();
+    assert_eq!(
+        named_product(&table, "gateway endpoint · Amazon S3"),
+        Some("gateway endpoint")
+    );
+    assert_eq!(
+        named_product(&table, "Secrets Manager interface endpoint"),
+        Some("interface endpoint")
+    );
+    assert!(aws_defects_for(Some("gateway endpoint · Amazon S3"), Some("vpc")).is_empty());
+    assert!(aws_defects_for(Some("interface endpoint"), Some("privatelink")).is_empty());
+    assert_eq!(
+        aws_defects_for(Some("S3 gateway endpoint"), Some("s3")),
+        ["subtitle names gateway endpoint, whose icon is vpc; the item carries s3"]
+    );
+}
+
+#[test]
+fn an_aws_subtitle_names_its_longest_service_name_and_never_an_instance() {
+    let table = aws_table();
+    assert_eq!(named_product(&table, "RDS instance"), Some("RDS"));
+    assert_eq!(named_product(&table, "ECS on Fargate"), Some("Fargate"));
+    assert_eq!(
+        named_product(&table, "Route 53 Resolver inbound endpoint"),
+        Some("Route 53")
+    );
+    assert_eq!(named_product(&table, "EC2X"), None);
+    assert!(aws_defects_for(Some("RDS instance"), Some("rds")).is_empty());
 }

@@ -113,7 +113,7 @@ enum Command {
         /// themes, links, blocks, layout, iso, checks, cue, sheet, phases, marks, assembly, howto,
         /// example, or grammar
         topic: Option<String>,
-        /// The grammar to brief on, after `grammar`: gcp or plain
+        /// The grammar to brief on, after `grammar`: aws, gcp or plain
         name: Option<String>,
     },
     /// Render and check every example under every theme, with index.html and gallery.json

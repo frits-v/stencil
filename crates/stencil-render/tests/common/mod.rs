@@ -85,10 +85,13 @@ pub fn gcp_anywhere() -> Grammar {
     grammar
 }
 
-/// The grammar a test page names: gcp with every kind allowed at the top level, or plain,
-/// the default, for a page that names none.
+/// The grammar a test page names: aws as built in, gcp with every kind allowed at the top
+/// level, or plain, the default, for a page that names none.
 pub fn grammar_for(page: &Page) -> Grammar {
     match page.grammar.as_deref() {
+        Some("aws") => builtin_grammar("aws")
+            .expect("aws is a built-in grammar")
+            .expect("the aws grammar is valid"),
         Some("gcp") => gcp_anywhere(),
         _ => builtin_grammar("plain")
             .expect("plain is a built-in grammar")

@@ -1,6 +1,6 @@
 # CUE
 
-Figures can be authored in CUE, which carries rules the Rust side does not evaluate. cue/core.cue holds the core vocabulary, cue/grammar.cue the #Grammar definition, and cue/grammars/gcp.cue and plain.cue each grammar's data, kinds and rules as packages gcp and plain. cue/ is the module root, so every command runs from inside it. The pinned CUE version is 0.17.1. In order, each step stopping on failure:
+Figures can be authored in CUE, which carries rules the Rust side does not evaluate. cue/core.cue holds the core vocabulary, cue/grammar.cue the #Grammar definition, and cue/grammars/aws.cue, gcp.cue and plain.cue each grammar's data, kinds and rules as packages aws, gcp and plain. cue/ is the module root, so every command runs from inside it. The pinned CUE version is 0.17.1. In order, each step stopping on failure:
 
     cd cue && cue vet -c ./figures:gcp
     cue export ./figures:gcp -e <field> --out json -o ../fig.json
@@ -19,6 +19,7 @@ Rules CUE adds beyond stencil vet, under the gcp grammar:
 | a solid pipe between two sibling Boxes touches no tinted Box of another slot | _pipeBesideZoneOfOtherTint |
 | no product naming or drawn as Cloud Storage, BigQuery, Pub/Sub, Artifact Registry or Cloud Logging sits inside a vpc | _productInsideVpc.TITLE |
 | every apis Box has a gcp Box above it | _apisOutsideGcp.LABEL |
+| under aws: no regional service (S3, DynamoDB, SQS and the rest) inside a vpc, no global service inside a region | _regionalServiceInsideVpc.TITLE, _globalInsideRegion.TITLE |
 | pipe targets name node ids, two different ones, and never on a Tee arm | _pipeTargetsUnknown.ID, _pipeTargetsEqual, _targetOnTeeArm |
 | a tint on a gray or deny line, or on a Box whose kind is not tintable | _tintWithoutEffect |
 | Box and Item kinds are the grammar's, and each sits in one of its kind's parents | _kindParentNotAllowed.KIND |
@@ -35,4 +36,4 @@ Two versions from one source, as cue/figures/g7.cue does with its fields custome
 
 When one node fails, the per-page sets built from it come up empty, so a single error can also report every legend key as unused. The first error on a body path is the cause.
 
-cue/check.sh vets the packages, re-exports both grammars and fails when either differs from crates/stencil-model/grammars, compares g7's customer field, exported, with examples/g7.json, vets every example against the #Page of the grammar it names (plain when it names none), then runs each negative case. Set CUE to the binary if the shim is not active: `CUE="$(mise which cue)" ./cue/check.sh`.
+cue/check.sh vets the packages, re-exports every grammar and fails when one differs from crates/stencil-model/grammars, compares g7's customer field, exported, with examples/g7.json, vets every example against the #Page of the grammar it names (plain when it names none), then runs each negative case. Set CUE to the binary if the shim is not active: `CUE="$(mise which cue)" ./cue/check.sh`.
