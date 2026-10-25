@@ -308,6 +308,15 @@ fn aws() -> Grammar {
     builtin_grammar("aws").unwrap().unwrap()
 }
 
+#[test]
+fn the_aws_example_passes_with_items_examined() {
+    let text = fs::read_to_string(repository_path("examples/aws-hybrid.json")).unwrap();
+    let page = parse_page(&text).unwrap();
+    let report = icon_matches_product(&page, &aws());
+    assert!(report.passed(), "{:?}", report.defects);
+    assert!(report.examined >= 10, "examined {}", report.examined);
+}
+
 fn aws_table() -> Vec<IconProducts> {
     let grammar = aws();
     let product = grammar.item("product").expect("aws has the product kind");

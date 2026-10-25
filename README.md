@@ -20,6 +20,10 @@ Build the binary with `cargo build --release`; it lands at `target/release/stenc
 
 `examples/network-hub-spoke.json`: a transit hub with one Shared VPC per environment and every path between them labeled.
 
+![A data center reaches a two-zone VPC over Direct Connect](docs/gallery/aws-hybrid.png)
+
+`examples/aws-hybrid.json`: a data center over Direct Connect into one region, a VPC across two Availability Zones, and the regional services the VPC reaches over endpoints beside it.
+
 ![Design one-pager for a trigger evaluation service](docs/gallery/design-brief.png)
 
 Five item shapes on one floor, under the isometric projection:
