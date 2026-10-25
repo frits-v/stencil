@@ -213,13 +213,14 @@ pub fn topic_names() -> String {
 fn grammar_briefing_text(name: &str) -> Option<&'static str> {
     match name {
         "aws" => Some(include_str!("../prime/grammars/aws.md")),
+        "azure" => Some(include_str!("../prime/grammars/azure.md")),
         "gcp" => Some(include_str!("../prime/grammars/gcp.md")),
         "plain" => Some(include_str!("../prime/grammars/plain.md")),
         _ => None,
     }
 }
 
-/// `aws, gcp, plain`, the built-in grammar names in `BUILTIN_GRAMMARS` order.
+/// `aws, azure, gcp, plain`, the built-in grammar names in `BUILTIN_GRAMMARS` order.
 pub fn grammar_names() -> String {
     BUILTIN_GRAMMARS.join(", ")
 }

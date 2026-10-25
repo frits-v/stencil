@@ -26,6 +26,7 @@ pub const KIND_PADDING_MAX_PX: f32 = 32.0;
 pub const KIND_RADIUS_MAX_PX: f32 = 16.0;
 
 const AWS_JSON: &str = include_str!("../grammars/aws.json");
+const AZURE_JSON: &str = include_str!("../grammars/azure.json");
 const GCP_JSON: &str = include_str!("../grammars/gcp.json");
 const PLAIN_JSON: &str = include_str!("../grammars/plain.json");
 
@@ -278,6 +279,7 @@ pub enum GrammarError {
 pub fn builtin_grammar(name: &str) -> Option<Result<Grammar, GrammarError>> {
     let json_text = match name {
         "aws" => AWS_JSON,
+        "azure" => AZURE_JSON,
         "gcp" => GCP_JSON,
         "plain" => PLAIN_JSON,
         _ => return None,
@@ -289,6 +291,7 @@ pub fn builtin_grammar(name: &str) -> Option<Result<Grammar, GrammarError>> {
 pub fn builtin_grammar_json(name: &str) -> Option<&'static str> {
     match name {
         "aws" => Some(AWS_JSON),
+        "azure" => Some(AZURE_JSON),
         "gcp" => Some(GCP_JSON),
         "plain" => Some(PLAIN_JSON),
         _ => None,

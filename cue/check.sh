@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
-# Vets the core package, every grammar package and the aws, g7, sequence, sheet,
-# sheet-small and sheet-gcp figures; exports each grammar and compares it byte for byte with
+# Vets the core package, every grammar package and the aws, azure, g7, sequence,
+# sheet, sheet-small and sheet-gcp figures; exports each grammar and compares it byte for byte with
 # crates/stencil-model/grammars/; compares the g7 customer export with
 # examples/g7.json, the sequence export with examples/sequence.json and the
 # sheet export with examples/onepager.json; vets every example against the
 # #Page of the grammar it names; vets every built-in theme file against #Theme
 # and rejects the theme negative cases; then runs the negative cases: a copy of
-# the cue tree with one edit to figures/aws.cue, figures/g7.cue, figures/sequence.cue,
-# figures/sheet.cue, figures/sheet-small.cue or figures/sheet-gcp.cue that vet
-# must reject with the named error.
+# the cue tree with one edit to figures/aws.cue, figures/azure.cue, figures/g7.cue,
+# figures/sequence.cue, figures/sheet.cue, figures/sheet-small.cue or figures/sheet-gcp.cue that
+# vet must reject with the named error.
 # Exits non-zero if the cue binary is missing, if any positive step fails, or
 # if any negative case passes or fails for a different reason.
 #
@@ -34,17 +34,19 @@ fi
 cd "$here"
 "$CUE" vet -c .
 "$CUE" vet -c ./grammars:aws
+"$CUE" vet -c ./grammars:azure
 "$CUE" vet -c ./grammars:gcp
 "$CUE" vet -c ./grammars:plain
 "$CUE" vet -c ./figures:aws
+"$CUE" vet -c ./figures:azure
 "$CUE" vet -c ./figures:gcp
 "$CUE" vet -c ./figures:plain
-echo "ok   vet: core, grammars aws, gcp and plain, figures aws, gcp and plain"
+echo "ok   vet: core, grammars aws, azure, gcp and plain, figures aws, azure, gcp and plain"
 
 # The committed grammar JSON is what the Rust side embeds; it must be exactly
 # this export, so the comparison is byte for byte. To regenerate, from cue/:
 #   cue export ./grammars:<name> -e grammar --out json -o ../crates/stencil-model/grammars/<name>.json --force
-for name in aws gcp plain; do
+for name in aws azure gcp plain; do
 	"$CUE" export "./grammars:$name" -e grammar --out json -o "$out/grammar-$name.json" --force
 	if ! cmp -s "$committed_grammars/$name.json" "$out/grammar-$name.json"; then
 		diff -u "$committed_grammars/$name.json" "$out/grammar-$name.json" >&2 || true
@@ -167,7 +169,7 @@ for example in "$repo"/examples/*.json; do
 		fi
 	done
 	grammar="$(python3 -c 'import json, sys; print(json.load(open(sys.argv[1], encoding="utf-8")).get("grammar", "plain"))' "$example")"
-	if [[ "$grammar" != "aws" && "$grammar" != "gcp" && "$grammar" != "plain" ]]; then
+	if [[ "$grammar" != "aws" && "$grammar" != "azure" && "$grammar" != "gcp" && "$grammar" != "plain" ]]; then
 		echo "FAIL example $stem: names grammar $grammar, which has no package under grammars/" >&2
 		examples_failed=$((examples_failed + 1))
 		continue
@@ -295,6 +297,60 @@ JSON
 "$CUE" vet -c -d '#Page' ./grammars:gcp "$chrome_none"
 echo "ok   chrome-none-one-key: an empty legend with one key in use vets clean, as do items with only a doc or ask fact and a pipe naming its targets"
 
+# What an azure subnet does hold, beside the placement rules it must not trip:
+# an App Service Environment and Functions on it, SQL Managed Instance, a
+# Container Apps environment and a private endpoint whose subtitle names its
+# target sit in a subnet; a Log Analytics workspace and Azure Monitor sit in a
+# region; Front Door sits in the frame outside every region.
+azure_clean="$out/azure-clean-neighbours.json"
+cat >"$azure_clean" <<'JSON'
+{
+  "title": "Clean neighbours",
+  "kicker": "Azure placement",
+  "lede": "Products that sit in a subnet or a region.",
+  "badge": "Internal",
+  "grammar": "azure",
+  "body": [
+    {
+      "tag": "Box", "kind": "azure", "label": "Microsoft Azure",
+      "children": [
+        {
+          "tag": "Box", "kind": "region", "label": "Region",
+          "children": [
+            {
+              "tag": "Box", "kind": "vnet", "label": "VNet",
+              "children": [
+                {
+                  "tag": "Box", "kind": "subnet", "label": "Workloads",
+                  "children": [
+                    { "tag": "Item", "kind": "product", "icon": "app-service", "title": "Web", "subtitle": "App Service Environment v3" },
+                    { "tag": "Item", "kind": "product", "icon": "functions", "title": "Jobs", "subtitle": "Azure Functions on an App Service Environment" },
+                    { "tag": "Item", "kind": "product", "icon": "sql-managed-instance", "title": "Ledger", "subtitle": "Azure SQL Managed Instance" },
+                    { "tag": "Item", "kind": "product", "icon": "container-apps-environments", "title": "Apps", "subtitle": "Azure Container Apps environment" },
+                    { "tag": "Item", "kind": "product", "icon": "private-endpoint", "title": "Vault endpoint", "subtitle": "private endpoint · Azure Key Vault" }
+                  ]
+                }
+              ]
+            },
+            { "tag": "Item", "kind": "product", "icon": "log-analytics", "title": "Logs", "subtitle": "Log Analytics workspace" },
+            { "tag": "Item", "kind": "product", "icon": "monitor", "title": "Alerts", "subtitle": "Azure Monitor" }
+          ]
+        },
+        { "tag": "Item", "kind": "product", "icon": "front-door", "title": "Edge", "subtitle": "Azure Front Door" }
+      ]
+    }
+  ],
+  "legend": []
+}
+JSON
+"$CUE" vet -c -d '#Page' ./grammars:azure "$azure_clean"
+azure_clean_items="$(python3 -c 'import json, sys; print(json.dumps(json.load(open(sys.argv[1], encoding="utf-8"))).count("\"tag\": \"Item\""))' "$azure_clean")"
+if [[ "$azure_clean_items" -eq 0 ]]; then
+	echo "FAIL azure-clean-neighbours: the document has no items" >&2
+	exit 1
+fi
+echo "ok   azure-clean-neighbours: $azure_clean_items products in a subnet, a region or the frame vet clean"
+
 # Fillers for the length bounds: 401 characters for a text field, 255 facts
 # added beside the one in Region A for 257 children.
 long_text="$(printf 'x%.0s' {1..401})"
@@ -324,9 +380,9 @@ three_items="$(printf '{title: "How-to %s", text: "Filler."},' $(seq 1 3))"
 ten_lines="$(printf '{kind: "output", text: "line %s"},' $(seq 1 10))"
 
 # figure | name | sed expression applied to figures/<figure>.cue | text the
-# vet error must contain [| second text the error must also contain]. An aws
-# case vets ./figures:aws, a g7 or sheet-gcp case ./figures:gcp and a sequence,
-# sheet or sheet-small case ./figures:plain.
+# vet error must contain [| second text the error must also contain]. An aws case vets
+# ./figures:aws, an azure case ./figures:azure, a g7 or sheet-gcp case ./figures:gcp and a
+# sequence, sheet or sheet-small case ./figures:plain.
 aws_subnet_fact='{tag: "Fact", text: "No route to an internet gateway"},'
 aws_region_fact='{tag: "Fact", text: "Region and zones from the landing-zone design"},'
 aws_cases=(
@@ -341,6 +397,21 @@ aws_cases=(
 	'vpc-doc-cidr-in-label|s/label: "Application VPC"/label: "Application VPC · 10.0.0.0\/16"/|.label: invalid value "Application VPC · 10.0.0.0/16"'
 	'subnet-doc-cidr-in-subtitle|s/subtitle: "Amazon RDS for PostgreSQL · primary"/subtitle: "Amazon RDS for PostgreSQL · 10.0.1.0\/24"/|.subtitle: invalid value "Amazon RDS for PostgreSQL · 10.0.1.0/24"'
 	'metadata-address-in-fact|s/text: "No route to an internet gateway"/text: "metadata at 169.254.169.254"/|.text: invalid value "metadata at 169.254.169.254"'
+)
+azure_cases=(
+	'key-vault-product-inside-vnet|s/{tag: "Item", kind: "product", icon: "aks"[^}]*},/&\n{tag: "Item", kind: "product", title: "Secrets", subtitle: "Azure Key Vault"},/|_paasInsideVnet.Secrets|draw it in a services box beside the vnet'
+	'storage-icon-inside-vnet|s/{tag: "Item", kind: "product", icon: "aks"[^}]*},/&\n{tag: "Item", kind: "product", icon: "storage-accounts", title: "Landing store", facts: [{text: "hot tier"}]},/|_paasInsideVnet."Landing store"'
+	'functions-with-vnet-integration-inside-vnet|s/{tag: "Item", kind: "product", icon: "aks"[^}]*},/&\n{tag: "Item", kind: "product", icon: "functions", title: "Jobs", subtitle: "Azure Functions · VNet integration"},/|_paasInsideVnet.Jobs'
+	'services-box-inside-vnet|s/{tag: "Item", kind: "product", icon: "aks"[^}]*},/&\n]}, {tag: "Box", kind: "services", label: "Stray services", children: [{tag: "Fact", text: "inside the spoke"}/|_kindParentNotAllowed.services|cannot sit in vnet'
+	'subnet-in-region|s/{tag: "Item", kind: "product", icon: "sql-database"[^}]*},/&\n]}, {tag: "Box", kind: "subnet", label: "Stray subnet", children: [{tag: "Fact", text: "no vnet around it"}/|_kindParentNotAllowed.subnet|cannot sit in region'
+	'front-door-inside-region|s/{tag: "Item", kind: "product", icon: "sql-database"[^}]*},/&\n{tag: "Item", kind: "product", icon: "front-door", title: "Edge", subtitle: "Azure Front Door"},/|_globalInsideRegion.Edge|sits outside every region'
+	'entra-id-icon-inside-region|s/{tag: "Item", kind: "product", icon: "sql-database"[^}]*},/&\n{tag: "Item", kind: "product", icon: "entra-id", title: "Tenant", facts: [{text: "one tenant per customer"}]},/|_globalInsideRegion.Tenant'
+	'dns-zone-name-inside-region|s/{tag: "Item", kind: "product", icon: "sql-database"[^}]*},/&\n{tag: "Item", kind: "product", title: "Zone", subtitle: "private DNS zone"},/|_globalInsideRegion.Zone'
+	'item-without-subtitle-or-fact|s/title: "Firewall", subtitle: "Azure Firewall"/title: "Firewall"/|_itemsWithoutSubtitleOrFact.Firewall'
+	'built-fact-without-subtitle|s/title: "Firewall", subtitle: "Azure Firewall"/title: "Firewall", facts: [{text: "afw-hub", source: "built"}]/|_itemsWithoutSubtitleOrFact.Firewall'
+	'remembered-asn-65515|s/sub: "private peering · BGP"/sub: "private peering · BGP ASN 65515"/|_rememberedInText."65515"|contains 65515: the default ASN of a VPN gateway'
+	'remembered-cidr-in-a-label|s/label: "Hub VNet"/label: "Hub VNet · 10.0.0.0\/16"/|_rememberedInText."10.0.0.0/16"'
+	'gcp-icon-on-an-azure-product|s/icon: "aks"/icon: "gke"/|_iconOutsidePack|is not in icon pack azure, which item kind product draws from'
 )
 g7_cases=(
 	'asn-64512|s/subtitle: "private ASN · RFC 6996"/subtitle: "private ASN 64512"/|.subtitle: invalid value "private ASN 64512"'
@@ -530,6 +601,9 @@ cases=()
 for entry in "${aws_cases[@]}"; do
 	cases+=("aws|$entry")
 done
+for entry in "${azure_cases[@]}"; do
+	cases+=("azure|$entry")
+done
 for entry in "${g7_cases[@]}"; do
 	cases+=("g7|$entry")
 done
@@ -565,6 +639,7 @@ for entry in "${cases[@]}"; do
 	IFS='|' read -r figure name expression expected also <<<"$entry"
 	case "$figure" in
 	aws) package=aws ;;
+	azure) package=azure ;;
 	g7) package=gcp ;;
 	sequence) package=plain ;;
 	sheet) package=plain ;;

@@ -9,9 +9,11 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 mod aws;
+mod azure;
 mod gcp;
 
 pub use aws::AwsIcon;
+pub use azure::AzureIcon;
 pub use gcp::GcpIcon;
 
 /// An icon file stem: lowercase ASCII letters and digits in runs joined by single `-`.
@@ -96,18 +98,20 @@ impl JsonSchema for IconStem {
 #[serde(rename_all = "lowercase")]
 pub enum IconPack {
     Aws,
+    Azure,
     Gcp,
     None,
 }
 
 impl IconPack {
     /// Every pack with files under `assets/icons/<pack>/`.
-    pub const BUNDLED: [IconPack; 2] = [IconPack::Aws, IconPack::Gcp];
+    pub const BUNDLED: [IconPack; 3] = [IconPack::Aws, IconPack::Azure, IconPack::Gcp];
 
     /// The serialized name, which is also the pack's directory under `assets/icons/`.
     pub fn as_str(self) -> &'static str {
         match self {
             IconPack::Aws => "aws",
+            IconPack::Azure => "azure",
             IconPack::Gcp => "gcp",
             IconPack::None => "none",
         }
@@ -117,6 +121,7 @@ impl IconPack {
     pub fn icons(self) -> Vec<IconName> {
         match self {
             IconPack::Aws => AwsIcon::ALL.into_iter().map(IconName::Aws).collect(),
+            IconPack::Azure => AzureIcon::ALL.into_iter().map(IconName::Azure).collect(),
             IconPack::Gcp => GcpIcon::ALL.into_iter().map(IconName::Gcp).collect(),
             IconPack::None => Vec::new(),
         }
@@ -126,6 +131,7 @@ impl IconPack {
     pub fn resolve(self, stem: &IconStem) -> Option<IconName> {
         match self {
             IconPack::Aws => AwsIcon::from_stem(stem.as_str()).map(IconName::Aws),
+            IconPack::Azure => AzureIcon::from_stem(stem.as_str()).map(IconName::Azure),
             IconPack::Gcp => GcpIcon::from_stem(stem.as_str()).map(IconName::Gcp),
             IconPack::None => None,
         }
@@ -136,6 +142,7 @@ impl IconPack {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum IconName {
     Aws(AwsIcon),
+    Azure(AzureIcon),
     Gcp(GcpIcon),
 }
 
@@ -143,6 +150,7 @@ impl IconName {
     pub fn pack(self) -> IconPack {
         match self {
             IconName::Aws(_) => IconPack::Aws,
+            IconName::Azure(_) => IconPack::Azure,
             IconName::Gcp(_) => IconPack::Gcp,
         }
     }
@@ -157,6 +165,7 @@ impl IconName {
     pub fn file_name(self) -> &'static str {
         match self {
             IconName::Aws(icon) => icon.file_name(),
+            IconName::Azure(icon) => icon.file_name(),
             IconName::Gcp(icon) => icon.file_name(),
         }
     }

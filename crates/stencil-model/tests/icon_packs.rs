@@ -9,7 +9,7 @@ use std::collections::BTreeSet;
 use std::fs;
 use std::path::PathBuf;
 
-use stencil_model::{AwsIcon, GcpIcon, IconName, IconPack, IconStem};
+use stencil_model::{AwsIcon, AzureIcon, GcpIcon, IconName, IconPack, IconStem};
 
 fn pack_directory(pack: IconPack) -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -119,6 +119,21 @@ fn the_bundled_packs_are_in_alphabetical_order_and_none_is_not_one() {
 }
 
 #[test]
+fn azure_icons_are_in_file_name_order() {
+    assert_eq!(AzureIcon::ALL.len(), 41);
+    assert_eq!(AzureIcon::ALL.first(), Some(&AzureIcon::Aks));
+    assert_eq!(AzureIcon::EntraId.file_name(), "entra-id.svg");
+    let names: Vec<&str> = AzureIcon::ALL.iter().map(|icon| icon.file_name()).collect();
+    let mut sorted = names.clone();
+    sorted.sort_unstable();
+    assert_eq!(names, sorted);
+    assert_eq!(
+        IconPack::Azure.icons(),
+        AzureIcon::ALL.map(IconName::Azure).to_vec()
+    );
+}
+
+#[test]
 fn gcp_icons_keep_their_order_and_file_names() {
     assert_eq!(GcpIcon::ALL.len(), 23);
     assert_eq!(GcpIcon::ALL.first(), Some(&GcpIcon::Agents));
@@ -164,6 +179,13 @@ fn a_stem_resolves_only_in_a_pack_that_has_its_file() {
     assert_eq!(IconPack::Aws.resolve(&gke), None);
     let bigtable = IconStem::try_from("bigtable").unwrap();
     assert_eq!(IconPack::Gcp.resolve(&bigtable), None);
+    assert_eq!(IconPack::Azure.resolve(&gke), None);
+    let key_vault = IconStem::try_from("key-vault").unwrap();
+    assert_eq!(
+        IconPack::Azure.resolve(&key_vault),
+        Some(IconName::Azure(AzureIcon::KeyVault))
+    );
+    assert_eq!(IconPack::Gcp.resolve(&key_vault), None);
 }
 
 #[test]

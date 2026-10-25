@@ -330,3 +330,104 @@ fn every_plain_example_checks_clean_in_center_dusk_and_wire() {
     }
     assert_eq!(examined, 9);
 }
+
+/// An azure page of one product inside a vnet, with the given icon and subtitle.
+fn azure_page(icon: &str, subtitle: &str, container_kind: &str) -> Value {
+    json!({
+        "title": "Azure figure",
+        "kicker": "Test",
+        "lede": "One product and one hop.",
+        "badge": "Internal",
+        "grammar": "azure",
+        "body": [
+            { "tag": "Box", "kind": "azure", "label": "Microsoft Azure", "children": [
+                { "tag": "Box", "kind": "region", "label": "Region", "children": [
+                    { "tag": "Box", "kind": container_kind, "label": "Hub", "children": [
+                        { "tag": "Item", "kind": "product", "icon": icon, "title": "Firewall", "subtitle": subtitle }
+                    ] }
+                ] }
+            ] },
+            { "tag": "Pipe", "dir": "h", "line": "solid", "label": "call" }
+        ],
+        "legend": [{ "line": "solid", "text": "request path" }]
+    })
+}
+
+#[test]
+fn an_azure_page_vets_with_its_kinds_icons_and_remembered_constants() {
+    let directory = scratch_directory("azure_page");
+    let document = directory.join("azure.json");
+    write_json(
+        &document,
+        &azure_page("azure-firewall", "Azure Firewall", "vnet"),
+    );
+
+    let outcome = run_stencil(&["vet", document.to_str().unwrap()]);
+
+    assert_eq!(outcome.code, ExitCode::Clean, "{}", outcome.stdout);
+    let lines: Vec<&str> = outcome.stdout.lines().collect();
+    assert_eq!(
+        lines[0],
+        "check remembered-constants: examined 11 text fields, 0 defects"
+    );
+    assert!(
+        outcome
+            .stdout
+            .contains("check icon-matches-product: examined 1 item, 0 defects"),
+        "{}",
+        outcome.stdout
+    );
+}
+
+#[test]
+fn an_azure_remembered_constant_is_a_defect_with_its_reason() {
+    let directory = scratch_directory("azure_remembered");
+    let document = directory.join("azure.json");
+    write_json(
+        &document,
+        &azure_page("vpn-gateway", "VPN Gateway · ASN 65515", "vnet"),
+    );
+
+    let outcome = run_stencil(&["vet", document.to_str().unwrap()]);
+
+    assert_eq!(outcome.code, ExitCode::Defects, "{}", outcome.stdout);
+    assert!(
+        outcome.stdout.contains(
+            "defect remembered-constants /body/0/children/0/children/0/children/0/subtitle: contains 65515: the default ASN of a VPN gateway"
+        ),
+        "{}",
+        outcome.stdout
+    );
+}
+
+#[test]
+fn a_gcp_kind_or_icon_under_azure_is_a_violation() {
+    let directory = scratch_directory("azure_kind_unknown");
+    let document = directory.join("azure.json");
+    write_json(
+        &document,
+        &azure_page("azure-firewall", "Azure Firewall", "vpc"),
+    );
+    let outcome = run_stencil(&["vet", document.to_str().unwrap()]);
+    assert_eq!(outcome.code, ExitCode::Defects);
+    assert_eq!(
+        outcome.stdout.lines().next(),
+        Some(
+            "violation kind-unknown /body/0/children/0/children/0/kind: kind \"vpc\" is not a container kind of grammar azure"
+        ),
+        "{}",
+        outcome.stdout
+    );
+
+    write_json(&document, &azure_page("gke", "Azure Firewall", "vnet"));
+    let outcome = run_stencil(&["vet", document.to_str().unwrap()]);
+    assert_eq!(outcome.code, ExitCode::Defects);
+    assert_eq!(
+        outcome.stdout.lines().next(),
+        Some(
+            "violation icon-outside-pack /body/0/children/0/children/0/children/0/icon: icon gke is not in icon pack azure, which item kind product draws from"
+        ),
+        "{}",
+        outcome.stdout
+    );
+}

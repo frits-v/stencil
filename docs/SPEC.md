@@ -40,7 +40,7 @@ The vocabulary is split into a core and grammars in section 13. The tables below
 | Page | foot | text | no | absent |
 | Page | width | integer 640 to 2560 | no | 1280 |
 | Page | canvas | `customer` or `internal` | yes | |
-| Page | grammar | `aws`, `gcp`, `plain` or a path ending in `.json` (section 13.2) | no | `gcp` |
+| Page | grammar | `aws`, `azure`, `gcp`, `plain` or a path ending in `.json` (section 13.2) | no | `gcp` |
 | Page | chrome | `full` or `none` (section 13.7) | no | `full` |
 | Page | body | list of Node, 1 to 256 | yes | |
 | Page | legend | list of LegendEntry, 0 to 16 | yes | |
@@ -1739,6 +1739,54 @@ The 46 AWS Architecture Icons in `assets/icons/aws/`, the 64 px SVGs of the icon
 | `vpc.svg` | `Architecture-Service-Icons_07312026/Arch_Networking-Content-Delivery/64/Arch_Amazon-Virtual-Private-Cloud_64.svg` | `4a2c292527ce28a95d9038ab7e6be818751ffef0a91aabb5de2e61045150a98d` |
 | `waf.svg` | `Architecture-Service-Icons_07312026/Arch_Security-Identity/64/Arch_AWS-WAF_64.svg` | `3bfa7a5af38e550346b1828bead1cd3a35436fa19e1bf82f6cf6a366250cf65a` |
 
+#### Pack azure
+
+The 41 Azure icons in `assets/icons/azure/`: 40 from the Azure Public Service Icons archive (V24) linked from learn.microsoft.com/en-us/azure/architecture/icons, and `entra-id.svg` from the Microsoft Entra architecture icons archive linked from learn.microsoft.com/en-us/entra/architecture/architecture-icons, since the Azure archive has no Entra ID icon. The archive's folders are categories but every file is a service icon, so every row of the `product` table is class product. `assets/icons/azure/PROVENANCE.md` records the stated terms and the conclusion that the icons may be used unaltered, labeled with the service name, for the Microsoft service each depicts in architecture diagrams, training materials and documentation.
+
+| Local file | Archive path | SHA-256 |
+|---|---|---|
+| `aks.svg` | `Icons/containers/10023-icon-service-Kubernetes-Services.svg` | `81954a481503057498d543a51863b2eb4673284e109662cdc421051d11dba25c` |
+| `api-management.svg` | `Icons/integration/10042-icon-service-API-Management-Services.svg` | `cf794288575f2f7b080c50aa8319d42b02a2f2ae5351e4712c574353fc801f9a` |
+| `app-service.svg` | `Icons/app services/10035-icon-service-App-Services.svg` | `529d83fc80637a96b6d27f6cfac7536e1c5f9b1b67f58aef4e2e3d6f47fd4925` |
+| `application-gateway.svg` | `Icons/networking/10076-icon-service-Application-Gateways.svg` | `531e668e47cf61872b2811ec67dcc103cee2ecc1d272f07132d6196d68ba6c19` |
+| `azure-files.svg` | `Icons/storage/10400-icon-service-Azure-Fileshares.svg` | `663097915add9d66e5b4973cb259b4c6fe5e3de86734e1467852d2483bd91d0b` |
+| `azure-firewall.svg` | `Icons/networking/10084-icon-service-Firewalls.svg` | `154c416cc15b95b7c6c1ab61a5ecb33f14845197b7d163bd9dc6f1968c14be1e` |
+| `azure-openai.svg` | `Icons/ai + machine learning/03438-icon-service-Azure-OpenAI.svg` | `4859f2c78b6b81acbbaf94e7348cb7dcbe97955a038be903de01cf46a7206aad` |
+| `bastion.svg` | `Icons/networking/02422-icon-service-Bastions.svg` | `7d3c33e355b9e180bb96491492ff856e379c27b3e7920526e2552c9b1593d3cb` |
+| `cache-redis.svg` | `Icons/databases/10137-icon-service-Cache-Redis.svg` | `39a62e5d2c573c1a3184eb2a818a3be09b25716e976acbada62c777c41a67ab9` |
+| `container-apps-environments.svg` | `Icons/other/02989-icon-service-Container-Apps-Environments.svg` | `3cf4ba9242e31496f778a27e92c9c2b2a09664f105c58325d5e2dcb142d3c3b9` |
+| `cosmos-db.svg` | `Icons/databases/10121-icon-service-Azure-Cosmos-DB.svg` | `b6f1f2afac15762d1de44366d34984c5a3e6e58f94d9e81407ac01565212e8e3` |
+| `data-factory.svg` | `Icons/analytics/10126-icon-service-Data-Factories.svg` | `a16a9c345c72e9342874425ea5883900df601ec815e5babbcf67085d5e2fa582` |
+| `databricks.svg` | `Icons/analytics/10787-icon-service-Azure-Databricks.svg` | `ea499005b9f8ed811d14e5e048fe6138ca2aa89250373c71e32f39793acb8dc4` |
+| `dns.svg` | `Icons/networking/10064-icon-service-DNS-Zones.svg` | `e6aaa1380e974af7d0aba1bb8380ecfab3f95182a595a28692aa3f963bcf9fac` |
+| `entra-id.svg` | `Microsoft Entra architecture icons - Oct 2023/Microsoft Entra color icons SVG/Microsoft Entra ID color icon.svg` (Entra archive) | `efd9f54562bfb78bf3c77aecdd5fc31b61fce8a1cec78c4370b41fc470e54eda` |
+| `event-grid-domains.svg` | `Icons/integration/10215-icon-service-Event-Grid-Domains.svg` | `f13dccc7d121f162b632ee13d6914fef68182c0496f26da3e2fa85a51ee19404` |
+| `event-grid-topics.svg` | `Icons/integration/10206-icon-service-Event-Grid-Topics.svg` | `106cc8427fde7c558fb90dccb381372954d436ac8122cb7afc442b05f7ef2b82` |
+| `event-hubs.svg` | `Icons/analytics/00039-icon-service-Event-Hubs.svg` | `55187fecea1de7b135e53cc100bc765ad06ab419365263456bf548906c3107f8` |
+| `expressroute.svg` | `Icons/networking/10079-icon-service-ExpressRoute-Circuits.svg` | `0087cb8e3027b750c18249915b620e67348d12cb6d147f10c6a701976c948696` |
+| `front-door.svg` | `Icons/networking/10073-icon-service-Front-Door-and-CDN-Profiles.svg` | `b2e9c9a8b091a0694532257354dea94bb8c65b33876826e44dbc9b2aae01cf17` |
+| `functions.svg` | `Icons/compute/10029-icon-service-Function-Apps.svg` | `1a6c9c108d5f63f7b78bc6fbc464059acd2eaa8c1d111e9bcd28a8b2cdf470b9` |
+| `key-vault.svg` | `Icons/security/10245-icon-service-Key-Vaults.svg` | `712b426f54f0fc50d0816dc79df709daa7ac5f93ccaf4e9b3527f627f6e9ad97` |
+| `load-balancer.svg` | `Icons/networking/10062-icon-service-Load-Balancers.svg` | `169edfa4edbc0cab6fdc1eef9243925588504a16f7729734e0e2161a9ca1d16c` |
+| `log-analytics.svg` | `Icons/monitor/00009-icon-service-Log-Analytics-Workspaces.svg` | `7a244a8d7260e84be5c904185db7b04994fe6ed345e2b224163bc5f7e3d97ce0` |
+| `logic-apps.svg` | `Icons/integration/02631-icon-service-Logic-Apps.svg` | `3390e6337469e29d755a4077b64efcf0b0269ee871113417fd4458269351b438` |
+| `machine-learning.svg` | `Icons/ai + machine learning/038470510-icon-service-Azure-Machine-Learning.svg` | `66af628f9dd7e49def76a4f6d90f262a5b47866098bc7b97042b541017992ad2` |
+| `monitor.svg` | `Icons/monitor/00001-icon-service-Monitor.svg` | `1396f59a7d8fd7505a423842b987c9b343a092263d1ab5c7b0d94d58d8b17448` |
+| `policy.svg` | `Icons/management + governance/10316-icon-service-Policy.svg` | `c3dc70003e793bf73b497f8d8501cdc81f930ce1777fdbfe9b7450afe477771a` |
+| `postgresql.svg` | `Icons/databases/10131-icon-service-Azure-Database-PostgreSQL-Server.svg` | `8232e8ecfbd607ce3b54646199805a823646d71e552f9aa71e7a3952cde35620` |
+| `private-endpoint.svg` | `Icons/other/02579-icon-service-Private-Endpoints.svg` | `96de0bb7f0aeb1220d0fd6d337578d5e93dca017d6ea7d42d887aa329b2fd90d` |
+| `private-link.svg` | `Icons/networking/00427-icon-service-Private-Link.svg` | `9990bbce78fc1ef3838fbe86e2ff3b297e721b1f6a6d037b4d3f3ce9abf4a5a2` |
+| `service-bus.svg` | `Icons/integration/10836-icon-service-Azure-Service-Bus.svg` | `eaf42cb87aedf608f60d40b601eb86491daaa71b8eab40a935e8e7fa2e62a2cf` |
+| `sql-database.svg` | `Icons/databases/10130-icon-service-SQL-Database.svg` | `a26124a2b188ccf910520c935c726f7364e0f5935d7a4319ebcab9c80a40e475` |
+| `sql-managed-instance.svg` | `Icons/databases/10136-icon-service-SQL-Managed-Instance.svg` | `ecf79797b7a8f7825eb4c987b1269d035fe3408f999149f29106fc24a62b0452` |
+| `storage-accounts.svg` | `Icons/storage/10086-icon-service-Storage-Accounts.svg` | `7190d3bb14ce30ce74bd0af873915830fe821e8c5f6ef6f3149e6f7cfb2aa4f7` |
+| `synapse.svg` | `Icons/analytics/00606-icon-service-Azure-Synapse-Analytics.svg` | `7eacb3ab0ffd5b76cc06e34ff41333aed79db0d41852397468486ddb63c2c314` |
+| `traffic-manager.svg` | `Icons/networking/10065-icon-service-Traffic-Manager-Profiles.svg` | `b4305970b3d623a9a7bd59d77df41cd9f6821128e2f95a2fb8d13f64c8ebe071` |
+| `virtual-machines.svg` | `Icons/compute/10021-icon-service-Virtual-Machine.svg` | `092d18ffadec9ec0e5af129186dc7bc2a80544011e55f965604ed4b13873e0fc` |
+| `virtual-network.svg` | `Icons/networking/10061-icon-service-Virtual-Networks.svg` | `64a5e75ecef2f9f69067faa2eb131266cb8f2858706f8ab74bfea5ad0d98b14d` |
+| `vm-scale-sets.svg` | `Icons/compute/10034-icon-service-VM-Scale-Sets.svg` | `a53772c07fe89cdbb876ce77e22dba0863c1459173b77a1eec73fbdd2048637f` |
+| `vpn-gateway.svg` | `Icons/networking/10063-icon-service-Virtual-Network-Gateways.svg` | `5ed14416dafff4e946fae5b68b9c86e8c9a9bbaa37ab94324a5d94c5cfbcb106` |
+
 #### Pack gcp
 
 The 23 Google Cloud icons in `assets/icons/gcp/`, from the two ZIP archives linked from cloud.google.com/icons. `assets/icons/gcp/PROVENANCE.md` records the stated terms and the conclusion that the icons may be used unaltered on labeled product cards in architecture and technical figures; a marketing or co-branded surface needs a Partner Marketing Hub request first.
@@ -3062,7 +3110,7 @@ Field summary additions and changes (section 1.1):
 
 | Tag | Field | Type | Required | Default |
 |---|---|---|---|---|
-| Page | grammar | `aws`, `gcp`, `plain` or a path ending in `.json` | no | `plain` |
+| Page | grammar | `aws`, `azure`, `gcp`, `plain` or a path ending in `.json` | no | `plain` |
 | Page | theme | a built-in theme name or a path ending in `.json` | no | `center` |
 | Page | theme_overrides | object, a partial theme (section 13.4 rule 8) | no | absent |
 | Page | chrome | `full` or `none` | no | `full` |
@@ -3104,7 +3152,7 @@ pub const LANES_MAX: usize = 32;
 pub const LINK_ORDER_MAX: u16 = 256;
 /// A grammar kind name: a Box or Item `kind`.
 pub const KIND_PATTERN: &str = r"^[a-z][a-z0-9-]{0,31}$";
-pub const BUILTIN_GRAMMARS: [&str; 3] = ["aws", "gcp", "plain"];
+pub const BUILTIN_GRAMMARS: [&str; 4] = ["aws", "azure", "gcp", "plain"];
 /// Designed built-ins first (section 13.5), then the imported tier (section 13.9).
 pub const BUILTIN_THEMES: [&str; 13] = [
     "center", "paper", "dusk", "clear", "clear-dark", "wire",
@@ -3435,7 +3483,7 @@ Layout. A Box reads everything layout needs from its container kind: the role (a
 
 A grammar is a data module. Its source is a CUE file under `cue/grammars/`, which declares a `grammar` value against `#Grammar` and adds the domain's rules in CUE. The data part is exported to JSON (`cue export ./cue/grammars:<name> -e grammar --out json`) and committed as `crates/stencil-model/grammars/<name>.json`, which the Rust side embeds and reads; Rust never evaluates CUE (section 9.2). `cue/check.sh` re-exports every built-in grammar and fails when the export differs from the committed JSON, as it does for g7.
 
-`Page.grammar` names a built-in grammar or a `.json` grammar file (an export of a CUE grammar), resolved like a theme reference (section 13.4 rule 1). Absent means `plain`, the vendor-neutral grammar of section 13.3; `aws` and `gcp` are named. A vendor figure that names no grammar never renders under the wrong grammar: plain shares only the `assembly`, `person` and `device` kinds with the vendor grammars, and every aws or gcp figure has its `aws` or `gcp` frame or `product` items, so vet rejects it with `kind-unknown`, and the message of a page that names no grammar ends `; the page names no grammar, so the default applies: set "grammar"`. A grammar given by path carries its data only; its CUE rules apply when the figure is authored in CUE against that grammar's package.
+`Page.grammar` names a built-in grammar or a `.json` grammar file (an export of a CUE grammar), resolved like a theme reference (section 13.4 rule 1). Absent means `plain`, the vendor-neutral grammar of section 13.3; `aws`, `azure` and `gcp` are named. A vendor figure that names no grammar never renders under the wrong grammar: plain shares only the `assembly`, `person` and `device` kinds with the vendor grammars, and every aws, azure or gcp figure has its frame or `product` items, so vet rejects it with `kind-unknown`, and the message of a page that names no grammar ends `; the page names no grammar, so the default applies: set "grammar"`. A grammar given by path carries its data only; its CUE rules apply when the figure is authored in CUE against that grammar's package.
 
 The renderer draws roles, never kinds. Each container kind declares one of four roles. The `frame` role names the outermost container, the gcp frame; it is unrelated to the `Frame` node tag of section 11.3, the wireframe placeholder, whose theme role is called `placeholder` for that reason. Every theme paints roles and tones (section 13.4), so a theme needs no knowledge of a grammar's kinds:
 
@@ -3751,6 +3799,35 @@ aws has three item kinds. `product`: icons `aws`, shape block, parents every con
 
 `cue/check.sh` runs a negative case for each rule on `figures/aws.cue`, which also carries the clean neighbours: a gateway endpoint inside the vpc whose subtitle names Amazon S3, a VPC-attached Lambda function and an RDS database in a subnet, and a Route 53 Resolver endpoint inside the region.
 
+azure. The vocabulary of an Azure architecture figure, built like gcp: a frame, the scopes and networks inside it, one `product` item kind drawing from the azure pack (section 8.2), and `person` and `device`. A VNet is regional, so region holds vnet and vnet holds subnet; management groups are not kinds.
+
+| Kind | Role | Tone | Tint | Border | Padding | Radius | Label | Parents |
+|---|---|---|---|---|---|---|---|---|
+| azure | frame | | no | solid 3 | 0 | 10 | bar | page |
+| subscription | tile | highlight | no | solid 1.5 | 12 | 8 | plain | page, azure, subscription |
+| resource-group | group | neutral | no | solid 1.5 | 12 | 8 | plain | azure, subscription, region |
+| region | group | neutral | yes, default 1 | solid 1.5 | 12 | 8 | plain | azure, subscription |
+| vnet | boundary | strong | no | dashed 2 | 10 | 8 | plain | region, subscription, resource-group |
+| subnet | group | cool | no | dashed 1.5 | 12 | 8 | plain | vnet |
+| onprem | group | warm | yes, no default | solid 1.5 | 12 | 8 | plain | page, optional |
+| optional | group | emphasis | no | dashed 2 | 12 | 8 | plain | page, azure, region, vnet, subnet, subscription, resource-group |
+| k8s | group | soft | no | none 0 | 12 | 8 | plain | azure, region, vnet, subnet, subscription, resource-group, optional |
+| services | group | neutral | no | solid 1.5 | 12 | 8 | plain | azure, region, subscription, resource-group |
+| assembly | group | neutral | yes, no default | dash-dot 1.1 | 14 | 0 | tab | page, azure, subscription, resource-group, region, vnet, subnet, onprem, optional, k8s, services |
+
+Each kind draws as its gcp counterpart does: azure as the gcp frame, subscription as project, vnet as vpc, and services, the PaaS services a VNet reaches over private endpoints or VNet integration, as apis. A k8s Box is an AKS cluster or namespace. services keeps out of a vnet by its parents (`kind-parent-not-allowed`).
+
+azure has three item kinds. `product`: icons `azure`, shape block, parents every container kind and `page`, and the 41-row products table of section 13.10, every row class product. `person` (shape figure) and `device` (shape laptop): icons `none`, an empty table, the same parents. Its `remembered` list holds five literals, each a doc example or a platform fact and never a design value: `10.0.0.0/16` and `10.0.0.0/24`, the address space and subnet of the virtual network quickstarts; `168.63.129.16`, the platform address for DNS, DHCP and health probes that the NSG docs repeat; `65515`, the default VPN gateway ASN, which a gateway may change; and `12076`, Microsoft's fixed ASN on ExpressRoute peering.
+
+`cue/grammars/azure.cue` carries the azure rules, every one a vet-time defect under `cue vet`, each with a negative case in `cue/check.sh` on `cue/figures/azure.cue`:
+
+1. Remembered constants: `_rememberedInText.<literal>` on the page, "contains <literal>: <reason>", when any regular field of the page holds a literal of the grammar's `remembered` list at word boundaries. The rule marshals the page's regular fields to JSON and matches each literal, quoted, between `\b` anchors, so it reads every text field the Rust check reads and needs no list of them. The core's four gcp literals stay rejected inside `#Text`.
+2. The hop-fact rule, as gcp's: every `product` item carries a `subtitle` or a fact whose source is `doc` or `ask` (`_itemsWithoutSubtitleOrFact`).
+3. PaaS services outside a VNet: a `product` item whose `subtitle` names Azure Storage, a storage account, Blob Storage, Azure Files, SQL Database, Cosmos DB, Key Vault, Service Bus, Event Hubs, Event Grid, App Service, Functions, Function Apps, Logic Apps or Azure OpenAI at word boundaries, or whose `icon` is one of their icons (`storage-accounts`, `azure-files`, `sql-database`, `cosmos-db`, `key-vault`, `service-bus`, `event-hubs`, `event-grid-topics`, `event-grid-domains`, `app-service`, `functions`, `logic-apps`, `azure-openai`), is a defect when a `vnet` Box is among its ancestors: `_paasInsideVnet.<title>`, "sits inside a vnet; draw it in a services box beside the vnet and the private endpoint or VNet integration inside". An item whose subtitle names an App Service Environment or a private endpoint, or whose icon is `private-endpoint`, is exempt: an App Service Environment is deployed into a subnet, and a private endpoint is a NIC in the subnet that names its target. Virtual machines, AKS node pools, Container Apps environments, Application Gateway, Azure Firewall, Bastion and SQL Managed Instance sit in a subnet and are outside the rule.
+4. Global and tenant-wide resources outside a region: a `product` item whose `subtitle` names Entra ID, Azure AD, Azure Active Directory, Front Door, Traffic Manager, a DNS zone or Azure Policy, or whose `icon` is `entra-id`, `front-door`, `traffic-manager`, `dns` or `policy`, is a defect inside a `region` Box: `_globalInsideRegion.<title>`, "sits inside a region; a global or tenant-wide resource sits outside every region". Azure Monitor is not listed, since a Log Analytics workspace is regional.
+
+`cue/check.sh` also vets a document of the products a subnet or region does hold (an App Service Environment, Functions on one, SQL Managed Instance, a Container Apps environment and a private endpoint in a subnet, a Log Analytics workspace and Azure Monitor in a region, Front Door in the frame), which must pass.
+
 plain, the default. The grammar of a system figure that names no vendor: a page without `grammar` is a plain page, and a figure moves to gcp when it draws Google Cloud products with their icons. No item takes an icon.
 
 | Kind | Role | Tone | Tint | Border | Padding | Radius | Label | Parents |
@@ -3761,7 +3838,7 @@ plain, the default. The grammar of a system figure that names no vendor: a page 
 | tile | tile | highlight | no | solid 1.5 | 12 | 8 | plain | page, system, boundary, tile |
 | assembly | group | neutral | yes, no default | dash-dot 1.1 | 14 | 0 | tab | page, system, boundary, group, tile |
 
-The `assembly` kind of every grammar, the parts one actor runs, draws on a design sheet only (section 14.4 rule 26): its `dash-dot` border and `tab` label are the sheet look of section 14.2 rule 7, and a Box of any kind with either needs a sheet.
+The `assembly` kind of every built-in grammar, the parts one actor runs, draws on a design sheet only (section 14.4 rule 26): its `dash-dot` border and `tab` label are the sheet look of section 14.2 rule 7, and a Box of any kind with either needs a sheet.
 
 Eight item kinds, each with icons `none`, an empty products table and every container kind and `page` as parents. An icon-free kind has no icon row to take a shape from, so each kind names the solid it stands as under iso (section 12.3); an item overrides it with `shape`.
 
@@ -4630,6 +4707,52 @@ icon-matches-product:
    | vpc | product | Amazon Virtual Private Cloud, Amazon VPC, VPC, gateway endpoint |
    | waf | product | AWS WAF, WAF |
 
+   The azure `product` kind carries one row per azure icon in `AzureIcon::ALL` order. The archive's folders are categories but every file is a service icon, so every row is class product, and a subtitle that names no row is examined and clean whatever icon the item carries. A name inside a longer name of another row yields to it by rule 2: `ExpressRoute gateway` names the gateway, whose icon is `vpn-gateway`, and `Azure Monitor Logs` names the Log Analytics workspace. Generic words that other products' subtitles use (load balancer, monitor, policy, VNet) are not names, so `AKS · internal load balancer` names AKS.
+
+   | Icon | Class | Names |
+   |---|---|---|
+   | aks | product | Azure Kubernetes Service, AKS |
+   | api-management | product | Azure API Management, API Management, APIM |
+   | app-service | product | Azure App Service, App Service, Web Apps |
+   | application-gateway | product | Azure Application Gateway, Application Gateway, App Gateway |
+   | azure-files | product | Azure Files, Azure file share |
+   | azure-firewall | product | Azure Firewall |
+   | azure-openai | product | Azure OpenAI Service, Azure OpenAI, AOAI |
+   | bastion | product | Azure Bastion, Bastion |
+   | cache-redis | product | Azure Cache for Redis, Redis Cache |
+   | container-apps-environments | product | Azure Container Apps environment, Azure Container Apps, Container Apps, ACA |
+   | cosmos-db | product | Azure Cosmos DB, Cosmos DB |
+   | data-factory | product | Azure Data Factory, Data Factory, ADF |
+   | databricks | product | Azure Databricks, Databricks |
+   | dns | product | Azure DNS, DNS zone, private DNS zone |
+   | entra-id | product | Microsoft Entra ID, Entra ID, Azure AD, Azure Active Directory |
+   | event-grid-domains | product | Azure Event Grid domain, Event Grid domain |
+   | event-grid-topics | product | Azure Event Grid, Event Grid, Event Grid topic |
+   | event-hubs | product | Azure Event Hubs, Event Hubs |
+   | expressroute | product | Azure ExpressRoute, ExpressRoute, ExpressRoute circuit |
+   | front-door | product | Azure Front Door, Front Door, AFD, Front Door and CDN profiles |
+   | functions | product | Azure Functions, Functions, Function App, Function Apps |
+   | key-vault | product | Azure Key Vault, Key Vault, AKV |
+   | load-balancer | product | Azure Load Balancer |
+   | log-analytics | product | Log Analytics workspace, Log Analytics, Azure Monitor Logs |
+   | logic-apps | product | Azure Logic Apps, Logic Apps |
+   | machine-learning | product | Azure Machine Learning, Azure ML, AML |
+   | monitor | product | Azure Monitor |
+   | policy | product | Azure Policy |
+   | postgresql | product | Azure Database for PostgreSQL flexible server, Azure Database for PostgreSQL, PostgreSQL flexible server |
+   | private-endpoint | product | Azure Private Endpoint, private endpoint |
+   | private-link | product | Azure Private Link, Private Link, Private Link service |
+   | service-bus | product | Azure Service Bus, Service Bus |
+   | sql-database | product | Azure SQL Database, SQL Database |
+   | sql-managed-instance | product | Azure SQL Managed Instance, SQL Managed Instance, SQL MI |
+   | storage-accounts | product | Azure Storage account, Storage account, Azure Storage, Azure Blob Storage, Blob Storage |
+   | synapse | product | Azure Synapse Analytics, Synapse |
+   | traffic-manager | product | Azure Traffic Manager, Traffic Manager |
+   | virtual-machines | product | Azure Virtual Machines, Virtual Machines, Virtual Machine |
+   | virtual-network | product | Azure Virtual Network, Virtual Network |
+   | vm-scale-sets | product | Azure Virtual Machine Scale Sets, Virtual Machine Scale Sets, VM Scale Sets, VMSS |
+   | vpn-gateway | product | Azure VPN Gateway, VPN Gateway, virtual network gateway, ExpressRoute gateway |
+
 2. `pub fn named_product(table: &[IconProducts], subtitle: &str) -> Option<&str>` finds every name of the table in the subtitle, ASCII case-insensitive, at the word boundaries of the remembered-constants rule (section 6), and returns the longest; on a tie, the one that starts first. `Vertex AI Agent Engine` therefore names Vertex AI Agent Engine, not Vertex AI, and `Cloud Run jobs` names Cloud Run. The scan is bounded by the table (at most 32 item kinds of at most 64 rows, enforced by `validate_grammar`) times the 400-scalar text limit, and uses no regex dependency.
 3. The product icons of a name are the `product`-class rows that list it. An item is examined when its kind has a non-empty products table and it has an `icon` or a `subtitle`. It is a defect when the subtitle names a product with product icons and the item's icon is set and not one of them, or when the subtitle names a product with no product icon and the item's icon is a `product`-class icon. Category icons are allowed for any product with no product icon. An item with no subtitle, or whose subtitle names nothing in the table, is examined and clean, as is one that names a product with a product icon and carries no icon.
 4. When no item of the page has a kind with a products table (every plain figure), the report is not applicable with the reason `grammar has no icon table`.
@@ -4708,10 +4831,10 @@ New error mappings for section 7's exhaustive table: `GrammarError` and `ThemeEr
 CUE. `cue/stencil.cue` splits:
 
 - `cue/core.cue` (package `stencil`): the core `#Page`, `#Node` and every core tag, with `#Box` and `#Item` taking `kind: #KindName`; `#Line: "gray" | "solid" | "dash" | "deny"` as `line` on `#Pipe`, `#Tee`, `#Link` and `#LegendEntry`; `#TintSlot: int & >=1 & <=8` as `tint?` on `#Box` and the four line carriers; `#FactEntry` and `source?` on `#Fact`; `from?` and `to?` on `#Pipe`; `order?` on `#Link`; `#Lanes`; `grammar?`, `theme?` (the reference patterns), `theme_overrides?: {...}` and `chrome?: "full" | "none"` on `#Page`. The core checks stay here: ids, link endpoints, pipe targets (`_pipeTargetsUnknown`), ordered links, legend keys (`"\(line)-\(tint)"` for solid and dash, slot 1 when absent, the line alone for gray and deny; `_legendKeysAreUnique`; the `chrome: "none"` exception) and `_tintWithoutEffect` for a tint on a gray or deny line. The old `#Theme` enum is gone; `#Theme` names the theme definition.
-- `cue/theme.cue` (package `stencil`): `#Theme` (section 13.4). `cue/grammar.cue` (package `stencil`): `#Grammar` (section 13.2), `#IconPack`, and `#PackStems`, which selects a pack's stem list by comprehension so that an Item's `icon` (`_iconOutsidePack`) and each products row's `icon` (`_iconsOutsidePack`) are checked against the kind's pack. `cue/icons_<pack>.cue` (package `stencil`) holds one pack's stems, `#IconGcpStems` and `#IconGcp` for gcp, and `#Icon` in `core.cue` is the union of the packs.
-- `cue/grammars/gcp.cue` (package `gcp`) and `cue/grammars/plain.cue` (package `plain`): each imports the core package, declares `grammar: stencil.#Grammar & {...}`, narrows `#Box.kind` and `#Item.kind` to its kind names, and adds its rules: for gcp the hop-fact rule, tint pairing over slot keys, `_productInsideVpc` and `_apisOutsideGcp` (section 13.3); for plain none. `_tintWithoutEffect` also names a tint on a Box whose kind is not tintable. A `cue.mod/module.cue` declares the module so the grammar packages can import the core; where CUE's package rules force a different file layout, `cue/README.md` records it.
+- `cue/theme.cue` (package `stencil`): `#Theme` (section 13.4). `cue/grammar.cue` (package `stencil`): `#Grammar` (section 13.2), `#IconPack`, and `#PackStems`, which selects a pack's stem list by comprehension so that an Item's `icon` (`_iconOutsidePack`) and each products row's `icon` (`_iconsOutsidePack`) are checked against the kind's pack. `cue/icons_<pack>.cue` (package `stencil`) holds one pack's stems, `#IconAzureStems` and `#IconAzure` for azure and `#IconGcpStems` and `#IconGcp` for gcp, and `#Icon` in `core.cue` is the union of the packs.
+- `cue/grammars/azure.cue` (package `azure`), `cue/grammars/gcp.cue` (package `gcp`) and `cue/grammars/plain.cue` (package `plain`): each imports the core package, declares `grammar: stencil.#Grammar & {...}`, narrows `#Box.kind` and `#Item.kind` to its kind names, and adds its rules: for azure `_rememberedInText`, the hop-fact rule, `_paasInsideVnet` and `_globalInsideRegion`; for gcp the hop-fact rule, tint pairing over slot keys, `_productInsideVpc` and `_apisOutsideGcp` (section 13.3); for plain none. `_tintWithoutEffect` also names a tint on a Box whose kind is not tintable. A `cue.mod/module.cue` declares the module so the grammar packages can import the core; where CUE's package rules force a different file layout, `cue/README.md` records it.
 - `cue/g7.cue` moves to `cue/figures/g7.cue` under package `gcp` and unifies with the gcp `#Page`.
-- `cue/check.sh` vets the core and both grammar packages; exports both grammars and compares them with `crates/stencil-model/grammars/<name>.json`; exports g7 and compares it with `examples/g7.json`; vets every example against the gcp `#Page` and every built-in theme file against `#Theme`; and runs the negative cases, migrated to the new vocabulary (the pink cases become solid tint 2 cases) plus: tint 9 on a pipe, a tint on a deny pipe, a BigQuery product inside the vpc, an apis Box outside gcp, a Box of kind `zone`, a subnet at the top level, a pipe target naming no id, two ordered links with one order, a legend entry for solid tint 3 that no pipe uses, a theme file with seven tints and a theme file with an unknown role.
+- `cue/check.sh` vets the core and every grammar package; exports every grammar and compares them with `crates/stencil-model/grammars/<name>.json`; exports g7 and compares it with `examples/g7.json`; vets every example against the gcp `#Page` and every built-in theme file against `#Theme`; and runs the negative cases, migrated to the new vocabulary (the pink cases become solid tint 2 cases) plus: tint 9 on a pipe, a tint on a deny pipe, a BigQuery product inside the vpc, an apis Box outside gcp, a Box of kind `zone`, a subnet at the top level, a pipe target naming no id, two ordered links with one order, a legend entry for solid tint 3 that no pipe uses, a theme file with seven tints and a theme file with an unknown role.
 
 Prime:
 
@@ -4761,7 +4884,7 @@ Identity proofs. Before step (a) changes any code, the implementer runs `origin/
 stencil-model:
 
 - The migrated examples parse, round-trip and validate against the regenerated schema; a copy with `"tag": "Zone"`, `"tag": "Pcard"`, `"kind": "blue"` on a pipe or `"fn"` on an item is a `ModelError::Json`.
-- Grammars: `gcp.json` and `plain.json` parse and pass `validate_grammar`; gcp's container kinds equal section 13.3's table field for field, and its border widths, paddings, radii and label styles equal section 2.4's; a copy with each grammar fault (a duplicate name, an unknown parent, no kind under `page`, a frame with a tone, a group without one, a default tint on an untintable kind, a solid border of width 0, an item with icons none and a products row, a repeated icon) is rejected with the named rule. `grammar_schema()` equals the committed `schema/grammar.schema.json`.
+- Grammars: `azure.json`, `gcp.json` and `plain.json` parse and pass `validate_grammar`; azure's and gcp's container kinds equal section 13.3's tables field for field, azure's products rows carry every azure icon once in `AzureIcon::ALL` order with its shape, and its border widths, paddings, radii and label styles equal section 2.4's; a copy with each grammar fault (a duplicate name, an unknown parent, no kind under `page`, a frame with a tone, a group without one, a default tint on an untintable kind, a solid border of width 0, an item with icons none and a products row, a repeated icon) is rejected with the named rule. `grammar_schema()` equals the committed `schema/grammar.schema.json`.
 - Vet with a grammar: `kind-unknown` for a Box of kind `zone` and an Item of kind `service` under gcp; `kind-parent-not-allowed` for a subnet at the top level and for a vpc inside a region, and none for a subnet inside a project inside a Row (Row is transparent); `icon-outside-pack` for a plain `service` with an icon and for a gcp `product` whose stem the gcp pack has no file of; `grammar-unknown` for `"gcpx"`. A page without `grammar` vets under plain, and a gcp page without it fails `kind-unknown` with the default-applied message. Every example vets clean under the grammar it names.
 - `tint`: 1 and 8 vet clean on every carrier, 0 and 9 give `tint-out-of-range`; `box_tint` for region (absent gives 1), onprem (absent gives none) and subnet (ignored); `line_tint`, `box_key`, `line_key` and `legend_label` against section 13.1's tables for every line and slot.
 - Legend consistency: solid tint 2 used with only a solid tint 1 entry gives one defect at the pipe and one at the entry; a tint on a deny pipe and on its entry are the same key; an entry for solid with no tint matches a pipe with tint 1; a dash tint 2 needs its own entry. Under `chrome: none`, one key in use with an empty legend passes with examined equal to the uses; two keys with an empty legend fail; one key with a legend entry follows the normal rule.

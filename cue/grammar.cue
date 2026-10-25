@@ -50,6 +50,7 @@ import (
 
 // A bundled icon pack, in alphabetical order, or none.
 #IconPack: "aws" |
+	"azure" |
 	"gcp" |
 	"none"
 
@@ -60,6 +61,7 @@ import (
 	#pack: #IconPack
 	stems: list.Concat([
 		if #pack == "aws" {#IconAwsStems},
+		if #pack == "azure" {#IconAzureStems},
 		if #pack == "gcp" {#IconGcpStems},
 	])
 }

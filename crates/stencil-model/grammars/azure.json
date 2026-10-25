@@ -1,0 +1,677 @@
+{
+    "name": "azure",
+    "containers": [
+        {
+            "name": "azure",
+            "role": "frame",
+            "tintable": false,
+            "border": {
+                "pattern": "solid",
+                "width": 3
+            },
+            "padding": 0,
+            "radius": 10,
+            "label": "bar",
+            "parents": [
+                "page"
+            ]
+        },
+        {
+            "name": "subscription",
+            "role": "tile",
+            "tone": "highlight",
+            "tintable": false,
+            "border": {
+                "pattern": "solid",
+                "width": 1.5
+            },
+            "padding": 12,
+            "radius": 8,
+            "label": "plain",
+            "parents": [
+                "page",
+                "azure",
+                "subscription"
+            ]
+        },
+        {
+            "name": "resource-group",
+            "role": "group",
+            "tone": "neutral",
+            "tintable": false,
+            "border": {
+                "pattern": "solid",
+                "width": 1.5
+            },
+            "padding": 12,
+            "radius": 8,
+            "label": "plain",
+            "parents": [
+                "azure",
+                "subscription",
+                "region"
+            ]
+        },
+        {
+            "name": "region",
+            "role": "group",
+            "tone": "neutral",
+            "tintable": true,
+            "default_tint": 1,
+            "border": {
+                "pattern": "solid",
+                "width": 1.5
+            },
+            "padding": 12,
+            "radius": 8,
+            "label": "plain",
+            "parents": [
+                "azure",
+                "subscription"
+            ]
+        },
+        {
+            "name": "vnet",
+            "role": "boundary",
+            "tone": "strong",
+            "tintable": false,
+            "border": {
+                "pattern": "dashed",
+                "width": 2
+            },
+            "padding": 10,
+            "radius": 8,
+            "label": "plain",
+            "parents": [
+                "region",
+                "subscription",
+                "resource-group"
+            ]
+        },
+        {
+            "name": "subnet",
+            "role": "group",
+            "tone": "cool",
+            "tintable": false,
+            "border": {
+                "pattern": "dashed",
+                "width": 1.5
+            },
+            "padding": 12,
+            "radius": 8,
+            "label": "plain",
+            "parents": [
+                "vnet"
+            ]
+        },
+        {
+            "name": "onprem",
+            "role": "group",
+            "tone": "warm",
+            "tintable": true,
+            "border": {
+                "pattern": "solid",
+                "width": 1.5
+            },
+            "padding": 12,
+            "radius": 8,
+            "label": "plain",
+            "parents": [
+                "page",
+                "optional"
+            ]
+        },
+        {
+            "name": "optional",
+            "role": "group",
+            "tone": "emphasis",
+            "tintable": false,
+            "border": {
+                "pattern": "dashed",
+                "width": 2
+            },
+            "padding": 12,
+            "radius": 8,
+            "label": "plain",
+            "parents": [
+                "page",
+                "azure",
+                "region",
+                "vnet",
+                "subnet",
+                "subscription",
+                "resource-group"
+            ]
+        },
+        {
+            "name": "k8s",
+            "role": "group",
+            "tone": "soft",
+            "tintable": false,
+            "border": {
+                "pattern": "none",
+                "width": 0
+            },
+            "padding": 12,
+            "radius": 8,
+            "label": "plain",
+            "parents": [
+                "azure",
+                "region",
+                "vnet",
+                "subnet",
+                "subscription",
+                "resource-group",
+                "optional"
+            ]
+        },
+        {
+            "name": "services",
+            "role": "group",
+            "tone": "neutral",
+            "tintable": false,
+            "border": {
+                "pattern": "solid",
+                "width": 1.5
+            },
+            "padding": 12,
+            "radius": 8,
+            "label": "plain",
+            "parents": [
+                "azure",
+                "region",
+                "subscription",
+                "resource-group"
+            ]
+        },
+        {
+            "name": "assembly",
+            "role": "group",
+            "tone": "neutral",
+            "tintable": true,
+            "border": {
+                "pattern": "dash-dot",
+                "width": 1.1
+            },
+            "padding": 14,
+            "radius": 0,
+            "label": "tab",
+            "parents": [
+                "page",
+                "azure",
+                "subscription",
+                "resource-group",
+                "region",
+                "vnet",
+                "subnet",
+                "onprem",
+                "optional",
+                "k8s",
+                "services"
+            ]
+        }
+    ],
+    "items": [
+        {
+            "name": "product",
+            "icons": "azure",
+            "products": [
+                {
+                    "icon": "aks",
+                    "class": "product",
+                    "names": [
+                        "Azure Kubernetes Service",
+                        "AKS"
+                    ],
+                    "shape": "tower"
+                },
+                {
+                    "icon": "api-management",
+                    "class": "product",
+                    "names": [
+                        "Azure API Management",
+                        "API Management",
+                        "APIM"
+                    ]
+                },
+                {
+                    "icon": "app-service",
+                    "class": "product",
+                    "names": [
+                        "Azure App Service",
+                        "App Service",
+                        "Web Apps"
+                    ]
+                },
+                {
+                    "icon": "application-gateway",
+                    "class": "product",
+                    "names": [
+                        "Azure Application Gateway",
+                        "Application Gateway",
+                        "App Gateway"
+                    ],
+                    "shape": "tile"
+                },
+                {
+                    "icon": "azure-files",
+                    "class": "product",
+                    "names": [
+                        "Azure Files",
+                        "Azure file share"
+                    ],
+                    "shape": "stack"
+                },
+                {
+                    "icon": "azure-firewall",
+                    "class": "product",
+                    "names": [
+                        "Azure Firewall"
+                    ],
+                    "shape": "tile"
+                },
+                {
+                    "icon": "azure-openai",
+                    "class": "product",
+                    "names": [
+                        "Azure OpenAI Service",
+                        "Azure OpenAI",
+                        "AOAI"
+                    ]
+                },
+                {
+                    "icon": "bastion",
+                    "class": "product",
+                    "names": [
+                        "Azure Bastion",
+                        "Bastion"
+                    ],
+                    "shape": "tile"
+                },
+                {
+                    "icon": "cache-redis",
+                    "class": "product",
+                    "names": [
+                        "Azure Cache for Redis",
+                        "Redis Cache"
+                    ],
+                    "shape": "cylinder"
+                },
+                {
+                    "icon": "container-apps-environments",
+                    "class": "product",
+                    "names": [
+                        "Azure Container Apps environment",
+                        "Azure Container Apps",
+                        "Container Apps",
+                        "ACA"
+                    ]
+                },
+                {
+                    "icon": "cosmos-db",
+                    "class": "product",
+                    "names": [
+                        "Azure Cosmos DB",
+                        "Cosmos DB"
+                    ],
+                    "shape": "cylinder"
+                },
+                {
+                    "icon": "data-factory",
+                    "class": "product",
+                    "names": [
+                        "Azure Data Factory",
+                        "Data Factory",
+                        "ADF"
+                    ]
+                },
+                {
+                    "icon": "databricks",
+                    "class": "product",
+                    "names": [
+                        "Azure Databricks",
+                        "Databricks"
+                    ],
+                    "shape": "cylinder"
+                },
+                {
+                    "icon": "dns",
+                    "class": "product",
+                    "names": [
+                        "Azure DNS",
+                        "DNS zone",
+                        "private DNS zone"
+                    ],
+                    "shape": "tile"
+                },
+                {
+                    "icon": "entra-id",
+                    "class": "product",
+                    "names": [
+                        "Microsoft Entra ID",
+                        "Entra ID",
+                        "Azure AD",
+                        "Azure Active Directory"
+                    ]
+                },
+                {
+                    "icon": "event-grid-domains",
+                    "class": "product",
+                    "names": [
+                        "Azure Event Grid domain",
+                        "Event Grid domain"
+                    ]
+                },
+                {
+                    "icon": "event-grid-topics",
+                    "class": "product",
+                    "names": [
+                        "Azure Event Grid",
+                        "Event Grid",
+                        "Event Grid topic"
+                    ]
+                },
+                {
+                    "icon": "event-hubs",
+                    "class": "product",
+                    "names": [
+                        "Azure Event Hubs",
+                        "Event Hubs"
+                    ]
+                },
+                {
+                    "icon": "expressroute",
+                    "class": "product",
+                    "names": [
+                        "Azure ExpressRoute",
+                        "ExpressRoute",
+                        "ExpressRoute circuit"
+                    ],
+                    "shape": "tile"
+                },
+                {
+                    "icon": "front-door",
+                    "class": "product",
+                    "names": [
+                        "Azure Front Door",
+                        "Front Door",
+                        "AFD",
+                        "Front Door and CDN profiles"
+                    ],
+                    "shape": "tile"
+                },
+                {
+                    "icon": "functions",
+                    "class": "product",
+                    "names": [
+                        "Azure Functions",
+                        "Functions",
+                        "Function App",
+                        "Function Apps"
+                    ]
+                },
+                {
+                    "icon": "key-vault",
+                    "class": "product",
+                    "names": [
+                        "Azure Key Vault",
+                        "Key Vault",
+                        "AKV"
+                    ]
+                },
+                {
+                    "icon": "load-balancer",
+                    "class": "product",
+                    "names": [
+                        "Azure Load Balancer"
+                    ],
+                    "shape": "tile"
+                },
+                {
+                    "icon": "log-analytics",
+                    "class": "product",
+                    "names": [
+                        "Log Analytics workspace",
+                        "Log Analytics",
+                        "Azure Monitor Logs"
+                    ]
+                },
+                {
+                    "icon": "logic-apps",
+                    "class": "product",
+                    "names": [
+                        "Azure Logic Apps",
+                        "Logic Apps"
+                    ]
+                },
+                {
+                    "icon": "machine-learning",
+                    "class": "product",
+                    "names": [
+                        "Azure Machine Learning",
+                        "Azure ML",
+                        "AML"
+                    ]
+                },
+                {
+                    "icon": "monitor",
+                    "class": "product",
+                    "names": [
+                        "Azure Monitor"
+                    ]
+                },
+                {
+                    "icon": "policy",
+                    "class": "product",
+                    "names": [
+                        "Azure Policy"
+                    ]
+                },
+                {
+                    "icon": "postgresql",
+                    "class": "product",
+                    "names": [
+                        "Azure Database for PostgreSQL flexible server",
+                        "Azure Database for PostgreSQL",
+                        "PostgreSQL flexible server"
+                    ],
+                    "shape": "cylinder"
+                },
+                {
+                    "icon": "private-endpoint",
+                    "class": "product",
+                    "names": [
+                        "Azure Private Endpoint",
+                        "private endpoint"
+                    ],
+                    "shape": "tile"
+                },
+                {
+                    "icon": "private-link",
+                    "class": "product",
+                    "names": [
+                        "Azure Private Link",
+                        "Private Link",
+                        "Private Link service"
+                    ],
+                    "shape": "tile"
+                },
+                {
+                    "icon": "service-bus",
+                    "class": "product",
+                    "names": [
+                        "Azure Service Bus",
+                        "Service Bus"
+                    ]
+                },
+                {
+                    "icon": "sql-database",
+                    "class": "product",
+                    "names": [
+                        "Azure SQL Database",
+                        "SQL Database"
+                    ],
+                    "shape": "cylinder"
+                },
+                {
+                    "icon": "sql-managed-instance",
+                    "class": "product",
+                    "names": [
+                        "Azure SQL Managed Instance",
+                        "SQL Managed Instance",
+                        "SQL MI"
+                    ],
+                    "shape": "cylinder"
+                },
+                {
+                    "icon": "storage-accounts",
+                    "class": "product",
+                    "names": [
+                        "Azure Storage account",
+                        "Storage account",
+                        "Azure Storage",
+                        "Azure Blob Storage",
+                        "Blob Storage"
+                    ],
+                    "shape": "stack"
+                },
+                {
+                    "icon": "synapse",
+                    "class": "product",
+                    "names": [
+                        "Azure Synapse Analytics",
+                        "Synapse"
+                    ],
+                    "shape": "cylinder"
+                },
+                {
+                    "icon": "traffic-manager",
+                    "class": "product",
+                    "names": [
+                        "Azure Traffic Manager",
+                        "Traffic Manager"
+                    ],
+                    "shape": "tile"
+                },
+                {
+                    "icon": "virtual-machines",
+                    "class": "product",
+                    "names": [
+                        "Azure Virtual Machines",
+                        "Virtual Machines",
+                        "Virtual Machine"
+                    ],
+                    "shape": "tower"
+                },
+                {
+                    "icon": "virtual-network",
+                    "class": "product",
+                    "names": [
+                        "Azure Virtual Network",
+                        "Virtual Network"
+                    ],
+                    "shape": "tile"
+                },
+                {
+                    "icon": "vm-scale-sets",
+                    "class": "product",
+                    "names": [
+                        "Azure Virtual Machine Scale Sets",
+                        "Virtual Machine Scale Sets",
+                        "VM Scale Sets",
+                        "VMSS"
+                    ],
+                    "shape": "tower"
+                },
+                {
+                    "icon": "vpn-gateway",
+                    "class": "product",
+                    "names": [
+                        "Azure VPN Gateway",
+                        "VPN Gateway",
+                        "virtual network gateway",
+                        "ExpressRoute gateway"
+                    ],
+                    "shape": "tile"
+                }
+            ],
+            "parents": [
+                "azure",
+                "subscription",
+                "resource-group",
+                "region",
+                "vnet",
+                "subnet",
+                "onprem",
+                "optional",
+                "k8s",
+                "services",
+                "assembly",
+                "page"
+            ],
+            "shape": "block"
+        },
+        {
+            "name": "person",
+            "icons": "none",
+            "products": [],
+            "parents": [
+                "azure",
+                "subscription",
+                "resource-group",
+                "region",
+                "vnet",
+                "subnet",
+                "onprem",
+                "optional",
+                "k8s",
+                "services",
+                "assembly",
+                "page"
+            ],
+            "shape": "figure"
+        },
+        {
+            "name": "device",
+            "icons": "none",
+            "products": [],
+            "parents": [
+                "azure",
+                "subscription",
+                "resource-group",
+                "region",
+                "vnet",
+                "subnet",
+                "onprem",
+                "optional",
+                "k8s",
+                "services",
+                "assembly",
+                "page"
+            ],
+            "shape": "laptop"
+        }
+    ],
+    "remembered": [
+        {
+            "literal": "10.0.0.0/16",
+            "reason": "doc example address space from the virtual network quickstarts, not a design value. A figure's address space comes from its IP plan, as a built fact or an ask."
+        },
+        {
+            "literal": "10.0.0.0/24",
+            "reason": "doc example subnet range from the virtual network quickstarts, not a design value. A figure's subnet ranges come from its IP plan, as a built fact or an ask."
+        },
+        {
+            "literal": "168.63.129.16",
+            "reason": "the platform address for DNS, DHCP and health probes that every NSG doc repeats: a fact of the platform, not a design value. A rule names the AzureLoadBalancer or AzurePlatformDNS service tag."
+        },
+        {
+            "literal": "65515",
+            "reason": "the default ASN of a VPN gateway, settable per gateway, so a doc example and not a requirement. The gateway's configured ASN is a built fact."
+        },
+        {
+            "literal": "12076",
+            "reason": "Microsoft's ASN on ExpressRoute peering, fixed by the platform: a fact, not a design value. Name the peering and leave the ASN to the live ExpressRoute doc."
+        }
+    ]
+}

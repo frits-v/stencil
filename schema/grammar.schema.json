@@ -163,6 +163,7 @@
       "type": "string",
       "enum": [
         "aws",
+        "azure",
         "gcp",
         "none"
       ]
