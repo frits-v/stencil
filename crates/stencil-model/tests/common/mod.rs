@@ -16,6 +16,12 @@ pub fn g7_page() -> Page {
     serde_json::from_str(G7_JSON).expect("g7.json parses as a Page")
 }
 
+pub fn azure() -> Grammar {
+    builtin_grammar("azure")
+        .expect("azure is a built-in grammar")
+        .expect("the azure grammar is valid")
+}
+
 pub fn gcp() -> Grammar {
     builtin_grammar("gcp")
         .expect("gcp is a built-in grammar")

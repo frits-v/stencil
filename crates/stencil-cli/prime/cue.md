@@ -1,6 +1,6 @@
 # CUE
 
-Figures can be authored in CUE, which carries rules the Rust side does not evaluate. cue/core.cue holds the core vocabulary, cue/grammar.cue the #Grammar definition, and cue/grammars/aws.cue, gcp.cue and plain.cue each grammar's data, kinds and rules as packages aws, gcp and plain. cue/ is the module root, so every command runs from inside it. The pinned CUE version is 0.17.1. In order, each step stopping on failure:
+Figures can be authored in CUE, which carries rules the Rust side does not evaluate. cue/core.cue holds the core vocabulary, cue/grammar.cue the #Grammar definition, and cue/grammars/aws.cue, azure.cue, gcp.cue and plain.cue each grammar's data, kinds and rules as packages aws, azure, gcp and plain. cue/ is the module root, so every command runs from inside it. The pinned CUE version is 0.17.1. In order, each step stopping on failure:
 
     cd cue && cue vet -c ./figures:gcp
     cue export ./figures:gcp -e <field> --out json -o ../fig.json

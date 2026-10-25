@@ -147,12 +147,12 @@
     "IconClass": {
       "oneOf": [
         {
-          "description": "From the archive's Unique Icons: stands for one product.",
+          "description": "Stands for one product.",
           "type": "string",
           "const": "product"
         },
         {
-          "description": "From the archive's Category Icons: stands for a product family.",
+          "description": "Stands for a product family, from a vendor's category folder.",
           "type": "string",
           "const": "category"
         }
@@ -163,6 +163,7 @@
       "type": "string",
       "enum": [
         "aws",
+        "azure",
         "gcp",
         "none"
       ]

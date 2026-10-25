@@ -5,8 +5,8 @@
     clippy::indexing_slicing
 )]
 
-//! icon-matches-product and `named_product` (section 13.10): the gcp and aws products tables,
-//! the longest-match rule, each defect kind beside its clean neighbor, and the examples.
+//! icon-matches-product and `named_product` (section 13.10): the gcp, aws and azure products
+//! tables, the longest-match rule, each defect kind beside its clean neighbor, and the examples.
 
 mod common;
 
@@ -17,7 +17,9 @@ use serde_json::{Value, json};
 use stencil_model::checks::{CheckName, CheckOutcome};
 use stencil_model::grammar::{IconClass, IconProducts};
 use stencil_model::products::{icon_matches_product, named_product};
-use stencil_model::{AwsIcon, GcpIcon, Grammar, IconStem, Page, builtin_grammar, parse_page};
+use stencil_model::{
+    AwsIcon, AzureIcon, GcpIcon, Grammar, IconStem, Page, builtin_grammar, parse_page,
+};
 
 fn repository_path(relative: &str) -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR"))
@@ -55,10 +57,15 @@ fn item(subtitle: Option<&str>, icon: Option<&str>) -> Value {
     value
 }
 
-/// The defect messages of a page holding the one item.
+/// The defect messages of a gcp page holding the one item.
 fn defects_for(subtitle: Option<&str>, icon: Option<&str>) -> Vec<String> {
+    defects_under(&common::gcp(), subtitle, icon)
+}
+
+/// The defect messages of a page under `grammar` holding the one item.
+fn defects_under(grammar: &Grammar, subtitle: Option<&str>, icon: Option<&str>) -> Vec<String> {
     let page = page_of_items(json!([item(subtitle, icon)]));
-    let report = icon_matches_product(&page, &common::gcp());
+    let report = icon_matches_product(&page, grammar);
     assert_eq!(report.examined, 1, "{subtitle:?} {icon:?}");
     report
         .defects
@@ -446,4 +453,104 @@ fn an_aws_subtitle_names_its_longest_service_name_and_never_an_instance() {
     );
     assert_eq!(named_product(&table, "EC2X"), None);
     assert!(aws_defects_for(Some("RDS instance"), Some("rds")).is_empty());
+}
+
+#[test]
+fn the_azure_example_passes_with_items_examined() {
+    let text = fs::read_to_string(repository_path("examples/azure-hub-spoke.json")).unwrap();
+    let page = parse_page(&text).unwrap();
+    let report = icon_matches_product(&page, &common::azure());
+    assert!(report.passed(), "{:?}", report.defects);
+    assert_eq!(report.examined, 14);
+}
+
+fn azure_table() -> Vec<IconProducts> {
+    let grammar = common::azure();
+    let product = grammar.item("product").expect("azure has the product kind");
+    product.products.clone()
+}
+
+#[test]
+fn the_azure_table_has_every_icon_once_in_icon_order_each_a_product_from_one_archive() {
+    let table = azure_table();
+    let icons: Vec<&str> = table.iter().map(|row| row.icon.as_str()).collect();
+    let pack_icons: Vec<&str> = AzureIcon::ALL.iter().map(|icon| icon.as_str()).collect();
+    assert_eq!(icons, pack_icons);
+
+    let provenance =
+        fs::read_to_string(repository_path("assets/icons/azure/PROVENANCE.md")).unwrap();
+    let mut examined = 0;
+    for row in &table {
+        let file_cell = format!("| `{}.svg` | `", row.icon);
+        let line = provenance
+            .lines()
+            .find(|line| line.starts_with(&file_cell))
+            .unwrap_or_else(|| panic!("{} has no provenance row", row.icon));
+        let archive_path = line.strip_prefix(&file_cell).unwrap();
+        assert!(
+            archive_path.starts_with("Icons/")
+                || archive_path.starts_with("Microsoft Entra architecture icons - Oct 2023/"),
+            "{} comes from neither archive",
+            row.icon
+        );
+        assert_eq!(row.class, IconClass::Product, "{}", row.icon);
+        examined += 1;
+    }
+    assert_eq!(examined, AzureIcon::ALL.len());
+}
+
+#[test]
+fn an_azure_name_inside_a_longer_name_of_another_row_yields_to_it() {
+    let table = azure_table();
+    assert_eq!(
+        named_product(&table, "ExpressRoute gateway · ErGw1AZ"),
+        Some("ExpressRoute gateway")
+    );
+    assert_eq!(
+        named_product(&table, "ExpressRoute circuit"),
+        Some("ExpressRoute circuit")
+    );
+    assert_eq!(
+        named_product(&table, "Event Grid domain"),
+        Some("Event Grid domain")
+    );
+    assert_eq!(
+        named_product(&table, "Azure Monitor Logs"),
+        Some("Azure Monitor Logs")
+    );
+    assert_eq!(
+        named_product(&table, "private endpoint · Blob Storage"),
+        Some("private endpoint")
+    );
+    assert_eq!(named_product(&table, "health monitor"), None);
+    assert_eq!(named_product(&table, "firewall policy"), None);
+}
+
+#[test]
+fn an_azure_product_with_its_own_icon_matches_it_or_no_icon_and_rejects_another() {
+    let azure = common::azure();
+    assert!(defects_under(&azure, Some("Azure Key Vault"), Some("key-vault")).is_empty());
+    assert!(defects_under(&azure, Some("Azure Key Vault"), None).is_empty());
+    assert!(defects_under(&azure, Some("Blob Storage"), Some("storage-accounts")).is_empty());
+    assert!(defects_under(&azure, Some("ExpressRoute gateway"), Some("vpn-gateway")).is_empty());
+    assert_eq!(
+        defects_under(&azure, Some("Azure Key Vault"), Some("storage-accounts")),
+        [
+            "subtitle names Azure Key Vault, whose icon is key-vault; the item carries storage-accounts"
+        ]
+    );
+    assert_eq!(
+        defects_under(&azure, Some("ExpressRoute gateway"), Some("expressroute")),
+        [
+            "subtitle names ExpressRoute gateway, whose icon is vpn-gateway; the item carries expressroute"
+        ]
+    );
+}
+
+#[test]
+fn an_azure_item_whose_subtitle_names_no_row_is_examined_and_clean_with_any_icon() {
+    let azure = common::azure();
+    assert!(defects_under(&azure, Some("Azure Route Server"), Some("virtual-network")).is_empty());
+    assert!(defects_under(&azure, Some("AKS · internal load balancer"), Some("aks")).is_empty());
+    assert!(defects_under(&azure, None, Some("key-vault")).is_empty());
 }

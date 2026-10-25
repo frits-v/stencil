@@ -9,8 +9,8 @@ use stencil_model::grammar::{
     BorderPattern, GrammarError, IconClass, LabelStyle, Role, Tone, builtin_grammar_json,
 };
 use stencil_model::{
-    AwsIcon, BUILTIN_GRAMMARS, GcpIcon, Grammar, IconPack, Shape, builtin_grammar, grammar_schema,
-    parse_grammar,
+    AwsIcon, AzureIcon, BUILTIN_GRAMMARS, GcpIcon, Grammar, IconPack, Shape, builtin_grammar,
+    grammar_schema, parse_grammar,
 };
 
 const COMMITTED_GRAMMAR_SCHEMA: &str = include_str!("../../../schema/grammar.schema.json");
@@ -618,6 +618,325 @@ fn aws_has_a_product_kind_with_every_icon_once_in_icon_order_and_a_person_and_a_
     assert_eq!(
         remembered,
         ["64512", "10.0.0.0/16", "10.0.1.0/24", "169.254.169.254"]
+    );
+}
+
+/// Section 13.3's azure table: name, role, tone, tintable, default tint, border pattern and
+/// width, padding, radius, label style, parents.
+#[allow(clippy::type_complexity)]
+const AZURE_TABLE: [(
+    &str,
+    Role,
+    Option<Tone>,
+    bool,
+    Option<u8>,
+    BorderPattern,
+    f32,
+    f32,
+    f32,
+    LabelStyle,
+    &[&str],
+); 11] = [
+    (
+        "azure",
+        Role::Frame,
+        None,
+        false,
+        None,
+        BorderPattern::Solid,
+        3.0,
+        0.0,
+        10.0,
+        LabelStyle::Bar,
+        &["page"],
+    ),
+    (
+        "subscription",
+        Role::Tile,
+        Some(Tone::Highlight),
+        false,
+        None,
+        BorderPattern::Solid,
+        1.5,
+        12.0,
+        8.0,
+        LabelStyle::Plain,
+        &["page", "azure", "subscription"],
+    ),
+    (
+        "resource-group",
+        Role::Group,
+        Some(Tone::Neutral),
+        false,
+        None,
+        BorderPattern::Solid,
+        1.5,
+        12.0,
+        8.0,
+        LabelStyle::Plain,
+        &["azure", "subscription", "region"],
+    ),
+    (
+        "region",
+        Role::Group,
+        Some(Tone::Neutral),
+        true,
+        Some(1),
+        BorderPattern::Solid,
+        1.5,
+        12.0,
+        8.0,
+        LabelStyle::Plain,
+        &["azure", "subscription"],
+    ),
+    (
+        "vnet",
+        Role::Boundary,
+        Some(Tone::Strong),
+        false,
+        None,
+        BorderPattern::Dashed,
+        2.0,
+        10.0,
+        8.0,
+        LabelStyle::Plain,
+        &["region", "subscription", "resource-group"],
+    ),
+    (
+        "subnet",
+        Role::Group,
+        Some(Tone::Cool),
+        false,
+        None,
+        BorderPattern::Dashed,
+        1.5,
+        12.0,
+        8.0,
+        LabelStyle::Plain,
+        &["vnet"],
+    ),
+    (
+        "onprem",
+        Role::Group,
+        Some(Tone::Warm),
+        true,
+        None,
+        BorderPattern::Solid,
+        1.5,
+        12.0,
+        8.0,
+        LabelStyle::Plain,
+        &["page", "optional"],
+    ),
+    (
+        "optional",
+        Role::Group,
+        Some(Tone::Emphasis),
+        false,
+        None,
+        BorderPattern::Dashed,
+        2.0,
+        12.0,
+        8.0,
+        LabelStyle::Plain,
+        &[
+            "page",
+            "azure",
+            "region",
+            "vnet",
+            "subnet",
+            "subscription",
+            "resource-group",
+        ],
+    ),
+    (
+        "k8s",
+        Role::Group,
+        Some(Tone::Soft),
+        false,
+        None,
+        BorderPattern::None,
+        0.0,
+        12.0,
+        8.0,
+        LabelStyle::Plain,
+        &[
+            "azure",
+            "region",
+            "vnet",
+            "subnet",
+            "subscription",
+            "resource-group",
+            "optional",
+        ],
+    ),
+    (
+        "services",
+        Role::Group,
+        Some(Tone::Neutral),
+        false,
+        None,
+        BorderPattern::Solid,
+        1.5,
+        12.0,
+        8.0,
+        LabelStyle::Plain,
+        &["azure", "region", "subscription", "resource-group"],
+    ),
+    (
+        "assembly",
+        Role::Group,
+        Some(Tone::Neutral),
+        true,
+        None,
+        BorderPattern::DashDot,
+        1.1,
+        14.0,
+        0.0,
+        LabelStyle::Tab,
+        &[
+            "page",
+            "azure",
+            "subscription",
+            "resource-group",
+            "region",
+            "vnet",
+            "subnet",
+            "onprem",
+            "optional",
+            "k8s",
+            "services",
+        ],
+    ),
+];
+
+#[test]
+fn azure_container_kinds_equal_the_section_13_3_table_field_for_field() {
+    let grammar = builtin_grammar("azure").unwrap().unwrap();
+    assert_eq!(grammar.containers.len(), AZURE_TABLE.len());
+    for (container, row) in grammar.containers.iter().zip(AZURE_TABLE) {
+        let (
+            name,
+            role,
+            tone,
+            tintable,
+            default_tint,
+            pattern,
+            width,
+            padding,
+            radius,
+            label,
+            parents,
+        ) = row;
+        assert_eq!(container.name, name);
+        assert_eq!(container.role, role, "{name}");
+        assert_eq!(container.tone, tone, "{name}");
+        assert_eq!(container.tintable, tintable, "{name}");
+        assert_eq!(container.default_tint, default_tint, "{name}");
+        assert_eq!(container.border.pattern, pattern, "{name}");
+        assert_eq!(container.border.width, width, "{name}");
+        assert_eq!(container.padding, padding, "{name}");
+        assert_eq!(container.radius, radius, "{name}");
+        assert_eq!(container.label, label, "{name}");
+        assert_eq!(container.parents, parents, "{name}");
+    }
+}
+
+/// The iso shape of each azure product row, in `AzureIcon::ALL` order: its gcp sibling's.
+const AZURE_SHAPES: [(&str, Option<Shape>); 41] = [
+    ("aks", Some(Shape::Tower)),
+    ("api-management", None),
+    ("app-service", None),
+    ("application-gateway", Some(Shape::Tile)),
+    ("azure-files", Some(Shape::Stack)),
+    ("azure-firewall", Some(Shape::Tile)),
+    ("azure-openai", None),
+    ("bastion", Some(Shape::Tile)),
+    ("cache-redis", Some(Shape::Cylinder)),
+    ("container-apps-environments", None),
+    ("cosmos-db", Some(Shape::Cylinder)),
+    ("data-factory", None),
+    ("databricks", Some(Shape::Cylinder)),
+    ("dns", Some(Shape::Tile)),
+    ("entra-id", None),
+    ("event-grid-domains", None),
+    ("event-grid-topics", None),
+    ("event-hubs", None),
+    ("expressroute", Some(Shape::Tile)),
+    ("front-door", Some(Shape::Tile)),
+    ("functions", None),
+    ("key-vault", None),
+    ("load-balancer", Some(Shape::Tile)),
+    ("log-analytics", None),
+    ("logic-apps", None),
+    ("machine-learning", None),
+    ("monitor", None),
+    ("policy", None),
+    ("postgresql", Some(Shape::Cylinder)),
+    ("private-endpoint", Some(Shape::Tile)),
+    ("private-link", Some(Shape::Tile)),
+    ("service-bus", None),
+    ("sql-database", Some(Shape::Cylinder)),
+    ("sql-managed-instance", Some(Shape::Cylinder)),
+    ("storage-accounts", Some(Shape::Stack)),
+    ("synapse", Some(Shape::Cylinder)),
+    ("traffic-manager", Some(Shape::Tile)),
+    ("virtual-machines", Some(Shape::Tower)),
+    ("virtual-network", Some(Shape::Tile)),
+    ("vm-scale-sets", Some(Shape::Tower)),
+    ("vpn-gateway", Some(Shape::Tile)),
+];
+
+#[test]
+fn azure_has_a_product_kind_with_every_icon_once_in_icon_order_and_a_person_and_a_device() {
+    let grammar = builtin_grammar("azure").unwrap().unwrap();
+    let names: Vec<&str> = grammar
+        .items
+        .iter()
+        .map(|item| item.name.as_str())
+        .collect();
+    assert_eq!(names, ["product", "person", "device"]);
+    for (name, shape) in [("person", Shape::Figure), ("device", Shape::Laptop)] {
+        let kind = grammar.item(name).unwrap();
+        assert_eq!(kind.icons, IconPack::None, "{name}");
+        assert!(kind.products.is_empty(), "{name}");
+        assert_eq!(kind.shape, Some(shape), "{name}");
+    }
+    let product = &grammar.items[0];
+    assert_eq!(product.shape, Some(Shape::Block));
+    assert_eq!(product.icons, IconPack::Azure);
+    let mut expected_parents: Vec<&str> = AZURE_TABLE.iter().map(|row| row.0).collect();
+    expected_parents.push("page");
+    assert_eq!(product.parents, expected_parents);
+    let pack_icons: Vec<&str> = AzureIcon::ALL.iter().map(|icon| icon.as_str()).collect();
+    let shape_icons: Vec<&str> = AZURE_SHAPES.iter().map(|(icon, _)| *icon).collect();
+    assert_eq!(shape_icons, pack_icons);
+    let rows: Vec<(&str, Option<Shape>)> = product
+        .products
+        .iter()
+        .map(|row| (row.icon.as_str(), row.shape))
+        .collect();
+    assert_eq!(rows, AZURE_SHAPES);
+    assert!(
+        product
+            .products
+            .iter()
+            .all(|row| row.class == IconClass::Product)
+    );
+    let literals: Vec<&str> = grammar
+        .remembered
+        .iter()
+        .map(|entry| entry.literal.as_str())
+        .collect();
+    assert_eq!(
+        literals,
+        [
+            "10.0.0.0/16",
+            "10.0.0.0/24",
+            "168.63.129.16",
+            "65515",
+            "12076"
+        ]
     );
 }
 

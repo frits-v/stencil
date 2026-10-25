@@ -1,0 +1,152 @@
+//! The Azure pack, `assets/icons/azure/`.
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum AzureIcon {
+    Aks,
+    ApiManagement,
+    AppService,
+    ApplicationGateway,
+    AzureFiles,
+    AzureFirewall,
+    AzureOpenai,
+    Bastion,
+    CacheRedis,
+    ContainerAppsEnvironments,
+    CosmosDb,
+    DataFactory,
+    Databricks,
+    Dns,
+    EntraId,
+    EventGridDomains,
+    EventGridTopics,
+    EventHubs,
+    Expressroute,
+    FrontDoor,
+    Functions,
+    KeyVault,
+    LoadBalancer,
+    LogAnalytics,
+    LogicApps,
+    MachineLearning,
+    Monitor,
+    Policy,
+    Postgresql,
+    PrivateEndpoint,
+    PrivateLink,
+    ServiceBus,
+    SqlDatabase,
+    SqlManagedInstance,
+    StorageAccounts,
+    Synapse,
+    TrafficManager,
+    VirtualMachines,
+    VirtualNetwork,
+    VmScaleSets,
+    VpnGateway,
+}
+
+impl AzureIcon {
+    pub const ALL: [AzureIcon; 41] = [
+        AzureIcon::Aks,
+        AzureIcon::ApiManagement,
+        AzureIcon::AppService,
+        AzureIcon::ApplicationGateway,
+        AzureIcon::AzureFiles,
+        AzureIcon::AzureFirewall,
+        AzureIcon::AzureOpenai,
+        AzureIcon::Bastion,
+        AzureIcon::CacheRedis,
+        AzureIcon::ContainerAppsEnvironments,
+        AzureIcon::CosmosDb,
+        AzureIcon::DataFactory,
+        AzureIcon::Databricks,
+        AzureIcon::Dns,
+        AzureIcon::EntraId,
+        AzureIcon::EventGridDomains,
+        AzureIcon::EventGridTopics,
+        AzureIcon::EventHubs,
+        AzureIcon::Expressroute,
+        AzureIcon::FrontDoor,
+        AzureIcon::Functions,
+        AzureIcon::KeyVault,
+        AzureIcon::LoadBalancer,
+        AzureIcon::LogAnalytics,
+        AzureIcon::LogicApps,
+        AzureIcon::MachineLearning,
+        AzureIcon::Monitor,
+        AzureIcon::Policy,
+        AzureIcon::Postgresql,
+        AzureIcon::PrivateEndpoint,
+        AzureIcon::PrivateLink,
+        AzureIcon::ServiceBus,
+        AzureIcon::SqlDatabase,
+        AzureIcon::SqlManagedInstance,
+        AzureIcon::StorageAccounts,
+        AzureIcon::Synapse,
+        AzureIcon::TrafficManager,
+        AzureIcon::VirtualMachines,
+        AzureIcon::VirtualNetwork,
+        AzureIcon::VmScaleSets,
+        AzureIcon::VpnGateway,
+    ];
+
+    /// The icon's file name in `assets/icons/azure/`.
+    pub fn file_name(self) -> &'static str {
+        match self {
+            AzureIcon::Aks => "aks.svg",
+            AzureIcon::ApiManagement => "api-management.svg",
+            AzureIcon::AppService => "app-service.svg",
+            AzureIcon::ApplicationGateway => "application-gateway.svg",
+            AzureIcon::AzureFiles => "azure-files.svg",
+            AzureIcon::AzureFirewall => "azure-firewall.svg",
+            AzureIcon::AzureOpenai => "azure-openai.svg",
+            AzureIcon::Bastion => "bastion.svg",
+            AzureIcon::CacheRedis => "cache-redis.svg",
+            AzureIcon::ContainerAppsEnvironments => "container-apps-environments.svg",
+            AzureIcon::CosmosDb => "cosmos-db.svg",
+            AzureIcon::DataFactory => "data-factory.svg",
+            AzureIcon::Databricks => "databricks.svg",
+            AzureIcon::Dns => "dns.svg",
+            AzureIcon::EntraId => "entra-id.svg",
+            AzureIcon::EventGridDomains => "event-grid-domains.svg",
+            AzureIcon::EventGridTopics => "event-grid-topics.svg",
+            AzureIcon::EventHubs => "event-hubs.svg",
+            AzureIcon::Expressroute => "expressroute.svg",
+            AzureIcon::FrontDoor => "front-door.svg",
+            AzureIcon::Functions => "functions.svg",
+            AzureIcon::KeyVault => "key-vault.svg",
+            AzureIcon::LoadBalancer => "load-balancer.svg",
+            AzureIcon::LogAnalytics => "log-analytics.svg",
+            AzureIcon::LogicApps => "logic-apps.svg",
+            AzureIcon::MachineLearning => "machine-learning.svg",
+            AzureIcon::Monitor => "monitor.svg",
+            AzureIcon::Policy => "policy.svg",
+            AzureIcon::Postgresql => "postgresql.svg",
+            AzureIcon::PrivateEndpoint => "private-endpoint.svg",
+            AzureIcon::PrivateLink => "private-link.svg",
+            AzureIcon::ServiceBus => "service-bus.svg",
+            AzureIcon::SqlDatabase => "sql-database.svg",
+            AzureIcon::SqlManagedInstance => "sql-managed-instance.svg",
+            AzureIcon::StorageAccounts => "storage-accounts.svg",
+            AzureIcon::Synapse => "synapse.svg",
+            AzureIcon::TrafficManager => "traffic-manager.svg",
+            AzureIcon::VirtualMachines => "virtual-machines.svg",
+            AzureIcon::VirtualNetwork => "virtual-network.svg",
+            AzureIcon::VmScaleSets => "vm-scale-sets.svg",
+            AzureIcon::VpnGateway => "vpn-gateway.svg",
+        }
+    }
+
+    /// The file stem, for example "key-vault".
+    pub fn as_str(self) -> &'static str {
+        let file_name = self.file_name();
+        file_name.strip_suffix(".svg").unwrap_or(file_name)
+    }
+
+    /// The icon whose file stem is `stem`.
+    pub fn from_stem(stem: &str) -> Option<AzureIcon> {
+        AzureIcon::ALL
+            .into_iter()
+            .find(|icon| icon.as_str() == stem)
+    }
+}

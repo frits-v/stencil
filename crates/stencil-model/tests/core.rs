@@ -8,7 +8,7 @@
 mod common;
 
 use common::{
-    box_node, g7_page, gcp, item, legend_entry, link, page_with_body, page_with_link, pipe,
+    azure, box_node, g7_page, gcp, item, legend_entry, link, page_with_body, page_with_link, pipe,
     pipe_value, plain, row, tee,
 };
 use stencil_model::checks::remembered_constants;
@@ -99,6 +99,17 @@ fn the_aws_example_parses_round_trips_and_vets_clean() {
     assert_eq!(page.grammar.as_deref(), Some("aws"));
     let written = serde_json::to_string(&page).unwrap();
     assert_eq!(parse_and_vet(&written, &grammar).unwrap(), page);
+}
+
+#[test]
+fn the_azure_example_parses_round_trips_and_vets_clean_under_azure() {
+    let grammar = azure();
+    let document = include_str!("../../../examples/azure-hub-spoke.json");
+    let page = parse_and_vet(document, &grammar).unwrap_or_else(|error| panic!("{error:?}"));
+    assert_eq!(page.grammar.as_deref(), Some("azure"));
+    let written = serde_json::to_string(&page).unwrap();
+    let reparsed = parse_and_vet(&written, &grammar).unwrap();
+    assert_eq!(reparsed, page, "round trip");
 }
 
 #[test]
