@@ -33,7 +33,6 @@
             {
               "tag": "Item",
               "kind": "product",
-              "icon": "networking-content-delivery",
               "title": "Core firewall",
               "subtitle": "inspects traffic toward AWS"
             },
@@ -46,14 +45,12 @@
             {
               "tag": "Item",
               "kind": "product",
-              "icon": "storage",
               "title": "Order archive",
               "subtitle": "nightly export source"
             },
             {
               "tag": "Item",
               "kind": "product",
-              "icon": "database",
               "title": "Legacy orders database",
               "subtitle": "moves to the cloud database"
             },

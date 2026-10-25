@@ -156,27 +156,21 @@
         "function_name": {
           "height": 15.6,
           "line_count": 1,
-          "width": 191.91,
-          "x": 83,
-          "y": 199
-        },
-        "icon": {
-          "height": 28,
-          "width": 28,
+          "width": 229.91,
           "x": 45,
-          "y": 200.5
+          "y": 199
         },
         "product_name": {
           "height": 14.4,
           "line_count": 1,
-          "width": 191.91,
-          "x": 83,
+          "width": 229.91,
+          "x": 45,
           "y": 215.6
         },
         "text": {
           "height": 31,
-          "width": 191.91,
-          "x": 83,
+          "width": 229.91,
+          "x": 45,
           "y": 199
         }
       },
@@ -222,27 +216,21 @@
         "function_name": {
           "height": 15.6,
           "line_count": 1,
-          "width": 191.91,
-          "x": 83,
-          "y": 307
-        },
-        "icon": {
-          "height": 28,
-          "width": 28,
+          "width": 229.91,
           "x": 45,
-          "y": 308.5
+          "y": 307
         },
         "product_name": {
           "height": 14.4,
           "line_count": 1,
-          "width": 191.91,
-          "x": 83,
+          "width": 229.91,
+          "x": 45,
           "y": 323.6
         },
         "text": {
           "height": 31,
-          "width": 191.91,
-          "x": 83,
+          "width": 229.91,
+          "x": 45,
           "y": 307
         }
       },
@@ -258,27 +246,21 @@
         "function_name": {
           "height": 15.6,
           "line_count": 1,
-          "width": 191.91,
-          "x": 83,
-          "y": 361
-        },
-        "icon": {
-          "height": 28,
-          "width": 28,
+          "width": 229.91,
           "x": 45,
-          "y": 362.5
+          "y": 361
         },
         "product_name": {
           "height": 14.4,
           "line_count": 1,
-          "width": 191.91,
-          "x": 83,
+          "width": 229.91,
+          "x": 45,
           "y": 377.6
         },
         "text": {
           "height": 31,
-          "width": 191.91,
-          "x": 83,
+          "width": 229.91,
+          "x": 45,
           "y": 361
         }
       },

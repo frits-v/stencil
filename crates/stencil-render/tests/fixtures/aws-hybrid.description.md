@@ -13,10 +13,10 @@ Drawn elements: 39 (39 nodes, 0 links). Canvas 1480 x 857.8 px, projection flat,
 - Row, left to right. `/body/0`
   - Box Data center; kind onprem, tint 1. `/body/0/children/0`
     - Item Customer router: port toward AWS; kind product, icon networking-content-delivery. `/body/0/children/0/children/0`
-    - Item Core firewall: inspects traffic toward AWS; kind product, icon networking-content-delivery. `/body/0/children/0/children/1`
+    - Item Core firewall: inspects traffic toward AWS; kind product. `/body/0/children/0/children/1`
     - Item Operators: run the release; kind person. `/body/0/children/0/children/2`
-    - Item Order archive: nightly export source; kind product, icon storage. `/body/0/children/0/children/3`
-    - Item Legacy orders database: moves to the cloud database; kind product, icon database. `/body/0/children/0/children/4`
+    - Item Order archive: nightly export source; kind product. `/body/0/children/0/children/3`
+    - Item Legacy orders database: moves to the cloud database; kind product. `/body/0/children/0/children/4`
     - Item Order desk: clients of the orders API; kind device. `/body/0/children/0/children/5`
     - Fact, doc: Prefixes advertised from the IP plan. `/body/0/children/0/children/6`
   - Pipe Direct Connect · private VIF · BGP.
