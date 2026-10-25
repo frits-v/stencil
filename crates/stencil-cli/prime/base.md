@@ -12,7 +12,7 @@ A grammar gives a domain its Box and Item kinds, where each may sit, and its rul
 
 # Vocabulary
 
-Every node object carries "tag"; the Page does not. * required, =default. A field with no type is text: 1-400 chars, trimmed, no control characters. Any node may carry id (a-z, 0-9, -; unique), which Link and Pipe from and to name. Unknown fields and values are rejected. kind names a kind of the grammar. tint picks a slot 1-8: the fill of a tintable Box, the wire of a solid or dash line (absent is 1); gray and deny ignore it. A fact's source is doc (read from the live doc), built (an as-built name: bucket, VLAN ID) or ask (an open question). chrome none drops badge, kicker, title and lede for a figure its document captions; one line and tint then needs no legend.
+Every node object carries "tag"; the Page does not. * required, =default. A field with no type is text: 1-400 chars, trimmed, no control characters. Any node may carry id (a-z, 0-9, -; unique), which Link and Pipe from and to name. Unknown fields and values are rejected. kind names a kind of the grammar; icon a file stem of its kind's icon pack, which `stencil prime grammar <name>` lists. tint picks a slot 1-8: the fill of a tintable Box, the wire of a solid or dash line (absent is 1); gray and deny ignore it. A fact's source is doc (read from the live doc), built (an as-built name: bucket, VLAN ID) or ask (an open question). chrome none drops badge, kicker, title and lede for a figure its document captions; one line and tint then needs no legend.
 
 {{vocabulary}}
 

@@ -2,10 +2,11 @@
 //! must be that product's own icon, or a category icon when the product has none.
 
 use crate::checks::{CheckName, CheckReport, Defect, is_word_character};
-use crate::document::{IconName, Node, Page};
+use crate::document::{Node, Page};
 use crate::grammar::{
     GRAMMAR_PRODUCT_NAMES_MAX, GRAMMAR_PRODUCTS_MAX, Grammar, IconClass, IconProducts, ItemKind,
 };
+use crate::icons::{IconName, IconStem};
 use crate::walk::{NodeRef, body_nodes};
 use crate::{Item, Shape};
 
@@ -38,17 +39,25 @@ pub fn item_shape(kind: Option<&ItemKind>, item: &Item) -> Shape {
     if let Some(shape) = item.shape {
         return shape;
     }
-    let row_shape = item.icon.and_then(|icon| {
+    let row_shape = item.icon.as_ref().and_then(|icon| {
         kind?
             .products
             .iter()
             .take(GRAMMAR_PRODUCTS_MAX)
-            .find(|row| row.icon == icon)
+            .find(|row| row.icon == *icon)
             .and_then(|row| row.shape)
     });
     row_shape
         .or_else(|| kind.and_then(|kind| kind.shape))
         .unwrap_or_default()
+}
+
+/// The icon an item draws: its `icon` stem resolved against the pack of its kind. None
+/// when the item has no icon, its kind is unknown, or the pack has no file of that stem,
+/// each of which vet reports.
+pub fn item_icon(kind: Option<&ItemKind>, item: &Item) -> Option<IconName> {
+    let stem = item.icon.as_ref()?;
+    kind?.icons.resolve(stem)
 }
 
 /// The product a subtitle names: every name of the table found in `subtitle`, ASCII
@@ -77,8 +86,8 @@ pub fn named_product<'a>(table: &'a [IconProducts], subtitle: &str) -> Option<&'
 }
 
 /// The `product`-class icons whose row lists `product`, sorted by name.
-fn product_icons(table: &[IconProducts], product: &str) -> Vec<IconName> {
-    let mut icons: Vec<IconName> = table
+fn product_icons<'a>(table: &'a [IconProducts], product: &str) -> Vec<&'a IconStem> {
+    let mut icons: Vec<&IconStem> = table
         .iter()
         .take(GRAMMAR_PRODUCTS_MAX)
         .filter(|row| row.class == IconClass::Product)
@@ -88,30 +97,29 @@ fn product_icons(table: &[IconProducts], product: &str) -> Vec<IconName> {
                 .take(GRAMMAR_PRODUCT_NAMES_MAX)
                 .any(|name| name == product)
         })
-        .map(|row| row.icon)
+        .map(|row| &row.icon)
         .collect();
-    icons.sort_by_key(|icon| icon.as_str());
+    icons.sort();
     icons.dedup();
     icons
 }
 
 /// True when the table lists `icon` with class `product`.
-fn is_product_icon(table: &[IconProducts], icon: IconName) -> bool {
+fn is_product_icon(table: &[IconProducts], icon: &IconStem) -> bool {
     table
         .iter()
         .take(GRAMMAR_PRODUCTS_MAX)
-        .any(|row| row.icon == icon && row.class == IconClass::Product)
+        .any(|row| row.icon == *icon && row.class == IconClass::Product)
 }
 
 /// The defect message for an item whose subtitle names `product` and which carries `icon`,
 /// or None when the icon fits the product.
-fn mismatch(table: &[IconProducts], product: &str, icon: IconName) -> Option<String> {
+fn mismatch(table: &[IconProducts], product: &str, icon: &IconStem) -> Option<String> {
     let own_icons = product_icons(table, product);
     if own_icons.is_empty() {
         is_product_icon(table, icon).then(|| {
             format!(
-                "subtitle names {product}, which has no product icon; the item carries the product icon {}",
-                icon.as_str()
+                "subtitle names {product}, which has no product icon; the item carries the product icon {icon}"
             )
         })
     } else if own_icons.contains(&icon) {
@@ -119,9 +127,8 @@ fn mismatch(table: &[IconProducts], product: &str, icon: IconName) -> Option<Str
     } else {
         let names: Vec<&str> = own_icons.iter().map(|own| own.as_str()).collect();
         Some(format!(
-            "subtitle names {product}, whose icon is {}; the item carries {}",
-            names.join(" or "),
-            icon.as_str()
+            "subtitle names {product}, whose icon is {}; the item carries {icon}",
+            names.join(" or ")
         ))
     }
 }
@@ -155,7 +162,7 @@ pub fn icon_matches_product(page: &Page, grammar: &Grammar) -> CheckReport {
             .subtitle
             .as_deref()
             .and_then(|subtitle| named_product(table, subtitle));
-        if let (Some(product), Some(icon)) = (product, item.icon)
+        if let (Some(product), Some(icon)) = (product, &item.icon)
             && let Some(message) = mismatch(table, product, icon)
         {
             defects.push(Defect {

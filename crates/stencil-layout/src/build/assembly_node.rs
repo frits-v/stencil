@@ -147,6 +147,7 @@ impl Builder<'_> {
             self.grammar.item(&item.kind),
             item,
         ));
+        record.icon = stencil_model::products::item_icon(self.grammar.item(&item.kind), item);
         record.parts = parts;
         record.outline = Some(item.outline);
         self.push_record(record);

@@ -15,11 +15,11 @@ use serde_json::Value;
 use stencil_cli::pipeline::{all_checks, load_document, read_input, render_page};
 use stencil_cli::prime::{
     BASE_BYTES_MAX, INLINE_DEFINITIONS, ROW_DEFINITIONS, TOPIC_BYTES_MAX, TOPIC_ROW_DEFINITIONS,
-    Topic, base_text, field_notes,
+    Topic, base_text, field_notes, icon_lists,
 };
 use stencil_cli::{ExitCode, run};
 use stencil_model::{
-    Arrow, CalloutKind, Chrome, FactSource, IconName, Justify, Line, ListKind, PipeForm, Shape,
+    Arrow, CalloutKind, Chrome, FactSource, IconPack, Justify, Line, ListKind, PipeForm, Shape,
     SheetSurface, Side, SurfaceVocabulary, builtin_grammar, page_schema,
 };
 use stencil_render::DeviceScale;
@@ -664,7 +664,6 @@ fn the_base_briefing_lists_every_enum_value_from_the_model() {
     assert_enum_listed(&text, "Line", names(&Line::ALL));
     assert_enum_listed(&text, "FactSource", names(&FactSource::ALL));
     assert_enum_listed(&text, "Chrome", names(&chromes()));
-    assert_enum_listed(&text, "IconName", names(&IconName::ALL));
     assert_enum_listed(&text, "Arrow", names(&arrows()));
     assert_enum_listed(&text, "Side", names(&sides()));
     assert_enum_listed(&text, "Justify", names(&justifies()));
@@ -672,7 +671,73 @@ fn the_base_briefing_lists_every_enum_value_from_the_model() {
     assert_enum_listed(&text, "CalloutKind", names(&callout_kinds()));
     assert_enum_listed(&text, "Shape", names(&shapes()));
     assert_enum_listed(&text, "PipeForm", names(&base_pipe_forms()));
-    assert!(text.contains(&format!("IconName ({}):", IconName::ALL.len())));
+}
+
+#[test]
+fn the_base_briefing_lists_no_icon_and_points_to_the_grammar_topics() {
+    let text = base_output();
+    assert!(text.contains("| Item | kind* kind, title*, facts FactEntry[0-8], icon stem,"));
+    assert!(
+        text.contains(
+            "icon a file stem of its kind's icon pack, which `stencil prime grammar <name>` lists"
+        ),
+        "{text}"
+    );
+    assert!(!text.contains("IconName"), "{text}");
+    assert!(!text.contains("cloud-run-flat"), "{text}");
+}
+
+/// The words of `line`, split at anything that cannot sit in an icon stem.
+fn stem_words(line: &str) -> Vec<&str> {
+    line.split(|character: char| !(character.is_ascii_alphanumeric() || character == '-'))
+        .filter(|word| !word.is_empty())
+        .collect()
+}
+
+#[test]
+fn every_grammar_topic_lists_every_stem_of_its_kinds_packs_once_with_its_class() {
+    let mut examined = 0;
+    for name in stencil_model::BUILTIN_GRAMMARS {
+        let topic = run_stencil(&["prime", "grammar", name]).stdout;
+        let grammar = builtin_grammar(name).unwrap().unwrap();
+        let lists = icon_lists(&grammar);
+        assert!(topic.contains(&lists), "{name} topic lacks its icon lists");
+        for item in &grammar.items {
+            let heading = format!(
+                "Icons of {} (pack {}), by class.",
+                item.name,
+                item.icons.as_str()
+            );
+            let lines: Vec<&str> = lists
+                .lines()
+                .filter(|line| line.starts_with(&heading))
+                .collect();
+            if item.icons == IconPack::None {
+                assert!(lines.is_empty(), "{name} lists icons for {}", item.name);
+                continue;
+            }
+            assert_eq!(lines.len(), 1, "{name} {}", item.name);
+            let words = stem_words(lines[0].strip_prefix(&heading).unwrap());
+            for icon in item.icons.icons() {
+                let count = words.iter().filter(|word| **word == icon.as_str()).count();
+                assert_eq!(count, 1, "{name} {} lists {}", item.name, icon.as_str());
+                examined += 1;
+            }
+        }
+    }
+    println!("examined {examined} stems");
+    assert!(examined > 0);
+}
+
+#[test]
+fn the_gcp_topic_groups_its_icons_by_the_class_of_their_rows() {
+    let topic = run_stencil(&["prime", "grammar", "gcp"]).stdout;
+    assert!(topic.contains(
+        "Icons of product (pack gcp), by class. product: bigquery cloud-run-flat cloud-run \
+         cloud-sql cloud-storage compute-engine gke scc vertex-ai; category: agents ai-ml compute \
+         containers data-analytics databases devops hybrid integration networking observability \
+         security-identity serverless storage."
+    ));
 }
 
 #[test]

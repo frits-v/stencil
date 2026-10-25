@@ -1200,7 +1200,7 @@ impl<'a> SvgWriter<'a> {
                     ..PartContext::default()
                 },
                 Node::Item(item) => PartContext {
-                    icon: item.icon,
+                    icon: node.icon,
                     outline: node.outline,
                     planned: item.planned,
                     ..PartContext::default()

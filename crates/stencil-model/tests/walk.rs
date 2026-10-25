@@ -5,7 +5,7 @@
 mod common;
 
 use common::{g7_page, g7_value, item, page_with_body, pipe, pipe_value, row, tee};
-use stencil_model::{FactSource, IconName, Line, Node, NodeRef, PipeDir, body_nodes, text_fields};
+use stencil_model::{FactSource, Line, Node, NodeRef, PipeDir, body_nodes, text_fields};
 
 #[test]
 fn g7_has_24_body_nodes_in_pre_order() {
@@ -160,41 +160,11 @@ fn tag_names() {
 }
 
 #[test]
-fn icon_file_names_match_serde_and_assets() {
-    let icons_directory = concat!(env!("CARGO_MANIFEST_DIR"), "/../../assets/icons");
-    for icon in IconName::ALL {
-        let serialized = serde_json::to_value(icon).unwrap();
-        assert_eq!(
-            format!("{}.svg", serialized.as_str().unwrap()),
-            icon.file_name()
-        );
-        let path = std::path::Path::new(icons_directory).join(icon.file_name());
-        assert!(path.is_file(), "{} exists", path.display());
-    }
-    assert_eq!(IconName::AiMl.file_name(), "ai-ml.svg");
-    let svg_count = std::fs::read_dir(icons_directory)
-        .unwrap()
-        .filter(|entry| {
-            entry.as_ref().is_ok_and(|entry| {
-                entry
-                    .path()
-                    .extension()
-                    .is_some_and(|extension| extension == "svg")
-            })
-        })
-        .count();
-    assert_eq!(svg_count, IconName::ALL.len());
-}
-
-#[test]
 fn kind_names_match_serde() {
     for line in Line::ALL {
         assert_eq!(serde_json::to_value(line).unwrap(), line.as_str());
     }
     for source in FactSource::ALL {
         assert_eq!(serde_json::to_value(source).unwrap(), source.as_str());
-    }
-    for icon in IconName::ALL {
-        assert_eq!(serde_json::to_value(icon).unwrap(), icon.as_str());
     }
 }

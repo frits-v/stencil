@@ -17,12 +17,16 @@ use serde_json::{Value, json};
 use stencil_model::checks::{CheckName, CheckOutcome};
 use stencil_model::grammar::{IconClass, IconProducts};
 use stencil_model::products::{icon_matches_product, named_product};
-use stencil_model::{IconName, Page, parse_page};
+use stencil_model::{GcpIcon, IconStem, Page, parse_page};
 
 fn repository_path(relative: &str) -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("../..")
         .join(relative)
+}
+
+fn stem(text: &str) -> IconStem {
+    IconStem::try_from(text).unwrap()
 }
 
 fn gcp_table() -> Vec<IconProducts> {
@@ -66,29 +70,30 @@ fn defects_for(subtitle: Option<&str>, icon: Option<&str>) -> Vec<String> {
 #[test]
 fn the_gcp_table_has_every_icon_once_in_icon_order_with_its_archive_class() {
     let table = gcp_table();
-    let icons: Vec<IconName> = table.iter().map(|row| row.icon).collect();
-    assert_eq!(icons, IconName::ALL);
+    let icons: Vec<&str> = table.iter().map(|row| row.icon.as_str()).collect();
+    let pack_icons: Vec<&str> = GcpIcon::ALL.iter().map(|icon| icon.as_str()).collect();
+    assert_eq!(icons, pack_icons);
 
-    let provenance = fs::read_to_string(repository_path("assets/icons/PROVENANCE.md")).unwrap();
+    let provenance = fs::read_to_string(repository_path("assets/icons/gcp/PROVENANCE.md")).unwrap();
     let mut examined = 0;
     for row in &table {
-        let file_cell = format!("| `{}` | `", row.icon.file_name());
+        let file_cell = format!("| `{}.svg` | `", row.icon);
         let line = provenance
             .lines()
             .find(|line| line.starts_with(&file_cell))
-            .unwrap_or_else(|| panic!("{} has no provenance row", row.icon.as_str()));
+            .unwrap_or_else(|| panic!("{} has no provenance row", row.icon));
         let archive_path = line.strip_prefix(&file_cell).unwrap();
         let expected = if archive_path.starts_with("Unique Icons/") {
             IconClass::Product
         } else if archive_path.starts_with("Category Icons/") {
             IconClass::Category
         } else {
-            panic!("{} comes from neither archive folder", row.icon.as_str())
+            panic!("{} comes from neither archive folder", row.icon)
         };
-        assert_eq!(row.class, expected, "{}", row.icon.as_str());
+        assert_eq!(row.class, expected, "{}", row.icon);
         examined += 1;
     }
-    assert_eq!(examined, IconName::ALL.len());
+    assert_eq!(examined, GcpIcon::ALL.len());
 }
 
 #[test]
@@ -109,13 +114,13 @@ fn named_product_picks_the_longest_name() {
 fn named_product_takes_the_first_of_two_names_of_equal_length() {
     let table = vec![
         IconProducts {
-            icon: IconName::Gke,
+            icon: stem("gke"),
             class: IconClass::Product,
             names: vec!["Alpha".to_string()],
             shape: None,
         },
         IconProducts {
-            icon: IconName::Compute,
+            icon: stem("compute"),
             class: IconClass::Category,
             names: vec!["Gamma".to_string()],
             shape: None,

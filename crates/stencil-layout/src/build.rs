@@ -16,14 +16,14 @@ pub use sheet::SHEET_BLOCK_BORDER_PX;
 use stencil_model::grammar::{LabelStyle, Role};
 use stencil_model::marks::{CarrierMark, MarkPlace};
 use stencil_model::pointer::NodePointer;
-use stencil_model::products::item_shape;
+use stencil_model::products::{item_icon, item_shape};
 use stencil_model::text::{TextStyle, TextStyleName};
 use stencil_model::{
     Arrow, BoxNode, Callout, Chrome, DEPTH_MAX, Fact, FactSource, Frame, GAP_DEFAULT_PX, Grammar,
-    Item, Justify, LANE_GAP_DEFAULT_PX, Lanes, LegendEntry, ListKind, Node, Note, NoteKind, Page,
-    PageActors, PageMarks, Pipe, PipeDir, PipeForm, Projection, Shape, Tee, TeeArm, Text, VetRule,
-    Violation, box_key, box_tint, canonical_legend_label, canvas_width, legend_entry_key, line_key,
-    line_tint,
+    IconName, Item, Justify, LANE_GAP_DEFAULT_PX, Lanes, LegendEntry, ListKind, Node, Note,
+    NoteKind, Page, PageActors, PageMarks, Pipe, PipeDir, PipeForm, Projection, Shape, Tee, TeeArm,
+    Text, VetRule, Violation, box_key, box_tint, canonical_legend_label, canvas_width,
+    legend_entry_key, line_key, line_tint,
 };
 use taffy::prelude::{
     AlignItems, AlignSelf, Dimension, Display, FlexDirection, FlexWrap, JustifyContent,
@@ -97,6 +97,8 @@ pub(crate) struct NodeRecord {
     pub container: Option<ContainerLook>,
     /// The solid an Item stands as under iso; None for every other tag.
     pub shape: Option<Shape>,
+    /// The icon an Item draws, resolved against its kind's pack; None for every other tag.
+    pub icon: Option<IconName>,
     /// How a Pipe is drawn under iso; None for every other tag.
     pub pipe_form: Option<PipeForm>,
     /// The flat outline of an outlined Item; None for every other node.
@@ -554,6 +556,7 @@ impl Builder<'_> {
             tint: None,
             container: None,
             shape: None,
+            icon: None,
             pipe_form: None,
             outline: None,
             parent,
@@ -1580,6 +1583,7 @@ impl Builder<'_> {
         let mut record = Self::record(pointer, NodeTag::Pcard, None, Some(parent_index), card);
         record.tint = self.actors.slot(item.actor.as_deref());
         record.shape = Some(shape);
+        record.icon = item_icon(self.grammar.item(&item.kind), item);
         record.parts = parts;
         self.push_record(record);
         Ok(())

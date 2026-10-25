@@ -158,35 +158,8 @@
         }
       ]
     },
-    "IconName": {
-      "type": "string",
-      "enum": [
-        "agents",
-        "ai-ml",
-        "bigquery",
-        "cloud-run-flat",
-        "cloud-run",
-        "cloud-sql",
-        "cloud-storage",
-        "compute-engine",
-        "compute",
-        "containers",
-        "data-analytics",
-        "databases",
-        "devops",
-        "gke",
-        "hybrid",
-        "integration",
-        "networking",
-        "observability",
-        "scc",
-        "security-identity",
-        "serverless",
-        "storage",
-        "vertex-ai"
-      ]
-    },
     "IconPack": {
+      "description": "The pack an item kind draws its icons from.",
       "type": "string",
       "enum": [
         "gcp",
@@ -200,7 +173,11 @@
           "$ref": "#/$defs/IconClass"
         },
         "icon": {
-          "$ref": "#/$defs/IconName"
+          "description": "A file stem of the kind's icon pack.",
+          "type": "string",
+          "maxLength": 64,
+          "minLength": 1,
+          "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
         },
         "names": {
           "type": "array",

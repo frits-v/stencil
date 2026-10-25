@@ -149,4 +149,4 @@ cd .. && stencil render figure.json --out-dir out
 
 ## Fonts and icons
 
-The four Inter faces in `assets/fonts/` are unmodified files from the Inter 4.1 release under the SIL Open Font License 1.1, whose text ships next to them as `OFL.txt`. The Google Cloud icons in `assets/icons/` are unaltered copies from the official icon library at cloud.google.com/icons, used on labeled product items in technical figures under the terms recorded in `assets/icons/PROVENANCE.md`.
+The four Inter faces in `assets/fonts/` are unmodified files from the Inter 4.1 release under the SIL Open Font License 1.1, whose text ships next to them as `OFL.txt`. Each icon pack is a directory under `assets/icons/` with its own `PROVENANCE.md`. The Google Cloud icons in `assets/icons/gcp/` are unaltered copies from the official icon library at cloud.google.com/icons, used on labeled product items in technical figures under the terms recorded in `assets/icons/gcp/PROVENANCE.md`.

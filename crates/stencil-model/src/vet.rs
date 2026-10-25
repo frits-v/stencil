@@ -7,7 +7,8 @@ use crate::document::{
     Projection, Sheet, Step, StepLook, TERMINAL_INDENT_MAX, TINT_SLOTS, Tee, Text,
     WORDMARK_SCALARS_MAX, canvas_width, is_valid_id,
 };
-use crate::grammar::{Grammar, IconPack, PAGE_PARENT};
+use crate::grammar::{Grammar, ItemKind, PAGE_PARENT};
+use crate::icons::{IconPack, IconStem};
 use crate::marks::{CarrierMark, PageMarks};
 use crate::pointer::NodePointer;
 use crate::sheet::{PageActors, SheetList, SheetSurface};
@@ -2233,12 +2234,8 @@ fn check_kind_and_tint(
                     kind_pointer,
                     violations,
                 );
-                if item.icon.is_some() && item_kind.icons == IconPack::None {
-                    violations.push(
-                        entry.pointer.child("icon"),
-                        VetRule::IconOutsidePack,
-                        format!("item kind {} takes no icon", item.kind),
-                    );
+                if let Some(icon) = &item.icon {
+                    check_icon_in_pack(icon, item_kind, &entry.pointer, violations);
                 }
             }
         },
@@ -2280,6 +2277,35 @@ fn check_parent(
             format!("{kind} cannot sit in {enclosing_box}"),
         );
     }
+}
+
+/// `icon-outside-pack` at `<item>/icon` when the item's kind takes no icon or its pack has
+/// no file of that stem.
+fn check_icon_in_pack(
+    icon: &IconStem,
+    item_kind: &ItemKind,
+    item_pointer: &NodePointer,
+    violations: &mut Violations,
+) {
+    let message = if item_kind.icons == IconPack::None {
+        format!(
+            "item kind {} draws from icon pack none and takes no icon",
+            item_kind.name
+        )
+    } else if item_kind.icons.resolve(icon).is_none() {
+        format!(
+            "icon {icon} is not in icon pack {}, which item kind {} draws from",
+            item_kind.icons.as_str(),
+            item_kind.name
+        )
+    } else {
+        return;
+    };
+    violations.push(
+        item_pointer.child("icon"),
+        VetRule::IconOutsidePack,
+        message,
+    );
 }
 
 /// `tint-out-of-range` at `<holder>/tint`.

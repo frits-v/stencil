@@ -83,10 +83,25 @@ fn unknown_tag_is_rejected() {
 }
 
 #[test]
-fn unknown_icon_is_rejected() {
+fn an_icon_that_is_not_a_file_stem_is_a_json_error() {
     assert_json_error(&g7_with_first_node(serde_json::json!(
-        { "tag": "Item", "kind": "product", "icon": "bigtable", "title": "Store" }
+        { "tag": "Item", "kind": "product", "icon": "Big Table", "title": "Store" }
     )));
+}
+
+#[test]
+fn an_icon_stem_outside_the_kinds_pack_parses_and_fails_vet() {
+    let json_text = g7_with_first_node(serde_json::json!(
+        { "tag": "Item", "kind": "product", "icon": "bigtable", "title": "Store", "subtitle": "Bigtable" }
+    ));
+    let Err(ModelError::Invalid(violations)) = parse_and_vet(&json_text, &common::gcp()) else {
+        panic!("an icon outside the pack vetted clean");
+    };
+    let rules: Vec<&str> = violations
+        .iter()
+        .map(|violation| violation.rule.as_str())
+        .collect();
+    assert_eq!(rules, ["icon-outside-pack"]);
 }
 
 #[test]

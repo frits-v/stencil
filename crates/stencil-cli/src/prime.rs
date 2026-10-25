@@ -5,12 +5,13 @@
 
 use serde::Serialize;
 use serde_json::{Map, Value};
-use stencil_model::grammar::{BorderPattern, IconPack, LabelStyle, Role, Tone};
+use stencil_model::grammar::{BorderPattern, IconClass, LabelStyle, Role, Tone};
 use stencil_model::{
     Arrow, BUILTIN_GRAMMARS, Bend, Chrome, FactSource, GAP_DEFAULT_PX, GRAMMAR_DEFAULT,
-    GRAMMAR_REFERENCE_PATTERN, GROW_WEIGHT_MAX, Grammar, GrammarError, ID_PATTERN, Justify,
-    KIND_PATTERN, LANE_GAP_DEFAULT_PX, LINK_CORNER_DEFAULT_PX, SheetSurface, SurfaceVocabulary,
-    TEXT_SCALARS_MAX, THEME_DEFAULT, THEME_REFERENCE_PATTERN, VIEW_GAP_DEFAULT_PX, builtin_grammar,
+    GRAMMAR_REFERENCE_PATTERN, GROW_WEIGHT_MAX, Grammar, GrammarError, ICON_STEM_PATTERN,
+    ID_PATTERN, IconPack, Justify, KIND_PATTERN, LANE_GAP_DEFAULT_PX, LINK_CORNER_DEFAULT_PX,
+    SheetSurface, SurfaceVocabulary, TEXT_SCALARS_MAX, THEME_DEFAULT, THEME_REFERENCE_PATTERN,
+    VIEW_GAP_DEFAULT_PX, builtin_grammar,
 };
 
 const BASE_TEXT: &str = include_str!("../prime/base.md");
@@ -18,6 +19,7 @@ const VOCABULARY_MARKER: &str = "{{vocabulary}}";
 const TOPICS_MARKER: &str = "{{topics}}";
 const GRAMMARS_MARKER: &str = "{{grammars}}";
 const KINDS_MARKER: &str = "{{kinds}}";
+const ICONS_MARKER: &str = "{{icons}}";
 
 /// Largest `stencil prime` output, in bytes.
 pub const BASE_BYTES_MAX: usize = 7000;
@@ -221,15 +223,21 @@ pub fn grammar_names() -> String {
     BUILTIN_GRAMMARS.join(", ")
 }
 
-/// `stencil prime grammar <name>`: the grammar's briefing with its kind tables rendered from
-/// its data. None for a name that is not a built-in grammar.
+/// `stencil prime grammar <name>`: the grammar's briefing with its kind tables, and its icon
+/// lists where the briefing has the icons marker, rendered from its data. None for a name
+/// that is not a built-in grammar.
 pub fn grammar_text(name: &str) -> Option<Result<String, PrimeError>> {
     let text = grammar_briefing_text(name)?;
     let grammar = match builtin_grammar(name)? {
         Ok(grammar) => grammar,
         Err(source) => return Some(Err(PrimeError::Grammar(source))),
     };
-    Some(fill(text, KINDS_MARKER, &kind_tables(&grammar)))
+    let text = match fill(text, KINDS_MARKER, &kind_tables(&grammar)) {
+        Ok(text) => text,
+        Err(error) => return Some(Err(error)),
+    };
+    // A grammar whose kinds draw no icons has nothing to list and no marker.
+    Some(Ok(text.replace(ICONS_MARKER, &icon_lists(&grammar))))
 }
 
 /// The container kinds and item kinds of a grammar as two markdown tables.
@@ -256,17 +264,57 @@ pub fn kind_tables(grammar: &Grammar) -> String {
     }
     text.push_str("\n| Item kind | Icons | Parents |\n|---|---|---|\n");
     for item in &grammar.items {
-        let icons = match item.icons {
-            IconPack::Gcp => "gcp",
-            IconPack::None => "none",
-        };
         text.push_str(&format!(
-            "| {} | {icons} | {} |\n",
+            "| {} | {} | {} |\n",
             item.name,
+            item.icons.as_str(),
             item.parents.join(", ")
         ));
     }
     text.trim_end().to_string()
+}
+
+/// One line per item kind that draws from an icon pack: the pack's stems in pack order,
+/// grouped by the class of the stem's row in the kind's products table; a stem with no row
+/// is listed as unlisted.
+pub fn icon_lists(grammar: &Grammar) -> String {
+    let mut lines = Vec::new();
+    for item in &grammar.items {
+        if item.icons == IconPack::None {
+            continue;
+        }
+        let mut product = Vec::new();
+        let mut category = Vec::new();
+        let mut unlisted = Vec::new();
+        for icon in item.icons.icons() {
+            let row = item
+                .products
+                .iter()
+                .find(|row| row.icon.as_str() == icon.as_str());
+            match row.map(|row| row.class) {
+                Some(IconClass::Product) => product.push(icon.as_str()),
+                Some(IconClass::Category) => category.push(icon.as_str()),
+                None => unlisted.push(icon.as_str()),
+            }
+        }
+        let mut classes = Vec::new();
+        for (class, stems) in [
+            ("product", product),
+            ("category", category),
+            ("unlisted", unlisted),
+        ] {
+            if !stems.is_empty() {
+                classes.push(format!("{class}: {}", stems.join(" ")));
+            }
+        }
+        lines.push(format!(
+            "Icons of {} (pack {}), by class. {}.",
+            item.name,
+            item.icons.as_str(),
+            classes.join("; ")
+        ));
+    }
+    lines.join("\n")
 }
 
 fn role_name(role: Role) -> &'static str {
@@ -877,6 +925,8 @@ fn describe_string(property: &Value) -> String {
         format!("text 1-{maximum}")
     } else if pattern == Some(KIND_PATTERN) {
         "kind".to_string()
+    } else if pattern == Some(ICON_STEM_PATTERN) {
+        "stem".to_string()
     } else if pattern == Some(GRAMMAR_REFERENCE_PATTERN) || pattern == Some(THEME_REFERENCE_PATTERN)
     {
         "ref".to_string()
