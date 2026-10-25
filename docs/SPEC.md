@@ -3657,9 +3657,9 @@ pub enum IconPack {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "lowercase")]
 pub enum IconClass {
-    /// From the archive's Unique Icons: stands for one product.
+    /// Stands for one product.
     Product,
-    /// From the archive's Category Icons: stands for a product family.
+    /// Stands for a product family, from a vendor's category folder.
     Category,
 }
 
