@@ -89,15 +89,19 @@ fn write_example(directory: &Path, file_name: &str, document: &Value) {
     .unwrap();
 }
 
+/// Sorted by file name, as the gallery lists them: `oss-web-stack-iso.json` sorts before
+/// `oss-web-stack.json`, so sorting the stems would not match.
 fn example_stems() -> Vec<String> {
-    let mut stems: Vec<String> = fs::read_dir(examples_directory())
+    let mut paths: Vec<PathBuf> = fs::read_dir(examples_directory())
         .unwrap()
         .map(|entry| entry.unwrap().path())
         .filter(|path| path.is_file() && path.extension().is_some_and(|ext| ext == "json"))
-        .map(|path| path.file_stem().unwrap().to_str().unwrap().to_string())
         .collect();
-    stems.sort();
-    stems
+    paths.sort();
+    paths
+        .iter()
+        .map(|path| path.file_stem().unwrap().to_str().unwrap().to_string())
+        .collect()
 }
 
 #[test]

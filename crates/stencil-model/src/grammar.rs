@@ -28,6 +28,7 @@ pub const KIND_RADIUS_MAX_PX: f32 = 16.0;
 const AWS_JSON: &str = include_str!("../grammars/aws.json");
 const AZURE_JSON: &str = include_str!("../grammars/azure.json");
 const GCP_JSON: &str = include_str!("../grammars/gcp.json");
+const OSS_JSON: &str = include_str!("../grammars/oss.json");
 const PLAIN_JSON: &str = include_str!("../grammars/plain.json");
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
@@ -153,8 +154,9 @@ pub enum IconClass {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct IconProducts {
-    /// A file stem of the kind's icon pack.
-    pub icon: IconStem,
+    /// A file stem of the kind's icon pack; absent for a product with no bundled icon.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub icon: Option<IconStem>,
     pub class: IconClass,
     #[schemars(length(min = 1))]
     pub names: Vec<String>,
@@ -281,6 +283,7 @@ pub fn builtin_grammar(name: &str) -> Option<Result<Grammar, GrammarError>> {
         "aws" => AWS_JSON,
         "azure" => AZURE_JSON,
         "gcp" => GCP_JSON,
+        "oss" => OSS_JSON,
         "plain" => PLAIN_JSON,
         _ => return None,
     };
@@ -293,6 +296,7 @@ pub fn builtin_grammar_json(name: &str) -> Option<&'static str> {
         "aws" => Some(AWS_JSON),
         "azure" => Some(AZURE_JSON),
         "gcp" => Some(GCP_JSON),
+        "oss" => Some(OSS_JSON),
         "plain" => Some(PLAIN_JSON),
         _ => None,
     }
@@ -633,25 +637,26 @@ fn check_icon_table(pointer: &NodePointer, item: &ItemKind, violations: &mut Vio
     let mut icons: BTreeSet<&str> = BTreeSet::new();
     for (index, row) in item.products.iter().enumerate().take(GRAMMAR_PRODUCTS_MAX) {
         let row_pointer = products_pointer.index(index);
-        if !icons.insert(row.icon.as_str()) {
-            violations.push(
-                row_pointer.child("icon"),
-                GrammarRule::IconTable,
-                format!("icon {} appears twice in item kind {}", row.icon, item.name),
-            );
-        }
-        // A kind of pack none with rows is reported once above, not once per row.
-        if item.icons != IconPack::None && item.icons.resolve(&row.icon).is_none() {
-            violations.push(
-                row_pointer.child("icon"),
-                GrammarRule::IconTable,
-                format!(
-                    "icon {} is not in icon pack {}, which item kind {} draws from",
-                    row.icon,
-                    item.icons.as_str(),
-                    item.name
-                ),
-            );
+        if let Some(icon) = &row.icon {
+            if !icons.insert(icon.as_str()) {
+                violations.push(
+                    row_pointer.child("icon"),
+                    GrammarRule::IconTable,
+                    format!("icon {icon} appears twice in item kind {}", item.name),
+                );
+            }
+            // A kind of pack none with rows is reported once above, not once per row.
+            if item.icons != IconPack::None && item.icons.resolve(icon).is_none() {
+                violations.push(
+                    row_pointer.child("icon"),
+                    GrammarRule::IconTable,
+                    format!(
+                        "icon {icon} is not in icon pack {}, which item kind {} draws from",
+                        item.icons.as_str(),
+                        item.name
+                    ),
+                );
+            }
         }
         if row.names.is_empty() || row.names.len() > GRAMMAR_PRODUCT_NAMES_MAX {
             violations.push(

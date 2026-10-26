@@ -5,7 +5,7 @@
     clippy::indexing_slicing
 )]
 
-//! icon-matches-product and `named_product` (section 13.10): the gcp, aws and azure products
+//! icon-matches-product and `named_product` (section 13.10): the gcp, aws, azure and oss products
 //! tables, the longest-match rule, each defect kind beside its clean neighbor, and the examples.
 
 mod common;
@@ -29,6 +29,14 @@ fn repository_path(relative: &str) -> PathBuf {
 
 fn stem(text: &str) -> IconStem {
     IconStem::try_from(text).unwrap()
+}
+
+/// The icon of a products row; every vendor row has one.
+fn row_icon(row: &IconProducts) -> &str {
+    row.icon
+        .as_ref()
+        .expect("a vendor row has an icon")
+        .as_str()
 }
 
 fn gcp_table() -> Vec<IconProducts> {
@@ -77,27 +85,27 @@ fn defects_under(grammar: &Grammar, subtitle: Option<&str>, icon: Option<&str>) 
 #[test]
 fn the_gcp_table_has_every_icon_once_in_icon_order_with_its_archive_class() {
     let table = gcp_table();
-    let icons: Vec<&str> = table.iter().map(|row| row.icon.as_str()).collect();
+    let icons: Vec<&str> = table.iter().map(row_icon).collect();
     let pack_icons: Vec<&str> = GcpIcon::ALL.iter().map(|icon| icon.as_str()).collect();
     assert_eq!(icons, pack_icons);
 
     let provenance = fs::read_to_string(repository_path("assets/icons/gcp/PROVENANCE.md")).unwrap();
     let mut examined = 0;
     for row in &table {
-        let file_cell = format!("| `{}.svg` | `", row.icon);
+        let file_cell = format!("| `{}.svg` | `", row_icon(row));
         let line = provenance
             .lines()
             .find(|line| line.starts_with(&file_cell))
-            .unwrap_or_else(|| panic!("{} has no provenance row", row.icon));
+            .unwrap_or_else(|| panic!("{} has no provenance row", row_icon(row)));
         let archive_path = line.strip_prefix(&file_cell).unwrap();
         let expected = if archive_path.starts_with("Unique Icons/") {
             IconClass::Product
         } else if archive_path.starts_with("Category Icons/") {
             IconClass::Category
         } else {
-            panic!("{} comes from neither archive folder", row.icon)
+            panic!("{} comes from neither archive folder", row_icon(row))
         };
-        assert_eq!(row.class, expected, "{}", row.icon);
+        assert_eq!(row.class, expected, "{}", row_icon(row));
         examined += 1;
     }
     assert_eq!(examined, GcpIcon::ALL.len());
@@ -121,13 +129,13 @@ fn named_product_picks_the_longest_name() {
 fn named_product_takes_the_first_of_two_names_of_equal_length() {
     let table = vec![
         IconProducts {
-            icon: stem("gke"),
+            icon: Some(stem("gke")),
             class: IconClass::Product,
             names: vec!["Alpha".to_string()],
             shape: None,
         },
         IconProducts {
-            icon: stem("compute"),
+            icon: Some(stem("compute")),
             class: IconClass::Category,
             names: vec!["Gamma".to_string()],
             shape: None,
@@ -345,27 +353,27 @@ fn aws_defects_for(subtitle: Option<&str>, icon: Option<&str>) -> Vec<String> {
 #[test]
 fn the_aws_table_has_every_icon_once_in_icon_order_with_its_archive_class() {
     let table = aws_table();
-    let icons: Vec<&str> = table.iter().map(|row| row.icon.as_str()).collect();
+    let icons: Vec<&str> = table.iter().map(row_icon).collect();
     let pack_icons: Vec<&str> = AwsIcon::ALL.iter().map(|icon| icon.as_str()).collect();
     assert_eq!(icons, pack_icons);
 
     let provenance = fs::read_to_string(repository_path("assets/icons/aws/PROVENANCE.md")).unwrap();
     let mut examined = 0;
     for row in &table {
-        let file_cell = format!("| `{}.svg` | `", row.icon);
+        let file_cell = format!("| `{}.svg` | `", row_icon(row));
         let line = provenance
             .lines()
             .find(|line| line.starts_with(&file_cell))
-            .unwrap_or_else(|| panic!("{} has no provenance row", row.icon));
+            .unwrap_or_else(|| panic!("{} has no provenance row", row_icon(row)));
         let archive_path = line.strip_prefix(&file_cell).unwrap();
         let expected = if archive_path.starts_with("Architecture-Service-Icons_") {
             IconClass::Product
         } else if archive_path.starts_with("Category-Icons_") {
             IconClass::Category
         } else {
-            panic!("{} comes from neither archive folder", row.icon)
+            panic!("{} comes from neither archive folder", row_icon(row))
         };
-        assert_eq!(row.class, expected, "{}", row.icon);
+        assert_eq!(row.class, expected, "{}", row_icon(row));
         examined += 1;
     }
     assert_eq!(examined, AwsIcon::ALL.len());
@@ -473,7 +481,7 @@ fn azure_table() -> Vec<IconProducts> {
 #[test]
 fn the_azure_table_has_every_icon_once_in_icon_order_each_a_product_from_one_archive() {
     let table = azure_table();
-    let icons: Vec<&str> = table.iter().map(|row| row.icon.as_str()).collect();
+    let icons: Vec<&str> = table.iter().map(row_icon).collect();
     let pack_icons: Vec<&str> = AzureIcon::ALL.iter().map(|icon| icon.as_str()).collect();
     assert_eq!(icons, pack_icons);
 
@@ -481,19 +489,19 @@ fn the_azure_table_has_every_icon_once_in_icon_order_each_a_product_from_one_arc
         fs::read_to_string(repository_path("assets/icons/azure/PROVENANCE.md")).unwrap();
     let mut examined = 0;
     for row in &table {
-        let file_cell = format!("| `{}.svg` | `", row.icon);
+        let file_cell = format!("| `{}.svg` | `", row_icon(row));
         let line = provenance
             .lines()
             .find(|line| line.starts_with(&file_cell))
-            .unwrap_or_else(|| panic!("{} has no provenance row", row.icon));
+            .unwrap_or_else(|| panic!("{} has no provenance row", row_icon(row)));
         let archive_path = line.strip_prefix(&file_cell).unwrap();
         assert!(
             archive_path.starts_with("Icons/")
                 || archive_path.starts_with("Microsoft Entra architecture icons - Oct 2023/"),
             "{} comes from neither archive",
-            row.icon
+            row_icon(row)
         );
-        assert_eq!(row.class, IconClass::Product, "{}", row.icon);
+        assert_eq!(row.class, IconClass::Product, "{}", row_icon(row));
         examined += 1;
     }
     assert_eq!(examined, AzureIcon::ALL.len());
@@ -553,4 +561,116 @@ fn an_azure_item_whose_subtitle_names_no_row_is_examined_and_clean_with_any_icon
     assert!(defects_under(&azure, Some("Azure Route Server"), Some("virtual-network")).is_empty());
     assert!(defects_under(&azure, Some("AKS · internal load balancer"), Some("aks")).is_empty());
     assert!(defects_under(&azure, None, Some("key-vault")).is_empty());
+}
+
+fn oss() -> Grammar {
+    builtin_grammar("oss")
+        .expect("oss is a built-in grammar")
+        .expect("the oss grammar is valid")
+}
+
+/// The defect messages of an oss page holding one item of `kind`.
+fn oss_defects_for(kind: &str, subtitle: Option<&str>, icon: Option<&str>) -> Vec<String> {
+    let mut value = item(subtitle, icon);
+    value["kind"] = json!(kind);
+    let page = page_of_items(json!([value]));
+    let report = icon_matches_product(&page, &oss());
+    assert_eq!(report.examined, 1, "{kind} {subtitle:?} {icon:?}");
+    report
+        .defects
+        .into_iter()
+        .map(|defect| defect.message)
+        .collect()
+}
+
+#[test]
+fn the_oss_examples_pass_with_items_examined() {
+    for (stem, items) in [("oss-web-stack", 11), ("oss-web-stack-iso", 10)] {
+        let text = fs::read_to_string(repository_path(&format!("examples/{stem}.json"))).unwrap();
+        let page = parse_page(&text).unwrap();
+        let report = icon_matches_product(&page, &oss());
+        assert!(report.passed(), "{stem}: {:?}", report.defects);
+        assert_eq!(report.examined, items, "{stem}");
+    }
+}
+
+#[test]
+fn every_oss_project_with_an_icon_matches_it_on_its_kind_and_no_other_icon() {
+    let grammar = oss();
+    let mut examined = 0;
+    for kind in grammar
+        .items
+        .iter()
+        .filter(|kind| !kind.products.is_empty())
+    {
+        for row in kind.products.iter().filter(|row| row.icon.is_some()) {
+            let icon = row_icon(row);
+            for name in &row.names {
+                assert!(
+                    oss_defects_for(&kind.name, Some(name), Some(icon)).is_empty(),
+                    "{} {name} {icon}",
+                    kind.name
+                );
+                assert!(
+                    oss_defects_for(&kind.name, Some(name), None).is_empty(),
+                    "{} {name}",
+                    kind.name
+                );
+                let other = kind
+                    .products
+                    .iter()
+                    .filter_map(|other| other.icon.as_ref())
+                    .find(|other| other.as_str() != icon)
+                    .unwrap();
+                assert_eq!(
+                    oss_defects_for(&kind.name, Some(name), Some(other.as_str())),
+                    [format!(
+                        "subtitle names {name}, whose icon is {icon}; the item carries {other}"
+                    )],
+                    "{} {name}",
+                    kind.name
+                );
+                examined += 1;
+            }
+        }
+    }
+    println!("examined {examined} product names");
+    assert!(examined > 0);
+}
+
+#[test]
+fn an_oss_icon_on_another_kind_is_a_defect_when_the_subtitle_names_that_kinds_project() {
+    assert_eq!(
+        oss_defects_for("queue", Some("Apache Kafka"), Some("postgresql")),
+        ["subtitle names Apache Kafka, whose icon is kafka; the item carries postgresql"]
+    );
+    assert_eq!(
+        oss_defects_for("network", Some("NGINX"), Some("kubernetes")),
+        ["subtitle names NGINX, whose icon is nginx; the item carries kubernetes"]
+    );
+    assert!(oss_defects_for("queue", Some("PostgreSQL"), Some("postgresql")).is_empty());
+}
+
+#[test]
+fn an_oss_project_without_a_bundled_logo_is_clean_without_an_icon_and_a_defect_with_one() {
+    for name in ["MySQL", "Elasticsearch"] {
+        assert!(
+            oss_defects_for("store", Some(name), None).is_empty(),
+            "{name}"
+        );
+    }
+    assert_eq!(
+        oss_defects_for("store", Some("MySQL"), Some("mariadb")),
+        [
+            "subtitle names MySQL, which has no product icon; the item carries the product icon mariadb"
+        ]
+    );
+    assert_eq!(
+        oss_defects_for("store", Some("Elasticsearch"), Some("opensearch")),
+        [
+            "subtitle names Elasticsearch, which has no product icon; the item carries the product icon opensearch"
+        ]
+    );
+    let table = oss().item("store").unwrap().products.clone();
+    assert_eq!(named_product(&table, "MySQL 8.4 · primary"), Some("MySQL"));
 }

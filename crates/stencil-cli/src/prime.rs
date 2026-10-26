@@ -9,9 +9,9 @@ use stencil_model::grammar::{BorderPattern, IconClass, LabelStyle, Role, Tone};
 use stencil_model::{
     Arrow, BUILTIN_GRAMMARS, Bend, Chrome, FactSource, GAP_DEFAULT_PX, GRAMMAR_DEFAULT,
     GRAMMAR_REFERENCE_PATTERN, GROW_WEIGHT_MAX, Grammar, GrammarError, ICON_STEM_PATTERN,
-    ID_PATTERN, IconPack, Justify, KIND_PATTERN, LANE_GAP_DEFAULT_PX, LINK_CORNER_DEFAULT_PX,
-    SheetSurface, SurfaceVocabulary, TEXT_SCALARS_MAX, THEME_DEFAULT, THEME_REFERENCE_PATTERN,
-    VIEW_GAP_DEFAULT_PX, builtin_grammar,
+    ID_PATTERN, IconPack, IconStem, Justify, KIND_PATTERN, LANE_GAP_DEFAULT_PX,
+    LINK_CORNER_DEFAULT_PX, SheetSurface, SurfaceVocabulary, TEXT_SCALARS_MAX, THEME_DEFAULT,
+    THEME_REFERENCE_PATTERN, VIEW_GAP_DEFAULT_PX, builtin_grammar,
 };
 
 const BASE_TEXT: &str = include_str!("../prime/base.md");
@@ -215,12 +215,13 @@ fn grammar_briefing_text(name: &str) -> Option<&'static str> {
         "aws" => Some(include_str!("../prime/grammars/aws.md")),
         "azure" => Some(include_str!("../prime/grammars/azure.md")),
         "gcp" => Some(include_str!("../prime/grammars/gcp.md")),
+        "oss" => Some(include_str!("../prime/grammars/oss.md")),
         "plain" => Some(include_str!("../prime/grammars/plain.md")),
         _ => None,
     }
 }
 
-/// `aws, azure, gcp, plain`, the built-in grammar names in `BUILTIN_GRAMMARS` order.
+/// `aws, azure, gcp, oss, plain`, the built-in grammar names in `BUILTIN_GRAMMARS` order.
 pub fn grammar_names() -> String {
     BUILTIN_GRAMMARS.join(", ")
 }
@@ -292,7 +293,7 @@ pub fn icon_lists(grammar: &Grammar) -> String {
             let row = item
                 .products
                 .iter()
-                .find(|row| row.icon.as_str() == icon.as_str());
+                .find(|row| row.icon.as_ref().map(IconStem::as_str) == Some(icon.as_str()));
             match row.map(|row| row.class) {
                 Some(IconClass::Product) => product.push(icon.as_str()),
                 Some(IconClass::Category) => category.push(icon.as_str()),

@@ -8,12 +8,14 @@ use stencil_model::IconName;
 mod aws;
 mod azure;
 mod gcp;
+mod oss;
 
 pub fn icon_svg_bytes(icon: IconName) -> &'static [u8] {
     match icon {
         IconName::Aws(icon) => aws::svg_bytes(icon),
         IconName::Azure(icon) => azure::svg_bytes(icon),
         IconName::Gcp(icon) => gcp::svg_bytes(icon),
+        IconName::Oss(icon) => oss::svg_bytes(icon),
     }
 }
 

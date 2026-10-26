@@ -26,7 +26,7 @@ use stencil_render::iso::{SolidInputs, project_page};
 use stencil_render::palette::Palette;
 use stencil_render::{DeviceScale, builtin_theme_json, measured_json, render_png, render_svg};
 
-const EXAMPLES: [(&str, &str); 13] = [
+const EXAMPLES: [(&str, &str); 15] = [
     (
         "aws-hybrid",
         include_str!("../../../examples/aws-hybrid.json"),
@@ -53,6 +53,14 @@ const EXAMPLES: [(&str, &str); 13] = [
     (
         "onprem-iso",
         include_str!("../../../examples/onprem-iso.json"),
+    ),
+    (
+        "oss-web-stack",
+        include_str!("../../../examples/oss-web-stack.json"),
+    ),
+    (
+        "oss-web-stack-iso",
+        include_str!("../../../examples/oss-web-stack-iso.json"),
     ),
     (
         "people-iso",

@@ -431,3 +431,87 @@ fn a_gcp_kind_or_icon_under_azure_is_a_violation() {
         outcome.stdout
     );
 }
+
+#[test]
+fn a_plain_page_becomes_an_oss_page_by_naming_the_grammar_and_adding_an_icon() {
+    let directory = scratch_directory("oss_from_plain");
+    let document = directory.join("page.json");
+    let mut value = page("plain", "store");
+    value["body"][0]["subtitle"] = json!("PostgreSQL");
+    write_json(&document, &value);
+
+    let plain = run_stencil(&["vet", document.to_str().unwrap()]);
+
+    assert_eq!(plain.code, ExitCode::Clean, "{}", plain.stdout);
+    assert!(
+        plain.stdout.contains(
+            "check icon-matches-product: examined 0 items, not applicable: grammar has no icon table"
+        ),
+        "{}",
+        plain.stdout
+    );
+
+    value["grammar"] = json!("oss");
+    value["body"][0]["icon"] = json!("postgresql");
+    write_json(&document, &value);
+
+    let oss = run_stencil(&["vet", document.to_str().unwrap()]);
+
+    assert_eq!(oss.code, ExitCode::Clean, "{}", oss.stdout);
+    assert!(
+        oss.stdout
+            .contains("check icon-matches-product: examined 1 item, 0 defects"),
+        "{}",
+        oss.stdout
+    );
+}
+
+#[test]
+fn under_oss_an_icon_reads_its_own_kinds_table_and_a_managed_item_takes_none() {
+    let directory = scratch_directory("oss_kinds");
+    let document = directory.join("oss.json");
+    let mut value = page("oss", "queue");
+    value["body"][0]["subtitle"] = json!("Apache Kafka");
+    value["body"][0]["icon"] = json!("postgresql");
+    write_json(&document, &value);
+
+    let mismatch = run_stencil(&["vet", document.to_str().unwrap()]);
+
+    assert_eq!(mismatch.code, ExitCode::Defects, "{}", mismatch.stdout);
+    assert!(
+        mismatch.stdout.contains(
+            "subtitle names Apache Kafka, whose icon is kafka; the item carries postgresql"
+        ),
+        "{}",
+        mismatch.stdout
+    );
+
+    value["body"][0]["kind"] = json!("managed");
+    write_json(&document, &value);
+
+    let managed = run_stencil(&["vet", document.to_str().unwrap()]);
+
+    assert_eq!(managed.code, ExitCode::Defects);
+    assert_eq!(
+        managed.stdout.lines().next(),
+        Some(
+            "violation icon-outside-pack /body/0/icon: item kind managed draws from icon pack none and takes no icon"
+        )
+    );
+
+    value["body"] = json!([
+        { "tag": "Box", "kind": "vpc", "label": "Network", "children": [] },
+        value["body"][1].clone()
+    ]);
+    write_json(&document, &value);
+
+    let vendor_kind = run_stencil(&["vet", document.to_str().unwrap()]);
+
+    assert_eq!(vendor_kind.code, ExitCode::Defects);
+    assert_eq!(
+        vendor_kind.stdout.lines().next(),
+        Some(
+            "violation kind-unknown /body/0/kind: kind \"vpc\" is not a container kind of grammar oss"
+        )
+    );
+}

@@ -1,0 +1,5 @@
+check remembered-constants: examined 0 text fields, not applicable: grammar has no remembered constants
+check legend-consistency: examined 13 relations, 0 defects
+check icon-matches-product: examined 11 items, 0 defects
+check keys-used: examined 0 keys, not applicable: page has no actors or keyed lists
+stencil vet: 0 violations, 4 checks, 2 passed, 0 failed, 2 not applicable

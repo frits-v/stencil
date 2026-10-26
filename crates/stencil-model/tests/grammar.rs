@@ -6,17 +6,26 @@
 
 use serde_json::{Value, json};
 use stencil_model::grammar::{
-    BorderPattern, GrammarError, IconClass, LabelStyle, Role, Tone, builtin_grammar_json,
+    BorderPattern, GrammarError, IconClass, IconProducts, LabelStyle, Role, Tone,
+    builtin_grammar_json,
 };
 use stencil_model::{
-    AwsIcon, AzureIcon, BUILTIN_GRAMMARS, GcpIcon, Grammar, IconPack, Shape, builtin_grammar,
-    grammar_schema, parse_grammar,
+    AwsIcon, AzureIcon, BUILTIN_GRAMMARS, GcpIcon, Grammar, IconPack, OssIcon, Shape,
+    builtin_grammar, grammar_schema, parse_grammar,
 };
 
 const COMMITTED_GRAMMAR_SCHEMA: &str = include_str!("../../../schema/grammar.schema.json");
 
 fn gcp() -> Grammar {
     builtin_grammar("gcp").unwrap().unwrap()
+}
+
+/// The icon of a products row; every vendor row has one.
+fn row_icon(row: &IconProducts) -> &str {
+    row.icon
+        .as_ref()
+        .expect("a vendor row has an icon")
+        .as_str()
 }
 
 fn gcp_value() -> Value {
@@ -296,18 +305,14 @@ fn gcp_has_a_product_kind_with_every_icon_once_in_icon_order_and_a_person_and_a_
     let mut expected_parents: Vec<&str> = GCP_TABLE.iter().map(|row| row.0).collect();
     expected_parents.push("page");
     assert_eq!(product.parents, expected_parents);
-    let icons: Vec<&str> = product
-        .products
-        .iter()
-        .map(|row| row.icon.as_str())
-        .collect();
+    let icons: Vec<&str> = product.products.iter().map(row_icon).collect();
     let pack_icons: Vec<&str> = GcpIcon::ALL.iter().map(|icon| icon.as_str()).collect();
     assert_eq!(icons, pack_icons);
     let product_class: Vec<&str> = product
         .products
         .iter()
         .filter(|row| row.class == IconClass::Product)
-        .map(|row| row.icon.as_str())
+        .map(row_icon)
         .collect();
     assert_eq!(
         product_class,
@@ -606,7 +611,7 @@ fn aws_has_a_product_kind_with_every_icon_once_in_icon_order_and_a_person_and_a_
     assert_eq!(table_icons, pack_icons);
     assert_eq!(product.products.len(), AWS_PRODUCTS.len());
     for (row, (icon, class, shape)) in product.products.iter().zip(AWS_PRODUCTS) {
-        assert_eq!(row.icon.as_str(), icon);
+        assert_eq!(row_icon(row), icon);
         assert_eq!(row.class, class, "{icon}");
         assert_eq!(row.shape, shape, "{icon}");
     }
@@ -914,7 +919,7 @@ fn azure_has_a_product_kind_with_every_icon_once_in_icon_order_and_a_person_and_
     let rows: Vec<(&str, Option<Shape>)> = product
         .products
         .iter()
-        .map(|row| (row.icon.as_str(), row.shape))
+        .map(|row| (row_icon(row), row.shape))
         .collect();
     assert_eq!(rows, AZURE_SHAPES);
     assert!(
@@ -983,6 +988,199 @@ fn plain_has_five_containers_and_eight_icon_free_items_each_with_a_shape() {
             .all(|item| item.icons == IconPack::None && item.products.is_empty())
     );
     assert!(grammar.remembered.is_empty());
+}
+
+/// The icon stems of each oss kind's table in row order, with each row's iso shape; None
+/// for a product with no bundled icon.
+#[allow(clippy::type_complexity)]
+const OSS_ROWS: [(&str, &[(Option<&str>, Option<Shape>)]); 4] = [
+    (
+        "service",
+        &[
+            (Some("airflow"), None),
+            (Some("argo"), None),
+            (Some("docker"), Some(Shape::Tower)),
+            (Some("grafana"), None),
+            (Some("helm"), None),
+            (Some("jaeger"), None),
+            (Some("jenkins"), None),
+            (Some("keycloak"), None),
+            (Some("kubernetes"), Some(Shape::Tower)),
+            (Some("loki"), None),
+            (Some("opentelemetry"), None),
+            (Some("prometheus"), None),
+            (Some("spark"), None),
+            (Some("vault"), None),
+        ],
+    ),
+    (
+        "store",
+        &[
+            (Some("cassandra"), None),
+            (Some("clickhouse"), None),
+            (None, None),
+            (Some("etcd"), None),
+            (Some("mariadb"), None),
+            (Some("minio"), Some(Shape::Stack)),
+            (Some("mongodb"), None),
+            (None, None),
+            (Some("opensearch"), None),
+            (Some("postgresql"), None),
+            (Some("redis"), None),
+            (Some("valkey"), None),
+        ],
+    ),
+    (
+        "queue",
+        &[
+            (Some("kafka"), None),
+            (Some("nats"), None),
+            (Some("pulsar"), None),
+            (Some("rabbitmq"), None),
+        ],
+    ),
+    (
+        "network",
+        &[
+            (Some("envoy"), None),
+            (Some("haproxy"), None),
+            (Some("istio"), None),
+            (Some("linkerd"), None),
+            (Some("nginx"), None),
+            (Some("traefik"), None),
+        ],
+    ),
+];
+
+#[test]
+fn oss_has_plains_containers_and_a_cluster() {
+    let oss = builtin_grammar("oss").unwrap().unwrap();
+    let plain = builtin_grammar("plain").unwrap().unwrap();
+    let names: Vec<&str> = oss
+        .containers
+        .iter()
+        .map(|container| container.name.as_str())
+        .collect();
+    assert_eq!(
+        names,
+        ["system", "boundary", "group", "tile", "cluster", "assembly"]
+    );
+    for name in ["system", "boundary", "group", "tile"] {
+        assert_eq!(oss.container(name), plain.container(name), "{name}");
+    }
+    let cluster = oss.container("cluster").unwrap();
+    assert_eq!(cluster.role, Role::Group);
+    assert_eq!(cluster.tone, Some(Tone::Soft));
+    assert!(!cluster.tintable);
+    assert_eq!(cluster.default_tint, None);
+    assert_eq!(cluster.border.pattern, BorderPattern::None);
+    assert_eq!(cluster.border.width, 0.0);
+    assert_eq!(cluster.padding, 12.0);
+    assert_eq!(cluster.radius, 8.0);
+    assert_eq!(cluster.label, LabelStyle::Plain);
+    assert_eq!(cluster.parents, ["system", "boundary", "group", "tile"]);
+    let mut assembly = plain.container("assembly").unwrap().clone();
+    assembly.parents.push("cluster".to_string());
+    assert_eq!(oss.container("assembly"), Some(&assembly));
+}
+
+#[test]
+fn oss_has_plains_item_kinds_with_every_icon_once_in_icon_order() {
+    let oss = builtin_grammar("oss").unwrap().unwrap();
+    let plain = builtin_grammar("plain").unwrap().unwrap();
+    let kinds: Vec<(&str, Option<Shape>)> = oss
+        .items
+        .iter()
+        .map(|item| (item.name.as_str(), item.shape))
+        .collect();
+    let plain_kinds: Vec<(&str, Option<Shape>)> = plain
+        .items
+        .iter()
+        .map(|item| (item.name.as_str(), item.shape))
+        .collect();
+    assert_eq!(kinds, plain_kinds);
+    let mut expected_parents: Vec<&str> = oss
+        .containers
+        .iter()
+        .map(|container| container.name.as_str())
+        .collect();
+    expected_parents.push("page");
+    let mut drawn: Vec<&str> = Vec::new();
+    for item in &oss.items {
+        assert_eq!(item.parents, expected_parents, "{}", item.name);
+        let Some((_, rows)) = OSS_ROWS.iter().find(|(name, _)| *name == item.name) else {
+            assert_eq!(item.icons, IconPack::None, "{}", item.name);
+            assert!(item.products.is_empty(), "{}", item.name);
+            continue;
+        };
+        assert_eq!(item.icons, IconPack::Oss, "{}", item.name);
+        let table: Vec<(Option<&str>, Option<Shape>)> = item
+            .products
+            .iter()
+            .map(|row| (row.icon.as_ref().map(|icon| icon.as_str()), row.shape))
+            .collect();
+        assert_eq!(table, *rows, "{}", item.name);
+        assert!(
+            item.products
+                .iter()
+                .all(|row| row.class == IconClass::Product),
+            "{}",
+            item.name
+        );
+        let icons: Vec<&str> = rows.iter().filter_map(|(icon, _)| *icon).collect();
+        let mut sorted = icons.clone();
+        sorted.sort_unstable();
+        assert_eq!(icons, sorted, "{} rows follow OssIcon::ALL", item.name);
+        drawn.extend(icons);
+    }
+    drawn.sort_unstable();
+    let pack_icons: Vec<&str> = OssIcon::ALL.iter().map(|icon| icon.as_str()).collect();
+    assert_eq!(drawn, pack_icons, "every oss icon on one kind, once");
+    let store = oss.item("store").unwrap();
+    let icon_less: Vec<&[String]> = store
+        .products
+        .iter()
+        .filter(|row| row.icon.is_none())
+        .map(|row| row.names.as_slice())
+        .collect();
+    assert_eq!(icon_less, [["Elasticsearch"], ["MySQL"]]);
+    assert!(oss.remembered.is_empty());
+}
+
+#[test]
+fn a_products_row_without_an_icon_is_valid_and_a_repeated_icon_still_is_not() {
+    let mut document = gcp_value();
+    let rows = document["items"][0]["products"].as_array_mut().unwrap();
+    rows.push(json!({ "class": "product", "names": ["Bigtable"] }));
+    rows.push(json!({ "class": "product", "names": ["Spanner"] }));
+    assert_eq!(grammar_faults(&document), []);
+    let grammar = parse_grammar(&document.to_string(), "test").unwrap();
+    let product = grammar.item("product").unwrap();
+    assert_eq!(
+        product
+            .products
+            .iter()
+            .filter(|row| row.icon.is_none())
+            .count(),
+        2
+    );
+
+    document["items"][0]["products"][1]["icon"] = json!("agents");
+    assert_eq!(
+        grammar_faults(&document),
+        [("grammar-icon-table", "/items/0/products/1/icon".to_string())]
+    );
+}
+
+#[test]
+fn a_kind_of_pack_none_takes_no_products_row_even_without_an_icon() {
+    let mut document = gcp_value();
+    assert_eq!(document["items"][1]["icons"], json!("none"));
+    document["items"][1]["products"] = json!([{ "class": "product", "names": ["Badge reader"] }]);
+    assert_eq!(
+        grammar_faults(&document),
+        [("grammar-icon-table", "/items/1/products".to_string())]
+    );
 }
 
 #[test]

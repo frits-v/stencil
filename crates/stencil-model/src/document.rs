@@ -67,10 +67,10 @@ pub const LINK_CORNER_DEFAULT_PX: f32 = 6.0;
 pub const LINK_CORNER_MAX_PX: f32 = 16.0;
 /// A grammar kind name: a Box or Item `kind`.
 pub const KIND_PATTERN: &str = r"^[a-z][a-z0-9-]{0,31}$";
-pub const BUILTIN_GRAMMARS: [&str; 4] = ["aws", "azure", "gcp", "plain"];
+pub const BUILTIN_GRAMMARS: [&str; 5] = ["aws", "azure", "gcp", "oss", "plain"];
 pub const GRAMMAR_DEFAULT: &str = "plain";
 pub const GRAMMAR_REFERENCE_PATTERN: &str =
-    r"^(aws|azure|gcp|plain|[^\u0000-\u001F]{1,395}\.json)$";
+    r"^(aws|azure|gcp|oss|plain|[^\u0000-\u001F]{1,395}\.json)$";
 /// Designed built-ins first (section 13.5), then the imported tier (section 13.9).
 pub const BUILTIN_THEMES: [&str; 13] = [
     "center",

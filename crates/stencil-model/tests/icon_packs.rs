@@ -9,7 +9,7 @@ use std::collections::BTreeSet;
 use std::fs;
 use std::path::PathBuf;
 
-use stencil_model::{AwsIcon, AzureIcon, GcpIcon, IconName, IconPack, IconStem};
+use stencil_model::{AwsIcon, AzureIcon, GcpIcon, IconName, IconPack, IconStem, OssIcon};
 
 fn pack_directory(pack: IconPack) -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -134,6 +134,54 @@ fn azure_icons_are_in_file_name_order() {
 }
 
 #[test]
+fn oss_icons_are_in_file_name_order() {
+    assert_eq!(OssIcon::ALL.len(), 34);
+    assert_eq!(OssIcon::ALL.first(), Some(&OssIcon::Airflow));
+    assert_eq!(OssIcon::Opentelemetry.file_name(), "opentelemetry.svg");
+    let names: Vec<&str> = OssIcon::ALL.iter().map(|icon| icon.file_name()).collect();
+    let mut sorted = names.clone();
+    sorted.sort_unstable();
+    assert_eq!(names, sorted);
+    assert_eq!(
+        IconPack::Oss.icons(),
+        OssIcon::ALL.map(IconName::Oss).to_vec()
+    );
+}
+
+/// The oss files come from many sources, so each row names its own: the cell after the
+/// product is an https URL and the last cell an ISO date.
+#[test]
+fn every_oss_provenance_row_carries_a_source_url_and_a_fetch_date() {
+    let provenance =
+        fs::read_to_string(pack_directory(IconPack::Oss).join("PROVENANCE.md")).unwrap();
+    let mut examined = 0;
+    for line in provenance.lines().filter(|line| line.starts_with("| `")) {
+        let cells: Vec<&str> = line.trim_matches('|').split(" | ").map(str::trim).collect();
+        assert_eq!(cells.len(), 5, "{line}");
+        assert!(cells[0].ends_with(".svg`"), "{line}");
+        assert!(!cells[1].is_empty(), "{line} names no product");
+        assert!(
+            cells[2].starts_with("<https://") && cells[2].ends_with('>'),
+            "{line} has no source URL"
+        );
+        assert!(!cells[3].is_empty(), "{line} names no source path");
+        let date = cells[4];
+        let digits: Vec<&str> = date.split('-').collect();
+        assert!(
+            date.len() == 10
+                && digits.len() == 3
+                && digits
+                    .iter()
+                    .all(|part| part.bytes().all(|byte| byte.is_ascii_digit())),
+            "{line} has no fetch date"
+        );
+        examined += 1;
+    }
+    println!("examined {examined} provenance rows");
+    assert_eq!(examined, OssIcon::ALL.len());
+}
+
+#[test]
 fn gcp_icons_keep_their_order_and_file_names() {
     assert_eq!(GcpIcon::ALL.len(), 23);
     assert_eq!(GcpIcon::ALL.first(), Some(&GcpIcon::Agents));
@@ -186,6 +234,16 @@ fn a_stem_resolves_only_in_a_pack_that_has_its_file() {
         Some(IconName::Azure(AzureIcon::KeyVault))
     );
     assert_eq!(IconPack::Gcp.resolve(&key_vault), None);
+    let postgresql = IconStem::try_from("postgresql").unwrap();
+    assert_eq!(
+        IconPack::Oss.resolve(&postgresql),
+        Some(IconName::Oss(OssIcon::Postgresql))
+    );
+    assert_eq!(
+        IconPack::Azure.resolve(&postgresql),
+        Some(IconName::Azure(AzureIcon::Postgresql))
+    );
+    assert_eq!(IconPack::Oss.resolve(&key_vault), None);
 }
 
 #[test]

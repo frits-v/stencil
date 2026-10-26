@@ -165,6 +165,7 @@
         "aws",
         "azure",
         "gcp",
+        "oss",
         "none"
       ]
     },
@@ -175,8 +176,11 @@
           "$ref": "#/$defs/IconClass"
         },
         "icon": {
-          "description": "A file stem of the kind's icon pack.",
-          "type": "string",
+          "description": "A file stem of the kind's icon pack; absent for a product with no bundled icon.",
+          "type": [
+            "string",
+            "null"
+          ],
           "maxLength": 64,
           "minLength": 1,
           "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
@@ -202,7 +206,6 @@
       },
       "additionalProperties": false,
       "required": [
-        "icon",
         "class",
         "names"
       ]
