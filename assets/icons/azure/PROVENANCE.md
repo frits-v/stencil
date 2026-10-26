@@ -1,6 +1,6 @@
 # Azure icon pack provenance
 
-Where the files under `assets/icons/azure/` came from and what may be done with them.
+Where each file under `assets/icons/azure/` came from, so its bytes can be re-verified.
 
 ## Icons (`assets/icons/azure/*.svg`)
 
@@ -82,72 +82,3 @@ comparing sha256 sums of each file against this directory:
 shasum -a 256 assets/icons/azure/*.svg
 shasum -a 256 "Azure_Public_Service_Icons/<archive path>"
 ```
-
-### Stated terms
-
-Terms come from the icons page and from `Microsoft_Terms_of_Use.pdf` and
-`Azure_Icons_FAQ.pdf` inside the ZIP. The page was fetched 2026-10-25 (page
-last updated 2026-10-09); the two PDFs were read from the archive downloaded the
-same day.
-
-<https://learn.microsoft.com/en-us/azure/architecture/icons/>, on the purpose of the download:
-
-> This page provides an official collection of Azure architecture icons including Azure product icons to help you build a custom architecture diagram for your next solution.
-
-Same page, "Icon terms":
-
-> Microsoft permits the use of these icons in architectural diagrams, training materials, or documentation. You can copy, distribute, and display the icons only for the permitted use unless granted explicit permission by Microsoft. Microsoft reserves all other rights.
-
-Same page, "General guidelines":
-
-> Use the icon to illustrate how products can work together.
->
-> In diagrams, we recommend including the product name somewhere close to the icon.
->
-> Use the icons as they would appear within Azure.
->
-> Don't crop, flip, or rotate icons.
->
-> Don't distort or change icon shape in any way.
->
-> Don't use Microsoft product icons to represent your product or service.
-
-`Microsoft_Terms_of_Use.pdf` in the ZIP repeats the same terms:
-
-> Microsoft permits the use of these icons in architectural diagrams, training materials, or documentation. You may copy, distribute, and display the icons only for the permitted use unless granted explicit permission by Microsoft. Microsoft reserves all other rights.
-
-`Azure_Icons_FAQ.pdf` in the ZIP, on modification and labeling:
-
-> Icons may not be cropped, flipped or rotated, and their shape may not be distorted or changed.
->
-> Yes, the full name of the service should always appear near the icon, but not so close that it looks like it's overlapping the icon.
->
-> No, Azure icons may only be used to represent the Microsoft product that it was designed for.
-
-The Entra package comes from <https://learn.microsoft.com/en-us/entra/architecture/architecture-icons>, fetched 2026-10-25 (page last updated 2023-10-23). Its "Icon terms" repeat the Azure wording:
-
-> Microsoft permits the use of these icons in architectural diagrams, training materials, or documentation. You might copy, distribute, and display the icons only for the permitted use unless granted explicit permission by Microsoft. Microsoft reserves all other rights.
-
-Its guidelines add one prohibition. The page and the package's `Microsoft Terms of Use.docx` both say:
-
-> Don't use Microsoft product icons in Marketing communications.
-
-### Conclusion
-
-Microsoft publishes this icon set for use in architecture diagrams, training
-materials and documentation, and asks that each icon be reproduced unaltered,
-labeled with the service name and used only for the Microsoft service it was
-designed for. The terms permit that use; they grant no separate licence to
-redistribute the files outside it, the same posture as the gcp pack. Stencil
-keeps the 41 SVGs unaltered, places the bytes of one in a data URI on the item
-of the service it depicts, beside the item's name, and scales it with the
-`<image>` element's width and height.
-
-What the terms do not cover: altering an icon (crop, flip, rotate, distort,
-recolor), using one to represent a product or service other than the Microsoft
-service it was designed for, use beyond diagrams, training materials and
-documentation, and, for the Entra icon, marketing communications.
-
-The Azure archive has no Microsoft Entra ID service icon, so `entra-id.svg`
-comes from the Entra archive, and it has no Blob Storage icon: a figure draws
-Blob Storage with `storage-accounts.svg`.
