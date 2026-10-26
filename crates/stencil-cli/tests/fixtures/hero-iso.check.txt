@@ -15,5 +15,5 @@ check icon-matches-product: examined 6 items, 0 defects
 check description-covers-drawing: examined 22 elements, 0 defects
 check keys-used: examined 0 keys, not applicable: page has no actors or keyed lists
 check marks-clear: examined 0 marks, not applicable: page has no marks, step badges, valves, hops or detail frames
-check junctions-plain: examined 76 junctions, 0 defects
+check junctions-plain: examined 75 junctions, 0 defects
 stencil check: 18 checks, 14 passed, 0 failed, 4 not applicable

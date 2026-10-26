@@ -1,7 +1,7 @@
 {
-  "title": "On-prem data reaches three managed services over two private paths.",
-  "kicker": "Hybrid platform · cover figure",
-  "lede": "Two Interconnect attachments carry on-prem traffic into the Shared VPC, which reaches the API gateway, model serving and the warehouse as managed services beside it.",
+  "title": "An assembly plant sends line-camera frames to defect inspection over two private paths.",
+  "kicker": "Vehicle plant · line inspection",
+  "lede": "Line-camera frames cross a primary and a failover attachment into the plant VPC, which hands them to the inspection API, the defect model and the quality warehouse.",
   "width": 1600,
   "badge": "Customer",
   "grammar": "gcp",
@@ -23,15 +23,15 @@
               "tag": "Box",
               "kind": "onprem",
               "tint": 1,
-              "label": "On-prem",
+              "label": "Plant floor",
               "children": [
                 {
                   "tag": "Item",
                   "id": "router",
                   "kind": "product",
                   "icon": "hybrid",
-                  "title": "Edge router",
-                  "subtitle": "on-prem · BGP"
+                  "title": "Plant router",
+                  "subtitle": "plant OT · BGP"
                 }
               ]
             }
@@ -55,7 +55,7 @@
                 {
                   "tag": "Box",
                   "kind": "vpc",
-                  "label": "Shared VPC · europe-west4",
+                  "label": "Plant VPC · europe-west4",
                   "children": [
                     {
                       "tag": "Row",
@@ -70,8 +70,8 @@
                           "id": "attachments",
                           "kind": "product",
                           "icon": "networking",
-                          "title": "Cloud Router",
-                          "subtitle": "VLAN attachments"
+                          "title": "Attachments",
+                          "subtitle": "Cloud Router"
                         },
                         {
                           "tag": "Item",
@@ -94,7 +94,7 @@
                       "id": "gateway",
                       "kind": "product",
                       "icon": "cloud-run",
-                      "title": "API gateway",
+                      "title": "Inspection API",
                       "subtitle": "Cloud Run"
                     }
                   ]
@@ -108,7 +108,7 @@
                       "id": "model",
                       "kind": "product",
                       "icon": "vertex-ai",
-                      "title": "Model serving",
+                      "title": "Defect model",
                       "subtitle": "Vertex AI"
                     }
                   ]
@@ -123,7 +123,7 @@
                       "id": "warehouse",
                       "kind": "product",
                       "icon": "bigquery",
-                      "title": "Warehouse",
+                      "title": "Quality warehouse",
                       "subtitle": "BigQuery"
                     }
                   ]
