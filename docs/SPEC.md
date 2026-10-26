@@ -1742,12 +1742,12 @@ Two families, both under the SIL Open Font License 1.1, committed unmodified und
 - `assets/fonts/OFL.txt` holds the license text from the Inter archive and `assets/fonts/JetBrainsMono-OFL.txt` the `OFL.txt` of the JetBrains Mono archive. `assets/fonts/FONTS.md` holds the table above with the SHA-256 column filled in, each release version and archive URL, and the SHA-256 of the JetBrains Mono archive. `BUNDLED_FONTS` copies the hashes, and a test compares them with the compiled bytes.
 - Static instances are used instead of the variable font, so each weight is a separate face with fixed metrics and cosmic-text and usvg select the same face. `docs/api-notes/cosmic-text.md` recommends bundling `InterVariable.ttf` alone; the spec does not follow it, for this reason.
 - The files are not subset, renamed or otherwise modified, so the OFL's clauses on modified versions do not apply. The license permits bundling the files with the software, and each license text ships next to them. The written SVG embeds the files its text uses unmodified (section 5.2); each carries its copyright notice and the OFL notice in its `name` table, the machine-readable metadata the OFL accepts in place of a separate license file.
-- Helvetica Neue, the face the HTML stencil uses, is a system `.ttc` that may not be redistributed, so it is not an option. Google Sans stays excluded for the brand reason recorded in the stencil provenance.
+- Helvetica Neue, the face the HTML stencil uses, is a system `.ttc` that may not be redistributed, so it is not an option. Google Sans is not bundled.
 - Only these six faces are ever loaded, into the cosmic-text database and into the usvg database alike. A character the style's family lacks is a `MissingGlyph` defect, never a fallback to the other family.
 
 ### 8.2 Icons
 
-An icon pack is a directory `assets/icons/<pack>/` of SVG files and a `PROVENANCE.md` that records the source archive or repository and its URL, the fetch date, and one row per file mapping the local file to its source path; the provenance of a vendor's archive also quotes its stated terms and the conclusion. `IconPack` lists the bundled packs in alphabetical order, then `none`. An icon is named by its file stem, and a stem means an icon only in the pack of the item's kind: `Item.icon` and a products row's `icon` are stems, the same stem in two packs is two icons, and a page never names a pack. Vet resolves an item's stem against its kind's pack (`icon-outside-pack`, section 13.1), the grammar check resolves each products row against its kind's pack (`grammar-icon-table`, section 13.2), and layout carries the resolved icon on the Item's node for the writer. A kind draws from one pack, so a figure mixes no packs.
+An icon pack is a directory `assets/icons/<pack>/` of SVG files and a `PROVENANCE.md` that records the source archive or repository and its URL, the fetch date, and one row per file mapping the local file to its source path. `IconPack` lists the bundled packs in alphabetical order, then `none`. An icon is named by its file stem, and a stem means an icon only in the pack of the item's kind: `Item.icon` and a products row's `icon` are stems, the same stem in two packs is two icons, and a page never names a pack. Vet resolves an item's stem against its kind's pack (`icon-outside-pack`, section 13.1), the grammar check resolves each products row against its kind's pack (`grammar-icon-table`, section 13.2), and layout carries the resolved icon on the Item's node for the writer. A kind draws from one pack, so a figure mixes no packs.
 
 Every file is copied byte for byte from its source. Stencil never recolors, resizes by rewriting, crops, re-exports or minifies an icon. It places the original bytes in a data URI and scales them with the `<image>` element's width and height.
 
@@ -1755,7 +1755,7 @@ Every file is copied byte for byte from its source. Stencil never recolors, resi
 
 #### Pack aws
 
-The 46 AWS Architecture Icons in `assets/icons/aws/`, the 64 px SVGs of the icon package linked from aws.amazon.com/architecture/icons. `assets/icons/aws/PROVENANCE.md` records the stated terms and the conclusion that customers and partners may use the icons unaltered, scaled in proportion, to create architecture diagrams; the terms give no separate licence to redistribute the files.
+The 46 AWS Architecture Icons in `assets/icons/aws/`, the 64 px SVGs of the icon package linked from aws.amazon.com/architecture/icons. `assets/icons/aws/PROVENANCE.md` records the archive, its URL and one row per file.
 
 | Local file | Archive path | SHA-256 |
 |---|---|---|
@@ -1808,7 +1808,7 @@ The 46 AWS Architecture Icons in `assets/icons/aws/`, the 64 px SVGs of the icon
 
 #### Pack azure
 
-The 41 Azure icons in `assets/icons/azure/`: 40 from the Azure Public Service Icons archive (V24) linked from learn.microsoft.com/en-us/azure/architecture/icons, and `entra-id.svg` from the Microsoft Entra architecture icons archive linked from learn.microsoft.com/en-us/entra/architecture/architecture-icons, since the Azure archive has no Entra ID icon. The archive's folders are categories but every file is a service icon, so every row of the `product` table is class product. `assets/icons/azure/PROVENANCE.md` records the stated terms and the conclusion that the icons may be used unaltered, labeled with the service name, for the Microsoft service each depicts in architecture diagrams, training materials and documentation.
+The 41 Azure icons in `assets/icons/azure/`: 40 from the Azure Public Service Icons archive (V24) linked from learn.microsoft.com/en-us/azure/architecture/icons, and `entra-id.svg` from the Microsoft Entra architecture icons archive linked from learn.microsoft.com/en-us/entra/architecture/architecture-icons, since the Azure archive has no Entra ID icon. The archive's folders are categories but every file is a service icon, so every row of the `product` table is class product. `assets/icons/azure/PROVENANCE.md` records the archives, their URLs and one row per file.
 
 | Local file | Archive path | SHA-256 |
 |---|---|---|
@@ -1856,7 +1856,7 @@ The 41 Azure icons in `assets/icons/azure/`: 40 from the Azure Public Service Ic
 
 #### Pack gcp
 
-The 23 Google Cloud icons in `assets/icons/gcp/`, from the two ZIP archives linked from cloud.google.com/icons. `assets/icons/gcp/PROVENANCE.md` records the stated terms and the conclusion that the icons may be used unaltered on labeled product cards in architecture and technical figures; a marketing or co-branded surface needs a Partner Marketing Hub request first.
+The 23 Google Cloud icons in `assets/icons/gcp/`, from the two ZIP archives linked from cloud.google.com/icons. `assets/icons/gcp/PROVENANCE.md` records the archives, their URLs and one row per file.
 
 | Local file | Archive path | SHA-256 |
 |---|---|---|
