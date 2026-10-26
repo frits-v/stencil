@@ -16,7 +16,7 @@
     <g data-id="/body" data-tag="Body">
       <g data-id="/body/0" data-tag="Row">
         <g data-id="/body/0/children/0" data-tag="Col">
-          <g data-id="/body/0/children/0/children/0" data-tag="Zone" data-kind="group">
+          <g id="_body_0_children_0_children_0" data-id="/body/0/children/0/children/0" data-tag="Zone" data-kind="group">
             <polygon points="367.71,257.35 606.73,395.35 606.73,389.35 367.71,251.35" fill="#D5E3DC"/>
             <polygon points="866.11,245.6 606.73,395.35 606.73,389.35 866.11,239.6" fill="#BCD2C7"/>
             <polygon points="627.08,101.6 866.11,239.6 606.73,389.35 367.71,251.35" fill="#EDF3F0"/>
@@ -34,7 +34,7 @@
               </g>
             </g>
           </g>
-          <g data-id="/body/0/children/0/children/1" data-tag="Zone" data-kind="group-a">
+          <g id="_body_0_children_0_children_1" data-id="/body/0/children/0/children/1" data-tag="Zone" data-kind="group-a">
             <polygon points="20,458.1 259.02,596.1 259.02,590.1 20,452.1" fill="#ACCBF9"/>
             <polygon points="533.99,437.35 259.02,596.1 259.02,590.1 533.99,431.35" fill="#85B3F7"/>
             <polygon points="294.96,293.35 533.99,431.35 259.02,590.1 20,452.1" fill="#D2E3FC"/>
@@ -54,14 +54,14 @@
             </g>
           </g>
         </g>
-        <g data-id="/body/0/children/1" data-tag="Zone" data-kind="system">
+        <g id="platform" data-id="/body/0/children/1" data-tag="Zone" data-kind="system">
           <polygon points="257.95,708.72 1394.17,1364.72 1394.17,1358.72 257.95,702.72" fill="#1A73E8"/>
           <polygon points="2099.33,957.6 1394.17,1364.72 1394.17,1358.72 2099.33,951.6" fill="#1257B3"/>
           <polygon points="963.1,295.6 2099.33,951.6 1394.17,1358.72 257.95,702.72" fill="#FAFBFC" stroke="#1A73E8" stroke-width="1.5" stroke-linejoin="round"/>
           <g data-plane="6" data-axis="x" transform="matrix(0.87 0.5 -0.87 0.5 697.75 40.8)">
             <text x="457" y="159.14" xml:space="preserve" font-family="Inter" font-size="25.2" font-weight="700" letter-spacing="0.25" fill="#1257B3">Shop platform</text>
           </g>
-          <g data-id="/body/0/children/1/children/0" data-tag="Zone" data-kind="cluster">
+          <g id="_body_0_children_1_children_0" data-id="/body/0/children/1/children/0" data-tag="Zone" data-kind="cluster">
             <polygon points="336.76,720.72 1394.17,1331.22 1394.17,1325.22 336.76,714.72" fill="#F8BFD2"/>
             <polygon points="1925.05,1024.72 1394.17,1331.22 1394.17,1325.22 1925.05,1018.72" fill="#F49BB8"/>
             <polygon points="867.63,408.22 1925.05,1018.72 1394.17,1325.22 336.76,714.72" fill="#FCE4EC"/>
@@ -243,29 +243,29 @@
       </g>
     </g>
     <g data-id="/legend" data-tag="Legend">
-      <g data-id="/legend/0" data-tag="LegendEntry" data-kind="blue">
+      <g id="_legend_0" data-id="/legend/0" data-tag="LegendEntry" data-kind="blue">
         <line x1="20" y1="1461.92" x2="46" y2="1461.92" stroke="#1A73E8" stroke-width="3.75"/>
         <text x="52" y="1466.29" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">Solid blue</text>
         <text x="115.56" y="1466.29" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">request path</text>
       </g>
-      <g data-id="/legend/1" data-tag="LegendEntry" data-kind="pink">
+      <g id="_legend_1" data-id="/legend/1" data-tag="LegendEntry" data-kind="pink">
         <line x1="203.18" y1="1461.92" x2="229.18" y2="1461.92" stroke="#C2185B" stroke-width="2.5"/>
         <text x="235.18" y="1466.29" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">Solid pink</text>
         <text x="298.55" y="1466.29" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">order events</text>
       </g>
-      <g data-id="/legend/2" data-tag="LegendEntry" data-kind="dash">
+      <g id="_legend_2" data-id="/legend/2" data-tag="LegendEntry" data-kind="dash">
         <line x1="385.8" y1="1461.92" x2="411.8" y2="1461.92" stroke="#1A73E8" stroke-width="2.5" stroke-dasharray="6 5"/>
         <text x="417.8" y="1466.29" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">Dashed blue</text>
         <text x="496.62" y="1466.29" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">identity</text>
       </g>
-      <g data-id="/legend/3" data-tag="LegendEntry" data-kind="gray">
+      <g id="_legend_3" data-id="/legend/3" data-tag="LegendEntry" data-kind="gray">
         <line x1="554.69" y1="1461.92" x2="580.69" y2="1461.92" stroke="#5F6368" stroke-width="2"/>
         <text x="586.69" y="1466.29" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">Solid gray</text>
         <text x="651.11" y="1466.29" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">uses</text>
       </g>
     </g>
   </g>
-  <g data-id="/links/0" data-tag="Link" data-kind="blue" data-from="/body/0/children/0/children/1/children/0" data-to="/body/0/children/1/children/0/children/0/children/0/children/0/children/0">
+  <g id="_links_0" data-id="/links/0" data-tag="Link" data-kind="blue" data-from="/body/0/children/0/children/1/children/0" data-to="/body/0/children/1/children/0/children/0/children/0/children/0/children/0">
     <polygon points="304.56,449.89 449.12,533.35 441.32,537.85 296.76,454.39" fill="#202124" fill-opacity="0.2" filter="url(#stencil-shadow)"/>
     <polygon points="296.76,446.89 296.9,445.65 297.29,444.34 297.91,443.05 298.71,441.87 299.65,440.88 300.66,440.14 301.67,439.71 302.61,439.62 303.42,439.87 304.04,440.44 304.43,441.3 304.56,442.39 304.43,443.63 304.04,444.94 303.42,446.23 302.61,447.41 301.67,448.4 300.66,449.14 299.65,449.57 298.71,449.66 297.91,449.41 297.29,448.84 296.9,447.98" fill="#1A73E8"/>
     <polygon points="303.42,439.87 447.97,523.33 445.22,528.1 300.66,444.64" fill="#5295EE"/>
@@ -290,11 +290,11 @@
       <text x="325.6" y="542.64" xml:space="preserve" font-family="Inter" font-size="15.6" font-weight="700" fill="#202124">HTTPS</text>
     </g>
   </g>
-  <g data-id="/links/1" data-tag="Link" data-kind="dash" data-from="/body/0/children/1/children/0/children/0/children/0/children/0/children/0" data-to="/body/0/children/0/children/0/children/0">
+  <g id="_links_1" data-id="/links/1" data-tag="Link" data-kind="dash" data-from="/body/0/children/1/children/0/children/0/children/0/children/0/children/0" data-to="/body/0/children/0/children/0/children/0">
     <path d="M 753.9 503.88 L 557.75 390.63 A 7.35 4.24 0 0 1 557.75 384.63 L 727.11 286.85 A 7.35 4.24 0 0 0 727.11 280.85 L 687.27 257.85" fill="none" stroke="#1A73E8" stroke-width="2.5" stroke-dasharray="6 5" stroke-linejoin="round"/>
     <polygon points="674.28,250.35 690.76,251.8 683.78,263.9" fill="#1A73E8"/>
   </g>
-  <g data-id="/links/2" data-tag="Link" data-kind="blue" data-from="/body/0/children/1/children/0/children/0/children/0/children/0/children/0" data-to="/body/0/children/1/children/0/children/0/children/0/children/1/children/0">
+  <g id="_links_2" data-id="/links/2" data-tag="Link" data-kind="blue" data-from="/body/0/children/1/children/0/children/0/children/0/children/0/children/0" data-to="/body/0/children/1/children/0/children/0/children/0/children/1/children/0">
     <polygon points="844.74,527.43 927.37,575.14 919.58,579.64 836.95,531.93" fill="#202124" fill-opacity="0.2" filter="url(#stencil-shadow)"/>
     <polygon points="836.95,524.43 837.08,523.19 837.47,521.88 838.09,520.59 838.9,519.41 839.84,518.42 840.84,517.68 841.85,517.26 842.79,517.16 843.6,517.41 844.22,517.99 844.61,518.85 844.74,519.93 844.61,521.18 844.22,522.49 843.6,523.78 842.79,524.96 841.85,525.95 840.84,526.68 839.84,527.11 838.9,527.21 838.09,526.96 837.47,526.38 837.08,525.52" fill="#1A73E8"/>
     <polygon points="843.6,517.41 926.23,565.12 923.48,569.89 840.84,522.18" fill="#5295EE"/>
@@ -307,7 +307,7 @@
       <text x="620.16" y="436.01" xml:space="preserve" font-family="Inter" font-size="15.6" font-weight="700" fill="#202124">route</text>
     </g>
   </g>
-  <g data-id="/links/3" data-tag="Link" data-kind="pink" data-from="/body/0/children/1/children/0/children/0/children/0/children/1/children/0" data-to="/body/0/children/1/children/0/children/0/children/0/children/2/children/0">
+  <g id="_links_3" data-id="/links/3" data-tag="Link" data-kind="pink" data-from="/body/0/children/1/children/0/children/0/children/0/children/1/children/0" data-to="/body/0/children/1/children/0/children/0/children/0/children/2/children/0">
     <polygon points="997.46,634.68 1111.1,700.29 1106.77,702.79 993.13,637.18" fill="#202124" fill-opacity="0.2" filter="url(#stencil-shadow)"/>
     <polygon points="993.13,631.68 993.21,630.99 993.42,630.26 993.77,629.54 994.21,628.89 994.74,628.34 995.3,627.93 995.86,627.69 996.38,627.64 996.83,627.78 997.17,628.1 997.39,628.57 997.46,629.18 997.39,629.87 997.17,630.6 996.83,631.31 996.38,631.97 995.86,632.52 995.3,632.93 994.74,633.17 994.21,633.22 993.77,633.08 993.42,632.76 993.21,632.28" fill="#C2185B"/>
     <polygon points="996.83,627.78 1110.47,693.39 1108.94,696.04 995.3,630.43" fill="#E63279"/>
@@ -320,7 +320,7 @@
       <text x="785.18" y="436.01" xml:space="preserve" font-family="Inter" font-size="15.6" font-weight="700" fill="#202124">publish</text>
     </g>
   </g>
-  <g data-id="/links/4" data-tag="Link" data-kind="pink" data-from="/body/0/children/1/children/0/children/0/children/0/children/2/children/0" data-to="/body/0/children/1/children/0/children/0/children/0/children/3/children/0">
+  <g id="_links_4" data-id="/links/4" data-tag="Link" data-kind="pink" data-from="/body/0/children/1/children/0/children/0/children/0/children/2/children/0" data-to="/body/0/children/1/children/0/children/0/children/0/children/3/children/0">
     <polygon points="1177.62,742.69 1289.12,807.07 1284.79,809.57 1173.29,745.19" fill="#202124" fill-opacity="0.2" filter="url(#stencil-shadow)"/>
     <polygon points="1173.29,739.69 1173.36,739 1173.58,738.27 1173.92,737.56 1174.37,736.9 1174.89,736.35 1175.45,735.94 1176.01,735.7 1176.53,735.65 1176.98,735.79 1177.33,736.11 1177.54,736.58 1177.62,737.19 1177.54,737.88 1177.33,738.61 1176.98,739.32 1176.53,739.98 1176.01,740.53 1175.45,740.94 1174.89,741.18 1174.37,741.23 1173.92,741.09 1173.58,740.77 1173.36,740.29" fill="#C2185B"/>
     <polygon points="1176.98,735.79 1288.49,800.17 1286.96,802.82 1175.45,738.44" fill="#E63279"/>
@@ -333,7 +333,7 @@
       <text x="998.5" y="432.01" xml:space="preserve" font-family="Inter" font-size="15.6" font-weight="700" fill="#202124">consume</text>
     </g>
   </g>
-  <g data-id="/links/5" data-tag="Link" data-kind="gray" data-from="/body/0/children/1/children/0/children/0/children/0/children/1/children/0" data-to="/body/0/children/1/children/0/children/0/children/1/children/1">
+  <g id="_links_5" data-id="/links/5" data-tag="Link" data-kind="gray" data-from="/body/0/children/1/children/0/children/0/children/0/children/1/children/0" data-to="/body/0/children/1/children/0/children/0/children/1/children/1">
     <polygon points="916,599.71 860.56,567.71 864.89,565.21 920.33,597.21" fill="#202124" fill-opacity="0.2" filter="url(#stencil-shadow)"/>
     <polygon points="864.89,559.71 864.82,559.11 864.6,558.63 864.26,558.31 863.81,558.17 863.29,558.22 862.73,558.46 862.17,558.87 861.65,559.42 861.2,560.08 860.85,560.79 860.64,561.52 860.56,562.21 860.64,562.81 860.85,563.29 861.2,563.61 861.65,563.75 862.17,563.7 862.73,563.46 863.29,563.05 863.81,562.5 864.26,561.84 864.6,561.13 864.82,560.4" fill="#5F6368"/>
     <polygon points="919.69,590.31 864.26,558.31 862.73,560.96 918.16,592.96" fill="#7C8188"/>
@@ -360,7 +360,7 @@
     <polygon points="725.61,725.62 734.82,713.59 737.73,718.62" fill="#7C8188"/>
     <polygon points="725.61,725.62 737.73,718.62 740.64,723.66" fill="#5F6368"/>
   </g>
-  <g data-id="/links/6" data-tag="Link" data-kind="pink" data-from="/body/0/children/1/children/0/children/0/children/0/children/3/children/0" data-to="/body/0/children/1/children/0/children/0/children/0/children/4/children/0">
+  <g id="_links_6" data-id="/links/6" data-tag="Link" data-kind="pink" data-from="/body/0/children/1/children/0/children/0/children/0/children/3/children/0" data-to="/body/0/children/1/children/0/children/0/children/0/children/4/children/0">
     <polygon points="1375.72,853.07 1483.71,915.41 1479.38,917.91 1371.39,855.57" fill="#202124" fill-opacity="0.2" filter="url(#stencil-shadow)"/>
     <polygon points="1371.39,850.07 1371.47,849.38 1371.68,848.65 1372.03,847.93 1372.48,847.28 1373,846.73 1373.56,846.32 1374.12,846.08 1374.64,846.03 1375.09,846.17 1375.43,846.48 1375.65,846.96 1375.72,847.57 1375.65,848.26 1375.43,848.98 1375.09,849.7 1374.64,850.36 1374.12,850.91 1373.56,851.32 1373,851.56 1372.48,851.61 1372.03,851.47 1371.68,851.15 1371.47,850.67" fill="#C2185B"/>
     <polygon points="1375.09,846.17 1483.07,908.51 1481.54,911.16 1373.56,848.82" fill="#E63279"/>
@@ -373,7 +373,7 @@
       <text x="1295.66" y="432.01" xml:space="preserve" font-family="Inter" font-size="15.6" font-weight="700" fill="#202124">writes</text>
     </g>
   </g>
-  <g data-id="/links/7" data-tag="Link" data-kind="gray" data-from="/body/0/children/1/children/0/children/0/children/0/children/4/children/0" data-to="/body/0/children/1/children/0/children/0/children/0/children/5/children/0">
+  <g id="_links_7" data-id="/links/7" data-tag="Link" data-kind="gray" data-from="/body/0/children/1/children/0/children/0/children/0/children/4/children/0" data-to="/body/0/children/1/children/0/children/0/children/0/children/5/children/0">
     <polygon points="1554.37,956.21 1649.48,1011.12 1645.15,1013.62 1550.04,958.71" fill="#202124" fill-opacity="0.2" filter="url(#stencil-shadow)"/>
     <polygon points="1550.04,953.21 1550.11,952.52 1550.33,951.79 1550.68,951.08 1551.12,950.42 1551.65,949.87 1552.21,949.46 1552.77,949.22 1553.29,949.17 1553.74,949.31 1554.08,949.63 1554.3,950.11 1554.37,950.71 1554.3,951.4 1554.08,952.13 1553.74,952.84 1553.29,953.5 1552.77,954.05 1552.21,954.46 1551.65,954.7 1551.12,954.75 1550.68,954.61 1550.33,954.29 1550.11,953.81" fill="#5F6368"/>
     <polygon points="1553.74,949.31 1648.84,1004.22 1647.31,1006.87 1552.21,951.96" fill="#7C8188"/>
