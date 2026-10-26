@@ -3665,8 +3665,8 @@ fn every_link_path_of_every_iso_example_lies_at_one_height() {
             examined += 1;
         }
     }
-    // Hero 6, platform 4, people 4, on-prem 1, transit 1.
-    assert_eq!(examined, 16);
+    // Hero 6, platform 4, people 4, on-prem 1, transit 1, oss web stack 8.
+    assert_eq!(examined, 24);
 }
 
 /// Section 12.7 rule 8: a Z the router left with its step at the end of the target's stub
