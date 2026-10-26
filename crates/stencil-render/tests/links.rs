@@ -14,7 +14,7 @@ use serde_json::{Value, json};
 use stencil_layout::{LinkRoute, PartName, RouteStatus};
 use stencil_model::PagePoint;
 use stencil_render::palette::Palette;
-use stencil_render::{DeviceScale, measured_json, render_png};
+use stencil_render::{DeviceScale, HoverSource, measured_json, render_png};
 
 const DESIGN_BRIEF_JSON: &str = include_str!("../../../examples/design-brief.json");
 
@@ -212,38 +212,50 @@ fn each_link_group_names_its_end_pointers_and_each_item_group_its_anchor_and_far
     assert_eq!(markers.len(), 1);
     assert!(markers[0].has_tag_name("marker"));
 
-    let hover: Vec<(String, String)> = rendered
-        .svg
-        .hover_items
-        .iter()
-        .map(|item| (item.pointer.clone(), item.anchor.clone()))
-        .collect();
-    let expected: Vec<(String, String)> = (0..4)
-        .map(|index| (child(index), anchors[index].to_string()))
-        .collect();
-    assert_eq!(hover, expected);
-    let neighbours: Vec<Vec<String>> = rendered
-        .svg
-        .hover_items
-        .iter()
-        .map(|item| item.neighbours.clone())
-        .collect();
+    // An item keeps itself, its links and the items at their far ends; the item with no
+    // link has no rule.
+    let kept_of = |source: &str| -> Option<Vec<String>> {
+        rendered
+            .svg
+            .hover_rules
+            .iter()
+            .find(|rule| rule.source == HoverSource::Group(source.to_string()))
+            .map(|rule| rule.kept_groups.clone())
+    };
+    let sorted = |mut pointers: Vec<String>| {
+        pointers.sort();
+        pointers
+    };
+    let link = |index: usize| format!("/links/{index}");
     assert_eq!(
-        neighbours,
-        vec![
-            vec![child(1), child(2)],
-            vec![child(0), child(2)],
-            vec![child(0), child(1), child(3)],
-            vec![child(2)],
-        ]
+        kept_of(&child(0)),
+        Some(sorted(vec![child(0), child(1), child(2), link(0), link(2)]))
     );
-    let written = rendered.svg.self_contained().unwrap();
-    let rules: Vec<&str> = written
-        .lines()
-        .filter(|line| line.contains(":hover"))
-        .collect();
-    assert_eq!(rules.len(), 4);
-    assert!(!written.contains(&format!(r#"[data-id="{}"]:hover"#, child(4))));
+    assert_eq!(
+        kept_of(&child(2)),
+        Some(sorted(vec![
+            child(0),
+            child(1),
+            child(2),
+            child(3),
+            link(1),
+            link(2),
+            link(3)
+        ]))
+    );
+    assert_eq!(
+        kept_of(&link(3)),
+        Some(sorted(vec![child(2), child(3), link(3)]))
+    );
+    assert_eq!(kept_of(&child(4)), None);
+    let group_sources = rendered
+        .svg
+        .hover_rules
+        .iter()
+        .filter(|rule| matches!(rule.source, HoverSource::Group(_)))
+        .count();
+    // Four linked items, four links and the two legend entries.
+    assert_eq!(group_sources, 10);
 }
 
 #[test]

@@ -13,9 +13,9 @@ use stencil_model::{
 use super::DOT_RADIUS_PX;
 use super::{
     ArrowEnds, DocumentNode, ICON_CHIP_RADIUS_PX, PartContext, Relabeler, SvgWriter, TAG_RADIUS_PX,
-    close_groups_until_parent, escape_xml, frame_diagonal_box, group_open_tag, hover_items_of,
-    icon_chip_box, item_anchor, link_group_open_tag, link_mismatch, part_mismatch,
-    pipe_text_style_name, stroke_attributes, text_style_name,
+    close_groups_until_parent, escape_xml, frame_diagonal_box, group_open_tag, icon_chip_box,
+    link_group_open_tag, link_mismatch, part_mismatch, pipe_text_style_name, stroke_attributes,
+    text_style_name,
 };
 use crate::iso::sprites;
 use crate::iso::tube::{
@@ -58,6 +58,7 @@ pub(super) fn render_iso(
     geometry: &PageGeometry,
     expected: &[(NodePointer, DocumentNode<'_>)],
 ) -> Result<SvgDocument, RenderError> {
+    let highlights = super::related::highlights(page, geometry);
     let (zoomed, zoom) = zoomed_geometry(geometry)?;
     let solid_inputs = SolidInputs::new(&zoomed, &page.links, theme.iso.slab_thickness);
     let scene = project_zoomed(&zoomed, zoom, &solid_inputs)?;
@@ -106,11 +107,9 @@ pub(super) fn render_iso(
     let mut relabeler = Relabeler::default();
 
     let mut open_groups: Vec<usize> = Vec::new();
-    let mut anchors: Vec<Option<String>> = Vec::with_capacity(geometry.nodes.len());
     for (index, (node, (_, document_node))) in geometry.nodes.iter().zip(expected).enumerate() {
         close_groups_until_parent(&mut writer, &mut open_groups, geometry, index)?;
         let depth = open_groups.len() + 1;
-        let anchor = item_anchor(node, *document_node);
         if node.parent.is_none() {
             writer.line(
                 depth,
@@ -121,9 +120,8 @@ pub(super) fn render_iso(
                 ),
             );
         } else {
-            writer.line(depth, &group_open_tag(node, anchor.as_deref()));
+            writer.line(depth, &group_open_tag(node, &highlights, index));
         }
-        anchors.push(anchor);
         let solid = solids.get(index).copied().flatten();
         match (node.tag, solid, document_node) {
             (NodeTag::LegendEntry, _, DocumentNode::LegendEntry(_)) => {
@@ -167,7 +165,7 @@ pub(super) fn render_iso(
         writer.line(1, "</g>");
     }
     writer.line(0, "</svg>");
-    writer.hover_items = hover_items_of(geometry, &anchors);
+    writer.hover_rules = highlights.rules;
 
     Ok(writer.into_document())
 }

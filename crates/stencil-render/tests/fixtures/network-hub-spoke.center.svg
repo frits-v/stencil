@@ -16,7 +16,7 @@
     <g data-id="/body" data-tag="Body">
       <g data-id="/body/0" data-tag="Row">
         <g data-id="/body/0/children/0" data-tag="Col">
-          <g data-id="/body/0/children/0/children/0" data-tag="Zone" data-kind="onprem-a">
+          <g id="_body_0_children_0_children_0" data-id="/body/0/children/0/children/0" data-tag="Zone" data-kind="onprem-a">
             <rect x="20.75" y="117.95" width="268.6" height="384.17" rx="7.25" fill="#D2E3FC" stroke="#D7CCC8" stroke-width="1.5"/>
             <text x="33.5" y="142.27" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#5F6368">On-prem · Metro 1</text>
             <g id="_body_0_children_0_children_0_children_0" data-id="/body/0/children/0/children/0/children/0" data-tag="Pcard">
@@ -32,7 +32,7 @@
               <text x="83" y="242.77" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">port toward Google</text>
             </g>
           </g>
-          <g data-id="/body/0/children/0/children/1" data-tag="Zone" data-kind="onprem-b">
+          <g id="_body_0_children_0_children_1" data-id="/body/0/children/0/children/1" data-tag="Zone" data-kind="onprem-b">
             <rect x="20.75" y="511.62" width="268.6" height="384.17" rx="7.25" fill="#FCE4EC" stroke="#D7CCC8" stroke-width="1.5"/>
             <text x="33.5" y="535.93" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#5F6368">On-prem · Metro 2</text>
             <g id="_body_0_children_0_children_1_children_0" data-id="/body/0/children/0/children/1/children/0" data-tag="Pcard">
@@ -48,7 +48,7 @@
               <text x="83" y="636.43" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">port toward Google</text>
             </g>
           </g>
-          <g data-id="/body/0/children/0/children/2" data-tag="Zone" data-kind="project">
+          <g id="_body_0_children_0_children_2" data-id="/body/0/children/0/children/2" data-tag="Zone" data-kind="project">
             <rect x="20.75" y="905.28" width="268.6" height="384.17" rx="7.25" fill="#FFF8E1" stroke="#FFE082" stroke-width="1.5"/>
             <text x="33.5" y="929.6" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#5F6368">Corporate network</text>
             <g id="_body_0_children_0_children_2_children_0" data-id="/body/0/children/0/children/2/children/0" data-tag="Pcard">
@@ -73,11 +73,11 @@
         </g>
         <g data-id="/body/0/children/1" data-tag="Col">
           <g data-id="/body/0/children/1/children/0" data-tag="Col">
-            <g data-id="/body/0/children/1/children/0/children/0" data-tag="Tee" data-kind="blue">
+            <g id="_body_0_children_1_children_0_children_0" data-id="/body/0/children/1/children/0/children/0" data-tag="Tee" data-kind="blue" data-from="/body/0/children/0/children/0">
               <line x1="305.1" y1="264.53" x2="305.1" y2="355.53" stroke="#1A73E8" stroke-width="2"/>
               <rect x="329.49" y="295.48" width="207.31" height="29.1" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
               <text x="338.24" y="314.4" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">Dedicated Interconnect · Metro 1</text>
-              <g data-id="/body/0/children/1/children/0/children/0/arms/0" data-tag="Pipe" data-kind="blue">
+              <g id="_body_0_children_1_children_0_children_0_arms_0" data-id="/body/0/children/1/children/0/children/0/arms/0" data-tag="Pipe" data-kind="blue" data-from="/body/0/children/1/children/0/children/0" data-to="/body/0/children/2">
                 <circle cx="316.1" cy="270.63" r="4" fill="#1A73E8"/>
                 <line x1="320.1" y1="270.63" x2="397.01" y2="270.63" stroke="#1A73E8" stroke-width="2"/>
                 <rect x="397.76" y="247.28" width="84.77" height="46.7" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
@@ -86,7 +86,7 @@
                 <text x="419.21" y="266.2" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">VLAN 1</text>
                 <text x="406.51" y="283.8" xml:space="preserve" font-family="Inter" font-size="12" font-weight="600" fill="#5F6368">EAD 1 · BGP</text>
               </g>
-              <g data-id="/body/0/children/1/children/0/children/0/arms/1" data-tag="Pipe" data-kind="blue">
+              <g id="_body_0_children_1_children_0_children_0_arms_1" data-id="/body/0/children/1/children/0/children/0/arms/1" data-tag="Pipe" data-kind="blue" data-from="/body/0/children/1/children/0/children/0" data-to="/body/0/children/2">
                 <circle cx="316.1" cy="349.43" r="4" fill="#1A73E8"/>
                 <line x1="320.1" y1="349.43" x2="395.81" y2="349.43" stroke="#1A73E8" stroke-width="2"/>
                 <rect x="396.56" y="326.08" width="87.17" height="46.7" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
@@ -98,11 +98,11 @@
             </g>
           </g>
           <g data-id="/body/0/children/1/children/1" data-tag="Col">
-            <g data-id="/body/0/children/1/children/1/children/0" data-tag="Tee" data-kind="pink">
+            <g id="_body_0_children_1_children_1_children_0" data-id="/body/0/children/1/children/1/children/0" data-tag="Tee" data-kind="pink" data-from="/body/0/children/0/children/1">
               <line x1="305.1" y1="658.2" x2="305.1" y2="749.2" stroke="#C2185B" stroke-width="2"/>
               <rect x="328.29" y="689.15" width="209.7" height="29.1" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
               <text x="337.04" y="708.07" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">Dedicated Interconnect · Metro 2</text>
-              <g data-id="/body/0/children/1/children/1/children/0/arms/0" data-tag="Pipe" data-kind="pink">
+              <g id="_body_0_children_1_children_1_children_0_arms_0" data-id="/body/0/children/1/children/1/children/0/arms/0" data-tag="Pipe" data-kind="pink" data-from="/body/0/children/1/children/1/children/0" data-to="/body/0/children/2">
                 <circle cx="316.1" cy="664.3" r="4" fill="#C2185B"/>
                 <line x1="320.1" y1="664.3" x2="397.01" y2="664.3" stroke="#C2185B" stroke-width="2"/>
                 <rect x="397.76" y="640.95" width="84.77" height="46.7" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
@@ -111,7 +111,7 @@
                 <text x="417.92" y="659.87" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">VLAN 3</text>
                 <text x="406.51" y="677.47" xml:space="preserve" font-family="Inter" font-size="12" font-weight="600" fill="#5F6368">EAD 1 · BGP</text>
               </g>
-              <g data-id="/body/0/children/1/children/1/children/0/arms/1" data-tag="Pipe" data-kind="pink">
+              <g id="_body_0_children_1_children_1_children_0_arms_1" data-id="/body/0/children/1/children/1/children/0/arms/1" data-tag="Pipe" data-kind="pink" data-from="/body/0/children/1/children/1/children/0" data-to="/body/0/children/2">
                 <circle cx="316.1" cy="743.1" r="4" fill="#C2185B"/>
                 <line x1="320.1" y1="743.1" x2="395.81" y2="743.1" stroke="#C2185B" stroke-width="2"/>
                 <rect x="396.56" y="719.75" width="87.17" height="46.7" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
@@ -123,7 +123,7 @@
             </g>
           </g>
           <g data-id="/body/0/children/1/children/2" data-tag="Col">
-            <g data-id="/body/0/children/1/children/2/children/0" data-tag="Pipe" data-kind="dash">
+            <g id="_body_0_children_1_children_2_children_0" data-id="/body/0/children/1/children/2/children/0" data-tag="Pipe" data-kind="dash" data-from="/body/0/children/0/children/2" data-to="/body/0/children/2">
               <circle cx="302.1" cy="1067.27" r="4" fill="#1A73E8"/>
               <line x1="306.1" y1="1067.27" x2="349.44" y2="1067.27" stroke="#1A73E8" stroke-width="2" stroke-dasharray="6 5"/>
               <rect x="350.19" y="1043.92" width="165.91" height="46.7" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
@@ -132,7 +132,7 @@
               <text x="409.82" y="1062.83" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">HA VPN</text>
               <text x="358.94" y="1080.43" xml:space="preserve" font-family="Inter" font-size="12" font-weight="600" fill="#5F6368">backup path · IPsec · BGP</text>
             </g>
-            <g data-id="/body/0/children/1/children/2/children/1" data-tag="Pipe" data-kind="dash">
+            <g id="_body_0_children_1_children_2_children_1" data-id="/body/0/children/1/children/2/children/1" data-tag="Pipe" data-kind="dash" data-from="/body/0/children/0/children/2" data-to="/body/0/children/2">
               <circle cx="302.1" cy="1127.47" r="4" fill="#1A73E8"/>
               <line x1="306.1" y1="1127.47" x2="342.78" y2="1127.47" stroke="#1A73E8" stroke-width="2" stroke-dasharray="6 5"/>
               <rect x="343.53" y="1104.12" width="179.23" height="46.7" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
@@ -143,17 +143,17 @@
             </g>
           </g>
         </g>
-        <g data-id="/body/0/children/2" data-tag="Zone" data-kind="gcp">
+        <g id="_body_0_children_2" data-id="/body/0/children/2" data-tag="Zone" data-kind="gcp">
           <path d="M 580.19 117.2 H 1456 A 4 4 0 0 1 1460 121.2 V 1280.2 A 10 10 0 0 1 1450 1290.2 H 586.19 A 10 10 0 0 1 576.19 1280.2 V 121.2 A 4 4 0 0 1 580.19 117.2 Z" fill="#FFFFFF"/>
           <rect x="579.19" y="120.2" width="877.81" height="35.6" fill="#1A73E8"/>
           <rect x="579.19" y="155.8" width="877.81" height="1131.4" fill="#FAFBFC"/>
           <path d="M 580.19 118.7 H 1456 A 2.5 2.5 0 0 1 1458.5 121.2 V 1280.2 A 8.5 8.5 0 0 1 1450 1288.7 H 586.19 A 8.5 8.5 0 0 1 577.69 1280.2 V 121.2 A 2.5 2.5 0 0 1 580.19 118.7 Z" fill="none" stroke="#1A73E8" stroke-width="3"/>
           <text x="595.19" y="144.55" xml:space="preserve" font-family="Inter" font-size="18" font-weight="700" letter-spacing="0.18" fill="#FFFFFF">Google Cloud</text>
-          <g data-id="/body/0/children/2/children/0" data-tag="Zone" data-kind="vpc">
+          <g id="_body_0_children_2_children_0" data-id="/body/0/children/2/children/0" data-tag="Zone" data-kind="vpc">
             <rect x="594.19" y="172.8" width="847.81" height="340.6" rx="7" fill="none" stroke="#5F6368" stroke-width="2" stroke-dasharray="6 5"/>
             <text x="605.19" y="195.37" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#5F6368">Transit hub VPC · NCC hub · one network, two regions</text>
             <g data-id="/body/0/children/2/children/0/children/0" data-tag="Row">
-              <g data-id="/body/0/children/2/children/0/children/0/children/0" data-tag="Zone" data-kind="region-a">
+              <g id="_body_0_children_2_children_0_children_0_children_0" data-id="/body/0/children/2/children/0/children/0/children/0" data-tag="Zone" data-kind="region-a">
                 <rect x="605.94" y="206.95" width="309.43" height="246.3" rx="7.25" fill="#D2E3FC" stroke="#BDC1C6" stroke-width="1.5"/>
                 <text x="618.69" y="231.27" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#5F6368">Region A</text>
                 <g id="_body_0_children_2_children_0_children_0_children_0_children_0" data-id="/body/0/children/2/children/0/children/0/children/0/children/0" data-tag="Pcard">
@@ -178,7 +178,7 @@
                   <text x="668.19" y="430.17" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">backup to Metro 1</text>
                 </g>
               </g>
-              <g data-id="/body/0/children/2/children/0/children/0/children/1" data-tag="Pipe" data-kind="dash">
+              <g id="_body_0_children_2_children_0_children_0_children_1" data-id="/body/0/children/2/children/0/children/0/children/1" data-tag="Pipe" data-kind="dash" data-from="/body/0/children/2/children/0/children/0/children/0" data-to="/body/0/children/2/children/0/children/0/children/2">
                 <circle cx="928.12" cy="330.1" r="4" fill="#1A73E8"/>
                 <line x1="932.12" y1="330.1" x2="946.12" y2="330.1" stroke="#1A73E8" stroke-width="2" stroke-dasharray="6 5"/>
                 <rect x="946.87" y="306.75" width="142.46" height="46.7" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
@@ -187,7 +187,7 @@
                 <text x="996.01" y="325.67" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">failover</text>
                 <text x="955.62" y="343.27" xml:space="preserve" font-family="Inter" font-size="12" font-weight="600" fill="#5F6368">Region A ↔ Region B</text>
               </g>
-              <g data-id="/body/0/children/2/children/0/children/0/children/2" data-tag="Zone" data-kind="region-b">
+              <g id="_body_0_children_2_children_0_children_0_children_2" data-id="/body/0/children/2/children/0/children/0/children/2" data-tag="Zone" data-kind="region-b">
                 <rect x="1120.82" y="206.95" width="309.43" height="246.3" rx="7.25" fill="#FCE4EC" stroke="#BDC1C6" stroke-width="1.5"/>
                 <text x="1133.57" y="231.27" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#5F6368">Region B</text>
                 <g id="_body_0_children_2_children_0_children_0_children_2_children_0" data-id="/body/0/children/2/children/0/children/0/children/2/children/0" data-tag="Pcard">
@@ -218,11 +218,11 @@
           </g>
           <g data-id="/body/0/children/2/children/1" data-tag="Row">
             <g data-id="/body/0/children/2/children/1/children/0" data-tag="Col">
-              <g data-id="/body/0/children/2/children/1/children/0/children/0" data-tag="Tee" data-kind="gray">
+              <g id="_body_0_children_2_children_1_children_0_children_0" data-id="/body/0/children/2/children/1/children/0/children/0" data-tag="Tee" data-kind="gray">
                 <line x1="600.19" y1="821.1" x2="600.19" y2="974.5" stroke="#5F6368" stroke-width="2"/>
                 <rect x="624.99" y="883.25" width="89.45" height="29.1" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
                 <text x="633.74" y="902.17" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">NCC spokes</text>
-                <g data-id="/body/0/children/2/children/1/children/0/children/0/arms/0" data-tag="Pipe" data-kind="gray">
+                <g id="_body_0_children_2_children_1_children_0_children_0_arms_0" data-id="/body/0/children/2/children/1/children/0/children/0/arms/0" data-tag="Pipe" data-kind="gray" data-from="/body/0/children/2/children/1/children/0/children/0" data-to="/body/0/children/2/children/1/children/1/children/0">
                   <circle cx="611.19" cy="842.8" r="4" fill="#5F6368"/>
                   <line x1="615.19" y1="842.8" x2="629.19" y2="842.8" stroke="#5F6368" stroke-width="2"/>
                   <rect x="629.94" y="811.65" width="93.56" height="62.3" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
@@ -232,7 +232,7 @@
                   <text x="658.24" y="848.17" xml:space="preserve" font-family="Inter" font-size="12" font-weight="600" fill="#5F6368">routes</text>
                   <text x="644.68" y="863.77" xml:space="preserve" font-family="Inter" font-size="12" font-weight="600" fill="#5F6368">exchanged</text>
                 </g>
-                <g data-id="/body/0/children/2/children/1/children/0/children/0/arms/1" data-tag="Pipe" data-kind="gray">
+                <g id="_body_0_children_2_children_1_children_0_children_0_arms_1" data-id="/body/0/children/2/children/1/children/0/children/0/arms/1" data-tag="Pipe" data-kind="gray" data-from="/body/0/children/2/children/1/children/0/children/0" data-to="/body/0/children/2/children/1/children/1/children/0">
                   <circle cx="611.19" cy="952.8" r="4" fill="#5F6368"/>
                   <line x1="615.19" y1="952.8" x2="629.19" y2="952.8" stroke="#5F6368" stroke-width="2"/>
                   <rect x="629.94" y="913.85" width="93.56" height="77.9" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
@@ -246,11 +246,11 @@
               </g>
             </g>
             <g data-id="/body/0/children/2/children/1/children/1" data-tag="Col">
-              <g data-id="/body/0/children/2/children/1/children/1/children/0" data-tag="Zone" data-kind="project">
+              <g id="_body_0_children_2_children_1_children_1_children_0" data-id="/body/0/children/2/children/1/children/1/children/0" data-tag="Zone" data-kind="project">
                 <rect x="755" y="523.15" width="687.25" height="453.3" rx="7.25" fill="#FFF8E1" stroke="#FFE082" stroke-width="1.5"/>
                 <text x="767.75" y="547.47" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#5F6368">Shared VPC · prod · host project</text>
                 <g data-id="/body/0/children/2/children/1/children/1/children/0/children/0" data-tag="Row">
-                  <g data-id="/body/0/children/2/children/1/children/1/children/0/children/0/children/0" data-tag="Zone" data-kind="subnet">
+                  <g id="_body_0_children_2_children_1_children_1_children_0_children_0_children_0" data-id="/body/0/children/2/children/1/children/1/children/0/children/0/children/0" data-tag="Zone" data-kind="subnet">
                     <rect x="768.5" y="559.05" width="259.04" height="176.1" rx="7.25" fill="#EDE7F6" stroke="#9AA0A6" stroke-width="1.5" stroke-dasharray="6 5"/>
                     <text x="781.25" y="583.37" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#5F6368">web subnet · Region A</text>
                     <g id="_body_0_children_2_children_1_children_1_children_0_children_0_children_0_children_0" data-id="/body/0/children/2/children/1/children/1/children/0/children/0/children/0/children/0" data-tag="Pcard">
@@ -268,7 +268,7 @@
                       <text x="830.75" y="712.07" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">MIG · no public IP</text>
                     </g>
                   </g>
-                  <g data-id="/body/0/children/2/children/1/children/1/children/0/children/0/children/1" data-tag="Pipe" data-kind="gray">
+                  <g id="_body_0_children_2_children_1_children_1_children_0_children_0_children_1" data-id="/body/0/children/2/children/1/children/1/children/0/children/0/children/1" data-tag="Pipe" data-kind="gray" data-from="/body/0/children/2/children/1/children/1/children/0/children/0/children/0" data-to="/body/0/children/2/children/1/children/1/children/0/children/0/children/2">
                     <circle cx="1040.29" cy="647.1" r="4" fill="#5F6368"/>
                     <line x1="1044.29" y1="647.1" x2="1058.29" y2="647.1" stroke="#5F6368" stroke-width="2"/>
                     <rect x="1059.04" y="623.75" width="79.17" height="46.7" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
@@ -277,7 +277,7 @@
                     <text x="1080.34" y="642.67" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">to app</text>
                     <text x="1067.79" y="660.27" xml:space="preserve" font-family="Inter" font-size="12" font-weight="600" fill="#5F6368">internal LB</text>
                   </g>
-                  <g data-id="/body/0/children/2/children/1/children/1/children/0/children/0/children/2" data-tag="Zone" data-kind="subnet">
+                  <g id="_body_0_children_2_children_1_children_1_children_0_children_0_children_2" data-id="/body/0/children/2/children/1/children/1/children/0/children/0/children/2" data-tag="Zone" data-kind="subnet">
                     <rect x="1169.71" y="559.05" width="259.04" height="176.1" rx="7.25" fill="#EDE7F6" stroke="#9AA0A6" stroke-width="1.5" stroke-dasharray="6 5"/>
                     <text x="1182.46" y="583.37" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#5F6368">app subnet · Region A</text>
                     <g id="_body_0_children_2_children_1_children_1_children_0_children_0_children_2_children_0" data-id="/body/0/children/2/children/1/children/1/children/0/children/0/children/2/children/0" data-tag="Pcard">
@@ -294,7 +294,7 @@
                     </g>
                   </g>
                 </g>
-                <g data-id="/body/0/children/2/children/1/children/1/children/0/children/1" data-tag="Pipe" data-kind="gray">
+                <g id="_body_0_children_2_children_1_children_1_children_0_children_1" data-id="/body/0/children/2/children/1/children/1/children/0/children/1" data-tag="Pipe" data-kind="gray" data-from="/body/0/children/2/children/1/children/1/children/0/children/0/children/1" data-to="/body/0/children/2/children/1/children/1/children/0/children/2">
                   <circle cx="1098.62" cy="747.9" r="4" fill="#5F6368"/>
                   <line x1="1098.62" y1="751.9" x2="1098.62" y2="763.9" stroke="#5F6368" stroke-width="2"/>
                   <rect x="990.73" y="764.65" width="215.79" height="46.7" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
@@ -303,7 +303,7 @@
                   <text x="1078.41" y="783.57" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">to data</text>
                   <text x="999.48" y="801.17" xml:space="preserve" font-family="Inter" font-size="12" font-weight="600" fill="#5F6368">private IP only · no route from web</text>
                 </g>
-                <g data-id="/body/0/children/2/children/1/children/1/children/0/children/2" data-tag="Zone" data-kind="subnet">
+                <g id="_body_0_children_2_children_1_children_1_children_0_children_2" data-id="/body/0/children/2/children/1/children/1/children/0/children/2" data-tag="Zone" data-kind="subnet">
                   <rect x="768.5" y="840.85" width="660.25" height="122.1" rx="7.25" fill="#EDE7F6" stroke="#9AA0A6" stroke-width="1.5" stroke-dasharray="6 5"/>
                   <text x="781.25" y="865.17" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#5F6368">data subnet · Region A</text>
                   <g data-id="/body/0/children/2/children/1/children/1/children/0/children/2/children/0" data-tag="Row">
@@ -324,7 +324,7 @@
                   </g>
                 </g>
               </g>
-              <g data-id="/body/0/children/2/children/1/children/1/children/1" data-tag="Pipe" data-kind="deny">
+              <g id="_body_0_children_2_children_1_children_1_children_1" data-id="/body/0/children/2/children/1/children/1/children/1" data-tag="Pipe" data-kind="deny" data-from="/body/0/children/2/children/1/children/1/children/0" data-to="/body/0/children/2/children/1/children/1/children/2">
                 <circle cx="1098.62" cy="981.2" r="4" fill="#C5221F"/>
                 <line x1="1098.62" y1="985.2" x2="1098.62" y2="1001.2" stroke="#C5221F" stroke-width="2" stroke-dasharray="6 5"/>
                 <rect x="1005.06" y="1001.95" width="187.12" height="46.7" rx="5.25" fill="#FFFFFF" stroke="#F4C7C3" stroke-width="1.5"/>
@@ -333,11 +333,11 @@
                 <text x="1049.5" y="1020.87" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#C5221F">prod ↔ nonprod</text>
                 <text x="1013.81" y="1038.47" xml:space="preserve" font-family="Inter" font-size="12" font-weight="600" fill="#5F6368">no peering · no shared routes</text>
               </g>
-              <g data-id="/body/0/children/2/children/1/children/1/children/2" data-tag="Zone" data-kind="project">
+              <g id="_body_0_children_2_children_1_children_1_children_2" data-id="/body/0/children/2/children/1/children/1/children/2" data-tag="Zone" data-kind="project">
                 <rect x="755" y="1074.15" width="687.25" height="198.3" rx="7.25" fill="#FFF8E1" stroke="#FFE082" stroke-width="1.5"/>
                 <text x="767.75" y="1098.47" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#5F6368">Shared VPC · nonprod · host project</text>
                 <g data-id="/body/0/children/2/children/1/children/1/children/2/children/0" data-tag="Row">
-                  <g data-id="/body/0/children/2/children/1/children/1/children/2/children/0/children/0" data-tag="Zone" data-kind="k8s">
+                  <g id="_body_0_children_2_children_1_children_1_children_2_children_0_children_0" data-id="/body/0/children/2/children/1/children/1/children/2/children/0/children/0" data-tag="Zone" data-kind="k8s">
                     <rect x="767.75" y="1109.3" width="242.56" height="150.4" rx="8" fill="#FCE4EC"/>
                     <text x="779.75" y="1132.87" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#5F6368">GKE · private cluster · Region B</text>
                     <g id="_body_0_children_2_children_1_children_1_children_2_children_0_children_0_children_0" data-id="/body/0/children/2/children/1/children/1/children/2/children/0/children/0/children/0" data-tag="Pcard">
@@ -353,7 +353,7 @@
                       <text x="829.25" y="1233.37" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">no external IPs · alias IPs</text>
                     </g>
                   </g>
-                  <g data-id="/body/0/children/2/children/1/children/1/children/2/children/0/children/1" data-tag="Pipe" data-kind="gray">
+                  <g id="_body_0_children_2_children_1_children_1_children_2_children_0_children_1" data-id="/body/0/children/2/children/1/children/1/children/2/children/0/children/1" data-tag="Pipe" data-kind="gray" data-from="/body/0/children/2/children/1/children/1/children/2/children/0/children/0" data-to="/body/0/children/2/children/1/children/1/children/2/children/0/children/2">
                     <circle cx="1022.31" cy="1184.5" r="4" fill="#5F6368"/>
                     <line x1="1026.31" y1="1184.5" x2="1040.31" y2="1184.5" stroke="#5F6368" stroke-width="2"/>
                     <rect x="1041.06" y="1161.15" width="111.13" height="46.7" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
@@ -362,7 +362,7 @@
                     <text x="1049.81" y="1180.07" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">shared services</text>
                     <text x="1060.66" y="1197.67" xml:space="preserve" font-family="Inter" font-size="12" font-weight="600" fill="#5F6368">internal only</text>
                   </g>
-                  <g data-id="/body/0/children/2/children/1/children/1/children/2/children/0/children/2" data-tag="Zone" data-kind="optional">
+                  <g id="_body_0_children_2_children_1_children_1_children_2_children_0_children_2" data-id="/body/0/children/2/children/1/children/1/children/2/children/0/children/2" data-tag="Zone" data-kind="optional">
                     <rect x="1183.94" y="1110.3" width="244.56" height="148.4" rx="7" fill="#F8FBFF" stroke="#4284F3" stroke-width="2" stroke-dasharray="6 5"/>
                     <text x="1196.94" y="1134.87" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#5F6368">Optional · shared services · Region B</text>
                     <g id="_body_0_children_2_children_1_children_1_children_2_children_0_children_2_children_0" data-id="/body/0/children/2/children/1/children/1/children/2/children/0/children/2/children/0" data-tag="Pcard">
@@ -386,27 +386,27 @@
       </g>
     </g>
     <g data-id="/legend" data-tag="Legend">
-      <g data-id="/legend/0" data-tag="LegendEntry" data-kind="blue">
+      <g id="_legend_0" data-id="/legend/0" data-tag="LegendEntry" data-kind="blue">
         <line x1="20" y1="1307.4" x2="46" y2="1307.4" stroke="#1A73E8" stroke-width="2"/>
         <text x="52" y="1311.77" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">Solid blue</text>
         <text x="115.56" y="1311.77" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">Metro 1 ↔ Region A</text>
       </g>
-      <g data-id="/legend/1" data-tag="LegendEntry" data-kind="pink">
+      <g id="_legend_1" data-id="/legend/1" data-tag="LegendEntry" data-kind="pink">
         <line x1="246.68" y1="1307.4" x2="272.68" y2="1307.4" stroke="#C2185B" stroke-width="2"/>
         <text x="278.68" y="1311.77" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">Solid pink</text>
         <text x="342.06" y="1311.77" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">Metro 2 ↔ Region B</text>
       </g>
-      <g data-id="/legend/2" data-tag="LegendEntry" data-kind="dash">
+      <g id="_legend_2" data-id="/legend/2" data-tag="LegendEntry" data-kind="dash">
         <line x1="475.19" y1="1307.4" x2="501.19" y2="1307.4" stroke="#1A73E8" stroke-width="2" stroke-dasharray="6 5"/>
         <text x="507.19" y="1311.77" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">Dashed blue</text>
         <text x="586" y="1311.77" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">backup path, DNS forwarding and region failover</text>
       </g>
-      <g data-id="/legend/3" data-tag="LegendEntry" data-kind="gray">
+      <g id="_legend_3" data-id="/legend/3" data-tag="LegendEntry" data-kind="gray">
         <line x1="878.73" y1="1307.4" x2="904.73" y2="1307.4" stroke="#5F6368" stroke-width="2"/>
         <text x="910.73" y="1311.77" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">Solid gray</text>
         <text x="975.15" y="1311.77" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">east-west inside Google Cloud</text>
       </g>
-      <g data-id="/legend/4" data-tag="LegendEntry" data-kind="deny">
+      <g id="_legend_4" data-id="/legend/4" data-tag="LegendEntry" data-kind="deny">
         <line x1="1165.03" y1="1307.4" x2="1191.03" y2="1307.4" stroke="#C5221F" stroke-width="2" stroke-dasharray="6 5"/>
         <rect x="1188.03" y="1301.4" width="3" height="12" fill="#C5221F"/>
         <text x="1197.03" y="1311.77" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">Dashed red</text>
