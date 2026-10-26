@@ -2871,7 +2871,7 @@ impl SvgDocument {
         output.push_str(open_tag);
         output.push_str("\n  <defs>\n    <style>\n");
         for (family, weight) in &self.font_faces {
-            let file = bundled_font(*family, *weight);
+            let file = bundled_font(*family, *weight)?;
             output.push_str(&format!(
                 r#"      @font-face {{ font-family: "{}"; font-style: normal; font-weight: {}; src: url("data:font/ttf;base64,{}") format("truetype"); }}"#,
                 family.css_name(),

@@ -39,7 +39,7 @@ impl MeasureKey {
     }
 }
 
-/// `TextMeasurer` over a cosmic-text `FontSystem` that holds only the bundled Inter faces.
+/// `TextMeasurer` over a cosmic-text `FontSystem` that holds only the bundled faces.
 pub struct CosmicTextMeasurer {
     font_system: FontSystem,
     cache: HashMap<MeasureKey, TextMetrics>,
@@ -56,7 +56,7 @@ impl std::fmt::Debug for CosmicTextMeasurer {
 }
 
 impl CosmicTextMeasurer {
-    /// Calls verify_bundled_fonts, then builds a FontSystem over the four faces only.
+    /// Calls verify_bundled_fonts, then builds a FontSystem over the six bundled faces only.
     pub fn new() -> Result<Self, FontError> {
         verify_bundled_fonts()?;
         let database = bundled_font_database()?;
@@ -455,7 +455,8 @@ mod tests {
     #[test]
     fn font_system_holds_only_the_bundled_faces() {
         let measurer = CosmicTextMeasurer::new().unwrap();
-        assert_eq!(measurer.font_system.db().len(), 4);
+        assert_eq!(measurer.font_system.db().len(), crate::BUNDLED_FONTS.len());
+        assert_eq!(crate::BUNDLED_FONTS.len(), 6);
     }
 
     #[test]

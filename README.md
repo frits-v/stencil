@@ -12,13 +12,9 @@ Build the binary with `cargo build --release`; it lands at `target/release/stenc
 
 `examples/g7.json`: four Dedicated Interconnect VLAN attachments from two metros into two regions, with failover between the regions.
 
-![Hybrid multi-cloud AI platform](docs/gallery/hybrid-ai.png)
+![A weather service's forecasting platform on Google Cloud](docs/gallery/hybrid-ai.png)
 
-`examples/hybrid-ai.json`: training on-prem, tuning and serving on Google Cloud, AWS and Azure feeding data over private paths.
-
-![Hub-and-spoke landing zone](docs/gallery/network-hub-spoke.png)
-
-`examples/network-hub-spoke.json`: a transit hub with one Shared VPC per environment and every path between them labeled.
+`examples/hybrid-ai.json`: a radar network and a satellite ground station uploading observations, a partner agency sharing model output from its own project, and nowcast models tuned and served inside a service perimeter.
 
 ![A data center reaches a two-zone VPC over Direct Connect](docs/gallery/aws-hybrid.png)
 
@@ -40,7 +36,7 @@ Build the binary with `cargo build --release`; it lands at `target/release/stenc
 
 Five item shapes on one floor, under the isometric projection:
 
-![One web path from the load balancer to the data layer](docs/gallery/platform-iso.png)
+![A game backend's match request path from the edge proxy to the player database and the match event stream](docs/gallery/platform-iso.png)
 
 Pipes as tubes on the floor, with flange rings and cones at their ends:
 
@@ -60,7 +56,11 @@ Narrow regions with long product names, a Tee with a band arm and a figure on th
 
 `examples/onepager.json`: the same service as a design sheet, one system drawn as an engineering drawing on one page: a frame with grid references 1 to 8 and A to F, a title block holding the problem, the answer and what needs the reader's attention, a legend strip naming who acts, the Workflow view numbered 2, a lane per actor across four phases, the System view numbered 3, each piece in the colour of the actor that runs it, and the How-tos view numbered 4, what an operator types with the terminal output it returns. Balloons key the drawings to a parts list beside the System view, flags to the general notes under the System drawing, and diamonds to the attention items, and each list prints the grid cells its marks stand in.
 
-The next three figures use the `plain` grammar.
+The next four figures also use the `plain` grammar.
+
+![An airline's check-in and boarding platform as a shared hub with two spokes](docs/gallery/network-hub-spoke.png)
+
+`examples/network-hub-spoke.json`: an airline's check-in and boarding platform, with a shared-services hub across two regions and production and test environments as spokes that never route to each other.
 
 ![A batch job from submission to completion, drawn as five lanes](docs/gallery/sequence.png)
 
@@ -166,4 +166,4 @@ cd .. && stencil render figure.json --out-dir out
 
 ## Fonts and icons
 
-The four Inter faces in `assets/fonts/` are unmodified files from the Inter 4.1 release under the SIL Open Font License 1.1, whose text ships next to them as `OFL.txt`. Each icon pack is a directory under `assets/icons/` with its own `PROVENANCE.md`. The icons (Google Cloud, AWS, Azure and open-source projects) are unaltered copies of the vendors' and projects' official files, and each pack's `PROVENANCE.md` records where every file came from.
+The four Inter faces in `assets/fonts/` are unmodified files from the Inter 4.1 release under the SIL Open Font License 1.1, whose text ships next to them as `OFL.txt`. The two JetBrains Mono NL faces beside them are unmodified files from the JetBrains Mono 2.304 release under the same license, whose text ships as `JetBrainsMono-OFL.txt`. Each icon pack is a directory under `assets/icons/` with its own `PROVENANCE.md`. The icons (Google Cloud, AWS, Azure and open-source projects) are unaltered copies of the vendors' and projects' official files, and each pack's `PROVENANCE.md` records where every file came from.
