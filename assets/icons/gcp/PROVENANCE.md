@@ -6,7 +6,7 @@ Where each file under `assets/icons/gcp/` came from, so its bytes can be re-veri
 
 Source: the Google Cloud product icon library published at
 <https://cloud.google.com/icons>, specifically the two ZIP downloads that page
-links:
+links, both downloaded 2026-09-02:
 
 - Core product icons: <https://services.google.com/fh/files/misc/core-products-icons.zip>
 - Product category icons: <https://services.google.com/fh/files/misc/category-icons.zip>

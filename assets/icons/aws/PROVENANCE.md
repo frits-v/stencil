@@ -9,7 +9,7 @@ suffix 07312026), published at <https://aws.amazon.com/architecture/icons/>,
 specifically the "Icon package" ZIP that page links:
 
 - <https://d1.awsstatic.com/onedam/marketing-channels/website/public/shared/architecture-icon-release/Icon-package_07312026.5846e92413caa21490223536cc97f1269e44fa92.zip>
-  (SHA-256 `d2d166c453526471749d520e0db022c459abef759d2946cf2dd1d1c992dc6526`)
+  (downloaded 2026-10-25, SHA-256 `d2d166c453526471749d520e0db022c459abef759d2946cf2dd1d1c992dc6526`)
 
 All 46 SVGs in `assets/icons/aws/` are byte-identical (SHA-256) to a file inside
 that archive. Nothing was recolored, resized, cropped, or re-exported. The files
