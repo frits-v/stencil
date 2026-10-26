@@ -447,7 +447,7 @@
             <g data-id="/body/1/children/0/children/0/children/0" data-tag="Row">
               <g data-id="/body/1/children/0/children/0/children/0/children/0" data-tag="Col">
                 <g data-id="/body/1/children/0/children/0/children/0/children/0/children/0" data-tag="Row">
-                  <g data-id="/body/1/children/0/children/0/children/0/children/0/children/0/children/0" data-tag="Pcard">
+                  <g id="operator-person" data-id="/body/1/children/0/children/0/children/0/children/0/children/0/children/0" data-tag="Pcard">
                     <circle cx="127.42" cy="1419.1" r="14.38" fill="#FAF9CA" stroke="#A36E14" stroke-width="1.25"/>
                     <path d="M 98.04 1473.47 Q 98.04 1441.72 127.42 1441.72 Q 156.79 1441.72 156.79 1473.47 Z" fill="#FAF9CA" stroke="#A36E14" stroke-width="1.25" stroke-linejoin="round"/>
                     <text x="99.16" y="1491.63" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#5A3900">Operator</text>
@@ -455,7 +455,7 @@
                   </g>
                 </g>
                 <g data-id="/body/1/children/0/children/0/children/0/children/0/children/1" data-tag="Row">
-                  <g data-id="/body/1/children/0/children/0/children/0/children/0/children/1/children/0" data-tag="Pcard">
+                  <g id="console" data-id="/body/1/children/0/children/0/children/0/children/0/children/1/children/0" data-tag="Pcard">
                     <rect x="50.63" y="1574.73" width="153.58" height="47.15" rx="7.38" fill="#FFFFFF" stroke="#A36E14" stroke-width="1.25"/>
                     <circle cx="184.33" cy="1590.6" r="8.35" fill="#FFFFFF" stroke="#A36E14" stroke-width="1.3"/>
                     <text x="61.5" y="1594.13" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#5A3900">Operator console</text>
@@ -471,7 +471,7 @@
                 <g data-id="/body/1/children/0/children/0/children/0/children/1/children/0" data-tag="Col">
                   <g data-id="/body/1/children/0/children/0/children/0/children/1/children/0/children/0" data-tag="Row">
                     <g data-id="/body/1/children/0/children/0/children/0/children/1/children/0/children/0/children/0" data-tag="Row">
-                      <g data-id="/body/1/children/0/children/0/children/0/children/1/children/0/children/0/children/0/children/0" data-tag="Pcard">
+                      <g id="gateway" data-id="/body/1/children/0/children/0/children/0/children/1/children/0/children/0/children/0/children/0" data-tag="Pcard">
                         <rect x="460.92" y="1266.22" width="127.61" height="47.15" rx="7.38" fill="#FFFFFF" stroke="#1A73E8" stroke-width="1.25"/>
                         <circle cx="568.65" cy="1282.1" r="8.35" fill="#FFFFFF" stroke="#1A73E8" stroke-width="1.3"/>
                         <text x="471.8" y="1285.63" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#5F6368">Gateway</text>
@@ -480,7 +480,7 @@
                       </g>
                     </g>
                     <g data-id="/body/1/children/0/children/0/children/0/children/1/children/0/children/0/children/1" data-tag="Row">
-                      <g data-id="/body/1/children/0/children/0/children/0/children/1/children/0/children/0/children/1/children/0" data-tag="Pcard">
+                      <g id="api" data-id="/body/1/children/0/children/0/children/0/children/1/children/0/children/0/children/1/children/0" data-tag="Pcard">
                         <rect x="873.44" y="1266.22" width="114.89" height="47.15" rx="7.38" fill="#FFFFFF" stroke="#1A73E8" stroke-width="1.25"/>
                         <circle cx="968.45" cy="1282.1" r="8.35" fill="#FFFFFF" stroke="#1A73E8" stroke-width="1.3"/>
                         <text x="884.31" y="1285.63" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#5F6368">Trigger API</text>
@@ -506,7 +506,7 @@
                         <text x="668.35" y="1390" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#26481B">EVALUATION PATH · ONE JOB PER CLIP</text>
                         <g data-id="/body/1/children/0/children/0/children/0/children/1/children/0/children/1/children/1/children/0/children/0" data-tag="Col">
                           <g data-id="/body/1/children/0/children/0/children/0/children/1/children/0/children/1/children/1/children/0/children/0/children/0" data-tag="Row">
-                            <g data-id="/body/1/children/0/children/0/children/0/children/1/children/0/children/1/children/1/children/0/children/0/children/0/children/0" data-tag="Pcard">
+                            <g id="worker" data-id="/body/1/children/0/children/0/children/0/children/1/children/0/children/1/children/1/children/0/children/0/children/0/children/0" data-tag="Pcard">
                               <rect x="743.58" y="1402.63" width="116.32" height="47.15" fill="#FFFFFF" stroke="#497938" stroke-width="1.25"/>
                               <rect x="739.58" y="1405.63" width="116.32" height="47.15" fill="#FFFFFF" stroke="#497938" stroke-width="1.25"/>
                               <rect x="735.58" y="1408.63" width="116.32" height="47.15" fill="#FFFFFF" stroke="#497938" stroke-width="1.25"/>
@@ -517,7 +517,7 @@
                             </g>
                           </g>
                           <g data-id="/body/1/children/0/children/0/children/0/children/1/children/0/children/1/children/1/children/0/children/0/children/1" data-tag="Row">
-                            <g data-id="/body/1/children/0/children/0/children/0/children/1/children/0/children/1/children/1/children/0/children/0/children/1/children/0" data-tag="Pcard">
+                            <g id="evaluator" data-id="/body/1/children/0/children/0/children/0/children/1/children/0/children/1/children/1/children/0/children/0/children/1/children/0" data-tag="Pcard">
                               <rect x="721.67" y="1521.03" width="152.13" height="47.15" rx="7.38" fill="#FFFFFF" stroke="#593894" stroke-width="1.25"/>
                               <circle cx="853.93" cy="1536.9" r="8.35" fill="#FFFFFF" stroke="#593894" stroke-width="1.3"/>
                               <text x="732.54" y="1540.43" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#4B3275">Clip evaluator</text>
@@ -532,7 +532,7 @@
                   <g data-id="/body/1/children/0/children/0/children/0/children/1/children/0/children/2" data-tag="Row">
                     <g data-id="/body/1/children/0/children/0/children/0/children/1/children/0/children/2/children/0" data-tag="Col">
                       <g data-id="/body/1/children/0/children/0/children/0/children/1/children/0/children/2/children/0/children/0" data-tag="Row">
-                        <g data-id="/body/1/children/0/children/0/children/0/children/1/children/0/children/2/children/0/children/0/children/0" data-tag="Pcard">
+                        <g id="bucket" data-id="/body/1/children/0/children/0/children/0/children/1/children/0/children/2/children/0/children/0/children/0" data-tag="Pcard">
                           <rect x="340.89" y="1694.55" width="115.13" height="46.9" rx="7.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
                           <circle cx="436.26" cy="1710.3" r="8.35" fill="#FFFFFF" stroke="#202124" stroke-width="1.3"/>
                           <text x="351.64" y="1713.83" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#202124">Clip bucket</text>
@@ -542,7 +542,7 @@
                       </g>
                     </g>
                     <g data-id="/body/1/children/0/children/0/children/0/children/1/children/0/children/2/children/1" data-tag="Row">
-                      <g data-id="/body/1/children/0/children/0/children/0/children/1/children/0/children/2/children/1/children/0" data-tag="Pcard">
+                      <g id="verdict-store" data-id="/body/1/children/0/children/0/children/0/children/1/children/0/children/2/children/1/children/0" data-tag="Pcard">
                         <path d="M 559.77 1656.8 V 1779.2 A 128.22 9.38 0 0 0 816.21 1779.2 V 1656.8" fill="#FFFFFF" stroke="#497938" stroke-width="1.25"/>
                         <ellipse cx="687.99" cy="1656.8" rx="128.22" ry="9.38" fill="#F2FBF1" stroke="#497938" stroke-width="1.25"/>
                         <rect x="573.64" y="1714.7" width="102.09" height="25" fill="#FFFFFF" stroke="#497938" stroke-width="1"/>
@@ -563,7 +563,7 @@
                     </g>
                     <g data-id="/body/1/children/0/children/0/children/0/children/1/children/0/children/2/children/2" data-tag="Col">
                       <g data-id="/body/1/children/0/children/0/children/0/children/1/children/0/children/2/children/2/children/0" data-tag="Row">
-                        <g data-id="/body/1/children/0/children/0/children/0/children/1/children/0/children/2/children/2/children/0/children/0" data-tag="Pcard">
+                        <g id="replay" data-id="/body/1/children/0/children/0/children/0/children/1/children/0/children/2/children/2/children/0/children/0" data-tag="Pcard">
                           <rect x="900.81" y="1694.42" width="153.44" height="47.15" fill="none" stroke="#1A73E8" stroke-width="1.25" stroke-dasharray="7 4"/>
                           <circle cx="1034.37" cy="1710.3" r="8.35" fill="#FFFFFF" stroke="#1A73E8" stroke-width="1.3"/>
                           <text x="911.68" y="1713.83" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#5F6368">Replay scheduler</text>
@@ -803,21 +803,21 @@
       <text x="50" y="2528.5" xml:space="preserve" font-family="Inter" font-size="11" font-weight="400" fill="#5F6368">Balloons key the drawings to the parts list, flags to the general notes, diamonds to the attention items in the title block.</text>
     </g>
   </g>
-  <g data-id="/links/0" data-tag="Link" data-kind="solid-4">
+  <g data-id="/links/0" data-tag="Link" data-kind="solid-4" data-from="/body/0/children/0/children/0" data-to="/body/0/children/0/children/2">
     <path d="M 351.13 507.4 L 371.13 507.4 A 6 6 0 0 1 377.13 513.4 L 377.13 624.9 A 6 6 0 0 0 383.13 630.9 L 389.13 630.9" fill="none" stroke="#A36E14" stroke-width="2" stroke-linejoin="round"/>
     <line x1="389.13" y1="630.9" x2="399.13" y2="630.9" stroke="none" marker-end="url(#arrow-center-solid-4)"/>
   </g>
-  <g data-id="/links/1" data-tag="Link" data-kind="blue">
+  <g data-id="/links/1" data-tag="Link" data-kind="blue" data-from="/body/0/children/0/children/2" data-to="/body/0/children/0/children/3">
     <path d="M 471.55 590.4 L 471.55 513.4 A 6 6 0 0 1 477.55 507.4 L 581.96 507.4" fill="none" stroke="#1A73E8" stroke-width="2" stroke-linejoin="round"/>
     <line x1="581.96" y1="507.4" x2="591.96" y2="507.4" stroke="none" marker-end="url(#arrow-center-blue)"/>
     <rect x="510.38" y="492.85" width="42.75" height="29.1" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
     <text x="519.13" y="511.77" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">plan</text>
   </g>
-  <g data-id="/links/2" data-tag="Link" data-kind="solid-4">
+  <g data-id="/links/2" data-tag="Link" data-kind="solid-4" data-from="/body/0/children/0/children/3" data-to="/body/0/children/0/children/4">
     <path d="M 669.71 546.4 L 669.71 603.9" fill="none" stroke="#A36E14" stroke-width="2" stroke-linejoin="round"/>
     <line x1="669.71" y1="603.9" x2="669.71" y2="613.9" stroke="none" marker-end="url(#arrow-center-solid-4)"/>
   </g>
-  <g data-id="/links/3" data-tag="Link" data-kind="dash-6">
+  <g data-id="/links/3" data-tag="Link" data-kind="dash-6" data-from="/body/0/children/0/children/4" data-to="/body/0/children/0/children/6">
     <path d="M 747.46 630.9 L 1053.67 630.9" fill="none" stroke="#497938" stroke-width="2" stroke-dasharray="6 5"/>
     <path d="M 1053.67 630.9 L 1057.17 630.9 A 6 6 0 0 1 1063.17 636.9 L 1063.17 640.4" fill="none" stroke="#497938" stroke-width="2"/>
     <path d="M 1063.17 640.4 L 1063.17 705.4" fill="none" stroke="#497938" stroke-width="2" stroke-dasharray="6 5" stroke-dashoffset="6"/>
@@ -825,29 +825,29 @@
     <rect x="827.5" y="616.35" width="155.63" height="29.1" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
     <text x="836.25" y="635.27" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">reads approved version</text>
   </g>
-  <g data-id="/links/4" data-tag="Link" data-kind="solid-6">
+  <g data-id="/links/4" data-tag="Link" data-kind="solid-6" data-from="/body/0/children/0/children/5" data-to="/body/0/children/0/children/6">
     <path d="M 948.07 757.4 L 986.07 757.4" fill="none" stroke="#497938" stroke-width="2" stroke-linejoin="round"/>
     <line x1="986.07" y1="757.4" x2="996.07" y2="757.4" stroke="none" marker-end="url(#arrow-center-solid-6)"/>
   </g>
-  <g data-id="/links/5" data-tag="Link" data-kind="solid-6">
+  <g data-id="/links/5" data-tag="Link" data-kind="solid-6" data-from="/body/0/children/0/children/6" data-to="/body/0/children/0/children/7">
     <path d="M 1105.23 799.4 L 1105.23 833.4" fill="none" stroke="#497938" stroke-width="2" stroke-linejoin="round"/>
     <line x1="1105.23" y1="833.4" x2="1105.23" y2="843.4" stroke="none" marker-end="url(#arrow-center-solid-6)"/>
   </g>
-  <g data-id="/links/6" data-tag="Link" data-kind="solid-5">
+  <g data-id="/links/6" data-tag="Link" data-kind="solid-5" data-from="/body/0/children/0/children/7" data-to="/body/0/children/0/children/8">
     <path d="M 1214.4 843.4 L 1214.4 809.4" fill="none" stroke="#593894" stroke-width="2" stroke-linejoin="round"/>
     <line x1="1214.4" y1="809.4" x2="1214.4" y2="799.4" stroke="none" marker-end="url(#arrow-center-solid-5)"/>
   </g>
-  <g data-id="/links/7" data-tag="Link" data-kind="solid-6">
+  <g data-id="/links/7" data-tag="Link" data-kind="solid-6" data-from="/body/0/children/0/children/8" data-to="/body/0/children/0/children/9">
     <path d="M 1323.56 757.4 L 1343.56 757.4 A 6 6 0 0 0 1349.56 751.4 L 1349.56 513.4 A 6 6 0 0 1 1355.56 507.4 L 1361.56 507.4" fill="none" stroke="#497938" stroke-width="2" stroke-linejoin="round"/>
     <line x1="1361.56" y1="507.4" x2="1371.56" y2="507.4" stroke="none" marker-end="url(#arrow-center-solid-6)"/>
   </g>
-  <g data-id="/links/8" data-tag="Link" data-kind="solid-4">
+  <g data-id="/links/8" data-tag="Link" data-kind="solid-4" data-from="/body/1/children/0/children/0/children/0/children/0/children/0/children/0" data-to="/body/1/children/0/children/0/children/0/children/0/children/1/children/0">
     <path d="M 127.42 1510.1 L 127.42 1564.1" fill="none" stroke="#A36E14" stroke-width="2" stroke-linejoin="round"/>
     <line x1="127.42" y1="1564.1" x2="127.42" y2="1574.1" stroke="none" marker-end="url(#arrow-center-solid-4)"/>
     <rect x="74.03" y="1527.55" width="106.77" height="29.1" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
     <text x="82.78" y="1546.47" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">writes, reviews</text>
   </g>
-  <g data-id="/links/9" data-tag="Link" data-kind="solid-4">
+  <g data-id="/links/9" data-tag="Link" data-kind="solid-4" data-from="/body/1/children/0/children/0/children/0/children/0/children/1/children/0" data-to="/body/1/children/0/children/0/children/0/children/1/children/0/children/0/children/0/children/0">
     <path d="M 204.83 1598.3 L 241.83 1598.3 A 6 6 0 0 0 247.83 1592.3 L 247.83 1295.8 A 6 6 0 0 1 253.83 1289.8 L 450.3 1289.8" fill="none" stroke="#A36E14" stroke-width="2" stroke-linejoin="round"/>
     <line x1="450.3" y1="1289.8" x2="460.3" y2="1289.8" stroke="none" marker-end="url(#arrow-center-solid-4)"/>
     <rect x="291.83" y="1275.25" width="124.48" height="29.1" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
@@ -855,7 +855,7 @@
     <text x="307.42" y="1293.44" xml:space="preserve" font-family="Inter" font-size="10" font-weight="700" fill="#202124">1</text>
     <text x="324.58" y="1294.17" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">submit trigger</text>
   </g>
-  <g data-id="/links/10" data-tag="Link" data-kind="blue">
+  <g data-id="/links/10" data-tag="Link" data-kind="blue" data-from="/body/1/children/0/children/0/children/0/children/1/children/0/children/0/children/0/children/0" data-to="/body/1/children/0/children/0/children/0/children/1/children/0/children/0/children/1/children/0">
     <path d="M 589.15 1289.8 L 862.81 1289.8" fill="none" stroke="#1A73E8" stroke-width="2" stroke-linejoin="round"/>
     <line x1="862.81" y1="1289.8" x2="872.81" y2="1289.8" stroke="none" marker-end="url(#arrow-center-blue)"/>
     <rect x="666.87" y="1275.25" width="128.22" height="29.1" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
@@ -863,7 +863,7 @@
     <text x="681.47" y="1293.44" xml:space="preserve" font-family="Inter" font-size="10" font-weight="700" fill="#202124">2</text>
     <text x="699.62" y="1294.17" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">authorized call</text>
   </g>
-  <g data-id="/links/11" data-tag="Link" data-kind="blue">
+  <g data-id="/links/11" data-tag="Link" data-kind="blue" data-from="/body/1/children/0/children/0/children/0/children/1/children/0/children/0/children/1/children/0" data-to="/body/1/children/0/children/0/children/0/children/1/children/0/children/1/children/0">
     <path d="M 911.52 1314 L 911.52 1340 A 6 6 0 0 1 905.52 1346 L 540.83 1346 A 6 6 0 0 0 534.83 1352 L 534.83 1384 A 6 6 0 0 1 528.83 1390 L 469.83 1390" fill="none" stroke="#1A73E8" stroke-width="2" stroke-linejoin="round"/>
     <rect x="631.77" y="1322.65" width="182.8" height="46.7" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
     <rect x="641.27" y="1337.75" width="16.5" height="16.5" rx="2.25" fill="#FFFFFF" stroke="#1A73E8" stroke-width="1.5"/>
@@ -876,7 +876,7 @@
     <path d="M505.23 1383.6 L505.23 1396.4 L497.83 1390 Z" fill="#FFFFFF" stroke="#1A73E8" stroke-width="1.2" stroke-linejoin="round"/>
     <circle cx="467.33" cy="1390" r="4.5" fill="#1A73E8"/>
   </g>
-  <g data-id="/links/12" data-tag="Link" data-kind="blue">
+  <g data-id="/links/12" data-tag="Link" data-kind="blue" data-from="/body/1/children/0/children/0/children/0/children/1/children/0/children/1/children/0" data-to="/body/1/children/0/children/0/children/0/children/1/children/0/children/1/children/1/children/0/children/0/children/0/children/0">
     <path d="M 469.83 1432.2 L 724.95 1432.2" fill="none" stroke="#1A73E8" stroke-width="2" stroke-linejoin="round"/>
     <line x1="724.95" y1="1432.2" x2="734.95" y2="1432.2" stroke="none" marker-end="url(#arrow-center-blue)"/>
     <rect x="541.08" y="1417.65" width="102.75" height="29.1" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
@@ -885,7 +885,7 @@
     <text x="573.83" y="1436.57" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">deliver job</text>
     <circle cx="467.33" cy="1432.2" r="4.5" fill="#1A73E8"/>
   </g>
-  <g data-id="/links/13" data-tag="Link" data-kind="solid-6">
+  <g data-id="/links/13" data-tag="Link" data-kind="solid-6" data-from="/body/1/children/0/children/0/children/0/children/1/children/0/children/1/children/1/children/0/children/0/children/0/children/0" data-to="/body/1/children/0/children/0/children/0/children/1/children/0/children/1/children/1/children/0/children/0/children/1/children/0">
     <path d="M 837.33 1456.4 L 837.33 1510.4" fill="none" stroke="#497938" stroke-width="2" stroke-linejoin="round"/>
     <line x1="837.33" y1="1510.4" x2="837.33" y2="1520.4" stroke="none" marker-end="url(#arrow-center-solid-6)"/>
     <rect x="779.55" y="1473.85" width="115.56" height="29.1" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
@@ -893,7 +893,7 @@
     <text x="794.19" y="1492.04" xml:space="preserve" font-family="Inter" font-size="10" font-weight="700" fill="#202124">5</text>
     <text x="812.3" y="1492.77" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">evaluate clip</text>
   </g>
-  <g data-id="/links/14" data-tag="Link" data-kind="dash-6">
+  <g data-id="/links/14" data-tag="Link" data-kind="dash-6" data-from="/body/1/children/0/children/0/children/0/children/1/children/0/children/1/children/1/children/0/children/0/children/0/children/0" data-to="/body/1/children/0/children/0/children/0/children/1/children/0/children/2/children/1/children/0">
     <path d="M 774.14 1456.4 L 774.14 1498.6" fill="none" stroke="#497938" stroke-width="2" stroke-dasharray="6 5"/>
     <path d="M 774.14 1498.6 L 774.14 1502.1 A 6 6 0 0 1 768.14 1508.1 L 764.64 1508.1" fill="none" stroke="#497938" stroke-width="2"/>
     <path d="M 764.64 1508.1 L 644.54 1508.1" fill="none" stroke="#497938" stroke-width="2" stroke-dasharray="6 5" stroke-dashoffset="6"/>
@@ -905,20 +905,20 @@
     <text x="591.97" y="1610.53" xml:space="preserve" font-family="Inter" font-size="10" font-weight="700" fill="#202124">6</text>
     <text x="610.21" y="1611.26" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">write verdict</text>
   </g>
-  <g data-id="/links/15" data-tag="Link" data-kind="blue">
+  <g data-id="/links/15" data-tag="Link" data-kind="blue" data-from="/body/1/children/0/children/0/children/0/children/1/children/0/children/0/children/1/children/0" data-to="/body/1/children/0/children/0/children/0/children/1/children/0/children/2/children/2/children/0/children/0">
     <path d="M 960.24 1314 L 960.24 1683.8" fill="none" stroke="#1A73E8" stroke-width="4" stroke-dasharray="7 4"/>
     <path d="M 960.24 1314 L 960.24 1683.8" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-dasharray="5 6" stroke-dashoffset="-1"/>
     <line x1="960.24" y1="1683.8" x2="960.24" y2="1693.8" stroke="none" marker-end="url(#arrow-center-blue)"/>
     <rect x="901.52" y="1595.55" width="117.44" height="29.1" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
     <text x="910.27" y="1614.47" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">schedule replays</text>
   </g>
-  <g data-id="/links/16" data-tag="Link" data-kind="gray">
+  <g data-id="/links/16" data-tag="Link" data-kind="gray" data-from="/body/1/children/0/children/0/children/0/children/1/children/0/children/2/children/0/children/0/children/0" data-to="/body/1/children/0/children/0/children/0/children/1/children/0/children/1/children/0">
     <path d="M 398.45 1693.8 L 398.45 1596.8 A 6 6 0 0 1 404.45 1590.8 L 463.33 1590.8 A 4 4 0 0 0 467.33 1586.8 L 467.33 1582.8" fill="none" stroke="#5F6368" stroke-width="2" stroke-linejoin="round"/>
     <rect x="353.84" y="1627.75" width="89.22" height="29.1" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
     <text x="362.59" y="1646.67" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">clip finished</text>
     <circle cx="467.33" cy="1582.8" r="4.5" fill="#5F6368"/>
   </g>
-  <g data-id="/links/17" data-tag="Link" data-kind="deny">
+  <g data-id="/links/17" data-tag="Link" data-kind="deny" data-from="/body/1/children/0/children/0/children/0/children/1/children/0/children/1/children/1/children/0/children/0/children/1/children/0" data-to="/body/1/children/0/children/0/children/0/children/1/children/0/children/2/children/1/children/0">
     <path d="M 762.94 1568.8 L 762.94 1645.67" fill="none" stroke="#C5221F" stroke-width="2" stroke-dasharray="6 5"/>
     <rect x="754.94" y="1645.67" width="16" height="3" fill="#C5221F"/>
     <rect x="700.01" y="1594.18" width="125.85" height="29.1" rx="5.25" fill="#FFFFFF" stroke="#F4C7C3" stroke-width="1.5"/>

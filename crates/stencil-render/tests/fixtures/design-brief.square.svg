@@ -75,7 +75,7 @@
         </g>
         <g data-id="/body/0/children/1" data-tag="Col">
           <g data-id="/body/0/children/1/children/0" data-tag="Row">
-            <g data-id="/body/0/children/1/children/0/children/0" data-tag="Pcard">
+            <g id="console" data-id="/body/0/children/1/children/0/children/0" data-tag="Pcard">
               <rect x="1327.92" y="102.35" width="131.33" height="44.5" rx="7.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
               <text x="1338.67" y="121.63" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#202124">Operator console</text>
               <text x="1338.67" y="137.27" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">web client</text>
@@ -89,40 +89,40 @@
             <text x="767" y="238.95" xml:space="preserve" font-family="Inter" font-size="18" font-weight="700" letter-spacing="0.18" fill="#FFFFFF">Trigger evaluation service</text>
             <g data-id="/body/0/children/1/children/1/children/0" data-tag="Col">
               <g data-id="/body/0/children/1/children/1/children/0/children/0" data-tag="Row">
-                <g data-id="/body/0/children/1/children/1/children/0/children/0/children/0" data-tag="Pcard">
+                <g id="gateway" data-id="/body/0/children/1/children/1/children/0/children/0/children/0" data-tag="Pcard">
                   <rect x="1040.32" y="266.95" width="127.36" height="44.5" rx="7.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
                   <text x="1051.07" y="286.23" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#202124">Gateway</text>
                   <text x="1051.07" y="301.87" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">authenticates calls</text>
                 </g>
               </g>
               <g data-id="/body/0/children/1/children/1/children/0/children/1" data-tag="Row">
-                <g data-id="/body/0/children/1/children/1/children/0/children/1/children/0" data-tag="Pcard">
+                <g id="api" data-id="/body/0/children/1/children/1/children/0/children/1/children/0" data-tag="Pcard">
                   <rect x="1050.83" y="376.95" width="106.34" height="44.5" rx="7.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
                   <text x="1061.58" y="396.23" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#202124">Trigger API</text>
                   <text x="1061.58" y="411.87" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">compiles plans</text>
                 </g>
               </g>
               <g data-id="/body/0/children/1/children/1/children/0/children/2" data-tag="Row">
-                <g data-id="/body/0/children/1/children/1/children/0/children/2/children/0" data-tag="Pcard">
+                <g id="queue" data-id="/body/0/children/1/children/1/children/0/children/2/children/0" data-tag="Pcard">
                   <rect x="1030.81" y="486.95" width="146.38" height="44.5" rx="7.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
                   <text x="1041.56" y="506.23" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#202124">Evaluation queue</text>
                   <text x="1041.56" y="521.87" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">at-least-once delivery</text>
                 </g>
               </g>
               <g data-id="/body/0/children/1/children/1/children/0/children/3" data-tag="Row">
-                <g data-id="/body/0/children/1/children/1/children/0/children/3/children/0" data-tag="Pcard">
+                <g id="worker" data-id="/body/0/children/1/children/1/children/0/children/3/children/0" data-tag="Pcard">
                   <rect x="1049.38" y="596.95" width="109.23" height="44.5" rx="7.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
                   <text x="1060.13" y="616.23" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#202124">Clip worker</text>
                   <text x="1060.13" y="631.87" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">one job per clip</text>
                 </g>
               </g>
               <g data-id="/body/0/children/1/children/1/children/0/children/4" data-tag="Row">
-                <g data-id="/body/0/children/1/children/1/children/0/children/4/children/0" data-tag="Pcard">
+                <g id="evaluator" data-id="/body/0/children/1/children/1/children/0/children/4/children/0" data-tag="Pcard">
                   <rect x="765.75" y="706.95" width="151.88" height="44.5" rx="7.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
                   <text x="776.5" y="726.23" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#202124">Clip evaluator</text>
                   <text x="776.5" y="741.87" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">hosted model endpoint</text>
                 </g>
-                <g data-id="/body/0/children/1/children/1/children/0/children/4/children/1" data-tag="Pcard">
+                <g id="database" data-id="/body/0/children/1/children/1/children/0/children/4/children/1" data-tag="Pcard">
                   <rect x="1313.31" y="706.95" width="128.94" height="44.5" rx="7.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
                   <text x="1324.06" y="726.23" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#202124">Verdict store</text>
                   <text x="1324.06" y="741.87" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">relational database</text>
@@ -166,43 +166,43 @@
       <text x="20" y="1020.2" xml:space="preserve" font-family="Inter" font-size="11" font-weight="400" fill="#5F6368">The numbered links follow one request from the console to a stored verdict.</text>
     </g>
   </g>
-  <g data-id="/links/0" data-tag="Link" data-kind="blue">
+  <g data-id="/links/0" data-tag="Link" data-kind="blue" data-from="/body/0/children/1/children/0/children/0" data-to="/body/0/children/1/children/1/children/0/children/0/children/0">
     <path d="M 1393.58 147.6 L 1393.58 289.2 L 1178.43 289.2" fill="none" stroke="#1A73E8" stroke-width="2" stroke-linejoin="round"/>
     <line x1="1178.43" y1="289.2" x2="1168.43" y2="289.2" stroke="none" marker-end="url(#arrow-center-blue)"/>
     <rect x="1226.76" y="274.65" width="108.5" height="29.1" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
     <text x="1235.51" y="293.57" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">1 submit trigger</text>
   </g>
-  <g data-id="/links/1" data-tag="Link" data-kind="blue">
+  <g data-id="/links/1" data-tag="Link" data-kind="blue" data-from="/body/0/children/1/children/1/children/0/children/0/children/0" data-to="/body/0/children/1/children/1/children/0/children/1/children/0">
     <path d="M 1104 312.2 L 1104 366.2" fill="none" stroke="#1A73E8" stroke-width="2" stroke-linejoin="round"/>
     <line x1="1104" y1="366.2" x2="1104" y2="376.2" stroke="none" marker-end="url(#arrow-center-blue)"/>
     <rect x="1046.69" y="329.65" width="114.62" height="29.1" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
     <text x="1055.44" y="348.57" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">2 authorized call</text>
   </g>
-  <g data-id="/links/2" data-tag="Link" data-kind="blue">
+  <g data-id="/links/2" data-tag="Link" data-kind="blue" data-from="/body/0/children/1/children/1/children/0/children/1/children/0" data-to="/body/0/children/1/children/1/children/0/children/2/children/0">
     <path d="M 1104 422.2 L 1104 476.2" fill="none" stroke="#1A73E8" stroke-width="2" stroke-linejoin="round"/>
     <line x1="1104" y1="476.2" x2="1104" y2="486.2" stroke="none" marker-end="url(#arrow-center-blue)"/>
     <rect x="1057.51" y="439.65" width="92.99" height="29.1" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
     <text x="1066.26" y="458.57" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">3 queue plan</text>
   </g>
-  <g data-id="/links/3" data-tag="Link" data-kind="blue">
+  <g data-id="/links/3" data-tag="Link" data-kind="blue" data-from="/body/0/children/1/children/1/children/0/children/2/children/0" data-to="/body/0/children/1/children/1/children/0/children/3/children/0">
     <path d="M 1104 532.2 L 1104 586.2" fill="none" stroke="#1A73E8" stroke-width="2" stroke-linejoin="round"/>
     <line x1="1104" y1="586.2" x2="1104" y2="596.2" stroke="none" marker-end="url(#arrow-center-blue)"/>
     <rect x="1059.15" y="549.65" width="89.71" height="29.1" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
     <text x="1067.9" y="568.57" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">4 deliver job</text>
   </g>
-  <g data-id="/links/4" data-tag="Link" data-kind="blue">
+  <g data-id="/links/4" data-tag="Link" data-kind="blue" data-from="/body/0/children/1/children/1/children/0/children/3/children/0" data-to="/body/0/children/1/children/1/children/0/children/4/children/0">
     <path d="M 1048.63 619.2 L 841.69 619.2 L 841.69 696.2" fill="none" stroke="#1A73E8" stroke-width="2" stroke-linejoin="round"/>
     <line x1="841.69" y1="696.2" x2="841.69" y2="706.2" stroke="none" marker-end="url(#arrow-center-blue)"/>
     <rect x="894.23" y="604.65" width="101.87" height="29.1" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
     <text x="902.98" y="623.57" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">5 evaluate clip</text>
   </g>
-  <g data-id="/links/5" data-tag="Link" data-kind="blue">
+  <g data-id="/links/5" data-tag="Link" data-kind="blue" data-from="/body/0/children/1/children/1/children/0/children/3/children/0" data-to="/body/0/children/1/children/1/children/0/children/4/children/1">
     <path d="M 1159.37 619.2 L 1377.78 619.2 L 1377.78 696.2" fill="none" stroke="#1A73E8" stroke-width="2" stroke-linejoin="round"/>
     <line x1="1377.78" y1="696.2" x2="1377.78" y2="706.2" stroke="none" marker-end="url(#arrow-center-blue)"/>
     <rect x="1217.68" y="604.65" width="101.79" height="29.1" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
     <text x="1226.43" y="623.57" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">6 write verdict</text>
   </g>
-  <g data-id="/links/6" data-tag="Link" data-kind="deny">
+  <g data-id="/links/6" data-tag="Link" data-kind="deny" data-from="/body/0/children/1/children/1/children/0/children/4/children/0" data-to="/body/0/children/1/children/1/children/0/children/4/children/1">
     <path d="M 918.38 729.2 L 1309.56 729.2" fill="none" stroke="#C5221F" stroke-width="2" stroke-dasharray="6 5" stroke-linejoin="round"/>
     <rect x="1309.56" y="721.2" width="3" height="16" fill="#C5221F"/>
     <rect x="1064.55" y="714.65" width="101.85" height="29.1" rx="5.25" fill="#FFFFFF" stroke="#F4C7C3" stroke-width="1.5"/>

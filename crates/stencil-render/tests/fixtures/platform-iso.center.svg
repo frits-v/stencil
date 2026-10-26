@@ -23,7 +23,7 @@
         </g>
         <g data-id="/body/0/children/0" data-tag="Row">
           <g data-id="/body/0/children/0/children/0" data-tag="Col">
-            <g data-id="/body/0/children/0/children/0/children/0" data-tag="Pcard">
+            <g id="lb" data-id="/body/0/children/0/children/0/children/0" data-tag="Pcard">
               <polygon points="460.15,342.59 515.57,374.59 460.15,406.59 404.72,374.59" fill="#202124" fill-opacity="0.2" filter="url(#stencil-shadow)"/>
               <polygon points="404.72,371.59 460.15,403.59 460.15,397.59 404.72,365.59" fill="#EBEBEB" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
               <polygon points="515.57,371.59 460.15,403.59 460.15,397.59 515.57,365.59" fill="#D6D6D6" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
@@ -46,7 +46,7 @@
                 <text x="393.91" y="327.3" xml:space="preserve" font-family="Inter" font-size="15" font-weight="700" fill="#5F6368">Shared VPC · europe-west4</text>
               </g>
               <g data-id="/body/0/children/0/children/1/children/0/children/0" data-tag="Row">
-                <g data-id="/body/0/children/0/children/1/children/0/children/0/children/0" data-tag="Pcard">
+                <g id="web" data-id="/body/0/children/0/children/1/children/0/children/0/children/0" data-tag="Pcard">
                   <polygon points="780.29,458.65 818.4,480.65 780.29,502.65 742.19,480.65" fill="#202124" fill-opacity="0.2" filter="url(#stencil-shadow)"/>
                   <polygon points="742.19,477.65 780.29,499.65 780.29,455.65 742.19,433.65" fill="#EBEBEB" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
                   <polygon points="818.4,477.65 780.29,499.65 780.29,455.65 818.4,433.65" fill="#D6D6D6" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
@@ -64,7 +64,7 @@
               </g>
             </g>
             <g data-id="/body/0/children/0/children/1/children/1" data-tag="Col">
-              <g data-id="/body/0/children/0/children/1/children/1/children/0" data-tag="Pcard">
+              <g id="db" data-id="/body/0/children/0/children/1/children/1/children/0" data-tag="Pcard">
                 <ellipse cx="600.1" cy="616.61" rx="34.29" ry="19.8" fill="#202124" fill-opacity="0.2" filter="url(#stencil-shadow)"/>
                 <path d="M 565.8 613.61 A 34.29 19.8 0 0 0 600.1 633.41 L 600.1 597.41 A 34.29 19.8 0 0 1 565.8 577.61 Z" fill="#EBEBEB" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
                 <path d="M 600.1 633.41 A 34.29 19.8 0 0 0 634.39 613.61 L 634.39 577.61 A 34.29 19.8 0 0 1 600.1 597.41 Z" fill="#D6D6D6" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
@@ -83,7 +83,7 @@
             </g>
           </g>
           <g data-id="/body/0/children/0/children/2" data-tag="Col">
-            <g data-id="/body/0/children/0/children/2/children/0" data-tag="Pcard">
+            <g id="api" data-id="/body/0/children/0/children/2/children/0" data-tag="Pcard">
               <polygon points="982.6,644.22 1038.02,676.22 982.6,708.22 927.17,676.22" fill="#202124" fill-opacity="0.2" filter="url(#stencil-shadow)"/>
               <polygon points="927.17,673.22 982.6,705.22 982.6,687.22 927.17,655.22" fill="#EBEBEB" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
               <polygon points="1038.02,673.22 982.6,705.22 982.6,687.22 1038.02,655.22" fill="#D6D6D6" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
@@ -107,7 +107,7 @@
               <g data-plane="12" data-axis="x" transform="matrix(0.87 0.5 -0.87 0.5 749.11 34.8)">
                 <text x="957.82" y="458.08" xml:space="preserve" font-family="Inter" font-size="15" font-weight="700" fill="#5F6368">Google APIs</text>
               </g>
-              <g data-id="/body/0/children/0/children/3/children/0/children/0" data-tag="Pcard">
+              <g id="store" data-id="/body/0/children/0/children/3/children/0/children/0" data-tag="Pcard">
                 <ellipse cx="1155.14" cy="813.84" rx="34.29" ry="19.8" fill="#202124" fill-opacity="0.2" filter="url(#stencil-shadow)"/>
                 <path d="M 1120.85 810.84 A 34.29 19.8 0 0 0 1155.14 830.64 L 1155.14 821.98 A 34.29 19.8 0 0 1 1120.85 802.18 Z" fill="#EBEBEB" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
                 <path d="M 1155.14 830.64 A 34.29 19.8 0 0 0 1189.43 810.84 L 1189.43 802.18 A 34.29 19.8 0 0 1 1155.14 821.98 Z" fill="#D6D6D6" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
@@ -146,7 +146,7 @@
       </g>
     </g>
   </g>
-  <g data-id="/links/0" data-tag="Link" data-kind="blue">
+  <g data-id="/links/0" data-tag="Link" data-kind="blue" data-from="/body/0/children/0/children/0/children/0" data-to="/body/0/children/0/children/1/children/0/children/0/children/0">
     <polygon points="491.76,388.34 594.33,447.56 586.54,452.06 483.96,392.84" fill="#202124" fill-opacity="0.2" filter="url(#stencil-shadow)"/>
     <polygon points="483.96,385.34 484.09,384.1 484.48,382.79 485.1,381.5 485.91,380.32 486.85,379.32 487.86,378.59 488.87,378.16 489.81,378.07 490.61,378.32 491.23,378.89 491.62,379.75 491.76,380.84 491.62,382.08 491.23,383.39 490.61,384.68 489.81,385.86 488.87,386.85 487.86,387.59 486.85,388.02 485.91,388.11 485.1,387.86 484.48,387.29 484.09,386.43" fill="#1A73E8"/>
     <polygon points="490.61,378.32 593.19,437.54 590.44,442.31 487.86,383.09" fill="#5295EE"/>
@@ -171,7 +171,7 @@
       <text x="246" y="503.29" xml:space="preserve" font-family="Inter" font-size="15.6" font-weight="700" fill="#202124">HTTPS</text>
     </g>
   </g>
-  <g data-id="/links/1" data-tag="Link" data-kind="blue">
+  <g data-id="/links/1" data-tag="Link" data-kind="blue" data-from="/body/0/children/0/children/1/children/0/children/0/children/0" data-to="/body/0/children/0/children/2/children/0">
     <polygon points="803.24,489.4 903.96,547.54 896.16,552.04 795.45,493.9" fill="#202124" fill-opacity="0.2" filter="url(#stencil-shadow)"/>
     <polygon points="795.45,486.4 795.58,485.15 795.97,483.84 796.59,482.55 797.4,481.37 798.34,480.38 799.35,479.65 800.35,479.22 801.29,479.12 802.1,479.37 802.72,479.95 803.11,480.81 803.24,481.9 803.11,483.14 802.72,484.45 802.1,485.74 801.29,486.92 800.35,487.91 799.35,488.65 798.34,489.07 797.4,489.17 796.59,488.92 795.97,488.34 795.58,487.48" fill="#1A73E8"/>
     <polygon points="802.1,479.37 902.81,537.52 900.06,542.29 799.35,484.15" fill="#5295EE"/>
@@ -192,7 +192,7 @@
     <polygon points="952.85,635.9 942.49,617.83 937.26,626.9" fill="#5295EE"/>
     <polygon points="952.85,635.9 937.26,626.9 932.02,635.97" fill="#1A73E8"/>
   </g>
-  <g data-id="/links/2" data-tag="Link" data-kind="gray">
+  <g data-id="/links/2" data-tag="Link" data-kind="gray" data-from="/body/0/children/0/children/2/children/0" data-to="/body/0/children/0/children/1/children/1/children/0">
     <polygon points="939.16,651.3 873.27,613.26 877.6,610.76 943.49,648.8" fill="#202124" fill-opacity="0.2" filter="url(#stencil-shadow)"/>
     <polygon points="877.6,605.26 877.53,604.65 877.31,604.17 876.97,603.86 876.52,603.72 876,603.77 875.44,604.01 874.88,604.42 874.35,604.97 873.91,605.62 873.56,606.34 873.35,607.07 873.27,607.76 873.35,608.36 873.56,608.84 873.91,609.16 874.35,609.3 874.88,609.25 875.44,609.01 876,608.6 876.52,608.05 876.97,607.39 877.31,606.67 877.53,605.95" fill="#5F6368"/>
     <polygon points="942.86,641.9 876.97,603.86 875.44,606.51 941.33,644.55" fill="#7C8188"/>
@@ -214,7 +214,7 @@
     <polygon points="624.35,625.11 636.47,632.11 633.56,637.15" fill="#5F6368"/>
     <polygon points="640.58,629.73 640.44,628.59 640.03,627.68 639.38,627.07 638.53,626.81 637.53,626.91 636.47,627.36 635.41,628.14 634.41,629.18 633.56,630.43 632.91,631.79 632.5,633.17 632.36,634.48 632.5,635.63 632.91,636.54 633.56,637.15 634.41,637.41 635.41,637.31 636.47,636.86 637.53,636.08 638.53,635.04 639.38,633.79 640.03,632.43 640.44,631.04" fill="#383A3D"/>
   </g>
-  <g data-id="/links/3" data-tag="Link" data-kind="gray">
+  <g data-id="/links/3" data-tag="Link" data-kind="gray" data-from="/body/0/children/0/children/2/children/0" data-to="/body/0/children/0/children/3/children/0/children/0">
     <polygon points="996.88,699.97 1113.99,767.59 1109.66,770.09 992.55,702.47" fill="#202124" fill-opacity="0.2" filter="url(#stencil-shadow)"/>
     <polygon points="992.55,696.97 992.63,696.29 992.84,695.56 993.19,694.84 993.64,694.18 994.16,693.63 994.72,693.22 995.28,692.99 995.8,692.93 996.25,693.07 996.59,693.39 996.81,693.87 996.88,694.47 996.81,695.16 996.59,695.89 996.25,696.61 995.8,697.26 995.28,697.82 994.72,698.22 994.16,698.46 993.64,698.51 993.19,698.38 992.84,698.06 992.63,697.58" fill="#5F6368"/>
     <polygon points="996.25,693.07 1113.36,760.69 1111.83,763.34 994.72,695.72" fill="#7C8188"/>
