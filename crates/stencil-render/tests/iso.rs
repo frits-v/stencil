@@ -34,13 +34,15 @@ const PLATFORM_JSON: &str = include_str!("../../../examples/platform-iso.json");
 const PEOPLE_JSON: &str = include_str!("../../../examples/people-iso.json");
 const ONPREM_JSON: &str = include_str!("../../../examples/onprem-iso.json");
 const TRANSIT_JSON: &str = include_str!("../../../examples/transit-iso.json");
+const OSS_JSON: &str = include_str!("../../../examples/oss-web-stack-iso.json");
 /// Every example drawn under iso, by stem.
-const ISO_EXAMPLES: [(&str, &str); 5] = [
+const ISO_EXAMPLES: [(&str, &str); 6] = [
     ("hero-iso", HERO_JSON),
     ("platform-iso", PLATFORM_JSON),
     ("people-iso", PEOPLE_JSON),
     ("onprem-iso", ONPREM_JSON),
     ("transit-iso", TRANSIT_JSON),
+    ("oss-web-stack-iso", OSS_JSON),
 ];
 const ZERO: ScreenPoint = ScreenPoint { x: 0.0, y: 0.0 };
 

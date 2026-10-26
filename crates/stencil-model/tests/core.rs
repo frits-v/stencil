@@ -102,6 +102,21 @@ fn the_aws_example_parses_round_trips_and_vets_clean() {
 }
 
 #[test]
+fn the_oss_examples_parse_round_trip_and_vet_clean_under_oss() {
+    let grammar = stencil_model::builtin_grammar("oss").unwrap().unwrap();
+    let examples = [
+        include_str!("../../../examples/oss-web-stack.json"),
+        include_str!("../../../examples/oss-web-stack-iso.json"),
+    ];
+    for document in examples {
+        let page = parse_and_vet(document, &grammar).unwrap_or_else(|error| panic!("{error:?}"));
+        assert_eq!(page.grammar.as_deref(), Some("oss"));
+        let written = serde_json::to_string(&page).unwrap();
+        assert_eq!(parse_and_vet(&written, &grammar).unwrap(), page, "round trip");
+    }
+}
+
+#[test]
 fn the_azure_example_parses_round_trips_and_vets_clean_under_azure() {
     let grammar = azure();
     let document = include_str!("../../../examples/azure-hub-spoke.json");

@@ -1,0 +1,19 @@
+check child-inside-container: examined 36 relations, 0 defects
+check siblings-do-not-overlap: examined 50 pairs, 0 defects
+check text-fits-box: examined 49 text runs, 0 defects
+check remembered-constants: examined 0 text fields, not applicable: grammar has no remembered constants
+check legend-consistency: examined 13 relations, 0 defects
+check links-routed: examined 6 links, 0 defects
+check links-avoid-boxes: examined 432 pairs, 0 defects
+check pipes-land: examined 6 pipe ends, 0 defects
+check iso-labels-clear: examined 0 pairs, not applicable: projection is flat
+check iso-links-clear: examined 0 link legs, not applicable: projection is flat
+check iso-link-ends: examined 0 link ends, not applicable: projection is flat
+check iso-links-apart: examined 0 link pairs, not applicable: projection is flat
+check print-fit: examined 0 text runs, not applicable: no print width
+check icon-matches-product: examined 11 items, 0 defects
+check description-covers-drawing: examined 33 elements, 0 defects
+check keys-used: examined 0 keys, not applicable: page has no actors or keyed lists
+check marks-clear: examined 0 marks, not applicable: page has no marks, step badges, valves, hops or detail frames
+check junctions-plain: examined 143 junctions, 0 defects
+stencil check: 18 checks, 10 passed, 0 failed, 8 not applicable

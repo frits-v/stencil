@@ -11,7 +11,7 @@ use stencil_cli::pipeline::{all_checks, load_document_from, read_input, render_p
 use stencil_cli::{ExitCode, run};
 use stencil_render::DeviceScale;
 
-const STEMS: [&str; 13] = [
+const STEMS: [&str; 15] = [
     "aws-hybrid",
     "azure-hub-spoke",
     "g7",
@@ -21,6 +21,8 @@ const STEMS: [&str; 13] = [
     "design-brief",
     "onepager",
     "onprem-iso",
+    "oss-web-stack",
+    "oss-web-stack-iso",
     "people-iso",
     "platform-iso",
     "stress-dense",

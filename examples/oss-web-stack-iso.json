@@ -1,0 +1,283 @@
+{
+  "title": "Orders reach PostgreSQL through Kafka, and sign-in stays with the identity provider",
+  "kicker": "Self-hosted web stack · one Kubernetes cluster",
+  "lede": "NGINX routes branch traffic to the storefront, which publishes orders to Kafka for the worker to write to PostgreSQL. Sessions live in Redis, backups in MinIO, and Argo CD deploys onto Kubernetes.",
+  "width": 1700,
+  "badge": "Internal",
+  "grammar": "oss",
+  "body": [
+    {
+      "tag": "Row",
+      "gap": 64,
+      "grow": [
+        3,
+        14
+      ],
+      "children": [
+        {
+          "tag": "Col",
+          "gap": 48,
+          "children": [
+            {
+              "tag": "Box",
+              "kind": "group",
+              "label": "Corporate identity",
+              "children": [
+                {
+                  "tag": "Item",
+                  "kind": "external",
+                  "id": "idp",
+                  "title": "Identity provider",
+                  "subtitle": "OpenID Connect"
+                }
+              ]
+            },
+            {
+              "tag": "Box",
+              "kind": "group",
+              "tint": 1,
+              "label": "Branch office",
+              "children": [
+                {
+                  "tag": "Item",
+                  "kind": "person",
+                  "id": "staff",
+                  "title": "Branch staff",
+                  "subtitle": "browser"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "tag": "Box",
+          "kind": "system",
+          "id": "platform",
+          "label": "Shop platform",
+          "children": [
+            {
+              "tag": "Box",
+              "kind": "cluster",
+              "label": "Production cluster",
+              "children": [
+                {
+                  "tag": "Col",
+                  "gap": 48,
+                  "children": [
+                    {
+                      "tag": "Row",
+                      "grow": [
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0
+                      ],
+                      "gap": 64,
+                      "children": [
+                        {
+                          "tag": "Col",
+                          "children": [
+                            {
+                              "tag": "Item",
+                              "kind": "network",
+                              "id": "ingress",
+                              "title": "Ingress",
+                              "icon": "nginx",
+                              "subtitle": "NGINX"
+                            }
+                          ]
+                        },
+                        {
+                          "tag": "Col",
+                          "children": [
+                            {
+                              "tag": "Item",
+                              "kind": "service",
+                              "id": "storefront",
+                              "title": "Storefront",
+                              "subtitle": "web front end"
+                            }
+                          ]
+                        },
+                        {
+                          "tag": "Col",
+                          "gap": 64,
+                          "children": [
+                            {
+                              "tag": "Item",
+                              "kind": "queue",
+                              "id": "events",
+                              "title": "Order events",
+                              "icon": "kafka",
+                              "subtitle": "Apache Kafka"
+                            },
+                            {
+                              "tag": "Item",
+                              "kind": "store",
+                              "id": "sessions",
+                              "title": "Sessions",
+                              "icon": "redis",
+                              "subtitle": "Redis"
+                            }
+                          ]
+                        },
+                        {
+                          "tag": "Col",
+                          "children": [
+                            {
+                              "tag": "Item",
+                              "kind": "service",
+                              "id": "worker",
+                              "title": "Order worker",
+                              "subtitle": "writes orders"
+                            }
+                          ]
+                        },
+                        {
+                          "tag": "Col",
+                          "children": [
+                            {
+                              "tag": "Item",
+                              "kind": "store",
+                              "id": "orders",
+                              "title": "Orders",
+                              "icon": "postgresql",
+                              "subtitle": "PostgreSQL"
+                            }
+                          ]
+                        },
+                        {
+                          "tag": "Col",
+                          "children": [
+                            {
+                              "tag": "Item",
+                              "kind": "store",
+                              "id": "backups",
+                              "title": "Backups",
+                              "icon": "minio",
+                              "subtitle": "MinIO"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "tag": "Row",
+                      "grow": [
+                        0,
+                        0,
+                        0
+                      ],
+                      "gap": 32,
+                      "children": [
+                        {
+                          "tag": "Item",
+                          "kind": "service",
+                          "id": "k8s",
+                          "title": "Orchestrator",
+                          "icon": "kubernetes",
+                          "subtitle": "Kubernetes"
+                        },
+                        {
+                          "tag": "Item",
+                          "kind": "service",
+                          "id": "argo",
+                          "title": "Delivery",
+                          "icon": "argo",
+                          "subtitle": "Argo CD"
+                        },
+                        {
+                          "tag": "Item",
+                          "kind": "service",
+                          "id": "prom",
+                          "title": "Metrics",
+                          "icon": "prometheus",
+                          "subtitle": "Prometheus"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "links": [
+    {
+      "from": "staff",
+      "to": "ingress",
+      "line": "solid",
+      "tint": 1,
+      "label": "HTTPS"
+    },
+    {
+      "from": "ingress",
+      "to": "idp",
+      "line": "dash"
+    },
+    {
+      "from": "ingress",
+      "to": "storefront",
+      "line": "solid",
+      "tint": 1,
+      "label": "route"
+    },
+    {
+      "from": "storefront",
+      "to": "events",
+      "line": "solid",
+      "tint": 2,
+      "label": "publish"
+    },
+    {
+      "from": "events",
+      "to": "worker",
+      "line": "solid",
+      "tint": 2,
+      "label": "consume"
+    },
+    {
+      "from": "storefront",
+      "to": "sessions",
+      "line": "gray"
+    },
+    {
+      "from": "worker",
+      "to": "orders",
+      "line": "solid",
+      "tint": 2,
+      "label": "writes"
+    },
+    {
+      "from": "orders",
+      "to": "backups",
+      "line": "gray"
+    }
+  ],
+  "legend": [
+    {
+      "line": "solid",
+      "tint": 1,
+      "text": "request path"
+    },
+    {
+      "line": "solid",
+      "tint": 2,
+      "text": "order events"
+    },
+    {
+      "line": "dash",
+      "text": "identity"
+    },
+    {
+      "line": "gray",
+      "text": "uses"
+    }
+  ],
+  "projection": "iso"
+}

@@ -28,6 +28,14 @@ Build the binary with `cargo build --release`; it lands at `target/release/stenc
 
 `examples/azure-hub-spoke.json`: an on-prem site reaching a hub VNet over ExpressRoute with a VPN backup, spoke traffic through the hub firewall, and a spoke cluster reaching PaaS services over private endpoints.
 
+![A self-hosted web stack on Kubernetes](docs/gallery/oss-web-stack.png)
+
+`examples/oss-web-stack.json`: NGINX routing branch traffic to a storefront on Kubernetes, orders flowing through Kafka to PostgreSQL, Redis and MinIO beside them, and an identity provider outside the platform.
+
+![A self-hosted web stack on Kubernetes, isometric](docs/gallery/oss-web-stack-iso.png)
+
+`examples/oss-web-stack-iso.json`: the same stack under the isometric projection, with each project's logo on a solid chosen by its kind: stores as cylinders, Kafka and MinIO as stacks, NGINX as a tile.
+
 ![Design one-pager for a trigger evaluation service](docs/gallery/design-brief.png)
 
 Five item shapes on one floor, under the isometric projection:
