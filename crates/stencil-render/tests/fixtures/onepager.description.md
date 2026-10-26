@@ -1,136 +1,136 @@
-# Plain-language event triggers, evaluated over video clips `A1-A2` `/title`
+# Library holds, from the catalogue to the pickup shelf `A1-A2` `/title`
 
-Internal · Premise · trigger evaluation `A1-A2` `/kicker`
+Internal · Library · hold and pickup `A1-A2` `/kicker`
 
-An operator describes an event in their own words. The service turns the description into an evaluation plan, runs the plan over each new clip, and stores a verdict with the frames that support it. `A1-A2` `/lede`
+A patron places a hold in the catalogue app. The service keeps a line of holds for each title, sets a returned copy aside at the patron's branch, and tells the patron it is ready to collect. `A1-A2` `/lede`
 
 ## Sheet
 
-Drawn elements: 141 (63 nodes, 18 links, 24 entries, 36 marks). Canvas 1600 x 2581.1 px, projection flat, grammar plain. Line styles name a tint slot by number; the colour word is the one the center theme draws it in. References: a reference such as B3 or B2-C5 names the grid cells under an element's top-left and bottom-right corners, columns 1 to 8 left to right, rows A to F top to bottom. The reference before a pointer is where that element is drawn; a Zones cell lists the cells of every balloon, flag or diamond keyed to its entry.
+Drawn elements: 141 (63 nodes, 18 links, 24 entries, 36 marks). Canvas 1600 x 2577.5 px, projection flat, grammar plain. Line styles name a tint slot by number; the colour word is the one the center theme draws it in. References: a reference such as B3 or B2-C5 names the grid cells under an element's top-left and bottom-right corners, columns 1 to 8 left to right, rows A to F top to bottom. The reference before a pointer is where that element is drawn; a Zones cell lists the cells of every balloon, flag or diamond keyed to its entry.
 
 ## Title block (view 1)
 
-Wordmark trig. `A1-A8` `/sheet`
+Wordmark holds. `A1-A8` `/sheet`
 
-### Problem · rules written as code `A2-A5` `/sheet/problem`
+### Problem · holds kept on paper `A2-A5` `/sheet/problem`
 
-Operators review long stretches of video to find a few events.
+Branch staff track holds on paper slips and by phone.
 
 | Point | Text | Marks | Pointer |
 |---|---|---|---|
-| P1 | A rule written as code needs an engineer for every change. | balloon 1 Operator console `A4` `/sheet/problem/points/0/marks/0`; balloon 3 Trigger API `A4` `/sheet/problem/points/0/marks/1` | `A2-A4` `/sheet/problem/points/0` |
-| P2 | A reviewer watches hours of footage to confirm a few seconds of it. | balloon 7 Clip evaluator `A4` `/sheet/problem/points/1/marks/0` | `A2-A4` `/sheet/problem/points/1` |
-| P3 | A verdict without its frames cannot be checked a month later. | balloon 8 Verdict store `A4` `/sheet/problem/points/2/marks/0`; flag 2 Evidence frames are stored as references into the clip, never copied. `A4` `/sheet/problem/points/2/marks/1` | `A2-A4` `/sheet/problem/points/2` |
-| P4 | A model update can quietly change what a trigger means. | diamond 3 Model updates. `A4` `/sheet/problem/points/3/marks/0`; flag 1 A plan change never reaches a running trigger until an operator approves it. `A4` `/sheet/problem/points/3/marks/1` | `A2-A4` `/sheet/problem/points/3` |
+| P1 | A patron must call or visit a branch to place a hold. | balloon 1 Catalogue app `A4` `/sheet/problem/points/0/marks/0`; balloon 3 Holds API `A4` `/sheet/problem/points/0/marks/1` | `A2-A4` `/sheet/problem/points/0` |
+| P2 | Staff phone each patron when a held copy comes in. | balloon 7 Notifier `A4` `/sheet/problem/points/1/marks/0` | `A2-A4` `/sheet/problem/points/1` |
+| P3 | A lost slip takes the patron's place in line with it. | balloon 8 Holds store `A4` `/sheet/problem/points/2/marks/0`; flag 2 A hold stores a reference to the copy record, never a copy of it. `A4` `/sheet/problem/points/2/marks/1` | `A2-A4` `/sheet/problem/points/2` |
+| P4 | A hold with no branch or an old phone number strands the copy. | diamond 3 Contact details. `A4` `/sheet/problem/points/3/marks/0`; flag 1 A hold reaches the pick queue only once its patron has confirmed the branch. `A4` `/sheet/problem/points/3/marks/1` | `A2-A4` `/sheet/problem/points/3` |
 
-### Answer · triggers in plain language `A5-A7` `/sheet/answer`
+### Answer · holds placed online `A5-A7` `/sheet/answer`
 
-The operator writes the event; the service plans it, runs it on every clip, and keeps the frames that decide it.
+The patron places the hold in the app; the service keeps the line, sets the copy aside and sends the notice.
 
-Versioned plans. Each trigger compiles to an evaluation plan with a version. A verdict records that version, so a changed plan shows in the history and is never applied silently.
+One line per title. Each hold takes a place in its title's line. A returned copy goes to the first confirmed hold, and the app shows each patron their place.
 
-Asynchronous evaluation. The API returns once a job is queued, and a slow clip never holds an operator request open.
+Queued work. The API returns once a hold is queued, and a busy branch never holds a patron's request open.
 
-### Your attention goes here, and only here `A7-A8` `/sheet/attention`
+### The patron's part, and only this `A7-A8` `/sheet/attention`
 
 | Mark | Item | Actor | Zones | Pointer |
 |---|---|---|---|---|
-| diamond 1 | Plan approval. You confirm each new or changed plan before it runs. | Operator | B4 | `A7-A8` `/sheet/attention/items/0` |
-| diamond 2 | Disputed verdicts. A verdict you mark wrong comes back with its frames and plan version. | Operator | B8 C2 | `A7-A8` `/sheet/attention/items/1` |
-| diamond 3 | Model updates. A new evaluator version re-plans every active trigger and waits for your approval. | Operator | A4 B8 | `A7-A8` `/sheet/attention/items/2` |
+| diamond 1 | Pickup branch. The patron confirms the branch before a copy is set aside. | Patron | B4 | `A7-A8` `/sheet/attention/items/0` |
+| diamond 2 | Collection. A ready copy waits seven days on the hold shelf at that branch. | Patron | B8 C2 | `A7-A8` `/sheet/attention/items/1` |
+| diamond 3 | Contact details. Notices go to the email or phone on the card, so the patron keeps them current. | Patron | A4 B8 | `A7-A8` `/sheet/attention/items/2` |
 
 ## Who acts
 
 | Actor | Id | Colour | Text | Pointer |
 |---|---|---|---|---|
-| Operator | operator | tint 4; amber in center | writes triggers, reviews verdicts | `A1-A3` `/actors/0` |
-| Trigger API | api | tint 1; blue in center | plans, versions, queues | `A3-A4` `/actors/1` |
-| Clip worker | worker | tint 6; green in center | one job per clip | `A4-A5` `/actors/2` |
-| Evaluator | model | tint 5; violet in center | reads frames against a plan | `A5-A6` `/actors/3` |
+| Patron | operator | tint 4; amber in center | places and collects holds | `A1-A2` `/actors/0` |
+| Holds API | api | tint 1; blue in center | keeps lines, queues jobs | `A2-A4` `/actors/1` |
+| Pickup worker | worker | tint 6; green in center | one job per hold | `A4-A5` `/actors/2` |
+| Notifier | model | tint 5; violet in center | sends ready notices | `A5-A6` `/actors/3` |
 
 ## Legend `A1-A8` `/legend`
 
 | Key | Center label | Means | Uses | Pointer |
 |---|---|---|---|---|
 | solid-by-actor | Solid, actor colour | work moves, in the colour of the actor that sends it | 13 | `A1-A3` `/legend/0` |
-| dash-by-actor | Dashed, actor colour | reads or writes the verdict store | 2 | `A3-A5` `/legend/1` |
+| dash-by-actor | Dashed, actor colour | reads or writes the holds store | 2 | `A3-A5` `/legend/1` |
 | solid-by-actor-rail | Solid, actor colour, rail | one topic that every job passes through | 1 | `A5-A7` `/legend/2` |
 | solid-by-actor-planned | Hollow, actor colour | planned, not built yet | 1 | `A1-A2` `/legend/3` |
-| gray | Solid gray | event from the platform | 1 | `A2-A3` `/legend/4` |
-| deny | Dashed red | blocked path | 1 | `A3-A4` `/legend/5` |
+| gray | Solid gray | event from the library system | 1 | `A2-A4` `/legend/4` |
+| deny | Dashed red | blocked path | 1 | `A4` `/legend/5` |
 
-Mark kinds: a piece of the service (balloon, parts list); asked of an operator (flag, general notes); your attention (diamond, attention items); a numbered request step (step badge, numbered lines).
+Mark kinds: a piece of the service (balloon, parts list); asked of a patron (flag, general notes); the patron's part (diamond, attention items); a numbered request step (step badge, numbered lines).
 
 ## View 2: Workflow `A1-C8` `/body/0`
 
-Subtitle: one trigger, from description to stored verdict. Note: a lane for each actor; time runs left to right.
+Subtitle: one hold, from placing it to pickup. Note: a lane for each actor; time runs left to right.
 
-- Phases: lanes Operator, Trigger API, Clip worker, Evaluator; phases 1 Describe, 2 Plan and approve, 3 Evaluate each clip, 4 Review; step fill cell; detail A frames One job per clip, Judge the frames, Write the verdict. `A1-C8` `/body/0/children/0`
-  - Step Describe the event. Lane Operator, phase 1 Describe, column 1. `B1-B2` `/body/0/children/0/children/0`
-    - Mark balloon 1 Operator console `B2` `/body/0/children/0/children/0/marks/0`
-    - Line in plain language.
-    - Line camera and hours.
-  - Step nothing runs yet. Lane Trigger API, phase 1 Describe, column 1, look text. `B1-B2` `/body/0/children/0/children/1`
-  - Step Compile a plan. Lane Trigger API, phase 2 Plan and approve, column 1. `B2-B3` `/body/0/children/0/children/2`
-    - Mark balloon 3 Trigger API `B3` `/body/0/children/0/children/2/marks/0`
-    - Line objects, conditions, frame rate.
-    - Line plan version 1.
-  - Step Approve the plan. Lane Operator, phase 2 Plan and approve, column 2. `B3-B4` `/body/0/children/0/children/3`
-    - Mark diamond 1 Plan approval. `B4` `/body/0/children/0/children/3/marks/0`
-    - Mark flag 1 A plan change never reaches a running trigger until an operator approves it. `B4` `/body/0/children/0/children/3/marks/1`
-    - Line reads the plan, not the prompt.
-  - Step Store plan version. Lane Trigger API, phase 2 Plan and approve, column 2, look chip, fill tint. `B3-B4` `/body/0/children/0/children/4`
-    - Mark balloon 8 Verdict store `B4` `/body/0/children/0/children/4/marks/0`
-  - Step Clip arrives. Lane Clip worker, phase 3 Evaluate each clip, column 1. `B4-B5` `/body/0/children/0/children/5`
-    - Mark balloon 5 Clip bucket `B5` `/body/0/children/0/children/5/marks/0`
-    - Line the arrival event names a finished clip.
-      - Mark flag 4 Out of scope: live streams, identifying people, and training a model per customer. `B5` `/body/0/children/0/children/5/lines/0/marks/0`
-  - Step One job per clip. Lane Clip worker, phase 3 Evaluate each clip, column 2, look stack. `B6` `/body/0/children/0/children/6`
-    - Mark balloon 6 Clip worker `B6` `/body/0/children/0/children/6/marks/0`
-    - Mark balloon 4 Evaluation queue `B6` `/body/0/children/0/children/6/marks/1`
-    - Line fetch frames.
-    - Line call the evaluator.
-  - Step Judge the frames. Lane Evaluator, phase 3 Evaluate each clip, column 2 to 3. `B6-C7` `/body/0/children/0/children/7`
-    - Mark balloon 7 Clip evaluator `B7` `/body/0/children/0/children/7/marks/0`
-    - Mark flag 3 The evaluator holds no credentials for the verdict store. `B7` `/body/0/children/0/children/7/marks/1`
-    - Line against the approved plan.
-  - Step Write the verdict. Lane Clip worker, phase 3 Evaluate each clip, column 3. `B6-B7` `/body/0/children/0/children/8`
-    - Mark balloon 8 Verdict store `B7` `/body/0/children/0/children/8/marks/0`
-    - Mark flag 2 Evidence frames are stored as references into the clip, never copied. `B7` `/body/0/children/0/children/8/marks/1`
-    - Line verdict, frames, plan version.
-  - Step Review verdicts. Lane Operator, phase 4 Review, column 1. `B7-B8` `/body/0/children/0/children/9`
-    - Mark diamond 2 Disputed verdicts. `B8` `/body/0/children/0/children/9/marks/0`
-    - Line filter by trigger and time.
-  - Step Replay over earlier clips. Lane Trigger API, phase 4 Review, column 1, look planned, fill cell. `B7-B8` `/body/0/children/0/children/10`
-    - Mark balloon 9 Replay scheduler `B8` `/body/0/children/0/children/10/marks/0`
-  - Step A new model version re-plans every trigger. Lane Evaluator, phase 4 Review, column 1, look note, fill cell. `B7-C8` `/body/0/children/0/children/11`
-    - Mark diamond 3 Model updates. `B8` `/body/0/children/0/children/11/marks/0`
-- Ladder, detail A: When a clip fails or a verdict is disputed; a failed clip never blocks the queue; rung fill none. Frames One job per clip, Judge the frames, Write the verdict. `C1-C8` `/body/0/children/1`
-  - Rung 1 (bottom) Retry, the clip worker; actor Clip worker: A failed frame fetch or evaluator call retries the clip job with backoff, three attempts in all. `C1-C8` `/body/0/children/1/rungs/0`
-  - Rung 2 Dead letter, the Trigger API; actor Trigger API: After the third failure the job moves to a dead-letter subscription and the trigger lists the clip as unevaluated. `C1-C8` `/body/0/children/1/rungs/1`
-  - Rung 3 Ask the operator, you; actor Operator: A disputed verdict returns with its frames and plan version; a confirmed dispute opens a plan change for approval. `C1-C8` `/body/0/children/1/rungs/2`
-    - Mark diamond 2 Disputed verdicts. `C2` `/body/0/children/1/rungs/2/marks/0`
-  - Rung 4 (top) Page the owner, the service owner; planned: A trigger with more than ten dead-lettered clips in an hour pages the service owner. `C1-C8` `/body/0/children/1/rungs/3`
+- Phases: lanes Patron, Holds API, Pickup worker, Notifier; phases 1 Place, 2 Wait in line, 3 Set aside and notify, 4 Collect; step fill cell; detail A frames One job per hold, Send the ready notice, Mark the hold ready. `A1-C8` `/body/0/children/0`
+  - Step Place a hold. Lane Patron, phase 1 Place, column 1. `B2` `/body/0/children/0/children/0`
+    - Mark balloon 1 Catalogue app `B2` `/body/0/children/0/children/0/marks/0`
+    - Line from the catalogue app.
+    - Line pickup branch.
+  - Step no copy is free yet. Lane Holds API, phase 1 Place, column 1, look text. `B2` `/body/0/children/0/children/1`
+  - Step Join the title's line. Lane Holds API, phase 2 Wait in line, column 1. `B2-B3` `/body/0/children/0/children/2`
+    - Mark balloon 3 Holds API `B3` `/body/0/children/0/children/2/marks/0`
+    - Line one line per title.
+    - Line place 3 of 5.
+  - Step Confirm the branch. Lane Patron, phase 2 Wait in line, column 2. `B3-B4` `/body/0/children/0/children/3`
+    - Mark diamond 1 Pickup branch. `B4` `/body/0/children/0/children/3/marks/0`
+    - Mark flag 1 A hold reaches the pick queue only once its patron has confirmed the branch. `B4` `/body/0/children/0/children/3/marks/1`
+    - Line or suspend while away.
+  - Step Store the hold. Lane Holds API, phase 2 Wait in line, column 2, look chip, fill tint. `B3-B4` `/body/0/children/0/children/4`
+    - Mark balloon 8 Holds store `B4` `/body/0/children/0/children/4/marks/0`
+  - Step Copy checked in. Lane Pickup worker, phase 3 Set aside and notify, column 1. `B4-B5` `/body/0/children/0/children/5`
+    - Mark balloon 5 Copy catalogue `B5` `/body/0/children/0/children/5/marks/0`
+    - Line the check-in event names a returned copy.
+      - Mark flag 4 Out of scope: interlibrary loans, fines, and holds on e-books. `B5` `/body/0/children/0/children/5/lines/0/marks/0`
+  - Step One job per hold. Lane Pickup worker, phase 3 Set aside and notify, column 2, look stack. `B5-B6` `/body/0/children/0/children/6`
+    - Mark balloon 6 Pickup worker `B6` `/body/0/children/0/children/6/marks/0`
+    - Mark balloon 4 Pick queue `B6` `/body/0/children/0/children/6/marks/1`
+    - Line set the copy aside.
+    - Line call the notifier.
+  - Step Send the ready notice. Lane Notifier, phase 3 Set aside and notify, column 2 to 3. `B5-C7` `/body/0/children/0/children/7`
+    - Mark balloon 7 Notifier `B7` `/body/0/children/0/children/7/marks/0`
+    - Mark flag 3 The notifier holds no credentials for the holds store. `B7` `/body/0/children/0/children/7/marks/1`
+    - Line by email or text message.
+  - Step Mark the hold ready. Lane Pickup worker, phase 3 Set aside and notify, column 3. `B6-B7` `/body/0/children/0/children/8`
+    - Mark balloon 8 Holds store `B7` `/body/0/children/0/children/8/marks/0`
+    - Mark flag 2 A hold stores a reference to the copy record, never a copy of it. `B7` `/body/0/children/0/children/8/marks/1`
+    - Line shelf slot, collect-by date.
+  - Step Collect the copy. Lane Patron, phase 4 Collect, column 1. `B7-B8` `/body/0/children/0/children/9`
+    - Mark diamond 2 Collection. `B8` `/body/0/children/0/children/9/marks/0`
+    - Line at the confirmed branch.
+  - Step Expire uncollected holds. Lane Holds API, phase 4 Collect, column 1, look planned, fill cell. `B7-B8` `/body/0/children/0/children/10`
+    - Mark balloon 9 Expiry scheduler `B8` `/body/0/children/0/children/10/marks/0`
+  - Step A bounced notice flags the card for the desk. Lane Notifier, phase 4 Collect, column 1, look note, fill cell. `B7-C8` `/body/0/children/0/children/11`
+    - Mark diamond 3 Contact details. `B8` `/body/0/children/0/children/11/marks/0`
+- Ladder, detail A: When a pick fails or a hold goes unclaimed; a failed pick never blocks the queue; rung fill none. Frames One job per hold, Send the ready notice, Mark the hold ready. `C1-C8` `/body/0/children/1`
+  - Rung 1 (bottom) Retry, the pickup worker; actor Pickup worker: A failed copy lookup or notifier call retries the hold job with backoff, three attempts in all. `C1-C8` `/body/0/children/1/rungs/0`
+  - Rung 2 Dead letter, the Holds API; actor Holds API: After the third failure the job moves to a dead-letter subscription and the desk lists the hold as stuck. `C1-C8` `/body/0/children/1/rungs/1`
+  - Rung 3 Ask the patron, the patron; actor Patron: An unclaimed copy sends a reminder on day five; the patron can extend the hold once or cancel it. `C1-C8` `/body/0/children/1/rungs/2`
+    - Mark diamond 2 Collection. `C2` `/body/0/children/1/rungs/2/marks/0`
+  - Rung 4 (top) Page the owner, the service owner; planned: A branch with more than ten stuck holds in an hour pages the service owner. `C1-C8` `/body/0/children/1/rungs/3`
 
-| Lane | 1 Describe `A1-A2` `/body/0/children/0/phases/0` | 2 Plan and approve `A2` `/body/0/children/0/phases/1` | 3 Evaluate each clip `A4` `/body/0/children/0/phases/2` | 4 Review `A7-A8` `/body/0/children/0/phases/3` |
+| Lane | 1 Place `A1-A2` `/body/0/children/0/phases/0` | 2 Wait in line `A2` `/body/0/children/0/phases/1` | 3 Set aside and notify `A4` `/body/0/children/0/phases/2` | 4 Collect `A7` `/body/0/children/0/phases/3` |
 |---|---|---|---|---|
-| Operator `A1-B8` `/body/0/children/0/lanes/0` | Describe the event | Approve the plan | none | Review verdicts |
-| Trigger API `B1-B8` `/body/0/children/0/lanes/1` | nothing runs yet | Compile a plan; Store plan version | none | Replay over earlier clips |
-| Clip worker `B1-B8` `/body/0/children/0/lanes/2` | none | none | Clip arrives; One job per clip; Write the verdict | none |
-| Evaluator `B1-C8` `/body/0/children/0/lanes/3` | none | none | Judge the frames | A new model version re-plans every trigger |
+| Patron `A1-B8` `/body/0/children/0/lanes/0` | Place a hold | Confirm the branch | none | Collect the copy |
+| Holds API `B1-B8` `/body/0/children/0/lanes/1` | no copy is free yet | Join the title's line; Store the hold | none | Expire uncollected holds |
+| Pickup worker `B1-B8` `/body/0/children/0/lanes/2` | none | none | Copy checked in; One job per hold; Mark the hold ready | none |
+| Notifier `B1-C8` `/body/0/children/0/lanes/3` | none | none | Send the ready notice | A bounced notice flags the card for the desk |
 
 ### Lines in view 2
 
 | Line | Kind | From | To | Style | Ends | Means | Actor | Marks | Pointer |
 |---|---|---|---|---|---|---|---|---|---|
-| unlabelled | link | Describe the event (s-describe) | Compile a plan (s-compile) | solid, tint 4, Operator; amber in center | arrow end | work moves, in the colour of the actor that sends it | Operator | none | `B2` `/links/0` |
-| plan | link | Compile a plan (s-compile) | Approve the plan (s-approve) | solid, tint 1, Trigger API; blue in center | arrow end | work moves, in the colour of the actor that sends it | Trigger API | none | `B3` `/links/1` |
-| unlabelled | link | Approve the plan (s-approve) | Store plan version (s-store-plan) | solid, tint 4, Operator; amber in center | arrow end | work moves, in the colour of the actor that sends it | Operator | none | `B4` `/links/2` |
-| reads approved version | link | Store plan version (s-store-plan) | One job per clip (s-evaluate) | dash, tint 6, Clip worker; green in center | arrow end | reads or writes the verdict store | Clip worker | none | `B5` `/links/3` |
-| unlabelled | link | Clip arrives (s-arrive) | One job per clip (s-evaluate) | solid, tint 6, Clip worker; green in center | arrow end | work moves, in the colour of the actor that sends it | Clip worker | none | `B5` `/links/4` |
-| unlabelled | link | One job per clip (s-evaluate) | Judge the frames (s-judge) | solid, tint 6, Clip worker; green in center | arrow end | work moves, in the colour of the actor that sends it | Clip worker | none | `B6` `/links/5` |
-| unlabelled | link | Judge the frames (s-judge) | Write the verdict (s-write) | solid, tint 5, Evaluator; violet in center | arrow end | work moves, in the colour of the actor that sends it | Evaluator | none | `B7` `/links/6` |
-| unlabelled | link | Write the verdict (s-write) | Review verdicts (s-review) | solid, tint 6, Clip worker; green in center | arrow end | work moves, in the colour of the actor that sends it | Clip worker | none | `B7` `/links/7` |
+| unlabelled | link | Place a hold (s-describe) | Join the title's line (s-compile) | solid, tint 4, Patron; amber in center | arrow end | work moves, in the colour of the actor that sends it | Patron | none | `B2` `/links/0` |
+| in line | link | Join the title's line (s-compile) | Confirm the branch (s-approve) | solid, tint 1, Holds API; blue in center | arrow end | work moves, in the colour of the actor that sends it | Holds API | none | `B3` `/links/1` |
+| unlabelled | link | Confirm the branch (s-approve) | Store the hold (s-store-plan) | solid, tint 4, Patron; amber in center | arrow end | work moves, in the colour of the actor that sends it | Patron | none | `B4` `/links/2` |
+| reads confirmed holds | link | Store the hold (s-store-plan) | One job per hold (s-evaluate) | dash, tint 6, Pickup worker; green in center | arrow end | reads or writes the holds store | Pickup worker | none | `B5` `/links/3` |
+| unlabelled | link | Copy checked in (s-arrive) | One job per hold (s-evaluate) | solid, tint 6, Pickup worker; green in center | arrow end | work moves, in the colour of the actor that sends it | Pickup worker | none | `B5` `/links/4` |
+| unlabelled | link | One job per hold (s-evaluate) | Send the ready notice (s-judge) | solid, tint 6, Pickup worker; green in center | arrow end | work moves, in the colour of the actor that sends it | Pickup worker | none | `B6` `/links/5` |
+| unlabelled | link | Send the ready notice (s-judge) | Mark the hold ready (s-write) | solid, tint 5, Notifier; violet in center | arrow end | work moves, in the colour of the actor that sends it | Notifier | none | `B7` `/links/6` |
+| unlabelled | link | Mark the hold ready (s-write) | Collect the copy (s-review) | solid, tint 6, Pickup worker; green in center | arrow end | work moves, in the colour of the actor that sends it | Pickup worker | none | `B7` `/links/7` |
 
 ## View 3: System `C1-E8` `/body/1`
 
@@ -141,148 +141,148 @@ Subtitle: the pieces, and why each exists. Note: balloons key the drawing to the
     - Row, left to right. `/body/1/children/0/children/0/children/0`
       - Col, top to bottom. `/body/1/children/0/children/0/children/0/children/0`
         - Row, left to right. `/body/1/children/0/children/0/children/0/children/0/children/0`
-          - Item Operator: one per site; kind person, outline person, actor Operator. `D1` `/body/1/children/0/children/0/children/0/children/0/children/0/children/0`
+          - Item Patron: one library card; kind person, outline person, actor Patron. `D1` `/body/1/children/0/children/0/children/0/children/0/children/0/children/0`
         - Row, left to right. `/body/1/children/0/children/0/children/0/children/0/children/1`
-          - Item Operator console: web client; kind service, actor Operator. `D1` `/body/1/children/0/children/0/children/0/children/0/children/1/children/0`
-            - Mark balloon 1 Operator console `D1` `/body/1/children/0/children/1/children/0/parts/0/node`
-      - Box Trigger evaluation service; kind system. `C2-E6` `/body/1/children/0/children/0/children/0/children/1`
+          - Item Catalogue app: web and mobile; kind service, actor Patron. `D1` `/body/1/children/0/children/0/children/0/children/0/children/1/children/0`
+            - Mark balloon 1 Catalogue app `D1` `/body/1/children/0/children/1/children/0/parts/0/node`
+      - Box Hold and pickup service; kind system. `C2-E6` `/body/1/children/0/children/0/children/0/children/1`
         - Col, top to bottom. `/body/1/children/0/children/0/children/0/children/1/children/0`
           - Row, left to right. `/body/1/children/0/children/0/children/0/children/1/children/0/children/0`
             - Row, left to right. `/body/1/children/0/children/0/children/0/children/1/children/0/children/0/children/0`
-              - Item Gateway: authenticates calls; kind network, actor Trigger API. `C3-D3` `/body/1/children/0/children/0/children/0/children/1/children/0/children/0/children/0/children/0`
+              - Item Gateway: checks library cards; kind network, actor Holds API. `C3-D3` `/body/1/children/0/children/0/children/0/children/1/children/0/children/0/children/0/children/0`
                 - Mark balloon 2 Gateway `C3` `/body/1/children/0/children/1/children/0/parts/1/node`
             - Row, left to right. `/body/1/children/0/children/0/children/0/children/1/children/0/children/0/children/1`
-              - Item Trigger API: compiles plans; kind service, actor Trigger API. `C5-D5` `/body/1/children/0/children/0/children/0/children/1/children/0/children/0/children/1/children/0`
-                - Mark balloon 3 Trigger API `C5` `/body/1/children/0/children/1/children/0/parts/2/node`
+              - Item Holds API: keeps the lines; kind service, actor Holds API. `C5-D5` `/body/1/children/0/children/0/children/0/children/1/children/0/children/0/children/1/children/0`
+                - Mark balloon 3 Holds API `C5` `/body/1/children/0/children/1/children/0/parts/2/node`
           - Row, left to right. `/body/1/children/0/children/0/children/0/children/1/children/0/children/1`
-            - Pipe Evaluation queue · at-least-once delivery.
+            - Pipe Pick queue · at-least-once delivery.
             - Row, left to right. `/body/1/children/0/children/0/children/0/children/1/children/0/children/1/children/1`
-              - Box Evaluation path · one job per clip; kind assembly, tint 6, actor Clip worker. `D4-D5` `/body/1/children/0/children/0/children/0/children/1/children/0/children/1/children/1/children/0`
+              - Box Pickup path · one job per hold; kind assembly, tint 6, actor Pickup worker. `D4-D5` `/body/1/children/0/children/0/children/0/children/1/children/0/children/1/children/1/children/0`
                 - Col, top to bottom. `/body/1/children/0/children/0/children/0/children/1/children/0/children/1/children/1/children/0/children/0`
                   - Row, left to right. `/body/1/children/0/children/0/children/0/children/1/children/0/children/1/children/1/children/0/children/0/children/0`
-                    - Item Clip worker: one job per clip; kind service, outline stack, actor Clip worker. `D4-D5` `/body/1/children/0/children/0/children/0/children/1/children/0/children/1/children/1/children/0/children/0/children/0/children/0`
-                      - Mark balloon 6 Clip worker `D5` `/body/1/children/0/children/1/children/0/parts/5/node`
+                    - Item Pickup worker: one job per hold; kind service, outline stack, actor Pickup worker. `D4-D5` `/body/1/children/0/children/0/children/0/children/1/children/0/children/1/children/1/children/0/children/0/children/0/children/0`
+                      - Mark balloon 6 Pickup worker `D5` `/body/1/children/0/children/1/children/0/parts/5/node`
                   - Row, left to right. `/body/1/children/0/children/0/children/0/children/1/children/0/children/1/children/1/children/0/children/0/children/1`
-                    - Item Clip evaluator: hosted model endpoint; kind managed, actor Evaluator. `D4-D5` `/body/1/children/0/children/0/children/0/children/1/children/0/children/1/children/1/children/0/children/0/children/1/children/0`
-                      - Mark balloon 7 Clip evaluator `D5` `/body/1/children/0/children/1/children/0/parts/6/node`
+                    - Item Notifier: hosted messaging service; kind managed, actor Notifier. `D4-D5` `/body/1/children/0/children/0/children/0/children/1/children/0/children/1/children/1/children/0/children/0/children/1/children/0`
+                      - Mark balloon 7 Notifier `D5` `/body/1/children/0/children/1/children/0/parts/6/node`
           - Row, left to right. `/body/1/children/0/children/0/children/0/children/1/children/0/children/2`
             - Col, top to bottom. `/body/1/children/0/children/0/children/0/children/1/children/0/children/2/children/0`
               - Row, left to right. `/body/1/children/0/children/0/children/0/children/1/children/0/children/2/children/0/children/0`
-                - Item Clip bucket: object store; kind store. `D2-E3` `/body/1/children/0/children/0/children/0/children/1/children/0/children/2/children/0/children/0/children/0`
-                  - Mark balloon 5 Clip bucket `E3` `/body/1/children/0/children/1/children/0/parts/4/node`
+                - Item Copy catalogue: circulation records; kind store. `D2-E3` `/body/1/children/0/children/0/children/0/children/1/children/0/children/2/children/0/children/0/children/0`
+                  - Mark balloon 5 Copy catalogue `D3` `/body/1/children/0/children/1/children/0/parts/4/node`
             - Row, left to right. `/body/1/children/0/children/0/children/0/children/1/children/0/children/2/children/1`
-              - Item Verdict store: relational database; kind store, outline store, actor Clip worker. `D3-E5` `/body/1/children/0/children/0/children/0/children/1/children/0/children/2/children/1/children/0`
-                - Mark balloon 8 Verdict store `D4` `/body/1/children/0/children/1/children/0/parts/7/node`
-                - Compartment Triggers.
-                - Compartment Plan versions.
-                - Compartment Verdicts.
-                - Compartment Evidence refs.
-                  - Mark flag 2 Evidence frames are stored as references into the clip, never copied. `E4` `/body/1/children/0/children/0/children/0/children/1/children/0/children/2/children/1/children/0/compartments/3/marks/0`
+              - Item Holds store: relational database; kind store, outline store, actor Pickup worker. `D3-E4` `/body/1/children/0/children/0/children/0/children/1/children/0/children/2/children/1/children/0`
+                - Mark balloon 8 Holds store `D4` `/body/1/children/0/children/1/children/0/parts/7/node`
+                - Compartment Holds.
+                - Compartment Title lines.
+                - Compartment Notices.
+                - Compartment Copy refs.
+                  - Mark flag 2 A hold stores a reference to the copy record, never a copy of it. `E4` `/body/1/children/0/children/0/children/0/children/1/children/0/children/2/children/1/children/0/compartments/3/marks/0`
             - Col, top to bottom. `/body/1/children/0/children/0/children/0/children/1/children/0/children/2/children/2`
               - Row, left to right. `/body/1/children/0/children/0/children/0/children/1/children/0/children/2/children/2/children/0`
-                - Item Replay scheduler: hosted scheduler; kind managed, actor Trigger API, planned. `D5-E6` `/body/1/children/0/children/0/children/0/children/1/children/0/children/2/children/2/children/0/children/0`
-                  - Mark balloon 9 Replay scheduler `E6` `/body/1/children/0/children/1/children/0/parts/8/node`
-    - General notes: what the service asks of its operators. `E1-E6` `/body/1/children/0/children/0/children/1`
-      - Note 1 (approved-plans-only): A plan change never reaches a running trigger until an operator approves it. The worker reads the approved version only. Zones A4 B4 D4. `E1-E6` `/body/1/children/0/children/0/children/1/notes/0`
-      - Note 2 (evidence-by-reference): Evidence frames are stored as references into the clip, never copied. Retention follows the clip bucket. Zones A4 B7 E4. `E1-E6` `/body/1/children/0/children/0/children/1/notes/1`
-      - Note 3 (no-store-credentials): The evaluator holds no credentials for the verdict store. The blocked line in view 3 is an IAM binding, not a convention. Zones B7 D5. `E1-E6` `/body/1/children/0/children/0/children/1/notes/2`
-      - Note 4 (out-of-scope): Out of scope: live streams, identifying people, and training a model per customer. The service evaluates finished clips with one shared model. Zones B5. `E1-E6` `/body/1/children/0/children/0/children/1/notes/3`
+                - Item Expiry scheduler: hosted scheduler; kind managed, actor Holds API, planned. `D5-E6` `/body/1/children/0/children/0/children/0/children/1/children/0/children/2/children/2/children/0/children/0`
+                  - Mark balloon 9 Expiry scheduler `D6` `/body/1/children/0/children/1/children/0/parts/8/node`
+    - General notes: what the service asks of its patrons. `E1-E6` `/body/1/children/0/children/0/children/1`
+      - Note 1 (approved-plans-only): A hold reaches the pick queue only once its patron has confirmed the branch. The worker never sets a copy aside for an unconfirmed hold. Zones A4 B4 D4. `E1-E6` `/body/1/children/0/children/0/children/1/notes/0`
+      - Note 2 (evidence-by-reference): A hold stores a reference to the copy record, never a copy of it. Copy details follow the catalogue. Zones A4 B7 E4. `E1-E6` `/body/1/children/0/children/0/children/1/notes/1`
+      - Note 3 (no-store-credentials): The notifier holds no credentials for the holds store. The blocked line in view 3 is a database grant, not a convention. Zones B7 D5. `E1-E6` `/body/1/children/0/children/0/children/1/notes/2`
+      - Note 4 (out-of-scope): Out of scope: interlibrary loans, fines, and holds on e-books. The service fills holds with copies this library owns. Zones B5. `E1-E6` `/body/1/children/0/children/0/children/1/notes/3`
       - Foot: Each flag on the drawings marks where its note applies.
   - Col, top to bottom. `/body/1/children/0/children/1`
     - Parts list: what the service is made of, and why each part exists. `C6-E8` `/body/1/children/0/children/1/children/0`
-    - Frame Verdict review in the console: clip, evidence frames, verdict and plan version: 240 px placeholder. `E6-E8` `/body/1/children/0/children/1/children/1`
+    - Frame Hold shelf at the desk: title, library card, slot and collect-by date: 240 px placeholder. `E6-E8` `/body/1/children/0/children/1/children/1`
 
 ### Parts list
 
 | Part | Name | What | Why | Actor | Zones | Pointer |
 |---|---|---|---|---|---|---|
-| 1 | Operator console | web client | Operators write triggers and judge verdicts without an engineer in the loop. | Operator | A4 B2 D1 | `D6-D8` `/body/1/children/0/children/1/children/0/parts/0` |
-| 2 | Gateway | authenticates calls | One authenticated entry point; the API never sees an anonymous call. | Trigger API | C3 | `D6-D8` `/body/1/children/0/children/1/children/0/parts/1` |
-| 3 | Trigger API | compiles plans | Turns a description into a versioned plan and refuses to queue a plan nobody approved. | Trigger API | A4 B3 C5 | `D6-D8` `/body/1/children/0/children/1/children/0/parts/2` |
-| 4 | Evaluation queue | at-least-once delivery | The API returns once a job is queued, so a slow clip never holds a request open. | Trigger API | B6 D3 | `D6-D8` `/body/1/children/0/children/1/children/0/parts/3` |
-| 5 | Clip bucket | object store | A clip is evaluated only once it is complete, and the arrival event names it. | none | B5 E3 | `D6-D8` `/body/1/children/0/children/1/children/0/parts/4` |
-| 6 | Clip worker | one job per clip | Clips are independent, so a failed clip retries alone. | Clip worker | B6 D5 | `D6-D8` `/body/1/children/0/children/1/children/0/parts/5` |
-| 7 | Clip evaluator | hosted model endpoint | Reads frames against the plan, and has no write path to the store. | Evaluator | A4 B7 D5 | `D6-D8` `/body/1/children/0/children/1/children/0/parts/6` |
-| 8 | Verdict store | relational database | Every verdict keeps its evidence frames and the plan version that produced it. | Clip worker | A4 B4 B7 D4 | `E6-E8` `/body/1/children/0/children/1/children/0/parts/7` |
-| 9 | Replay scheduler, planned | hosted scheduler | Runs a trigger over earlier clips on a schedule, so the operator does not wait on a replay. | Trigger API | B8 E6 | `E6-E8` `/body/1/children/0/children/1/children/0/parts/8` |
+| 1 | Catalogue app | web and mobile | Patrons place and track holds without a call to the branch. | Patron | A4 B2 D1 | `D6-D8` `/body/1/children/0/children/1/children/0/parts/0` |
+| 2 | Gateway | checks library cards | One signed-in entry point; the API never sees a call without a card. | Holds API | C3 | `D6-D8` `/body/1/children/0/children/1/children/0/parts/1` |
+| 3 | Holds API | keeps the lines | Keeps one line per title and refuses to queue a hold nobody has confirmed. | Holds API | A4 B3 C5 | `D6-D8` `/body/1/children/0/children/1/children/0/parts/2` |
+| 4 | Pick queue | at-least-once delivery | The API returns once a job is queued, so a busy branch never holds a request open. | Holds API | B6 D3 | `D6-D8` `/body/1/children/0/children/1/children/0/parts/3` |
+| 5 | Copy catalogue | circulation records | A hold is filled only from a copy on the shelf, and the check-in event names it. | none | B5 D3 | `D6-D8` `/body/1/children/0/children/1/children/0/parts/4` |
+| 6 | Pickup worker | one job per hold | Holds are independent, so a failed pick retries alone. | Pickup worker | B6 D5 | `D6-D8` `/body/1/children/0/children/1/children/0/parts/5` |
+| 7 | Notifier | hosted messaging service | Sends the ready notice, and has no write path to the store. | Notifier | A4 B7 D5 | `D6-D8` `/body/1/children/0/children/1/children/0/parts/6` |
+| 8 | Holds store | relational database | Every hold keeps its place in line, its branch and the notices sent for it. | Pickup worker | A4 B4 B7 D4 | `E6-E8` `/body/1/children/0/children/1/children/0/parts/7` |
+| 9 | Expiry scheduler, planned | hosted scheduler | Releases a copy left on the shelf past its date, so the next patron in line gets it. | Holds API | B8 D6 | `E6-E8` `/body/1/children/0/children/1/children/0/parts/8` |
 
 ### Lines in view 3
 
 | Line | Kind | From | To | Style | Ends | Means | Actor | Marks | Pointer |
 |---|---|---|---|---|---|---|---|---|---|
-| Evaluation queue · at-least-once delivery | pipe v, rail | rail; in from Trigger API (api); in from Clip bucket (bucket) | rail; out to Clip worker (worker) | solid, tint 1, Trigger API; blue in center | no arrowheads | one topic that every job passes through | Trigger API | balloon 4 Evaluation queue `D3` `/body/1/children/0/children/1/children/0/parts/3/node` | `D2-D3` `/body/1/children/0/children/0/children/0/children/1/children/0/children/1/children/0` |
-| writes, reviews | link | Operator (operator-person) | Operator console (console) | solid, tint 4, Operator; amber in center | arrow end | work moves, in the colour of the actor that sends it | Operator | none | `D1` `/links/8` |
-| step 1: submit trigger | link | Operator console (console) | Gateway (gateway) | solid, tint 4, Operator; amber in center | arrow end | work moves, in the colour of the actor that sends it | Operator | none | `C2` `/links/9` |
-| step 2: authorized call | link | Gateway (gateway) | Trigger API (api) | solid, tint 1, Trigger API; blue in center | arrow end | work moves, in the colour of the actor that sends it | Trigger API | none | `C4` `/links/10` |
-| step 3: queue job · approved plans only | link | Trigger API (api) | Evaluation queue (queue) | solid, tint 1, Trigger API; blue in center | dot end, valve before the end | work moves, in the colour of the actor that sends it | Trigger API | flag 1 A plan change never reaches a running trigger until an operator approves it. `D4` `/links/11/marks/0` | `D4` `/links/11` |
-| step 4: deliver job | link | Evaluation queue (queue) | Clip worker (worker) | solid, tint 1, Trigger API; blue in center | dot start, arrow end | work moves, in the colour of the actor that sends it | Trigger API | none | `D3` `/links/12` |
-| step 5: evaluate clip | link | Clip worker (worker) | Clip evaluator (evaluator) | solid, tint 6, Clip worker; green in center | arrow end | work moves, in the colour of the actor that sends it | Clip worker | none | `D5` `/links/13` |
-| step 6: write verdict | link | Clip worker (worker) | Verdict store (verdict-store) | dash, tint 6, Clip worker; green in center | arrow end | reads or writes the verdict store | Clip worker | none | `D4` `/links/14` |
-| schedule replays | link | Trigger API (api) | Replay scheduler (replay) | solid, tint 1, Trigger API, planned; blue in center | arrow end | planned, not built yet | Trigger API | none | `D5` `/links/15` |
-| clip finished | link | Clip bucket (bucket) | Evaluation queue (queue) | gray; gray in center | dot end | event from the platform | none | none | `D2` `/links/16` |
-| no direct write | link | Clip evaluator (evaluator) | Verdict store (verdict-store) | deny; red in center | stop plate end | blocked path | none | flag 3 The evaluator holds no credentials for the verdict store. `D5` `/links/17/marks/0` | `D4` `/links/17` |
+| Pick queue · at-least-once delivery | pipe v, rail | rail; in from Holds API (api); in from Copy catalogue (bucket) | rail; out to Pickup worker (worker) | solid, tint 1, Holds API; blue in center | no arrowheads | one topic that every job passes through | Holds API | balloon 4 Pick queue `D3` `/body/1/children/0/children/1/children/0/parts/3/node` | `D2-D3` `/body/1/children/0/children/0/children/0/children/1/children/0/children/1/children/0` |
+| places, tracks | link | Patron (operator-person) | Catalogue app (console) | solid, tint 4, Patron; amber in center | arrow end | work moves, in the colour of the actor that sends it | Patron | none | `D1` `/links/8` |
+| step 1: place hold | link | Catalogue app (console) | Gateway (gateway) | solid, tint 4, Patron; amber in center | arrow end | work moves, in the colour of the actor that sends it | Patron | none | `C2` `/links/9` |
+| step 2: authorized call | link | Gateway (gateway) | Holds API (api) | solid, tint 1, Holds API; blue in center | arrow end | work moves, in the colour of the actor that sends it | Holds API | none | `C4` `/links/10` |
+| step 3: queue job · confirmed holds only | link | Holds API (api) | Pick queue (queue) | solid, tint 1, Holds API; blue in center | dot end, valve before the end | work moves, in the colour of the actor that sends it | Holds API | flag 1 A hold reaches the pick queue only once its patron has confirmed the branch. `D4` `/links/11/marks/0` | `D4` `/links/11` |
+| step 4: deliver job | link | Pick queue (queue) | Pickup worker (worker) | solid, tint 1, Holds API; blue in center | dot start, arrow end | work moves, in the colour of the actor that sends it | Holds API | none | `D3` `/links/12` |
+| step 5: send notice | link | Pickup worker (worker) | Notifier (evaluator) | solid, tint 6, Pickup worker; green in center | arrow end | work moves, in the colour of the actor that sends it | Pickup worker | none | `D5` `/links/13` |
+| step 6: mark ready | link | Pickup worker (worker) | Holds store (verdict-store) | dash, tint 6, Pickup worker; green in center | arrow end | reads or writes the holds store | Pickup worker | none | `D4` `/links/14` |
+| schedule expiry | link | Holds API (api) | Expiry scheduler (replay) | solid, tint 1, Holds API, planned; blue in center | arrow end | planned, not built yet | Holds API | none | `D5` `/links/15` |
+| copy returned | link | Copy catalogue (bucket) | Pick queue (queue) | gray; gray in center | dot end | event from the library system | none | none | `D2` `/links/16` |
+| no direct write | link | Notifier (evaluator) | Holds store (verdict-store) | deny; red in center | stop plate end | blocked path | none | flag 3 The notifier holds no credentials for the holds store. `D5` `/links/17/marks/0` | `D4` `/links/17` |
 
 ## View 4: How-tos `F1-F8` `/body/2`
 
-Subtitle: what an operator types. Note: real output, trimmed.
+Subtitle: what desk staff type. Note: real output, trimmed.
 
 - How-to column. `/body/2/children/0`
 
-### How-to 4.1: Write a trigger `F1-F4` `/body/2/children/0/items/0`
+### How-to 4.1: Place a hold `F1-F4` `/body/2/children/0/items/0`
 
-- Command trig create.
+- Command hold place.
 - Words then.
-- Command trig approve.
+- Command hold confirm.
 
-Describe the event, read the plan the service returns, then approve it. Nothing runs before the approval.
-
-```text
-$ trig create --camera dock-4 "a forklift enters while the bay door is open"
-  trigger t-31 created, plan version 1
-  objects: forklift, bay door; condition: door open while a forklift is in the bay
-# the plan waits for approval
-$ trig approve t-31 --version 1
-✓ t-31 live from plan version 1
-```
-
-### How-to 4.2: Replay a trigger `F5-F8` `/body/2/children/0/items/1`
-
-- Command trig replay.
-
-Queues every stored clip in the range; verdicts arrive as the jobs finish.
+Place the hold for the patron, check the branch it names, then confirm it. No copy is set aside before that.
 
 ```text
-$ trig replay t-31 --from 2026-10-01 --to 2026-10-07
-  412 clips queued under plan version 1
-✓ verdicts: 409 written, 3 retrying
+$ hold place --card 2104-8831 --branch east "Rivers of the North"
+  hold h-5120 placed, 3 of 5 in line
+  title: Rivers of the North; branch: East; notice: text message
+# the hold waits for confirmation
+$ hold confirm h-5120
+✓ h-5120 confirmed for East branch
 ```
 
-### How-to 4.3: Dispute a verdict `F1-F4` `/body/2/children/0/items/2`
+### How-to 4.2: Extend a hold `F5-F8` `/body/2/children/0/items/1`
 
-- Command trig dispute.
+- Command hold extend.
 
-Sends the verdict back with its frames. A confirmed dispute opens a plan change.
+Adds seven days to a ready hold; the patron gets the new collect-by date by text.
 
 ```text
-$ trig dispute v-88201 --reason "the door was closed"
-  verdict v-88201 returned to t-31 with 6 frames
-# a confirmed dispute opens plan version 2 for approval
+$ hold extend h-5120 --days 7
+  h-5120 collect-by date moved to 2026-11-09
+✓ notice sent by text message
 ```
 
-### How-to 4.4: List verdicts `F5-F8` `/body/2/children/0/items/3`
+### How-to 4.3: Cancel a hold `F1-F4` `/body/2/children/0/items/2`
 
-- Command trig verdicts.
+- Command hold cancel.
+
+Releases the hold and its place in line. A copy already set aside goes to the next hold.
+
+```text
+$ hold cancel h-5141 --reason "bought a copy"
+  hold h-5141 cancelled, 4 holds left in line
+# the next hold in line moves up one place
+```
+
+### How-to 4.4: List holds `F5-F8` `/body/2/children/0/items/3`
+
+- Command hold list.
 
 Text beside the terminal.
 
-Filters by trigger, clip and capture time. A disputed verdict stays listed until its dispute closes.
+Filters by card, title and branch. A ready hold stays listed until it is collected or expires.
 
 ```text
-$ trig verdicts t-31 --since 2026-10-07
-  3 verdicts for t-31 under plan version 1
-    v-88201 match, 6 frames, disputed
-    v-88202 no match
-    v-88203 match, 4 frames
+$ hold list --card 2104-8831
+  3 holds on card 2104-8831
+    h-5120 ready at East, collect by 2026-11-02
+    h-5133 in line, 2 of 4
+    h-5141 waiting for a free copy
 ```
 
 Foot: Balloons key the drawings to the parts list, flags to the general notes, diamonds to the attention items in the title block. `F1-F8` `/foot`

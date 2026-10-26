@@ -32,7 +32,7 @@ Build the binary with `cargo build --release`; it lands at `target/release/stenc
 
 `examples/oss-web-stack-iso.json`: the same stack under the isometric projection, with each project's logo on a solid chosen by its kind: stores as cylinders, Kafka and MinIO as stacks, NGINX as a tile.
 
-![Design one-pager for a trigger evaluation service](docs/gallery/design-brief.png)
+![Design one-pager for a library hold-and-pickup service](docs/gallery/design-brief.png)
 
 Five item shapes on one floor, under the isometric projection:
 
@@ -52,9 +52,9 @@ Narrow regions with long product names, a Tee with a band arm and a figure on th
 
 `examples/design-brief.json`: a design one-pager with text blocks, callouts and numbered links tracing one request.
 
-![A design sheet for the trigger evaluation service, with its title block, legend strip, Workflow swimlane, System view and how-tos](docs/gallery/onepager.png)
+![A design sheet for the library hold-and-pickup service, with its title block, legend strip, Workflow swimlane, System view and how-tos](docs/gallery/onepager.png)
 
-`examples/onepager.json`: the same service as a design sheet, one system drawn as an engineering drawing on one page: a frame with grid references 1 to 8 and A to F, a title block holding the problem, the answer and what needs the reader's attention, a legend strip naming who acts, the Workflow view numbered 2, a lane per actor across four phases, the System view numbered 3, each piece in the colour of the actor that runs it, and the How-tos view numbered 4, what an operator types with the terminal output it returns. Balloons key the drawings to a parts list beside the System view, flags to the general notes under the System drawing, and diamonds to the attention items, and each list prints the grid cells its marks stand in.
+`examples/onepager.json`: the same service as a design sheet, one system drawn as an engineering drawing on one page: a frame with grid references 1 to 8 and A to F, a title block holding the problem, the answer and what needs the reader's attention, a legend strip naming who acts, the Workflow view numbered 2, a lane per actor across four phases, the System view numbered 3, each piece in the colour of the actor that runs it, and the How-tos view numbered 4, what desk staff type with the terminal output it returns. Balloons key the drawings to a parts list beside the System view, flags to the general notes under the System drawing, and diamonds to the attention items, and each list prints the grid cells its marks stand in.
 
 The next four figures also use the `plain` grammar.
 

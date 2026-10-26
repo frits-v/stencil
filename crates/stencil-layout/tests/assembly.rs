@@ -245,7 +245,7 @@ fn a_rounded_bend_is_one_joint_and_every_onepager_bend_is_drawn() {
 fn a_tag_or_a_valve_on_a_bend_is_a_links_routed_defect() {
     // Leaving the Trigger API to its right, as on the mockup, the planned line bends.
     let mut document: Value = serde_json::from_str(ONEPAGER).unwrap();
-    let planned = link_index(&page_from(document.clone()), "schedule replays");
+    let planned = link_index(&page_from(document.clone()), "schedule expiry");
     document["links"][planned]["from_side"] = json!("right");
     let page = page_from(document);
     let mut geometry = layout(&page);
@@ -422,7 +422,7 @@ fn a_glyph_on_an_arrival_is_a_marks_clear_defect() {
         messages(&marks_clear(&page, &geometry)),
         Vec::<(String, String)>::new()
     );
-    let index = link_index(&page, "write verdict");
+    let index = link_index(&page, "mark ready");
     let tip = *route(&geometry, index).points.last().unwrap();
     let carrier = geometry
         .nodes
@@ -459,7 +459,7 @@ fn a_leg_along_a_box_outline_is_a_links_routed_defect() {
     let (page, mut geometry) = onepager();
     let assembly = node_with_id(&page, &geometry, "evaluation-path").clone();
     let outline = assembly.part(PartName::TabBorder).unwrap().bounds;
-    let index = link_index(&page, "evaluate clip");
+    let index = link_index(&page, "send notice");
     let along = route_mut(&mut geometry, index);
     let x = outline.x + 5.0;
     along.points = vec![
@@ -658,14 +658,14 @@ fn every_end_on_a_store_lid_lies_on_the_curve_after_its_leg_moves() {
     assert!(examined >= 2, "examined {examined} store ends");
 }
 
-/// The write verdict line leaves the clip worker and turns above the clip evaluator, an
+/// The mark ready line leaves the pickup worker and turns above the notifier, an
 /// Item: the turn keeps OUTLINE_AIR_PX above the card, and no onepager leg crowds an
 /// outline.
 #[test]
 fn a_sheet_leg_keeps_its_air_from_an_item_outline() {
     let (page, geometry) = onepager();
     let evaluator = node_with_id(&page, &geometry, "evaluator").bounds;
-    let index = link_index(&page, "write verdict");
+    let index = link_index(&page, "mark ready");
     let mut examined = 0;
     for pair in route(&geometry, index).points.windows(2) {
         let (a, b) = (pair[0], pair[1]);

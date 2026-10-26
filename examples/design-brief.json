@@ -1,8 +1,8 @@
 {
-  "title": "Plain-language event triggers, evaluated over video clips",
-  "kicker": "Design one-pager · trigger evaluation service",
-  "lede": "An operator describes an event in their own words. The service turns the description into an evaluation plan, runs the plan over each new clip, and stores a verdict with the frames that support it.",
-  "foot": "The numbered links follow one request from the console to a stored verdict.",
+  "title": "Library holds, from the catalogue to the pickup shelf",
+  "kicker": "Design one-pager · hold and pickup service",
+  "lede": "A patron places a hold in the catalogue app. The service keeps a line of holds for each title, sets a returned copy aside at the patron's branch, and tells the patron it is ready to collect.",
+  "foot": "The numbered links follow one hold from the catalogue app to the holds store.",
   "width": 1440,
   "badge": "Internal",
   "grammar": "plain",
@@ -19,8 +19,8 @@
               "id": "problem",
               "heading": "Problem",
               "body": [
-                "Operators review long stretches of video to find a few events. Rules written as code need an engineer for every change.",
-                "Operators need to describe an event in plain language and get a verdict per clip, with the frames that support it."
+                "Branch staff track holds on paper slips and by phone. A patron has to call or visit a branch to place one.",
+                "Patrons need to place a hold online, keep their place in line, and hear when a copy is ready to collect."
               ]
             },
             {
@@ -29,10 +29,10 @@
               "heading": "Goals",
               "list": "numbered",
               "body": [
-                "Accept a trigger written in plain language and show its evaluation plan before it runs.",
-                "Evaluate every new clip against each active trigger.",
-                "Store each verdict with its evidence frames and the plan version that produced it.",
-                "Let an operator replay a trigger over earlier clips."
+                "Accept a hold placed in the catalogue app and show the patron their place in line.",
+                "Set each returned copy aside for the first confirmed hold on its title.",
+                "Tell the patron by email or text when the copy is ready, with a collect-by date.",
+                "Release a copy nobody collects in seven days to the next hold in line."
               ]
             },
             {
@@ -41,9 +41,9 @@
               "heading": "Non-goals",
               "list": "bulleted",
               "body": [
-                "Live stream analysis: the service works on finished clips.",
-                "Identifying people.",
-                "Training or tuning a model per customer."
+                "Interlibrary loans: the service fills holds with copies this library owns.",
+                "Fines and fees.",
+                "Holds on e-books."
               ]
             },
             {
@@ -52,25 +52,25 @@
               "heading": "Interfaces",
               "list": "bulleted",
               "body": [
-                "Create trigger: takes the description, returns the trigger and its plan.",
-                "Replay trigger: queues an evaluation over a range of stored clips.",
-                "List verdicts: filters by trigger, clip and capture time.",
-                "Clip arrival event: carries the clip location and capture time."
+                "Place hold: takes the card, the title and the branch, returns the hold.",
+                "Cancel hold: releases the hold and its place in line.",
+                "List holds: filters by card, title and branch.",
+                "Copy check-in event: carries the copy and the branch that received it."
               ]
             },
             {
               "tag": "Callout",
               "id": "risk-plan-drift",
               "kind": "risk",
-              "title": "Risk: plan drift",
-              "text": "A model update can change how a description is read. Each verdict records the plan version, and a changed plan waits for operator approval before it runs."
+              "title": "Risk: stale contact details",
+              "text": "A notice sent to an old address or number leaves the copy unclaimed. A bounced notice flags the card for the desk, and the copy still expires after seven days."
             },
             {
               "tag": "Callout",
               "id": "decision-queue",
               "kind": "decision",
               "title": "Decision: queue between API and worker",
-              "text": "Evaluation runs asynchronously. The API returns once the plan is queued, so a slow clip never holds an operator request open."
+              "text": "Pickup runs asynchronously. The API returns once the hold is queued, so a busy branch never holds a patron's request open."
             }
           ]
         },
@@ -83,14 +83,14 @@
               "justify": "end",
               "grow": [0],
               "children": [
-                { "tag": "Item", "id": "console", "kind": "service", "title": "Operator console", "subtitle": "web client" }
+                { "tag": "Item", "id": "console", "kind": "service", "title": "Catalogue app", "subtitle": "web and mobile" }
               ]
             },
             {
               "tag": "Box",
               "id": "cloud",
               "kind": "system",
-              "label": "Trigger evaluation service",
+              "label": "Hold and pickup service",
               "children": [
                 {
                   "tag": "Col",
@@ -101,7 +101,7 @@
                       "justify": "center",
                       "grow": [0],
                       "children": [
-                        { "tag": "Item", "id": "gateway", "kind": "network", "title": "Gateway", "subtitle": "authenticates calls" }
+                        { "tag": "Item", "id": "gateway", "kind": "network", "title": "Gateway", "subtitle": "checks library cards" }
                       ]
                     },
                     {
@@ -109,7 +109,7 @@
                       "justify": "center",
                       "grow": [0],
                       "children": [
-                        { "tag": "Item", "id": "api", "kind": "service", "title": "Trigger API", "subtitle": "compiles plans" }
+                        { "tag": "Item", "id": "api", "kind": "service", "title": "Holds API", "subtitle": "keeps the lines" }
                       ]
                     },
                     {
@@ -117,7 +117,7 @@
                       "justify": "center",
                       "grow": [0],
                       "children": [
-                        { "tag": "Item", "id": "queue", "kind": "queue", "title": "Evaluation queue", "subtitle": "at-least-once delivery" }
+                        { "tag": "Item", "id": "queue", "kind": "queue", "title": "Pick queue", "subtitle": "at-least-once delivery" }
                       ]
                     },
                     {
@@ -125,7 +125,7 @@
                       "justify": "center",
                       "grow": [0],
                       "children": [
-                        { "tag": "Item", "id": "worker", "kind": "service", "title": "Clip worker", "subtitle": "one job per clip" }
+                        { "tag": "Item", "id": "worker", "kind": "service", "title": "Pickup worker", "subtitle": "one job per hold" }
                       ]
                     },
                     {
@@ -133,8 +133,8 @@
                       "grow": [0, 0],
                       "justify": "space-between",
                       "children": [
-                        { "tag": "Item", "id": "evaluator", "kind": "managed", "title": "Clip evaluator", "subtitle": "hosted model endpoint" },
-                        { "tag": "Item", "id": "database", "kind": "store", "title": "Verdict store", "subtitle": "relational database" }
+                        { "tag": "Item", "id": "evaluator", "kind": "managed", "title": "Notifier", "subtitle": "hosted messaging service" },
+                        { "tag": "Item", "id": "database", "kind": "store", "title": "Holds store", "subtitle": "relational database" }
                       ]
                     }
                   ]
@@ -149,8 +149,8 @@
       "tag": "Row",
       "gap": 16,
       "children": [
-        { "tag": "Frame", "id": "screen-editor", "label": "Trigger editor: description, generated plan, approve", "height": 200 },
-        { "tag": "Frame", "id": "screen-review", "label": "Verdict review: clip, evidence frames, verdict", "height": 200 }
+        { "tag": "Frame", "id": "screen-editor", "label": "Place a hold: title, pickup branch, notice channel, confirm", "height": 200 },
+        { "tag": "Frame", "id": "screen-review", "label": "Hold shelf: title, library card, slot, collect-by date", "height": 200 }
       ]
     }
   ],
@@ -159,12 +159,12 @@
     { "line": "deny", "text": "blocked path" }
   ],
   "links": [
-    { "from": "console", "to": "gateway", "line": "solid", "tint": 1, "label": "1 submit trigger", "from_side": "bottom", "to_side": "right" },
+    { "from": "console", "to": "gateway", "line": "solid", "tint": 1, "label": "1 place hold", "from_side": "bottom", "to_side": "right" },
     { "from": "gateway", "to": "api", "line": "solid", "tint": 1, "label": "2 authorized call" },
-    { "from": "api", "to": "queue", "line": "solid", "tint": 1, "label": "3 queue plan" },
+    { "from": "api", "to": "queue", "line": "solid", "tint": 1, "label": "3 queue hold" },
     { "from": "queue", "to": "worker", "line": "solid", "tint": 1, "label": "4 deliver job" },
-    { "from": "worker", "to": "evaluator", "line": "solid", "tint": 1, "label": "5 evaluate clip", "from_side": "left", "to_side": "top" },
-    { "from": "worker", "to": "database", "line": "solid", "tint": 1, "label": "6 write verdict", "from_side": "right", "to_side": "top" },
+    { "from": "worker", "to": "evaluator", "line": "solid", "tint": 1, "label": "5 send notice", "from_side": "left", "to_side": "top" },
+    { "from": "worker", "to": "database", "line": "solid", "tint": 1, "label": "6 mark ready", "from_side": "right", "to_side": "top" },
     { "from": "evaluator", "to": "database", "line": "deny", "label": "no direct write" }
   ]
 }

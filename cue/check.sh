@@ -377,7 +377,7 @@ seven_ladders="$(printf '{tag: "Ladder", title: "Extra ladder %s", around: ["s-j
 many_around="$(printf '"s-judge",%.0s' {1..17})"
 six_rungs="$(printf '{title: "Rung %s", text: "Filler."},' $(seq 1 6))"
 # Fillers for the how-to bounds: three items beside onepager's four, and ten
-# terminal lines beside the three of its Replay a trigger.
+# terminal lines beside the three of its Extend a hold.
 three_items="$(printf '{title: "How-to %s", text: "Filler."},' $(seq 1 3))"
 ten_lines="$(printf '{kind: "output", text: "line %s"},' $(seq 1 10))"
 
@@ -501,20 +501,20 @@ sequence_cases=(
 	'line-kind-listed-twice|s/^figure: plain.#Page \& {/_house: plain.grammar \& {lines: [{line: "dash", corner: 4}, {line: "dash", bend: "curve"}]}\n&/|_house._linesAreUnique'
 )
 sheet_cases=(
-	'actor-tint-duplicate|s/text: "one job per clip", tint: 6/text: "one job per clip", tint: 4/|_actorTintsTwice."4"'
+	'actor-tint-duplicate|s/text: "one job per hold", tint: 6/text: "one job per hold", tint: 4/|_actorTintsTwice."4"'
 	'actor-unknown|s/actor:    "api"/actor:    "apis"/|_actorsUnknown.apis'
 	'tint-on-actor-page|s/{from: "s-describe", to: "s-compile", line: "solid"}/{from: "s-describe", to: "s-compile", line: "solid", tint: 2}/|_tintOnActorPage'
 	'line-without-actor|s/^\tlinks: \[$/&\n\t\t{from: "bucket", to: "worker", line: "solid"},/|_lineWithoutActor'
 	'actor-on-neutral-line|s/line:  "deny"/&\n\t\t\tactor: "api"/|_actorOnNeutralLine'
-	'actor-on-untintable-kind|s/label: "Trigger evaluation service"/&\n\t\t\t\t\t\t\tactor: "api"/|_actorOnUntintableKind'
+	'actor-on-untintable-kind|s/label: "Hold and pickup service"/&\n\t\t\t\t\t\t\tactor: "api"/|_actorOnUntintableKind'
 	'legend-by-actor-misused|s/{line: "deny", text: "blocked path"}/{line: "deny", by_actor: true, text: "blocked path"}/|_legendByActorMisused'
-	'key-duplicate-actor|s/{id: "model", name: "Evaluator"/{id: "worker", name: "Evaluator"/|_keysUsedTwice."actor.worker"'
-	'key-duplicate-phase|s/{id: "review", title: "Review"}/{id: "plan", title: "Review"}/|_phaseIdsUsedTwice.plan'
+	'key-duplicate-actor|s/{id: "model", name: "Notifier"/{id: "worker", name: "Notifier"/|_keysUsedTwice."actor.worker"'
+	'key-duplicate-phase|s/{id: "review", title: "Collect"}/{id: "plan", title: "Collect"}/|_phaseIdsUsedTwice.plan'
 	'phases-child-not-step|s/^\t\t\t\t\tchildren: \[$/&\n\t\t\t\t\t\t{tag: "Fact", text: "loose"},/|children.0.tag: conflicting values'
 	'step-outside-phases|s/^\t\t\tchildren: \[$/&\n\t\t\t\t{tag: "Step", lane: "api", phase: "plan", title: "Loose step"},/|_stepOutsidePhases."Loose step"'
 	'phase-lane-twice|s/lanes: \["operator", "api", "worker", "model"\]/lanes: ["operator", "api", "worker", "model", "api"]/|_lanesUsedTwice.api'
 	'step-lane-unknown|s/lanes: \["operator", "api", "worker", "model"\]/lanes: ["operator", "api", "worker"]/|_stepLanesUnknown'
-	'step-phase-unknown|s/{id: "review", title: "Review"},//|_stepPhasesUnknown'
+	'step-phase-unknown|s/{id: "review", title: "Collect"},//|_stepPhasesUnknown'
 	'step-span-out-of-range|s/phase: "describe"/&, col: 5, span: 3/|_stepSpanOutOfRange'
 	'step-text-fill|s/look:  "text"/&, fill: "tint"/|_stepTextFill'
 	'step-fill-unknown|s/look:  "text"/look: "box", fill: "paper"/|fill: 3 errors in empty disjunction'
@@ -533,12 +533,12 @@ sheet_cases=(
 	'link-marks-without-tag|/label: "no direct write"/d|_linkMarksWithoutTag'
 	'link-marks-without-tag-no-valve|s/^\t\t\tvalve: true$//; /label: "queue job"/d; s/^\t\t\tstep:  3$//|_linkMarksWithoutTag'
 	'planned-not-solid|s/{line: "solid", by_actor: true, planned: true,/{line: "dash", by_actor: true, planned: true,/|_plannedNotSolid'
-	'line-into-planned|s/planned: true, label: "schedule replays"/label: "schedule replays"/|_lineIntoPlanned."link.15.replay"'
+	'line-into-planned|s/planned: true, label: "schedule expiry"/label: "schedule expiry"/|_lineIntoPlanned."link.15.replay"'
 	'compartments-without-store|s/outline:  "store"/outline:  "card"/|_compartmentsWithoutStore'
-	"list-too-long-compartments|s/\"Triggers\",/\"Triggers\", \"one\", \"two\", \"three\",/|compartments: invalid value|list.MaxItems(6)"
+	"list-too-long-compartments|s/\"Holds\",/\"Holds\", \"one\", \"two\", \"three\",/|compartments: invalid value|list.MaxItems(6)"
 	'rail-not-vertical|s/dir:   "v"/dir:   "h"/|_railNotVertical'
 	'rail-with-targets|s/form:  "rail"/&, to: "worker"/|_railWithTargets'
-	'step-out-of-range|s/step: 1, label: "submit trigger"/step: 65, label: "submit trigger"/|step: invalid value 65'
+	'step-out-of-range|s/step: 1, label: "place hold"/step: 65, label: "place hold"/|step: invalid value 65'
 	'link-step-duplicate|s/step: 2, label: "authorized call"/step: 1, label: "authorized call"/|_linkStepUsedTwice."1"'
 	'valve-without-arrow|s/^\t\t\tvalve: true$/&, arrow: "none"/|_valveWithoutArrow'
 	'mark-legend-unused-step|s/ step: [0-9],//; /^\t\t\tstep:  3$/d|_markLegendUnused.step'
@@ -553,14 +553,14 @@ sheet_cases=(
 	'list-empty-rungs|/^\t\t\t\t\trungs: \[$/,/^\t\t\t\t\t\]$/d; s/^\t\t\t\t\taround: .*/&\n\t\t\t\t\trungs: []/|rungs: invalid value []|list.MinItems(1)'
 	"list-too-long-around|s/around: \[\"s-evaluate\", \"s-judge\", \"s-write\"\]/around: [$many_around]/|around: invalid value|list.MaxItems(16)"
 	"list-too-long-rungs|s/^\t\t\t\t\trungs: \[$/&\n\t\t\t\t\t\t$six_rungs/|rungs: invalid value|list.MaxItems(6)"
-	'how-to-item-empty|/text: "Sends the verdict back/,/^\t\t\t\t\t\t\t\]$/d|_howToItemEmpty|says or shows something'
-	'how-to-beside-alone|s/text: "Queues every stored clip.*"$/beside: true/|_besideAlone|the item needs both'
-	'terminal-indent-out-of-range|s/indent: 1, text: "v-88202 no match"/indent: 9, text: "v-88202 no match"/|indent: invalid value 9'
+	'how-to-item-empty|/text: "Releases the hold and its place/,/^\t\t\t\t\t\t\t\]$/d|_howToItemEmpty|says or shows something'
+	'how-to-beside-alone|s/text: "Adds seven days to a ready hold.*"$/beside: true/|_besideAlone|the item needs both'
+	'terminal-indent-out-of-range|s/indent: 1, text: "h-5133 in line, 2 of 4"/indent: 9, text: "h-5133 in line, 2 of 4"/|indent: invalid value 9'
 	'list-empty-how-to-items|/^\t\t\t\t\titems: \[$/,/^\t\t\t\t\t\]$/d; s/^\t\t\t\t\tid:  "operator-commands"$/&\n\t\t\t\t\titems: []/|items: invalid value []|list.MinItems(1)'
 	"list-too-long-how-to-items|s/^\t\t\t\t\titems: \[$/&\n\t\t\t\t\t\t$three_items/|items: invalid value|list.MaxItems(6)"
-	'list-too-long-command-runs|s/commands: \["trig replay"\]/commands: ["trig a", "trig b", "trig c", "trig d", "trig e", "trig replay"]/|commands: invalid value|list.MaxItems(5)'
-	"list-too-long-terminal-lines|s/^\t\t\t\t\t\t\t\t{kind: \"output\", text: \"412 clips queued under plan version 1\"},$/&\n$ten_lines/|terminal: invalid value|list.MaxItems(12)"
-	"list-too-long-step-lines|s/lines: \[\"in plain language\", \"camera and hours\"\]/lines: [$seven_lines]/|lines: invalid value|list.MaxItems(6)"
+	'list-too-long-command-runs|s/commands: \["hold extend"\]/commands: ["hold a", "hold b", "hold c", "hold d", "hold e", "hold extend"]/|commands: invalid value|list.MaxItems(5)'
+	"list-too-long-terminal-lines|s/^\t\t\t\t\t\t\t\t{kind: \"output\", text: \"h-5120 collect-by date moved to 2026-11-09\"},$/&\n$ten_lines/|terminal: invalid value|list.MaxItems(12)"
+	"list-too-long-step-lines|s/lines: \[\"from the catalogue app\", \"pickup branch\"\]/lines: [$seven_lines]/|lines: invalid value|list.MaxItems(6)"
 )
 # The rules that need a gcp kind on a sheet: a subnet directly in a View sits in
 # the page, since a View is transparent for kind nesting as Row, Col and Lanes

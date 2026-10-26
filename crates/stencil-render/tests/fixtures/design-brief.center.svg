@@ -7,13 +7,13 @@
     <g data-id="/kicker" data-tag="Kicker">
       <rect x="20" y="20" width="70.61" height="16" rx="4" fill="#E8F0FE"/>
       <text x="27" y="31.64" xml:space="preserve" font-family="Inter" font-size="10" font-weight="800" letter-spacing="0.7" fill="#174EA6">INTERNAL</text>
-      <text x="96.61" y="32" xml:space="preserve" font-family="Inter" font-size="11" font-weight="700" letter-spacing="0.88" fill="#1A73E8">DESIGN ONE-PAGER · TRIGGER EVALUATION SERVICE</text>
+      <text x="96.61" y="32" xml:space="preserve" font-family="Inter" font-size="11" font-weight="700" letter-spacing="0.88" fill="#1A73E8">DESIGN ONE-PAGER · HOLD AND PICKUP SERVICE</text>
     </g>
     <g data-id="/title" data-tag="Title">
-      <text x="20" y="61.28" xml:space="preserve" font-family="Inter" font-size="20" font-weight="700" letter-spacing="-0.4" fill="#202124">Plain-language event triggers, evaluated over video clips</text>
+      <text x="20" y="61.28" xml:space="preserve" font-family="Inter" font-size="20" font-weight="700" letter-spacing="-0.4" fill="#202124">Library holds, from the catalogue to the pickup shelf</text>
     </g>
     <g data-id="/lede" data-tag="Lede">
-      <text x="20" y="82.53" xml:space="preserve" font-family="Inter" font-size="13" font-weight="400" fill="#5F6368">An operator describes an event in their own words. The service turns the description into an evaluation plan, runs the plan over each new clip, and stores a verdict with the frames that support it.</text>
+      <text x="20" y="82.53" xml:space="preserve" font-family="Inter" font-size="13" font-weight="400" fill="#5F6368">A patron places a hold in the catalogue app. The service keeps a line of holds for each title, sets a returned copy aside at the patron&apos;s branch, and tells the patron it is ready to collect.</text>
     </g>
     <g data-id="/body" data-tag="Body">
       <g data-id="/body/0" data-tag="Row">
@@ -21,20 +21,20 @@
           <g data-id="/body/0/children/0/children/0" data-tag="Text">
             <rect x="20.63" y="102.22" width="710.75" height="85.65" rx="7.38" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.25"/>
             <text x="33.25" y="127.38" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#202124">Problem</text>
-            <text x="33.25" y="149.52" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#202124">Operators review long stretches of video to find a few events. Rules written as code need an engineer for every change.</text>
-            <text x="33.25" y="170.92" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#202124">Operators need to describe an event in plain language and get a verdict per clip, with the frames that support it.</text>
+            <text x="33.25" y="149.52" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#202124">Branch staff track holds on paper slips and by phone. A patron has to call or visit a branch to place one.</text>
+            <text x="33.25" y="170.92" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#202124">Patrons need to place a hold online, keep their place in line, and hear when a copy is ready to collect.</text>
           </g>
           <g data-id="/body/0/children/0/children/1" data-tag="Text">
             <rect x="20.63" y="197.13" width="710.75" height="128.45" rx="7.38" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.25"/>
             <text x="33.25" y="222.28" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#202124">Goals</text>
             <text x="33.25" y="244.42" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#202124">1.</text>
-            <text x="55.25" y="244.42" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#202124">Accept a trigger written in plain language and show its evaluation plan before it runs.</text>
+            <text x="55.25" y="244.42" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#202124">Accept a hold placed in the catalogue app and show the patron their place in line.</text>
             <text x="33.25" y="265.82" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#202124">2.</text>
-            <text x="55.25" y="265.82" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#202124">Evaluate every new clip against each active trigger.</text>
+            <text x="55.25" y="265.82" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#202124">Set each returned copy aside for the first confirmed hold on its title.</text>
             <text x="33.25" y="287.22" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#202124">3.</text>
-            <text x="55.25" y="287.22" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#202124">Store each verdict with its evidence frames and the plan version that produced it.</text>
+            <text x="55.25" y="287.22" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#202124">Tell the patron by email or text when the copy is ready, with a collect-by date.</text>
             <text x="33.25" y="308.62" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#202124">4.</text>
-            <text x="55.25" y="308.62" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#202124">Let an operator replay a trigger over earlier clips.</text>
+            <text x="55.25" y="308.62" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#202124">Release a copy nobody collects in seven days to the next hold in line.</text>
           </g>
           <g data-id="/body/0/children/0/children/2" data-tag="Text">
             <rect x="20.63" y="334.83" width="710.75" height="107.05" rx="7.38" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.25"/>
@@ -42,9 +42,9 @@
             <circle cx="38.25" cy="399.15" r="2" fill="#202124"/>
             <circle cx="38.25" cy="420.55" r="2" fill="#202124"/>
             <text x="33.25" y="359.98" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#202124">Non-goals</text>
-            <text x="55.25" y="382.12" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#202124">Live stream analysis: the service works on finished clips.</text>
-            <text x="55.25" y="403.52" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#202124">Identifying people.</text>
-            <text x="55.25" y="424.92" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#202124">Training or tuning a model per customer.</text>
+            <text x="55.25" y="382.12" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#202124">Interlibrary loans: the service fills holds with copies this library owns.</text>
+            <text x="55.25" y="403.52" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#202124">Fines and fees.</text>
+            <text x="55.25" y="424.92" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#202124">Holds on e-books.</text>
           </g>
           <g data-id="/body/0/children/0/children/3" data-tag="Text">
             <rect x="20.63" y="451.13" width="710.75" height="128.45" rx="7.38" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.25"/>
@@ -53,32 +53,32 @@
             <circle cx="38.25" cy="536.85" r="2" fill="#202124"/>
             <circle cx="38.25" cy="558.25" r="2" fill="#202124"/>
             <text x="33.25" y="476.28" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#202124">Interfaces</text>
-            <text x="55.25" y="498.42" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#202124">Create trigger: takes the description, returns the trigger and its plan.</text>
-            <text x="55.25" y="519.82" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#202124">Replay trigger: queues an evaluation over a range of stored clips.</text>
-            <text x="55.25" y="541.22" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#202124">List verdicts: filters by trigger, clip and capture time.</text>
-            <text x="55.25" y="562.62" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#202124">Clip arrival event: carries the clip location and capture time.</text>
+            <text x="55.25" y="498.42" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#202124">Place hold: takes the card, the title and the branch, returns the hold.</text>
+            <text x="55.25" y="519.82" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#202124">Cancel hold: releases the hold and its place in line.</text>
+            <text x="55.25" y="541.22" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#202124">List holds: filters by card, title and branch.</text>
+            <text x="55.25" y="562.62" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#202124">Copy check-in event: carries the copy and the branch that received it.</text>
           </g>
           <g data-id="/body/0/children/0/children/4" data-tag="Callout">
             <rect x="20.63" y="588.83" width="710.75" height="81.65" rx="7.38" fill="#FCE8E6" stroke="#DADCE0" stroke-width="1.25"/>
             <path d="M 25.25 590.04 V 669.26 A 6.75 6.75 0 0 1 21.25 663.1 V 596.2 A 6.75 6.75 0 0 1 25.25 590.04 Z" fill="#C5221F"/>
-            <text x="37.25" y="613.98" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#202124">Risk: plan drift</text>
-            <text x="37.25" y="636.12" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#202124">A model update can change how a description is read. Each verdict records the plan version, and a changed plan waits</text>
-            <text x="37.25" y="653.52" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#202124">for operator approval before it runs.</text>
+            <text x="37.25" y="613.98" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#202124">Risk: stale contact details</text>
+            <text x="37.25" y="636.12" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#202124">A notice sent to an old address or number leaves the copy unclaimed. A bounced notice flags the card for the desk, and</text>
+            <text x="37.25" y="653.52" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#202124">the copy still expires after seven days.</text>
           </g>
           <g data-id="/body/0/children/0/children/5" data-tag="Callout">
             <rect x="20.63" y="679.73" width="710.75" height="81.65" rx="7.38" fill="#E6F4EA" stroke="#DADCE0" stroke-width="1.25"/>
             <path d="M 25.25 680.94 V 760.16 A 6.75 6.75 0 0 1 21.25 754 V 687.1 A 6.75 6.75 0 0 1 25.25 680.94 Z" fill="#188038"/>
             <text x="37.25" y="704.88" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#202124">Decision: queue between API and worker</text>
-            <text x="37.25" y="727.02" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#202124">Evaluation runs asynchronously. The API returns once the plan is queued, so a slow clip never holds an operator</text>
-            <text x="37.25" y="744.42" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#202124">request open.</text>
+            <text x="37.25" y="727.02" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#202124">Pickup runs asynchronously. The API returns once the hold is queued, so a busy branch never holds a patron&apos;s request</text>
+            <text x="37.25" y="744.42" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#202124">open.</text>
           </g>
         </g>
         <g data-id="/body/0/children/1" data-tag="Col">
           <g data-id="/body/0/children/1/children/0" data-tag="Row">
             <g id="console" data-id="/body/0/children/1/children/0/children/0" data-tag="Pcard">
-              <rect x="1327.92" y="102.35" width="131.33" height="44.5" rx="7.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
-              <text x="1338.67" y="121.63" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#202124">Operator console</text>
-              <text x="1338.67" y="137.27" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">web client</text>
+              <rect x="1345.65" y="102.35" width="113.6" height="44.5" rx="7.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
+              <text x="1356.4" y="121.63" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#202124">Catalogue app</text>
+              <text x="1356.4" y="137.27" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">web and mobile</text>
             </g>
           </g>
           <g id="cloud" data-id="/body/0/children/1/children/1" data-tag="Zone" data-kind="system">
@@ -86,45 +86,45 @@
             <rect x="751" y="214.6" width="706" height="35.6" fill="#1A73E8"/>
             <rect x="751" y="250.2" width="706" height="516" fill="#FAFBFC"/>
             <path d="M 752 213.1 H 1456 A 2.5 2.5 0 0 1 1458.5 215.6 V 759.2 A 8.5 8.5 0 0 1 1450 767.7 H 758 A 8.5 8.5 0 0 1 749.5 759.2 V 215.6 A 2.5 2.5 0 0 1 752 213.1 Z" fill="none" stroke="#1A73E8" stroke-width="3"/>
-            <text x="767" y="238.95" xml:space="preserve" font-family="Inter" font-size="18" font-weight="700" letter-spacing="0.18" fill="#FFFFFF">Trigger evaluation service</text>
+            <text x="767" y="238.95" xml:space="preserve" font-family="Inter" font-size="18" font-weight="700" letter-spacing="0.18" fill="#FFFFFF">Hold and pickup service</text>
             <g data-id="/body/0/children/1/children/1/children/0" data-tag="Col">
               <g data-id="/body/0/children/1/children/1/children/0/children/0" data-tag="Row">
                 <g id="gateway" data-id="/body/0/children/1/children/1/children/0/children/0/children/0" data-tag="Pcard">
-                  <rect x="1040.32" y="266.95" width="127.36" height="44.5" rx="7.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
-                  <text x="1051.07" y="286.23" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#202124">Gateway</text>
-                  <text x="1051.07" y="301.87" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">authenticates calls</text>
+                  <rect x="1035.73" y="266.95" width="136.55" height="44.5" rx="7.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
+                  <text x="1046.48" y="286.23" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#202124">Gateway</text>
+                  <text x="1046.48" y="301.87" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">checks library cards</text>
                 </g>
               </g>
               <g data-id="/body/0/children/1/children/1/children/0/children/1" data-tag="Row">
                 <g id="api" data-id="/body/0/children/1/children/1/children/0/children/1/children/0" data-tag="Pcard">
-                  <rect x="1050.83" y="376.95" width="106.34" height="44.5" rx="7.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
-                  <text x="1061.58" y="396.23" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#202124">Trigger API</text>
-                  <text x="1061.58" y="411.87" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">compiles plans</text>
+                  <rect x="1050.75" y="376.95" width="106.49" height="44.5" rx="7.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
+                  <text x="1061.5" y="396.23" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#202124">Holds API</text>
+                  <text x="1061.5" y="411.87" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">keeps the lines</text>
                 </g>
               </g>
               <g data-id="/body/0/children/1/children/1/children/0/children/2" data-tag="Row">
                 <g id="queue" data-id="/body/0/children/1/children/1/children/0/children/2/children/0" data-tag="Pcard">
                   <rect x="1030.81" y="486.95" width="146.38" height="44.5" rx="7.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
-                  <text x="1041.56" y="506.23" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#202124">Evaluation queue</text>
+                  <text x="1041.56" y="506.23" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#202124">Pick queue</text>
                   <text x="1041.56" y="521.87" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">at-least-once delivery</text>
                 </g>
               </g>
               <g data-id="/body/0/children/1/children/1/children/0/children/3" data-tag="Row">
                 <g id="worker" data-id="/body/0/children/1/children/1/children/0/children/3/children/0" data-tag="Pcard">
-                  <rect x="1049.38" y="596.95" width="109.23" height="44.5" rx="7.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
-                  <text x="1060.13" y="616.23" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#202124">Clip worker</text>
-                  <text x="1060.13" y="631.87" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">one job per clip</text>
+                  <rect x="1047.12" y="596.95" width="113.76" height="44.5" rx="7.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
+                  <text x="1057.87" y="616.23" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#202124">Pickup worker</text>
+                  <text x="1057.87" y="631.87" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">one job per hold</text>
                 </g>
               </g>
               <g data-id="/body/0/children/1/children/1/children/0/children/4" data-tag="Row">
                 <g id="evaluator" data-id="/body/0/children/1/children/1/children/0/children/4/children/0" data-tag="Pcard">
-                  <rect x="765.75" y="706.95" width="151.88" height="44.5" rx="7.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
-                  <text x="776.5" y="726.23" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#202124">Clip evaluator</text>
-                  <text x="776.5" y="741.87" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">hosted model endpoint</text>
+                  <rect x="765.75" y="706.95" width="170.19" height="44.5" rx="7.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
+                  <text x="776.5" y="726.23" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#202124">Notifier</text>
+                  <text x="776.5" y="741.87" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">hosted messaging service</text>
                 </g>
                 <g id="database" data-id="/body/0/children/1/children/1/children/0/children/4/children/1" data-tag="Pcard">
                   <rect x="1313.31" y="706.95" width="128.94" height="44.5" rx="7.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
-                  <text x="1324.06" y="726.23" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#202124">Verdict store</text>
+                  <text x="1324.06" y="726.23" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#202124">Holds store</text>
                   <text x="1324.06" y="741.87" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">relational database</text>
                 </g>
               </g>
@@ -137,15 +137,15 @@
           <line x1="22.06" y1="779.26" x2="729.94" y2="975.14" stroke="#5F6368" stroke-width="1"/>
           <line x1="22.06" y1="975.14" x2="729.94" y2="779.26" stroke="#5F6368" stroke-width="1"/>
           <rect x="20.63" y="777.82" width="710.75" height="198.75" rx="3.38" fill="none" stroke="#9AA0A6" stroke-width="1.25" stroke-dasharray="6 5"/>
-          <rect x="216.29" y="866" width="319.41" height="22.4" rx="4" fill="#FFFFFF"/>
-          <text x="224.29" y="881.57" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#5F6368">Trigger editor: description, generated plan, approve</text>
+          <rect x="199.67" y="866" width="352.65" height="22.4" rx="4" fill="#FFFFFF"/>
+          <text x="207.67" y="881.57" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#5F6368">Place a hold: title, pickup branch, notice channel, confirm</text>
         </g>
         <g data-id="/body/1/children/1" data-tag="Frame">
           <line x1="750.06" y1="779.26" x2="1457.94" y2="975.14" stroke="#5F6368" stroke-width="1"/>
           <line x1="750.06" y1="975.14" x2="1457.94" y2="779.26" stroke="#5F6368" stroke-width="1"/>
           <rect x="748.63" y="777.82" width="710.75" height="198.75" rx="3.38" fill="none" stroke="#9AA0A6" stroke-width="1.25" stroke-dasharray="6 5"/>
-          <rect x="963.6" y="866" width="280.81" height="22.4" rx="4" fill="#FFFFFF"/>
-          <text x="971.6" y="881.57" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#5F6368">Verdict review: clip, evidence frames, verdict</text>
+          <rect x="952.77" y="866" width="302.46" height="22.4" rx="4" fill="#FFFFFF"/>
+          <text x="960.77" y="881.57" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#5F6368">Hold shelf: title, library card, slot, collect-by date</text>
         </g>
       </g>
     </g>
@@ -163,14 +163,14 @@
       </g>
     </g>
     <g data-id="/foot" data-tag="Foot">
-      <text x="20" y="1020.2" xml:space="preserve" font-family="Inter" font-size="11" font-weight="400" fill="#5F6368">The numbered links follow one request from the console to a stored verdict.</text>
+      <text x="20" y="1020.2" xml:space="preserve" font-family="Inter" font-size="11" font-weight="400" fill="#5F6368">The numbered links follow one hold from the catalogue app to the holds store.</text>
     </g>
   </g>
   <g id="_links_0" data-id="/links/0" data-tag="Link" data-kind="blue" data-from="/body/0/children/1/children/0/children/0" data-to="/body/0/children/1/children/1/children/0/children/0/children/0">
-    <path d="M 1393.58 147.6 L 1393.58 283.2 A 6 6 0 0 1 1387.58 289.2 L 1178.43 289.2" fill="none" stroke="#1A73E8" stroke-width="2" stroke-linejoin="round"/>
-    <line x1="1178.43" y1="289.2" x2="1168.43" y2="289.2" stroke="none" marker-end="url(#arrow-center-blue)"/>
-    <rect x="1226.76" y="274.65" width="108.5" height="29.1" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
-    <text x="1235.51" y="293.57" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">1 submit trigger</text>
+    <path d="M 1402.45 147.6 L 1402.45 283.2 A 6 6 0 0 1 1396.45 289.2 L 1183.02 289.2" fill="none" stroke="#1A73E8" stroke-width="2" stroke-linejoin="round"/>
+    <line x1="1183.02" y1="289.2" x2="1173.02" y2="289.2" stroke="none" marker-end="url(#arrow-center-blue)"/>
+    <rect x="1244.74" y="274.65" width="86" height="29.1" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
+    <text x="1253.49" y="293.57" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">1 place hold</text>
   </g>
   <g id="_links_1" data-id="/links/1" data-tag="Link" data-kind="blue" data-from="/body/0/children/1/children/1/children/0/children/0/children/0" data-to="/body/0/children/1/children/1/children/0/children/1/children/0">
     <path d="M 1104 312.2 L 1104 366.2" fill="none" stroke="#1A73E8" stroke-width="2" stroke-linejoin="round"/>
@@ -181,8 +181,8 @@
   <g id="_links_2" data-id="/links/2" data-tag="Link" data-kind="blue" data-from="/body/0/children/1/children/1/children/0/children/1/children/0" data-to="/body/0/children/1/children/1/children/0/children/2/children/0">
     <path d="M 1104 422.2 L 1104 476.2" fill="none" stroke="#1A73E8" stroke-width="2" stroke-linejoin="round"/>
     <line x1="1104" y1="476.2" x2="1104" y2="486.2" stroke="none" marker-end="url(#arrow-center-blue)"/>
-    <rect x="1057.51" y="439.65" width="92.99" height="29.1" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
-    <text x="1066.26" y="458.57" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">3 queue plan</text>
+    <rect x="1057.31" y="439.65" width="93.38" height="29.1" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
+    <text x="1066.06" y="458.57" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">3 queue hold</text>
   </g>
   <g id="_links_3" data-id="/links/3" data-tag="Link" data-kind="blue" data-from="/body/0/children/1/children/1/children/0/children/2/children/0" data-to="/body/0/children/1/children/1/children/0/children/3/children/0">
     <path d="M 1104 532.2 L 1104 586.2" fill="none" stroke="#1A73E8" stroke-width="2" stroke-linejoin="round"/>
@@ -191,21 +191,21 @@
     <text x="1067.9" y="568.57" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">4 deliver job</text>
   </g>
   <g id="_links_4" data-id="/links/4" data-tag="Link" data-kind="blue" data-from="/body/0/children/1/children/1/children/0/children/3/children/0" data-to="/body/0/children/1/children/1/children/0/children/4/children/0">
-    <path d="M 1048.63 619.2 L 847.69 619.2 A 6 6 0 0 0 841.69 625.2 L 841.69 696.2" fill="none" stroke="#1A73E8" stroke-width="2" stroke-linejoin="round"/>
-    <line x1="841.69" y1="696.2" x2="841.69" y2="706.2" stroke="none" marker-end="url(#arrow-center-blue)"/>
-    <rect x="894.23" y="604.65" width="101.87" height="29.1" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
-    <text x="902.98" y="623.57" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">5 evaluate clip</text>
+    <path d="M 1046.37 619.2 L 856.85 619.2 A 6 6 0 0 0 850.85 625.2 L 850.85 696.2" fill="none" stroke="#1A73E8" stroke-width="2" stroke-linejoin="round"/>
+    <line x1="850.85" y1="696.2" x2="850.85" y2="706.2" stroke="none" marker-end="url(#arrow-center-blue)"/>
+    <rect x="900.49" y="604.65" width="96.24" height="29.1" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
+    <text x="909.24" y="623.57" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">5 send notice</text>
   </g>
   <g id="_links_5" data-id="/links/5" data-tag="Link" data-kind="blue" data-from="/body/0/children/1/children/1/children/0/children/3/children/0" data-to="/body/0/children/1/children/1/children/0/children/4/children/1">
-    <path d="M 1159.37 619.2 L 1371.78 619.2 A 6 6 0 0 1 1377.78 625.2 L 1377.78 696.2" fill="none" stroke="#1A73E8" stroke-width="2" stroke-linejoin="round"/>
+    <path d="M 1161.63 619.2 L 1371.78 619.2 A 6 6 0 0 1 1377.78 625.2 L 1377.78 696.2" fill="none" stroke="#1A73E8" stroke-width="2" stroke-linejoin="round"/>
     <line x1="1377.78" y1="696.2" x2="1377.78" y2="706.2" stroke="none" marker-end="url(#arrow-center-blue)"/>
-    <rect x="1217.68" y="604.65" width="101.79" height="29.1" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
-    <text x="1226.43" y="623.57" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">6 write verdict</text>
+    <rect x="1222.37" y="604.65" width="94.67" height="29.1" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
+    <text x="1231.12" y="623.57" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">6 mark ready</text>
   </g>
   <g id="_links_6" data-id="/links/6" data-tag="Link" data-kind="deny" data-from="/body/0/children/1/children/1/children/0/children/4/children/0" data-to="/body/0/children/1/children/1/children/0/children/4/children/1">
-    <path d="M 918.38 729.2 L 1309.56 729.2" fill="none" stroke="#C5221F" stroke-width="2" stroke-dasharray="6 5" stroke-linejoin="round"/>
+    <path d="M 936.69 729.2 L 1309.56 729.2" fill="none" stroke="#C5221F" stroke-width="2" stroke-dasharray="6 5" stroke-linejoin="round"/>
     <rect x="1309.56" y="721.2" width="3" height="16" fill="#C5221F"/>
-    <rect x="1064.55" y="714.65" width="101.85" height="29.1" rx="5.25" fill="#FFFFFF" stroke="#F4C7C3" stroke-width="1.5"/>
-    <text x="1073.3" y="733.57" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#C5221F">no direct write</text>
+    <rect x="1073.71" y="714.65" width="101.85" height="29.1" rx="5.25" fill="#FFFFFF" stroke="#F4C7C3" stroke-width="1.5"/>
+    <text x="1082.46" y="733.57" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#C5221F">no direct write</text>
   </g>
 </svg>

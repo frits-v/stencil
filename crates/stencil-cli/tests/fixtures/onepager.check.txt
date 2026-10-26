@@ -15,5 +15,5 @@ check icon-matches-product: examined 0 items, not applicable: grammar has no ico
 check description-covers-drawing: examined 141 elements, 0 defects
 check keys-used: examined 20 keys, 0 defects
 check marks-clear: examined 84 marks, 0 defects
-check junctions-plain: examined 177 junctions, 0 defects
+check junctions-plain: examined 178 junctions, 0 defects
 stencil check: 18 checks, 10 passed, 0 failed, 8 not applicable

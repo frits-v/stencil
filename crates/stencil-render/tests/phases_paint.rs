@@ -164,6 +164,9 @@ fn a_washed_lane_draws_its_band_then_the_grid_over_it() {
             .unwrap_or_else(|| panic!("{position} is off the grid"));
         *is_major
     };
+    // The writer rounds every coordinate to two decimals, so a written number matches its
+    // geometry within half a hundredth.
+    let written = |svg_value: f32, geometry_value: f32| (svg_value - geometry_value).abs() <= 0.005;
     let bands = parts(node(&rendered.geometry, PHASES), PartName::LaneBand);
     let slots: Vec<u8> = document["body"][0]["children"][0]["lanes"]
         .as_array()
@@ -187,7 +190,10 @@ fn a_washed_lane_draws_its_band_then_the_grid_over_it() {
             .iter()
             .position(|element| {
                 element.has_tag_name("rect")
-                    && element.attribute("y").unwrap().parse::<f32>().unwrap() == band.y
+                    && written(
+                        element.attribute("y").unwrap().parse::<f32>().unwrap(),
+                        band.y,
+                    )
                     && element.attribute("fill") == Some(lane_band(&theme, *slot).as_str())
             })
             .unwrap_or_else(|| panic!("no band rect at y {}", band.y));
@@ -197,14 +203,26 @@ fn a_washed_lane_draws_its_band_then_the_grid_over_it() {
             let stroke = path.attribute("stroke").unwrap();
             assert!(stroke == minor || stroke == major, "{stroke}");
             for (x1, y1, x2, y2) in segments(path.attribute("d").unwrap()) {
-                assert!(x1 >= band.x && x2 <= band.right(), "x {x1} to {x2}");
-                assert!(y1 >= band.y && y2 <= band.bottom(), "y {y1} to {y2}");
+                assert!(
+                    x1 >= band.x - 0.005 && x2 <= band.right() + 0.005,
+                    "x {x1} to {x2}"
+                );
+                assert!(
+                    y1 >= band.y - 0.005 && y2 <= band.bottom() + 0.005,
+                    "y {y1} to {y2}"
+                );
                 if x1 == x2 {
-                    assert_eq!((y1, y2), (band.y, band.bottom()));
+                    assert!(
+                        written(y1, band.y) && written(y2, band.bottom()),
+                        "y {y1} to {y2}"
+                    );
                     assert_eq!(stroke == major, on_line(&columns, x1), "x {x1}");
                     verticals.push(x1);
                 } else {
-                    assert_eq!((x1, x2), (band.x, band.right()));
+                    assert!(
+                        written(x1, band.x) && written(x2, band.right()),
+                        "x {x1} to {x2}"
+                    );
                     assert_eq!(stroke == major, on_line(&rows, y1), "y {y1}");
                 }
                 examined += 1;

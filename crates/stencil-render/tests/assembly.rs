@@ -38,7 +38,7 @@ fn a_planned_line_is_hollow_and_no_other_line_is() {
         .paper
         .as_str()
         .to_string();
-    let planned = link_index(&document, "schedule replays");
+    let planned = link_index(&document, "schedule expiry");
     let group = common::group(&svg, &format!("/links/{planned}"));
     let paths = common::children_named(group, "path");
     assert!(
@@ -88,12 +88,12 @@ fn a_planned_line_is_hollow_and_no_other_line_is() {
     assert!(examined > 15, "examined {examined}");
 }
 
-/// Leaving the Trigger API to its right, the planned line bends twice: each bend is a
+/// Leaving the Holds API to its right, the planned line bends twice: each bend is a
 /// joint whose casing and core are both drawn solid, so the corner never falls in a gap.
 #[test]
 fn a_bent_planned_line_draws_its_casing_and_core_solid_around_each_bend() {
     let mut document = onepager_document();
-    let planned = link_index(&document, "schedule replays");
+    let planned = link_index(&document, "schedule expiry");
     document["links"][planned]["from_side"] = serde_json::json!("right");
     let rendered = common::render_document_with_fixed_metrics(document);
     let svg = common::parse_xml(&rendered.svg.svg);
