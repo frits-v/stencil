@@ -1,201 +1,80 @@
 {
-  "title": "Spoke traffic leaves through the hub firewall, and PaaS stays off the address space",
-  "kicker": "Azure hub and spoke · ExpressRoute with VPN backup · one region",
-  "lede": "On-prem reaches the hub over ExpressRoute private peering, with a site-to-site VPN as backup. The hub firewall inspects what crosses between spokes. The spoke cluster reaches Storage and SQL Database through private endpoints in its own VNet.",
+  "title": "Spoke traffic leaves through the hub firewall, and the booking data stays off the address space",
+  "kicker": "Hotel reservation platform · Azure hub and spoke · one region",
+  "lede": "The booking cluster runs in a spoke VNet peered to the hub, and the hub firewall inspects what leaves the spoke. The cluster reaches room photos in Azure Storage, reservations in Azure SQL Database and its secrets in Azure Key Vault through private endpoints in its own VNet. Azure Front Door takes guest traffic and Microsoft Entra ID signs in staff, both outside the region.",
   "foot": "Illustrative topology · hop facts are placeholders, not looked-up values",
   "width": 1440,
   "badge": "Customer",
   "grammar": "azure",
   "body": [
     {
-      "tag": "Row",
-      "gap": 8,
-      "grow": [
-        0,
-        0,
-        1
-      ],
+      "tag": "Box",
+      "kind": "azure",
+      "label": "Microsoft Azure",
       "children": [
         {
           "tag": "Col",
-          "justify": "center",
+          "gap": 8,
           "children": [
             {
               "tag": "Box",
-              "kind": "onprem",
+              "kind": "region",
               "tint": 1,
-              "label": "On-prem site",
+              "label": "Primary region",
               "children": [
                 {
-                  "tag": "Item",
-                  "kind": "product",
-                  "title": "Edge router",
-                  "subtitle": "customer edge toward Microsoft"
-                },
-                {
-                  "tag": "Item",
-                  "kind": "product",
-                  "title": "VPN device",
-                  "subtitle": "IPsec peer for the backup tunnel"
-                },
-                {
-                  "tag": "Item",
-                  "kind": "product",
-                  "title": "Directory servers",
-                  "subtitle": "synchronized to Microsoft Entra ID"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "tag": "Col",
-          "gap": 12,
-          "justify": "center",
-          "children": [
-            {
-              "tag": "Pipe",
-              "dir": "h",
-              "line": "solid",
-              "tint": 1,
-              "label": "ExpressRoute",
-              "sub": "private peering · BGP"
-            },
-            {
-              "tag": "Pipe",
-              "dir": "h",
-              "line": "dash",
-              "label": "Site-to-site VPN",
-              "sub": "backup path · IPsec · BGP"
-            }
-          ]
-        },
-        {
-          "tag": "Box",
-          "kind": "azure",
-          "label": "Microsoft Azure",
-          "children": [
-            {
-              "tag": "Col",
-              "gap": 8,
-              "children": [
-                {
-                  "tag": "Box",
-                  "kind": "region",
-                  "tint": 1,
-                  "label": "Primary region",
+                  "tag": "Col",
+                  "gap": 8,
                   "children": [
                     {
-                      "tag": "Col",
+                      "tag": "Row",
                       "gap": 8,
+                      "grow": [
+                        1,
+                        0,
+                        1
+                      ],
                       "children": [
                         {
-                          "tag": "Row",
-                          "gap": 8,
-                          "grow": [
-                            1,
-                            0,
-                            1
-                          ],
+                          "tag": "Box",
+                          "kind": "vnet",
+                          "label": "Hub VNet",
                           "children": [
                             {
                               "tag": "Box",
-                              "kind": "vnet",
-                              "label": "Hub VNet",
+                              "kind": "subnet",
+                              "label": "AzureBastionSubnet",
                               "children": [
                                 {
-                                  "tag": "Box",
-                                  "kind": "subnet",
-                                  "label": "GatewaySubnet",
-                                  "children": [
+                                  "tag": "Item",
+                                  "kind": "product",
+                                  "icon": "bastion",
+                                  "title": "Operator access",
+                                  "subtitle": "Azure Bastion",
+                                  "facts": [
                                     {
-                                      "tag": "Item",
-                                      "kind": "product",
-                                      "icon": "vpn-gateway",
-                                      "title": "Gateway",
-                                      "subtitle": "ExpressRoute gateway",
-                                      "facts": [
-                                        {
-                                          "text": "SKU and zone redundancy from the ExpressRoute gateway doc",
-                                          "source": "doc"
-                                        }
-                                      ]
-                                    }
-                                  ]
-                                },
-                                {
-                                  "tag": "Box",
-                                  "kind": "subnet",
-                                  "label": "AzureFirewallSubnet",
-                                  "children": [
-                                    {
-                                      "tag": "Item",
-                                      "kind": "product",
-                                      "icon": "azure-firewall",
-                                      "title": "Firewall",
-                                      "subtitle": "Azure Firewall",
-                                      "facts": [
-                                        {
-                                          "text": "Premium or Standard SKU: open question",
-                                          "source": "ask"
-                                        }
-                                      ]
+                                      "text": "SKU and scale units from the Azure Bastion doc",
+                                      "source": "doc"
                                     }
                                   ]
                                 }
                               ]
                             },
                             {
-                              "tag": "Pipe",
-                              "dir": "h",
-                              "line": "gray",
-                              "label": "VNet peering",
-                              "sub": "spoke traffic via the firewall"
-                            },
-                            {
                               "tag": "Box",
-                              "kind": "vnet",
-                              "label": "Spoke VNet",
+                              "kind": "subnet",
+                              "label": "AzureFirewallSubnet",
                               "children": [
                                 {
-                                  "tag": "Box",
-                                  "kind": "subnet",
-                                  "label": "AKS nodes",
-                                  "children": [
+                                  "tag": "Item",
+                                  "kind": "product",
+                                  "icon": "azure-firewall",
+                                  "title": "Firewall",
+                                  "subtitle": "Azure Firewall",
+                                  "facts": [
                                     {
-                                      "tag": "Item",
-                                      "kind": "product",
-                                      "icon": "aks",
-                                      "title": "Cluster",
-                                      "subtitle": "Azure Kubernetes Service"
-                                    },
-                                    {
-                                      "tag": "Item",
-                                      "kind": "product",
-                                      "icon": "virtual-machines",
-                                      "title": "Build agents",
-                                      "subtitle": "Azure Virtual Machines"
-                                    }
-                                  ]
-                                },
-                                {
-                                  "tag": "Box",
-                                  "kind": "subnet",
-                                  "label": "Private endpoints",
-                                  "children": [
-                                    {
-                                      "tag": "Item",
-                                      "kind": "product",
-                                      "icon": "private-endpoint",
-                                      "title": "Blob endpoint",
-                                      "subtitle": "private endpoint · Blob Storage"
-                                    },
-                                    {
-                                      "tag": "Item",
-                                      "kind": "product",
-                                      "icon": "private-endpoint",
-                                      "title": "SQL endpoint",
-                                      "subtitle": "private endpoint · SQL Database"
+                                      "text": "Premium or Standard SKU: open question",
+                                      "source": "ask"
                                     }
                                   ]
                                 }
@@ -205,77 +84,140 @@
                         },
                         {
                           "tag": "Pipe",
-                          "dir": "v",
+                          "dir": "h",
                           "line": "gray",
-                          "label": "Private Link",
-                          "sub": "from the endpoints to the services"
+                          "label": "VNet peering",
+                          "sub": "spoke traffic via the firewall"
                         },
                         {
                           "tag": "Box",
-                          "kind": "services",
-                          "label": "PaaS services",
+                          "kind": "vnet",
+                          "label": "Spoke VNet",
                           "children": [
                             {
-                              "tag": "Row",
-                              "gap": 8,
-                              "grow": [
-                                1,
-                                1,
-                                1
-                              ],
+                              "tag": "Box",
+                              "kind": "subnet",
+                              "label": "AKS nodes",
                               "children": [
                                 {
                                   "tag": "Item",
                                   "kind": "product",
-                                  "icon": "storage-accounts",
-                                  "title": "Data lake",
-                                  "subtitle": "Azure Storage account"
+                                  "icon": "aks",
+                                  "title": "Booking cluster",
+                                  "subtitle": "Azure Kubernetes Service"
                                 },
                                 {
                                   "tag": "Item",
                                   "kind": "product",
-                                  "icon": "sql-database",
-                                  "title": "Orders",
-                                  "subtitle": "Azure SQL Database"
+                                  "icon": "virtual-machines",
+                                  "title": "Channel sync",
+                                  "subtitle": "Azure Virtual Machines"
+                                }
+                              ]
+                            },
+                            {
+                              "tag": "Box",
+                              "kind": "subnet",
+                              "label": "Private endpoints",
+                              "children": [
+                                {
+                                  "tag": "Item",
+                                  "kind": "product",
+                                  "icon": "private-endpoint",
+                                  "title": "Blob endpoint",
+                                  "subtitle": "private endpoint · Blob Storage"
                                 },
                                 {
                                   "tag": "Item",
                                   "kind": "product",
-                                  "icon": "key-vault",
-                                  "title": "Secrets",
-                                  "subtitle": "Azure Key Vault"
+                                  "icon": "private-endpoint",
+                                  "title": "SQL endpoint",
+                                  "subtitle": "private endpoint · SQL Database"
+                                },
+                                {
+                                  "tag": "Item",
+                                  "kind": "product",
+                                  "icon": "private-endpoint",
+                                  "title": "Key Vault endpoint",
+                                  "subtitle": "private endpoint · Key Vault"
                                 }
                               ]
                             }
                           ]
                         }
                       ]
-                    }
-                  ]
-                },
-                {
-                  "tag": "Row",
-                  "gap": 8,
-                  "grow": [
-                    1,
-                    1
-                  ],
-                  "children": [
-                    {
-                      "tag": "Item",
-                      "kind": "product",
-                      "icon": "entra-id",
-                      "title": "Directory",
-                      "subtitle": "Microsoft Entra ID"
                     },
                     {
-                      "tag": "Item",
-                      "kind": "product",
-                      "icon": "front-door",
-                      "title": "Public entry",
-                      "subtitle": "Azure Front Door"
+                      "tag": "Pipe",
+                      "dir": "v",
+                      "line": "gray",
+                      "label": "Private Link",
+                      "sub": "from the endpoints to the services"
+                    },
+                    {
+                      "tag": "Box",
+                      "kind": "services",
+                      "label": "PaaS services",
+                      "children": [
+                        {
+                          "tag": "Row",
+                          "gap": 8,
+                          "grow": [
+                            1,
+                            1,
+                            1
+                          ],
+                          "children": [
+                            {
+                              "tag": "Item",
+                              "kind": "product",
+                              "icon": "storage-accounts",
+                              "title": "Room photos",
+                              "subtitle": "Azure Storage account"
+                            },
+                            {
+                              "tag": "Item",
+                              "kind": "product",
+                              "icon": "sql-database",
+                              "title": "Reservations",
+                              "subtitle": "Azure SQL Database"
+                            },
+                            {
+                              "tag": "Item",
+                              "kind": "product",
+                              "icon": "key-vault",
+                              "title": "Booking secrets",
+                              "subtitle": "Azure Key Vault"
+                            }
+                          ]
+                        }
+                      ]
                     }
                   ]
+                }
+              ]
+            },
+            {
+              "tag": "Row",
+              "gap": 8,
+              "grow": [
+                1,
+                1
+              ],
+              "children": [
+                {
+                  "tag": "Item",
+                  "kind": "product",
+                  "icon": "entra-id",
+                  "title": "Staff sign-in",
+                  "subtitle": "Microsoft Entra ID"
+                },
+                {
+                  "tag": "Item",
+                  "kind": "product",
+                  "icon": "front-door",
+                  "title": "Guest entry",
+                  "subtitle": "Azure Front Door"
                 }
               ]
             }
@@ -285,15 +227,6 @@
     }
   ],
   "legend": [
-    {
-      "line": "solid",
-      "tint": 1,
-      "text": "on-prem to the region over ExpressRoute"
-    },
-    {
-      "line": "dash",
-      "text": "backup path over the internet"
-    },
     {
       "line": "gray",
       "text": "inside Azure: peering and Private Link"
