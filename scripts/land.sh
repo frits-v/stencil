@@ -22,6 +22,22 @@ case "$mergeable" in
     exit 1
     ;;
 esac
+# A ci run tests the head, not the head merged onto the current base: a head behind its base can
+# pass and still merge into a red main, as two pull requests did when one added examples and the
+# other pinned the example count. Refuse it until it is rebased.
+base=$(gh pr view "$pr" --json baseRefName --jq .baseRefName)
+behind=$(gh api "repos/{owner}/{repo}/compare/$base...$sha" --jq .behind_by)
+case "$behind" in
+  0) ;;
+  '' | *[!0-9]*)
+    echo "land: unrecognised behind count '$behind' for $head against $base" >&2
+    exit 1
+    ;;
+  *)
+    echo "land: $head is $behind commit(s) behind $base, so its ci run did not test what would merge; rebase it onto $base and push" >&2
+    exit 1
+    ;;
+esac
 # The branch filter combined with the workflow filter can list nothing for a run that exists,
 # so the run is found by commit and its branch is checked from the result.
 run=$(gh run list --workflow ci.yml --commit "$sha" --limit 20 --json databaseId,headBranch \
