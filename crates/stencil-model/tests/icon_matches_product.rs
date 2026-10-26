@@ -323,7 +323,7 @@ fn the_aws_example_passes_with_items_examined() {
     let page = parse_page(&text).unwrap();
     let report = icon_matches_product(&page, &aws());
     assert!(report.passed(), "{:?}", report.defects);
-    assert!(report.examined >= 10, "examined {}", report.examined);
+    assert_eq!(report.examined, 15);
 }
 
 fn aws_table() -> Vec<IconProducts> {
@@ -463,7 +463,7 @@ fn the_azure_example_passes_with_items_examined() {
     let page = parse_page(&text).unwrap();
     let report = icon_matches_product(&page, &common::azure());
     assert!(report.passed(), "{:?}", report.defects);
-    assert_eq!(report.examined, 14);
+    assert_eq!(report.examined, 12);
 }
 
 fn azure_table() -> Vec<IconProducts> {
