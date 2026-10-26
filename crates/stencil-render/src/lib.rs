@@ -27,7 +27,14 @@ pub use themes::{builtin_theme, builtin_theme_json};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct SvgDocument {
+    /// The SVG resvg parses: no style, no anchor and no hit area.
     pub svg: String,
+    /// `svg` with the elements only a browser reads: each rule source's own elements in a
+    /// `<g data-own>` of `<a>` runs that pin its highlight on click, the hit areas, and the
+    /// unpin floor. `self_contained` writes this with the style block.
+    pub written: String,
+    /// True when the theme's page colour is dark, where faded units keep more opacity.
+    pub dark_page: bool,
     /// Number of <text> elements written: one per line of every TextRun.
     pub text_elements: usize,
     /// The family and weight of the `<text>` elements, each once, ordered by family name and

@@ -600,16 +600,15 @@ fn not_values(text: &str, name: &str) -> BTreeSet<String> {
 fn hover_rules(svg: &str) -> BTreeMap<String, ParsedRule> {
     let mut rules = BTreeMap::new();
     for line in svg.lines().filter(|line| line.contains(":hover")) {
-        let source = if line.trim_start().starts_with(r#"svg:has([data-id=""#) {
-            quoted_after(line, r#"svg:has([data-id=""#)
+        let source = if line.contains(r#":has([data-id=""#) {
+            quoted_after(line, r#":has([data-id=""#)
         } else {
-            quoted_after(line, r#"svg:has([data-row=""#)
+            quoted_after(line, r#":has([data-row=""#)
         };
-        let (groups, rows) = line.split_once(" > :not([data-id]), ").unwrap();
         let rule = ParsedRule {
             anchor: quoted_after(line, r#"[id=""#).to_string(),
-            groups: not_values(groups, "data-id"),
-            rows: not_values(rows, "data-row"),
+            groups: not_values(line, "data-id"),
+            rows: not_values(line, "data-row"),
         };
         assert!(
             rules.insert(source.to_string(), rule).is_none(),
@@ -720,6 +719,104 @@ fn every_hover_rule_names_units_the_written_svg_holds_and_the_resvg_input_has_no
     assert!(examples >= 16, "{examples} examples");
     assert!(rules_examined >= 376, "{rules_examined} rules");
     assert!(names_examined > rules_examined, "{names_examined} names");
+}
+
+/// Every example's file stem.
+fn example_stems() -> Vec<String> {
+    let mut stems: Vec<String> = fs::read_dir(repository_path("examples"))
+        .unwrap()
+        .map(|entry| entry.unwrap().path())
+        .filter(|path| path.extension().and_then(|extension| extension.to_str()) == Some("json"))
+        .map(|path| path.file_stem().unwrap().to_str().unwrap().to_string())
+        .collect();
+    stems.sort();
+    stems
+}
+
+#[test]
+fn every_rule_fades_a_link_and_its_tag_as_one_group() {
+    let leaf = r#":is([data-tag="Pcard"],[data-tag="Pipe"],[data-tag="Step"],[data-tag="Rung"],[data-tag="ProblemPoint"],[data-tag="ActorChip"],[data-tag="LegendEntry"],[data-tag="HowToItem"],[data-tag="Link"])"#;
+    let container = r#":is([data-tag="Zone"],[data-tag="Tee"])"#;
+    let mut tagged_links = 0;
+    let mut rules_examined = 0;
+    for stem in example_stems() {
+        let input = repository_path(&format!("examples/{stem}.json"));
+        let json_text = read_input(&input).unwrap();
+        let loaded = load_document_from(&json_text, input.parent().unwrap(), None).unwrap();
+        let rendered = render_page(&loaded, DeviceScale::DEFAULT).unwrap();
+        let svg = rendered.svg.self_contained().unwrap();
+        for line in svg.lines().filter(|line| line.contains(":hover")) {
+            // Each selector of the rule ends on a group: a leaf group, a container's own
+            // wrapper, or a row; none reaches into a group for its paths or rects.
+            let selectors = line.split_once(" { ").unwrap().0;
+            for selector in selectors.split(", :is(svg:not(") {
+                let target = selector.split_once(":target)) ").unwrap().1;
+                assert!(
+                    target.starts_with(leaf)
+                        || (target.starts_with(container) && target.ends_with("> [data-own]"))
+                        || target.starts_with("[data-row]"),
+                    "{stem}: {target:.120}"
+                );
+                assert!(!target.contains(":not([data-id]) >"), "{stem}");
+            }
+            rules_examined += 1;
+        }
+        for route in rendered
+            .geometry
+            .links
+            .iter()
+            .filter(|route| route.tag.is_some())
+        {
+            let open = format!(r#" data-id="/links/{}" data-tag="Link""#, route.index);
+            assert!(svg.contains(&open), "{stem}: link {}", route.index);
+            tagged_links += 1;
+        }
+    }
+    assert!(rules_examined >= 376, "{rules_examined} rules");
+    assert!(tagged_links > 0, "no link with a tag");
+}
+
+#[test]
+fn a_click_pins_each_source_and_the_floor_clears_it_in_the_written_svg_only() {
+    let mut sources_examined = 0;
+    for stem in example_stems() {
+        let (svg, resvg_input) = written_and_resvg_svg(&stem);
+        for marker in ["<a ", "data-own", "data-hit"] {
+            assert!(!resvg_input.svg.contains(marker), "{stem}: {marker}");
+        }
+        let lines: Vec<&str> = svg.lines().map(str::trim_start).collect();
+        assert_eq!(
+            lines
+                .iter()
+                .filter(|line| **line == r##"<a href="#">"##)
+                .count(),
+            usize::from(!resvg_input.hover_rules.is_empty()),
+            "{stem}"
+        );
+        for rule in &resvg_input.hover_rules {
+            let (attribute, pointer) = match &rule.source {
+                stencil_render::HoverSource::Group(pointer) => ("data-id", pointer),
+                stencil_render::HoverSource::Row(pointer) => ("data-row", pointer),
+            };
+            let open = lines
+                .iter()
+                .position(|line| line.starts_with("<g ") && attribute_is(line, attribute, pointer))
+                .unwrap_or_else(|| panic!("{stem}: no group {pointer}"));
+            let link = format!(r##"<a href="#{}">"##, rule.anchor);
+            let following: Vec<&str> = lines.iter().skip(open + 1).take(2).copied().collect();
+            match attribute {
+                "data-id" => assert_eq!(following, [r#"<g data-own="">"#, link.as_str()], "{stem}"),
+                _ => assert_eq!(following.first(), Some(&link.as_str()), "{stem}"),
+            }
+            sources_examined += 1;
+        }
+    }
+    assert!(sources_examined >= 376, "{sources_examined} sources");
+}
+
+/// True when the tag on `line` has attribute `name` equal to `value`.
+fn attribute_is(line: &str, name: &str, value: &str) -> bool {
+    attribute(line, name) == Some(value)
 }
 
 /// The pointer of every body node of a document that carries an `id`.
