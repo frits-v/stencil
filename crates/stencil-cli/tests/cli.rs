@@ -715,8 +715,8 @@ fn every_hover_rule_names_units_the_written_svg_holds_and_the_resvg_input_has_no
         rules_examined += rules.len();
         examples += 1;
     }
-    assert_eq!(examples, 16);
-    assert_eq!(rules_examined, 376);
+    assert_eq!(examples, 18);
+    assert_eq!(rules_examined, 428);
     assert!(names_examined > rules_examined, "{names_examined} names");
 }
 
