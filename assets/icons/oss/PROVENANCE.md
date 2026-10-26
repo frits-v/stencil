@@ -8,9 +8,9 @@ Each file is byte-identical (sha256) to the file at its source. Nothing was reco
 
 - Git repositories, pinned to the commit named in the row: the file is `https://raw.githubusercontent.com/<owner>/<repository>/<commit>/<path>`, and its `git hash-object` equals the blob sha GitHub reports for that path at that commit. The CNCF files come from <https://github.com/cncf/artwork> at `b4b5989332c822ef09d5b38a512e2b39c63e32f2`, each the `icon/color` variant.
 - The Docker logo kit <https://www.docker.com/static/Docker-Logos-1.zip>, linked from <https://www.docker.com/company/newsroom/media-resources/>, sha256 `590790ecdaaa577e55ce3dcad3a6c67a04ca7f8cc53a4a2fa21ac69d6767d476`.
-- Website files, which cannot be pinned: the ASF logo collection under <https://www.apache.org/logos/originals/>, and the files the project or vendor site serves (opensearch.org, nginx.org, wiki.postgresql.org, webimages.mongodb.com, mariadb.com, the MinIO site CDN linked from <https://www.min.io/logo>, cdn.haproxy.com, traefik.io). `opensearch.svg` is also the entry `SVG/Mark/opensearch_mark_default.svg` of <https://opensearch.org/wp-content/uploads/2025/01/opensearch-assets_SVG.zip> (sha256 `853dff05ffdc3931e8ef552166fd4463d7a45ae17ed3a83ec12d515b0ee21356`).
+- Website files, which cannot be pinned: the ASF logo collection under <https://www.apache.org/logos/originals/>, and the files the project or vendor site serves (opensearch.org, docs.nginx.com, wiki.postgresql.org, cdn.haproxy.com, traefik.io). `opensearch.svg` is also the entry `SVG/Mark/opensearch_mark_default.svg` of <https://opensearch.org/wp-content/uploads/2025/01/opensearch-assets_SVG.zip> (sha256 `853dff05ffdc3931e8ef552166fd4463d7a45ae17ed3a83ec12d515b0ee21356`).
 
-Fetched 2026-10-25 (16 files) and 2026-10-26 (18 files), as the Fetched column says per file. To re-verify, download each source and compare its sha256 with the file's row in section 8.2 of docs/SPEC.md; a file whose source no longer matches goes back through review before the pack ships again.
+Fetched 2026-10-25 (16 files) and 2026-10-26 (14 files), as the Fetched column says per file. To re-verify, download each source and compare its sha256 with the file's row in section 8.2 of docs/SPEC.md; a file whose source no longer matches goes back through review before the pack ships again.
 
 ## Files
 
@@ -34,19 +34,15 @@ Fetched 2026-10-25 (16 files) and 2026-10-26 (18 files), as the Fetched column s
 | `kubernetes.svg` | Kubernetes | <https://github.com/cncf/artwork> | `projects/kubernetes/icon/color/kubernetes-icon-color.svg` at `b4b5989332c822ef09d5b38a512e2b39c63e32f2` | 2026-10-25 |
 | `linkerd.svg` | Linkerd | <https://github.com/cncf/artwork> | `projects/linkerd/icon/color/linkerd-icon-color.svg` at `b4b5989332c822ef09d5b38a512e2b39c63e32f2` | 2026-10-25 |
 | `loki.svg` | Grafana Loki | <https://github.com/grafana/grafana> | `public/app/features/loki-helpers/loki_icon.svg` at `299371878b4bbd2651759ff9f4f7a56360959415` | 2026-10-26 |
-| `mariadb.svg` | MariaDB Server | <https://mariadb.com/wp-content/uploads/2019/11/mariadb-logo-vertical_blue.svg> | website file, not pinnable | 2026-10-26 |
-| `minio.svg` | MinIO | <https://cdn.prod.website-files.com/681c8426519d8db8f867c1e8/68821329161290c2dce9073b_MINIO_wordmark.svg> | website file, not pinnable | 2026-10-26 |
-| `mongodb.svg` | MongoDB | <https://webimages.mongodb.com/_com_assets/cms/kuyjf3vea2hg34taa-horizontal_default_slate_blue.svg> | website file, not pinnable | 2026-10-26 |
+| `mongodb.svg` | MongoDB | <https://github.com/mongodb/mongo> | `docs/leaf.svg` at `6bfa1c14d4b2ccc0d5d9bbe876ee287647c775e2` | 2026-10-26 |
 | `nats.svg` | NATS | <https://github.com/cncf/artwork> | `projects/nats/icon/color/nats-icon-color.svg` at `b4b5989332c822ef09d5b38a512e2b39c63e32f2` | 2026-10-25 |
-| `nginx.svg` | NGINX | <https://nginx.org/img/nginx_logo.svg> | website file, not pinnable | 2026-10-26 |
+| `nginx.svg` | NGINX | <https://docs.nginx.com/images/icons/NGINX-Open-Source-product-icon.svg> | website file, not pinnable | 2026-10-26 |
 | `opensearch.svg` | OpenSearch | <https://opensearch.org/wp-content/uploads/2025/01/opensearch_mark_default.svg> | website file, not pinnable | 2026-10-25 |
 | `opentelemetry.svg` | OpenTelemetry | <https://github.com/cncf/artwork> | `projects/opentelemetry/icon/color/opentelemetry-icon-color.svg` at `b4b5989332c822ef09d5b38a512e2b39c63e32f2` | 2026-10-25 |
 | `postgresql.svg` | PostgreSQL | <https://wiki.postgresql.org/images/a/a4/PostgreSQL_logo.3colors.svg> | website file, not pinnable | 2026-10-26 |
 | `prometheus.svg` | Prometheus | <https://github.com/cncf/artwork> | `projects/prometheus/icon/color/prometheus-icon-color.svg` at `b4b5989332c822ef09d5b38a512e2b39c63e32f2` | 2026-10-25 |
-| `pulsar.svg` | Apache Pulsar | <https://github.com/apache/pulsar-site> | `static/img/pulsar.svg` at `328d5ec71976de658d928d1ce7ec61f675af9a5e` | 2026-10-26 |
 | `rabbitmq.svg` | RabbitMQ | <https://github.com/rabbitmq/rabbitmq-website> | `static/img/rabbitmq-logo.svg` at `a284a068ab720672b40ceed40f3f151d9829fb70` | 2026-10-26 |
 | `redis.svg` | Redis | <https://github.com/redis/docs> | `assets/icons/redis-cube.svg` at `4fe762f8dab40f0b661207374378ed52113c9fe3` | 2026-10-25 |
-| `spark.svg` | Apache Spark | <https://github.com/apache/spark-website> | `images/spark-logo-rev.svg` at `d2f3579c367a2973d8dc66c38176269fd42b2ba8` | 2026-10-26 |
 | `traefik.svg` | Traefik Proxy | <https://traefik.io/images/header/products/traefik-proxy.svg> | website file, not pinnable | 2026-10-26 |
 | `valkey.svg` | Valkey | <https://github.com/valkey-io/valkey-io.github.io> | `static/img/Valkey-logo.svg` at `5900f066c3d02fae66e87c9f59fbd4c704ef2845` | 2026-10-25 |
 | `vault.svg` | HashiCorp Vault | <https://github.com/hashicorp/design-system> | `packages/flight-icons/svg-original/vault-color-24.svg` at `a160656e5e762f87baa57c4e6451a0c56ce1cdb4` | 2026-10-26 |

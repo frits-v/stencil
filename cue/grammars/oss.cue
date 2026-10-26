@@ -115,7 +115,7 @@ _itemKinds: [
 			{icon: "loki", class: "product", names: ["Grafana Loki", "Loki"]},
 			{icon: "opentelemetry", class: "product", names: ["OpenTelemetry", "OTel", "OpenTelemetry Collector"]},
 			{icon: "prometheus", class: "product", names: ["Prometheus"]},
-			{icon: "spark", class: "product", names: ["Apache Spark", "Spark"]},
+			{class: "product", names: ["Apache Spark", "Spark"]},
 			{icon: "vault", class: "product", names: ["HashiCorp Vault", "Vault"]},
 		]
 	},
@@ -129,8 +129,8 @@ _itemKinds: [
 			{icon: "clickhouse", class: "product", names: ["ClickHouse"]},
 			{class: "product", names: ["Elasticsearch"]},
 			{icon: "etcd", class: "product", names: ["etcd"]},
-			{icon: "mariadb", class: "product", names: ["MariaDB Server", "MariaDB"]},
-			{icon: "minio", class: "product", names: ["MinIO", "MinIO AIStor"], shape: "stack"},
+			{class: "product", names: ["MariaDB Server", "MariaDB"]},
+			{class: "product", names: ["MinIO", "MinIO AIStor"]},
 			{icon: "mongodb", class: "product", names: ["MongoDB", "MongoDB Community Edition", "MongoDB Atlas"]},
 			{class: "product", names: ["MySQL"]},
 			{icon: "opensearch", class: "product", names: ["OpenSearch", "OpenSearch Dashboards"]},
@@ -146,7 +146,7 @@ _itemKinds: [
 		products: [
 			{icon: "kafka", class: "product", names: ["Apache Kafka", "Kafka"]},
 			{icon: "nats", class: "product", names: ["NATS", "NATS JetStream"]},
-			{icon: "pulsar", class: "product", names: ["Apache Pulsar", "Pulsar"]},
+			{class: "product", names: ["Apache Pulsar", "Pulsar"]},
 			{icon: "rabbitmq", class: "product", names: ["RabbitMQ"]},
 		]
 	},

@@ -1873,7 +1873,7 @@ The 23 Google Cloud icons in `assets/icons/gcp/`, from the two ZIP archives link
 
 #### Pack oss
 
-The 34 open-source project logos in `assets/icons/oss/`, each the project's or its steward's own published SVG file. `assets/icons/oss/PROVENANCE.md` records each file's source URL, the path and commit of a file taken from a git repository, and the fetch date. MySQL and Elasticsearch have no file; the oss grammar lists them in products rows without an icon (section 13.10).
+The 30 open-source project symbols in `assets/icons/oss/`, each the project's or its steward's own published SVG file of the symbol alone, with no wordmark beside or under it. `assets/icons/oss/PROVENANCE.md` records each file's source URL, the path and commit of a file taken from a git repository, and the fetch date. Apache Pulsar, Apache Spark, MariaDB, MinIO, MySQL and Elasticsearch have no file; the oss grammar lists them in products rows without an icon (section 13.10).
 
 | Local file | Product | SHA-256 |
 |---|---|---|
@@ -1895,19 +1895,15 @@ The 34 open-source project logos in `assets/icons/oss/`, each the project's or i
 | `kubernetes.svg` | Kubernetes | `ff5427cfeeff39e82834ab1b4fe3ed61fc08596225a17eed56adc04f7cc1f712` |
 | `linkerd.svg` | Linkerd | `e43dda1077018cb44d0dc7bc8d3183aa05ddfa85f7544371475efaa0878c1764` |
 | `loki.svg` | Grafana Loki | `1d3087c3acefcd556eeb11f8de85f289913d87338fe8dae04cc844fb0785f4e9` |
-| `mariadb.svg` | MariaDB Server | `14258ff8e2ff7f7c831f36619ff0503c8861cdb5c3f8d4905edbdb58c18c88fb` |
-| `minio.svg` | MinIO | `a29fb599d75725713f09d83429b729ee7272fb6ac9294184ceb16dbb49efc983` |
-| `mongodb.svg` | MongoDB | `9f5435c8be18a834b2c2f8c4c03f117a997646c660fd6f28e3b6869a1bc2fcc1` |
+| `mongodb.svg` | MongoDB | `4d317a269829991627b78d100c241baa3fe227a816e7dc0f6a37234a53f7be24` |
 | `nats.svg` | NATS | `aeac64fac2ef4226a921508afc8097bd6300cdc9361779acdd19ec650a961992` |
-| `nginx.svg` | NGINX | `9bd543826050ee506dd234f03fbbe972444bb20d9d4854ba7b0e1cf71ef28f07` |
+| `nginx.svg` | NGINX | `0649a956be406cf5944b9f91f44c842e4ec3a8eeeade81e310e33ed311ab3292` |
 | `opensearch.svg` | OpenSearch | `d89d0555a75fa2c745bfdd782589cc17ce596d3fd41e5008bef8ff3fec695bc8` |
 | `opentelemetry.svg` | OpenTelemetry | `f19d3aa81895ba0d2102df6bbd76371e55664f8f6714c6ed355f971b7b013906` |
 | `postgresql.svg` | PostgreSQL | `51f93e19516081fc7d6fe6ab9bbab07abe5f7819e28016eefacea6dea691bc54` |
 | `prometheus.svg` | Prometheus | `a96d48cc7f1c91de940dacbf30581850fd2c0ed4afaf1b0b94fb86eb1d0aef6e` |
-| `pulsar.svg` | Apache Pulsar | `9a541b47e11703dd80b2660401c988f01e0c1728cf38ee7463a38897b0cbbdfd` |
 | `rabbitmq.svg` | RabbitMQ | `5c83f8a9819ca280dd32eef7e79c567a071dddc6a66a120b5d1511f286766749` |
 | `redis.svg` | Redis | `46b9de6d80f089580210f14d2c25f712ab90d831f94d96f67f22920ebccc015f` |
-| `spark.svg` | Apache Spark | `19f38764a2d20e3cc24e7b57acf1fb16bc8a3711437232ab20f452d5bca7fdac` |
 | `traefik.svg` | Traefik Proxy | `e2885459d44d08f4debd515f1ad0399710902302af1e6691d851544b5ad01bee` |
 | `valkey.svg` | Valkey | `36a2375e56420a570f6a0346dde019314204c05f5326c0f00d39114e63397f37` |
 | `vault.svg` | HashiCorp Vault | `1f4f0003f7317dba29fe34cb0aa1041b9da0d6dc29167896dbc434b1e78d1271` |
@@ -3950,7 +3946,7 @@ The eight item kinds are plain's, in plain's order, with plain's shapes and ever
 |---|---|---|---|
 | service | oss | Apache Airflow, Argo CD, Docker, Grafana, Helm, Jaeger, Jenkins, Keycloak, Kubernetes, Grafana Loki, OpenTelemetry, Prometheus, Apache Spark, HashiCorp Vault | block; Docker and Kubernetes a tower |
 | managed | none | | block |
-| store | oss | Apache Cassandra, ClickHouse, Elasticsearch, etcd, MariaDB, MinIO, MongoDB, MySQL, OpenSearch, PostgreSQL, Redis, Valkey | cylinder; MinIO a stack |
+| store | oss | Apache Cassandra, ClickHouse, Elasticsearch, etcd, MariaDB, MinIO, MongoDB, MySQL, OpenSearch, PostgreSQL, Redis, Valkey | cylinder |
 | queue | oss | Apache Kafka, NATS, Apache Pulsar, RabbitMQ | stack |
 | network | oss | Envoy, HAProxy, Istio, Linkerd, NGINX, Traefik | tile |
 | external | none | | block |
@@ -4902,14 +4898,14 @@ icon-matches-product:
    | service | loki | product | Grafana Loki, Loki |
    | service | opentelemetry | product | OpenTelemetry, OTel, OpenTelemetry Collector |
    | service | prometheus | product | Prometheus |
-   | service | spark | product | Apache Spark, Spark |
+   | service |  | product | Apache Spark, Spark |
    | service | vault | product | HashiCorp Vault, Vault |
    | store | cassandra | product | Apache Cassandra, Cassandra |
    | store | clickhouse | product | ClickHouse |
    | store |  | product | Elasticsearch |
    | store | etcd | product | etcd |
-   | store | mariadb | product | MariaDB Server, MariaDB |
-   | store | minio | product | MinIO, MinIO AIStor |
+   | store |  | product | MariaDB Server, MariaDB |
+   | store |  | product | MinIO, MinIO AIStor |
    | store | mongodb | product | MongoDB, MongoDB Community Edition, MongoDB Atlas |
    | store |  | product | MySQL |
    | store | opensearch | product | OpenSearch, OpenSearch Dashboards |
@@ -4918,7 +4914,7 @@ icon-matches-product:
    | store | valkey | product | Valkey |
    | queue | kafka | product | Apache Kafka, Kafka |
    | queue | nats | product | NATS, NATS JetStream |
-   | queue | pulsar | product | Apache Pulsar, Pulsar |
+   | queue |  | product | Apache Pulsar, Pulsar |
    | queue | rabbitmq | product | RabbitMQ |
    | network | envoy | product | Envoy Proxy, Envoy |
    | network | haproxy | product | HAProxy |

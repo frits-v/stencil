@@ -1,4 +1,4 @@
-//! The oss pack, `assets/icons/oss/`: each project's own logo file.
+//! The oss pack, `assets/icons/oss/`: each project's own symbol.
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum OssIcon {
@@ -20,8 +20,6 @@ pub enum OssIcon {
     Kubernetes,
     Linkerd,
     Loki,
-    Mariadb,
-    Minio,
     Mongodb,
     Nats,
     Nginx,
@@ -29,17 +27,15 @@ pub enum OssIcon {
     Opentelemetry,
     Postgresql,
     Prometheus,
-    Pulsar,
     Rabbitmq,
     Redis,
-    Spark,
     Traefik,
     Valkey,
     Vault,
 }
 
 impl OssIcon {
-    pub const ALL: [OssIcon; 34] = [
+    pub const ALL: [OssIcon; 30] = [
         OssIcon::Airflow,
         OssIcon::Argo,
         OssIcon::Cassandra,
@@ -58,8 +54,6 @@ impl OssIcon {
         OssIcon::Kubernetes,
         OssIcon::Linkerd,
         OssIcon::Loki,
-        OssIcon::Mariadb,
-        OssIcon::Minio,
         OssIcon::Mongodb,
         OssIcon::Nats,
         OssIcon::Nginx,
@@ -67,10 +61,8 @@ impl OssIcon {
         OssIcon::Opentelemetry,
         OssIcon::Postgresql,
         OssIcon::Prometheus,
-        OssIcon::Pulsar,
         OssIcon::Rabbitmq,
         OssIcon::Redis,
-        OssIcon::Spark,
         OssIcon::Traefik,
         OssIcon::Valkey,
         OssIcon::Vault,
@@ -97,8 +89,6 @@ impl OssIcon {
             OssIcon::Kubernetes => "kubernetes.svg",
             OssIcon::Linkerd => "linkerd.svg",
             OssIcon::Loki => "loki.svg",
-            OssIcon::Mariadb => "mariadb.svg",
-            OssIcon::Minio => "minio.svg",
             OssIcon::Mongodb => "mongodb.svg",
             OssIcon::Nats => "nats.svg",
             OssIcon::Nginx => "nginx.svg",
@@ -106,10 +96,8 @@ impl OssIcon {
             OssIcon::Opentelemetry => "opentelemetry.svg",
             OssIcon::Postgresql => "postgresql.svg",
             OssIcon::Prometheus => "prometheus.svg",
-            OssIcon::Pulsar => "pulsar.svg",
             OssIcon::Rabbitmq => "rabbitmq.svg",
             OssIcon::Redis => "redis.svg",
-            OssIcon::Spark => "spark.svg",
             OssIcon::Traefik => "traefik.svg",
             OssIcon::Valkey => "valkey.svg",
             OssIcon::Vault => "vault.svg",

@@ -1009,7 +1009,7 @@ const OSS_ROWS: [(&str, &[(Option<&str>, Option<Shape>)]); 4] = [
             (Some("loki"), None),
             (Some("opentelemetry"), None),
             (Some("prometheus"), None),
-            (Some("spark"), None),
+            (None, None),
             (Some("vault"), None),
         ],
     ),
@@ -1020,8 +1020,8 @@ const OSS_ROWS: [(&str, &[(Option<&str>, Option<Shape>)]); 4] = [
             (Some("clickhouse"), None),
             (None, None),
             (Some("etcd"), None),
-            (Some("mariadb"), None),
-            (Some("minio"), Some(Shape::Stack)),
+            (None, None),
+            (None, None),
             (Some("mongodb"), None),
             (None, None),
             (Some("opensearch"), None),
@@ -1035,7 +1035,7 @@ const OSS_ROWS: [(&str, &[(Option<&str>, Option<Shape>)]); 4] = [
         &[
             (Some("kafka"), None),
             (Some("nats"), None),
-            (Some("pulsar"), None),
+            (None, None),
             (Some("rabbitmq"), None),
         ],
     ),
@@ -1143,7 +1143,15 @@ fn oss_has_plains_item_kinds_with_every_icon_once_in_icon_order() {
         .filter(|row| row.icon.is_none())
         .map(|row| row.names.as_slice())
         .collect();
-    assert_eq!(icon_less, [["Elasticsearch"], ["MySQL"]]);
+    assert_eq!(
+        icon_less,
+        [
+            &["Elasticsearch".to_string()][..],
+            &["MariaDB Server".to_string(), "MariaDB".to_string()][..],
+            &["MinIO".to_string(), "MinIO AIStor".to_string()][..],
+            &["MySQL".to_string()][..],
+        ]
+    );
     assert!(oss.remembered.is_empty());
 }
 

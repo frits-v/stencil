@@ -135,7 +135,7 @@ fn azure_icons_are_in_file_name_order() {
 
 #[test]
 fn oss_icons_are_in_file_name_order() {
-    assert_eq!(OssIcon::ALL.len(), 34);
+    assert_eq!(OssIcon::ALL.len(), 30);
     assert_eq!(OssIcon::ALL.first(), Some(&OssIcon::Airflow));
     assert_eq!(OssIcon::Opentelemetry.file_name(), "opentelemetry.svg");
     let names: Vec<&str> = OssIcon::ALL.iter().map(|icon| icon.file_name()).collect();

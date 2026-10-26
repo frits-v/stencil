@@ -217,7 +217,6 @@
                     ]
                 },
                 {
-                    "icon": "spark",
                     "class": "product",
                     "names": [
                         "Apache Spark",
@@ -292,7 +291,6 @@
                     ]
                 },
                 {
-                    "icon": "mariadb",
                     "class": "product",
                     "names": [
                         "MariaDB Server",
@@ -300,13 +298,11 @@
                     ]
                 },
                 {
-                    "icon": "minio",
                     "class": "product",
                     "names": [
                         "MinIO",
                         "MinIO AIStor"
-                    ],
-                    "shape": "stack"
+                    ]
                 },
                 {
                     "icon": "mongodb",
@@ -387,7 +383,6 @@
                     ]
                 },
                 {
-                    "icon": "pulsar",
                     "class": "product",
                     "names": [
                         "Apache Pulsar",
