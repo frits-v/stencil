@@ -33,6 +33,19 @@ pub struct SvgDocument {
     /// The family and weight of the `<text>` elements, each once, ordered by family name and
     /// then weight. `self_contained` embeds these faces and no other.
     pub font_faces: Vec<(FontFamily, FontWeight)>,
+    /// Every Item at an end of at least one link, in geometry order. `self_contained` writes
+    /// one hover rule per entry and none for another Item.
+    pub hover_items: Vec<HoverItem>,
+}
+
+/// An Item the written SVG highlights with its links on hover or as the URL fragment.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct HoverItem {
+    /// The `data-id` of the Item's group, which each of its links names in `data-from` or
+    /// `data-to`.
+    pub pointer: String,
+    /// The `id` of the Item's group.
+    pub anchor: String,
 }
 
 /// Section 5.1 rounding. The SVG writer and measured_json both call it.

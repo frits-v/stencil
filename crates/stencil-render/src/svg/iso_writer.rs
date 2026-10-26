@@ -13,8 +13,9 @@ use stencil_model::{
 use super::DOT_RADIUS_PX;
 use super::{
     ArrowEnds, DocumentNode, ICON_CHIP_RADIUS_PX, PartContext, Relabeler, SvgWriter, TAG_RADIUS_PX,
-    close_groups_until_parent, escape_xml, frame_diagonal_box, group_open_tag, icon_chip_box,
-    link_mismatch, part_mismatch, pipe_text_style_name, stroke_attributes, text_style_name,
+    close_groups_until_parent, escape_xml, frame_diagonal_box, group_open_tag, hover_items_of,
+    icon_chip_box, item_anchor, link_group_open_tag, link_mismatch, part_mismatch,
+    pipe_text_style_name, stroke_attributes, text_style_name,
 };
 use crate::iso::sprites;
 use crate::iso::tube::{
@@ -47,7 +48,7 @@ enum TubeStyle {
 use crate::{RenderError, SvgDocument, format_number};
 
 /// The id of the blur filter every block shadow references (section 13.11).
-const SHADOW_FILTER_ID: &str = "stencil-shadow";
+pub(super) const SHADOW_FILTER_ID: &str = "stencil-shadow";
 /// The gap between the discs of a stack (section 12.3).
 const STACK_GAP_PX: f32 = 2.0;
 
@@ -105,9 +106,11 @@ pub(super) fn render_iso(
     let mut relabeler = Relabeler::default();
 
     let mut open_groups: Vec<usize> = Vec::new();
+    let mut anchors: Vec<Option<String>> = Vec::with_capacity(geometry.nodes.len());
     for (index, (node, (_, document_node))) in geometry.nodes.iter().zip(expected).enumerate() {
         close_groups_until_parent(&mut writer, &mut open_groups, geometry, index)?;
         let depth = open_groups.len() + 1;
+        let anchor = item_anchor(node, *document_node);
         if node.parent.is_none() {
             writer.line(
                 depth,
@@ -118,8 +121,9 @@ pub(super) fn render_iso(
                 ),
             );
         } else {
-            writer.line(depth, &group_open_tag(node));
+            writer.line(depth, &group_open_tag(node, anchor.as_deref()));
         }
+        anchors.push(anchor);
         let solid = solids.get(index).copied().flatten();
         match (node.tag, solid, document_node) {
             (NodeTag::LegendEntry, _, DocumentNode::LegendEntry(_)) => {
@@ -158,9 +162,12 @@ pub(super) fn render_iso(
             .ok_or_else(|| link_mismatch(route))?;
         let pointer = NodePointer::root().child("links").index(route.index);
         let tag = scene.labels.iter().find(|label| label.owner == pointer);
+        writer.line(1, &link_group_open_tag(geometry, route)?);
         writer.write_iso_link(1, route, link, path, scene.offset, tag)?;
+        writer.line(1, "</g>");
     }
     writer.line(0, "</svg>");
+    writer.hover_items = hover_items_of(geometry, &anchors);
 
     Ok(writer.into_document())
 }
@@ -1243,7 +1250,7 @@ impl<'a> SvgWriter<'a> {
 
     /// The link path of section 12.3 rule 7 as one `<path>`, shortened under each arrowhead
     /// as in flat, and the arrowheads as projected polygons at the height of their tip. The
-    /// tag is a billboard.
+    /// tag is a billboard. The caller opens and closes the link's group at `depth`.
     fn write_iso_link(
         &mut self,
         depth: usize,
@@ -1253,15 +1260,6 @@ impl<'a> SvgWriter<'a> {
         offset: ScreenPoint,
         tag: Option<&Label>,
     ) -> Result<(), RenderError> {
-        let pointer = NodePointer::root().child("links").index(route.index);
-        self.line(
-            depth,
-            &format!(
-                r#"<g data-id="{}" data-tag="Link" data-kind="{}">"#,
-                escape_xml(pointer.as_str()),
-                route.key()
-            ),
-        );
         let line_use = LineUse::new(route.line, route.tint);
         let arrows = ArrowEnds::from_arrow(link.arrow);
         let arrow_length = iso_link_arrowhead_length(route.line, route.tint);
@@ -1341,7 +1339,6 @@ impl<'a> SvgWriter<'a> {
         if let Some(label) = tag {
             self.write_link_tag_label(depth + 1, route, label)?;
         }
-        self.line(depth, "</g>");
         Ok(())
     }
 

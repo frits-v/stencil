@@ -180,6 +180,58 @@ fn a_link_draws_its_path_the_marker_at_the_arrow_end_and_its_tag() {
 }
 
 #[test]
+fn each_link_group_names_its_end_pointers_and_each_item_group_its_anchor() {
+    let mut document = linked_document("center");
+    let children = document["body"][0]["children"].as_array_mut().unwrap();
+    children.push(card("arrow-center-blue"));
+    children.push(json!({ "tag": "Item", "kind": "product", "title": "Unlinked" }));
+    document["links"]
+        .as_array_mut()
+        .unwrap()
+        .push(json!({ "from": "c", "to": "arrow-center-blue", "line": "gray" }));
+    let rendered = common::render_document_with_fixed_metrics(document);
+    let svg = common::parse_xml(&rendered.svg.svg);
+    let child = |index: usize| format!("/body/0/children/{index}");
+
+    let expected_ends = [(0, 1), (1, 2), (0, 2), (2, 3)];
+    for (index, (from, to)) in expected_ends.iter().enumerate() {
+        let link = link_group(&svg, index);
+        assert_eq!(link.attribute("data-from"), Some(child(*from).as_str()));
+        assert_eq!(link.attribute("data-to"), Some(child(*to).as_str()));
+    }
+    let anchors = ["a", "b", "c", "_body_0_children_3", "_body_0_children_4"];
+    for (index, anchor) in anchors.iter().enumerate() {
+        let item = common::group(&svg, &child(index));
+        assert_eq!(item.attribute("data-tag"), Some("Pcard"));
+        assert_eq!(item.attribute("id"), Some(*anchor), "{index}");
+    }
+    let markers: Vec<_> = svg
+        .descendants()
+        .filter(|node| node.attribute("id") == Some("arrow-center-blue"))
+        .collect();
+    assert_eq!(markers.len(), 1);
+    assert!(markers[0].has_tag_name("marker"));
+
+    let hover: Vec<(String, String)> = rendered
+        .svg
+        .hover_items
+        .iter()
+        .map(|item| (item.pointer.clone(), item.anchor.clone()))
+        .collect();
+    let expected: Vec<(String, String)> = (0..4)
+        .map(|index| (child(index), anchors[index].to_string()))
+        .collect();
+    assert_eq!(hover, expected);
+    let written = rendered.svg.self_contained().unwrap();
+    let rules: Vec<&str> = written
+        .lines()
+        .filter(|line| line.contains(":hover"))
+        .collect();
+    assert_eq!(rules.len(), 4);
+    assert!(!written.contains(&format!(r#"[data-id="{}"]:hover"#, child(4))));
+}
+
+#[test]
 fn arrow_start_marks_the_from_end_and_none_draws_no_marker() {
     // Square corners, so the drawn path is the route point for point.
     let mut document = linked_document("wire");

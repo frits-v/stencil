@@ -23,7 +23,7 @@
           <g data-id="/body/0/children/0/children/0" data-tag="Zone" data-kind="boundary">
             <rect x="38" y="157.2" width="384.77" height="351" rx="7" fill="none" stroke="#5F6368" stroke-width="2" stroke-dasharray="6 5"/>
             <text x="49" y="179.77" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#5F6368">Inside zone</text>
-            <g data-id="/body/0/children/0/children/0/children/0" data-tag="Pcard">
+            <g id="_body_0_children_0_children_0_children_0" data-id="/body/0/children/0/children/0/children/0" data-tag="Pcard">
               <rect x="49.75" y="191.35" width="361.27" height="72.7" rx="7.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
               <text x="60.5" y="210.63" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#202124">Core switch</text>
               <text x="60.5" y="226.27" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">Layer 3, routes between VLANs</text>
@@ -33,12 +33,12 @@
               <rect x="49.75" y="273.55" width="361.27" height="106.7" rx="7.25" fill="#D2E3FC" stroke="#BDC1C6" stroke-width="1.5"/>
               <text x="62.5" y="297.87" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#5F6368">VLAN 10 · staff</text>
               <g data-id="/body/0/children/0/children/0/children/1/children/0" data-tag="Row">
-                <g data-id="/body/0/children/0/children/0/children/1/children/0/children/0" data-tag="Pcard">
+                <g id="_body_0_children_0_children_0_children_1_children_0_children_0" data-id="/body/0/children/0/children/0/children/1/children/0/children/0" data-tag="Pcard">
                   <rect x="63.25" y="309.45" width="162.39" height="57.3" rx="7.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
                   <text x="74" y="328.73" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#202124">Print server</text>
                   <text x="82" y="352.27" xml:space="preserve" font-family="Inter" font-size="12" font-weight="600" fill="#5F6368">• prn-01</text>
                 </g>
-                <g data-id="/body/0/children/0/children/0/children/1/children/0/children/1" data-tag="Pcard">
+                <g id="_body_0_children_0_children_0_children_1_children_0_children_1" data-id="/body/0/children/0/children/0/children/1/children/0/children/1" data-tag="Pcard">
                   <rect x="235.14" y="309.45" width="162.39" height="57.3" rx="7.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
                   <text x="245.89" y="328.73" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#202124">Directory server</text>
                   <text x="253.89" y="352.27" xml:space="preserve" font-family="Inter" font-size="12" font-weight="600" fill="#5F6368">• dc-01</text>
@@ -49,12 +49,12 @@
               <rect x="49.75" y="389.75" width="361.27" height="106.7" rx="7.25" fill="#FCE4EC" stroke="#BDC1C6" stroke-width="1.5"/>
               <text x="62.5" y="414.07" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#5F6368">VLAN 20 · servers</text>
               <g data-id="/body/0/children/0/children/0/children/2/children/0" data-tag="Row">
-                <g data-id="/body/0/children/0/children/0/children/2/children/0/children/0" data-tag="Pcard">
+                <g id="_body_0_children_0_children_0_children_2_children_0_children_0" data-id="/body/0/children/0/children/0/children/2/children/0/children/0" data-tag="Pcard">
                   <rect x="63.25" y="425.65" width="162.39" height="57.3" rx="7.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
                   <text x="74" y="444.93" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#202124">Application server</text>
                   <text x="82" y="468.47" xml:space="preserve" font-family="Inter" font-size="12" font-weight="600" fill="#5F6368">• app-01</text>
                 </g>
-                <g data-id="/body/0/children/0/children/0/children/2/children/0/children/1" data-tag="Pcard">
+                <g id="_body_0_children_0_children_0_children_2_children_0_children_1" data-id="/body/0/children/0/children/0/children/2/children/0/children/1" data-tag="Pcard">
                   <rect x="235.14" y="425.65" width="162.39" height="57.3" rx="7.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
                   <text x="245.89" y="444.93" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#202124">File server</text>
                   <text x="253.89" y="468.47" xml:space="preserve" font-family="Inter" font-size="12" font-weight="600" fill="#5F6368">• fs-01</text>
@@ -92,7 +92,7 @@
             </g>
           </g>
           <g data-id="/body/0/children/0/children/2" data-tag="Col">
-            <g data-id="/body/0/children/0/children/2/children/0" data-tag="Pcard">
+            <g id="_body_0_children_0_children_2_children_0" data-id="/body/0/children/0/children/2/children/0" data-tag="Pcard">
               <rect x="584.06" y="156.95" width="179.89" height="351.5" rx="7.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
               <text x="594.81" y="315.63" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#202124">Edge firewall</text>
               <text x="594.81" y="331.27" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">stateful, zone policy</text>
@@ -126,12 +126,12 @@
               <rect x="908.98" y="191.35" width="361.27" height="106.7" rx="7.25" fill="#E1FCFD" stroke="#BDC1C6" stroke-width="1.5"/>
               <text x="921.73" y="215.67" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#004845">VLAN 30 · public services</text>
               <g data-id="/body/0/children/0/children/4/children/0/children/0" data-tag="Row">
-                <g data-id="/body/0/children/0/children/4/children/0/children/0/children/0" data-tag="Pcard">
+                <g id="_body_0_children_0_children_4_children_0_children_0_children_0" data-id="/body/0/children/0/children/4/children/0/children/0/children/0" data-tag="Pcard">
                   <rect x="922.48" y="227.25" width="162.39" height="57.3" rx="7.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
                   <text x="933.23" y="246.53" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#202124">Web server</text>
                   <text x="941.23" y="270.07" xml:space="preserve" font-family="Inter" font-size="12" font-weight="600" fill="#5F6368">• web-01</text>
                 </g>
-                <g data-id="/body/0/children/0/children/4/children/0/children/0/children/1" data-tag="Pcard">
+                <g id="_body_0_children_0_children_4_children_0_children_0_children_1" data-id="/body/0/children/0/children/4/children/0/children/0/children/1" data-tag="Pcard">
                   <rect x="1094.36" y="227.25" width="162.39" height="57.3" rx="7.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
                   <text x="1105.11" y="246.53" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#202124">Mail relay</text>
                   <text x="1113.11" y="270.07" xml:space="preserve" font-family="Inter" font-size="12" font-weight="600" fill="#5F6368">• mx-01</text>
@@ -141,7 +141,7 @@
             <g data-id="/body/0/children/0/children/4/children/1" data-tag="Zone" data-kind="group-d">
               <rect x="908.98" y="307.55" width="361.27" height="122.1" rx="7.25" fill="#FAF9CA" stroke="#BDC1C6" stroke-width="1.5"/>
               <text x="921.73" y="331.87" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#5A3900">VLAN 99 · transit</text>
-              <g data-id="/body/0/children/0/children/4/children/1/children/0" data-tag="Pcard">
+              <g id="_body_0_children_0_children_4_children_1_children_0" data-id="/body/0/children/0/children/4/children/1/children/0" data-tag="Pcard">
                 <rect x="922.48" y="343.45" width="334.27" height="72.7" rx="7.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
                 <text x="933.23" y="362.73" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#202124">Edge router</text>
                 <text x="933.23" y="378.37" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">ISP uplink</text>

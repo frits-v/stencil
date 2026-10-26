@@ -36,7 +36,7 @@
                   <text x="161.5" y="435.8" xml:space="preserve" font-family="Inter" font-size="15" font-weight="700" fill="#5F6368">VLAN 10 · staff</text>
                 </g>
                 <g data-id="/body/0/children/0/children/0/children/0/children/0/children/0" data-tag="Row">
-                  <g data-id="/body/0/children/0/children/0/children/0/children/0/children/0/children/0" data-tag="Pcard">
+                  <g id="_body_0_children_0_children_0_children_0_children_0_children_0_children_0" data-id="/body/0/children/0/children/0/children/0/children/0/children/0/children/0" data-tag="Pcard">
                     <polygon points="908.64,377.66 964.07,409.66 908.64,441.66 853.21,409.66" fill="#202124" fill-opacity="0.2" filter="url(#stencil-shadow)"/>
                     <polygon points="853.21,406.66 908.64,438.66 908.64,420.66 853.21,388.66" fill="#EBEBEB" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
                     <polygon points="964.07,406.66 908.64,438.66 908.64,420.66 964.07,388.66" fill="#D6D6D6" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
@@ -46,7 +46,7 @@
                       <text x="201.6" y="598.32" xml:space="preserve" font-family="Inter" font-size="15.6" font-weight="600" fill="#5F6368">• prn-01</text>
                     </g>
                   </g>
-                  <g data-id="/body/0/children/0/children/0/children/0/children/0/children/0/children/1" data-tag="Pcard">
+                  <g id="_body_0_children_0_children_0_children_0_children_0_children_0_children_1" data-id="/body/0/children/0/children/0/children/0/children/0/children/0/children/1" data-tag="Pcard">
                     <polygon points="1043.52,455.53 1098.95,487.53 1043.52,519.53 988.09,487.53" fill="#202124" fill-opacity="0.2" filter="url(#stencil-shadow)"/>
                     <polygon points="988.09,484.53 1043.52,516.53 1043.52,498.53 988.09,466.53" fill="#EBEBEB" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
                     <polygon points="1098.95,484.53 1043.52,516.53 1043.52,498.53 1098.95,466.53" fill="#D6D6D6" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
@@ -58,7 +58,7 @@
                   </g>
                 </g>
               </g>
-              <g data-id="/body/0/children/0/children/0/children/0/children/1" data-tag="Pcard">
+              <g id="core" data-id="/body/0/children/0/children/0/children/0/children/1" data-tag="Pcard">
                 <polygon points="764.48,535.76 819.9,567.76 764.48,599.76 709.05,567.76" fill="#202124" fill-opacity="0.2" filter="url(#stencil-shadow)"/>
                 <polygon points="709.05,564.76 764.48,596.76 764.48,590.76 709.05,558.76" fill="#EBEBEB" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
                 <polygon points="819.9,564.76 764.48,596.76 764.48,590.76 819.9,558.76" fill="#D6D6D6" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
@@ -77,7 +77,7 @@
                   <text x="161.5" y="1002.2" xml:space="preserve" font-family="Inter" font-size="15" font-weight="700" fill="#5F6368">VLAN 20 · servers</text>
                 </g>
                 <g data-id="/body/0/children/0/children/0/children/0/children/2/children/0" data-tag="Row">
-                  <g data-id="/body/0/children/0/children/0/children/0/children/2/children/0/children/0" data-tag="Pcard">
+                  <g id="_body_0_children_0_children_0_children_0_children_2_children_0_children_0" data-id="/body/0/children/0/children/0/children/0/children/2/children/0/children/0" data-tag="Pcard">
                     <polygon points="407.03,672.45 462.45,704.45 407.03,736.45 351.6,704.45" fill="#202124" fill-opacity="0.2" filter="url(#stencil-shadow)"/>
                     <polygon points="351.6,701.45 407.03,733.45 407.03,715.45 351.6,683.45" fill="#EBEBEB" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
                     <polygon points="462.45,701.45 407.03,733.45 407.03,715.45 462.45,683.45" fill="#D6D6D6" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
@@ -87,7 +87,7 @@
                       <text x="205.38" y="1182.72" xml:space="preserve" font-family="Inter" font-size="15.6" font-weight="600" fill="#5F6368">• app-01</text>
                     </g>
                   </g>
-                  <g data-id="/body/0/children/0/children/0/children/0/children/2/children/0/children/1" data-tag="Pcard">
+                  <g id="_body_0_children_0_children_0_children_0_children_2_children_0_children_1" data-id="/body/0/children/0/children/0/children/0/children/2/children/0/children/1" data-tag="Pcard">
                     <ellipse cx="545.37" cy="780.32" rx="34.29" ry="19.8" fill="#202124" fill-opacity="0.2" filter="url(#stencil-shadow)"/>
                     <path d="M 511.08 777.32 A 34.29 19.8 0 0 0 545.37 797.12 L 545.37 761.12 A 34.29 19.8 0 0 1 511.08 741.32 Z" fill="#EBEBEB" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
                     <path d="M 545.37 797.12 A 34.29 19.8 0 0 0 579.66 777.32 L 579.66 741.32 A 34.29 19.8 0 0 1 545.37 761.12 Z" fill="#D6D6D6" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
@@ -146,7 +146,7 @@
             </g>
           </g>
           <g data-id="/body/0/children/0/children/2" data-tag="Col">
-            <g data-id="/body/0/children/0/children/2/children/0" data-tag="Pcard">
+            <g id="fw" data-id="/body/0/children/0/children/2/children/0" data-tag="Pcard">
               <polygon points="1205.4,759.99 1416.07,881.62 1246.12,979.74 1035.45,858.11" fill="#202124" fill-opacity="0.2" filter="url(#stencil-shadow)"/>
               <polygon points="1035.45,855.11 1246.12,976.74 1246.12,958.74 1035.45,837.11" fill="#EBEBEB" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
               <polygon points="1416.07,878.62 1246.12,976.74 1246.12,958.74 1416.07,860.62" fill="#D6D6D6" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
@@ -210,7 +210,7 @@
               <g data-plane="12" data-axis="x" transform="matrix(0.87 0.5 -0.87 0.5 1150.23 34.8)">
                 <text x="1353.01" y="417.8" xml:space="preserve" font-family="Inter" font-size="15" font-weight="700" fill="#5A3900">VLAN 99 · transit</text>
               </g>
-              <g data-id="/body/0/children/0/children/4/children/0/children/0" data-tag="Pcard">
+              <g id="rt" data-id="/body/0/children/0/children/4/children/0/children/0" data-tag="Pcard">
                 <polygon points="2023.54,1003.35 2078.97,1035.35 2023.54,1067.35 1968.12,1035.35" fill="#202124" fill-opacity="0.2" filter="url(#stencil-shadow)"/>
                 <polygon points="1968.12,1032.35 2023.54,1064.35 2023.54,1058.35 1968.12,1026.35" fill="#EBEBEB" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
                 <polygon points="2078.97,1032.35 2023.54,1064.35 2023.54,1058.35 2078.97,1026.35" fill="#D6D6D6" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
@@ -230,7 +230,7 @@
                 <text x="1353.01" y="764.36" xml:space="preserve" font-family="Inter" font-size="15" font-weight="700" fill="#004845">VLAN 30 · public services</text>
               </g>
               <g data-id="/body/0/children/0/children/4/children/1/children/0" data-tag="Row">
-                <g data-id="/body/0/children/0/children/4/children/1/children/0/children/0" data-tag="Pcard">
+                <g id="web" data-id="/body/0/children/0/children/4/children/1/children/0/children/0" data-tag="Pcard">
                   <polygon points="1655.97,1137.69 1711.4,1169.69 1655.97,1201.69 1600.55,1169.69" fill="#202124" fill-opacity="0.2" filter="url(#stencil-shadow)"/>
                   <polygon points="1600.55,1166.69 1655.97,1198.69 1655.97,1180.69 1600.55,1148.69" fill="#EBEBEB" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
                   <polygon points="1711.4,1166.69 1655.97,1198.69 1655.97,1180.69 1711.4,1148.69" fill="#D6D6D6" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
@@ -240,7 +240,7 @@
                     <text x="1390.01" y="926.88" xml:space="preserve" font-family="Inter" font-size="15.6" font-weight="600" fill="#5F6368">• web-01</text>
                   </g>
                 </g>
-                <g data-id="/body/0/children/0/children/4/children/1/children/0/children/1" data-tag="Pcard">
+                <g id="_body_0_children_0_children_4_children_1_children_0_children_1" data-id="/body/0/children/0/children/4/children/1/children/0/children/1" data-tag="Pcard">
                   <polygon points="1790.85,1215.56 1846.28,1247.56 1790.85,1279.56 1735.43,1247.56" fill="#202124" fill-opacity="0.2" filter="url(#stencil-shadow)"/>
                   <polygon points="1735.43,1244.56 1790.85,1276.56 1790.85,1258.56 1735.43,1226.56" fill="#EBEBEB" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
                   <polygon points="1846.28,1244.56 1790.85,1276.56 1790.85,1258.56 1846.28,1226.56" fill="#D6D6D6" stroke="#DADCE0" stroke-width="1.5" stroke-linejoin="round"/>
@@ -285,7 +285,7 @@
       </g>
     </g>
   </g>
-  <g data-id="/links/0" data-tag="Link" data-kind="solid-4">
+  <g data-id="/links/0" data-tag="Link" data-kind="solid-4" data-from="/body/0/children/0/children/2/children/0" data-to="/body/0/children/0/children/4/children/0/children/0">
     <polygon points="1318.96,807.55 1473.98,718.05 1478.31,720.55 1323.29,810.05" fill="#202124" fill-opacity="0.2" filter="url(#stencil-shadow)"/>
     <polygon points="1478.31,715.05 1478.23,714.36 1478.02,713.64 1477.67,712.92 1477.23,712.26 1476.7,711.71 1476.14,711.3 1475.58,711.07 1475.06,711.01 1474.61,711.15 1474.27,711.47 1474.05,711.95 1473.98,712.55 1474.05,713.24 1474.27,713.97 1474.61,714.69 1475.06,715.34 1475.58,715.9 1476.14,716.3 1476.7,716.54 1477.23,716.59 1477.67,716.46 1478.02,716.14 1478.23,715.66" fill="#A36E14"/>
     <polygon points="1319.59,800.65 1474.61,711.15 1476.14,713.8 1321.12,803.3" fill="#DA931B"/>

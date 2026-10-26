@@ -25,7 +25,7 @@
         <path d="M 24 118.7 H 1296 A 2.5 2.5 0 0 1 1298.5 121.2 V 535 A 8.5 8.5 0 0 1 1290 543.5 H 30 A 8.5 8.5 0 0 1 21.5 535 V 121.2 A 2.5 2.5 0 0 1 24 118.7 Z" fill="none" stroke="#1A73E8" stroke-width="3"/>
         <text x="39" y="144.55" xml:space="preserve" font-family="Inter" font-size="18" font-weight="700" letter-spacing="0.18" fill="#FFFFFF">Northwind Labs</text>
         <g data-id="/body/0/children/0" data-tag="Row">
-          <g data-id="/body/0/children/0/children/0" data-tag="Pcard">
+          <g id="ceo" data-id="/body/0/children/0/children/0" data-tag="Pcard">
             <rect x="605.31" y="172.55" width="109.37" height="44.5" rx="7.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
             <text x="616.06" y="191.83" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#202124">Dana Reyes</text>
             <text x="616.06" y="207.47" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">Chief executive</text>
@@ -35,7 +35,7 @@
           <g data-id="/body/0/children/1/children/0" data-tag="Zone" data-kind="tile">
             <rect x="37.75" y="226.55" width="397.83" height="300.7" rx="7.25" fill="#FFF8E1" stroke="#FFE082" stroke-width="1.5"/>
             <text x="50.5" y="250.87" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#5F6368">Engineering</text>
-            <g data-id="/body/0/children/1/children/0/children/0" data-tag="Pcard">
+            <g id="head-engineering" data-id="/body/0/children/1/children/0/children/0" data-tag="Pcard">
               <rect x="51.25" y="262.45" width="370.83" height="44.5" rx="7.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
               <text x="62" y="281.73" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#202124">Sam Okafor</text>
               <text x="62" y="297.37" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">Head of engineering</text>
@@ -44,12 +44,12 @@
               <rect x="51.25" y="316.45" width="370.83" height="93.9" rx="7.25" fill="#D2E3FC" stroke="#BDC1C6" stroke-width="1.5"/>
               <text x="64" y="340.77" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#5F6368">Platform team</text>
               <g data-id="/body/0/children/1/children/0/children/1/children/0" data-tag="Row">
-                <g data-id="/body/0/children/1/children/0/children/1/children/0/children/0" data-tag="Pcard">
+                <g id="_body_0_children_1_children_0_children_1_children_0_children_0" data-id="/body/0/children/1/children/0/children/1/children/0/children/0" data-tag="Pcard">
                   <rect x="64.75" y="352.35" width="167.17" height="44.5" rx="7.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
                   <text x="75.5" y="371.63" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#202124">Lee Park</text>
                   <text x="75.5" y="387.27" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">Team lead</text>
                 </g>
-                <g data-id="/body/0/children/1/children/0/children/1/children/0/children/1" data-tag="Pcard">
+                <g id="_body_0_children_1_children_0_children_1_children_0_children_1" data-id="/body/0/children/1/children/0/children/1/children/0/children/1" data-tag="Pcard">
                   <rect x="241.42" y="352.35" width="167.17" height="44.5" rx="7.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
                   <text x="252.17" y="371.63" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#202124">Ana Silva</text>
                   <text x="252.17" y="387.27" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">Engineer</text>
@@ -60,12 +60,12 @@
               <rect x="51.25" y="419.85" width="370.83" height="93.9" rx="7.25" fill="#D2E3FC" stroke="#BDC1C6" stroke-width="1.5"/>
               <text x="64" y="444.17" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#5F6368">Product engineering</text>
               <g data-id="/body/0/children/1/children/0/children/2/children/0" data-tag="Row">
-                <g data-id="/body/0/children/1/children/0/children/2/children/0/children/0" data-tag="Pcard">
+                <g id="_body_0_children_1_children_0_children_2_children_0_children_0" data-id="/body/0/children/1/children/0/children/2/children/0/children/0" data-tag="Pcard">
                   <rect x="64.75" y="455.75" width="167.17" height="44.5" rx="7.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
                   <text x="75.5" y="475.03" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#202124">Raj Mehta</text>
                   <text x="75.5" y="490.67" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">Team lead</text>
                 </g>
-                <g data-id="/body/0/children/1/children/0/children/2/children/0/children/1" data-tag="Pcard">
+                <g id="_body_0_children_1_children_0_children_2_children_0_children_1" data-id="/body/0/children/1/children/0/children/2/children/0/children/1" data-tag="Pcard">
                   <rect x="241.42" y="455.75" width="167.17" height="44.5" rx="7.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
                   <text x="252.17" y="475.03" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#202124">Kim Berg</text>
                   <text x="252.17" y="490.67" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">Engineer</text>
@@ -76,7 +76,7 @@
           <g data-id="/body/0/children/1/children/1" data-tag="Zone" data-kind="tile">
             <rect x="461.08" y="226.55" width="397.83" height="300.7" rx="7.25" fill="#FFF8E1" stroke="#FFE082" stroke-width="1.5"/>
             <text x="473.83" y="250.87" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#5F6368">Product</text>
-            <g data-id="/body/0/children/1/children/1/children/0" data-tag="Pcard">
+            <g id="head-product" data-id="/body/0/children/1/children/1/children/0" data-tag="Pcard">
               <rect x="474.58" y="262.45" width="370.83" height="44.5" rx="7.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
               <text x="485.33" y="281.73" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#202124">Mia Laurent</text>
               <text x="485.33" y="297.37" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">Head of product</text>
@@ -85,12 +85,12 @@
               <rect x="474.58" y="316.45" width="370.83" height="93.9" rx="7.25" fill="#FCE4EC" stroke="#BDC1C6" stroke-width="1.5"/>
               <text x="487.33" y="340.77" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#5F6368">Design</text>
               <g data-id="/body/0/children/1/children/1/children/1/children/0" data-tag="Row">
-                <g data-id="/body/0/children/1/children/1/children/1/children/0/children/0" data-tag="Pcard">
+                <g id="_body_0_children_1_children_1_children_1_children_0_children_0" data-id="/body/0/children/1/children/1/children/1/children/0/children/0" data-tag="Pcard">
                   <rect x="488.08" y="352.35" width="167.17" height="44.5" rx="7.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
                   <text x="498.83" y="371.63" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#202124">Jo Tanaka</text>
                   <text x="498.83" y="387.27" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">Design lead</text>
                 </g>
-                <g data-id="/body/0/children/1/children/1/children/1/children/0/children/1" data-tag="Pcard">
+                <g id="_body_0_children_1_children_1_children_1_children_0_children_1" data-id="/body/0/children/1/children/1/children/1/children/0/children/1" data-tag="Pcard">
                   <rect x="664.75" y="352.35" width="167.17" height="44.5" rx="7.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
                   <text x="675.5" y="371.63" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#202124">Eli Moss</text>
                   <text x="675.5" y="387.27" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">Designer</text>
@@ -101,12 +101,12 @@
               <rect x="474.58" y="419.85" width="370.83" height="93.9" rx="7.25" fill="#FCE4EC" stroke="#BDC1C6" stroke-width="1.5"/>
               <text x="487.33" y="444.17" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#5F6368">Research</text>
               <g data-id="/body/0/children/1/children/1/children/2/children/0" data-tag="Row">
-                <g data-id="/body/0/children/1/children/1/children/2/children/0/children/0" data-tag="Pcard">
+                <g id="_body_0_children_1_children_1_children_2_children_0_children_0" data-id="/body/0/children/1/children/1/children/2/children/0/children/0" data-tag="Pcard">
                   <rect x="488.08" y="455.75" width="167.17" height="44.5" rx="7.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
                   <text x="498.83" y="475.03" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#202124">Noor Haddad</text>
                   <text x="498.83" y="490.67" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">Research lead</text>
                 </g>
-                <g data-id="/body/0/children/1/children/1/children/2/children/0/children/1" data-tag="Pcard">
+                <g id="_body_0_children_1_children_1_children_2_children_0_children_1" data-id="/body/0/children/1/children/1/children/2/children/0/children/1" data-tag="Pcard">
                   <rect x="664.75" y="455.75" width="167.17" height="44.5" rx="7.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
                   <text x="675.5" y="475.03" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#202124">Tom Ruiz</text>
                   <text x="675.5" y="490.67" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">Researcher</text>
@@ -117,7 +117,7 @@
           <g data-id="/body/0/children/1/children/2" data-tag="Zone" data-kind="tile">
             <rect x="884.42" y="226.55" width="397.83" height="300.7" rx="7.25" fill="#FFF8E1" stroke="#FFE082" stroke-width="1.5"/>
             <text x="897.17" y="250.87" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#5F6368">Operations</text>
-            <g data-id="/body/0/children/1/children/2/children/0" data-tag="Pcard">
+            <g id="head-operations" data-id="/body/0/children/1/children/2/children/0" data-tag="Pcard">
               <rect x="897.92" y="262.45" width="370.83" height="44.5" rx="7.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
               <text x="908.67" y="281.73" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#202124">Ivy Chen</text>
               <text x="908.67" y="297.37" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">Head of operations</text>
@@ -126,12 +126,12 @@
               <rect x="897.92" y="316.45" width="370.83" height="93.9" rx="7.25" fill="#E1FCFD" stroke="#BDC1C6" stroke-width="1.5"/>
               <text x="910.67" y="340.77" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#004845">Site reliability</text>
               <g data-id="/body/0/children/1/children/2/children/1/children/0" data-tag="Row">
-                <g data-id="/body/0/children/1/children/2/children/1/children/0/children/0" data-tag="Pcard">
+                <g id="_body_0_children_1_children_2_children_1_children_0_children_0" data-id="/body/0/children/1/children/2/children/1/children/0/children/0" data-tag="Pcard">
                   <rect x="911.42" y="352.35" width="167.17" height="44.5" rx="7.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
                   <text x="922.17" y="371.63" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#202124">Ola Nowak</text>
                   <text x="922.17" y="387.27" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">Team lead</text>
                 </g>
-                <g data-id="/body/0/children/1/children/2/children/1/children/0/children/1" data-tag="Pcard">
+                <g id="_body_0_children_1_children_2_children_1_children_0_children_1" data-id="/body/0/children/1/children/2/children/1/children/0/children/1" data-tag="Pcard">
                   <rect x="1088.08" y="352.35" width="167.17" height="44.5" rx="7.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
                   <text x="1098.83" y="371.63" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#202124">Ben Adler</text>
                   <text x="1098.83" y="387.27" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">Engineer</text>
@@ -142,12 +142,12 @@
               <rect x="897.92" y="419.85" width="370.83" height="93.9" rx="7.25" fill="#E1FCFD" stroke="#BDC1C6" stroke-width="1.5"/>
               <text x="910.67" y="444.17" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#004845">Support</text>
               <g data-id="/body/0/children/1/children/2/children/2/children/0" data-tag="Row">
-                <g data-id="/body/0/children/1/children/2/children/2/children/0/children/0" data-tag="Pcard">
+                <g id="_body_0_children_1_children_2_children_2_children_0_children_0" data-id="/body/0/children/1/children/2/children/2/children/0/children/0" data-tag="Pcard">
                   <rect x="911.42" y="455.75" width="167.17" height="44.5" rx="7.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
                   <text x="922.17" y="475.03" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#202124">Zoe Grant</text>
                   <text x="922.17" y="490.67" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">Team lead</text>
                 </g>
-                <g data-id="/body/0/children/1/children/2/children/2/children/0/children/1" data-tag="Pcard">
+                <g id="_body_0_children_1_children_2_children_2_children_0_children_1" data-id="/body/0/children/1/children/2/children/2/children/0/children/1" data-tag="Pcard">
                   <rect x="1088.08" y="455.75" width="167.17" height="44.5" rx="7.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
                   <text x="1098.83" y="475.03" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#202124">Max Weber</text>
                   <text x="1098.83" y="490.67" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">Agent</text>
@@ -171,19 +171,19 @@
       </g>
     </g>
   </g>
-  <g data-id="/links/0" data-tag="Link" data-kind="blue">
+  <g data-id="/links/0" data-tag="Link" data-kind="blue" data-from="/body/0/children/1/children/0/children/0" data-to="/body/0/children/0/children/0">
     <path d="M 236.67 261.7 L 236.67 194.8 L 594.56 194.8" fill="none" stroke="#1A73E8" stroke-width="2" stroke-linejoin="round"/>
     <line x1="594.56" y1="194.8" x2="604.56" y2="194.8" stroke="none" marker-end="url(#arrow-center-blue)"/>
   </g>
-  <g data-id="/links/1" data-tag="Link" data-kind="blue">
+  <g data-id="/links/1" data-tag="Link" data-kind="blue" data-from="/body/0/children/1/children/1/children/0" data-to="/body/0/children/0/children/0">
     <path d="M 660 261.7 L 660 227.8" fill="none" stroke="#1A73E8" stroke-width="2" stroke-linejoin="round"/>
     <line x1="660" y1="227.8" x2="660" y2="217.8" stroke="none" marker-end="url(#arrow-center-blue)"/>
   </g>
-  <g data-id="/links/2" data-tag="Link" data-kind="blue">
+  <g data-id="/links/2" data-tag="Link" data-kind="blue" data-from="/body/0/children/1/children/2/children/0" data-to="/body/0/children/0/children/0">
     <path d="M 1083.33 261.7 L 1083.33 194.8 L 725.44 194.8" fill="none" stroke="#1A73E8" stroke-width="2" stroke-linejoin="round"/>
     <line x1="725.44" y1="194.8" x2="715.44" y2="194.8" stroke="none" marker-end="url(#arrow-center-blue)"/>
   </g>
-  <g data-id="/links/3" data-tag="Link" data-kind="dash">
+  <g data-id="/links/3" data-tag="Link" data-kind="dash" data-from="/body/0/children/1/children/2/children/0" data-to="/body/0/children/1/children/1/children/0">
     <path d="M 897.17 284.7 L 856.17 284.7" fill="none" stroke="#1A73E8" stroke-width="2" stroke-dasharray="6 5" stroke-linejoin="round"/>
     <line x1="856.17" y1="284.7" x2="846.17" y2="284.7" stroke="none" marker-end="url(#arrow-center-dash)"/>
   </g>

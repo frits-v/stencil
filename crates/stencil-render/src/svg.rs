@@ -24,7 +24,7 @@ use stencil_text::{CosmicTextMeasurer, bundled_font};
 
 use crate::icons::icon_data_uri;
 use crate::palette::{self, BoxPaint, DotStyle, LineStyle, LineUse, Palette, PartShape, Stroke};
-use crate::{RenderError, SvgDocument, format_number};
+use crate::{HoverItem, RenderError, SvgDocument, format_number};
 
 const SVG_NAMESPACE: &str = "http://www.w3.org/2000/svg";
 /// Flat radius of a pipe end dot; an arrowhead's tip sits this far out from the dot center.
@@ -140,10 +140,13 @@ pub fn render_svg(
 
     // Geometry order is pre-order, so a stack of open groups reproduces the nesting.
     let mut open_groups: Vec<usize> = Vec::new();
+    let mut anchors: Vec<Option<String>> = Vec::with_capacity(geometry.nodes.len());
     for (index, (node, (_, document_node))) in geometry.nodes.iter().zip(&expected).enumerate() {
         close_groups_until_parent(&mut writer, &mut open_groups, geometry, index)?;
         let depth = open_groups.len() + 1;
-        writer.line(depth, &group_open_tag(node));
+        let anchor = item_anchor(node, *document_node);
+        writer.line(depth, &group_open_tag(node, anchor.as_deref()));
+        anchors.push(anchor);
         let relabeled = relabeler.relabeled(writer.palette, node, *document_node)?;
         writer.write_node(
             depth + 1,
@@ -163,6 +166,7 @@ pub fn render_svg(
         writer.write_link(1, geometry, route, page.links.get(route.index))?;
     }
     writer.line(0, "</svg>");
+    writer.hover_items = hover_items_of(geometry, &anchors);
 
     Ok(writer.into_document())
 }
@@ -548,17 +552,88 @@ fn parent_mismatch(geometry: &PageGeometry, index: usize) -> RenderError {
     RenderError::GeometryMismatch { expected, found }
 }
 
-fn group_open_tag(node: &NodeGeometry) -> String {
+fn group_open_tag(node: &NodeGeometry, anchor: Option<&str>) -> String {
+    let anchor = anchor
+        .map(|anchor| format!(r#" id="{}""#, escape_xml(anchor)))
+        .unwrap_or_default();
     let kind = node
         .kind
         .as_deref()
         .map(|kind| format!(r#" data-kind="{}""#, escape_xml(kind)))
         .unwrap_or_default();
     format!(
-        r#"<g data-id="{}" data-tag="{}"{kind}>"#,
+        r#"<g{anchor} data-id="{}" data-tag="{}"{kind}>"#,
         escape_xml(node.pointer.as_str()),
         node.tag.as_str()
     )
+}
+
+/// The `id` of an Item's group, which a URL fragment names to open the figure with the item
+/// highlighted: the item's own `id`, else its pointer with each `/` replaced by `_`, which no
+/// `id` can spell. An own `id` that starts `arrow-`, as the arrowhead markers do, or names
+/// the shadow filter takes the pointer form, so `url(#…)` keeps resolving to the marker or
+/// filter.
+/// None for every node that is not an Item.
+fn item_anchor(node: &NodeGeometry, document_node: DocumentNode<'_>) -> Option<String> {
+    if node.tag != NodeTag::Pcard {
+        return None;
+    }
+    let own = match document_node {
+        DocumentNode::Content(NodeRef::Node(Node::Item(item))) => item.id.as_deref(),
+        _ => None,
+    };
+    match own {
+        Some(id) if !id.starts_with("arrow-") && id != iso_writer::SHADOW_FILTER_ID => {
+            Some(id.to_string())
+        }
+        _ => Some(node.pointer.as_str().replace('/', "_")),
+    }
+}
+
+/// A link's group, which names the pointer of the node at each end in `data-from` and
+/// `data-to`.
+fn link_group_open_tag(geometry: &PageGeometry, route: &LinkRoute) -> Result<String, RenderError> {
+    let end_pointer = |index: usize| {
+        geometry
+            .nodes
+            .get(index)
+            .map(|node| escape_xml(node.pointer.as_str()))
+            .ok_or_else(|| link_mismatch(route))
+    };
+    Ok(format!(
+        r#"<g data-id="{}" data-tag="Link" data-kind="{}" data-from="{}" data-to="{}">"#,
+        escape_xml(
+            NodePointer::root()
+                .child("links")
+                .index(route.index)
+                .as_str()
+        ),
+        route.key(),
+        end_pointer(route.from_node)?,
+        end_pointer(route.to_node)?
+    ))
+}
+
+/// Every Item at an end of a drawn link, in geometry order, with the anchor its group
+/// carries; `anchors` holds one entry per geometry node.
+fn hover_items_of(geometry: &PageGeometry, anchors: &[Option<String>]) -> Vec<HoverItem> {
+    let linked: BTreeSet<usize> = geometry
+        .links
+        .iter()
+        .take(LINKS_MAX)
+        .flat_map(|route| [route.from_node, route.to_node])
+        .collect();
+    linked
+        .into_iter()
+        .filter_map(|index| {
+            let node = geometry.nodes.get(index)?;
+            let anchor = anchors.get(index)?.as_ref()?;
+            Some(HoverItem {
+                pointer: node.pointer.as_str().to_string(),
+                anchor: anchor.clone(),
+            })
+        })
+        .collect()
 }
 
 /// Draws each legend entry's label as the theme names it (section 13.4 rule 9), measuring
@@ -674,6 +749,8 @@ struct SvgWriter<'a> {
     phases_step_fill: Option<StepFill>,
     /// The kind and key colour of every glyph.
     mark_paints: MarkPaints,
+    /// The Items the written SVG highlights on hover, set once every link is written.
+    hover_items: Vec<HoverItem>,
 }
 
 /// The kind and key actor slot of every glyph the page draws, read from the document
@@ -792,6 +869,7 @@ impl<'a> SvgWriter<'a> {
             sheet_grid: None,
             phases_step_fill: None,
             mark_paints: MarkPaints::default(),
+            hover_items: Vec::new(),
         }
     }
 
@@ -811,6 +889,7 @@ impl<'a> SvgWriter<'a> {
             svg: self.output,
             text_elements: self.text_elements,
             font_faces,
+            hover_items: self.hover_items,
         }
     }
 
@@ -2137,14 +2216,7 @@ impl<'a> SvgWriter<'a> {
         link: Option<&stencil_model::Link>,
     ) -> Result<(), RenderError> {
         let pointer = NodePointer::root().child("links").index(route.index);
-        self.line(
-            depth,
-            &format!(
-                r#"<g data-id="{}" data-tag="Link" data-kind="{}">"#,
-                escape_xml(pointer.as_str()),
-                route.key()
-            ),
-        );
+        self.line(depth, &link_group_open_tag(geometry, route)?);
         let line_use = LineUse::new(route.line, route.tint);
         let drawn = drawn_link(geometry, route);
         if self.sheet.is_some() {
@@ -2728,10 +2800,17 @@ fn left_rounded_strip_path(bounds: BoxRect, radius: f32) -> String {
     )
 }
 
+/// How far a faded Item or Link drops while another Item is highlighted (section 5.2).
+const HOVER_FADED_OPACITY: &str = "0.2";
+/// How long the fade takes each way.
+const HOVER_TRANSITION: &str = "opacity 0.15s ease-out";
+
 impl SvgDocument {
     /// The SVG with one `@font-face` per entry of `font_faces`, its bundled file as a `data:`
-    /// URI, in a `<style>` right after the opening `<svg>` tag, so the file renders in Inter
-    /// where Inter is not installed (section 5.2). A document with no text is returned as is.
+    /// URI, and one hover rule per entry of `hover_items`, in a `<style>` right after the
+    /// opening `<svg>` tag, so the file renders in Inter where Inter is not installed and
+    /// highlights an Item and its links under the pointer (section 5.2). A document with no
+    /// text and no linked Item is returned as is.
     pub fn self_contained(&self) -> Result<String, RenderError> {
         let Some((open_tag, rest)) = self.svg.split_once('\n') else {
             return Err(RenderError::Svg {
@@ -2743,7 +2822,7 @@ impl SvgDocument {
                 message: format!("SVG starts with {open_tag:.40} instead of <svg"),
             });
         }
-        if self.font_faces.is_empty() {
+        if self.font_faces.is_empty() && self.hover_items.is_empty() {
             return Ok(self.svg.clone());
         }
         let mut output = String::new();
@@ -2759,10 +2838,63 @@ impl SvgDocument {
             ));
             output.push('\n');
         }
+        if !self.hover_items.is_empty() {
+            output.push_str(&format!(
+                "      [data-tag=\"Pcard\"], [data-tag=\"Link\"] {{ transition: {HOVER_TRANSITION}; }}\n"
+            ));
+        }
+        for item in &self.hover_items {
+            output.push_str("      ");
+            output.push_str(&escape_xml_text(&hover_rule(item)));
+            output.push('\n');
+        }
         output.push_str("    </style>\n  </defs>\n");
         output.push_str(rest);
         Ok(output)
     }
+}
+
+/// One rule that fades every Link not attached to `item` and every other Item while the
+/// pointer rests on `item` or the URL fragment names its anchor.
+fn hover_rule(item: &HoverItem) -> String {
+    let pointer = css_string(&item.pointer);
+    let highlighted = format!(
+        "svg:has([data-id={pointer}]:hover, [id={}]:target)",
+        css_string(&item.anchor)
+    );
+    format!(
+        "{highlighted} [data-tag=\"Link\"]:not([data-from={pointer}]):not([data-to={pointer}]), {highlighted} [data-tag=\"Pcard\"]:not([data-id={pointer}]) {{ opacity: {HOVER_FADED_OPACITY}; }}"
+    )
+}
+
+/// `text` as a double-quoted CSS string.
+fn css_string(text: &str) -> String {
+    let mut quoted = String::with_capacity(text.len() + 2);
+    quoted.push('"');
+    for character in text.chars() {
+        match character {
+            '"' => quoted.push_str("\\\""),
+            '\\' => quoted.push_str("\\\\"),
+            '\n' => quoted.push_str("\\a "),
+            other => quoted.push(other),
+        }
+    }
+    quoted.push('"');
+    quoted
+}
+
+/// `text` escaped for element content, where quotes stand as they are.
+fn escape_xml_text(text: &str) -> String {
+    let mut escaped = String::with_capacity(text.len());
+    for character in text.chars() {
+        match character {
+            '&' => escaped.push_str("&amp;"),
+            '<' => escaped.push_str("&lt;"),
+            '>' => escaped.push_str("&gt;"),
+            other => escaped.push(other),
+        }
+    }
+    escaped
 }
 
 fn escape_xml(text: &str) -> String {
@@ -2804,6 +2936,7 @@ mod tests {
             svg: "<svg xmlns=\"http://www.w3.org/2000/svg\">\n</svg>\n".to_string(),
             text_elements: 0,
             font_faces: Vec::new(),
+            hover_items: Vec::new(),
         };
         assert_eq!(document.self_contained().unwrap(), document.svg);
     }
@@ -2814,11 +2947,56 @@ mod tests {
             svg: "<g>\n</g>\n".to_string(),
             text_elements: 1,
             font_faces: vec![(FontFamily::Inter, FontWeight::Bold)],
+            hover_items: Vec::new(),
         };
         assert!(matches!(
             document.self_contained(),
             Err(RenderError::Svg { .. })
         ));
+    }
+
+    #[test]
+    fn css_string_escapes_quotes_backslashes_and_newlines() {
+        assert_eq!(css_string("/body/0"), r#""/body/0""#);
+        assert_eq!(css_string("a\"b\\c\nd"), r#""a\"b\\c\a d""#);
+    }
+
+    #[test]
+    fn a_hover_rule_fades_the_links_of_other_items_and_every_other_item() {
+        let item = HoverItem {
+            pointer: "/body/0".to_string(),
+            anchor: "api".to_string(),
+        };
+        assert_eq!(
+            hover_rule(&item),
+            concat!(
+                r#"svg:has([data-id="/body/0"]:hover, [id="api"]:target) [data-tag="Link"]:not([data-from="/body/0"]):not([data-to="/body/0"]), "#,
+                r#"svg:has([data-id="/body/0"]:hover, [id="api"]:target) [data-tag="Pcard"]:not([data-id="/body/0"]) { opacity: 0.2; }"#
+            )
+        );
+    }
+
+    #[test]
+    fn a_document_with_a_linked_item_and_no_text_still_gets_its_hover_rule() {
+        let document = SvgDocument {
+            svg: "<svg xmlns=\"http://www.w3.org/2000/svg\">\n</svg>\n".to_string(),
+            text_elements: 0,
+            font_faces: Vec::new(),
+            hover_items: vec![HoverItem {
+                pointer: "/body/0".to_string(),
+                anchor: "_body_0".to_string(),
+            }],
+        };
+        let written = document.self_contained().unwrap();
+        assert_eq!(
+            written
+                .lines()
+                .filter(|line| line.contains(":hover"))
+                .count(),
+            1
+        );
+        assert!(!written.contains("@font-face"));
+        assert!(written.contains(r#"svg:has([data-id="/body/0"]:hover"#));
     }
 
     #[test]

@@ -12,7 +12,9 @@ use std::path::{Path, PathBuf};
 
 use base64::Engine as _;
 use serde_json::{Value, json};
+use stencil_cli::pipeline::{load_document_from, read_input, render_page};
 use stencil_cli::{ExitCode, run};
+use stencil_render::DeviceScale;
 use stencil_text::BUNDLED_FONTS;
 
 struct Outcome {
@@ -564,6 +566,126 @@ fn the_svg_embeds_a_font_face_for_each_weight_its_text_uses_and_no_other() {
         examined += 1;
     }
     assert_eq!(examined, 4);
+}
+
+/// The value of attribute `name` in the tag on `line`, when the tag has it.
+fn attribute<'a>(line: &'a str, name: &str) -> Option<&'a str> {
+    let after = line.split_once(&format!(r#" {name}=""#))?.1;
+    Some(after.split_once('"')?.0)
+}
+
+/// The text between `start` and the next `"` after it in `line`.
+fn quoted_after<'a>(line: &'a str, start: &str) -> &'a str {
+    line.split_once(start).unwrap().1.split_once('"').unwrap().0
+}
+
+#[test]
+fn the_svg_highlights_each_linked_item_on_hover_and_the_resvg_input_does_not() {
+    let out_dir = scratch_directory("render_hover_rules");
+    let mut items_examined = 0;
+    let mut links_examined = 0;
+    let mut unlinked_items = 0;
+    let mut rules_examined = 0;
+    for stem in ["onepager", "org", "onprem-iso", "g7"] {
+        let input = repository_path(&format!("examples/{stem}.json"));
+        let outcome = run_stencil(&[
+            "render",
+            input.to_str().unwrap(),
+            "--out-dir",
+            out_dir.to_str().unwrap(),
+        ]);
+        assert_eq!(outcome.code, ExitCode::Clean, "{}", outcome.stderr);
+        let svg = fs::read_to_string(out_dir.join(format!("{stem}.svg"))).unwrap();
+        let group_lines: Vec<&str> = svg
+            .lines()
+            .map(str::trim_start)
+            .filter(|line| line.starts_with("<g "))
+            .collect();
+
+        let node_pointers: BTreeSet<&str> = group_lines
+            .iter()
+            .filter(|line| attribute(line, "data-tag") != Some("Link"))
+            .filter_map(|line| attribute(line, "data-id"))
+            .collect();
+        let mut linked = BTreeSet::new();
+        let link_lines: Vec<&&str> = group_lines
+            .iter()
+            .filter(|line| attribute(line, "data-tag") == Some("Link"))
+            .collect();
+        for line in &link_lines {
+            for end in ["data-from", "data-to"] {
+                let pointer = attribute(line, end).unwrap_or_else(|| panic!("{stem}: {line}"));
+                assert!(node_pointers.contains(pointer), "{stem}: {end} {pointer}");
+                linked.insert(pointer);
+            }
+        }
+        let document: Value = serde_json::from_str(&fs::read_to_string(&input).unwrap()).unwrap();
+        assert_eq!(
+            link_lines.len(),
+            document["links"].as_array().map_or(0, Vec::len),
+            "{stem}"
+        );
+        links_examined += link_lines.len();
+
+        let items: BTreeMap<&str, &str> = group_lines
+            .iter()
+            .filter(|line| attribute(line, "data-tag") == Some("Pcard"))
+            .map(|line| {
+                let anchor = attribute(line, "id").unwrap_or_else(|| panic!("{stem}: {line}"));
+                (attribute(line, "data-id").unwrap(), anchor)
+            })
+            .collect();
+        let ids: Vec<&str> = svg
+            .split(r#" id=""#)
+            .skip(1)
+            .map(|rest| rest.split_once('"').unwrap().0)
+            .collect();
+        assert_eq!(
+            ids.iter().collect::<BTreeSet<_>>().len(),
+            ids.len(),
+            "{stem}: an id repeats"
+        );
+
+        let rules: BTreeMap<&str, &str> = svg
+            .lines()
+            .filter(|line| line.contains(":hover"))
+            .map(|line| {
+                (
+                    quoted_after(line, r#"svg:has([data-id=""#),
+                    quoted_after(line, r#"[id=""#),
+                )
+            })
+            .collect();
+        let hover_lines = svg.lines().filter(|line| line.contains(":hover")).count();
+        assert_eq!(hover_lines, rules.len(), "{stem}: an item has two rules");
+        for (pointer, anchor) in &items {
+            if linked.contains(pointer) {
+                assert_eq!(rules.get(pointer), Some(anchor), "{stem}: {pointer}");
+            } else {
+                assert!(!rules.contains_key(pointer), "{stem}: {pointer}");
+                unlinked_items += 1;
+            }
+            items_examined += 1;
+        }
+        assert!(rules.keys().all(|pointer| items.contains_key(pointer)));
+        assert_eq!(
+            svg.contains("transition: opacity"),
+            !rules.is_empty(),
+            "{stem}"
+        );
+        rules_examined += rules.len();
+
+        let json_text = read_input(&input).unwrap();
+        let loaded = load_document_from(&json_text, input.parent().unwrap(), None).unwrap();
+        let rendered = render_page(&loaded, DeviceScale::DEFAULT).unwrap();
+        assert_eq!(rendered.svg.hover_items.len(), rules.len(), "{stem}");
+        assert!(!rendered.svg.svg.contains(":hover"), "{stem}");
+        assert!(!rendered.svg.svg.contains("<style"), "{stem}");
+    }
+    assert_eq!(links_examined, 23);
+    assert_eq!(items_examined, 40);
+    assert_eq!(rules_examined, 15);
+    assert_eq!(unlinked_items, 25);
 }
 
 #[test]
