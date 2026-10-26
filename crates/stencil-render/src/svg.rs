@@ -2840,6 +2840,10 @@ fn left_rounded_strip_path(bounds: BoxRect, radius: f32) -> String {
 
 /// How far a faded unit drops while another element is highlighted (section 5.2).
 const HOVER_FADED_OPACITY: &str = "0.2";
+/// The families the written file's text falls back through when the embedded faces do not
+/// load (section 5.2).
+const TEXT_FONT_STACK: &str =
+    r#"Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif"#;
 /// How long the fade takes each way.
 const HOVER_TRANSITION: &str = "opacity 0.15s ease-out";
 
@@ -2875,6 +2879,13 @@ impl SvgDocument {
                 base64::engine::general_purpose::STANDARD.encode(file.bytes)
             ));
             output.push('\n');
+        }
+        if !self.font_faces.is_empty() {
+            // A style rule outranks the `font-family` attribute, so where the embedded faces
+            // are blocked and Inter is not installed the text falls back to a sans face.
+            output.push_str(&format!(
+                "      text {{ font-family: {TEXT_FONT_STACK}; }}\n"
+            ));
         }
         if !self.hover_rules.is_empty() {
             output.push_str(&format!(
