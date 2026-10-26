@@ -1,7 +1,7 @@
 {
-  "title": "Two firewall zones and four VLANs at the head office",
-  "kicker": "On-prem network · head office site",
-  "lede": "The core switch trunks VLAN 10 and VLAN 20 to the edge firewall, which carries them on to the DMZ and the transit VLAN. Traffic from the DMZ never reaches the inside zone.",
+  "title": "Building management network of an office tower",
+  "kicker": "Building management · office tower",
+  "lede": "The core switch trunks the heating and security VLANs to the edge firewall. Controllers push trends and alarms out to a vendor portal in the DMZ, and no session that starts in the DMZ reaches them.",
   "badge": "Internal",
   "grammar": "plain",
   "projection": "iso",
@@ -10,7 +10,7 @@
     {
       "tag": "Box",
       "kind": "system",
-      "label": "Head office site",
+      "label": "Office tower",
       "children": [
         {
           "tag": "Row",
@@ -35,7 +35,7 @@
                       "tag": "Box",
                       "kind": "group",
                       "tint": 1,
-                      "label": "VLAN 10 · staff",
+                      "label": "VLAN 10 · heating",
                       "children": [
                         {
                           "tag": "Row",
@@ -43,10 +43,10 @@
                             {
                               "tag": "Item",
                               "kind": "service",
-                              "title": "Print server",
+                              "title": "Boiler controller",
                               "facts": [
                                 {
-                                  "text": "prn-01",
+                                  "text": "blr-ctl-01",
                                   "source": "built"
                                 }
                               ]
@@ -54,10 +54,10 @@
                             {
                               "tag": "Item",
                               "kind": "service",
-                              "title": "Directory server",
+                              "title": "Air handler control",
                               "facts": [
                                 {
-                                  "text": "dc-01",
+                                  "text": "ahu-ctl-01",
                                   "source": "built"
                                 }
                               ]
@@ -84,7 +84,7 @@
                       "tag": "Box",
                       "kind": "group",
                       "tint": 2,
-                      "label": "VLAN 20 · servers",
+                      "label": "VLAN 20 · security",
                       "children": [
                         {
                           "tag": "Row",
@@ -92,10 +92,10 @@
                             {
                               "tag": "Item",
                               "kind": "service",
-                              "title": "Application server",
+                              "title": "Access control",
                               "facts": [
                                 {
-                                  "text": "app-01",
+                                  "text": "acs-01",
                                   "source": "built"
                                 }
                               ]
@@ -103,10 +103,10 @@
                             {
                               "tag": "Item",
                               "kind": "store",
-                              "title": "File server",
+                              "title": "Camera recorder",
                               "facts": [
                                 {
-                                  "text": "fs-01",
+                                  "text": "nvr-01",
                                   "source": "built"
                                 }
                               ]
@@ -241,7 +241,7 @@
                   "tag": "Box",
                   "kind": "group",
                   "tint": 3,
-                  "label": "VLAN 30 · public services",
+                  "label": "VLAN 30 · vendor access",
                   "children": [
                     {
                       "tag": "Row",
@@ -249,10 +249,10 @@
                         {
                           "tag": "Item",
                           "kind": "service",
-                          "title": "Web server",
+                          "title": "Vendor portal",
                           "facts": [
                             {
-                              "text": "web-01",
+                              "text": "portal-01",
                               "source": "built"
                             }
                           ],
@@ -261,10 +261,10 @@
                         {
                           "tag": "Item",
                           "kind": "service",
-                          "title": "Mail relay",
+                          "title": "Alarm relay",
                           "facts": [
                             {
-                              "text": "mx-01",
+                              "text": "alarm-01",
                               "source": "built"
                             }
                           ]
@@ -286,17 +286,17 @@
     {
       "line": "solid",
       "tint": 1,
-      "text": "VLAN 10, staff"
+      "text": "VLAN 10, heating"
     },
     {
       "line": "solid",
       "tint": 2,
-      "text": "VLAN 20, servers"
+      "text": "VLAN 20, security"
     },
     {
       "line": "solid",
       "tint": 3,
-      "text": "VLAN 30, DMZ"
+      "text": "VLAN 30, vendor access"
     },
     {
       "line": "solid",
