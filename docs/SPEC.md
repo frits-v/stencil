@@ -3598,10 +3598,17 @@ import (
 	parents: [...#KindName] & list.MinItems(1)
 }
 
+// A bundled icon pack, in alphabetical order, or none.
+#IconPack: "aws" |
+	"azure" |
+	"gcp" |
+	"oss" |
+	"none"
+
 #ItemKind: {
 	name: #KindName
 	// The bundled icon pack the kind draws from; none takes no icon.
-	icons: "gcp" | "none"
+	icons: #IconPack
 	// The icon-to-name table of icon-matches-product; empty when icons is none.
 	products: [...#IconProducts]
 	parents: [...#KindName] & list.MinItems(1)
