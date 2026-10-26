@@ -46,6 +46,9 @@ pub struct HoverItem {
     pub pointer: String,
     /// The `id` of the Item's group.
     pub anchor: String,
+    /// The `data-id` of every other Item at the far end of one of its links, in geometry
+    /// order, each once. These stay drawn while the Item is highlighted.
+    pub neighbours: Vec<String>,
 }
 
 /// Section 5.1 rounding. The SVG writer and measured_json both call it.

@@ -180,7 +180,7 @@ fn a_link_draws_its_path_the_marker_at_the_arrow_end_and_its_tag() {
 }
 
 #[test]
-fn each_link_group_names_its_end_pointers_and_each_item_group_its_anchor() {
+fn each_link_group_names_its_end_pointers_and_each_item_group_its_anchor_and_far_ends() {
     let mut document = linked_document("center");
     let children = document["body"][0]["children"].as_array_mut().unwrap();
     children.push(card("arrow-center-blue"));
@@ -222,6 +222,21 @@ fn each_link_group_names_its_end_pointers_and_each_item_group_its_anchor() {
         .map(|index| (child(index), anchors[index].to_string()))
         .collect();
     assert_eq!(hover, expected);
+    let neighbours: Vec<Vec<String>> = rendered
+        .svg
+        .hover_items
+        .iter()
+        .map(|item| item.neighbours.clone())
+        .collect();
+    assert_eq!(
+        neighbours,
+        vec![
+            vec![child(1), child(2)],
+            vec![child(0), child(2)],
+            vec![child(0), child(1), child(3)],
+            vec![child(2)],
+        ]
+    );
     let written = rendered.svg.self_contained().unwrap();
     let rules: Vec<&str> = written
         .lines()
