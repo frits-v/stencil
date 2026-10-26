@@ -62,7 +62,10 @@ if [[ -n $unsigned ]]; then
   exit 1
 fi
 echo "land: watching ci run $run for $head at ${sha:0:7}"
-gh run watch "$run" --exit-status
+# gh polls every 3 seconds by default, about 1200 calls an hour from one watch against the
+# 5000 an hour every session of this account shares; a ci run takes minutes, so 30 seconds loses
+# little and leaves the budget for the other sessions.
+gh run watch "$run" --exit-status --interval 30
 # The base can move while CI runs.
 require_current_base
 
