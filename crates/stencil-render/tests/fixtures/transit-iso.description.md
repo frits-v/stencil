@@ -27,7 +27,7 @@ Drawn elements: 17 (16 nodes, 1 link). Laid out at 1840 x 929.24 px, projection 
           - Item Student records: Google Cloud VMware Engine; kind product, icon compute, product Google Cloud VMware Engine, shape tower. `/body/0/children/2/children/0/children/1/children/0/children/0`
       - Box europe-north1; kind region, tint 2. `/body/0/children/2/children/0/children/2`
         - Col, top to bottom. `/body/0/children/2/children/0/children/2/children/0`
-          - Item Degree certificates: Certificate Authority Service; kind product, icon security-identity, product Certificate Authority Service, shape block. `/body/0/children/2/children/0/children/2/children/0/children/0`
+          - Item Wi-Fi certificates: Certificate Authority Service; kind product, icon security-identity, product Certificate Authority Service, shape block. `/body/0/children/2/children/0/children/2/children/0/children/0`
           - Item Records migration: Database Migration Service; kind product, icon databases, product Database Migration Service, shape cylinder. `/body/0/children/2/children/0/children/2/children/0/children/1`
 
 ## Lines
