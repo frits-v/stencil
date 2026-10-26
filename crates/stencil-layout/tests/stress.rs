@@ -20,31 +20,59 @@ fn stress_document_has_37_body_nodes() {
     assert_eq!(body_nodes(&stress_page()).len(), 37);
 }
 
+/// The three service titles and the two pipe labels of each stage row, in order.
+const STAGES: [([&str; 3], [&str; 2]); 5] = [
+    (
+        ["Shipment booking", "Label printing", "Pickup scan"],
+        ["label", "pickup"],
+    ),
+    (
+        ["Hub arrival", "Sort planner", "Chute assignment"],
+        ["arrival", "sort plan"],
+    ),
+    (
+        ["Trailer loading", "Route tracker", "Depot arrival"],
+        ["load list", "position"],
+    ),
+    (
+        ["Courier manifest", "Delivery tracker", "Proof of delivery"],
+        ["manifest", "status"],
+    ),
+    (
+        ["Return request", "Return label", "Refund trigger"],
+        ["return", "refund"],
+    ),
+];
+
 /// The section 10 description of `examples/stress-dense.json`, field for field.
 fn section_10_stress_document() -> Value {
-    let card = |row: u32, column: u32| {
+    let card = |title: &str| {
         json!({
             "tag": "Item", "kind": "product",
             "icon": "cloud-run",
-            "title": format!("Service {row}.{column}"),
+            "title": title,
             "subtitle": "Cloud Run",
-            "facts": [{ "text": "Reads its config from a bucket in the same project" }]
+            "facts": [{ "text": "Publishes each parcel event to the tracking topic" }]
         })
     };
-    let solid_step = |row: u32, step: u32| json!({ "tag": "Pipe", "dir": "h", "line": "solid", "tint": 1, "label": format!("step {row}.{step}") });
-    let gray_step = |row: u32, step: u32| json!({ "tag": "Pipe", "dir": "h", "line": "gray", "label": format!("step {row}.{step}") });
-    let row = |row: u32| {
+    let solid_step = |label: &str| json!({ "tag": "Pipe", "dir": "h", "line": "solid", "tint": 1, "label": label });
+    let gray_step =
+        |label: &str| json!({ "tag": "Pipe", "dir": "h", "line": "gray", "label": label });
+    let row = |(titles, labels): ([&str; 3], [&str; 2])| {
+        let [first, second, third] = titles;
+        let [request, internal] = labels;
         json!({
             "tag": "Row",
             "children": [
-                card(row, 1),
-                solid_step(row, 1),
-                card(row, 2),
-                gray_step(row, 2),
-                card(row, 3)
+                card(first),
+                solid_step(request),
+                card(second),
+                gray_step(internal),
+                card(third)
             ]
         })
     };
+    let [intake, sorting, linehaul, last_mile, returns] = STAGES.map(row);
     let failover = json!({ "tag": "Pipe", "dir": "v", "line": "dash", "label": "failover" });
     let tee = json!({
         "tag": "Tee",
@@ -56,9 +84,9 @@ fn section_10_stress_document() -> Value {
         ]
     });
     json!({
-        "title": "Fifteen Cloud Run services in five rows behind one service perimeter",
-        "kicker": "Service perimeter · Cloud Run",
-        "lede": "Five rows of cards and pipes inside a service perimeter.",
+        "title": "A parcel carrier tracks every shipment through five stages behind one service perimeter",
+        "kicker": "Parcel tracking · Cloud Run",
+        "lede": "Each parcel moves from intake through sorting, linehaul and last-mile delivery to returns, and the perimeter blocks egress from every stage.",
         "badge": "Internal",
         "grammar": "gcp",
         "body": [{
@@ -71,7 +99,7 @@ fn section_10_stress_document() -> Value {
                 "label": "Service perimeter",
                 "children": [{
                     "tag": "Col",
-                    "children": [row(1), failover, row(2), row(3), tee, row(4), row(5)]
+                    "children": [intake, failover, sorting, linehaul, tee, last_mile, returns]
                 }]
             }]
         }],
