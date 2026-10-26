@@ -2646,7 +2646,7 @@ fn the_platform_example_stands_one_item_of_each_form_with_its_labels_and_links_c
         assert_eq!(count, 1, "{form:?} in {forms:?}");
     }
     let labels = iso_labels_clear(Some(&scene));
-    assert_eq!(labels.examined, 240);
+    assert_eq!(labels.examined, 131);
     assert!(labels.defects.is_empty(), "{labels:#?}");
     assert!(labels.passed());
     let links = iso_links_clear(&geometry, Some(&scene));
