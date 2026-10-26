@@ -24,7 +24,7 @@ case "$*" in
   "pr view 7 --json commits --jq .commits[].oid") echo 0123456789abcdef ;;
   "api repos/{owner}/{repo}/commits/0123456789abcdef --jq .commit.verification.verified") echo "${STUB_VERIFIED:-true}" ;;
   "run list "*) echo 42 ;;
-  "run watch 42 --exit-status") ;;
+  "run watch 42 --exit-status --interval 30") ;;
   "pr ready 7") ;;
   "pr merge 7 --squash") echo "merged 7" ;;
   *)
@@ -72,13 +72,13 @@ expect() {
 expect MERGEABLE true 0 $'pr ready 7\npr merge 7 --squash' ''
 expect MERGEABLE false 0 'pr merge 7 --squash' 'pr ready 7'
 expect UNKNOWN false 0 'pr merge 7 --squash' ''
-expect CONFLICTING false 1 '' $'run watch 42 --exit-status\npr merge 7 --squash'
+expect CONFLICTING false 1 '' $'run watch 42 --exit-status --interval 30\npr merge 7 --squash'
 expect BLOCKED false 1 '' 'pr merge 7 --squash'
 expect MERGEABLE maybe 1 '' $'pr ready 7\npr merge 7 --squash'
-STUB_BEHIND=3 expect MERGEABLE false 1 '' $'run watch 42 --exit-status\npr merge 7 --squash'
-STUB_BEHIND_AFTER=2 expect MERGEABLE true 1 'run watch 42 --exit-status' $'pr ready 7\npr merge 7 --squash'
-STUB_BEHIND=unknown expect MERGEABLE false 1 '' $'run watch 42 --exit-status\npr merge 7 --squash'
-STUB_VERIFIED=false expect MERGEABLE false 1 '' $'run watch 42 --exit-status\npr ready 7\npr merge 7 --squash'
+STUB_BEHIND=3 expect MERGEABLE false 1 '' $'run watch 42 --exit-status --interval 30\npr merge 7 --squash'
+STUB_BEHIND_AFTER=2 expect MERGEABLE true 1 'run watch 42 --exit-status --interval 30' $'pr ready 7\npr merge 7 --squash'
+STUB_BEHIND=unknown expect MERGEABLE false 1 '' $'run watch 42 --exit-status --interval 30\npr merge 7 --squash'
+STUB_VERIFIED=false expect MERGEABLE false 1 '' $'run watch 42 --exit-status --interval 30\npr ready 7\npr merge 7 --squash'
 
 if (( cases == 0 )); then
   echo "check-land: no case ran" >&2
