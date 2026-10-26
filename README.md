@@ -40,7 +40,7 @@ Build the binary with `cargo build --release`; it lands at `target/release/stenc
 
 Five item shapes on one floor, under the isometric projection:
 
-![One web path from the load balancer to the data layer](docs/gallery/platform-iso.png)
+![A game backend's match request path from the edge proxy to the player database and the match event stream](docs/gallery/platform-iso.png)
 
 Pipes as tubes on the floor, with flange rings and cones at their ends:
 
