@@ -18,7 +18,8 @@ use stencil_model::{
     validate_page,
 };
 
-const EXAMPLES: [(&str, &str); 5] = [
+// Each entry names "grammar": "gcp"; an example of another grammar goes in its own test.
+const GCP_EXAMPLES: [(&str, &str); 5] = [
     ("g7", include_str!("../../../examples/g7.json")),
     ("hero-iso", include_str!("../../../examples/hero-iso.json")),
     (
@@ -73,7 +74,7 @@ fn plain_item(kind: &str, icon: Option<&str>) -> Node {
 #[test]
 fn every_gcp_example_parses_round_trips_and_vets_clean() {
     let grammar = gcp();
-    for (name, document) in EXAMPLES {
+    for (name, document) in GCP_EXAMPLES {
         let page =
             parse_and_vet(document, &grammar).unwrap_or_else(|error| panic!("{name}: {error:?}"));
         assert_eq!(page.grammar.as_deref(), Some("gcp"), "{name}");
