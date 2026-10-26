@@ -1,7 +1,7 @@
 {
-  "title": "A branch office reaches two regions over one Interconnect through the transit hub.",
-  "kicker": "Landing zone · transit",
-  "lede": "One Dedicated Interconnect with two VLAN attachments lands on the transit hub, which routes the branch on to europe-north1.",
+  "title": "A university's admissions project reaches student records in two regions through one transit hub.",
+  "kicker": "University enrolment · transit",
+  "lede": "The admissions VPC attaches to the transit hub as a spoke, and the hub routes it on to student records in europe-west4 and to certificates and migration in europe-north1.",
   "width": 1800,
   "badge": "Customer",
   "grammar": "gcp",
@@ -13,8 +13,8 @@
       "children": [
         {
           "tag": "Box",
-          "kind": "onprem",
-          "label": "Branch office",
+          "kind": "project",
+          "label": "Admissions project",
           "children": [
             {
               "tag": "Col",
@@ -24,15 +24,15 @@
                   "kind": "product",
                   "id": "edge",
                   "icon": "networking",
-                  "title": "Edge router",
-                  "subtitle": "Cloud Router peer"
+                  "title": "Admissions VPC",
+                  "subtitle": "VPC network"
                 },
                 {
                   "tag": "Item",
                   "kind": "person",
                   "id": "users",
-                  "title": "Branch users",
-                  "subtitle": "SD-WAN users"
+                  "title": "Admissions staff",
+                  "subtitle": "offer review desk"
                 }
               ]
             }
@@ -50,8 +50,8 @@
                   "dir": "h",
                   "line": "solid",
                   "tint": 1,
-                  "label": "Dedicated Interconnect",
-                  "sub": "VLAN 1 and VLAN 2 attachments",
+                  "label": "VPC spoke",
+                  "sub": "admissions VPC to the hub",
                   "from": "edge",
                   "to": "ncc",
                   "arrow": "end"
@@ -102,7 +102,7 @@
                           "kind": "product",
                           "id": "vmware",
                           "icon": "compute",
-                          "title": "VMware cluster",
+                          "title": "Student records",
                           "subtitle": "Google Cloud VMware Engine"
                         }
                       ]
@@ -123,7 +123,7 @@
                           "kind": "product",
                           "id": "cas",
                           "icon": "security-identity",
-                          "title": "Certificates",
+                          "title": "Degree certificates",
                           "subtitle": "Certificate Authority Service"
                         },
                         {
@@ -131,7 +131,7 @@
                           "kind": "product",
                           "id": "dms",
                           "icon": "databases",
-                          "title": "Migration",
+                          "title": "Records migration",
                           "subtitle": "Database Migration Service"
                         }
                       ]
@@ -161,11 +161,11 @@
     {
       "line": "solid",
       "tint": 1,
-      "text": "Interconnect attachment"
+      "text": "VPC spoke attachment"
     },
     {
       "line": "gray",
-      "text": "east-west"
+      "text": "routed by the hub"
     }
   ]
 }
