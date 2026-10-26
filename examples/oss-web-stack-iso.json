@@ -213,7 +213,13 @@
       "to": "ingress",
       "line": "solid",
       "tint": 1,
-      "label": "HTTPS"
+      "label": "HTTPS",
+      "via": [
+        {
+          "x": 352,
+          "y": 643.6
+        }
+      ]
     },
     {
       "from": "ingress",

@@ -112,7 +112,11 @@ fn the_oss_examples_parse_round_trip_and_vet_clean_under_oss() {
         let page = parse_and_vet(document, &grammar).unwrap_or_else(|error| panic!("{error:?}"));
         assert_eq!(page.grammar.as_deref(), Some("oss"));
         let written = serde_json::to_string(&page).unwrap();
-        assert_eq!(parse_and_vet(&written, &grammar).unwrap(), page, "round trip");
+        assert_eq!(
+            parse_and_vet(&written, &grammar).unwrap(),
+            page,
+            "round trip"
+        );
     }
 }
 

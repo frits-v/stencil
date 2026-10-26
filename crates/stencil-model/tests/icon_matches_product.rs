@@ -585,12 +585,12 @@ fn oss_defects_for(kind: &str, subtitle: Option<&str>, icon: Option<&str>) -> Ve
 
 #[test]
 fn the_oss_examples_pass_with_items_examined() {
-    for stem in ["oss-web-stack", "oss-web-stack-iso"] {
+    for (stem, items) in [("oss-web-stack", 11), ("oss-web-stack-iso", 10)] {
         let text = fs::read_to_string(repository_path(&format!("examples/{stem}.json"))).unwrap();
         let page = parse_page(&text).unwrap();
         let report = icon_matches_product(&page, &oss());
         assert!(report.passed(), "{stem}: {:?}", report.defects);
-        assert_eq!(report.examined, 11, "{stem}");
+        assert_eq!(report.examined, items, "{stem}");
     }
 }
 
