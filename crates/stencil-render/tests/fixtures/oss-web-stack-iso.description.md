@@ -6,7 +6,7 @@ NGINX routes branch traffic to the storefront, which publishes orders to Kafka f
 
 ## Figure
 
-Drawn elements: 31 (23 nodes, 8 links). Laid out at 1740 x 1286.74 px, projection iso, grammar oss; the projected drawing is larger, by an amount that depends on the theme. Line styles name a tint slot by number; the colour word is the one the center theme draws it in.
+Drawn elements: 31 (23 nodes, 8 links). Laid out at 1740 x 1040.24 px, projection iso, grammar oss; the projected drawing is larger, by an amount that depends on the theme. Line styles name a tint slot by number; the colour word is the one the center theme draws it in.
 
 ## Drawing `/body`
 
@@ -26,7 +26,6 @@ Drawn elements: 31 (23 nodes, 8 links). Laid out at 1740 x 1286.74 px, projectio
             - Item Storefront: web front end; kind service, shape block. `/body/0/children/1/children/0/children/0/children/0/children/1/children/0`
           - Col, top to bottom. `/body/0/children/1/children/0/children/0/children/0/children/2`
             - Item Order events: Apache Kafka; kind queue, icon kafka, product Apache Kafka, shape stack. `/body/0/children/1/children/0/children/0/children/0/children/2/children/0`
-            - Item Sessions: Redis; kind store, icon redis, product Redis, shape cylinder. `/body/0/children/1/children/0/children/0/children/0/children/2/children/1`
           - Col, top to bottom. `/body/0/children/1/children/0/children/0/children/0/children/3`
             - Item Order worker: writes orders; kind service, shape block. `/body/0/children/1/children/0/children/0/children/0/children/3/children/0`
           - Col, top to bottom. `/body/0/children/1/children/0/children/0/children/0/children/4`
@@ -35,8 +34,9 @@ Drawn elements: 31 (23 nodes, 8 links). Laid out at 1740 x 1286.74 px, projectio
             - Item Backups: MinIO; kind store, icon minio, product MinIO, shape stack. `/body/0/children/1/children/0/children/0/children/0/children/5/children/0`
         - Row, left to right. `/body/0/children/1/children/0/children/0/children/1`
           - Item Orchestrator: Kubernetes; kind service, icon kubernetes, product Kubernetes, shape tower. `/body/0/children/1/children/0/children/0/children/1/children/0`
-          - Item Delivery: Argo CD; kind service, icon argo, product Argo CD, shape block. `/body/0/children/1/children/0/children/0/children/1/children/1`
-          - Item Metrics: Prometheus; kind service, icon prometheus, product Prometheus, shape block. `/body/0/children/1/children/0/children/0/children/1/children/2`
+          - Item Sessions: Redis; kind store, icon redis, product Redis, shape cylinder. `/body/0/children/1/children/0/children/0/children/1/children/1`
+          - Item Delivery: Argo CD; kind service, icon argo, product Argo CD, shape block. `/body/0/children/1/children/0/children/0/children/1/children/2`
+          - Item Metrics: Prometheus; kind service, icon prometheus, product Prometheus, shape block. `/body/0/children/1/children/0/children/0/children/1/children/3`
 
 ## Lines
 

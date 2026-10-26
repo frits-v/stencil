@@ -1,13 +1,13 @@
 check child-inside-container: examined 36 relations, 0 defects
-check siblings-do-not-overlap: examined 38 pairs, 0 defects
+check siblings-do-not-overlap: examined 40 pairs, 0 defects
 check text-fits-box: examined 45 text runs, 0 defects
 check remembered-constants: examined 0 text fields, not applicable: grammar has no remembered constants
 check legend-consistency: examined 12 relations, 0 defects
 check links-routed: examined 8 links, 0 defects
-check links-avoid-boxes: examined 518 pairs, 0 defects
+check links-avoid-boxes: examined 539 pairs, 0 defects
 check pipes-land: examined 0 pipe ends, not applicable: page has no pipes
-check iso-labels-clear: examined 980 pairs, 0 defects
-check iso-links-clear: examined 14 link legs, 0 defects
+check iso-labels-clear: examined 979 pairs, 0 defects
+check iso-links-clear: examined 15 link legs, 0 defects
 check iso-link-ends: examined 16 link ends, 0 defects
 check iso-links-apart: examined 28 link pairs, 0 defects
 check print-fit: examined 0 text runs, not applicable: no print width

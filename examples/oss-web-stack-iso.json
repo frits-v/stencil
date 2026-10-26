@@ -62,7 +62,7 @@
               "children": [
                 {
                   "tag": "Col",
-                  "gap": 48,
+                  "gap": 64,
                   "children": [
                     {
                       "tag": "Row",
@@ -103,7 +103,6 @@
                         },
                         {
                           "tag": "Col",
-                          "gap": 64,
                           "children": [
                             {
                               "tag": "Item",
@@ -112,14 +111,6 @@
                               "title": "Order events",
                               "icon": "kafka",
                               "subtitle": "Apache Kafka"
-                            },
-                            {
-                              "tag": "Item",
-                              "kind": "store",
-                              "id": "sessions",
-                              "title": "Sessions",
-                              "icon": "redis",
-                              "subtitle": "Redis"
                             }
                           ]
                         },
@@ -168,6 +159,7 @@
                       "grow": [
                         0,
                         0,
+                        0,
                         0
                       ],
                       "gap": 32,
@@ -179,6 +171,14 @@
                           "title": "Orchestrator",
                           "icon": "kubernetes",
                           "subtitle": "Kubernetes"
+                        },
+                        {
+                          "tag": "Item",
+                          "kind": "store",
+                          "id": "sessions",
+                          "title": "Sessions",
+                          "icon": "redis",
+                          "subtitle": "Redis"
                         },
                         {
                           "tag": "Item",
@@ -250,7 +250,8 @@
     {
       "from": "storefront",
       "to": "sessions",
-      "line": "gray"
+      "line": "gray",
+      "to_side": "top"
     },
     {
       "from": "worker",
