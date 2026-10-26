@@ -2,7 +2,9 @@
 # Regenerates the committed fixtures of the given example stems (every example when none
 # is named): the center SVG, measured JSON and description under
 # crates/stencil-render/tests/fixtures, the corner-0 SVG for the stems that have one, and
-# the check and vet lines under crates/stencil-cli/tests/fixtures for the stems that have them.
+# the check and vet lines under crates/stencil-cli/tests/fixtures. With no stem named, the
+# check and vet lines are rewritten only for the stems that already have them; a stem named on
+# the command line always gets both, so a new example gets its fixtures.
 # The SVG fixture is the document render_svg returns, so scripts/resvg-input.py removes the
 # style block and the browser-only elements the written file carries; the measured JSON
 # fixture leaves out the document key.
@@ -15,7 +17,8 @@ render_fixtures=crates/stencil-render/tests/fixtures
 cli_fixtures=crates/stencil-cli/tests/fixtures
 
 stems=("$@")
-if (( ${#stems[@]} == 0 )); then
+named=${#stems[@]}
+if (( named == 0 )); then
   for example in examples/*.json; do
     stems+=("$(basename "$example" .json)")
   done
@@ -50,7 +53,7 @@ PY
     "$stencil" render "$out/$stem.square.json" --out-dir "$out/square" --scale 2 --theme center >/dev/null
     python3 scripts/resvg-input.py "$out/square/$stem.square.svg" "$render_fixtures/$stem.square.svg"
   fi
-  if [[ -e "$cli_fixtures/$stem.check.txt" ]]; then
+  if (( named > 0 )) || [[ -e "$cli_fixtures/$stem.check.txt" ]]; then
     "$stencil" check "examples/$stem.json" >| "$cli_fixtures/$stem.check.txt" || true
     "$stencil" vet "examples/$stem.json" >| "$cli_fixtures/$stem.vet.txt" || true
   fi
