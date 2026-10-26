@@ -8,6 +8,22 @@ set -euo pipefail
 pr="${1:?usage: scripts/land.sh <pr-number>}"
 head=$(gh pr view "$pr" --json headRefName --jq .headRefName)
 sha=$(gh pr view "$pr" --json headRefOid --jq .headRefOid)
+base=$(gh pr view "$pr" --json baseRefName --jq .baseRefName)
+
+# Branch protection cannot require an up-to-date head here, so a head whose CI ran against an
+# older base can pass and still turn the base red once merged. Refuse a head that lacks the base tip.
+require_current_base() {
+  local behind
+  behind=$(gh api "repos/{owner}/{repo}/compare/$base...$sha" --jq .behind_by)
+  if [[ ! $behind =~ ^[0-9]+$ ]]; then
+    echo "land: unrecognised behind_by '$behind' comparing $base with $head" >&2
+    exit 1
+  fi
+  if (( behind > 0 )); then
+    echo "land: $head is $behind commit(s) behind $base; merge $base into it and push, so CI runs against the current base" >&2
+    exit 1
+  fi
+}
 # GitHub starts no pull_request run for a head that conflicts with its base, so the watch
 # below would find nothing. UNKNOWN is a mergeability GitHub has not computed yet.
 mergeable=$(gh pr view "$pr" --json mergeable --jq .mergeable)
@@ -41,8 +57,11 @@ if [[ -n $unsigned ]]; then
   echo "land: unsigned commit(s) on $head, which main refuses: $(echo "$unsigned" | paste -sd ' ' -); sign and push again" >&2
   exit 1
 fi
+require_current_base
 echo "land: watching ci run $run for $head at ${sha:0:7}"
 gh run watch "$run" --exit-status
+# The base can move while CI runs.
+require_current_base
 
 # A draft cannot merge; it is marked ready once its CI run has passed.
 draft=$(gh pr view "$pr" --json isDraft --jq .isDraft)
