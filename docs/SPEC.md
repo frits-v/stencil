@@ -608,9 +608,13 @@ The trait and its value types live in `stencil_model::text`. Layout depends on t
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum FontFamily {
     Inter,
+    /// JetBrains Mono NL, the build without programming ligatures (section 8.1).
+    JetBrainsMonoNl,
 }
 
 impl FontFamily {
+    pub const ALL: [FontFamily; 2];
+    /// "Inter" and "JetBrains Mono NL".
     pub fn css_name(self) -> &'static str;
 }
 
@@ -788,7 +792,7 @@ impl TextMeasurer for FixedMetricsMeasurer { /* rules below */ }
 
 ### 3.2 cosmic-text implementation
 
-`stencil_text::CosmicTextMeasurer` holds a `cosmic_text::FontSystem`. It is built with `FontSystem::new_with_locale_and_db("en-US".into(), database)`, where `database` holds only the four bundled Inter faces (section 8). System fonts are never loaded, so font fallback cannot pick another face.
+`stencil_text::CosmicTextMeasurer` holds a `cosmic_text::FontSystem`. It is built with `FontSystem::new_with_locale_and_db("en-US".into(), database)`, where `database` holds only the six bundled faces (section 8). System fonts are never loaded, so font fallback cannot pick another face.
 
 Each measurement follows these steps:
 
@@ -1040,31 +1044,33 @@ pub fn legend_consistency(page: &Page) -> CheckReport;
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct FontFile {
     pub file_name: &'static str,
+    pub family: FontFamily,
     pub weight: FontWeight,
     pub bytes: &'static [u8],
     /// Lowercase hex SHA-256 of `bytes`, copied from assets/fonts/FONTS.md.
     pub sha256: &'static str,
 }
 
-/// Inter-Regular, Inter-SemiBold, Inter-Bold, Inter-ExtraBold, via include_bytes!.
-pub const BUNDLED_FONTS: [FontFile; 4];
+/// The four Inter faces, then JetBrainsMonoNL-Regular and JetBrainsMonoNL-Bold, via
+/// include_bytes!, in FONTS.md order.
+pub const BUNDLED_FONTS: [FontFile; 6];
 
-/// The bundled file that holds `family` at `weight`; an exhaustive match, so every style a
-/// layout can set names one.
-pub fn bundled_font(family: FontFamily, weight: FontWeight) -> FontFile;
+/// The bundled file that holds `family` at `weight`, or `NoSuchFace`; a test resolves every
+/// style of TEXT_STYLES, so every style a layout can set names one.
+pub fn bundled_font(family: FontFamily, weight: FontWeight) -> Result<FontFile, FontError>;
 
-/// The public check over the four compiled-in faces; `verify_fonts` stays crate-private so
+/// The public check over the six compiled-in faces; `verify_fonts` stays crate-private so
 /// only the font-swap test can pass it other files.
 pub fn verify_bundled_fonts() -> Result<(), FontError>;
 
-/// Parses each file and asserts family "Inter" and the listed weight. Crate-private so the
+/// Parses each file and asserts its listed family and weight. Crate-private so the
 /// font-swap test can pass a modified copy of BUNDLED_FONTS.
-pub(crate) fn verify_fonts(files: &[FontFile]) -> Result<(), FontError>;
+pub(crate) fn verify_fonts(files: &[FontFile; 6]) -> Result<(), FontError>;
 
 pub struct CosmicTextMeasurer { /* FontSystem, cache */ }
 
 impl CosmicTextMeasurer {
-    /// Calls verify_bundled_fonts, then builds a FontSystem over the four faces only.
+    /// Calls verify_bundled_fonts, then builds a FontSystem over the six faces only.
     pub fn new() -> Result<Self, FontError>;
 }
 
@@ -1074,10 +1080,12 @@ impl stencil_model::text::TextMeasurer for CosmicTextMeasurer { /* section 3.2 *
 pub enum FontError {
     #[error("bundled font {file_name} does not parse")]
     Unparseable { file_name: &'static str },
-    #[error("bundled font {file_name} has family {found:?}, expected \"Inter\"")]
-    FamilyMismatch { file_name: &'static str, found: String },
+    #[error("bundled font {file_name} has family {found:?}, expected {expected:?}")]
+    FamilyMismatch { file_name: &'static str, expected: &'static str, found: String },
     #[error("bundled font {file_name} has weight {found}, expected {expected}")]
     WeightMismatch { file_name: &'static str, expected: u16, found: u16 },
+    #[error("no bundled font holds {family} at weight {weight}")]
+    NoSuchFace { family: &'static str, weight: u16 },
 }
 ```
 
@@ -1259,21 +1267,31 @@ pub struct SvgDocument {
     /// The family and weight of the <text> elements, each once, ordered by family name and
     /// then weight.
     pub font_faces: Vec<(FontFamily, FontWeight)>,
-    /// Every Item at an end of at least one link, in geometry order.
-    pub hover_items: Vec<HoverItem>,
+    /// One rule per element that refers to something else (section 5.2).
+    pub hover_rules: Vec<HoverRule>,
 }
 
-/// An Item the written SVG highlights with its links (section 5.2).
-pub struct HoverItem {
-    /// The `data-id` of the Item's group.
-    pub pointer: String,
-    /// The `id` of the Item's group.
+/// What the written SVG highlights from one element (section 5.2).
+pub struct HoverRule {
+    pub source: HoverSource,
+    /// The `id` the source carries.
     pub anchor: String,
+    /// The `data-id` of every fading group that stays drawn, the source's own included.
+    pub kept_groups: Vec<String>,
+    /// The `data-row` of every row that stays drawn.
+    pub kept_rows: Vec<String>,
+}
+
+pub enum HoverSource {
+    /// A fading group by its `data-id`.
+    Group(String),
+    /// A row of a keyed list by its `data-row`.
+    Row(String),
 }
 
 impl SvgDocument {
-    /// The SVG with an @font-face per entry of `font_faces` and a hover rule per entry of
-    /// `hover_items` (section 5.2). `render` writes this; `render_png` takes `svg`.
+    /// The SVG with an @font-face per entry of `font_faces` and a rule per entry of
+    /// `hover_rules` (section 5.2). `render` writes this; `render_png` takes `svg`.
     pub fn self_contained(&self) -> Result<String, RenderError>;
 }
 
@@ -1418,7 +1436,8 @@ The coordinates in this example are illustrative.
 
 Structure:
 
-- One `<g>` per node, nested the same way as the node tree and in section 4.4 geometry order. Each carries `data-id` (the node pointer) and `data-tag` (the `NodeTag` name). Zones, Pipes (Tee arms included), Tees and legend entries also carry `data-kind`, taken from `NodeGeometry.kind`. An Item's group also carries `id`, written before `data-id`: the item's own `id`, else its pointer with each `/` replaced by `_` (`_body_0_children_3`), which no `id` can spell since `ID_PATTERN` has no `_`. An own `id` that starts `arrow-` or equals `stencil-shadow`, the prefix and name the writer gives its markers and its shadow filter, takes the pointer form, so every `url(#…)` keeps its target. A `<g>` has no transform. Every coordinate is absolute canvas px.
+- One `<g>` per node, nested the same way as the node tree and in section 4.4 geometry order. Each carries `data-id` (the node pointer) and `data-tag` (the `NodeTag` name). Zones, Pipes (Tee arms included), Tees and legend entries also carry `data-kind`, taken from `NodeGeometry.kind`. The group of every fading node (an Item, Box, Pipe, Tee, Step, rung, problem point, actor chip, legend entry or how-to) also carries `id`, written before `data-id`: the node's own `id`, else its pointer with each `/` replaced by `_` (`_body_0_children_3`), which no `id` can spell since `ID_PATTERN` has no `_`. An own `id` that starts `arrow-` or equals `stencil-shadow`, the prefix and name the writer gives its markers and its shadow filter, takes the pointer form, so every `url(#…)` keeps its target. A Pipe's group carries `data-from` and `data-to`, the pointers of the nodes its ends meet (its targets, else what each end lands on, as the description names them); a Tee arm's names its Tee and the node its end meets, and a Tee's `data-from` names the node its spine stands on. An end that meets nothing writes no attribute. A `<g>` has no transform.
+- On a design sheet every element of a parts-list row, a general-notes row or an attention item carries `data-row`, the row's pointer (`/…/parts/2`, `/…/notes/0`, `/sheet/attention/items/1`), and the first of them carries the row's `id` in the pointer form. Every element of a balloon, flag or diamond and its numeral carries `data-mark`, the pointer of the row of the key it names. A row rule between rows carries neither. Every coordinate is absolute canvas px.
 - Inside a node's group, shapes come first, then that node's text, then the child groups. Inside a Tee the order is spine, hub, then arm groups.
 - Boxes are `<rect>` with `rx` for the radius and fill and stroke from the tables in section 2. A stroke of width `w` is drawn on a rect inset by `w / 2`, so it stays inside the border box as a CSS border does. The gcp frame uses a `<path>` for its 4 4 10 10 corners and draws the bar before the frame stroke.
 - Dashed borders and dashed wires use `stroke-dasharray="6 5"`.
@@ -1442,27 +1461,40 @@ The only `http` string in the SVG is the SVG namespace URI. There are no externa
 @font-face { font-family: "Inter"; font-style: normal; font-weight: 700; src: url("data:font/ttf;base64,…") format("truetype"); }
 ```
 
-The payload is the base64 of the `BUNDLED_FONTS` file that `stencil_text::bundled_font` returns for that family and weight, unmodified, so a browser, a slide or document import or any other rasterizer draws the SVG in the faces the PNG was rendered and measured with, whether or not Inter is installed. A figure using all four weights grows by about 2.2 MB. The `data:` URIs are not external references.
+The payload is the base64 of the `BUNDLED_FONTS` file that `stencil_text::bundled_font` returns for that family and weight, unmodified, so a browser, a slide or document import or any other rasterizer draws the SVG in the faces the PNG was rendered and measured with, whether or not Inter is installed. A figure using all four weights grows by about 2.2 MB. The `data:` URIs are not external references. After the faces the block holds `text { font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }`, written whenever it holds a face. A style rule outranks the `font-family="Inter"` attribute, so where a page forbids `data:` fonts (GitHub's user content policy does) and Inter is not installed, the text falls back to a sans face instead of the browser's default serif; the attribute stays as it is, so `render_svg` and the PNG do not change.
 
-The hover rules highlight an Item and its links where the file is opened in a browser or inlined in a page; an `<img>` gets no pointer events and draws the figure as the PNG does. `hover_items` holds every Item at an end of at least one link, in geometry order, with its pointer and the `id` its group carries. When it is not empty the block holds `[data-tag="Pcard"], [data-tag="Link"] { transition: opacity 0.15s ease-out; }` and then, per entry, one rule on one line:
+The hover rules highlight an element and what it refers to where the file is opened in a browser or inlined in a page; an `<img>` gets no pointer events and draws the figure as the PNG does. A fading unit is the group of a fading node or a link, which fades its own drawn elements and never its child groups, so a kept unit inside a faded one stays drawn and no element fades twice, or a row, whose elements fade. Each source, a fading unit or a row, has a related set that stays drawn while the pointer rests on one of its own elements, on a row through any mark of its key as well, or while the URL fragment names its `id` (`figure.svg#api` opens with `api` highlighted). Every other fading unit drops to opacity 0.2. Grid references, the title block head, captions, view headings, lane heads and the parts-list and notes heads never fade. The sets are read from the model and the geometry: line ends from routes and pipe landings, marks from `PageMarks`, actors from `PageActors`, legend keys from `line_uses`.
+
+| Source | Related set, the source included |
+|---|---|
+| Item, Step, problem point, rung | its framing Boxes; every Link, Pipe or Tee with an end on it, with its arms, the nodes their ends meet and the key rows those lines mark; the row of each key it marks and the node of each such part; its own parts row and every carrier of that part's balloon |
+| Box | its framing Boxes; every fading node inside it; every Link, Pipe or Tee with an end on it or inside it; its key rows and parts row as for an Item |
+| Link, Pipe, Tee or Tee arm | its framing Boxes; the whole Tee with its arms; the nodes every end meets; the key rows of each member and the parts row a Pipe is the node of, with that part's carriers |
+| Parts-list row, or a balloon of its part | the set of its node when it names one; every carrier of its balloon |
+| General-notes row, or a flag of its note | every carrier of its flag |
+| Attention row, or a diamond of its item | every carrier of its diamond; the actor chip it names |
+| Actor chip | every Item, Box, Pipe, Tee arm, Tee, Link, Step (by lane), rung, attention row and parts row that acts for the actor |
+| Legend entry | every line use whose legend key is the entry's (section 13.1 rule 8) |
+
+A source whose set holds nothing beyond itself and its framing Boxes has no rule, so hovering a how-to, or an Item with no line, mark or part, changes nothing. When `hover_rules` is not empty the block then holds `F > :not([data-id]), [data-row] { transition: opacity 0.15s ease-out; }`, where `F` is `:is([data-tag="Pcard"],[data-tag="Zone"],…,[data-tag="Link"])` over the fading tags, and then one rule per entry on one line, sources in geometry order, then links, then rows in list order:
 
 ```css
-svg:has([data-id="P"]:hover, [id="A"]:target) [data-tag="Link"]:not([data-from="P"]):not([data-to="P"]), svg:has([data-id="P"]:hover, [id="A"]:target) [data-tag="Pcard"]:not([data-id="P"]) { opacity: 0.2; }
+svg:has(S) F:not([data-id="G1"]):not([data-id="G2"]) > :not([data-id]), svg:has(S) [data-row]:not([data-row="R1"]) { opacity: 0.2; }
 ```
 
-where `P` is the item's pointer and `A` its `id`, each a CSS string with `"`, `\` and newline escaped, and the line escaped for XML content. While the pointer rests on the item, or the URL fragment names it (`figure.svg#api` opens with `api` highlighted), every link that does not end on it and every other Item fades; the items at the far ends of its links fade with the rest and its links stay drawn up to them. Pipes, zones and chrome keep their opacity. An Item with no link has no rule, so hovering it changes nothing. A document with no text and no linked Item is written as `render_svg` returned it. Neither block reaches the PNG, the measured JSON or a center fixture.
+`S` is `[data-id="H"] > :not([data-id], [data-mark]):hover, [id="A"]:target` for a group source `H` and `[data-row="R"]:hover, [data-mark="R"]:hover, [id="A"]:target` for a row `R`; binding to the source's own elements keeps a Box from firing when one of its Items is hovered. `G1`, `G2` and so on are the kept groups and `R1` the kept rows, sorted, one `:not()` each. Every value is a CSS string with `"`, `\` and newline escaped, and the line is escaped for XML content (`&` and `<`). The block is 9 KB to 68 KB without the fonts across the examples, onepager the largest. A document with no text and no rule is written as `render_svg` returned it. Neither block reaches the PNG, the measured JSON or a center fixture.
 
 ### 5.3 PNG
 
 `render_png` works in this order:
 
 1. Call `stencil_text::verify_bundled_fonts`. A failure returns `RenderError::Fonts`.
-2. Build `usvg::Options` with `fontdb` set to an `Arc` of a database that contains only the four bundled faces (loaded with `load_font_data`), `font_family` set to `"Inter"`, no resources directory, an `image_href_resolver` that decodes `data:` URIs and resolves every other href to nothing, and a strict `font_resolver`:
+2. Build `usvg::Options` with `fontdb` set to an `Arc` of a database that contains only the six bundled faces (loaded with `load_font_data`), `font_family` set to `"Inter"`, no resources directory, an `image_href_resolver` that decodes `data:` URIs and resolves every other href to nothing, and a strict `font_resolver`:
    - `select_font` queries the database with the element's own families, weight, stretch and style and appends no generic family. usvg's default selector appends Serif to every query, which resolves a missing family as soon as a generic family points at a loaded face.
-   - `select_fallback` returns `None`. usvg's default fallback substitutes any loaded face that covers a character, so with four Inter faces loaded it would draw a character from the wrong weight.
+   - `select_fallback` returns `None`. usvg's default fallback substitutes any loaded face that covers a character, so with six faces loaded it would draw a character from the wrong weight or family.
    - Both closures count every lookup that finds no face.
 
-   No generic family is pointed at Inter on this database (`set_serif_family` and its siblings are never called). `docs/api-notes/resvg.md` records the resolver and the failure it closes.
+   No generic family is pointed at a bundled face on this database (`set_serif_family` and its siblings are never called). `docs/api-notes/resvg.md` records the resolver and the failure it closes.
 3. Parse with `usvg::Tree::from_str`.
 4. Count `usvg::Node::Text` nodes, descending recursively through `Node::Group` children only: not into a text node's flattened group and not into the tree of an `<image>` (icons hold no text). The walk visits at most 16 × NODES_MAX = 65,536 groups, well above the one `<g>` per geometry node a vetted page writes, and returns `Svg` when the tree holds more. When a `<text>` element's font does not resolve, usvg 0.48 drops the element and raises no error. `parser/text.rs` returns before it pushes the `Node::Text`, and text layout returns `None` when it placed no glyphs, so a dropped string leaves no node behind. The count is compared with `expected_text_elements`, which the caller takes from `SvgDocument::text_elements`. Fewer returns `TextNotRendered { count: expected - found }`. More returns `TextCountExceeded`, which means the caller passed the wrong number. Equal goes on to the lookup tally from step 2: a span whose family does not resolve inside a `<text>` that still places other glyphs, or a character that no longer falls back, leaves the node count intact, so any counted miss returns `FontNotResolved { lookups }`. The tally counts resolver calls, not `<text>` elements, so one span with two unresolvable characters counts 2.
 5. Compute `ceil(width * scale)` and `ceil(height * scale)` in f64. `width` and `height` are the parsed tree's size, which is the SVG's `width` and `height` attributes, so they are the canvas size already rounded to 2 decimals by section 5.1. A layout height of 652.004 is written as 652 and renders 1304 px tall at scale 2, not 1305. When either extent is not finite or below 1, or their product is above `PNG_PIXELS_MAX`, return `PixmapAllocation` before anything is allocated. Otherwise allocate a `tiny_skia::Pixmap` of that size, fill it with white (`Color::WHITE`), and render with `resvg::render(&tree, Transform::from_scale(scale, scale), &mut pixmap.as_mut())`. `PngSize::Width(w)` keeps `w` as the pixmap width, which must lie between `ceil(width * PNG_WIDTH_SCALE_MIN)` and `floor(width * DeviceScale::MAX)` or `PngWidthOutOfRange` is returned, takes `scale = w / width` and the height `ceil(height * scale)`, and renders at that scale under the same budget. The tree is rasterized at the fractional scale, so text is drawn at its final size, never resampled. hybrid-ai, 1480 by 1177.6, renders 2034 by 1619 at width 2034.
@@ -1681,24 +1713,26 @@ Errors for exit 2 go to stderr with the underlying error chain. The CLI never pr
 
 ### 8.1 Fonts
 
-Family: Inter, SIL Open Font License 1.1. Four static instances from the Inter 4.1 release archive (`extras/ttf/`), committed unmodified under `assets/fonts/` by the asset pre-step (section 8.3):
+Two families, both under the SIL Open Font License 1.1, committed unmodified under `assets/fonts/` by the asset pre-step (section 8.3). Inter: four static instances from the Inter 4.1 release archive (`extras/ttf/`). JetBrains Mono NL: Regular and Bold from the JetBrains Mono 2.304 release archive (`fonts/ttf/`), the build without programming ligatures, so `--`, `->` and `!=` draw as the characters typed and not as joined glyphs.
 
-| File | Weight | Used by | SHA-256 |
-|---|---|---|---|
-| `Inter-Regular.ttf` | 400 | lede, card_product, note_legend, legend_text, foot, block_body | in `FONTS.md` |
-| `Inter-SemiBold.ttf` | 600 | fact, ask, tag_sub | in `FONTS.md` |
-| `Inter-Bold.ttf` | 700 | kicker, title, zone_label, gcp_bar, perimeter_label, card_function, tag_label, legend_label | in `FONTS.md` |
-| `Inter-ExtraBold.ttf` | 800 | badge | in `FONTS.md` |
+| File | Family | Weight | Used by | SHA-256 |
+|---|---|---|---|---|
+| `Inter-Regular.ttf` | Inter | 400 | lede, card_product, note_legend, legend_text, foot, block_body | in `FONTS.md` |
+| `Inter-SemiBold.ttf` | Inter | 600 | fact, ask, tag_sub | in `FONTS.md` |
+| `Inter-Bold.ttf` | Inter | 700 | kicker, title, zone_label, gcp_bar, perimeter_label, card_function, tag_label, legend_label | in `FONTS.md` |
+| `Inter-ExtraBold.ttf` | Inter | 800 | badge | in `FONTS.md` |
+| `JetBrainsMonoNL-Regular.ttf` | JetBrains Mono NL | 400 | none yet | in `FONTS.md` |
+| `JetBrainsMonoNL-Bold.ttf` | JetBrains Mono NL | 700 | none yet | in `FONTS.md` |
 
-- `assets/fonts/OFL.txt` holds the license text from the same archive. `assets/fonts/FONTS.md` holds the table above with the SHA-256 column filled in and the release version and archive URL. `BUNDLED_FONTS` copies the hashes, and a test compares them with the compiled bytes.
+- `assets/fonts/OFL.txt` holds the license text from the Inter archive and `assets/fonts/JetBrainsMono-OFL.txt` the `OFL.txt` of the JetBrains Mono archive. `assets/fonts/FONTS.md` holds the table above with the SHA-256 column filled in, each release version and archive URL, and the SHA-256 of the JetBrains Mono archive. `BUNDLED_FONTS` copies the hashes, and a test compares them with the compiled bytes.
 - Static instances are used instead of the variable font, so each weight is a separate face with fixed metrics and cosmic-text and usvg select the same face. `docs/api-notes/cosmic-text.md` recommends bundling `InterVariable.ttf` alone; the spec does not follow it, for this reason.
-- The files are not subset, renamed or otherwise modified, so the OFL's clauses on modified versions do not apply. The license permits bundling the files with the software, and `OFL.txt` ships next to them. The written SVG embeds the files its text uses unmodified (section 5.2); each carries its copyright notice and the OFL notice in its `name` table, the machine-readable metadata the OFL accepts in place of a separate license file.
-- Helvetica Neue, the face the HTML stencil uses, is a system `.ttc` that may not be redistributed, so it is not an option. Google Sans stays excluded for the brand reason recorded in the stencil provenance.
-- Only these four faces are ever loaded, into the cosmic-text database and into the usvg database alike. A character Inter lacks is a `MissingGlyph` defect, never a fallback.
+- The files are not subset, renamed or otherwise modified, so the OFL's clauses on modified versions do not apply. The license permits bundling the files with the software, and each license text ships next to them. The written SVG embeds the files its text uses unmodified (section 5.2); each carries its copyright notice and the OFL notice in its `name` table, the machine-readable metadata the OFL accepts in place of a separate license file.
+- Helvetica Neue, the face the HTML stencil uses, is a system `.ttc` that may not be redistributed, so it is not an option. Google Sans is not bundled.
+- Only these six faces are ever loaded, into the cosmic-text database and into the usvg database alike. A character the style's family lacks is a `MissingGlyph` defect, never a fallback to the other family.
 
 ### 8.2 Icons
 
-An icon pack is a directory `assets/icons/<pack>/` of SVG files and a `PROVENANCE.md` that records the source archive or repository and its URL, the fetch date, and one row per file mapping the local file to its source path; the provenance of a vendor's archive also quotes its stated terms and the conclusion. `IconPack` lists the bundled packs in alphabetical order, then `none`. An icon is named by its file stem, and a stem means an icon only in the pack of the item's kind: `Item.icon` and a products row's `icon` are stems, the same stem in two packs is two icons, and a page never names a pack. Vet resolves an item's stem against its kind's pack (`icon-outside-pack`, section 13.1), the grammar check resolves each products row against its kind's pack (`grammar-icon-table`, section 13.2), and layout carries the resolved icon on the Item's node for the writer. A kind draws from one pack, so a figure mixes no packs.
+An icon pack is a directory `assets/icons/<pack>/` of SVG files and a `PROVENANCE.md` that records the source archive or repository and its URL, the fetch date, and one row per file mapping the local file to its source path. `IconPack` lists the bundled packs in alphabetical order, then `none`. An icon is named by its file stem, and a stem means an icon only in the pack of the item's kind: `Item.icon` and a products row's `icon` are stems, the same stem in two packs is two icons, and a page never names a pack. Vet resolves an item's stem against its kind's pack (`icon-outside-pack`, section 13.1), the grammar check resolves each products row against its kind's pack (`grammar-icon-table`, section 13.2), and layout carries the resolved icon on the Item's node for the writer. A kind draws from one pack, so a figure mixes no packs.
 
 Every file is copied byte for byte from its source. Stencil never recolors, resizes by rewriting, crops, re-exports or minifies an icon. It places the original bytes in a data URI and scales them with the `<image>` element's width and height.
 
@@ -1706,7 +1740,7 @@ Every file is copied byte for byte from its source. Stencil never recolors, resi
 
 #### Pack aws
 
-The 46 AWS Architecture Icons in `assets/icons/aws/`, the 64 px SVGs of the icon package linked from aws.amazon.com/architecture/icons. `assets/icons/aws/PROVENANCE.md` records the stated terms and the conclusion that customers and partners may use the icons unaltered, scaled in proportion, to create architecture diagrams; the terms give no separate licence to redistribute the files.
+The 46 AWS Architecture Icons in `assets/icons/aws/`, the 64 px SVGs of the icon package linked from aws.amazon.com/architecture/icons. `assets/icons/aws/PROVENANCE.md` records the archive, its URL and one row per file.
 
 | Local file | Archive path | SHA-256 |
 |---|---|---|
@@ -1759,7 +1793,7 @@ The 46 AWS Architecture Icons in `assets/icons/aws/`, the 64 px SVGs of the icon
 
 #### Pack azure
 
-The 41 Azure icons in `assets/icons/azure/`: 40 from the Azure Public Service Icons archive (V24) linked from learn.microsoft.com/en-us/azure/architecture/icons, and `entra-id.svg` from the Microsoft Entra architecture icons archive linked from learn.microsoft.com/en-us/entra/architecture/architecture-icons, since the Azure archive has no Entra ID icon. The archive's folders are categories but every file is a service icon, so every row of the `product` table is class product. `assets/icons/azure/PROVENANCE.md` records the stated terms and the conclusion that the icons may be used unaltered, labeled with the service name, for the Microsoft service each depicts in architecture diagrams, training materials and documentation.
+The 41 Azure icons in `assets/icons/azure/`: 40 from the Azure Public Service Icons archive (V24) linked from learn.microsoft.com/en-us/azure/architecture/icons, and `entra-id.svg` from the Microsoft Entra architecture icons archive linked from learn.microsoft.com/en-us/entra/architecture/architecture-icons, since the Azure archive has no Entra ID icon. The archive's folders are categories but every file is a service icon, so every row of the `product` table is class product. `assets/icons/azure/PROVENANCE.md` records the archives, their URLs and one row per file.
 
 | Local file | Archive path | SHA-256 |
 |---|---|---|
@@ -1807,7 +1841,7 @@ The 41 Azure icons in `assets/icons/azure/`: 40 from the Azure Public Service Ic
 
 #### Pack gcp
 
-The 23 Google Cloud icons in `assets/icons/gcp/`, from the two ZIP archives linked from cloud.google.com/icons. `assets/icons/gcp/PROVENANCE.md` records the stated terms and the conclusion that the icons may be used unaltered on labeled product cards in architecture and technical figures; a marketing or co-branded surface needs a Partner Marketing Hub request first.
+The 23 Google Cloud icons in `assets/icons/gcp/`, from the two ZIP archives linked from cloud.google.com/icons. `assets/icons/gcp/PROVENANCE.md` records the archives, their URLs and one row per file.
 
 | Local file | Archive path | SHA-256 |
 |---|---|---|
@@ -1885,12 +1919,13 @@ stencil-text and stencil-render embed the assets with `include_bytes!`, so neith
 1. Download `https://github.com/rsms/inter/releases/download/v4.1/Inter-4.1.zip`.
 2. Copy `extras/ttf/Inter-Regular.ttf`, `Inter-SemiBold.ttf`, `Inter-Bold.ttf` and `Inter-ExtraBold.ttf` unmodified to `assets/fonts/`, and the archive's `LICENSE.txt` to `assets/fonts/OFL.txt`.
 3. Write `assets/fonts/FONTS.md`: the section 8.1 table with each file's SHA-256 (`shasum -a 256`), the release version 4.1 and the archive URL.
-4. Copy the 23 Google Cloud icons from `drafting-diagrams/stencil/icons/` to `assets/icons/gcp/` and `drafting-diagrams/stencil/PROVENANCE.md` to `assets/icons/gcp/PROVENANCE.md`. Confirm every icon's SHA-256 equals its row in the section 8.2 table of pack gcp.
-5. Confirm with a throwaway probe that both font databases read the four files as this spec expects. cosmic-text's re-exported `fontdb` and usvg's re-exported `fontdb` each load the files with `load_font_data` and must report family `Inter` for every face and weights 400, 600, 700 and 800. The cosmic-text scout checked only Regular, SemiBold and Bold, so ExtraBold at weight 800 is unconfirmed until this step. If any face reports another family (for example `Inter ExtraBold` from the legacy name table) or another weight, the pre-step stops and this spec is revised before fan-out.
-6. Write `examples/g7.json` as the section 9.3 JSON block, byte for byte, with a trailing newline. stencil-model, stencil-text, stencil-render, stencil-cli and the golden test all read this one file, and a change to it is made in section 9.3 first.
-7. Copy the existing Chrome headless render of the g7 gold to `examples/golden/g7-gold-chrome.png`, or regenerate it with the recipe in section 9.4. Confirm it is 2640 by 1800 px (`sips -g pixelWidth -g pixelHeight` or `file`).
+4. Download `https://github.com/JetBrains/JetBrainsMono/releases/download/v2.304/JetBrainsMono-2.304.zip` into an empty directory and confirm its SHA-256 equals the one in `FONTS.md`. Copy `fonts/ttf/JetBrainsMonoNL-Regular.ttf` and `fonts/ttf/JetBrainsMonoNL-Bold.ttf` unmodified to `assets/fonts/`, and the archive's `OFL.txt` to `assets/fonts/JetBrainsMono-OFL.txt`; add their rows, the release version 2.304 and the archive URL to `FONTS.md`. Nothing else from the archive is read or run.
+5. Copy the 23 Google Cloud icons from `drafting-diagrams/stencil/icons/` to `assets/icons/gcp/` and `drafting-diagrams/stencil/PROVENANCE.md` to `assets/icons/gcp/PROVENANCE.md`. Confirm every icon's SHA-256 equals its row in the section 8.2 table of pack gcp.
+6. Confirm with a throwaway probe that both font databases read the six files as this spec expects. cosmic-text's re-exported `fontdb` and usvg's re-exported `fontdb` each load the files with `load_font_data` and must report family `Inter` for every Inter face and weights 400, 600, 700 and 800, and family `JetBrains Mono NL` and weights 400 and 700 for the two JetBrains Mono files. The cosmic-text scout checked only Regular, SemiBold and Bold, so ExtraBold at weight 800 is unconfirmed until this step. If any face reports another family (for example `Inter ExtraBold` from the legacy name table) or another weight, the pre-step stops and this spec is revised before fan-out.
+7. Write `examples/g7.json` as the section 9.3 JSON block, byte for byte, with a trailing newline. stencil-model, stencil-text, stencil-render, stencil-cli and the golden test all read this one file, and a change to it is made in section 9.3 first.
+8. Copy the existing Chrome headless render of the g7 gold to `examples/golden/g7-gold-chrome.png`, or regenerate it with the recipe in section 9.4. Confirm it is 2640 by 1800 px (`sips -g pixelWidth -g pixelHeight` or `file`).
 
-The probe is not committed. `verify_bundled_fonts` and the stencil-text tests check the same facts once the crate exists.
+The probe is not committed. `verify_bundled_fonts` and the stencil-text tests check the same facts on cosmic-text's database once the crate exists, and `the_usvg_database_reads_each_bundled_file_as_its_family_and_weight` in crates/stencil-render/src/png.rs on usvg's.
 
 Two more fixtures are created during crate work, each by one owner:
 
@@ -2095,7 +2130,7 @@ Each behavior change comes with a test that fails before the change. Each positi
 ### stencil-text
 
 - Each `BUNDLED_FONTS` entry's bytes hash to its `sha256`, and the hashes equal `assets/fonts/FONTS.md`.
-- `verify_bundled_fonts` passes. Each face reports family `Inter` and weights 400, 600, 700 and 800. A unit test copies `BUNDLED_FONTS`, swaps the `bytes` of two entries of different weight, passes the copy to `verify_fonts` and gets `WeightMismatch`.
+- `verify_bundled_fonts` passes. The Inter faces report family `Inter` and weights 400, 600, 700 and 800, the JetBrains Mono files `JetBrains Mono NL` and 400 and 700. A unit test copies `BUNDLED_FONTS`, swaps the `bytes` of two entries of different weight, passes the copy to `verify_fonts` and gets `WeightMismatch`; another puts Inter's bytes in a JetBrains Mono entry and gets `FamilyMismatch`. `bundled_font` resolves every style of `TEXT_STYLES` and reports `NoSuchFace` for JetBrains Mono NL at 600.
 - Coverage: every character in every text field of `examples/g7.json`, uppercased where the style uppercases, has a glyph in the weight its style uses, `·` and `↔` included.
 - `MissingGlyph` for U+4E00 and U+1F600.
 - Idempotence: for each style in `stencil_model::text::TEXT_STYLES` and a set of strings, measuring again at `Some(width_px + WRAP_EPSILON_PX)` gives the same line count and width.
@@ -2137,7 +2172,8 @@ All tests except the wrap-epsilon regression use `FixedMetricsMeasurer::default(
 - SVG parses with usvg. There is one `<g data-id>` per geometry node, in the same order with the same pointers. The only `http` substring is the namespace URI.
 - Every `<text>` has `xml:space="preserve"` and `font-family="Inter"` with no fallback list. `letter-spacing` is present exactly for the styles with nonzero spacing.
 - The SVG `render` writes holds one `@font-face` per weight its `<text>` elements use and none for another, each decoding to the bundled file of that weight: hybrid-ai uses 400, 600, 700 and 800, design-brief and hero-iso 400, 700 and 800 (`the_svg_embeds_a_font_face_for_each_weight_its_text_uses_and_no_other` in `crates/stencil-cli/tests/cli.rs`).
-- The SVG `render` writes holds one hover rule per Item at a link end and none for another Item, every link group's `data-from` and `data-to` name a node group's `data-id`, every `id` is unique, and the SVG `render_svg` returns holds no `<style>`: over onepager, org, onprem-iso and g7 that is 23 links, 40 Items, 15 rules and 25 Items without one (`the_svg_highlights_each_linked_item_on_hover_and_the_resvg_input_does_not` in `crates/stencil-cli/tests/cli.rs`). On a small page an Item keeps its own `id`, an Item without one or with the id `arrow-center-blue` takes the pointer form, and the marker keeps its id (`each_link_group_names_its_end_pointers_and_each_item_group_its_anchor` in `crates/stencil-render/tests/links.rs`).
+- The SVG `render` writes holds the `text` fallback rule once, after the last `@font-face` and before the hover rules, for hybrid-ai, design-brief, onepager and hero-iso, and the SVG `render_svg` returns holds no style (`the_written_svg_gives_its_text_a_fallback_stack_after_the_faces_and_the_resvg_input_does_not` in `crates/stencil-cli/tests/cli.rs`).
+- Across every example, at least 16 holding at least 376 hover rules, the written SVG holds one rule per source at most: each source exists with the `id` its rule names, keeps itself, and keeps only groups and rows the SVG holds; every `id` is unique, every `data-from`, `data-to` and `data-mark` names a group or row the SVG holds, no how-to has a rule, and the SVG `render_svg` returns holds no `<style>` (`every_hover_rule_names_units_the_written_svg_holds_and_the_resvg_input_has_none` in `crates/stencil-cli/tests/cli.rs`). On onepager the item `api`, its parts row, the first attention item, the second actor chip, the first legend entry, the Box `evaluation-path` and the first general note keep the exact sets the section 5.2 table gives, 72 kept units in all (`onepager_keeps_the_related_set_of_each_kind_of_element`). On a small page an Item keeps its own `id`, an Item without one or with the id `arrow-center-blue` takes the pointer form, the marker keeps its id, an item keeps its links and their far ends, and the item with no link has no rule (`each_link_group_names_its_end_pointers_and_each_item_group_its_anchor_and_far_ends` in `crates/stencil-render/tests/links.rs`).
 - Icons: for every bundled pack, each data URI decodes to bytes whose SHA-256 equals the pack's section 8.2 table, which has one row per icon of the pack and fails when it has none. A render of a Pcard for each gcp icon parses.
 - Colors: for each ZoneKind the rect fill, stroke, stroke width and dasharray match section 2.4. For each PipeKind the wire color and dasharray match section 5.2, and a Tee of that kind draws its spine, and a legend entry of that kind its swatch `<line>`, in the same color and dasharray. A `deny` Tee's hub has stroke #F4C7C3 and text fill #C5221F.
 - Numbers: no attribute value has more than 2 decimals, and `-0` never appears. `format_number` gives `Integer(0)` for -0.0 and -0.001, `Integer(1320)` for 1320.0, `Integer(652)` for 652.004 and `Decimal(652.4)` for 652.4.
@@ -2333,7 +2369,7 @@ Checks, in section 6 terms, examined counts included:
 
 Rendering: each route is a `<polyline>` (or `<path>` with `L` commands) in the wire color and line style of its kind, with an arrowhead as a filled triangle, 10 px long and 8 px wide, at each end the `arrow` value names, drawn with a `<marker>` per kind and theme. A deny line ends in a stop plate there instead (`EndCap::StopPlate`), so it never reads as a permitted path: a filled `<rect>` in the wire color, `STOP_PLATE_WIDTH_PX` = 16 across the line and `STOP_PLATE_THICKNESS_PX` = 3 along it, its outer face on the attach point and so on the endpoint's outline. The arrow stub still applies, so the plate stands square to a straight approach. It is the flat form of the iso plate of section 12.3 rule 5, wider against the 8 px arrowhead than the iso proportion so it reads at deck size, and it has no marker. The tag is drawn exactly like a pipe tag. Links are drawn after every node, so they paint over zone fills and never under them. The measured JSON gains `links` with the routed points, tag box and status (section 5.4).
 
-SVG structure: after the page group closes, one `<g data-id="/links/<i>" data-tag="Link" data-kind="<kind>" data-from="<pointer>" data-to="<pointer>">` per route in link order, where `data-from` and `data-to` hold the `data-id` of the node the link's `from` and `to` name. Inside it, in order:
+SVG structure: after the page group closes, one `<g id="_links_<i>" data-id="/links/<i>" data-tag="Link" data-kind="<kind>" data-from="<pointer>" data-to="<pointer>">` per route in link order, where `data-from` and `data-to` hold the `data-id` of the node the link's `from` and `to` name. Inside it, in order:
 
 - A `<path d="M x y L x y ..." fill="none">` with the kind's stroke and `stroke-linejoin="round"`, each bend rounded as [section 11.6](#116-link-corners) says. At an arrowed end the path stops 10 px short of the attach point (3 px, the plate's thickness, on a deny line), or at the previous corner when the end segment is shorter, so the stroke ends under the arrowhead's base as a pipe wire does.
 - One unstroked `<line>` per arrowhead from its base to its tip on the endpoint box edge, carrying `marker-end` with the `arrow-<theme>-<kind>` marker that pipes use, or on a deny line one stop plate `<rect>`. The marker set in `<defs>` covers every kind but deny used by an arrowed Pipe, Tee arm or link.
@@ -4906,7 +4942,7 @@ With no `--print-width`, icon-matches-product examines 6 items on g7 and hero-is
 Break opportunities. A long bucket name such as `acme-prod.analytics.raw-events` is one word to a measurer that breaks only at spaces, so its min-content width can widen an item past its column. Section 3's definition of a word changes for both measurers: a line may break after a run of U+0020, after a `-` or `/` that is followed by an ASCII letter, and after a `.` that is followed by an ASCII letter. A word is the text between two consecutive opportunities, and the min-content floor of sections 2.1 and 2.5 is the widest word. A dot between digits (`10.8.0.0`) and a hyphen before a digit (`-29`) stay unbreakable, so addresses and ranges never split.
 
 1. `FixedMetricsMeasurer` breaks at exactly these opportunities. A break after `-`, `/` or `.` keeps the character on the earlier line, and no width is subtracted for it (it is not a trailing space). The worked example of section 3.1 is unchanged at max-content; at `Some(0.0)` `"On-prem router 1"` now gives `On-`, `prem`, `router` and `1`, as cosmic-text already does.
-2. `CosmicTextMeasurer` keeps `Wrap::Word`, whose UAX #14 opportunities already include the hyphen and slash cases. For the dot case it shapes a copy of the string with U+200B ZERO WIDTH SPACE inserted after every `.` followed by an ASCII letter, and maps each layout run's byte range back to the original string through the table of inserted offsets, so `TextLine` ranges, the drawn text and the SVG never contain U+200B. The asset probe of section 8.3 step 5 gains one check before step (e) starts: each bundled face maps U+200B to a glyph other than 0 with zero advance. If a face does not, the measurer instead splits the string at those dots into segments, shapes each with `Wrap::Word`, and joins the lines greedily; the spec is revised before the change lands.
+2. `CosmicTextMeasurer` keeps `Wrap::Word`, whose UAX #14 opportunities already include the hyphen and slash cases. For the dot case it shapes a copy of the string with U+200B ZERO WIDTH SPACE inserted after every `.` followed by an ASCII letter, and maps each layout run's byte range back to the original string through the table of inserted offsets, so `TextLine` ranges, the drawn text and the SVG never contain U+200B. The asset probe of section 8.3 step 6 gains one check before step (e) starts: each bundled face maps U+200B to a glyph other than 0 with zero advance. If a face does not, the measurer instead splits the string at those dots into segments, shapes each with `Wrap::Word`, and joins the lines greedily; the spec is revised before the change lands.
 3. Cosmic-text also breaks at UAX #14 opportunities the fake does not have (after an em dash or a question mark, for example). The contract states the shared set; tests that compare the two use strings whose only opportunities are in that set.
 4. No example has a dotted word, and cosmic-text already broke at their hyphens and slashes, so step (e) leaves every example's geometry unchanged; the geometry fixtures prove it. Layout tests that measure hyphenated strings with the fake are re-derived in step (e).
 

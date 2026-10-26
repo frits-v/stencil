@@ -22,6 +22,26 @@ case "$mergeable" in
     exit 1
     ;;
 esac
+# A ci run tests the head as pushed. A head behind its base was never tested against what
+# the squash merge produces, so a test over every example can pass on the branch and fail on
+# main once another branch has added an example.
+base=$(gh pr view "$pr" --json baseRefName --jq .baseRefName)
+require_current_base() {
+  local behind
+  behind=$(gh api "repos/{owner}/{repo}/compare/$base...$sha" --jq .behind_by)
+  case "$behind" in
+    0) ;;
+    '' | *[!0-9]*)
+      echo "land: unrecognised behind count '$behind' for $head" >&2
+      exit 1
+      ;;
+    *)
+      echo "land: $head is $behind commit(s) behind $base; merge $base into it and push" >&2
+      exit 1
+      ;;
+  esac
+}
+require_current_base
 # The branch filter combined with the workflow filter can list nothing for a run that exists,
 # so the run is found by commit and its branch is checked from the result.
 run=$(gh run list --workflow ci.yml --commit "$sha" --limit 20 --json databaseId,headBranch \
@@ -43,6 +63,8 @@ if [[ -n $unsigned ]]; then
 fi
 echo "land: watching ci run $run for $head at ${sha:0:7}"
 gh run watch "$run" --exit-status
+# The base can move while CI runs.
+require_current_base
 
 # A draft cannot merge; it is marked ready once its CI run has passed.
 draft=$(gh pr view "$pr" --json isDraft --jq .isDraft)

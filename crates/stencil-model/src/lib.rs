@@ -15,7 +15,7 @@ pub mod theme;
 mod vet;
 mod walk;
 
-pub use checks::{KeyColour, LegendKey, entry_key};
+pub use checks::{KeyColour, LegendKey, LegendUse, entry_key, line_uses};
 pub use document::*;
 pub use grammar::{
     Grammar, GrammarError, GrammarRule, GrammarViolation, LineKind, builtin_grammar,

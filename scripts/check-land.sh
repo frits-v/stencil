@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Runs scripts/land.sh against a stub gh for each mergeable, draft and signature state it
+# Runs scripts/land.sh against a stub gh for each mergeable, behind, draft and signature state it
 # reads, and checks its exit status and the gh calls it made. Run from the repository root. Fails
 # when a case does not hold, and when no case ran.
 set -euo pipefail
@@ -16,6 +16,11 @@ case "$*" in
   "pr view 7 --json headRefOid --jq .headRefOid") echo 0123456789abcdef ;;
   "pr view 7 --json mergeable --jq .mergeable") echo "$STUB_MERGEABLE" ;;
   "pr view 7 --json isDraft --jq .isDraft") echo "$STUB_DRAFT" ;;
+  "pr view 7 --json baseRefName --jq .baseRefName") echo main ;;
+  "api repos/{owner}/{repo}/compare/main...0123456789abcdef --jq .behind_by")
+    if [[ -e "$STUB_LOG.compared" ]]; then echo "${STUB_BEHIND_AFTER:-${STUB_BEHIND:-0}}"; else echo "${STUB_BEHIND:-0}"; fi
+    : >"$STUB_LOG.compared"
+    ;;
   "pr view 7 --json commits --jq .commits[].oid") echo 0123456789abcdef ;;
   "api repos/{owner}/{repo}/commits/0123456789abcdef --jq .commit.verification.verified") echo "${STUB_VERIFIED:-true}" ;;
   "run list "*) echo 42 ;;
@@ -70,6 +75,9 @@ expect UNKNOWN false 0 'pr merge 7 --squash' ''
 expect CONFLICTING false 1 '' $'run watch 42 --exit-status\npr merge 7 --squash'
 expect BLOCKED false 1 '' 'pr merge 7 --squash'
 expect MERGEABLE maybe 1 '' $'pr ready 7\npr merge 7 --squash'
+STUB_BEHIND=3 expect MERGEABLE false 1 '' $'run watch 42 --exit-status\npr merge 7 --squash'
+STUB_BEHIND_AFTER=2 expect MERGEABLE true 1 'run watch 42 --exit-status' $'pr ready 7\npr merge 7 --squash'
+STUB_BEHIND=unknown expect MERGEABLE false 1 '' $'run watch 42 --exit-status\npr merge 7 --squash'
 STUB_VERIFIED=false expect MERGEABLE false 1 '' $'run watch 42 --exit-status\npr ready 7\npr merge 7 --squash'
 
 if (( cases == 0 )); then

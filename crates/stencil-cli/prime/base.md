@@ -4,7 +4,7 @@ stencil turns structural JSON (boxes, items, facts, pipes, links; no coordinates
 
 # Loop
 
-Write fig.json, `stencil vet fig.json`, `stencil check fig.json`, `stencil render fig.json --out-dir out --scale 2`, Read out/fig.png, fix, repeat until check shows 0 failed and the PNG reads right. `render` also writes out/fig.description.md, the figure in words. In a browser the SVG highlights an item and its links on hover, and fig.svg#<item id> opens with it highlighted. Exit 0 clean; 1 defect in the document (fix the JSON at the pointer); 2 could not run (arguments, paths, fonts).
+Write fig.json, `stencil vet fig.json`, `stencil check fig.json`, `stencil render fig.json --out-dir out --scale 2`, Read out/fig.png, fix, repeat until check shows 0 failed and the PNG reads right. `render` also writes out/fig.description.md, the figure in words. In a browser, hovering an item, line, Box, mark, row, actor or legend entry of the SVG fades all it does not refer to, and fig.svg#<id> opens that way. Exit 0 clean; 1 defect in the document (fix the JSON at the pointer); 2 could not run (arguments, paths, fonts).
 
 # Grammars
 

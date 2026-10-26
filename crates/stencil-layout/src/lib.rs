@@ -51,7 +51,8 @@ pub use stencil_model::text::WRAP_EPSILON_PX;
 pub use theme_labels::theme_legend_labels;
 pub use units::{
     DescribedUnit, DescriptionUnits, ENTRY_PARTS, PipeEndSide, PipeLanding, SheetZone, UnitKind,
-    description_units, sheet_frame, sheet_zone, sheet_zone_at, title_cell_caption, where_used,
+    description_units, sheet_frame, sheet_zone, sheet_zone_at, tee_spine_landing,
+    title_cell_caption, where_used,
 };
 
 pub const GEOMETRY_EPSILON_PX: f32 = 0.01;

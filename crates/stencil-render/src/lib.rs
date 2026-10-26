@@ -33,19 +33,32 @@ pub struct SvgDocument {
     /// The family and weight of the `<text>` elements, each once, ordered by family name and
     /// then weight. `self_contained` embeds these faces and no other.
     pub font_faces: Vec<(FontFamily, FontWeight)>,
-    /// Every Item at an end of at least one link, in geometry order. `self_contained` writes
-    /// one hover rule per entry and none for another Item.
-    pub hover_items: Vec<HoverItem>,
+    /// One rule per element that refers to something else, in the order of section 5.2.
+    /// `self_contained` writes each as one CSS rule.
+    pub hover_rules: Vec<HoverRule>,
 }
 
-/// An Item the written SVG highlights with its links on hover or as the URL fragment.
+/// What the written SVG highlights while the pointer rests on one element or the URL
+/// fragment names it (section 5.2).
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct HoverItem {
-    /// The `data-id` of the Item's group, which each of its links names in `data-from` or
-    /// `data-to`.
-    pub pointer: String,
-    /// The `id` of the Item's group.
+pub struct HoverRule {
+    pub source: HoverSource,
+    /// The `id` the source carries, which a URL fragment names.
     pub anchor: String,
+    /// The `data-id` of every fading group that stays drawn, the source's own included.
+    pub kept_groups: Vec<String>,
+    /// The `data-row` of every row that stays drawn.
+    pub kept_rows: Vec<String>,
+}
+
+/// The element a rule highlights from.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum HoverSource {
+    /// A fading group, by its `data-id`: hovered through its own drawn elements.
+    Group(String),
+    /// A row of a keyed list, by its `data-row`: hovered through the row or any mark of its
+    /// key.
+    Row(String),
 }
 
 /// Section 5.1 rounding. The SVG writer and measured_json both call it.

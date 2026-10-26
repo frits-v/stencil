@@ -4,12 +4,18 @@
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum FontFamily {
     Inter,
+    /// JetBrains Mono NL, the build without programming ligatures, so `--` and `->` draw as
+    /// the characters an operator types.
+    JetBrainsMonoNl,
 }
 
 impl FontFamily {
+    pub const ALL: [FontFamily; 2] = [FontFamily::Inter, FontFamily::JetBrainsMonoNl];
+
     pub fn css_name(self) -> &'static str {
         match self {
             FontFamily::Inter => "Inter",
+            FontFamily::JetBrainsMonoNl => "JetBrains Mono NL",
         }
     }
 }

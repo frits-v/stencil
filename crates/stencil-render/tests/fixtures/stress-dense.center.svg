@@ -13,13 +13,13 @@
       <text x="20" y="82.53" xml:space="preserve" font-family="Inter" font-size="13" font-weight="400" fill="#5F6368">Five rows of cards and pipes inside a service perimeter.</text>
     </g>
     <g data-id="/body" data-tag="Body">
-      <g data-id="/body/0" data-tag="Zone" data-kind="gcp">
+      <g id="_body_0" data-id="/body/0" data-tag="Zone" data-kind="gcp">
         <path d="M 24 101.6 H 1296 A 4 4 0 0 1 1300 105.6 V 878.2 A 10 10 0 0 1 1290 888.2 H 30 A 10 10 0 0 1 20 878.2 V 105.6 A 4 4 0 0 1 24 101.6 Z" fill="#FFFFFF"/>
         <rect x="23" y="104.6" width="1274" height="35.6" fill="#1A73E8"/>
         <rect x="23" y="140.2" width="1274" height="745" fill="#FAFBFC"/>
         <path d="M 24 103.1 H 1296 A 2.5 2.5 0 0 1 1298.5 105.6 V 878.2 A 8.5 8.5 0 0 1 1290 886.7 H 30 A 8.5 8.5 0 0 1 21.5 878.2 V 105.6 A 2.5 2.5 0 0 1 24 103.1 Z" fill="none" stroke="#1A73E8" stroke-width="3"/>
         <text x="39" y="128.95" xml:space="preserve" font-family="Inter" font-size="18" font-weight="700" letter-spacing="0.18" fill="#FFFFFF">Google Cloud</text>
-        <g data-id="/body/0/children/0" data-tag="Zone" data-kind="perimeter">
+        <g id="_body_0_children_0" data-id="/body/0/children/0" data-tag="Zone" data-kind="perimeter">
           <rect x="38.25" y="157.45" width="1243.5" height="712.5" rx="8.75" fill="#FFFBF5" stroke="#E37400" stroke-width="2.5" stroke-dasharray="6 5"/>
           <text x="51.5" y="183.23" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#B06000">Service perimeter</text>
           <g data-id="/body/0/children/0/children/0" data-tag="Col">
@@ -33,7 +33,7 @@
                 <text x="109" y="253.27" xml:space="preserve" font-family="Inter" font-size="12" font-weight="600" fill="#5F6368">Reads its config from a bucket in the same</text>
                 <text x="109" y="269.47" xml:space="preserve" font-family="Inter" font-size="12" font-weight="600" fill="#5F6368">project</text>
               </g>
-              <g data-id="/body/0/children/0/children/0/children/0/children/1" data-tag="Pipe" data-kind="blue">
+              <g id="_body_0_children_0_children_0_children_0_children_1" data-id="/body/0/children/0/children/0/children/0/children/1" data-tag="Pipe" data-kind="blue" data-from="/body/0/children/0/children/0/children/0/children/0" data-to="/body/0/children/0/children/0/children/0/children/2">
                 <circle cx="387.46" cy="239.5" r="4" fill="#1A73E8"/>
                 <line x1="391.46" y1="239.5" x2="405.46" y2="239.5" stroke="#1A73E8" stroke-width="2"/>
                 <rect x="406.21" y="224.95" width="59.32" height="29.1" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
@@ -50,7 +50,7 @@
                 <text x="553.79" y="253.27" xml:space="preserve" font-family="Inter" font-size="12" font-weight="600" fill="#5F6368">Reads its config from a bucket in the same</text>
                 <text x="553.79" y="269.47" xml:space="preserve" font-family="Inter" font-size="12" font-weight="600" fill="#5F6368">project</text>
               </g>
-              <g data-id="/body/0/children/0/children/0/children/0/children/3" data-tag="Pipe" data-kind="gray">
+              <g id="_body_0_children_0_children_0_children_0_children_3" data-id="/body/0/children/0/children/0/children/0/children/3" data-tag="Pipe" data-kind="gray" data-from="/body/0/children/0/children/0/children/0/children/2" data-to="/body/0/children/0/children/0/children/0/children/4">
                 <circle cx="832.25" cy="239.5" r="4" fill="#5F6368"/>
                 <line x1="836.25" y1="239.5" x2="850.25" y2="239.5" stroke="#5F6368" stroke-width="2"/>
                 <rect x="851" y="224.95" width="62.79" height="29.1" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
@@ -68,7 +68,7 @@
                 <text x="1002.04" y="269.47" xml:space="preserve" font-family="Inter" font-size="12" font-weight="600" fill="#5F6368">project</text>
               </g>
             </g>
-            <g data-id="/body/0/children/0/children/0/children/1" data-tag="Pipe" data-kind="dash">
+            <g id="_body_0_children_0_children_0_children_1" data-id="/body/0/children/0/children/0/children/1" data-tag="Pipe" data-kind="dash" data-from="/body/0/children/0/children/0/children/0/children/2" data-to="/body/0/children/0/children/0/children/2/children/2">
               <circle cx="660" cy="296.7" r="4" fill="#1A73E8"/>
               <line x1="660" y1="300.7" x2="660" y2="312.7" stroke="#1A73E8" stroke-width="2" stroke-dasharray="6 5"/>
               <rect x="629.17" y="313.45" width="61.67" height="29.1" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
@@ -86,7 +86,7 @@
                 <text x="109" y="430.27" xml:space="preserve" font-family="Inter" font-size="12" font-weight="600" fill="#5F6368">Reads its config from a bucket in the</text>
                 <text x="109" y="446.47" xml:space="preserve" font-family="Inter" font-size="12" font-weight="600" fill="#5F6368">same project</text>
               </g>
-              <g data-id="/body/0/children/0/children/0/children/2/children/1" data-tag="Pipe" data-kind="blue">
+              <g id="_body_0_children_0_children_0_children_2_children_1" data-id="/body/0/children/0/children/0/children/2/children/1" data-tag="Pipe" data-kind="blue" data-from="/body/0/children/0/children/0/children/2/children/0" data-to="/body/0/children/0/children/0/children/2/children/2">
                 <circle cx="385.87" cy="416.5" r="4" fill="#1A73E8"/>
                 <line x1="389.87" y1="416.5" x2="403.87" y2="416.5" stroke="#1A73E8" stroke-width="2"/>
                 <rect x="404.62" y="401.95" width="61.71" height="29.1" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
@@ -103,7 +103,7 @@
                 <text x="554.58" y="430.27" xml:space="preserve" font-family="Inter" font-size="12" font-weight="600" fill="#5F6368">Reads its config from a bucket in the</text>
                 <text x="554.58" y="446.47" xml:space="preserve" font-family="Inter" font-size="12" font-weight="600" fill="#5F6368">same project</text>
               </g>
-              <g data-id="/body/0/children/0/children/0/children/2/children/3" data-tag="Pipe" data-kind="gray">
+              <g id="_body_0_children_0_children_0_children_2_children_3" data-id="/body/0/children/0/children/0/children/2/children/3" data-tag="Pipe" data-kind="gray" data-from="/body/0/children/0/children/0/children/2/children/2" data-to="/body/0/children/0/children/0/children/2/children/4">
                 <circle cx="831.45" cy="416.5" r="4" fill="#5F6368"/>
                 <line x1="835.45" y1="416.5" x2="849.45" y2="416.5" stroke="#5F6368" stroke-width="2"/>
                 <rect x="850.2" y="401.95" width="65.18" height="29.1" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
@@ -131,7 +131,7 @@
                 <text x="109" y="528.67" xml:space="preserve" font-family="Inter" font-size="12" font-weight="600" fill="#5F6368">Reads its config from a bucket in the same</text>
                 <text x="109" y="544.87" xml:space="preserve" font-family="Inter" font-size="12" font-weight="600" fill="#5F6368">project</text>
               </g>
-              <g data-id="/body/0/children/0/children/0/children/3/children/1" data-tag="Pipe" data-kind="blue">
+              <g id="_body_0_children_0_children_0_children_3_children_1" data-id="/body/0/children/0/children/0/children/3/children/1" data-tag="Pipe" data-kind="blue" data-from="/body/0/children/0/children/0/children/3/children/0" data-to="/body/0/children/0/children/0/children/3/children/2">
                 <circle cx="385.91" cy="514.9" r="4" fill="#1A73E8"/>
                 <line x1="389.91" y1="514.9" x2="403.91" y2="514.9" stroke="#1A73E8" stroke-width="2"/>
                 <rect x="404.66" y="500.35" width="61.64" height="29.1" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
@@ -148,7 +148,7 @@
                 <text x="554.56" y="528.67" xml:space="preserve" font-family="Inter" font-size="12" font-weight="600" fill="#5F6368">Reads its config from a bucket in the same</text>
                 <text x="554.56" y="544.87" xml:space="preserve" font-family="Inter" font-size="12" font-weight="600" fill="#5F6368">project</text>
               </g>
-              <g data-id="/body/0/children/0/children/0/children/3/children/3" data-tag="Pipe" data-kind="gray">
+              <g id="_body_0_children_0_children_0_children_3_children_3" data-id="/body/0/children/0/children/0/children/3/children/3" data-tag="Pipe" data-kind="gray" data-from="/body/0/children/0/children/0/children/3/children/2" data-to="/body/0/children/0/children/0/children/3/children/4">
                 <circle cx="831.47" cy="514.9" r="4" fill="#5F6368"/>
                 <line x1="835.47" y1="514.9" x2="849.47" y2="514.9" stroke="#5F6368" stroke-width="2"/>
                 <rect x="850.22" y="500.35" width="65.11" height="29.1" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
@@ -166,11 +166,11 @@
                 <text x="1003.59" y="544.87" xml:space="preserve" font-family="Inter" font-size="12" font-weight="600" fill="#5F6368">project</text>
               </g>
             </g>
-            <g data-id="/body/0/children/0/children/0/children/4" data-tag="Tee" data-kind="deny">
+            <g id="_body_0_children_0_children_0_children_4" data-id="/body/0/children/0/children/0/children/4" data-tag="Tee" data-kind="deny">
               <line x1="58.5" y1="586.1" x2="58.5" y2="641.9" stroke="#C5221F" stroke-width="2" stroke-dasharray="6 5"/>
               <rect x="631.29" y="599.45" width="57.41" height="29.1" rx="5.25" fill="#FFFFFF" stroke="#F4C7C3" stroke-width="1.5"/>
               <text x="640.04" y="618.37" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#C5221F">egress</text>
-              <g data-id="/body/0/children/0/children/0/children/4/arms/0" data-tag="Pipe" data-kind="blue">
+              <g id="_body_0_children_0_children_0_children_4_arms_0" data-id="/body/0/children/0/children/0/children/4/arms/0" data-tag="Pipe" data-kind="blue" data-from="/body/0/children/0/children/0/children/4">
                 <circle cx="69.5" cy="583.4" r="4" fill="#1A73E8"/>
                 <line x1="73.5" y1="583.4" x2="634.79" y2="583.4" stroke="#1A73E8" stroke-width="2"/>
                 <rect x="635.54" y="568.85" width="62.92" height="29.1" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
@@ -178,7 +178,7 @@
                 <circle cx="1264.5" cy="583.4" r="4" fill="#1A73E8"/>
                 <text x="644.29" y="587.77" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">allowed</text>
               </g>
-              <g data-id="/body/0/children/0/children/0/children/4/arms/1" data-tag="Pipe" data-kind="pink">
+              <g id="_body_0_children_0_children_0_children_4_arms_1" data-id="/body/0/children/0/children/0/children/4/arms/1" data-tag="Pipe" data-kind="pink" data-from="/body/0/children/0/children/0/children/4">
                 <circle cx="69.5" cy="644.6" r="4" fill="#C2185B"/>
                 <line x1="73.5" y1="644.6" x2="642.55" y2="644.6" stroke="#C2185B" stroke-width="2"/>
                 <rect x="643.3" y="630.05" width="47.41" height="29.1" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
@@ -197,7 +197,7 @@
                 <text x="109" y="726.87" xml:space="preserve" font-family="Inter" font-size="12" font-weight="600" fill="#5F6368">Reads its config from a bucket in the</text>
                 <text x="109" y="743.07" xml:space="preserve" font-family="Inter" font-size="12" font-weight="600" fill="#5F6368">same project</text>
               </g>
-              <g data-id="/body/0/children/0/children/0/children/5/children/1" data-tag="Pipe" data-kind="blue">
+              <g id="_body_0_children_0_children_0_children_5_children_1" data-id="/body/0/children/0/children/0/children/5/children/1" data-tag="Pipe" data-kind="blue" data-from="/body/0/children/0/children/0/children/5/children/0" data-to="/body/0/children/0/children/0/children/5/children/2">
                 <circle cx="385.77" cy="713.1" r="4" fill="#1A73E8"/>
                 <line x1="389.77" y1="713.1" x2="403.77" y2="713.1" stroke="#1A73E8" stroke-width="2"/>
                 <rect x="404.52" y="698.55" width="61.86" height="29.1" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
@@ -214,7 +214,7 @@
                 <text x="554.63" y="726.87" xml:space="preserve" font-family="Inter" font-size="12" font-weight="600" fill="#5F6368">Reads its config from a bucket in the</text>
                 <text x="554.63" y="743.07" xml:space="preserve" font-family="Inter" font-size="12" font-weight="600" fill="#5F6368">same project</text>
               </g>
-              <g data-id="/body/0/children/0/children/0/children/5/children/3" data-tag="Pipe" data-kind="gray">
+              <g id="_body_0_children_0_children_0_children_5_children_3" data-id="/body/0/children/0/children/0/children/5/children/3" data-tag="Pipe" data-kind="gray" data-from="/body/0/children/0/children/0/children/5/children/2" data-to="/body/0/children/0/children/0/children/5/children/4">
                 <circle cx="831.4" cy="713.1" r="4" fill="#5F6368"/>
                 <line x1="835.4" y1="713.1" x2="849.4" y2="713.1" stroke="#5F6368" stroke-width="2"/>
                 <rect x="850.15" y="698.55" width="65.33" height="29.1" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
@@ -242,7 +242,7 @@
                 <text x="109" y="825.27" xml:space="preserve" font-family="Inter" font-size="12" font-weight="600" fill="#5F6368">Reads its config from a bucket in the same</text>
                 <text x="109" y="841.47" xml:space="preserve" font-family="Inter" font-size="12" font-weight="600" fill="#5F6368">project</text>
               </g>
-              <g data-id="/body/0/children/0/children/0/children/6/children/1" data-tag="Pipe" data-kind="blue">
+              <g id="_body_0_children_0_children_0_children_6_children_1" data-id="/body/0/children/0/children/0/children/6/children/1" data-tag="Pipe" data-kind="blue" data-from="/body/0/children/0/children/0/children/6/children/0" data-to="/body/0/children/0/children/0/children/6/children/2">
                 <circle cx="386.12" cy="811.5" r="4" fill="#1A73E8"/>
                 <line x1="390.12" y1="811.5" x2="404.12" y2="811.5" stroke="#1A73E8" stroke-width="2"/>
                 <rect x="404.87" y="796.95" width="61.34" height="29.1" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
@@ -259,7 +259,7 @@
                 <text x="554.46" y="825.27" xml:space="preserve" font-family="Inter" font-size="12" font-weight="600" fill="#5F6368">Reads its config from a bucket in the same</text>
                 <text x="554.46" y="841.47" xml:space="preserve" font-family="Inter" font-size="12" font-weight="600" fill="#5F6368">project</text>
               </g>
-              <g data-id="/body/0/children/0/children/0/children/6/children/3" data-tag="Pipe" data-kind="gray">
+              <g id="_body_0_children_0_children_0_children_6_children_3" data-id="/body/0/children/0/children/0/children/6/children/3" data-tag="Pipe" data-kind="gray" data-from="/body/0/children/0/children/0/children/6/children/2" data-to="/body/0/children/0/children/0/children/6/children/4">
                 <circle cx="831.57" cy="811.5" r="4" fill="#5F6368"/>
                 <line x1="835.57" y1="811.5" x2="849.57" y2="811.5" stroke="#5F6368" stroke-width="2"/>
                 <rect x="850.32" y="796.95" width="64.81" height="29.1" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
@@ -282,27 +282,27 @@
       </g>
     </g>
     <g data-id="/legend" data-tag="Legend">
-      <g data-id="/legend/0" data-tag="LegendEntry" data-kind="gray">
+      <g id="_legend_0" data-id="/legend/0" data-tag="LegendEntry" data-kind="gray">
         <line x1="20" y1="905.4" x2="46" y2="905.4" stroke="#5F6368" stroke-width="2"/>
         <text x="52" y="909.77" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">Solid gray</text>
         <text x="116.42" y="909.77" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">internal call</text>
       </g>
-      <g data-id="/legend/1" data-tag="LegendEntry" data-kind="blue">
+      <g id="_legend_1" data-id="/legend/1" data-tag="LegendEntry" data-kind="blue">
         <line x1="197.56" y1="905.4" x2="223.56" y2="905.4" stroke="#1A73E8" stroke-width="2"/>
         <text x="229.56" y="909.77" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">Solid blue</text>
         <text x="293.12" y="909.77" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">request path</text>
       </g>
-      <g data-id="/legend/2" data-tag="LegendEntry" data-kind="pink">
+      <g id="_legend_2" data-id="/legend/2" data-tag="LegendEntry" data-kind="pink">
         <line x1="380.73" y1="905.4" x2="406.73" y2="905.4" stroke="#C2185B" stroke-width="2"/>
         <text x="412.73" y="909.77" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">Solid pink</text>
         <text x="476.11" y="909.77" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">reply path</text>
       </g>
-      <g data-id="/legend/3" data-tag="LegendEntry" data-kind="dash">
+      <g id="_legend_3" data-id="/legend/3" data-tag="LegendEntry" data-kind="dash">
         <line x1="549.08" y1="905.4" x2="575.08" y2="905.4" stroke="#1A73E8" stroke-width="2" stroke-dasharray="6 5"/>
         <text x="581.08" y="909.77" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">Dashed blue</text>
         <text x="659.89" y="909.77" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">failover</text>
       </g>
-      <g data-id="/legend/4" data-tag="LegendEntry" data-kind="deny">
+      <g id="_legend_4" data-id="/legend/4" data-tag="LegendEntry" data-kind="deny">
         <line x1="717.68" y1="905.4" x2="743.68" y2="905.4" stroke="#C5221F" stroke-width="2" stroke-dasharray="6 5"/>
         <rect x="740.68" y="899.4" width="3" height="12" fill="#C5221F"/>
         <text x="749.68" y="909.77" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">Dashed red</text>

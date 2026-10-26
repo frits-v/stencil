@@ -21,7 +21,7 @@
     <g data-id="/body" data-tag="Body">
       <g data-id="/body/0" data-tag="Row">
         <g data-id="/body/0/children/0" data-tag="Col">
-          <g data-id="/body/0/children/0/children/0" data-tag="Zone" data-kind="group-a">
+          <g id="_body_0_children_0_children_0" data-id="/body/0/children/0/children/0" data-tag="Zone" data-kind="group-a">
             <rect x="20.75" y="102.35" width="250.85" height="93.9" rx="7.25" fill="#D2E3FC" stroke="#BDC1C6" stroke-width="1.5"/>
             <text x="33.5" y="126.67" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#5F6368">Branch office</text>
             <g id="staff" data-id="/body/0/children/0/children/0/children/0" data-tag="Pcard">
@@ -30,7 +30,7 @@
               <text x="45" y="173.17" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">browser</text>
             </g>
           </g>
-          <g data-id="/body/0/children/0/children/1" data-tag="Zone" data-kind="group">
+          <g id="_body_0_children_0_children_1" data-id="/body/0/children/0/children/1" data-tag="Zone" data-kind="group">
             <rect x="20.75" y="213.75" width="250.85" height="93.9" rx="7.25" fill="#EDF3F0" stroke="#BDC1C6" stroke-width="1.5"/>
             <text x="33.5" y="238.07" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#5F6368">Corporate identity</text>
             <g id="idp" data-id="/body/0/children/0/children/1/children/0" data-tag="Pcard">
@@ -40,13 +40,13 @@
             </g>
           </g>
         </g>
-        <g data-id="/body/0/children/1" data-tag="Zone" data-kind="system">
+        <g id="platform" data-id="/body/0/children/1" data-tag="Zone" data-kind="system">
           <path d="M 340.35 101.6 H 1516 A 4 4 0 0 1 1520 105.6 V 508.2 A 10 10 0 0 1 1510 518.2 H 346.35 A 10 10 0 0 1 336.35 508.2 V 105.6 A 4 4 0 0 1 340.35 101.6 Z" fill="#FFFFFF"/>
           <rect x="339.35" y="104.6" width="1177.65" height="35.6" fill="#1A73E8"/>
           <rect x="339.35" y="140.2" width="1177.65" height="375" fill="#FAFBFC"/>
           <path d="M 340.35 103.1 H 1516 A 2.5 2.5 0 0 1 1518.5 105.6 V 508.2 A 8.5 8.5 0 0 1 1510 516.7 H 346.35 A 8.5 8.5 0 0 1 337.85 508.2 V 105.6 A 2.5 2.5 0 0 1 340.35 103.1 Z" fill="none" stroke="#1A73E8" stroke-width="3"/>
           <text x="355.35" y="128.95" xml:space="preserve" font-family="Inter" font-size="18" font-weight="700" letter-spacing="0.18" fill="#FFFFFF">Shop platform</text>
-          <g data-id="/body/0/children/1/children/0" data-tag="Zone" data-kind="cluster">
+          <g id="_body_0_children_1_children_0" data-id="/body/0/children/1/children/0" data-tag="Zone" data-kind="cluster">
             <rect x="353.35" y="156.2" width="1149.65" height="345" rx="8" fill="#FCE4EC"/>
             <text x="365.35" y="179.77" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#5F6368">Production cluster</text>
             <g data-id="/body/0/children/1/children/0/children/0" data-tag="Col">
@@ -60,7 +60,7 @@
                     <text x="422.85" y="249.57" xml:space="preserve" font-family="Inter" font-size="12" font-weight="600" fill="#5F6368">• TLS terminated,</text>
                     <text x="422.85" y="265.77" xml:space="preserve" font-family="Inter" font-size="12" font-weight="600" fill="#5F6368">port 443</text>
                   </g>
-                  <g data-id="/body/0/children/1/children/0/children/0/children/0/children/0/children/1" data-tag="Pipe" data-kind="blue">
+                  <g id="_body_0_children_1_children_0_children_0_children_0_children_0_children_1" data-id="/body/0/children/1/children/0/children/0/children/0/children/0/children/1" data-tag="Pipe" data-kind="blue" data-from="/body/0/children/1/children/0/children/0/children/0/children/0/children/0" data-to="/body/0/children/1/children/0/children/0/children/0/children/0/children/2">
                     <circle cx="567.43" cy="235.8" r="4" fill="#1A73E8"/>
                     <line x1="571.43" y1="235.8" x2="585.43" y2="235.8" stroke="#1A73E8" stroke-width="2"/>
                     <rect x="586.18" y="221.25" width="48.35" height="29.1" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
@@ -73,7 +73,7 @@
                     <text x="676.78" y="232.83" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" fill="#202124">Storefront</text>
                     <text x="676.78" y="248.47" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">web front end</text>
                   </g>
-                  <g data-id="/body/0/children/1/children/0/children/0/children/0/children/0/children/3" data-tag="Pipe" data-kind="pink">
+                  <g id="_body_0_children_1_children_0_children_0_children_0_children_0_children_3" data-id="/body/0/children/1/children/0/children/0/children/0/children/0/children/3" data-tag="Pipe" data-kind="pink" data-from="/body/0/children/1/children/0/children/0/children/0/children/0/children/2" data-to="/body/0/children/1/children/0/children/0/children/0/children/0/children/4">
                     <circle cx="867.36" cy="235.8" r="4" fill="#C2185B"/>
                     <line x1="871.36" y1="235.8" x2="885.36" y2="235.8" stroke="#C2185B" stroke-width="2"/>
                     <rect x="886.11" y="221.25" width="60.79" height="29.1" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
@@ -90,7 +90,7 @@
                     <text x="1035.16" y="249.57" xml:space="preserve" font-family="Inter" font-size="12" font-weight="600" fill="#B06000">Ask: partitions per</text>
                     <text x="1035.16" y="265.77" xml:space="preserve" font-family="Inter" font-size="12" font-weight="600" fill="#B06000">topic</text>
                   </g>
-                  <g data-id="/body/0/children/1/children/0/children/0/children/0/children/0/children/5" data-tag="Pipe" data-kind="pink">
+                  <g id="_body_0_children_1_children_0_children_0_children_0_children_0_children_5" data-id="/body/0/children/1/children/0/children/0/children/0/children/0/children/5" data-tag="Pipe" data-kind="pink" data-from="/body/0/children/1/children/0/children/0/children/0/children/0/children/4" data-to="/body/0/children/1/children/0/children/0/children/0/children/0/children/6">
                     <circle cx="1179.74" cy="235.8" r="4" fill="#C2185B"/>
                     <line x1="1183.74" y1="235.8" x2="1197.74" y2="235.8" stroke="#C2185B" stroke-width="2"/>
                     <rect x="1198.49" y="221.25" width="71.68" height="29.1" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
@@ -157,51 +157,51 @@
       </g>
     </g>
     <g data-id="/legend" data-tag="Legend">
-      <g data-id="/legend/0" data-tag="LegendEntry" data-kind="blue">
+      <g id="_legend_0" data-id="/legend/0" data-tag="LegendEntry" data-kind="blue">
         <line x1="20" y1="535.4" x2="46" y2="535.4" stroke="#1A73E8" stroke-width="2"/>
         <text x="52" y="539.77" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">Solid blue</text>
         <text x="115.56" y="539.77" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">request path</text>
       </g>
-      <g data-id="/legend/1" data-tag="LegendEntry" data-kind="pink">
+      <g id="_legend_1" data-id="/legend/1" data-tag="LegendEntry" data-kind="pink">
         <line x1="203.18" y1="535.4" x2="229.18" y2="535.4" stroke="#C2185B" stroke-width="2"/>
         <text x="235.18" y="539.77" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">Solid pink</text>
         <text x="298.55" y="539.77" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">order events</text>
       </g>
-      <g data-id="/legend/2" data-tag="LegendEntry" data-kind="dash">
+      <g id="_legend_2" data-id="/legend/2" data-tag="LegendEntry" data-kind="dash">
         <line x1="385.8" y1="535.4" x2="411.8" y2="535.4" stroke="#1A73E8" stroke-width="2" stroke-dasharray="6 5"/>
         <text x="417.8" y="539.77" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">Dashed blue</text>
         <text x="496.62" y="539.77" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">identity</text>
       </g>
-      <g data-id="/legend/3" data-tag="LegendEntry" data-kind="gray">
+      <g id="_legend_3" data-id="/legend/3" data-tag="LegendEntry" data-kind="gray">
         <line x1="554.69" y1="535.4" x2="580.69" y2="535.4" stroke="#5F6368" stroke-width="2"/>
         <text x="586.69" y="539.77" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">Solid gray</text>
         <text x="651.11" y="539.77" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">uses</text>
       </g>
     </g>
   </g>
-  <g data-id="/links/0" data-tag="Link" data-kind="blue" data-from="/body/0/children/0/children/0/children/0" data-to="/body/0/children/1/children/0/children/0/children/0/children/0/children/0">
+  <g id="_links_0" data-id="/links/0" data-tag="Link" data-kind="blue" data-from="/body/0/children/0/children/0/children/0" data-to="/body/0/children/1/children/0/children/0/children/0/children/0/children/0">
     <path d="M 258.85 160.5 L 317.35 160.5 A 6 6 0 0 1 323.35 166.5 L 323.35 229.8 A 6 6 0 0 0 329.35 235.8 L 355.35 235.8" fill="none" stroke="#1A73E8" stroke-width="2" stroke-linejoin="round"/>
     <line x1="355.35" y1="235.8" x2="365.35" y2="235.8" stroke="none" marker-end="url(#arrow-center-blue)"/>
     <rect x="294.29" y="183.6" width="58.12" height="29.1" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
     <text x="303.04" y="202.52" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">HTTPS</text>
   </g>
-  <g data-id="/links/1" data-tag="Link" data-kind="dash" data-from="/body/0/children/1/children/0/children/0/children/0/children/0/children/0" data-to="/body/0/children/0/children/1/children/0">
+  <g id="_links_1" data-id="/links/1" data-tag="Link" data-kind="dash" data-from="/body/0/children/1/children/0/children/0/children/0/children/0/children/0" data-to="/body/0/children/0/children/1/children/0">
     <path d="M 365.35 235.8 L 296.85 235.8 A 6 6 0 0 0 290.85 241.8 L 290.85 265.9 A 6 6 0 0 1 284.85 271.9 L 268.85 271.9" fill="none" stroke="#1A73E8" stroke-width="2" stroke-dasharray="6 5" stroke-linejoin="round"/>
     <line x1="268.85" y1="271.9" x2="258.85" y2="271.9" stroke="none" marker-end="url(#arrow-center-dash)"/>
   </g>
-  <g data-id="/links/2" data-tag="Link" data-kind="gray" data-from="/body/0/children/1/children/0/children/0/children/0/children/0/children/2" data-to="/body/0/children/1/children/0/children/0/children/0/children/1/children/0">
+  <g id="_links_2" data-id="/links/2" data-tag="Link" data-kind="gray" data-from="/body/0/children/1/children/0/children/0/children/0/children/0/children/2" data-to="/body/0/children/1/children/0/children/0/children/0/children/1/children/0">
     <path d="M 760.32 281 L 760.32 309 A 6 6 0 0 1 754.32 315 L 509.06 315 A 6 6 0 0 0 503.06 321 L 503.06 327" fill="none" stroke="#5F6368" stroke-width="2" stroke-linejoin="round"/>
     <line x1="503.06" y1="327" x2="503.06" y2="337" stroke="none" marker-end="url(#arrow-center-gray)"/>
   </g>
-  <g data-id="/links/3" data-tag="Link" data-kind="gray" data-from="/body/0/children/1/children/0/children/0/children/0/children/0/children/2" data-to="/body/0/children/1/children/0/children/0/children/0/children/1/children/1">
+  <g id="_links_3" data-id="/links/3" data-tag="Link" data-kind="gray" data-from="/body/0/children/1/children/0/children/0/children/0/children/0/children/2" data-to="/body/0/children/1/children/0/children/0/children/0/children/1/children/1">
     <path d="M 760.32 281 L 760.32 309 A 6 6 0 0 0 766.32 315 L 780.47 315 A 6 6 0 0 1 786.47 321 L 786.47 327" fill="none" stroke="#5F6368" stroke-width="2" stroke-linejoin="round"/>
     <line x1="786.47" y1="327" x2="786.47" y2="337" stroke="none" marker-end="url(#arrow-center-gray)"/>
   </g>
-  <g data-id="/links/4" data-tag="Link" data-kind="pink" data-from="/body/0/children/1/children/0/children/0/children/0/children/0/children/6" data-to="/body/0/children/1/children/0/children/0/children/0/children/1/children/2">
+  <g id="_links_4" data-id="/links/4" data-tag="Link" data-kind="pink" data-from="/body/0/children/1/children/0/children/0/children/0/children/0/children/6" data-to="/body/0/children/1/children/0/children/0/children/0/children/1/children/2">
     <path d="M 1395.96 281 L 1395.96 309 A 6 6 0 0 1 1389.96 315 L 1075.88 315 A 6 6 0 0 0 1069.88 321 L 1069.88 327" fill="none" stroke="#C2185B" stroke-width="2" stroke-linejoin="round"/>
     <line x1="1069.88" y1="327" x2="1069.88" y2="337" stroke="none" marker-end="url(#arrow-center-pink)"/>
   </g>
-  <g data-id="/links/5" data-tag="Link" data-kind="pink" data-from="/body/0/children/1/children/0/children/0/children/0/children/0/children/6" data-to="/body/0/children/1/children/0/children/0/children/0/children/1/children/3">
+  <g id="_links_5" data-id="/links/5" data-tag="Link" data-kind="pink" data-from="/body/0/children/1/children/0/children/0/children/0/children/0/children/6" data-to="/body/0/children/1/children/0/children/0/children/0/children/1/children/3">
     <path d="M 1395.96 281 L 1395.96 309 A 6 6 0 0 1 1389.96 315 L 1359.29 315 A 6 6 0 0 0 1353.29 321 L 1353.29 327" fill="none" stroke="#C2185B" stroke-width="2" stroke-linejoin="round"/>
     <line x1="1353.29" y1="327" x2="1353.29" y2="337" stroke="none" marker-end="url(#arrow-center-pink)"/>
   </g>

@@ -1,14 +1,12 @@
 # Google Cloud icon pack provenance
 
-Where the files in `assets/icons/gcp/` came from and what may be done with them. The
-last two sections record the drafting-diagrams kit files (`drafting-diagrams/stencil/`)
-the icons were vendored beside; those files are not part of this repository.
+Where each file under `assets/icons/gcp/` came from, so its bytes can be re-verified.
 
 ## Icons (`assets/icons/gcp/*.svg`)
 
 Source: the Google Cloud product icon library published at
 <https://cloud.google.com/icons>, specifically the two ZIP downloads that page
-links:
+links, both downloaded 2026-09-02:
 
 - Core product icons: <https://services.google.com/fh/files/misc/core-products-icons.zip>
 - Product category icons: <https://services.google.com/fh/files/misc/category-icons.zip>
@@ -48,97 +46,3 @@ Mapping, verified 2026-09-02:
 
 Regenerate the check by unzipping both archives and comparing MD5 sums against
 this directory.
-
-### Stated terms
-
-Neither ZIP contains a LICENSE, README, or terms file. The overview PDF the
-icons page links, `google-cloud-product-icons.pdf` (Updated: May 2026), stamps
-"Google Cloud Proprietary & Confidential" on every page and grants nothing. The
-terms therefore come from three live Google pages, all fetched 2026-09-02.
-
-<https://cloud.google.com/icons>, on the purpose of the download:
-
-> Welcome to the official library for Google Cloud product icons. Here you can
-> find the Google Cloud product icons you need for your diagrams, technical
-> documentation, and more.
-
-<https://about.google/brand-resource-center/brand-elements/>, section "Product
-icons":
-
-> We use product icons to represent specific Google products. You might see them
-> when you open an app on your phone, or when using a Google product. To use a
-> Google product icon in your work, create a Partner Marketing Hub account to
-> find assets and request permission through our approval form. We're in the
-> process of redesigning our product icons, so be sure to use the most up-to-date
-> versions.
->
-> DO Make sure your brand is more prominent than Google's product icon.
->
-> DON'T Don't incorporate a Google product icon out of context, without the
-> proper information for your audience to understand what it means.
-
-<https://about.google/brand-resource-center/guidance/>, on unaltered use:
-
-> Use our names, visuals, logos, or icons in teaching materials. You can use
-> unaltered static screenshots or video captures of our products, the Google
-> logo, or specific product icons for educational purposes in textbooks or other
-> standard teaching materials.
-
-<https://www.google.com/permissions/trademark/rules/>:
-
-> DON'T Don't remove, distort, or alter any element of a Google Brand Feature.
-> You may not modify Google Brand Features by hyphenation or combination, or by
-> shortening, abbreviating, or creating acronyms from Google Brand Features.
-
-The same page also forbids imitating the surrounding trade dress:
-
-> DON'T Don't copy or imitate Google's trade dress, including the look and feel
-> of Google web design properties or Google brand packaging, distinctive color
-> combinations, typography, graphic designs, product icons, or imagery
-> associated with Google.
-
-### Conclusion
-
-Google publishes this icon set for use in architecture diagrams and technical
-documentation and asks that the icons be reproduced unaltered, in context, and
-without letting Google's mark outweigh the author's own. Vendoring the 23 SVGs
-byte-for-byte and placing them on labeled product cards is inside that grant.
-
-What the grant does not cover: altering an icon (recolor, crop, restyle, combine
-with another mark), putting one on merchandise, using one on a surface where it
-reads as a Google endorsement, or copying the wider Google trade dress. The
-Brand Resource Center also routes product-icon use "in your work" through a
-Partner Marketing Hub approval request, so a marketing or co-branded surface, as
-opposed to an architecture figure inside a deliverable, needs that request filed
-before it ships.
-
-Re-check these pages before any use outside architecture and technical figures.
-The icon system was reworked in early 2025 and Google says it is still
-redesigning icons, so the set turns over.
-
-## CSS (`drafting-diagrams/stencil/_gcp.css`)
-
-Layout and pipe grammar written for the DataPiper kit's diagrams skill. No
-third-party code and no license file: the kit ships exactly one LICENSE, an MIT
-notice scoped to a separately vendored `stop-slop` skill, which does not cover
-this file. Treat it as internal work product.
-
-The stylesheet carries no Google brand assets. It names no Google font, reuses
-no Google logo, and its colors are the ordinary Material greys and blues rather
-than a lift of a Google page's trade dress. Two edits on vendoring:
-
-- The Google Fonts `@import` for Inter was removed. The renderer runs with DNS
-  blackholed, and a webfont request that never resolves leaves the page
-  mid-layout when the screenshot fires.
-- `Google Sans` was dropped from the `body` font stack, since Google's brand
-  guidance reserves its brand fonts. Type now resolves through
-  `"Helvetica Neue", Helvetica, Arial, system-ui, sans-serif`.
-
-## Gold prototypes (`drafting-diagrams/stencil/golds/*.html`)
-
-Same origin and same status as the CSS. Two changes on vendoring: stylesheet and
-icon `src` paths were rewritten one level up for the
-`drafting-diagrams/stencil/golds/` layout, and every hard-coded Google constant on a hop (probe ranges, VIP ranges, BGP
-timers) was replaced with an instruction to read the value from the live product
-doc. A gold that ships a remembered range teaches the exact habit the hop-fact
-rule exists to stop, and `scripts/constants_lint.py` fires on it.
