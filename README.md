@@ -12,9 +12,9 @@ Build the binary with `cargo build --release`; it lands at `target/release/stenc
 
 `examples/g7.json`: four Dedicated Interconnect VLAN attachments from two metros into two regions, with failover between the regions.
 
-![Hybrid multi-cloud AI platform](docs/gallery/hybrid-ai.png)
+![A weather service's forecasting platform on Google Cloud](docs/gallery/hybrid-ai.png)
 
-`examples/hybrid-ai.json`: training on-prem, tuning and serving on Google Cloud, AWS and Azure feeding data over private paths.
+`examples/hybrid-ai.json`: a radar network and a satellite ground station uploading observations, a partner agency sharing model output from its own project, and nowcast models tuned and served inside a service perimeter.
 
 ![Hub-and-spoke landing zone](docs/gallery/network-hub-spoke.png)
 

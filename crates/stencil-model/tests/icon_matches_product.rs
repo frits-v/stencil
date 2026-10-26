@@ -282,8 +282,8 @@ fn the_three_example_mismatches_are_found_at_their_items() {
             "subtitle names BigQuery, whose icon is bigquery; the item carries data-analytics",
         ),
         (
-            "network-hub-spoke",
-            "Cloud Run · Direct VPC",
+            "hybrid-ai",
+            "Cloud Run jobs",
             "serverless",
             "subtitle names Cloud Run, whose icon is cloud-run or cloud-run-flat; the item carries serverless",
         ),
