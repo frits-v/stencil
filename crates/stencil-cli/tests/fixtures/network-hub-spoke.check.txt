@@ -1,19 +1,19 @@
-check child-inside-container: examined 78 relations, 0 defects
-check siblings-do-not-overlap: examined 72 pairs, 0 defects
-check text-fits-box: examined 108 text runs, 0 defects
-check remembered-constants: examined 103 text fields, 0 defects
-check legend-consistency: examined 21 relations, 0 defects
+check child-inside-container: examined 51 relations, 0 defects
+check siblings-do-not-overlap: examined 43 pairs, 0 defects
+check text-fits-box: examined 75 text runs, 0 defects
+check remembered-constants: examined 0 text fields, not applicable: grammar has no remembered constants
+check legend-consistency: examined 11 relations, 0 defects
 check links-routed: examined 0 links, not applicable: page has no links
 check links-avoid-boxes: examined 0 pairs, not applicable: page has no links
-check pipes-land: examined 23 pipe ends, 0 defects
+check pipes-land: examined 11 pipe ends, 0 defects
 check iso-labels-clear: examined 0 pairs, not applicable: projection is flat
 check iso-links-clear: examined 0 link legs, not applicable: projection is flat
 check iso-link-ends: examined 0 link ends, not applicable: projection is flat
 check iso-links-apart: examined 0 link pairs, not applicable: projection is flat
 check print-fit: examined 0 text runs, not applicable: no print width
-check icon-matches-product: examined 23 items, 0 defects
-check description-covers-drawing: examined 63 elements, 0 defects
+check icon-matches-product: examined 0 items, not applicable: grammar has no icon table
+check description-covers-drawing: examined 42 elements, 0 defects
 check keys-used: examined 0 keys, not applicable: page has no actors or keyed lists
 check marks-clear: examined 0 marks, not applicable: page has no marks, step badges, valves, hops or detail frames
-check junctions-plain: examined 336 junctions, 0 defects
-stencil check: 18 checks, 9 passed, 0 failed, 9 not applicable
+check junctions-plain: examined 242 junctions, 0 defects
+stencil check: 18 checks, 7 passed, 0 failed, 11 not applicable

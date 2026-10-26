@@ -303,20 +303,14 @@ fn the_three_example_mismatches_are_found_at_their_items() {
 #[test]
 fn every_gcp_example_passes_with_items_examined() {
     let mut examined = 0;
-    for stem in [
-        "g7",
-        "hero-iso",
-        "hybrid-ai",
-        "network-hub-spoke",
-        "stress-dense",
-    ] {
+    for stem in ["g7", "hero-iso", "hybrid-ai", "stress-dense"] {
         let text = fs::read_to_string(repository_path(&format!("examples/{stem}.json"))).unwrap();
         let page = parse_page(&text).unwrap();
         let report = icon_matches_product(&page, &common::gcp());
         assert!(report.passed(), "{stem}: {:?}", report.defects);
         examined += 1;
     }
-    assert_eq!(examined, 5);
+    assert_eq!(examined, 4);
 }
 
 fn aws() -> Grammar {
