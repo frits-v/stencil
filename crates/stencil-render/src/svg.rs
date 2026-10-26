@@ -3,7 +3,7 @@
 mod assembly;
 mod iso_writer;
 
-use std::collections::{BTreeSet, HashMap};
+use std::collections::{BTreeMap, BTreeSet, HashMap};
 use stencil_layout::{
     BoxRect, ContainerLook, DrawnLink, EndCap, LinkRoute, NodeGeometry, NodeTag, PageGeometry,
     Part, PartName, PathPiece, STOP_PLATE_THICKNESS_PX, TextAlign, TextRun, container_label_style,
@@ -615,22 +615,38 @@ fn link_group_open_tag(geometry: &PageGeometry, route: &LinkRoute) -> Result<Str
 }
 
 /// Every Item at an end of a drawn link, in geometry order, with the anchor its group
-/// carries; `anchors` holds one entry per geometry node.
+/// carries and the Items at the far ends of its links; `anchors` holds one entry per
+/// geometry node and is Some exactly for an Item.
 fn hover_items_of(geometry: &PageGeometry, anchors: &[Option<String>]) -> Vec<HoverItem> {
-    let linked: BTreeSet<usize> = geometry
-        .links
-        .iter()
-        .take(LINKS_MAX)
-        .flat_map(|route| [route.from_node, route.to_node])
-        .collect();
-    linked
+    let mut far_ends: BTreeMap<usize, BTreeSet<usize>> = BTreeMap::new();
+    for route in geometry.links.iter().take(LINKS_MAX) {
+        far_ends
+            .entry(route.from_node)
+            .or_default()
+            .insert(route.to_node);
+        far_ends
+            .entry(route.to_node)
+            .or_default()
+            .insert(route.from_node);
+    }
+    let item_pointer = |index: usize| -> Option<String> {
+        if anchors.get(index)?.is_none() {
+            return None;
+        }
+        Some(geometry.nodes.get(index)?.pointer.as_str().to_string())
+    };
+    far_ends
         .into_iter()
-        .filter_map(|index| {
-            let node = geometry.nodes.get(index)?;
+        .filter_map(|(index, ends)| {
             let anchor = anchors.get(index)?.as_ref()?;
             Some(HoverItem {
-                pointer: node.pointer.as_str().to_string(),
+                pointer: item_pointer(index)?,
                 anchor: anchor.clone(),
+                neighbours: ends
+                    .into_iter()
+                    .filter(|end| *end != index)
+                    .filter_map(item_pointer)
+                    .collect(),
             })
         })
         .collect()
@@ -2854,16 +2870,21 @@ impl SvgDocument {
     }
 }
 
-/// One rule that fades every Link not attached to `item` and every other Item while the
-/// pointer rests on `item` or the URL fragment names its anchor.
+/// One rule that fades every Link not attached to `item` and every Item that is neither
+/// `item` nor at the far end of one of its links, while the pointer rests on `item` or the
+/// URL fragment names its anchor.
 fn hover_rule(item: &HoverItem) -> String {
     let pointer = css_string(&item.pointer);
     let highlighted = format!(
         "svg:has([data-id={pointer}]:hover, [id={}]:target)",
         css_string(&item.anchor)
     );
+    let mut kept_items = format!(":not([data-id={pointer}])");
+    for neighbour in &item.neighbours {
+        kept_items.push_str(&format!(":not([data-id={}])", css_string(neighbour)));
+    }
     format!(
-        "{highlighted} [data-tag=\"Link\"]:not([data-from={pointer}]):not([data-to={pointer}]), {highlighted} [data-tag=\"Pcard\"]:not([data-id={pointer}]) {{ opacity: {HOVER_FADED_OPACITY}; }}"
+        "{highlighted} [data-tag=\"Link\"]:not([data-from={pointer}]):not([data-to={pointer}]), {highlighted} [data-tag=\"Pcard\"]{kept_items} {{ opacity: {HOVER_FADED_OPACITY}; }}"
     )
 }
 
@@ -2962,16 +2983,17 @@ mod tests {
     }
 
     #[test]
-    fn a_hover_rule_fades_the_links_of_other_items_and_every_other_item() {
+    fn a_hover_rule_fades_the_other_links_and_every_item_not_at_a_far_end() {
         let item = HoverItem {
             pointer: "/body/0".to_string(),
             anchor: "api".to_string(),
+            neighbours: vec!["/body/1".to_string(), "/body/3".to_string()],
         };
         assert_eq!(
             hover_rule(&item),
             concat!(
                 r#"svg:has([data-id="/body/0"]:hover, [id="api"]:target) [data-tag="Link"]:not([data-from="/body/0"]):not([data-to="/body/0"]), "#,
-                r#"svg:has([data-id="/body/0"]:hover, [id="api"]:target) [data-tag="Pcard"]:not([data-id="/body/0"]) { opacity: 0.2; }"#
+                r#"svg:has([data-id="/body/0"]:hover, [id="api"]:target) [data-tag="Pcard"]:not([data-id="/body/0"]):not([data-id="/body/1"]):not([data-id="/body/3"]) { opacity: 0.2; }"#
             )
         );
     }
@@ -2985,6 +3007,7 @@ mod tests {
             hover_items: vec![HoverItem {
                 pointer: "/body/0".to_string(),
                 anchor: "_body_0".to_string(),
+                neighbours: Vec::new(),
             }],
         };
         let written = document.self_contained().unwrap();

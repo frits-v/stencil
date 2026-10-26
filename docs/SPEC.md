@@ -1269,6 +1269,8 @@ pub struct HoverItem {
     pub pointer: String,
     /// The `id` of the Item's group.
     pub anchor: String,
+    /// The `data-id` of every other Item at the far end of one of its links.
+    pub neighbours: Vec<String>,
 }
 
 impl SvgDocument {
@@ -1444,13 +1446,13 @@ The only `http` string in the SVG is the SVG namespace URI. There are no externa
 
 The payload is the base64 of the `BUNDLED_FONTS` file that `stencil_text::bundled_font` returns for that family and weight, unmodified, so a browser, a slide or document import or any other rasterizer draws the SVG in the faces the PNG was rendered and measured with, whether or not Inter is installed. A figure using all four weights grows by about 2.2 MB. The `data:` URIs are not external references.
 
-The hover rules highlight an Item and its links where the file is opened in a browser or inlined in a page; an `<img>` gets no pointer events and draws the figure as the PNG does. `hover_items` holds every Item at an end of at least one link, in geometry order, with its pointer and the `id` its group carries. When it is not empty the block holds `[data-tag="Pcard"], [data-tag="Link"] { transition: opacity 0.15s ease-out; }` and then, per entry, one rule on one line:
+The hover rules highlight an Item and its links where the file is opened in a browser or inlined in a page; an `<img>` gets no pointer events and draws the figure as the PNG does. `hover_items` holds every Item at an end of at least one link, in geometry order, with its pointer, the `id` its group carries and the pointers of the other Items at the far ends of its links, in geometry order. When it is not empty the block holds `[data-tag="Pcard"], [data-tag="Link"] { transition: opacity 0.15s ease-out; }` and then, per entry, one rule on one line:
 
 ```css
-svg:has([data-id="P"]:hover, [id="A"]:target) [data-tag="Link"]:not([data-from="P"]):not([data-to="P"]), svg:has([data-id="P"]:hover, [id="A"]:target) [data-tag="Pcard"]:not([data-id="P"]) { opacity: 0.2; }
+svg:has([data-id="P"]:hover, [id="A"]:target) [data-tag="Link"]:not([data-from="P"]):not([data-to="P"]), svg:has([data-id="P"]:hover, [id="A"]:target) [data-tag="Pcard"]:not([data-id="P"]):not([data-id="N1"]):not([data-id="N2"]) { opacity: 0.2; }
 ```
 
-where `P` is the item's pointer and `A` its `id`, each a CSS string with `"`, `\` and newline escaped, and the line escaped for XML content. While the pointer rests on the item, or the URL fragment names it (`figure.svg#api` opens with `api` highlighted), every link that does not end on it and every other Item fades; the items at the far ends of its links fade with the rest and its links stay drawn up to them. Pipes, zones and chrome keep their opacity. An Item with no link has no rule, so hovering it changes nothing. A document with no text and no linked Item is written as `render_svg` returned it. Neither block reaches the PNG, the measured JSON or a center fixture.
+where `P` is the item's pointer, `A` its `id` and `N1`, `N2` and so on the pointers of its far-end Items, one `:not()` each, each a CSS string with `"`, `\` and newline escaped, and the line escaped for XML content. While the pointer rests on the item, or the URL fragment names it (`figure.svg#api` opens with `api` highlighted), every link that does not end on it fades, and so does every Item that is neither the item nor at the far end of one of its links, so the reader sees the item, its links and what they connect to. Pipes, zones and chrome keep their opacity. An Item with no link has no rule, so hovering it changes nothing. A document with no text and no linked Item is written as `render_svg` returned it. Neither block reaches the PNG, the measured JSON or a center fixture.
 
 ### 5.3 PNG
 
@@ -2096,7 +2098,7 @@ All tests except the wrap-epsilon regression use `FixedMetricsMeasurer::default(
 - SVG parses with usvg. There is one `<g data-id>` per geometry node, in the same order with the same pointers. The only `http` substring is the namespace URI.
 - Every `<text>` has `xml:space="preserve"` and `font-family="Inter"` with no fallback list. `letter-spacing` is present exactly for the styles with nonzero spacing.
 - The SVG `render` writes holds one `@font-face` per weight its `<text>` elements use and none for another, each decoding to the bundled file of that weight: hybrid-ai uses 400, 600, 700 and 800, design-brief and hero-iso 400, 700 and 800 (`the_svg_embeds_a_font_face_for_each_weight_its_text_uses_and_no_other` in `crates/stencil-cli/tests/cli.rs`).
-- The SVG `render` writes holds one hover rule per Item at a link end and none for another Item, every link group's `data-from` and `data-to` name a node group's `data-id`, every `id` is unique, and the SVG `render_svg` returns holds no `<style>`: over onepager, org, onprem-iso and g7 that is 23 links, 40 Items, 15 rules and 25 Items without one (`the_svg_highlights_each_linked_item_on_hover_and_the_resvg_input_does_not` in `crates/stencil-cli/tests/cli.rs`). On a small page an Item keeps its own `id`, an Item without one or with the id `arrow-center-blue` takes the pointer form, and the marker keeps its id (`each_link_group_names_its_end_pointers_and_each_item_group_its_anchor` in `crates/stencil-render/tests/links.rs`).
+- The SVG `render` writes holds one hover rule per Item at a link end and none for another Item, every link group's `data-from` and `data-to` name a node group's `data-id`, every `id` is unique, and the SVG `render_svg` returns holds no `<style>`: over onepager, org, onprem-iso and g7 that is 23 links, 40 Items, 15 rules and 25 Items without one, and each rule keeps exactly the item and its far-end Items, 24 of them (`the_svg_highlights_each_linked_item_and_its_far_ends_on_hover_and_the_resvg_input_does_not` in `crates/stencil-cli/tests/cli.rs`). On a small page an Item keeps its own `id`, an Item without one or with the id `arrow-center-blue` takes the pointer form, and the marker keeps its id and each Item's far ends are its neighbours (`each_link_group_names_its_end_pointers_and_each_item_group_its_anchor_and_far_ends` in `crates/stencil-render/tests/links.rs`).
 - Icons: for every bundled pack, each data URI decodes to bytes whose SHA-256 equals the pack's section 8.2 table, which has one row per icon of the pack and fails when it has none. A render of a Pcard for each gcp icon parses.
 - Colors: for each ZoneKind the rect fill, stroke, stroke width and dasharray match section 2.4. For each PipeKind the wire color and dasharray match section 5.2, and a Tee of that kind draws its spine, and a legend entry of that kind its swatch `<line>`, in the same color and dasharray. A `deny` Tee's hub has stroke #F4C7C3 and text fill #C5221F.
 - Numbers: no attribute value has more than 2 decimals, and `-0` never appears. `format_number` gives `Integer(0)` for -0.0 and -0.001, `Integer(1320)` for 1320.0, `Integer(652)` for 652.004 and `Decimal(652.4)` for 652.4.

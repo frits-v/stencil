@@ -580,12 +580,13 @@ fn quoted_after<'a>(line: &'a str, start: &str) -> &'a str {
 }
 
 #[test]
-fn the_svg_highlights_each_linked_item_on_hover_and_the_resvg_input_does_not() {
+fn the_svg_highlights_each_linked_item_and_its_far_ends_on_hover_and_the_resvg_input_does_not() {
     let out_dir = scratch_directory("render_hover_rules");
     let mut items_examined = 0;
     let mut links_examined = 0;
     let mut unlinked_items = 0;
     let mut rules_examined = 0;
+    let mut neighbours_examined = 0;
     for stem in ["onepager", "org", "onprem-iso", "g7"] {
         let input = repository_path(&format!("examples/{stem}.json"));
         let outcome = run_stencil(&[
@@ -608,6 +609,7 @@ fn the_svg_highlights_each_linked_item_on_hover_and_the_resvg_input_does_not() {
             .filter_map(|line| attribute(line, "data-id"))
             .collect();
         let mut linked = BTreeSet::new();
+        let mut far_ends: BTreeMap<&str, BTreeSet<&str>> = BTreeMap::new();
         let link_lines: Vec<&&str> = group_lines
             .iter()
             .filter(|line| attribute(line, "data-tag") == Some("Link"))
@@ -618,6 +620,10 @@ fn the_svg_highlights_each_linked_item_on_hover_and_the_resvg_input_does_not() {
                 assert!(node_pointers.contains(pointer), "{stem}: {end} {pointer}");
                 linked.insert(pointer);
             }
+            let from = attribute(line, "data-from").unwrap();
+            let to = attribute(line, "data-to").unwrap();
+            far_ends.entry(from).or_default().insert(to);
+            far_ends.entry(to).or_default().insert(from);
         }
         let document: Value = serde_json::from_str(&fs::read_to_string(&input).unwrap()).unwrap();
         assert_eq!(
@@ -674,6 +680,25 @@ fn the_svg_highlights_each_linked_item_on_hover_and_the_resvg_input_does_not() {
             "{stem}"
         );
         rules_examined += rules.len();
+        for line in svg.lines().filter(|line| line.contains(":hover")) {
+            let pointer = quoted_after(line, r#"svg:has([data-id=""#);
+            let kept: BTreeSet<&str> = line
+                .rsplit_once(r#"[data-tag="Pcard"]"#)
+                .unwrap()
+                .1
+                .split(r#":not([data-id=""#)
+                .skip(1)
+                .map(|rest| rest.split_once('"').unwrap().0)
+                .collect();
+            let mut expected: BTreeSet<&str> = far_ends[pointer]
+                .iter()
+                .copied()
+                .filter(|end| items.contains_key(end))
+                .collect();
+            neighbours_examined += expected.iter().filter(|end| **end != pointer).count();
+            expected.insert(pointer);
+            assert_eq!(kept, expected, "{stem}: {pointer}");
+        }
 
         let json_text = read_input(&input).unwrap();
         let loaded = load_document_from(&json_text, input.parent().unwrap(), None).unwrap();
@@ -685,6 +710,7 @@ fn the_svg_highlights_each_linked_item_on_hover_and_the_resvg_input_does_not() {
     assert_eq!(links_examined, 23);
     assert_eq!(items_examined, 40);
     assert_eq!(rules_examined, 15);
+    assert_eq!(neighbours_examined, 24);
     assert_eq!(unlinked_items, 25);
 }
 
