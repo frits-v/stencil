@@ -16,13 +16,13 @@ Build the binary with `cargo build --release`; it lands at `target/release/stenc
 
 `examples/hybrid-ai.json`: a radar network and a satellite ground station uploading observations, a partner agency sharing model output from its own project, and nowcast models tuned and served inside a service perimeter.
 
-![A data center reaches a two-zone VPC over Direct Connect](docs/gallery/aws-hybrid.png)
+![A food delivery ordering backend in a two-zone VPC behind CloudFront](docs/gallery/aws-hybrid.png)
 
-`examples/aws-hybrid.json`: a data center over Direct Connect into one region, a VPC across two Availability Zones, and the regional services the VPC reaches over endpoints beside it.
+`examples/aws-hybrid.json`: a food delivery service's ordering backend, with CloudFront and Route 53 outside the region, the order API and its database across two Availability Zones, and the regional services the VPC reaches over endpoints beside it.
 
-![Azure hub-and-spoke network with ExpressRoute and private endpoints](docs/gallery/azure-hub-spoke.png)
+![A hotel reservation platform on an Azure hub-and-spoke network with private endpoints](docs/gallery/azure-hub-spoke.png)
 
-`examples/azure-hub-spoke.json`: an on-prem site reaching a hub VNet over ExpressRoute with a VPN backup, spoke traffic through the hub firewall, and a spoke cluster reaching PaaS services over private endpoints.
+`examples/azure-hub-spoke.json`: a hotel group's reservation platform, with spoke traffic through the hub firewall, a booking cluster reaching Storage, SQL Database and Key Vault over private endpoints, and Front Door and Entra ID outside the region.
 
 ![A self-hosted web stack on Kubernetes](docs/gallery/oss-web-stack.png)
 
