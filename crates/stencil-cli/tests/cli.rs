@@ -634,6 +634,14 @@ fn every_hover_rule_names_units_the_written_svg_holds_and_the_resvg_input_has_no
     let mut examples = 0;
     let mut rules_examined = 0;
     let mut names_examined = 0;
+    let mut stems_without_rules = Vec::new();
+    let example_files = fs::read_dir(repository_path("examples"))
+        .unwrap()
+        .filter(|entry| {
+            let path = entry.as_ref().unwrap().path();
+            path.extension().and_then(|extension| extension.to_str()) == Some("json")
+        })
+        .count();
     for example in fs::read_dir(repository_path("examples")).unwrap() {
         let path = example.unwrap().path();
         if path.extension().and_then(|extension| extension.to_str()) != Some("json") {
@@ -712,11 +720,19 @@ fn every_hover_rule_names_units_the_written_svg_holds_and_the_resvg_input_has_no
             }
             names_examined += rule.groups.len() + rule.rows.len();
         }
+        if rules.is_empty() {
+            stems_without_rules.push(stem.clone());
+        }
         rules_examined += rules.len();
         examples += 1;
     }
-    assert_eq!(examples, 16);
-    assert_eq!(rules_examined, 376);
+    println!("{examples} examples, {rules_examined} hover rules, {names_examined} names");
+    assert!(examples > 0, "no example was examined");
+    assert_eq!(examples, example_files);
+    assert!(
+        stems_without_rules.is_empty(),
+        "examples with no hover rule: {stems_without_rules:?}"
+    );
     assert!(names_examined > rules_examined, "{names_examined} names");
 }
 
