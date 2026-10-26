@@ -44,7 +44,7 @@ pub fn item_shape(kind: Option<&ItemKind>, item: &Item) -> Shape {
             .products
             .iter()
             .take(GRAMMAR_PRODUCTS_MAX)
-            .find(|row| row.icon == *icon)
+            .find(|row| row.icon.as_ref() == Some(icon))
             .and_then(|row| row.shape)
     });
     row_shape
@@ -85,7 +85,8 @@ pub fn named_product<'a>(table: &'a [IconProducts], subtitle: &str) -> Option<&'
     best.map(|(name, _)| name)
 }
 
-/// The `product`-class icons whose row lists `product`, sorted by name.
+/// The `product`-class icons whose row lists `product`, sorted by name; a row without an
+/// icon adds none.
 fn product_icons<'a>(table: &'a [IconProducts], product: &str) -> Vec<&'a IconStem> {
     let mut icons: Vec<&IconStem> = table
         .iter()
@@ -97,7 +98,7 @@ fn product_icons<'a>(table: &'a [IconProducts], product: &str) -> Vec<&'a IconSt
                 .take(GRAMMAR_PRODUCT_NAMES_MAX)
                 .any(|name| name == product)
         })
-        .map(|row| &row.icon)
+        .filter_map(|row| row.icon.as_ref())
         .collect();
     icons.sort();
     icons.dedup();
@@ -109,7 +110,7 @@ fn is_product_icon(table: &[IconProducts], icon: &IconStem) -> bool {
     table
         .iter()
         .take(GRAMMAR_PRODUCTS_MAX)
-        .any(|row| row.icon == *icon && row.class == IconClass::Product)
+        .any(|row| row.icon.as_ref() == Some(icon) && row.class == IconClass::Product)
 }
 
 /// The defect message for an item whose subtitle names `product` and which carries `icon`,

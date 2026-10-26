@@ -15,7 +15,7 @@ use base64::Engine;
 use base64::engine::general_purpose::STANDARD;
 use serde_json::json;
 use sha2::{Digest, Sha256};
-use stencil_model::{IconName, IconPack};
+use stencil_model::{Grammar, IconName, IconPack, IconStem, builtin_grammar};
 use stencil_render::{DeviceScale, icon_data_uri, icon_svg_bytes, render_png};
 
 const DATA_URI_PREFIX: &str = "data:image/svg+xml;base64,";
@@ -170,8 +170,8 @@ fn data_uri_decodes_to_the_exact_icon_bytes() {
     }
 }
 
-/// Each bundled pack is drawn by the built-in grammar of the same name, whose product kind
-/// draws from it.
+/// Each bundled pack is drawn by the built-in grammar of the same name, whose kinds draw from
+/// it.
 #[test]
 fn a_card_for_each_icon_of_every_bundled_pack_renders_to_png() {
     let mut examined = 0;
@@ -185,15 +185,35 @@ fn a_card_for_each_icon_of_every_bundled_pack_renders_to_png() {
     assert!(examined > 0);
 }
 
-/// Renders one product card per icon of the pack under its grammar and returns the number of
-/// icons drawn.
+/// The item kind of `grammar` whose products table lists `icon`.
+fn kind_listing(grammar: &Grammar, icon: IconName) -> &str {
+    grammar
+        .items
+        .iter()
+        .find(|kind| {
+            kind.icons == icon.pack()
+                && kind
+                    .products
+                    .iter()
+                    .any(|row| row.icon.as_ref().map(IconStem::as_str) == Some(icon.as_str()))
+        })
+        .map(|kind| kind.name.as_str())
+        .unwrap_or_else(|| panic!("no kind lists {}", icon.as_str()))
+}
+
+/// Renders one card per icon of the pack under its grammar, each on the kind whose table lists
+/// the icon, and returns the number of icons drawn.
 fn render_a_card_for_each_icon(pack: IconPack) -> usize {
+    let grammar = builtin_grammar(pack.as_str())
+        .expect("each bundled pack has a built-in grammar of its name")
+        .expect("the grammar is valid");
     let pack_icons = pack.icons();
     let cards: Vec<_> = pack_icons
         .iter()
         .map(|icon| {
             let stem = icon.as_str();
-            json!({ "tag": "Item", "kind": "product", "icon": stem, "title": format!("Card {stem}") })
+            let kind = kind_listing(&grammar, *icon);
+            json!({ "tag": "Item", "kind": kind, "icon": stem, "title": format!("Card {stem}") })
         })
         .collect();
     let body = json!([

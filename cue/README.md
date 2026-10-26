@@ -14,13 +14,16 @@ its rules; a figure file writes one topology against a grammar's `#Page`.
 | `icons_aws.cue` | `stencil` | `#IconAwsStems` and `#IconAws`, the file stems of the aws icon pack |
 | `icons_azure.cue` | `stencil` | `#IconAzureStems` and `#IconAzure`, the file stems of the azure icon pack |
 | `icons_gcp.cue` | `stencil` | `#IconGcpStems` and `#IconGcp`, the file stems of the gcp icon pack; each pack has its own `icons_<pack>.cue`, and `#Icon` in `core.cue` is their union |
+| `icons_oss.cue` | `stencil` | `#IconOssStems` and `#IconOss`, the file stems of the oss icon pack |
 | `theme.cue` | `stencil` | `#Theme`, the closed theme definition every theme file vets against: `cue vet -c -d '#Theme' . <file>.json` |
 | `grammars/aws.cue` | `aws` | the AWS grammar data and service rules, and the aws `#Page` |
 | `grammars/azure.cue` | `azure` | the Azure grammar data and product rules, and the azure `#Page` |
 | `grammars/gcp.cue` | `gcp` | the Google Cloud grammar data and product rules, and the gcp `#Page` |
+| `grammars/oss.cue` | `oss` | plain's kinds with the oss pack on service, store, queue and network, a cluster container, and the oss `#Page`, which walks the body with plain's `#Node` for the external-outside-system rule |
 | `grammars/plain.cue` | `plain` | the default, vendor-neutral grammar data and the plain `#Page` with its external-outside-system rule |
 | `figures/aws.cue` | `aws` | an on-prem site over Direct Connect into a two-AZ VPC with its regional services beside it: `hybrid`, the base of the aws negative cases |
 | `figures/azure.cue` | `azure` | a hub-and-spoke network in one Azure region: `figure`, the base of the azure negative cases |
+| `figures/oss.cue` | `oss` | a web stack on Kubernetes with an identity provider beside the platform: `figure`, the base of the oss negative cases |
 | `figures/g7.cue` | `gcp` | g7, Dedicated Interconnect at 99.99%: `customer` and `internal: customer & {...}` |
 | `figures/sequence.cue` | `plain` | a request flow in five lanes with ten ordered messages: `figure`, exported as `examples/sequence.json` |
 | `figures/sheet.cue` | `plain` | the trigger evaluation design sheet, a title block, four actors, a Workflow view with a detail ladder, a System view (an assembly, a rail, a store with compartments, step badges, a valve and planned work) with its parts list, general notes and a console screen, and a How-tos view of four terminals: `onepager`, exported as `examples/onepager.json` |
@@ -35,13 +38,13 @@ Layout notes forced by CUE's package rules:
   inside it. From the repository root, `cue export ./cue/grammars:gcp` finds no module.
 - The core package lives in the module root directory, whose name (`cue`) differs from its
   package name, so its import path carries the package: `github.com/frits-v/stencil/cue:stencil`.
-- `grammars/` holds one package per grammar, `aws`, `azure`, `gcp` and `plain`, so every command
+- `grammars/` holds one package per grammar, `aws`, `azure`, `gcp`, `oss` and `plain`, so every command
   names one: `./grammars:gcp`. A bare `./grammars` is an error.
 - `figures/` holds `aws.cue` (package `aws`), `azure.cue` (package `azure`), `g7.cue` and
-  `sheet-gcp.cue` (package `gcp`) and `sequence.cue`, `sheet.cue` and `sheet-small.cue`
+  `sheet-gcp.cue` (package `gcp`), `oss.cue` (package `oss`) and `sequence.cue`, `sheet.cue` and `sheet-small.cue`
   (package `plain`), so commands name the package: `./figures:aws`, `./figures:azure`,
-  `./figures:gcp`, `./figures:plain`. Each is a separate instance from its grammar and imports it
-  (`github.com/frits-v/stencil/cue/grammars:gcp`, `:aws`, `:azure` or `:plain`) to reach its
+  `./figures:gcp`, `./figures:oss`, `./figures:plain`. Each is a separate instance from its grammar and imports it
+  (`github.com/frits-v/stencil/cue/grammars:gcp`, `:aws`, `:azure`, `:oss` or `:plain`) to reach its
   `#Page`.
 
 ## Vet, export, render
@@ -67,7 +70,8 @@ it, vet only says that some instances are incomplete. `stencil render` writes `<
 `./cue/check.sh` (from anywhere) runs, in order:
 
 1. `cue vet -c` over the core, `./grammars:aws`, `./grammars:azure`, `./grammars:gcp`,
-   `./grammars:plain`, `./figures:aws`, `./figures:azure`, `./figures:gcp` and `./figures:plain`.
+   `./grammars:oss`, `./grammars:plain`, `./figures:aws`, `./figures:azure`, `./figures:gcp`,
+   `./figures:oss` and `./figures:plain`.
 2. Exports each grammar and compares it byte for byte with
    `crates/stencil-model/grammars/<name>.json`, which the Rust side embeds; a difference prints a
    unified diff and fails. Regenerate the committed file with the export command above.
@@ -80,7 +84,7 @@ it, vet only says that some instances are incomplete. `stencil render` writes `<
 5. Vets a one-key `chrome: "none"` document with an empty legend, and a document of the
    products an azure subnet or region does hold, which must both pass.
 6. Runs every negative case: a copy of the cue tree with one edit to `figures/aws.cue`,
-   `figures/azure.cue`, `figures/g7.cue`, `figures/sequence.cue`, `figures/sheet.cue`,
+   `figures/azure.cue`, `figures/g7.cue`, `figures/oss.cue`, `figures/sequence.cue`, `figures/sheet.cue`,
    `figures/sheet-small.cue` or
    `figures/sheet-gcp.cue` that vet must reject with a named error.
 
@@ -156,7 +160,7 @@ for example `CUE="$(mise which cue)" ./cue/check.sh`.
   `."sheet-look"`, `."rail-form"`, `."link-step"`, `."pipe-step"` and `.valve`.
 - `Lanes` is a container of 1 to 32 lane heads with an optional `gap` of 0 to 64. A `Link` may
   carry `order`, 1 to 256, which makes it a message of the Lanes node whose heads it joins.
-- `#Page` adds `grammar` (`aws`, `azure`, `gcp`, `plain` or a path ending in `.json`) and `chrome` (`full` or
+- `#Page` adds `grammar` (`aws`, `azure`, `gcp`, `oss`, `plain` or a path ending in `.json`) and `chrome` (`full` or
   `none`). `theme` is a built-in theme name (`center`, `paper`, `dusk`, `clear`, `clear-dark`, `wire`, or one of the imported tier: `tokyo-night`, `solarized-light`, `solarized-dark`, `material-dark`, `gruvbox-dark`, `dracula`, `nord`) or a theme file path ending in `.json`; `theme_overrides` is an open struct the Rust loader checks against `#Theme`.
 
 ## What the core enforces
@@ -224,7 +228,8 @@ _nesting: stencil.#GrammarNesting & {#grammar: grammar}
   `_tintWithoutEffect` on the Box.
 - Icons. An Item's `icon` and each products row's `icon` are stems of the pack the kind draws
   from, `#PackStems` selecting the pack's list by comprehension; `_iconOutsidePack` on the
-  Item and `_iconsOutsidePack.<stem>` on the item kind name the offender.
+  Item and `_iconsOutsidePack.<stem>` on the item kind name the offender. A products row may
+  have no icon, for a product with no bundled icon; the check skips it.
 - Grammar name. A page that sets `grammar` must name the package's grammar.
 
 ## azure rules

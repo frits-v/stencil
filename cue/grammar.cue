@@ -52,6 +52,7 @@ import (
 #IconPack: "aws" |
 	"azure" |
 	"gcp" |
+	"oss" |
 	"none"
 
 // The stems of one pack, selected by comprehension: a lookup by struct key of
@@ -63,6 +64,7 @@ import (
 		if #pack == "aws" {#IconAwsStems},
 		if #pack == "azure" {#IconAzureStems},
 		if #pack == "gcp" {#IconGcpStems},
+		if #pack == "oss" {#IconOssStems},
 	])
 }
 
@@ -71,11 +73,12 @@ import (
 	// The bundled icon pack the kind draws from; none takes no icon.
 	icons: #IconPack
 	// The icon-to-name table of icon-matches-product; empty when icons is none.
-	// Each row's icon is a stem of the kind's pack.
+	// Each row's icon is a stem of the kind's pack; a row without one names a
+	// product with no bundled icon.
 	products: [...#IconProducts]
 	_packStems: (#PackStems & {#pack: icons}).stems
 	_iconsOutsidePack: {
-		for row in products if !list.Contains(_packStems, row.icon) {
+		for row in products if row.icon != _|_ if !list.Contains(_packStems, row.icon) {
 			(row.icon): "icon \(row.icon)" & "is not in icon pack \(icons), which item kind \(name) draws from"
 		}
 	}
@@ -86,7 +89,7 @@ import (
 }
 
 #IconProducts: {
-	icon:  #Icon
+	icon?: #Icon
 	class: "product" | "category"
 	names: [...string & !="" & strings.MaxRunes(64)] & list.MinItems(1)
 	// Under iso, the solid an item with this icon stands as; absent is card.

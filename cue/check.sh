@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
-# Vets the core package, every grammar package and the aws, azure, g7, sequence,
-# sheet, sheet-small and sheet-gcp figures; exports each grammar and compares it byte for byte with
+# Vets the core package, every grammar package and the aws, azure, g7, oss,
+# sequence, sheet, sheet-small and sheet-gcp figures; exports each grammar and compares it byte for byte with
 # crates/stencil-model/grammars/; compares the g7 customer export with
 # examples/g7.json, the sequence export with examples/sequence.json and the
 # sheet export with examples/onepager.json; vets every example against the
 # #Page of the grammar it names; vets every built-in theme file against #Theme
 # and rejects the theme negative cases; then runs the negative cases: a copy of
 # the cue tree with one edit to figures/aws.cue, figures/azure.cue, figures/g7.cue,
-# figures/sequence.cue, figures/sheet.cue, figures/sheet-small.cue or figures/sheet-gcp.cue that
+# figures/oss.cue, figures/sequence.cue, figures/sheet.cue, figures/sheet-small.cue or figures/sheet-gcp.cue that
 # vet must reject with the named error.
 # Exits non-zero if the cue binary is missing, if any positive step fails, or
 # if any negative case passes or fails for a different reason.
@@ -36,17 +36,19 @@ cd "$here"
 "$CUE" vet -c ./grammars:aws
 "$CUE" vet -c ./grammars:azure
 "$CUE" vet -c ./grammars:gcp
+"$CUE" vet -c ./grammars:oss
 "$CUE" vet -c ./grammars:plain
 "$CUE" vet -c ./figures:aws
 "$CUE" vet -c ./figures:azure
 "$CUE" vet -c ./figures:gcp
+"$CUE" vet -c ./figures:oss
 "$CUE" vet -c ./figures:plain
-echo "ok   vet: core, grammars aws, azure, gcp and plain, figures aws, azure, gcp and plain"
+echo "ok   vet: core, grammars aws, azure, gcp, oss and plain, figures aws, azure, gcp, oss and plain"
 
 # The committed grammar JSON is what the Rust side embeds; it must be exactly
 # this export, so the comparison is byte for byte. To regenerate, from cue/:
 #   cue export ./grammars:<name> -e grammar --out json -o ../crates/stencil-model/grammars/<name>.json --force
-for name in aws azure gcp plain; do
+for name in aws azure gcp oss plain; do
 	"$CUE" export "./grammars:$name" -e grammar --out json -o "$out/grammar-$name.json" --force
 	if ! cmp -s "$committed_grammars/$name.json" "$out/grammar-$name.json"; then
 		diff -u "$committed_grammars/$name.json" "$out/grammar-$name.json" >&2 || true
@@ -169,7 +171,7 @@ for example in "$repo"/examples/*.json; do
 		fi
 	done
 	grammar="$(python3 -c 'import json, sys; print(json.load(open(sys.argv[1], encoding="utf-8")).get("grammar", "plain"))' "$example")"
-	if [[ "$grammar" != "aws" && "$grammar" != "azure" && "$grammar" != "gcp" && "$grammar" != "plain" ]]; then
+	if [[ "$grammar" != "aws" && "$grammar" != "azure" && "$grammar" != "gcp" && "$grammar" != "oss" && "$grammar" != "plain" ]]; then
 		echo "FAIL example $stem: names grammar $grammar, which has no package under grammars/" >&2
 		examples_failed=$((examples_failed + 1))
 		continue
@@ -381,8 +383,8 @@ ten_lines="$(printf '{kind: "output", text: "line %s"},' $(seq 1 10))"
 
 # figure | name | sed expression applied to figures/<figure>.cue | text the
 # vet error must contain [| second text the error must also contain]. An aws case vets
-# ./figures:aws, an azure case ./figures:azure, a g7 or sheet-gcp case ./figures:gcp and a
-# sequence, sheet or sheet-small case ./figures:plain.
+# ./figures:aws, an azure case ./figures:azure, a g7 or sheet-gcp case ./figures:gcp, an oss
+# case ./figures:oss and a sequence, sheet or sheet-small case ./figures:plain.
 aws_subnet_fact='{tag: "Fact", text: "No route to an internet gateway"},'
 aws_region_fact='{tag: "Fact", text: "Region and zones from the landing-zone design"},'
 aws_cases=(
@@ -412,6 +414,12 @@ azure_cases=(
 	'remembered-asn-65515|s/sub: "private peering · BGP"/sub: "private peering · BGP ASN 65515"/|_rememberedInText."65515"|contains 65515: the default ASN of a VPN gateway'
 	'remembered-cidr-in-a-label|s/label: "Hub VNet"/label: "Hub VNet · 10.0.0.0\/16"/|_rememberedInText."10.0.0.0/16"'
 	'gcp-icon-on-an-azure-product|s/icon: "aks"/icon: "gke"/|_iconOutsidePack|is not in icon pack azure, which item kind product draws from'
+)
+oss_cases=(
+	'oss-external-inside-system|s/kind: "service", title: "Storefront"/kind: "external", title: "Storefront"/|_externalInsideSystem.Storefront|sits inside the system frame'
+	'gcp-icon-on-an-oss-service|s/kind: "service", title: "Storefront"/kind: "service", icon: "gke", title: "Storefront"/|_iconOutsidePack|is not in icon pack oss, which item kind service draws from'
+	'oss-icon-on-a-managed-item|s/kind: "service", title: "Order worker"/kind: "managed", icon: "postgresql", title: "Order worker"/|_iconOutsidePack|is not in icon pack none, which item kind managed draws from'
+	'cluster-at-the-top-level|s/^\tbody: \[{$/\tbody: [{tag: "Box", kind: "cluster", label: "Stray cluster", children: [{tag: "Fact", text: "no system around it"}]}, {/|_kindParentNotAllowed.cluster|cannot sit in page'
 )
 g7_cases=(
 	'asn-64512|s/subtitle: "private ASN · RFC 6996"/subtitle: "private ASN 64512"/|.subtitle: invalid value "private ASN 64512"'
@@ -607,6 +615,9 @@ done
 for entry in "${g7_cases[@]}"; do
 	cases+=("g7|$entry")
 done
+for entry in "${oss_cases[@]}"; do
+	cases+=("oss|$entry")
+done
 for entry in "${sequence_cases[@]}"; do
 	cases+=("sequence|$entry")
 done
@@ -641,6 +652,7 @@ for entry in "${cases[@]}"; do
 	aws) package=aws ;;
 	azure) package=azure ;;
 	g7) package=gcp ;;
+	oss) package=oss ;;
 	sequence) package=plain ;;
 	sheet) package=plain ;;
 	sheet-gcp) package=gcp ;;

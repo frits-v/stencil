@@ -11,10 +11,12 @@ use serde::{Deserialize, Serialize};
 mod aws;
 mod azure;
 mod gcp;
+mod oss;
 
 pub use aws::AwsIcon;
 pub use azure::AzureIcon;
 pub use gcp::GcpIcon;
+pub use oss::OssIcon;
 
 /// An icon file stem: lowercase ASCII letters and digits in runs joined by single `-`.
 pub const ICON_STEM_PATTERN: &str = r"^[a-z0-9]+(-[a-z0-9]+)*$";
@@ -100,12 +102,14 @@ pub enum IconPack {
     Aws,
     Azure,
     Gcp,
+    Oss,
     None,
 }
 
 impl IconPack {
     /// Every pack with files under `assets/icons/<pack>/`.
-    pub const BUNDLED: [IconPack; 3] = [IconPack::Aws, IconPack::Azure, IconPack::Gcp];
+    pub const BUNDLED: [IconPack; 4] =
+        [IconPack::Aws, IconPack::Azure, IconPack::Gcp, IconPack::Oss];
 
     /// The serialized name, which is also the pack's directory under `assets/icons/`.
     pub fn as_str(self) -> &'static str {
@@ -113,6 +117,7 @@ impl IconPack {
             IconPack::Aws => "aws",
             IconPack::Azure => "azure",
             IconPack::Gcp => "gcp",
+            IconPack::Oss => "oss",
             IconPack::None => "none",
         }
     }
@@ -123,6 +128,7 @@ impl IconPack {
             IconPack::Aws => AwsIcon::ALL.into_iter().map(IconName::Aws).collect(),
             IconPack::Azure => AzureIcon::ALL.into_iter().map(IconName::Azure).collect(),
             IconPack::Gcp => GcpIcon::ALL.into_iter().map(IconName::Gcp).collect(),
+            IconPack::Oss => OssIcon::ALL.into_iter().map(IconName::Oss).collect(),
             IconPack::None => Vec::new(),
         }
     }
@@ -133,6 +139,7 @@ impl IconPack {
             IconPack::Aws => AwsIcon::from_stem(stem.as_str()).map(IconName::Aws),
             IconPack::Azure => AzureIcon::from_stem(stem.as_str()).map(IconName::Azure),
             IconPack::Gcp => GcpIcon::from_stem(stem.as_str()).map(IconName::Gcp),
+            IconPack::Oss => OssIcon::from_stem(stem.as_str()).map(IconName::Oss),
             IconPack::None => None,
         }
     }
@@ -144,6 +151,7 @@ pub enum IconName {
     Aws(AwsIcon),
     Azure(AzureIcon),
     Gcp(GcpIcon),
+    Oss(OssIcon),
 }
 
 impl IconName {
@@ -152,6 +160,7 @@ impl IconName {
             IconName::Aws(_) => IconPack::Aws,
             IconName::Azure(_) => IconPack::Azure,
             IconName::Gcp(_) => IconPack::Gcp,
+            IconName::Oss(_) => IconPack::Oss,
         }
     }
 
@@ -167,6 +176,7 @@ impl IconName {
             IconName::Aws(icon) => icon.file_name(),
             IconName::Azure(icon) => icon.file_name(),
             IconName::Gcp(icon) => icon.file_name(),
+            IconName::Oss(icon) => icon.file_name(),
         }
     }
 }

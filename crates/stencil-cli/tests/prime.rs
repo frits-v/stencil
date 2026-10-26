@@ -621,7 +621,11 @@ fn prime_grammar_with_an_unknown_or_missing_name_exits_2_with_one_line() {
         assert_eq!(outcome.code, ExitCode::CouldNotRun, "{arguments:?}");
         assert_eq!(outcome.stdout, "");
         assert_eq!(outcome.stderr.lines().count(), 1, "{}", outcome.stderr);
-        assert!(outcome.stderr.contains("gcp, plain"), "{}", outcome.stderr);
+        assert!(
+            outcome.stderr.contains("gcp, oss, plain"),
+            "{}",
+            outcome.stderr
+        );
     }
     let extra = run_stencil(&["prime", "themes", "gcp"]);
     assert_eq!(extra.code, ExitCode::CouldNotRun);

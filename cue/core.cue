@@ -208,7 +208,7 @@ import (
 
 // A built-in grammar name or a path to an exported grammar file, the
 // GRAMMAR_REFERENCE_PATTERN of the Rust model.
-#GrammarReference: =~"^(aws|azure|gcp|plain|[^\\x00-\\x1F]{1,395}\\.json)$"
+#GrammarReference: =~"^(aws|azure|gcp|oss|plain|[^\\x00-\\x1F]{1,395}\\.json)$"
 
 // A node id, the pattern of the Rust model's `id` field. Links name nodes by it.
 #Id: =~"^[a-z0-9][a-z0-9-]{0,63}$"
@@ -218,7 +218,8 @@ import (
 // come from is the item kind's, checked in grammar.cue.
 #Icon: #IconAws |
 	#IconAzure |
-	#IconGcp
+	#IconGcp |
+	#IconOss
 
 // The legend key of a line: the line and its tint for solid and dash, slot 1
 // when tint is absent, "<line>-by-actor" for a use with an effective actor or a

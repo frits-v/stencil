@@ -1698,9 +1698,9 @@ Family: Inter, SIL Open Font License 1.1. Four static instances from the Inter 4
 
 ### 8.2 Icons
 
-An icon pack is a directory `assets/icons/<pack>/` of SVG files and a `PROVENANCE.md` that records the source archive and its URL, the fetch date, the stated terms quoted, the conclusion, and one row per file mapping the local file to its archive path. `IconPack` lists the bundled packs in alphabetical order, then `none`. An icon is named by its file stem, and a stem means an icon only in the pack of the item's kind: `Item.icon` and a products row's `icon` are stems, the same stem in two packs is two icons, and a page never names a pack. Vet resolves an item's stem against its kind's pack (`icon-outside-pack`, section 13.1), the grammar check resolves each products row against its kind's pack (`grammar-icon-table`, section 13.2), and layout carries the resolved icon on the Item's node for the writer. A kind draws from one pack, so a figure mixes no packs.
+An icon pack is a directory `assets/icons/<pack>/` of SVG files and a `PROVENANCE.md` that records the source archive or repository and its URL, the fetch date, and one row per file mapping the local file to its source path; the provenance of a vendor's archive also quotes its stated terms and the conclusion. `IconPack` lists the bundled packs in alphabetical order, then `none`. An icon is named by its file stem, and a stem means an icon only in the pack of the item's kind: `Item.icon` and a products row's `icon` are stems, the same stem in two packs is two icons, and a page never names a pack. Vet resolves an item's stem against its kind's pack (`icon-outside-pack`, section 13.1), the grammar check resolves each products row against its kind's pack (`grammar-icon-table`, section 13.2), and layout carries the resolved icon on the Item's node for the writer. A kind draws from one pack, so a figure mixes no packs.
 
-Every file is copied byte for byte from the vendor's archive. Stencil never recolors, resizes by rewriting, crops, re-exports or minifies an icon. It places the original bytes in a data URI and scales them with the `<image>` element's width and height.
+Every file is copied byte for byte from its source. Stencil never recolors, resizes by rewriting, crops, re-exports or minifies an icon. It places the original bytes in a data URI and scales them with the `<image>` element's width and height.
 
 `stencil-render` embeds the files with `include_bytes!`, one module per pack under `crates/stencil-render/src/icons/`. A test reads the tables below, one under a heading per bundled pack in `IconPack` order, and compares each embedded file with its row; a bundled pack with no rows, an icon with no row and a row with no icon each fail it. A second test requires every SVG in a pack's directory to have a row in that pack's `PROVENANCE.md` and every row there to have a file.
 
@@ -1836,6 +1836,47 @@ The 23 Google Cloud icons in `assets/icons/gcp/`, from the two ZIP archives link
 | `vertex-ai.svg` | `Unique Icons/Vertex AI/SVG/VertexAI-512-color.svg` | `17922247f3110026fd637c531d0604c67a00c9a58a6e152030f2242b9fd48a8e` |
 
 `cloud-run.svg` and `cloud-run-flat.svg` are the same file under two names, which the pack's provenance also records.
+
+#### Pack oss
+
+The 34 open-source project logos in `assets/icons/oss/`, each the project's or its steward's own published SVG file. `assets/icons/oss/PROVENANCE.md` records each file's source URL, the path and commit of a file taken from a git repository, and the fetch date. MySQL and Elasticsearch have no file; the oss grammar lists them in products rows without an icon (section 13.10).
+
+| Local file | Product | SHA-256 |
+|---|---|---|
+| `airflow.svg` | Apache Airflow | `5ef09e84bc3ec931468369b388e9be65fd68fd93c09e53f73b15f295f67f60e3` |
+| `argo.svg` | Argo | `e926e477a7912364ea2f582f9cb08b04c3adf92a7b67c39693095960ed50b46a` |
+| `cassandra.svg` | Apache Cassandra | `d056d2830da4617d56fcf1272638f869c49ce0f44c19ae51798cfaa656b7daaf` |
+| `clickhouse.svg` | ClickHouse | `99037fb343a0e32887d258c88f142c4f97124f8964ba1dfddf08f159bcdd1bf7` |
+| `docker.svg` | Docker | `0fd7f9164de13672bb1708ac7cc401ed439eb938ffa7358d5cb278e107904687` |
+| `envoy.svg` | Envoy | `df8b8caf4cf8763be5932dc58d7272c03e50fc4dcfdf7eaee4a28a34d6ac5b7d` |
+| `etcd.svg` | etcd | `67535552e9930d1b0b9fb76db7bfe4367ec9e644badce29fb4534c05685fb723` |
+| `grafana.svg` | Grafana | `50806d5a65779e79f746398570e0fc322d5de55e19f0be87a275963f0947bb5e` |
+| `haproxy.svg` | HAProxy | `5b09f3fc5a0c12d4a2ff6db9fbaa9753e408db10b882d06a624a491bcb718241` |
+| `helm.svg` | Helm | `ad04fbc7841a55023ad7806aa133a86ebd0aab21c2179be97f9048617138e7b1` |
+| `istio.svg` | Istio | `f5d5e6e64b794721fc698e05fd64004f73efbe2a3bdedf3a20394db44b71c889` |
+| `jaeger.svg` | Jaeger | `8a0405c39367a378e9e2626dbd1a5c13a613f9e148cb2360c094ccc50c348ae1` |
+| `jenkins.svg` | Jenkins | `5afd00080797a0568f7305696775e53a2d1fb88c59c054ebc554b3d284b5d230` |
+| `kafka.svg` | Apache Kafka | `76af24fd1768521d2fadac9317f64176d0c1892c520b118f20aa998bff31c023` |
+| `keycloak.svg` | Keycloak | `488472bcd75c7cfe6442c8f2248cf0d7cb57d3faed00be9b59e1744a8cbd2ad2` |
+| `kubernetes.svg` | Kubernetes | `ff5427cfeeff39e82834ab1b4fe3ed61fc08596225a17eed56adc04f7cc1f712` |
+| `linkerd.svg` | Linkerd | `e43dda1077018cb44d0dc7bc8d3183aa05ddfa85f7544371475efaa0878c1764` |
+| `loki.svg` | Grafana Loki | `1d3087c3acefcd556eeb11f8de85f289913d87338fe8dae04cc844fb0785f4e9` |
+| `mariadb.svg` | MariaDB Server | `14258ff8e2ff7f7c831f36619ff0503c8861cdb5c3f8d4905edbdb58c18c88fb` |
+| `minio.svg` | MinIO | `a29fb599d75725713f09d83429b729ee7272fb6ac9294184ceb16dbb49efc983` |
+| `mongodb.svg` | MongoDB | `9f5435c8be18a834b2c2f8c4c03f117a997646c660fd6f28e3b6869a1bc2fcc1` |
+| `nats.svg` | NATS | `aeac64fac2ef4226a921508afc8097bd6300cdc9361779acdd19ec650a961992` |
+| `nginx.svg` | NGINX | `9bd543826050ee506dd234f03fbbe972444bb20d9d4854ba7b0e1cf71ef28f07` |
+| `opensearch.svg` | OpenSearch | `d89d0555a75fa2c745bfdd782589cc17ce596d3fd41e5008bef8ff3fec695bc8` |
+| `opentelemetry.svg` | OpenTelemetry | `f19d3aa81895ba0d2102df6bbd76371e55664f8f6714c6ed355f971b7b013906` |
+| `postgresql.svg` | PostgreSQL | `51f93e19516081fc7d6fe6ab9bbab07abe5f7819e28016eefacea6dea691bc54` |
+| `prometheus.svg` | Prometheus | `a96d48cc7f1c91de940dacbf30581850fd2c0ed4afaf1b0b94fb86eb1d0aef6e` |
+| `pulsar.svg` | Apache Pulsar | `9a541b47e11703dd80b2660401c988f01e0c1728cf38ee7463a38897b0cbbdfd` |
+| `rabbitmq.svg` | RabbitMQ | `5c83f8a9819ca280dd32eef7e79c567a071dddc6a66a120b5d1511f286766749` |
+| `redis.svg` | Redis | `46b9de6d80f089580210f14d2c25f712ab90d831f94d96f67f22920ebccc015f` |
+| `spark.svg` | Apache Spark | `19f38764a2d20e3cc24e7b57acf1fb16bc8a3711437232ab20f452d5bca7fdac` |
+| `traefik.svg` | Traefik Proxy | `e2885459d44d08f4debd515f1ad0399710902302af1e6691d851544b5ad01bee` |
+| `valkey.svg` | Valkey | `36a2375e56420a570f6a0346dde019314204c05f5326c0f00d39114e63397f37` |
+| `vault.svg` | HashiCorp Vault | `1f4f0003f7317dba29fe34cb0aa1041b9da0d6dc29167896dbc434b1e78d1271` |
 
 ### 8.3 Asset pre-step
 
@@ -3171,14 +3212,14 @@ pub const LANES_MAX: usize = 32;
 pub const LINK_ORDER_MAX: u16 = 256;
 /// A grammar kind name: a Box or Item `kind`.
 pub const KIND_PATTERN: &str = r"^[a-z][a-z0-9-]{0,31}$";
-pub const BUILTIN_GRAMMARS: [&str; 4] = ["aws", "azure", "gcp", "plain"];
+pub const BUILTIN_GRAMMARS: [&str; 5] = ["aws", "azure", "gcp", "oss", "plain"];
 /// Designed built-ins first (section 13.5), then the imported tier (section 13.9).
 pub const BUILTIN_THEMES: [&str; 13] = [
     "center", "paper", "dusk", "clear", "clear-dark", "wire",
     "tokyo-night", "solarized-light", "solarized-dark", "material-dark",
     "gruvbox-dark", "dracula", "nord",
 ];
-pub const GRAMMAR_REFERENCE_PATTERN: &str = r"^(aws|gcp|plain|[^\u0000-\u001F]{1,395}\.json)$";
+pub const GRAMMAR_REFERENCE_PATTERN: &str = r"^(aws|azure|gcp|oss|plain|[^\u0000-\u001F]{1,395}\.json)$";
 pub const THEME_REFERENCE_PATTERN: &str = r"^(center|paper|dusk|clear|clear-dark|wire|tokyo-night|solarized-light|solarized-dark|material-dark|gruvbox-dark|dracula|nord|[^\u0000-\u001F]{1,395}\.json)$";
 /// Largest grammar or theme file the CLI reads, in bytes.
 pub const DATA_FILE_BYTES_MAX: usize = 65_536;
@@ -3502,7 +3543,7 @@ Layout. A Box reads everything layout needs from its container kind: the role (a
 
 A grammar is a data module. Its source is a CUE file under `cue/grammars/`, which declares a `grammar` value against `#Grammar` and adds the domain's rules in CUE. The data part is exported to JSON (`cue export ./cue/grammars:<name> -e grammar --out json`) and committed as `crates/stencil-model/grammars/<name>.json`, which the Rust side embeds and reads; Rust never evaluates CUE (section 9.2). `cue/check.sh` re-exports every built-in grammar and fails when the export differs from the committed JSON, as it does for g7.
 
-`Page.grammar` names a built-in grammar or a `.json` grammar file (an export of a CUE grammar), resolved like a theme reference (section 13.4 rule 1). Absent means `plain`, the vendor-neutral grammar of section 13.3; `aws`, `azure` and `gcp` are named. A vendor figure that names no grammar never renders under the wrong grammar: plain shares only the `assembly`, `person` and `device` kinds with the vendor grammars, and every aws, azure or gcp figure has its frame or `product` items, so vet rejects it with `kind-unknown`, and the message of a page that names no grammar ends `; the page names no grammar, so the default applies: set "grammar"`. A grammar given by path carries its data only; its CUE rules apply when the figure is authored in CUE against that grammar's package.
+`Page.grammar` names a built-in grammar or a `.json` grammar file (an export of a CUE grammar), resolved like a theme reference (section 13.4 rule 1). Absent means `plain`, the vendor-neutral grammar of section 13.3; `aws`, `azure`, `gcp` and `oss` are named. A vendor figure that names no grammar never renders under the wrong grammar: plain shares only the `assembly`, `person` and `device` kinds with the vendor grammars, and every aws, azure or gcp figure has its frame or `product` items, so vet rejects it with `kind-unknown`, and the message of a page that names no grammar ends `; the page names no grammar, so the default applies: set "grammar"`. An oss figure shares plain's kinds, so one that names no grammar fails vet on its icons instead: a plain kind takes no icon (`icon-outside-pack`), and a `cluster` Box is `kind-unknown`. A grammar given by path carries its data only; its CUE rules apply when the figure is authored in CUE against that grammar's package.
 
 The renderer draws roles, never kinds. Each container kind declares one of four roles. The `frame` role names the outermost container, the gcp frame; it is unrelated to the `Frame` node tag of section 11.3, the wireframe placeholder, whose theme role is called `placeholder` for that reason. Every theme paints roles and tones (section 13.4), so a theme needs no knowledge of a grammar's kinds:
 
@@ -3567,7 +3608,8 @@ import (
 }
 
 #IconProducts: {
-	icon:  #Icon
+	// Absent for a product with no bundled icon.
+	icon?: #Icon
 	class: "product" | "category"
 	names: [...string & !="" & strings.MaxRunes(64)] & list.MinItems(1)
 }
@@ -3685,8 +3727,9 @@ pub enum IconClass {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct IconProducts {
-    /// A file stem of the kind's icon pack.
-    pub icon: IconStem,
+    /// A file stem of the kind's icon pack; absent for a product with no bundled icon.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub icon: Option<IconStem>,
     pub class: IconClass,
     #[schemars(length(min = 1))]
     pub names: Vec<String>,
@@ -3746,7 +3789,7 @@ impl Grammar {
 
 `GrammarViolation` and `GrammarError` have the shape of the theme ones in section 13.4 (pointer into the grammar document, a `GrammarRule`, a message; `Json` and `Invalid` variants with an `origin` naming the file or built-in).
 
-Grammar rules, in `validate_grammar`, all reported in field order: container and item names are unique across both lists (`grammar-name-duplicate`); every parent is a container kind of the grammar or `page` (`grammar-parent-unknown`); at least one kind lists `page` (`grammar-no-top-level`); a `frame` kind has no tone and label `bar`, and every other kind has a tone and a label other than `bar` (`grammar-role-mismatch`); `default_tint` only on a tintable kind (`grammar-default-tint-untintable`); border width 0 exactly when the pattern is `none` (`grammar-border-mismatch`); an item kind with icons `none` has no products, within one item kind each icon appears at most once, and each row's icon is a stem of the kind's pack (`grammar-icon-table`); `remembered` literals are distinct (`grammar-remembered-duplicate`); each line appears in `lines` at most once (`grammar-line-duplicate`) and its `corner` is 0 to 16 (`grammar-corner-out-of-range`). A grammar file that fails stops `vet`, `render`, `check` and `gallery` before layout, printed and mapped to exit codes exactly as a theme failure is (section 13.4 rule 5).
+Grammar rules, in `validate_grammar`, all reported in field order: container and item names are unique across both lists (`grammar-name-duplicate`); every parent is a container kind of the grammar or `page` (`grammar-parent-unknown`); at least one kind lists `page` (`grammar-no-top-level`); a `frame` kind has no tone and label `bar`, and every other kind has a tone and a label other than `bar` (`grammar-role-mismatch`); `default_tint` only on a tintable kind (`grammar-default-tint-untintable`); border width 0 exactly when the pattern is `none` (`grammar-border-mismatch`); an item kind with icons `none` has no products, within one item kind each icon appears at most once, and each row's icon is a stem of the kind's pack (`grammar-icon-table`). A row may carry no icon: it names a product that has no bundled icon, its names still count for icon-matches-product (section 13.10), and the duplicate and pack checks skip it; a kind with icons `none` takes no such row either; `remembered` literals are distinct (`grammar-remembered-duplicate`); each line appears in `lines` at most once (`grammar-line-duplicate`) and its `corner` is 0 to 16 (`grammar-corner-out-of-range`). A grammar file that fails stops `vet`, `render`, `check` and `gallery` before layout, printed and mapped to exit codes exactly as a theme failure is (section 13.4 rule 5).
 
 What a grammar decides and what it does not:
 
@@ -3846,6 +3889,34 @@ azure has three item kinds. `product`: icons `azure`, shape block, parents every
 4. Global and tenant-wide resources outside a region: a `product` item whose `subtitle` names Entra ID, Azure AD, Azure Active Directory, Front Door, Traffic Manager, a DNS zone or Azure Policy, or whose `icon` is `entra-id`, `front-door`, `traffic-manager`, `dns` or `policy`, is a defect inside a `region` Box: `_globalInsideRegion.<title>`, "sits inside a region; a global or tenant-wide resource sits outside every region". Azure Monitor is not listed, since a Log Analytics workspace is regional.
 
 `cue/check.sh` also vets a document of the products a subnet or region does hold (an App Service Environment, Functions on one, SQL Managed Instance, a Container Apps environment and a private endpoint in a subnet, a Log Analytics workspace and Azure Monitor in a region, Front Door in the frame), which must pass.
+
+oss. The grammar of a figure of self-hosted open-source components, drawn with each project's own logo from the oss pack (section 8.2). Its kinds are plain's, so a plain page becomes an oss page by setting `"grammar": "oss"` and adding icons, and no kind changes meaning. The containers are plain's five with the same fields, plus `cluster`, a Kubernetes cluster or namespace, drawn as gcp's `k8s`; `assembly` also lists `cluster` among its parents:
+
+| Kind | Role | Tone | Tint | Border | Padding | Radius | Label | Parents |
+|---|---|---|---|---|---|---|---|---|
+| system | frame | | no | solid 3 | 0 | 10 | bar | page |
+| boundary | boundary | strong | no | dashed 2 | 10 | 8 | plain | page, system, group, tile |
+| group | group | neutral | yes, no default | solid 1.5 | 12 | 8 | plain | page, system, boundary, group, tile |
+| tile | tile | highlight | no | solid 1.5 | 12 | 8 | plain | page, system, boundary, tile |
+| cluster | group | soft | no | none 0 | 12 | 8 | plain | system, boundary, group, tile |
+| assembly | group | neutral | yes, no default | dash-dot 1.1 | 14 | 0 | tab | page, system, boundary, group, tile, cluster |
+
+The eight item kinds are plain's, in plain's order, with plain's shapes and every container kind and `page` as parents. Four draw from pack `oss`, each with its own products table of section 13.10; the other four take no icon:
+
+| Kind | Icons | Products in its table | Shape |
+|---|---|---|---|
+| service | oss | Apache Airflow, Argo CD, Docker, Grafana, Helm, Jaeger, Jenkins, Keycloak, Kubernetes, Grafana Loki, OpenTelemetry, Prometheus, Apache Spark, HashiCorp Vault | block; Docker and Kubernetes a tower |
+| managed | none | | block |
+| store | oss | Apache Cassandra, ClickHouse, Elasticsearch, etcd, MariaDB, MinIO, MongoDB, MySQL, OpenSearch, PostgreSQL, Redis, Valkey | cylinder; MinIO a stack |
+| queue | oss | Apache Kafka, NATS, Apache Pulsar, RabbitMQ | stack |
+| network | oss | Envoy, HAProxy, Istio, Linkerd, NGINX, Traefik | tile |
+| external | none | | block |
+| person | none | | figure |
+| device | none | | laptop |
+
+The observability tools (Prometheus, Grafana, Loki, Jaeger, OpenTelemetry) are rows on `service`, not a kind of their own, because plain has no such kind and a plain page must keep its meaning under oss. Every row is class product. Elasticsearch and MySQL have no file in the pack, so their rows carry names and no icon.
+
+`remembered` is empty, so remembered-constants is not applicable under oss. `cue/grammars/oss.cue` declares the data and carries plain's rule by walking the body with plain's `#Node`: an `external` item inside a `system` Box is `_externalInsideSystem.<title>`. Tint pairing is the core's. oss has no hop-fact rule, since a self-hosted component's version and host are built facts, and no placement rules. `cue/check.sh` runs negative cases on `cue/figures/oss.cue` for the external rule, a gcp stem on a `service`, an oss stem on a `managed` item and a `cluster` at the top level.
 
 plain, the default. The grammar of a system figure that names no vendor: a page without `grammar` is a plain page, and a figure moves to gcp when it draws Google Cloud products with their icons. No item takes an icon.
 
@@ -4772,8 +4843,49 @@ icon-matches-product:
    | vm-scale-sets | product | Azure Virtual Machine Scale Sets, Virtual Machine Scale Sets, VM Scale Sets, VMSS |
    | vpn-gateway | product | Azure VPN Gateway, VPN Gateway, virtual network gateway, ExpressRoute gateway |
 
+   The oss pack spreads over four kinds, and each kind's table lists the rows of its own projects in `OssIcon::ALL` order, so every oss icon sits in exactly one table. Each row is class product. A row with no icon is a product with no bundled logo: its names are found like any other's, it adds no product icon, so a subtitle that names it is clean on an item with no icon and a defect on an item that carries another project's icon. The check reads the item's own kind's table, so `postgresql` on a `queue` whose subtitle names Apache Kafka is a defect, and on a `queue` whose subtitle names PostgreSQL is clean, since the queue table does not list it.
+
+   | Kind | Icon | Class | Names |
+   |---|---|---|---|
+   | service | airflow | product | Apache Airflow, Airflow |
+   | service | argo | product | Argo, Argo CD, Argo Workflows |
+   | service | docker | product | Docker, Docker Engine, Docker Compose |
+   | service | grafana | product | Grafana, Grafana OSS |
+   | service | helm | product | Helm |
+   | service | jaeger | product | Jaeger |
+   | service | jenkins | product | Jenkins |
+   | service | keycloak | product | Keycloak |
+   | service | kubernetes | product | Kubernetes, K8s |
+   | service | loki | product | Grafana Loki, Loki |
+   | service | opentelemetry | product | OpenTelemetry, OTel, OpenTelemetry Collector |
+   | service | prometheus | product | Prometheus |
+   | service | spark | product | Apache Spark, Spark |
+   | service | vault | product | HashiCorp Vault, Vault |
+   | store | cassandra | product | Apache Cassandra, Cassandra |
+   | store | clickhouse | product | ClickHouse |
+   | store |  | product | Elasticsearch |
+   | store | etcd | product | etcd |
+   | store | mariadb | product | MariaDB Server, MariaDB |
+   | store | minio | product | MinIO, MinIO AIStor |
+   | store | mongodb | product | MongoDB, MongoDB Community Edition, MongoDB Atlas |
+   | store |  | product | MySQL |
+   | store | opensearch | product | OpenSearch, OpenSearch Dashboards |
+   | store | postgresql | product | PostgreSQL, Postgres |
+   | store | redis | product | Redis, Redis Open Source |
+   | store | valkey | product | Valkey |
+   | queue | kafka | product | Apache Kafka, Kafka |
+   | queue | nats | product | NATS, NATS JetStream |
+   | queue | pulsar | product | Apache Pulsar, Pulsar |
+   | queue | rabbitmq | product | RabbitMQ |
+   | network | envoy | product | Envoy Proxy, Envoy |
+   | network | haproxy | product | HAProxy |
+   | network | istio | product | Istio |
+   | network | linkerd | product | Linkerd |
+   | network | nginx | product | NGINX, NGINX Open Source |
+   | network | traefik | product | Traefik Proxy, Traefik |
+
 2. `pub fn named_product(table: &[IconProducts], subtitle: &str) -> Option<&str>` finds every name of the table in the subtitle, ASCII case-insensitive, at the word boundaries of the remembered-constants rule (section 6), and returns the longest; on a tie, the one that starts first. `Vertex AI Agent Engine` therefore names Vertex AI Agent Engine, not Vertex AI, and `Cloud Run jobs` names Cloud Run. The scan is bounded by the table (at most 32 item kinds of at most 64 rows, enforced by `validate_grammar`) times the 400-scalar text limit, and uses no regex dependency.
-3. The product icons of a name are the `product`-class rows that list it. An item is examined when its kind has a non-empty products table and it has an `icon` or a `subtitle`. It is a defect when the subtitle names a product with product icons and the item's icon is set and not one of them, or when the subtitle names a product with no product icon and the item's icon is a `product`-class icon. Category icons are allowed for any product with no product icon. An item with no subtitle, or whose subtitle names nothing in the table, is examined and clean, as is one that names a product with a product icon and carries no icon.
+3. The product icons of a name are the icons of the `product`-class rows that list it; a row without an icon adds none. An item is examined when its kind has a non-empty products table and it has an `icon` or a `subtitle`. It is a defect when the subtitle names a product with product icons and the item's icon is set and not one of them, or when the subtitle names a product with no product icon and the item's icon is a `product`-class icon. Category icons are allowed for any product with no product icon. An item with no subtitle, or whose subtitle names nothing in the table, is examined and clean, as is one that names a product with a product icon and carries no icon.
 4. When no item of the page has a kind with a products table (every plain figure), the report is not applicable with the reason `grammar has no icon table`.
 5. Defect pointer: the item. Messages: `subtitle names Vertex AI, whose icon is vertex-ai; the item carries ai-ml`, with every product icon listed and joined by ` or ` (`cloud-run or cloud-run-flat`), and `subtitle names Cloud Logging, which has no product icon; the item carries the product icon bigquery`.
 6. Run over the examples, the check finds three real mismatches, corrected in step (d): `hybrid-ai.json` `/body/0/children/2/children/0/children/0/children/0/children/0/children/2/children/0` (`Vertex AI Registry` on `ai-ml`, becomes `vertex-ai`) and `/body/0/children/2/children/0/children/1/children/0/children/4` (`Billing export · BigQuery` on `data-analytics`, becomes `bigquery`), and `network-hub-spoke.json` `/body/0/children/2/children/1/children/1/children/0/children/0/children/2/children/1` (`Cloud Run · Direct VPC` on `serverless`, becomes `cloud-run`). Icon boxes keep their size, so the geometry is unchanged; the `hybrid-ai.json` pointers change when step (d) moves those items into an apis Box.
@@ -4850,15 +4962,15 @@ New error mappings for section 7's exhaustive table: `GrammarError` and `ThemeEr
 CUE. `cue/stencil.cue` splits:
 
 - `cue/core.cue` (package `stencil`): the core `#Page`, `#Node` and every core tag, with `#Box` and `#Item` taking `kind: #KindName`; `#Line: "gray" | "solid" | "dash" | "deny"` as `line` on `#Pipe`, `#Tee`, `#Link` and `#LegendEntry`; `#TintSlot: int & >=1 & <=8` as `tint?` on `#Box` and the four line carriers; `#FactEntry` and `source?` on `#Fact`; `from?` and `to?` on `#Pipe`; `order?` on `#Link`; `#Lanes`; `grammar?`, `theme?` (the reference patterns), `theme_overrides?: {...}` and `chrome?: "full" | "none"` on `#Page`. The core checks stay here: ids, link endpoints, pipe targets (`_pipeTargetsUnknown`), ordered links, legend keys (`"\(line)-\(tint)"` for solid and dash, slot 1 when absent, the line alone for gray and deny; `_legendKeysAreUnique`; the `chrome: "none"` exception) and `_tintWithoutEffect` for a tint on a gray or deny line. The old `#Theme` enum is gone; `#Theme` names the theme definition.
-- `cue/theme.cue` (package `stencil`): `#Theme` (section 13.4). `cue/grammar.cue` (package `stencil`): `#Grammar` (section 13.2), `#IconPack`, and `#PackStems`, which selects a pack's stem list by comprehension so that an Item's `icon` (`_iconOutsidePack`) and each products row's `icon` (`_iconsOutsidePack`) are checked against the kind's pack. `cue/icons_<pack>.cue` (package `stencil`) holds one pack's stems, `#IconAwsStems` and `#IconAws` for aws, `#IconAzureStems` and `#IconAzure` for azure and `#IconGcpStems` and `#IconGcp` for gcp, and `#Icon` in `core.cue` is the union of the packs.
-- `cue/grammars/aws.cue` (package `aws`), `cue/grammars/azure.cue` (package `azure`), `cue/grammars/gcp.cue` (package `gcp`) and `cue/grammars/plain.cue` (package `plain`): each imports the core package, declares `grammar: stencil.#Grammar & {...}`, narrows `#Box.kind` and `#Item.kind` to its kind names, and adds its rules: for aws the hop-fact rule, `_regionalServiceInsideVpc`, `_globalInsideRegion` and the remembered constants of `#AwsText`; for azure `_rememberedInText`, the hop-fact rule, `_paasInsideVnet` and `_globalInsideRegion`; for gcp the hop-fact rule, tint pairing over slot keys, `_productInsideVpc` and `_apisOutsideGcp` (section 13.3); for plain none. `_tintWithoutEffect` also names a tint on a Box whose kind is not tintable. A `cue.mod/module.cue` declares the module so the grammar packages can import the core; where CUE's package rules force a different file layout, `cue/README.md` records it.
+- `cue/theme.cue` (package `stencil`): `#Theme` (section 13.4). `cue/grammar.cue` (package `stencil`): `#Grammar` (section 13.2), `#IconPack`, and `#PackStems`, which selects a pack's stem list by comprehension so that an Item's `icon` (`_iconOutsidePack`) and each products row's `icon` (`_iconsOutsidePack`) are checked against the kind's pack. `cue/icons_<pack>.cue` (package `stencil`) holds one pack's stems, `#IconAwsStems` and `#IconAws` for aws, `#IconAzureStems` and `#IconAzure` for azure, `#IconGcpStems` and `#IconGcp` for gcp and `#IconOssStems` and `#IconOss` for oss, and `#Icon` in `core.cue` is the union of the packs.
+- `cue/grammars/aws.cue` (package `aws`), `cue/grammars/azure.cue` (package `azure`), `cue/grammars/gcp.cue` (package `gcp`), `cue/grammars/oss.cue` (package `oss`) and `cue/grammars/plain.cue` (package `plain`): each imports the core package, declares `grammar: stencil.#Grammar & {...}`, narrows `#Box.kind` and `#Item.kind` to its kind names, and adds its rules: for aws the hop-fact rule, `_regionalServiceInsideVpc`, `_globalInsideRegion` and the remembered constants of `#AwsText`; for azure `_rememberedInText`, the hop-fact rule, `_paasInsideVnet` and `_globalInsideRegion`; for gcp the hop-fact rule, tint pairing over slot keys, `_productInsideVpc` and `_apisOutsideGcp` (section 13.3); for plain `_externalInsideSystem`, which oss carries by importing plain's `#Node`. `_tintWithoutEffect` also names a tint on a Box whose kind is not tintable. A `cue.mod/module.cue` declares the module so the grammar packages can import the core; where CUE's package rules force a different file layout, `cue/README.md` records it.
 - `cue/g7.cue` moves to `cue/figures/g7.cue` under package `gcp` and unifies with the gcp `#Page`.
 - `cue/check.sh` vets the core and every grammar package; exports every grammar and compares them with `crates/stencil-model/grammars/<name>.json`; exports g7 and compares it with `examples/g7.json`; vets every example against the gcp `#Page` and every built-in theme file against `#Theme`; and runs the negative cases, migrated to the new vocabulary (the pink cases become solid tint 2 cases) plus: tint 9 on a pipe, a tint on a deny pipe, a BigQuery product inside the vpc, an apis Box outside gcp, a Box of kind `zone`, a subnet at the top level, a pipe target naming no id, two ordered links with one order, a legend entry for solid tint 3 that no pipe uses, a theme file with seven tints and a theme file with an unknown role.
 
 Prime:
 
 - `prime/base.md` becomes the core briefing: the loop, the core vocabulary rendered from the schema (Box, Item, facts with their sources, lines, tints, Lanes, chrome, pipe targets), layout, the checks table with rows for `print-fit` (each text run, only with --print-width; prints below 8 pt; widen the print or shorten the figure) and `icon-matches-product` (each item with an icon or subtitle whose kind has an icon table; the subtitle names a product whose own icon is another, or a product icon on a product without one; use the product's icon or a category icon), themes, and one line per built-in grammar. The vocabulary sentence becomes "Every node object carries "tag"; the Page does not." `field_notes` adds `tint 1-8`, `source =doc`, `chrome =full`, `grammar =gcp; a built-in name or a .json path` and `theme =center; a built-in name or a .json path`. Under "Rules no check enforces" a line points sequence and timeline figures at Lanes with ordered links and `stencil prime grammar plain`.
-- `prime/grammars/gcp.md` holds what was GCP-specific in the base briefing and the layout and cue topics: the kind table with meanings, the nesting, the tint pairing in slot terms, the apis kind and the products that never sit inside a VPC, and the rules no check enforces: "Every product on a hop carries a fact read from the live doc at authoring time (source doc), or an explicit ask; never a remembered value. A built fact holds as-built names (bucket names, VLAN IDs, project ids) and needs no live doc." "One audience per figure: canvas customer or internal." "Official product names in subtitle: Cloud Run, Cloud SQL, Pub/Sub." `prime/grammars/plain.md` lists the plain kinds.
+- `prime/grammars/gcp.md` holds what was GCP-specific in the base briefing and the layout and cue topics: the kind table with meanings, the nesting, the tint pairing in slot terms, the apis kind and the products that never sit inside a VPC, and the rules no check enforces: "Every product on a hop carries a fact read from the live doc at authoring time (source doc), or an explicit ask; never a remembered value. A built fact holds as-built names (bucket names, VLAN IDs, project ids) and needs no live doc." "One audience per figure: canvas customer or internal." "Official product names in subtitle: Cloud Run, Cloud SQL, Pub/Sub." `prime/grammars/plain.md` lists the plain kinds and points at `prime/grammars/oss.md`, which lists the oss kinds' projects and says that a product with no bundled logo is named in its subtitle without an icon.
 - `prime/themes.md` is rewritten around tint slots: the slot table with center's names, the six designed themes with one line each, the imported tier with its warning, theme files, `stencil theme show` and `check`, and overrides with the `tints` slot-object form. The per-theme color table goes; `stencil theme show <name>` prints the values.
 - `prime/layout.md`, `prime/cue.md`, `prime/links.md` (its example link becomes `"line": "solid", "tint": 1`, and it gains ordered links and Lanes), `prime/blocks.md` (callout tints by kind without naming colors) and `prime/checks.md` (the two new rows and their line formats) follow the core vocabulary. `stencil prime example` stays `examples/g7.json` verbatim.
 - `BASE_BYTES_MAX` rises from 6,000 to 7,000 bytes and `TOPIC_BYTES_MAX` from 4,000 to 5,000, which also bounds each grammar briefing. Today's briefing is 6,000 bytes exactly and the themes and checks topics are within 20 bytes of their limit; moving the GCP text into `grammars/gcp.md` frees some of the base, and the raised limits leave room for the core additions. The prime tests enforce the new limits.
@@ -4903,14 +5015,14 @@ Identity proofs. Before step (a) changes any code, the implementer runs `origin/
 stencil-model:
 
 - The migrated examples parse, round-trip and validate against the regenerated schema; a copy with `"tag": "Zone"`, `"tag": "Pcard"`, `"kind": "blue"` on a pipe or `"fn"` on an item is a `ModelError::Json`.
-- Grammars: `aws.json`, `azure.json`, `gcp.json` and `plain.json` parse and pass `validate_grammar`; aws's, azure's and gcp's container kinds equal section 13.3's tables field for field, the products rows of aws and azure carry every icon of the pack once in `AwsIcon::ALL` and `AzureIcon::ALL` order with its shape, and its border widths, paddings, radii and label styles equal section 2.4's; a copy with each grammar fault (a duplicate name, an unknown parent, no kind under `page`, a frame with a tone, a group without one, a default tint on an untintable kind, a solid border of width 0, an item with icons none and a products row, a repeated icon) is rejected with the named rule. `grammar_schema()` equals the committed `schema/grammar.schema.json`.
+- Grammars: `aws.json`, `azure.json`, `gcp.json`, `oss.json` and `plain.json` parse and pass `validate_grammar`; oss's containers are plain's plus `cluster` and its item kinds plain's, its four tables together carry every oss icon once, each in `OssIcon::ALL` order, and its store table has the icon-less Elasticsearch and MySQL rows; a products row with no icon validates, and a repeated icon beside it is still rejected; aws's, azure's and gcp's container kinds equal section 13.3's tables field for field, the products rows of aws and azure carry every icon of the pack once in `AwsIcon::ALL` and `AzureIcon::ALL` order with its shape, and its border widths, paddings, radii and label styles equal section 2.4's; a copy with each grammar fault (a duplicate name, an unknown parent, no kind under `page`, a frame with a tone, a group without one, a default tint on an untintable kind, a solid border of width 0, an item with icons none and a products row, a repeated icon) is rejected with the named rule. `grammar_schema()` equals the committed `schema/grammar.schema.json`.
 - Vet with a grammar: `kind-unknown` for a Box of kind `zone` and an Item of kind `service` under gcp; `kind-parent-not-allowed` for a subnet at the top level and for a vpc inside a region, and none for a subnet inside a project inside a Row (Row is transparent); `icon-outside-pack` for a plain `service` with an icon and for a gcp `product` whose stem the gcp pack has no file of; `grammar-unknown` for `"gcpx"`. A page without `grammar` vets under plain, and a gcp page without it fails `kind-unknown` with the default-applied message. Every example vets clean under the grammar it names.
 - `tint`: 1 and 8 vet clean on every carrier, 0 and 9 give `tint-out-of-range`; `box_tint` for region (absent gives 1), onprem (absent gives none) and subnet (ignored); `line_tint`, `box_key`, `line_key` and `legend_label` against section 13.1's tables for every line and slot.
 - Legend consistency: solid tint 2 used with only a solid tint 1 entry gives one defect at the pipe and one at the entry; a tint on a deny pipe and on its entry are the same key; an entry for solid with no tint matches a pipe with tint 1; a dash tint 2 needs its own entry. Under `chrome: none`, one key in use with an empty legend passes with examined equal to the uses; two keys with an empty legend fail; one key with a legend entry follows the normal rule.
 - Facts: an Item's fact entries appear in `text_fields` after title and subtitle at `/…/facts/<i>/text`; remembered constants are found in a built fact; a Fact node without `source` serializes without it.
 - Themes: every built-in parses and passes `validate_theme`; a copy of center with each structural fault (lowercase hex, width 5, step 41, opacity 1.5, slab thickness 1, blur 0, an uppercase tint name, two equal tint names, seven tints, a fill on the strong tone, an unknown key at the top and inside `iso`) is rejected with the named rule and pointer, all faults of one document reported together in field order. `apply_overrides`: one wire through the `tints` slot form changes that slot only; a nested object merges; an unknown key reports `/theme_overrides/...`; a string where the base holds an object is `theme-override-not-object`. `theme_schema()` equals `schema/theme.schema.json`.
 - `theme_quality`: center gives 285 rows, 284 passed, and exactly one failure, `ask.ink on ask.fill` at 4.34; paper, dusk, clear and clear-dark give 285 rows and no failure; wire gives 277 passed and 8 not applicable; the center and dusk values match the research checker to 2 decimals (recorded in the test, with the checker's file named as the source). A hand-built theme with eight equal wires fails the four wire separation rows, and the same theme with `tint_cue: line` reports them not applicable. Center's inks equal `stencil_layout::styles`, and `TINT_NAMES` equals center's slot names.
-- icon-matches-product: gcp's table has every icon once in `GcpIcon::ALL` order, with the class of its section 8.2 archive path; `named_product` picks the longest match (`Vertex AI Agent Engine`, `Cloud Run functions`), respects word boundaries (`BigQueryX` names nothing) and ignores ASCII case; each defect kind fires once and its clean neighbor does not (subtitle BigQuery with icon bigquery, with no icon, with data-analytics; subtitle Pub/Sub with integration, with cloud-run); g7 examines 6 items clean; a plain page is not applicable; the three example mismatches of section 13.10 are found at their pointers before step (d) corrects them.
+- icon-matches-product: gcp's table has every icon once in `GcpIcon::ALL` order, with the class of its section 8.2 archive path; `named_product` picks the longest match (`Vertex AI Agent Engine`, `Cloud Run functions`), respects word boundaries (`BigQueryX` names nothing) and ignores ASCII case; each defect kind fires once and its clean neighbor does not (subtitle BigQuery with icon bigquery, with no icon, with data-analytics; subtitle Pub/Sub with integration, with cloud-run); g7 examines 6 items clean; a plain page is not applicable; the three example mismatches of section 13.10 are found at their pointers before step (d) corrects them. Under oss, every project name matches its own icon and no icon and rejects another icon of its kind; `postgresql` on a queue whose subtitle names Apache Kafka is a defect; MySQL and Elasticsearch are clean with no icon and a defect with another project's icon.
 - Lanes and ordered links: `link-order-outside-lanes` for an ordered link between a head and a node outside the Lanes, `link-order-duplicate` for two messages with one order, `lanes-in-iso` for a Lanes page with `projection: iso`.
 
 stencil-text:
