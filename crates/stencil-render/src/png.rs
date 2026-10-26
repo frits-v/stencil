@@ -169,8 +169,8 @@ fn data_only_image_resolver() -> ImageHrefResolver<'static> {
     }
 }
 
-/// A usvg database holding the four bundled faces and nothing else. System fonts are
-/// never loaded and no generic family is pointed at Inter.
+/// A usvg database holding the six bundled faces and nothing else. System fonts are
+/// never loaded and no generic family is pointed at a bundled face.
 fn bundled_font_database() -> Result<fontdb::Database, RenderError> {
     let mut database = fontdb::Database::new();
     for (index, file) in BUNDLED_FONTS.iter().enumerate() {
@@ -395,5 +395,25 @@ mod tests {
             count_text_nodes(tree.root()),
             Err(RenderError::Svg { .. })
         ));
+    }
+
+    /// The usvg side of the section 8.3 probe: resvg's database reads every bundled file as
+    /// the family and weight its `BUNDLED_FONTS` row lists, as cosmic-text's does.
+    #[test]
+    fn the_usvg_database_reads_each_bundled_file_as_its_family_and_weight() {
+        let database = bundled_font_database().unwrap();
+        let faces: Vec<(String, u16)> = database
+            .faces()
+            .map(|face| {
+                let family = face.families.first().map(|(name, _)| name.clone());
+                (family.unwrap_or_default(), face.weight.0)
+            })
+            .collect();
+        let listed: Vec<(String, u16)> = BUNDLED_FONTS
+            .iter()
+            .map(|file| (file.family.css_name().to_string(), file.weight.css_value()))
+            .collect();
+        assert_eq!(faces.len(), 6);
+        assert_eq!(faces, listed);
     }
 }

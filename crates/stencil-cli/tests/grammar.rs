@@ -301,7 +301,13 @@ fn a_gcp_page_without_a_grammar_fails_kind_unknown_and_names_the_default() {
 #[test]
 fn every_plain_example_checks_clean_in_center_dusk_and_wire() {
     let mut examined = 0;
-    for stem in ["sequence", "org", "onprem-network"] {
+    for stem in [
+        "sequence",
+        "org",
+        "onprem-network",
+        "network-hub-spoke",
+        "platform-iso",
+    ] {
         let document = Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../examples")
             .join(format!("{stem}.json"));
@@ -328,7 +334,7 @@ fn every_plain_example_checks_clean_in_center_dusk_and_wire() {
             examined += 1;
         }
     }
-    assert_eq!(examined, 9);
+    assert_eq!(examined, 15);
 }
 
 /// An azure page of one product inside a vnet, with the given icon and subtitle.

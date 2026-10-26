@@ -88,7 +88,8 @@ pub fn font_exit_code(error: &FontError) -> ExitCode {
     match error {
         FontError::Unparseable { .. }
         | FontError::FamilyMismatch { .. }
-        | FontError::WeightMismatch { .. } => ExitCode::CouldNotRun,
+        | FontError::WeightMismatch { .. }
+        | FontError::NoSuchFace { .. } => ExitCode::CouldNotRun,
     }
 }
 
@@ -233,12 +234,17 @@ mod tests {
                 },
                 FontError::FamilyMismatch {
                     file_name: "Inter-Bold.ttf",
+                    expected: "Inter",
                     found: "Inter ExtraBold".to_string(),
                 },
                 FontError::WeightMismatch {
                     file_name: "Inter-Bold.ttf",
                     expected: 700,
                     found: 800,
+                },
+                FontError::NoSuchFace {
+                    family: "JetBrains Mono NL",
+                    weight: 600,
                 },
             ]
         };

@@ -1,69 +1,69 @@
-# Training stays on-prem. Tuning, serving and evidence run on Google Cloud. AWS and Azure feed data over private paths only. `/title`
+# Radar and satellite observations upload to Google Cloud, where nowcast models are tuned and served inside one perimeter. `/title`
 
-Customer · Hybrid multi-cloud AI platform `/kicker`
+Customer · Weather forecasting platform `/kicker`
 
-Three producers outside the frame, one Shared VPC across two regions, one service perimeter around every AI service. Every hop is a labeled line; the public internet is drawn once, as the prohibited path. `/lede`
+A radar network and a satellite ground station upload observations, and a partner forecasting agency shares its model output from its own project. Nowcast models are tuned in Vertex AI and served from two regions; the public internet appears once, as the prohibited path. `/lede`
 
 ## Figure
 
-Drawn elements: 52 (52 nodes, 0 links). Canvas 1480 x 1177.6 px, projection flat, grammar gcp. Line styles name a tint slot by number; the colour word is the one the center theme draws it in.
+Drawn elements: 52 (52 nodes, 0 links). Canvas 1480 x 1193.2 px, projection flat, grammar gcp. Line styles name a tint slot by number; the colour word is the one the center theme draws it in.
 
 ## Drawing `/body`
 
 - Row, left to right. `/body/0`
   - Col, top to bottom. `/body/0/children/0`
-    - Box On-prem · GPU data center; kind onprem, tint 1. `/body/0/children/0/children/0`
-      - Item GPU training cluster: Kubernetes on bare metal; kind product, icon compute. `/body/0/children/0/children/0/children/0`
-        - Fact, doc: Checkpoints leave over the Interconnect only.
-      - Item Data lake: object storage · clips, telemetry; kind product, icon storage. `/body/0/children/0/children/0/children/1`
-      - Item Corporate identity: SAML IdP · group sync; kind product, icon security-identity. `/body/0/children/0/children/0/children/2`
-    - Box AWS · us-east-1; kind onprem, tint 2. `/body/0/children/0/children/1`
-      - Item Telemetry landing: S3 bucket · event stream; kind product, icon storage. `/body/0/children/0/children/1/children/0`
-      - Item Feature service: EKS · federated role, no keys; kind product, icon containers. `/body/0/children/0/children/1/children/1`
-    - Box Azure · East US; kind project. `/body/0/children/0/children/2`
-      - Item Document corpus: Blob Storage · contracts; kind product, icon storage. `/body/0/children/0/children/2/children/0`
-      - Item Copilot integration: Azure OpenAI · retrieval calls; kind product, icon integration. `/body/0/children/0/children/2/children/1`
+    - Box Radar network · on-prem; kind onprem, tint 1. `/body/0/children/0/children/0`
+      - Item Radar processors: volume scans every 5 minutes; kind product, icon compute. `/body/0/children/0/children/0/children/0`
+        - Fact, doc: Scans leave over HTTPS only.
+      - Item Scan archive: object storage · raw volumes; kind product, icon storage. `/body/0/children/0/children/0/children/1`
+      - Item Staff identity: SAML IdP · group sync; kind product, icon security-identity. `/body/0/children/0/children/0/children/2`
+    - Box Satellite ground station; kind onprem, tint 2. `/body/0/children/0/children/1`
+      - Item Downlink store: imagery passes · events; kind product, icon storage. `/body/0/children/0/children/1/children/0`
+      - Item Pass processor: calibrates · federated role; kind product, icon containers. `/body/0/children/0/children/1/children/1`
+    - Box Partner agency · own project; kind project. `/body/0/children/0/children/2`
+      - Item Ensemble output: gridded model runs; kind product, icon storage. `/body/0/children/0/children/2/children/0`
+      - Item Warning exchange: severe weather alerts; kind product, icon integration. `/body/0/children/0/children/2/children/1`
   - Col, top to bottom. `/body/0/children/1`
     - Col, top to bottom. `/body/0/children/1/children/0`
-      - Pipe Interconnect · VLAN · BGP · checkpoints, clips.
+      - Pipe HTTPS upload · signed URLs · scans.
       - Pipe Workforce identity · SAML · groups to IAM.
     - Col, top to bottom. `/body/0/children/1/children/1`
-      - Pipe HA VPN · IPsec · BGP · S3 to Region B.
+      - Pipe Pub/Sub push · pass events · to Region B.
       - Pipe Workload identity · federation · no keys.
     - Col, top to bottom. `/body/0/children/1/children/2`
-      - Pipe Cross-Cloud Interconnect · private path · corpus.
+      - Pipe Analytics Hub · shared dataset.
       - Pipe Public internet · no public IP · no keys.
   - Box Google Cloud; kind gcp. `/body/0/children/2`
-    - Box VPC Service Controls perimeter · every AI and data service; kind perimeter. `/body/0/children/2/children/0`
-      - Box Shared VPC · prod · one network, two regions; kind vpc. `/body/0/children/2/children/0/children/0`
-        - Box Region A · tuning and serving; kind region, tint 1. `/body/0/children/2/children/0/children/0/children/0`
+    - Box VPC Service Controls perimeter · every model and observation store; kind perimeter. `/body/0/children/2/children/0`
+      - Box Shared VPC · forecasting · one network, two regions; kind vpc. `/body/0/children/2/children/0/children/0`
+        - Box Region A · nowcasts; kind region, tint 1. `/body/0/children/2/children/0/children/0/children/0`
           - Row, left to right. `/body/0/children/2/children/0/children/0/children/0/children/0`
             - Col, top to bottom. `/body/0/children/2/children/0/children/0/children/0/children/0/children/0`
-              - Item Online inference: GKE · GPU node pool; kind product, icon gke, product GKE. `/body/0/children/2/children/0/children/0/children/0/children/0/children/0/children/0`
+              - Item Nowcast inference: GKE · GPU node pool; kind product, icon gke, product GKE. `/body/0/children/2/children/0/children/0/children/0/children/0/children/0/children/0`
                 - Fact, doc: Workload Identity Federation.
             - Pipe serve · internal load balancer.
             - Col, top to bottom. `/body/0/children/2/children/0/children/0/children/0/children/0/children/2`
-              - Item Gateway: External Application LB; kind product, icon networking. `/body/0/children/2/children/0/children/0/children/0/children/0/children/2/children/0`
+              - Item Forecast API: External Application LB; kind product, icon networking. `/body/0/children/2/children/0/children/0/children/0/children/0/children/2/children/0`
                 - Fact, doc: Cloud Armor · IAP.
           - Fact, doc: Direct VPC egress for every serverless caller · Private Google Access on the subnet · restricted VIP from the Private Google Access doc. `/body/0/children/2/children/0/children/0/children/0/children/1`
-        - Pipe failover · Region A ↔ Region B · checkpoints and adapters replicate.
+        - Pipe failover · Region A ↔ Region B · models and checkpoints replicate.
         - Box Region B · replica and batch; kind region, tint 2. `/body/0/children/2/children/0/children/0/children/2`
           - Row, left to right. `/body/0/children/2/children/0/children/0/children/2/children/0`
             - Item Serving replica: GKE · GPU pool · warm; kind product, icon gke, product GKE. `/body/0/children/2/children/0/children/0/children/2/children/0/children/0`
       - Box Vertex AI · managed, reached over Private Service Connect; kind project. `/body/0/children/2/children/0/children/1`
         - Row, left to right. `/body/0/children/2/children/0/children/1/children/0`
           - Col, top to bottom. `/body/0/children/2/children/0/children/1/children/0/children/0`
-            - Item Tuning: Vertex AI · tuning; kind product, icon vertex-ai, product Vertex AI. `/body/0/children/2/children/0/children/1/children/0/children/0/children/0`
+            - Item Nowcast tuning: Vertex AI · tuning; kind product, icon vertex-ai, product Vertex AI. `/body/0/children/2/children/0/children/1/children/0/children/0/children/0`
               - Fact, doc: CMEK · private endpoint.
-            - Item Batch inference: Cloud Run jobs; kind product, icon cloud-run, product Cloud Run. `/body/0/children/2/children/0/children/1/children/0/children/0/children/1`
-          - Pipe register · tuned adapters.
+            - Item Hourly forecast runs: Cloud Run jobs; kind product, icon cloud-run, product Cloud Run. `/body/0/children/2/children/0/children/1/children/0/children/0/children/1`
+          - Pipe register · tuned models.
           - Col, top to bottom. `/body/0/children/2/children/0/children/1/children/0/children/2`
             - Item Model registry: Vertex AI Registry; kind product, icon vertex-ai, product Vertex AI. `/body/0/children/2/children/0/children/1/children/0/children/2/children/0`
-            - Item Agent runtime: Vertex AI Agent Engine; kind product, icon agents, product Vertex AI Agent Engine. `/body/0/children/2/children/0/children/1/children/0/children/2/children/1`
+            - Item Forecast assistant: Vertex AI Agent Engine; kind product, icon agents, product Vertex AI Agent Engine. `/body/0/children/2/children/0/children/1/children/0/children/2/children/1`
       - Box Google APIs · Private Google Access · data the regions read and write; kind apis. `/body/0/children/2/children/0/children/2`
         - Row, left to right. `/body/0/children/2/children/0/children/2/children/0`
-          - Item Feature store: BigQuery · vectors; kind product, icon bigquery, product BigQuery. `/body/0/children/2/children/0/children/2/children/0/children/0`
-          - Item Checkpoint bucket: Cloud Storage · dual-region; kind product, icon cloud-storage, product Cloud Storage. `/body/0/children/2/children/0/children/2/children/0/children/1`
+          - Item Observation store: BigQuery · scans and passes; kind product, icon bigquery, product BigQuery. `/body/0/children/2/children/0/children/2/children/0/children/0`
+          - Item Model checkpoints: Cloud Storage · dual-region; kind product, icon cloud-storage, product Cloud Storage. `/body/0/children/2/children/0/children/2/children/0/children/1`
             - Fact, doc: CMEK · retention lock.
     - Box Evidence · common folder, outside the perimeter; kind project. `/body/0/children/2/children/1`
       - Box Google APIs · org-level; kind apis. `/body/0/children/2/children/1/children/0`
@@ -78,15 +78,15 @@ Drawn elements: 52 (52 nodes, 0 links). Canvas 1480 x 1177.6 px, projection flat
 
 | Line | Kind | From | To | Style | Ends | Means | Pointer |
 |---|---|---|---|---|---|---|---|
-| Interconnect · VLAN · BGP · checkpoints, clips | pipe h | On-prem · GPU data center (left neighbour) | Google Cloud (right neighbour) | solid, tint 1; blue in center | no arrowheads | private data path into Region A | `/body/0/children/1/children/0/children/0` |
-| Workforce identity · SAML · groups to IAM | pipe h | On-prem · GPU data center (left neighbour) | Google Cloud (right neighbour) | dash, tint 1; blue in center | no arrowheads | identity, control plane and failover | `/body/0/children/1/children/0/children/1` |
-| HA VPN · IPsec · BGP · S3 to Region B | pipe h | AWS · us-east-1 (left neighbour) | Google Cloud (right neighbour) | solid, tint 2; pink in center | no arrowheads | private data path into Region B | `/body/0/children/1/children/1/children/0` |
-| Workload identity · federation · no keys | pipe h | AWS · us-east-1 (left neighbour) | Google Cloud (right neighbour) | dash, tint 1; blue in center | no arrowheads | identity, control plane and failover | `/body/0/children/1/children/1/children/1` |
-| Cross-Cloud Interconnect · private path · corpus | pipe h | Azure · East US (left neighbour) | Google Cloud (right neighbour) | solid, tint 1; blue in center | no arrowheads | private data path into Region A | `/body/0/children/1/children/2/children/0` |
-| Public internet · no public IP · no keys | pipe h | Azure · East US (left neighbour) | Google Cloud (right neighbour) | deny; red in center | no arrowheads | prohibited path | `/body/0/children/1/children/2/children/1` |
-| serve · internal load balancer | pipe h | Online inference (left neighbour) | Gateway (right neighbour) | gray; gray in center | no arrowheads | east-west inside Google Cloud | `/body/0/children/2/children/0/children/0/children/0/children/0/children/1` |
-| failover · Region A ↔ Region B · checkpoints and adapters replicate | pipe v | Region A · tuning and serving (sibling above) | Region B · replica and batch (sibling below) | dash, tint 1; blue in center | no arrowheads | identity, control plane and failover | `/body/0/children/2/children/0/children/0/children/1` |
-| register · tuned adapters | pipe h | Tuning (left neighbour) | Agent runtime (right neighbour) | gray; gray in center | no arrowheads | east-west inside Google Cloud | `/body/0/children/2/children/0/children/1/children/0/children/1` |
+| HTTPS upload · signed URLs · scans | pipe h | Radar network · on-prem (left neighbour) | Google Cloud (right neighbour) | solid, tint 1; blue in center | no arrowheads | upload and sharing into Region A | `/body/0/children/1/children/0/children/0` |
+| Workforce identity · SAML · groups to IAM | pipe h | Radar network · on-prem (left neighbour) | Google Cloud (right neighbour) | dash, tint 1; blue in center | no arrowheads | identity, control plane and failover | `/body/0/children/1/children/0/children/1` |
+| Pub/Sub push · pass events · to Region B | pipe h | Satellite ground station (left neighbour) | Google Cloud (right neighbour) | solid, tint 2; pink in center | no arrowheads | event push into Region B | `/body/0/children/1/children/1/children/0` |
+| Workload identity · federation · no keys | pipe h | Satellite ground station (left neighbour) | Google Cloud (right neighbour) | dash, tint 1; blue in center | no arrowheads | identity, control plane and failover | `/body/0/children/1/children/1/children/1` |
+| Analytics Hub · shared dataset | pipe h | Partner agency · own project (left neighbour) | Google Cloud (right neighbour) | solid, tint 1; blue in center | no arrowheads | upload and sharing into Region A | `/body/0/children/1/children/2/children/0` |
+| Public internet · no public IP · no keys | pipe h | Partner agency · own project (left neighbour) | Google Cloud (right neighbour) | deny; red in center | no arrowheads | prohibited path | `/body/0/children/1/children/2/children/1` |
+| serve · internal load balancer | pipe h | Nowcast inference (left neighbour) | Forecast API (right neighbour) | gray; gray in center | no arrowheads | east-west inside Google Cloud | `/body/0/children/2/children/0/children/0/children/0/children/0/children/1` |
+| failover · Region A ↔ Region B · models and checkpoints replicate | pipe v | Region A · nowcasts (sibling above) | Region B · replica and batch (sibling below) | dash, tint 1; blue in center | no arrowheads | identity, control plane and failover | `/body/0/children/2/children/0/children/0/children/1` |
+| register · tuned models | pipe h | Nowcast tuning (left neighbour) | Forecast assistant (right neighbour) | gray; gray in center | no arrowheads | east-west inside Google Cloud | `/body/0/children/2/children/0/children/1/children/0/children/1` |
 | findings | pipe h | Audit logs (left neighbour) | Posture (right neighbour) | gray; gray in center | no arrowheads | east-west inside Google Cloud | `/body/0/children/2/children/1/children/0/children/0/children/1` |
 | export | pipe h | Posture (left neighbour) | Cost and usage (right neighbour) | gray; gray in center | no arrowheads | east-west inside Google Cloud | `/body/0/children/2/children/1/children/0/children/0/children/3` |
 
@@ -94,8 +94,8 @@ Drawn elements: 52 (52 nodes, 0 links). Canvas 1480 x 1177.6 px, projection flat
 
 | Key | Center label | Means | Uses | Pointer |
 |---|---|---|---|---|
-| blue | Solid blue | private data path into Region A | 2 | `/legend/0` |
-| pink | Solid pink | private data path into Region B | 1 | `/legend/1` |
+| blue | Solid blue | upload and sharing into Region A | 2 | `/legend/0` |
+| pink | Solid pink | event push into Region B | 1 | `/legend/1` |
 | dash | Dashed blue | identity, control plane and failover | 3 | `/legend/2` |
 | gray | Solid gray | east-west inside Google Cloud | 4 | `/legend/3` |
 | deny | Dashed red | prohibited path | 1 | `/legend/4` |

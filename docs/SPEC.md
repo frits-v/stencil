@@ -608,9 +608,13 @@ The trait and its value types live in `stencil_model::text`. Layout depends on t
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum FontFamily {
     Inter,
+    /// JetBrains Mono NL, the build without programming ligatures (section 8.1).
+    JetBrainsMonoNl,
 }
 
 impl FontFamily {
+    pub const ALL: [FontFamily; 2];
+    /// "Inter" and "JetBrains Mono NL".
     pub fn css_name(self) -> &'static str;
 }
 
@@ -788,7 +792,7 @@ impl TextMeasurer for FixedMetricsMeasurer { /* rules below */ }
 
 ### 3.2 cosmic-text implementation
 
-`stencil_text::CosmicTextMeasurer` holds a `cosmic_text::FontSystem`. It is built with `FontSystem::new_with_locale_and_db("en-US".into(), database)`, where `database` holds only the four bundled Inter faces (section 8). System fonts are never loaded, so font fallback cannot pick another face.
+`stencil_text::CosmicTextMeasurer` holds a `cosmic_text::FontSystem`. It is built with `FontSystem::new_with_locale_and_db("en-US".into(), database)`, where `database` holds only the six bundled faces (section 8). System fonts are never loaded, so font fallback cannot pick another face.
 
 Each measurement follows these steps:
 
@@ -1040,31 +1044,33 @@ pub fn legend_consistency(page: &Page) -> CheckReport;
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct FontFile {
     pub file_name: &'static str,
+    pub family: FontFamily,
     pub weight: FontWeight,
     pub bytes: &'static [u8],
     /// Lowercase hex SHA-256 of `bytes`, copied from assets/fonts/FONTS.md.
     pub sha256: &'static str,
 }
 
-/// Inter-Regular, Inter-SemiBold, Inter-Bold, Inter-ExtraBold, via include_bytes!.
-pub const BUNDLED_FONTS: [FontFile; 4];
+/// The four Inter faces, then JetBrainsMonoNL-Regular and JetBrainsMonoNL-Bold, via
+/// include_bytes!, in FONTS.md order.
+pub const BUNDLED_FONTS: [FontFile; 6];
 
-/// The bundled file that holds `family` at `weight`; an exhaustive match, so every style a
-/// layout can set names one.
-pub fn bundled_font(family: FontFamily, weight: FontWeight) -> FontFile;
+/// The bundled file that holds `family` at `weight`, or `NoSuchFace`; a test resolves every
+/// style of TEXT_STYLES, so every style a layout can set names one.
+pub fn bundled_font(family: FontFamily, weight: FontWeight) -> Result<FontFile, FontError>;
 
-/// The public check over the four compiled-in faces; `verify_fonts` stays crate-private so
+/// The public check over the six compiled-in faces; `verify_fonts` stays crate-private so
 /// only the font-swap test can pass it other files.
 pub fn verify_bundled_fonts() -> Result<(), FontError>;
 
-/// Parses each file and asserts family "Inter" and the listed weight. Crate-private so the
+/// Parses each file and asserts its listed family and weight. Crate-private so the
 /// font-swap test can pass a modified copy of BUNDLED_FONTS.
-pub(crate) fn verify_fonts(files: &[FontFile]) -> Result<(), FontError>;
+pub(crate) fn verify_fonts(files: &[FontFile; 6]) -> Result<(), FontError>;
 
 pub struct CosmicTextMeasurer { /* FontSystem, cache */ }
 
 impl CosmicTextMeasurer {
-    /// Calls verify_bundled_fonts, then builds a FontSystem over the four faces only.
+    /// Calls verify_bundled_fonts, then builds a FontSystem over the six faces only.
     pub fn new() -> Result<Self, FontError>;
 }
 
@@ -1074,10 +1080,12 @@ impl stencil_model::text::TextMeasurer for CosmicTextMeasurer { /* section 3.2 *
 pub enum FontError {
     #[error("bundled font {file_name} does not parse")]
     Unparseable { file_name: &'static str },
-    #[error("bundled font {file_name} has family {found:?}, expected \"Inter\"")]
-    FamilyMismatch { file_name: &'static str, found: String },
+    #[error("bundled font {file_name} has family {found:?}, expected {expected:?}")]
+    FamilyMismatch { file_name: &'static str, expected: &'static str, found: String },
     #[error("bundled font {file_name} has weight {found}, expected {expected}")]
     WeightMismatch { file_name: &'static str, expected: u16, found: u16 },
+    #[error("no bundled font holds {family} at weight {weight}")]
+    NoSuchFace { family: &'static str, weight: u16 },
 }
 ```
 
@@ -1481,12 +1489,12 @@ svg:has(S) F:not([data-id="G1"]):not([data-id="G2"]) > :not([data-id]), svg:has(
 `render_png` works in this order:
 
 1. Call `stencil_text::verify_bundled_fonts`. A failure returns `RenderError::Fonts`.
-2. Build `usvg::Options` with `fontdb` set to an `Arc` of a database that contains only the four bundled faces (loaded with `load_font_data`), `font_family` set to `"Inter"`, no resources directory, an `image_href_resolver` that decodes `data:` URIs and resolves every other href to nothing, and a strict `font_resolver`:
+2. Build `usvg::Options` with `fontdb` set to an `Arc` of a database that contains only the six bundled faces (loaded with `load_font_data`), `font_family` set to `"Inter"`, no resources directory, an `image_href_resolver` that decodes `data:` URIs and resolves every other href to nothing, and a strict `font_resolver`:
    - `select_font` queries the database with the element's own families, weight, stretch and style and appends no generic family. usvg's default selector appends Serif to every query, which resolves a missing family as soon as a generic family points at a loaded face.
-   - `select_fallback` returns `None`. usvg's default fallback substitutes any loaded face that covers a character, so with four Inter faces loaded it would draw a character from the wrong weight.
+   - `select_fallback` returns `None`. usvg's default fallback substitutes any loaded face that covers a character, so with six faces loaded it would draw a character from the wrong weight or family.
    - Both closures count every lookup that finds no face.
 
-   No generic family is pointed at Inter on this database (`set_serif_family` and its siblings are never called). `docs/api-notes/resvg.md` records the resolver and the failure it closes.
+   No generic family is pointed at a bundled face on this database (`set_serif_family` and its siblings are never called). `docs/api-notes/resvg.md` records the resolver and the failure it closes.
 3. Parse with `usvg::Tree::from_str`.
 4. Count `usvg::Node::Text` nodes, descending recursively through `Node::Group` children only: not into a text node's flattened group and not into the tree of an `<image>` (icons hold no text). The walk visits at most 16 × NODES_MAX = 65,536 groups, well above the one `<g>` per geometry node a vetted page writes, and returns `Svg` when the tree holds more. When a `<text>` element's font does not resolve, usvg 0.48 drops the element and raises no error. `parser/text.rs` returns before it pushes the `Node::Text`, and text layout returns `None` when it placed no glyphs, so a dropped string leaves no node behind. The count is compared with `expected_text_elements`, which the caller takes from `SvgDocument::text_elements`. Fewer returns `TextNotRendered { count: expected - found }`. More returns `TextCountExceeded`, which means the caller passed the wrong number. Equal goes on to the lookup tally from step 2: a span whose family does not resolve inside a `<text>` that still places other glyphs, or a character that no longer falls back, leaves the node count intact, so any counted miss returns `FontNotResolved { lookups }`. The tally counts resolver calls, not `<text>` elements, so one span with two unresolvable characters counts 2.
 5. Compute `ceil(width * scale)` and `ceil(height * scale)` in f64. `width` and `height` are the parsed tree's size, which is the SVG's `width` and `height` attributes, so they are the canvas size already rounded to 2 decimals by section 5.1. A layout height of 652.004 is written as 652 and renders 1304 px tall at scale 2, not 1305. When either extent is not finite or below 1, or their product is above `PNG_PIXELS_MAX`, return `PixmapAllocation` before anything is allocated. Otherwise allocate a `tiny_skia::Pixmap` of that size, fill it with white (`Color::WHITE`), and render with `resvg::render(&tree, Transform::from_scale(scale, scale), &mut pixmap.as_mut())`. `PngSize::Width(w)` keeps `w` as the pixmap width, which must lie between `ceil(width * PNG_WIDTH_SCALE_MIN)` and `floor(width * DeviceScale::MAX)` or `PngWidthOutOfRange` is returned, takes `scale = w / width` and the height `ceil(height * scale)`, and renders at that scale under the same budget. The tree is rasterized at the fractional scale, so text is drawn at its final size, never resampled. hybrid-ai, 1480 by 1177.6, renders 2034 by 1619 at width 2034.
@@ -1705,20 +1713,22 @@ Errors for exit 2 go to stderr with the underlying error chain. The CLI never pr
 
 ### 8.1 Fonts
 
-Family: Inter, SIL Open Font License 1.1. Four static instances from the Inter 4.1 release archive (`extras/ttf/`), committed unmodified under `assets/fonts/` by the asset pre-step (section 8.3):
+Two families, both under the SIL Open Font License 1.1, committed unmodified under `assets/fonts/` by the asset pre-step (section 8.3). Inter: four static instances from the Inter 4.1 release archive (`extras/ttf/`). JetBrains Mono NL: Regular and Bold from the JetBrains Mono 2.304 release archive (`fonts/ttf/`), the build without programming ligatures, so `--`, `->` and `!=` draw as the characters typed and not as joined glyphs.
 
-| File | Weight | Used by | SHA-256 |
-|---|---|---|---|
-| `Inter-Regular.ttf` | 400 | lede, card_product, note_legend, legend_text, foot, block_body | in `FONTS.md` |
-| `Inter-SemiBold.ttf` | 600 | fact, ask, tag_sub | in `FONTS.md` |
-| `Inter-Bold.ttf` | 700 | kicker, title, zone_label, gcp_bar, perimeter_label, card_function, tag_label, legend_label | in `FONTS.md` |
-| `Inter-ExtraBold.ttf` | 800 | badge | in `FONTS.md` |
+| File | Family | Weight | Used by | SHA-256 |
+|---|---|---|---|---|
+| `Inter-Regular.ttf` | Inter | 400 | lede, card_product, note_legend, legend_text, foot, block_body | in `FONTS.md` |
+| `Inter-SemiBold.ttf` | Inter | 600 | fact, ask, tag_sub | in `FONTS.md` |
+| `Inter-Bold.ttf` | Inter | 700 | kicker, title, zone_label, gcp_bar, perimeter_label, card_function, tag_label, legend_label | in `FONTS.md` |
+| `Inter-ExtraBold.ttf` | Inter | 800 | badge | in `FONTS.md` |
+| `JetBrainsMonoNL-Regular.ttf` | JetBrains Mono NL | 400 | none yet | in `FONTS.md` |
+| `JetBrainsMonoNL-Bold.ttf` | JetBrains Mono NL | 700 | none yet | in `FONTS.md` |
 
-- `assets/fonts/OFL.txt` holds the license text from the same archive. `assets/fonts/FONTS.md` holds the table above with the SHA-256 column filled in and the release version and archive URL. `BUNDLED_FONTS` copies the hashes, and a test compares them with the compiled bytes.
+- `assets/fonts/OFL.txt` holds the license text from the Inter archive and `assets/fonts/JetBrainsMono-OFL.txt` the `OFL.txt` of the JetBrains Mono archive. `assets/fonts/FONTS.md` holds the table above with the SHA-256 column filled in, each release version and archive URL, and the SHA-256 of the JetBrains Mono archive. `BUNDLED_FONTS` copies the hashes, and a test compares them with the compiled bytes.
 - Static instances are used instead of the variable font, so each weight is a separate face with fixed metrics and cosmic-text and usvg select the same face. `docs/api-notes/cosmic-text.md` recommends bundling `InterVariable.ttf` alone; the spec does not follow it, for this reason.
-- The files are not subset, renamed or otherwise modified, so the OFL's clauses on modified versions do not apply. The license permits bundling the files with the software, and `OFL.txt` ships next to them. The written SVG embeds the files its text uses unmodified (section 5.2); each carries its copyright notice and the OFL notice in its `name` table, the machine-readable metadata the OFL accepts in place of a separate license file.
+- The files are not subset, renamed or otherwise modified, so the OFL's clauses on modified versions do not apply. The license permits bundling the files with the software, and each license text ships next to them. The written SVG embeds the files its text uses unmodified (section 5.2); each carries its copyright notice and the OFL notice in its `name` table, the machine-readable metadata the OFL accepts in place of a separate license file.
 - Helvetica Neue, the face the HTML stencil uses, is a system `.ttc` that may not be redistributed, so it is not an option. Google Sans stays excluded for the brand reason recorded in the stencil provenance.
-- Only these four faces are ever loaded, into the cosmic-text database and into the usvg database alike. A character Inter lacks is a `MissingGlyph` defect, never a fallback.
+- Only these six faces are ever loaded, into the cosmic-text database and into the usvg database alike. A character the style's family lacks is a `MissingGlyph` defect, never a fallback to the other family.
 
 ### 8.2 Icons
 
@@ -1909,12 +1919,13 @@ stencil-text and stencil-render embed the assets with `include_bytes!`, so neith
 1. Download `https://github.com/rsms/inter/releases/download/v4.1/Inter-4.1.zip`.
 2. Copy `extras/ttf/Inter-Regular.ttf`, `Inter-SemiBold.ttf`, `Inter-Bold.ttf` and `Inter-ExtraBold.ttf` unmodified to `assets/fonts/`, and the archive's `LICENSE.txt` to `assets/fonts/OFL.txt`.
 3. Write `assets/fonts/FONTS.md`: the section 8.1 table with each file's SHA-256 (`shasum -a 256`), the release version 4.1 and the archive URL.
-4. Copy the 23 Google Cloud icons from `drafting-diagrams/stencil/icons/` to `assets/icons/gcp/` and `drafting-diagrams/stencil/PROVENANCE.md` to `assets/icons/gcp/PROVENANCE.md`. Confirm every icon's SHA-256 equals its row in the section 8.2 table of pack gcp.
-5. Confirm with a throwaway probe that both font databases read the four files as this spec expects. cosmic-text's re-exported `fontdb` and usvg's re-exported `fontdb` each load the files with `load_font_data` and must report family `Inter` for every face and weights 400, 600, 700 and 800. The cosmic-text scout checked only Regular, SemiBold and Bold, so ExtraBold at weight 800 is unconfirmed until this step. If any face reports another family (for example `Inter ExtraBold` from the legacy name table) or another weight, the pre-step stops and this spec is revised before fan-out.
-6. Write `examples/g7.json` as the section 9.3 JSON block, byte for byte, with a trailing newline. stencil-model, stencil-text, stencil-render, stencil-cli and the golden test all read this one file, and a change to it is made in section 9.3 first.
-7. Copy the existing Chrome headless render of the g7 gold to `examples/golden/g7-gold-chrome.png`, or regenerate it with the recipe in section 9.4. Confirm it is 2640 by 1800 px (`sips -g pixelWidth -g pixelHeight` or `file`).
+4. Download `https://github.com/JetBrains/JetBrainsMono/releases/download/v2.304/JetBrainsMono-2.304.zip` into an empty directory and confirm its SHA-256 equals the one in `FONTS.md`. Copy `fonts/ttf/JetBrainsMonoNL-Regular.ttf` and `fonts/ttf/JetBrainsMonoNL-Bold.ttf` unmodified to `assets/fonts/`, and the archive's `OFL.txt` to `assets/fonts/JetBrainsMono-OFL.txt`; add their rows, the release version 2.304 and the archive URL to `FONTS.md`. Nothing else from the archive is read or run.
+5. Copy the 23 Google Cloud icons from `drafting-diagrams/stencil/icons/` to `assets/icons/gcp/` and `drafting-diagrams/stencil/PROVENANCE.md` to `assets/icons/gcp/PROVENANCE.md`. Confirm every icon's SHA-256 equals its row in the section 8.2 table of pack gcp.
+6. Confirm with a throwaway probe that both font databases read the six files as this spec expects. cosmic-text's re-exported `fontdb` and usvg's re-exported `fontdb` each load the files with `load_font_data` and must report family `Inter` for every Inter face and weights 400, 600, 700 and 800, and family `JetBrains Mono NL` and weights 400 and 700 for the two JetBrains Mono files. The cosmic-text scout checked only Regular, SemiBold and Bold, so ExtraBold at weight 800 is unconfirmed until this step. If any face reports another family (for example `Inter ExtraBold` from the legacy name table) or another weight, the pre-step stops and this spec is revised before fan-out.
+7. Write `examples/g7.json` as the section 9.3 JSON block, byte for byte, with a trailing newline. stencil-model, stencil-text, stencil-render, stencil-cli and the golden test all read this one file, and a change to it is made in section 9.3 first.
+8. Copy the existing Chrome headless render of the g7 gold to `examples/golden/g7-gold-chrome.png`, or regenerate it with the recipe in section 9.4. Confirm it is 2640 by 1800 px (`sips -g pixelWidth -g pixelHeight` or `file`).
 
-The probe is not committed. `verify_bundled_fonts` and the stencil-text tests check the same facts once the crate exists.
+The probe is not committed. `verify_bundled_fonts` and the stencil-text tests check the same facts on cosmic-text's database once the crate exists, and `the_usvg_database_reads_each_bundled_file_as_its_family_and_weight` in crates/stencil-render/src/png.rs on usvg's.
 
 Two more fixtures are created during crate work, each by one owner:
 
@@ -2119,7 +2130,7 @@ Each behavior change comes with a test that fails before the change. Each positi
 ### stencil-text
 
 - Each `BUNDLED_FONTS` entry's bytes hash to its `sha256`, and the hashes equal `assets/fonts/FONTS.md`.
-- `verify_bundled_fonts` passes. Each face reports family `Inter` and weights 400, 600, 700 and 800. A unit test copies `BUNDLED_FONTS`, swaps the `bytes` of two entries of different weight, passes the copy to `verify_fonts` and gets `WeightMismatch`.
+- `verify_bundled_fonts` passes. The Inter faces report family `Inter` and weights 400, 600, 700 and 800, the JetBrains Mono files `JetBrains Mono NL` and 400 and 700. A unit test copies `BUNDLED_FONTS`, swaps the `bytes` of two entries of different weight, passes the copy to `verify_fonts` and gets `WeightMismatch`; another puts Inter's bytes in a JetBrains Mono entry and gets `FamilyMismatch`. `bundled_font` resolves every style of `TEXT_STYLES` and reports `NoSuchFace` for JetBrains Mono NL at 600.
 - Coverage: every character in every text field of `examples/g7.json`, uppercased where the style uppercases, has a glyph in the weight its style uses, `·` and `↔` included.
 - `MissingGlyph` for U+4E00 and U+1F600.
 - Idempotence: for each style in `stencil_model::text::TEXT_STYLES` and a set of strings, measuring again at `Some(width_px + WRAP_EPSILON_PX)` gives the same line count and width.
@@ -4931,7 +4942,7 @@ With no `--print-width`, icon-matches-product examines 6 items on g7 and hero-is
 Break opportunities. A long bucket name such as `acme-prod.analytics.raw-events` is one word to a measurer that breaks only at spaces, so its min-content width can widen an item past its column. Section 3's definition of a word changes for both measurers: a line may break after a run of U+0020, after a `-` or `/` that is followed by an ASCII letter, and after a `.` that is followed by an ASCII letter. A word is the text between two consecutive opportunities, and the min-content floor of sections 2.1 and 2.5 is the widest word. A dot between digits (`10.8.0.0`) and a hyphen before a digit (`-29`) stay unbreakable, so addresses and ranges never split.
 
 1. `FixedMetricsMeasurer` breaks at exactly these opportunities. A break after `-`, `/` or `.` keeps the character on the earlier line, and no width is subtracted for it (it is not a trailing space). The worked example of section 3.1 is unchanged at max-content; at `Some(0.0)` `"On-prem router 1"` now gives `On-`, `prem`, `router` and `1`, as cosmic-text already does.
-2. `CosmicTextMeasurer` keeps `Wrap::Word`, whose UAX #14 opportunities already include the hyphen and slash cases. For the dot case it shapes a copy of the string with U+200B ZERO WIDTH SPACE inserted after every `.` followed by an ASCII letter, and maps each layout run's byte range back to the original string through the table of inserted offsets, so `TextLine` ranges, the drawn text and the SVG never contain U+200B. The asset probe of section 8.3 step 5 gains one check before step (e) starts: each bundled face maps U+200B to a glyph other than 0 with zero advance. If a face does not, the measurer instead splits the string at those dots into segments, shapes each with `Wrap::Word`, and joins the lines greedily; the spec is revised before the change lands.
+2. `CosmicTextMeasurer` keeps `Wrap::Word`, whose UAX #14 opportunities already include the hyphen and slash cases. For the dot case it shapes a copy of the string with U+200B ZERO WIDTH SPACE inserted after every `.` followed by an ASCII letter, and maps each layout run's byte range back to the original string through the table of inserted offsets, so `TextLine` ranges, the drawn text and the SVG never contain U+200B. The asset probe of section 8.3 step 6 gains one check before step (e) starts: each bundled face maps U+200B to a glyph other than 0 with zero advance. If a face does not, the measurer instead splits the string at those dots into segments, shapes each with `Wrap::Word`, and joins the lines greedily; the spec is revised before the change lands.
 3. Cosmic-text also breaks at UAX #14 opportunities the fake does not have (after an em dash or a question mark, for example). The contract states the shared set; tests that compare the two use strings whose only opportunities are in that set.
 4. No example has a dotted word, and cosmic-text already broke at their hyphens and slashes, so step (e) leaves every example's geometry unchanged; the geometry fixtures prove it. Layout tests that measure hyphenated strings with the fake are re-derived in step (e).
 

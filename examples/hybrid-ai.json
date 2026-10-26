@@ -1,7 +1,7 @@
 {
-  "title": "Training stays on-prem. Tuning, serving and evidence run on Google Cloud. AWS and Azure feed data over private paths only.",
-  "kicker": "Hybrid multi-cloud AI platform",
-  "lede": "Three producers outside the frame, one Shared VPC across two regions, one service perimeter around every AI service. Every hop is a labeled line; the public internet is drawn once, as the prohibited path.",
+  "title": "Radar and satellite observations upload to Google Cloud, where nowcast models are tuned and served inside one perimeter.",
+  "kicker": "Weather forecasting platform",
+  "lede": "A radar network and a satellite ground station upload observations, and a partner forecasting agency shares its model output from its own project. Nowcast models are tuned in Vertex AI and served from two regions; the public internet appears once, as the prohibited path.",
   "foot": "Illustrative topology · hop facts are placeholders, not looked-up values",
   "badge": "Customer",
   "grammar": "gcp",
@@ -23,17 +23,17 @@
               "tag": "Box",
               "kind": "onprem",
               "tint": 1,
-              "label": "On-prem · GPU data center",
+              "label": "Radar network · on-prem",
               "children": [
                 {
                   "tag": "Item",
                   "kind": "product",
                   "icon": "compute",
-                  "title": "GPU training cluster",
-                  "subtitle": "Kubernetes on bare metal",
+                  "title": "Radar processors",
+                  "subtitle": "volume scans every 5 minutes",
                   "facts": [
                     {
-                      "text": "Checkpoints leave over the Interconnect only"
+                      "text": "Scans leave over HTTPS only"
                     }
                   ]
                 },
@@ -41,14 +41,14 @@
                   "tag": "Item",
                   "kind": "product",
                   "icon": "storage",
-                  "title": "Data lake",
-                  "subtitle": "object storage · clips, telemetry"
+                  "title": "Scan archive",
+                  "subtitle": "object storage · raw volumes"
                 },
                 {
                   "tag": "Item",
                   "kind": "product",
                   "icon": "security-identity",
-                  "title": "Corporate identity",
+                  "title": "Staff identity",
                   "subtitle": "SAML IdP · group sync"
                 }
               ]
@@ -57,42 +57,42 @@
               "tag": "Box",
               "kind": "onprem",
               "tint": 2,
-              "label": "AWS · us-east-1",
+              "label": "Satellite ground station",
               "children": [
                 {
                   "tag": "Item",
                   "kind": "product",
                   "icon": "storage",
-                  "title": "Telemetry landing",
-                  "subtitle": "S3 bucket · event stream"
+                  "title": "Downlink store",
+                  "subtitle": "imagery passes · events"
                 },
                 {
                   "tag": "Item",
                   "kind": "product",
                   "icon": "containers",
-                  "title": "Feature service",
-                  "subtitle": "EKS · federated role, no keys"
+                  "title": "Pass processor",
+                  "subtitle": "calibrates · federated role"
                 }
               ]
             },
             {
               "tag": "Box",
               "kind": "project",
-              "label": "Azure · East US",
+              "label": "Partner agency · own project",
               "children": [
                 {
                   "tag": "Item",
                   "kind": "product",
                   "icon": "storage",
-                  "title": "Document corpus",
-                  "subtitle": "Blob Storage · contracts"
+                  "title": "Ensemble output",
+                  "subtitle": "gridded model runs"
                 },
                 {
                   "tag": "Item",
                   "kind": "product",
                   "icon": "integration",
-                  "title": "Copilot integration",
-                  "subtitle": "Azure OpenAI · retrieval calls"
+                  "title": "Warning exchange",
+                  "subtitle": "severe weather alerts"
                 }
               ]
             }
@@ -121,8 +121,8 @@
                   "dir": "h",
                   "line": "solid",
                   "tint": 1,
-                  "label": "Interconnect",
-                  "sub": "VLAN · BGP · checkpoints, clips"
+                  "label": "HTTPS upload",
+                  "sub": "signed URLs · scans"
                 },
                 {
                   "tag": "Pipe",
@@ -143,8 +143,8 @@
                   "dir": "h",
                   "line": "solid",
                   "tint": 2,
-                  "label": "HA VPN",
-                  "sub": "IPsec · BGP · S3 to Region B"
+                  "label": "Pub/Sub push",
+                  "sub": "pass events · to Region B"
                 },
                 {
                   "tag": "Pipe",
@@ -165,8 +165,8 @@
                   "dir": "h",
                   "line": "solid",
                   "tint": 1,
-                  "label": "Cross-Cloud Interconnect",
-                  "sub": "private path · corpus"
+                  "label": "Analytics Hub",
+                  "sub": "shared dataset"
                 },
                 {
                   "tag": "Pipe",
@@ -187,18 +187,18 @@
             {
               "tag": "Box",
               "kind": "perimeter",
-              "label": "VPC Service Controls perimeter · every AI and data service",
+              "label": "VPC Service Controls perimeter · every model and observation store",
               "children": [
                 {
                   "tag": "Box",
                   "kind": "vpc",
-                  "label": "Shared VPC · prod · one network, two regions",
+                  "label": "Shared VPC · forecasting · one network, two regions",
                   "children": [
                     {
                       "tag": "Box",
                       "kind": "region",
                       "tint": 1,
-                      "label": "Region A · tuning and serving",
+                      "label": "Region A · nowcasts",
                       "children": [
                         {
                           "tag": "Row",
@@ -210,7 +210,7 @@
                                   "tag": "Item",
                                   "kind": "product",
                                   "icon": "gke",
-                                  "title": "Online inference",
+                                  "title": "Nowcast inference",
                                   "subtitle": "GKE · GPU node pool",
                                   "facts": [
                                     {
@@ -234,7 +234,7 @@
                                   "tag": "Item",
                                   "kind": "product",
                                   "icon": "networking",
-                                  "title": "Gateway",
+                                  "title": "Forecast API",
                                   "subtitle": "External Application LB",
                                   "facts": [
                                     {
@@ -257,7 +257,7 @@
                       "dir": "v",
                       "line": "dash",
                       "label": "failover · Region A ↔ Region B",
-                      "sub": "checkpoints and adapters replicate"
+                      "sub": "models and checkpoints replicate"
                     },
                     {
                       "tag": "Box",
@@ -296,7 +296,7 @@
                               "tag": "Item",
                               "kind": "product",
                               "icon": "vertex-ai",
-                              "title": "Tuning",
+                              "title": "Nowcast tuning",
                               "subtitle": "Vertex AI · tuning",
                               "facts": [
                                 {
@@ -308,7 +308,7 @@
                               "tag": "Item",
                               "kind": "product",
                               "icon": "cloud-run",
-                              "title": "Batch inference",
+                              "title": "Hourly forecast runs",
                               "subtitle": "Cloud Run jobs"
                             }
                           ]
@@ -318,7 +318,7 @@
                           "dir": "h",
                           "line": "gray",
                           "label": "register",
-                          "sub": "tuned adapters"
+                          "sub": "tuned models"
                         },
                         {
                           "tag": "Col",
@@ -334,7 +334,7 @@
                               "tag": "Item",
                               "kind": "product",
                               "icon": "agents",
-                              "title": "Agent runtime",
+                              "title": "Forecast assistant",
                               "subtitle": "Vertex AI Agent Engine"
                             }
                           ]
@@ -360,14 +360,14 @@
                           "tag": "Item",
                           "kind": "product",
                           "icon": "bigquery",
-                          "title": "Feature store",
-                          "subtitle": "BigQuery · vectors"
+                          "title": "Observation store",
+                          "subtitle": "BigQuery · scans and passes"
                         },
                         {
                           "tag": "Item",
                           "kind": "product",
                           "icon": "cloud-storage",
-                          "title": "Checkpoint bucket",
+                          "title": "Model checkpoints",
                           "subtitle": "Cloud Storage · dual-region",
                           "facts": [
                             {
@@ -450,12 +450,12 @@
     {
       "line": "solid",
       "tint": 1,
-      "text": "private data path into Region A"
+      "text": "upload and sharing into Region A"
     },
     {
       "line": "solid",
       "tint": 2,
-      "text": "private data path into Region B"
+      "text": "event push into Region B"
     },
     {
       "line": "dash",

@@ -205,7 +205,7 @@ fn every_bundled_face_maps_zero_width_space_to_a_glyph_without_advance() {
     let mut examined_faces = 0;
     for file in &BUNDLED_FONTS {
         let attributes = Attrs::new()
-            .family(Family::Name("Inter"))
+            .family(Family::Name(file.family.css_name()))
             .weight(Weight(file.weight.css_value()));
         let mut buffer = Buffer::new(&mut font_system, Metrics::new(13.0, 15.6));
         buffer.set_text("a\u{200B}b", &attributes, Shaping::Advanced, None);
@@ -221,5 +221,5 @@ fn every_bundled_face_maps_zero_width_space_to_a_glyph_without_advance() {
         assert_eq!(zero_width_space.w, 0.0, "{}", file.file_name);
         examined_faces += 1;
     }
-    assert_eq!(examined_faces, 4);
+    assert_eq!(examined_faces, 6);
 }
