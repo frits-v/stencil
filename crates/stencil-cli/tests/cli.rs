@@ -481,21 +481,25 @@ fn describe_exits_2_for_a_missing_file() {
     );
 }
 
-/// The `font-weight` values of every `<text>` element, and of every `@font-face` rule with
-/// the bytes its `data:` URI decodes to.
-fn text_weights_and_font_faces(svg: &str) -> (BTreeSet<u16>, BTreeMap<u16, Vec<u8>>) {
-    let text_weights = svg
+/// A text face as the written SVG names it: family and weight.
+type Face = (String, u16);
+
+/// The `font-family` and `font-weight` of every `<text>` element, and of every `@font-face`
+/// rule with the bytes its `data:` URI decodes to.
+fn text_faces_and_font_faces(svg: &str) -> (BTreeSet<Face>, BTreeMap<Face, Vec<u8>>) {
+    let text_faces = svg
         .lines()
         .filter(|line| line.trim_start().starts_with("<text "))
         .map(|line| {
-            let after = line.split_once(r#" font-weight=""#).unwrap().1;
-            after.split_once('"').unwrap().0.parse().unwrap()
+            let family = attribute(line, "font-family").unwrap().to_string();
+            let weight = attribute(line, "font-weight").unwrap().parse().unwrap();
+            (family, weight)
         })
         .collect();
     let mut faces = BTreeMap::new();
     for rule in svg.split("@font-face").skip(1) {
         let rule = rule.split_once('}').unwrap().0;
-        assert!(rule.contains(r#"font-family: "Inter";"#), "{rule:.120}");
+        let family = quoted_after(rule, r#"font-family: ""#).to_string();
         let weight: u16 = rule
             .split_once("font-weight: ")
             .unwrap()
@@ -505,35 +509,42 @@ fn text_weights_and_font_faces(svg: &str) -> (BTreeSet<u16>, BTreeMap<u16, Vec<u
             .0
             .parse()
             .unwrap();
-        let payload = rule
-            .split_once(r#"url("data:font/ttf;base64,"#)
-            .unwrap()
-            .1
-            .split_once('"')
-            .unwrap()
-            .0;
+        let payload = quoted_after(rule, r#"url("data:font/ttf;base64,"#);
         let bytes = base64::engine::general_purpose::STANDARD
             .decode(payload)
             .unwrap();
+        let face = (family, weight);
         assert!(
-            faces.insert(weight, bytes).is_none(),
-            "weight {weight} twice"
+            faces.insert(face.clone(), bytes).is_none(),
+            "{face:?} twice"
         );
     }
-    (text_weights, faces)
+    (text_faces, faces)
 }
 
-/// hybrid-ai and the onepager sheet set text in all four weights (the sheet's captions and
-/// grid references are SemiBold), and design-brief and the iso hero in 400, 700 and 800 only.
+/// hybrid-ai, g7 and the onepager sheet set text in all four Inter weights (the sheet's
+/// captions and grid references are SemiBold), and design-brief and the iso hero in 400, 700
+/// and 800 only. Only onepager holds a how-to, so only its file sets text in JetBrains Mono
+/// NL, embeds that face and writes its monospace fallback rule.
 #[test]
-fn the_svg_embeds_a_font_face_for_each_weight_its_text_uses_and_no_other() {
+fn the_svg_embeds_a_font_face_for_each_family_and_weight_its_text_uses_and_no_other() {
     let out_dir = scratch_directory("render_embeds_fonts");
+    let inter = |weights: &[u16]| -> Vec<Face> {
+        weights
+            .iter()
+            .map(|weight| ("Inter".to_string(), *weight))
+            .collect()
+    };
+    let monospace: Face = ("JetBrains Mono NL".to_string(), 400);
+    let mut onepager = inter(&[400, 600, 700, 800]);
+    onepager.push(monospace.clone());
     let mut examined = 0;
-    for (stem, expected_weights) in [
-        ("hybrid-ai", vec![400, 600, 700, 800]),
-        ("design-brief", vec![400, 700, 800]),
-        ("onepager", vec![400, 600, 700, 800]),
-        ("hero-iso", vec![400, 700, 800]),
+    for (stem, expected_faces) in [
+        ("hybrid-ai", inter(&[400, 600, 700, 800])),
+        ("design-brief", inter(&[400, 700, 800])),
+        ("onepager", onepager),
+        ("hero-iso", inter(&[400, 700, 800])),
+        ("g7", inter(&[400, 600, 700, 800])),
     ] {
         let input = repository_path(&format!("examples/{stem}.json"));
         let outcome = run_stencil(&[
@@ -545,27 +556,36 @@ fn the_svg_embeds_a_font_face_for_each_weight_its_text_uses_and_no_other() {
         assert_eq!(outcome.code, ExitCode::Clean, "{}", outcome.stderr);
 
         let svg = fs::read_to_string(out_dir.join(format!("{stem}.svg"))).unwrap();
-        let (text_weights, faces) = text_weights_and_font_faces(&svg);
+        let (text_faces, faces) = text_faces_and_font_faces(&svg);
         assert_eq!(
-            text_weights.iter().copied().collect::<Vec<_>>(),
-            expected_weights,
+            text_faces.iter().cloned().collect::<Vec<_>>(),
+            expected_faces,
             "{stem}"
         );
         assert_eq!(
-            faces.keys().copied().collect::<BTreeSet<_>>(),
-            text_weights,
+            faces.keys().cloned().collect::<BTreeSet<_>>(),
+            text_faces,
             "{stem}"
         );
-        for (weight, bytes) in &faces {
+        for ((family, weight), bytes) in &faces {
             let bundled = BUNDLED_FONTS
                 .iter()
-                .find(|file| file.weight.css_value() == *weight)
+                .find(|file| file.family.css_name() == family && file.weight.css_value() == *weight)
                 .unwrap();
-            assert!(bytes.as_slice() == bundled.bytes, "{stem}: {weight}");
+            assert!(
+                bytes.as_slice() == bundled.bytes,
+                "{stem}: {family} {weight}"
+            );
         }
+        let monospace_rule = r#"text[font-family="JetBrains Mono NL"] { font-family: "JetBrains Mono NL", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }"#;
+        assert_eq!(
+            svg.contains(monospace_rule),
+            text_faces.contains(&monospace),
+            "{stem}"
+        );
         examined += 1;
     }
-    assert_eq!(examined, 4);
+    assert_eq!(examined, 5);
 }
 
 /// The value of attribute `name` in the tag on `line`, when the tag has it.

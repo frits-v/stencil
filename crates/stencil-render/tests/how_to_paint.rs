@@ -6,14 +6,18 @@
 )]
 
 //! Section 14.5 rules 5 and 12: onepager's how-tos, painted from the theme's terminal and
-//! sheet roles, and from the roles the terminal derives from when a theme leaves it out.
+//! sheet roles, and from the roles the terminal derives from when a theme leaves it out;
+//! and their terminal text, set in the monospace face in whole advances.
 
 mod common;
 
 use resvg::usvg::roxmltree;
 use serde_json::Value;
+use stencil_layout::{NodeTag, PartName};
+use stencil_model::text::{FontFamily, TextMeasurer, TextStyleName};
 use stencil_model::{DESIGNED_THEMES, IMPORTED_THEMES, Theme};
 use stencil_render::render_svg;
+use stencil_text::CosmicTextMeasurer;
 
 const FIRST_ITEM: &str = "/body/2/children/0/items/0";
 
@@ -283,4 +287,121 @@ fn how_to_part_keys_follow_the_run_and_line_they_draw() {
             "terminal_prompt/5",
         ]
     );
+}
+
+/// The parts a how-to sets in the terminal face: its chips' text, its prompts and its lines.
+fn is_terminal_text(name: PartName) -> bool {
+    matches!(
+        name,
+        PartName::CommandText | PartName::TerminalPrompt | PartName::TerminalLine
+    )
+}
+
+/// Section 2.9: a how-to's chips, prompts and terminal lines are measured in JetBrains Mono
+/// NL and written in it, and every other run on the sheet keeps Inter.
+#[test]
+fn terminal_runs_are_measured_and_written_in_the_monospace_family() {
+    let page = onepager();
+    let geometry = common::layout_with_cosmic_text(&page);
+    let mut terminal_lines = 0;
+    let mut other_runs = 0;
+    for node in &geometry.nodes {
+        for part in &node.parts {
+            let Some(run) = &part.text else { continue };
+            if is_terminal_text(part.name) {
+                assert_eq!(node.tag, NodeTag::HowToItem, "{}", node.pointer);
+                assert_eq!(
+                    run.style.family,
+                    FontFamily::JetBrainsMonoNl,
+                    "{}",
+                    run.text
+                );
+                terminal_lines += run.metrics.lines.len();
+            } else {
+                assert_eq!(run.style.family, FontFamily::Inter, "{}", run.text);
+                other_runs += 1;
+            }
+        }
+    }
+    // Five chips, 17 terminal lines and the nine prompts of the command, comment and ok lines.
+    assert_eq!(terminal_lines, 5 + 17 + 9);
+    assert!(other_runs > 0);
+
+    let svg = common::render_svg(&page, &geometry).unwrap().svg;
+    let document = common::parse_xml(&svg);
+    let texts: Vec<_> = document
+        .descendants()
+        .filter(|node| node.has_tag_name("text"))
+        .collect();
+    let monospace = texts
+        .iter()
+        .filter(|text| text.attribute("font-family") == Some("JetBrains Mono NL"))
+        .count();
+    let inter = texts
+        .iter()
+        .filter(|text| text.attribute("font-family") == Some("Inter"))
+        .count();
+    assert_eq!(monospace, terminal_lines);
+    assert_eq!(monospace + inter, texts.len());
+}
+
+/// Section 14.4 rule 31: the prompt column and each indent level are whole advances of the
+/// monospace face, so an indented line starts on a column of the line above it, and a
+/// line's width is its character count in advances.
+#[test]
+fn terminal_indents_and_the_prompt_column_are_whole_monospace_advances() {
+    let style = TextStyleName::TerminalText.text_style().style;
+    let mut measurer = CosmicTextMeasurer::new().unwrap();
+    let advance = measurer.measure("x", &style, None).unwrap().width_px;
+    assert!((advance - 0.6 * 11.5).abs() < 1e-3, "{advance}");
+
+    let page = onepager();
+    let geometry = common::layout_with_cosmic_text(&page);
+    let mut examined = 0;
+    for (index, item) in page_how_to_items(&page).iter().enumerate() {
+        let pointer = format!("/body/2/children/0/items/{index}");
+        let node = geometry
+            .nodes
+            .iter()
+            .find(|node| node.pointer.as_str() == pointer)
+            .unwrap();
+        let terminal = node
+            .parts
+            .iter()
+            .find(|part| part.name == PartName::Terminal)
+            .unwrap();
+        let lines: Vec<_> = node
+            .parts
+            .iter()
+            .filter(|part| part.name == PartName::TerminalLine)
+            .collect();
+        assert_eq!(lines.len(), item.terminal.len(), "{pointer}");
+        let inner_left = terminal.bounds.x + 1.0 + 10.0;
+        for (line, source) in lines.iter().zip(&item.terminal) {
+            let columns = 2.0 + 2.0 * f32::from(source.indent);
+            assert!(
+                (line.bounds.x - inner_left - columns * advance).abs() < 1e-3,
+                "{pointer}: {:?} starts at {}",
+                source.text,
+                line.bounds.x - inner_left
+            );
+            let characters = source.text.chars().count() as f32;
+            let run = line.text.as_ref().unwrap();
+            assert!(
+                (run.metrics.width_px - characters * advance).abs() < 1e-2,
+                "{pointer}: {:?} is {} wide",
+                source.text,
+                run.metrics.width_px
+            );
+            examined += 1;
+        }
+    }
+    assert_eq!(examined, 17);
+}
+
+/// The items of onepager's one HowTo, the first child of its third View.
+fn page_how_to_items(page: &stencil_model::Page) -> Vec<stencil_model::HowToItem> {
+    let document = serde_json::to_value(page).unwrap();
+    let items = document["body"][2]["children"][0]["items"].clone();
+    serde_json::from_value(items).unwrap()
 }
