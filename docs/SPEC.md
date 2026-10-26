@@ -1259,21 +1259,31 @@ pub struct SvgDocument {
     /// The family and weight of the <text> elements, each once, ordered by family name and
     /// then weight.
     pub font_faces: Vec<(FontFamily, FontWeight)>,
-    /// Every Item at an end of at least one link, in geometry order.
-    pub hover_items: Vec<HoverItem>,
+    /// One rule per element that refers to something else (section 5.2).
+    pub hover_rules: Vec<HoverRule>,
 }
 
-/// An Item the written SVG highlights with its links (section 5.2).
-pub struct HoverItem {
-    /// The `data-id` of the Item's group.
-    pub pointer: String,
-    /// The `id` of the Item's group.
+/// What the written SVG highlights from one element (section 5.2).
+pub struct HoverRule {
+    pub source: HoverSource,
+    /// The `id` the source carries.
     pub anchor: String,
+    /// The `data-id` of every fading group that stays drawn, the source's own included.
+    pub kept_groups: Vec<String>,
+    /// The `data-row` of every row that stays drawn.
+    pub kept_rows: Vec<String>,
+}
+
+pub enum HoverSource {
+    /// A fading group by its `data-id`.
+    Group(String),
+    /// A row of a keyed list by its `data-row`.
+    Row(String),
 }
 
 impl SvgDocument {
-    /// The SVG with an @font-face per entry of `font_faces` and a hover rule per entry of
-    /// `hover_items` (section 5.2). `render` writes this; `render_png` takes `svg`.
+    /// The SVG with an @font-face per entry of `font_faces` and a rule per entry of
+    /// `hover_rules` (section 5.2). `render` writes this; `render_png` takes `svg`.
     pub fn self_contained(&self) -> Result<String, RenderError>;
 }
 
@@ -1418,7 +1428,8 @@ The coordinates in this example are illustrative.
 
 Structure:
 
-- One `<g>` per node, nested the same way as the node tree and in section 4.4 geometry order. Each carries `data-id` (the node pointer) and `data-tag` (the `NodeTag` name). Zones, Pipes (Tee arms included), Tees and legend entries also carry `data-kind`, taken from `NodeGeometry.kind`. An Item's group also carries `id`, written before `data-id`: the item's own `id`, else its pointer with each `/` replaced by `_` (`_body_0_children_3`), which no `id` can spell since `ID_PATTERN` has no `_`. An own `id` that starts `arrow-` or equals `stencil-shadow`, the prefix and name the writer gives its markers and its shadow filter, takes the pointer form, so every `url(#…)` keeps its target. A `<g>` has no transform. Every coordinate is absolute canvas px.
+- One `<g>` per node, nested the same way as the node tree and in section 4.4 geometry order. Each carries `data-id` (the node pointer) and `data-tag` (the `NodeTag` name). Zones, Pipes (Tee arms included), Tees and legend entries also carry `data-kind`, taken from `NodeGeometry.kind`. The group of every fading node (an Item, Box, Pipe, Tee, Step, rung, problem point, actor chip, legend entry or how-to) also carries `id`, written before `data-id`: the node's own `id`, else its pointer with each `/` replaced by `_` (`_body_0_children_3`), which no `id` can spell since `ID_PATTERN` has no `_`. An own `id` that starts `arrow-` or equals `stencil-shadow`, the prefix and name the writer gives its markers and its shadow filter, takes the pointer form, so every `url(#…)` keeps its target. A Pipe's group carries `data-from` and `data-to`, the pointers of the nodes its ends meet (its targets, else what each end lands on, as the description names them); a Tee arm's names its Tee and the node its end meets, and a Tee's `data-from` names the node its spine stands on. An end that meets nothing writes no attribute. A `<g>` has no transform.
+- On a design sheet every element of a parts-list row, a general-notes row or an attention item carries `data-row`, the row's pointer (`/…/parts/2`, `/…/notes/0`, `/sheet/attention/items/1`), and the first of them carries the row's `id` in the pointer form. Every element of a balloon, flag or diamond and its numeral carries `data-mark`, the pointer of the row of the key it names. A row rule between rows carries neither. Every coordinate is absolute canvas px.
 - Inside a node's group, shapes come first, then that node's text, then the child groups. Inside a Tee the order is spine, hub, then arm groups.
 - Boxes are `<rect>` with `rx` for the radius and fill and stroke from the tables in section 2. A stroke of width `w` is drawn on a rect inset by `w / 2`, so it stays inside the border box as a CSS border does. The gcp frame uses a `<path>` for its 4 4 10 10 corners and draws the bar before the frame stroke.
 - Dashed borders and dashed wires use `stroke-dasharray="6 5"`.
@@ -1444,13 +1455,26 @@ The only `http` string in the SVG is the SVG namespace URI. There are no externa
 
 The payload is the base64 of the `BUNDLED_FONTS` file that `stencil_text::bundled_font` returns for that family and weight, unmodified, so a browser, a slide or document import or any other rasterizer draws the SVG in the faces the PNG was rendered and measured with, whether or not Inter is installed. A figure using all four weights grows by about 2.2 MB. The `data:` URIs are not external references.
 
-The hover rules highlight an Item and its links where the file is opened in a browser or inlined in a page; an `<img>` gets no pointer events and draws the figure as the PNG does. `hover_items` holds every Item at an end of at least one link, in geometry order, with its pointer and the `id` its group carries. When it is not empty the block holds `[data-tag="Pcard"], [data-tag="Link"] { transition: opacity 0.15s ease-out; }` and then, per entry, one rule on one line:
+The hover rules highlight an element and what it refers to where the file is opened in a browser or inlined in a page; an `<img>` gets no pointer events and draws the figure as the PNG does. A fading unit is the group of a fading node or a link, which fades its own drawn elements and never its child groups, so a kept unit inside a faded one stays drawn and no element fades twice, or a row, whose elements fade. Each source, a fading unit or a row, has a related set that stays drawn while the pointer rests on one of its own elements, on a row through any mark of its key as well, or while the URL fragment names its `id` (`figure.svg#api` opens with `api` highlighted). Every other fading unit drops to opacity 0.2. Grid references, the title block head, captions, view headings, lane heads and the parts-list and notes heads never fade. The sets are read from the model and the geometry: line ends from routes and pipe landings, marks from `PageMarks`, actors from `PageActors`, legend keys from `line_uses`.
+
+| Source | Related set, the source included |
+|---|---|
+| Item, Step, problem point, rung | its framing Boxes; every Link, Pipe or Tee with an end on it, with its arms, the nodes their ends meet and the key rows those lines mark; the row of each key it marks and the node of each such part; its own parts row and every carrier of that part's balloon |
+| Box | its framing Boxes; every fading node inside it; every Link, Pipe or Tee with an end on it or inside it; its key rows and parts row as for an Item |
+| Link, Pipe, Tee or Tee arm | its framing Boxes; the whole Tee with its arms; the nodes every end meets; the key rows of each member and the parts row a Pipe is the node of, with that part's carriers |
+| Parts-list row, or a balloon of its part | the set of its node when it names one; every carrier of its balloon |
+| General-notes row, or a flag of its note | every carrier of its flag |
+| Attention row, or a diamond of its item | every carrier of its diamond; the actor chip it names |
+| Actor chip | every Item, Box, Pipe, Tee arm, Tee, Link, Step (by lane), rung, attention row and parts row that acts for the actor |
+| Legend entry | every line use whose legend key is the entry's (section 13.1 rule 8) |
+
+A source whose set holds nothing beyond itself and its framing Boxes has no rule, so hovering a how-to, or an Item with no line, mark or part, changes nothing. When `hover_rules` is not empty the block holds `F > :not([data-id]), [data-row] { transition: opacity 0.15s ease-out; }`, where `F` is `:is([data-tag="Pcard"],[data-tag="Zone"],…,[data-tag="Link"])` over the fading tags, and then one rule per entry on one line, sources in geometry order, then links, then rows in list order:
 
 ```css
-svg:has([data-id="P"]:hover, [id="A"]:target) [data-tag="Link"]:not([data-from="P"]):not([data-to="P"]), svg:has([data-id="P"]:hover, [id="A"]:target) [data-tag="Pcard"]:not([data-id="P"]) { opacity: 0.2; }
+svg:has(S) F:not([data-id="G1"]):not([data-id="G2"]) > :not([data-id]), svg:has(S) [data-row]:not([data-row="R1"]) { opacity: 0.2; }
 ```
 
-where `P` is the item's pointer and `A` its `id`, each a CSS string with `"`, `\` and newline escaped, and the line escaped for XML content. While the pointer rests on the item, or the URL fragment names it (`figure.svg#api` opens with `api` highlighted), every link that does not end on it and every other Item fades; the items at the far ends of its links fade with the rest and its links stay drawn up to them. Pipes, zones and chrome keep their opacity. An Item with no link has no rule, so hovering it changes nothing. A document with no text and no linked Item is written as `render_svg` returned it. Neither block reaches the PNG, the measured JSON or a center fixture.
+`S` is `[data-id="H"] > :not([data-id], [data-mark]):hover, [id="A"]:target` for a group source `H` and `[data-row="R"]:hover, [data-mark="R"]:hover, [id="A"]:target` for a row `R`; binding to the source's own elements keeps a Box from firing when one of its Items is hovered. `G1`, `G2` and so on are the kept groups and `R1` the kept rows, sorted, one `:not()` each. Every value is a CSS string with `"`, `\` and newline escaped, and the line is escaped for XML content (`&` and `<`). The block is 9 KB to 68 KB without the fonts across the examples, onepager the largest. A document with no text and no rule is written as `render_svg` returned it. Neither block reaches the PNG, the measured JSON or a center fixture.
 
 ### 5.3 PNG
 
@@ -2137,7 +2161,7 @@ All tests except the wrap-epsilon regression use `FixedMetricsMeasurer::default(
 - SVG parses with usvg. There is one `<g data-id>` per geometry node, in the same order with the same pointers. The only `http` substring is the namespace URI.
 - Every `<text>` has `xml:space="preserve"` and `font-family="Inter"` with no fallback list. `letter-spacing` is present exactly for the styles with nonzero spacing.
 - The SVG `render` writes holds one `@font-face` per weight its `<text>` elements use and none for another, each decoding to the bundled file of that weight: hybrid-ai uses 400, 600, 700 and 800, design-brief and hero-iso 400, 700 and 800 (`the_svg_embeds_a_font_face_for_each_weight_its_text_uses_and_no_other` in `crates/stencil-cli/tests/cli.rs`).
-- The SVG `render` writes holds one hover rule per Item at a link end and none for another Item, every link group's `data-from` and `data-to` name a node group's `data-id`, every `id` is unique, and the SVG `render_svg` returns holds no `<style>`: over onepager, org, onprem-iso and g7 that is 23 links, 40 Items, 15 rules and 25 Items without one (`the_svg_highlights_each_linked_item_on_hover_and_the_resvg_input_does_not` in `crates/stencil-cli/tests/cli.rs`). On a small page an Item keeps its own `id`, an Item without one or with the id `arrow-center-blue` takes the pointer form, and the marker keeps its id (`each_link_group_names_its_end_pointers_and_each_item_group_its_anchor` in `crates/stencil-render/tests/links.rs`).
+- Across the 16 examples the written SVG holds 376 hover rules, one per source at most: each source exists with the `id` its rule names, keeps itself, and keeps only groups and rows the SVG holds; every `id` is unique, every `data-from`, `data-to` and `data-mark` names a group or row the SVG holds, no how-to has a rule, and the SVG `render_svg` returns holds no `<style>` (`every_hover_rule_names_units_the_written_svg_holds_and_the_resvg_input_has_none` in `crates/stencil-cli/tests/cli.rs`). On onepager the item `api`, its parts row, the first attention item, the second actor chip, the first legend entry, the Box `evaluation-path` and the first general note keep the exact sets the section 5.2 table gives, 72 kept units in all (`onepager_keeps_the_related_set_of_each_kind_of_element`). On a small page an Item keeps its own `id`, an Item without one or with the id `arrow-center-blue` takes the pointer form, the marker keeps its id, an item keeps its links and their far ends, and the item with no link has no rule (`each_link_group_names_its_end_pointers_and_each_item_group_its_anchor_and_far_ends` in `crates/stencil-render/tests/links.rs`).
 - Icons: for every bundled pack, each data URI decodes to bytes whose SHA-256 equals the pack's section 8.2 table, which has one row per icon of the pack and fails when it has none. A render of a Pcard for each gcp icon parses.
 - Colors: for each ZoneKind the rect fill, stroke, stroke width and dasharray match section 2.4. For each PipeKind the wire color and dasharray match section 5.2, and a Tee of that kind draws its spine, and a legend entry of that kind its swatch `<line>`, in the same color and dasharray. A `deny` Tee's hub has stroke #F4C7C3 and text fill #C5221F.
 - Numbers: no attribute value has more than 2 decimals, and `-0` never appears. `format_number` gives `Integer(0)` for -0.0 and -0.001, `Integer(1320)` for 1320.0, `Integer(652)` for 652.004 and `Decimal(652.4)` for 652.4.
@@ -2333,7 +2357,7 @@ Checks, in section 6 terms, examined counts included:
 
 Rendering: each route is a `<polyline>` (or `<path>` with `L` commands) in the wire color and line style of its kind, with an arrowhead as a filled triangle, 10 px long and 8 px wide, at each end the `arrow` value names, drawn with a `<marker>` per kind and theme. A deny line ends in a stop plate there instead (`EndCap::StopPlate`), so it never reads as a permitted path: a filled `<rect>` in the wire color, `STOP_PLATE_WIDTH_PX` = 16 across the line and `STOP_PLATE_THICKNESS_PX` = 3 along it, its outer face on the attach point and so on the endpoint's outline. The arrow stub still applies, so the plate stands square to a straight approach. It is the flat form of the iso plate of section 12.3 rule 5, wider against the 8 px arrowhead than the iso proportion so it reads at deck size, and it has no marker. The tag is drawn exactly like a pipe tag. Links are drawn after every node, so they paint over zone fills and never under them. The measured JSON gains `links` with the routed points, tag box and status (section 5.4).
 
-SVG structure: after the page group closes, one `<g data-id="/links/<i>" data-tag="Link" data-kind="<kind>" data-from="<pointer>" data-to="<pointer>">` per route in link order, where `data-from` and `data-to` hold the `data-id` of the node the link's `from` and `to` name. Inside it, in order:
+SVG structure: after the page group closes, one `<g id="_links_<i>" data-id="/links/<i>" data-tag="Link" data-kind="<kind>" data-from="<pointer>" data-to="<pointer>">` per route in link order, where `data-from` and `data-to` hold the `data-id` of the node the link's `from` and `to` name. Inside it, in order:
 
 - A `<path d="M x y L x y ..." fill="none">` with the kind's stroke and `stroke-linejoin="round"`, each bend rounded as [section 11.6](#116-link-corners) says. At an arrowed end the path stops 10 px short of the attach point (3 px, the plate's thickness, on a deny line), or at the previous corner when the end segment is shorter, so the stroke ends under the arrowhead's base as a pipe wire does.
 - One unstroked `<line>` per arrowhead from its base to its tip on the endpoint box edge, carrying `marker-end` with the `arrow-<theme>-<kind>` marker that pipes use, or on a deny line one stop plate `<rect>`. The marker set in `<defs>` covers every kind but deny used by an arrowed Pipe, Tee arm or link.

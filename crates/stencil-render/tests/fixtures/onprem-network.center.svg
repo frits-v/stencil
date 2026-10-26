@@ -13,14 +13,14 @@
       <text x="20" y="82.53" xml:space="preserve" font-family="Inter" font-size="13" font-weight="400" fill="#5F6368">The core switch trunks the staff and server VLANs to the edge firewall, which routes them to the DMZ and the transit VLAN. Traffic that starts in the DMZ never reaches the inside zone.</text>
     </g>
     <g data-id="/body" data-tag="Body">
-      <g data-id="/body/0" data-tag="Zone" data-kind="system">
+      <g id="_body_0" data-id="/body/0" data-tag="Zone" data-kind="system">
         <path d="M 24 101.6 H 1296 A 4 4 0 0 1 1300 105.6 V 516.2 A 10 10 0 0 1 1290 526.2 H 30 A 10 10 0 0 1 20 516.2 V 105.6 A 4 4 0 0 1 24 101.6 Z" fill="#FFFFFF"/>
         <rect x="23" y="104.6" width="1274" height="35.6" fill="#1A73E8"/>
         <rect x="23" y="140.2" width="1274" height="383" fill="#FAFBFC"/>
         <path d="M 24 103.1 H 1296 A 2.5 2.5 0 0 1 1298.5 105.6 V 516.2 A 8.5 8.5 0 0 1 1290 524.7 H 30 A 8.5 8.5 0 0 1 21.5 516.2 V 105.6 A 2.5 2.5 0 0 1 24 103.1 Z" fill="none" stroke="#1A73E8" stroke-width="3"/>
         <text x="39" y="128.95" xml:space="preserve" font-family="Inter" font-size="18" font-weight="700" letter-spacing="0.18" fill="#FFFFFF">Head office site</text>
         <g data-id="/body/0/children/0" data-tag="Row">
-          <g data-id="/body/0/children/0/children/0" data-tag="Zone" data-kind="boundary">
+          <g id="_body_0_children_0_children_0" data-id="/body/0/children/0/children/0" data-tag="Zone" data-kind="boundary">
             <rect x="38" y="157.2" width="384.77" height="351" rx="7" fill="none" stroke="#5F6368" stroke-width="2" stroke-dasharray="6 5"/>
             <text x="49" y="179.77" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#5F6368">Inside zone</text>
             <g id="_body_0_children_0_children_0_children_0" data-id="/body/0/children/0/children/0/children/0" data-tag="Pcard">
@@ -29,7 +29,7 @@
               <text x="60.5" y="226.27" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">Layer 3, routes between VLANs</text>
               <text x="68.5" y="249.57" xml:space="preserve" font-family="Inter" font-size="12" font-weight="600" fill="#5F6368">• sw-core-01</text>
             </g>
-            <g data-id="/body/0/children/0/children/0/children/1" data-tag="Zone" data-kind="group-a">
+            <g id="_body_0_children_0_children_0_children_1" data-id="/body/0/children/0/children/0/children/1" data-tag="Zone" data-kind="group-a">
               <rect x="49.75" y="273.55" width="361.27" height="106.7" rx="7.25" fill="#D2E3FC" stroke="#BDC1C6" stroke-width="1.5"/>
               <text x="62.5" y="297.87" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#5F6368">VLAN 10 · staff</text>
               <g data-id="/body/0/children/0/children/0/children/1/children/0" data-tag="Row">
@@ -45,7 +45,7 @@
                 </g>
               </g>
             </g>
-            <g data-id="/body/0/children/0/children/0/children/2" data-tag="Zone" data-kind="group-b">
+            <g id="_body_0_children_0_children_0_children_2" data-id="/body/0/children/0/children/0/children/2" data-tag="Zone" data-kind="group-b">
               <rect x="49.75" y="389.75" width="361.27" height="106.7" rx="7.25" fill="#FCE4EC" stroke="#BDC1C6" stroke-width="1.5"/>
               <text x="62.5" y="414.07" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#5F6368">VLAN 20 · servers</text>
               <g data-id="/body/0/children/0/children/0/children/2/children/0" data-tag="Row">
@@ -63,7 +63,7 @@
             </g>
           </g>
           <g data-id="/body/0/children/0/children/1" data-tag="Col">
-            <g data-id="/body/0/children/0/children/1/children/0" data-tag="Pipe" data-kind="blue">
+            <g id="_body_0_children_0_children_1_children_0" data-id="/body/0/children/0/children/1/children/0" data-tag="Pipe" data-kind="blue" data-from="/body/0/children/0/children/0" data-to="/body/0/children/0/children/2/children/0">
               <circle cx="435.77" cy="281.3" r="4" fill="#1A73E8"/>
               <line x1="439.77" y1="281.3" x2="463.96" y2="281.3" stroke="#1A73E8" stroke-width="2"/>
               <rect x="464.71" y="257.95" width="77.66" height="46.7" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
@@ -72,7 +72,7 @@
               <text x="478.56" y="276.87" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">VLAN 10</text>
               <text x="473.46" y="294.47" xml:space="preserve" font-family="Inter" font-size="12" font-weight="600" fill="#5F6368">staff trunk</text>
             </g>
-            <g data-id="/body/0/children/0/children/1/children/1" data-tag="Pipe" data-kind="pink">
+            <g id="_body_0_children_0_children_1_children_1" data-id="/body/0/children/0/children/1/children/1" data-tag="Pipe" data-kind="pink" data-from="/body/0/children/0/children/0" data-to="/body/0/children/0/children/2/children/0">
               <circle cx="435.77" cy="341.5" r="4" fill="#C2185B"/>
               <line x1="439.77" y1="341.5" x2="458.61" y2="341.5" stroke="#C2185B" stroke-width="2"/>
               <rect x="459.36" y="318.15" width="88.36" height="46.7" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
@@ -81,7 +81,7 @@
               <text x="477.37" y="337.07" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">VLAN 20</text>
               <text x="468.11" y="354.67" xml:space="preserve" font-family="Inter" font-size="12" font-weight="600" fill="#5F6368">server trunk</text>
             </g>
-            <g data-id="/body/0/children/0/children/1/children/2" data-tag="Pipe" data-kind="deny">
+            <g id="_body_0_children_0_children_1_children_2" data-id="/body/0/children/0/children/1/children/2" data-tag="Pipe" data-kind="deny" data-from="/body/0/children/0/children/0" data-to="/body/0/children/0/children/2/children/0">
               <line x1="441.77" y1="392.9" x2="434.77" y2="392.9" stroke="#C5221F" stroke-width="2"/>
               <rect x="431.77" y="384.9" width="3" height="16" fill="#C5221F"/>
               <line x1="441.77" y1="392.9" x2="453.77" y2="392.9" stroke="#C5221F" stroke-width="2" stroke-dasharray="6 5"/>
@@ -100,7 +100,7 @@
             </g>
           </g>
           <g data-id="/body/0/children/0/children/3" data-tag="Col">
-            <g data-id="/body/0/children/0/children/3/children/0" data-tag="Pipe" data-kind="solid-3">
+            <g id="_body_0_children_0_children_3_children_0" data-id="/body/0/children/0/children/3/children/0" data-tag="Pipe" data-kind="solid-3" data-from="/body/0/children/0/children/2/children/0" data-to="/body/0/children/0/children/4">
               <circle cx="776.7" cy="302.6" r="4" fill="#007D78"/>
               <line x1="780.7" y1="302.6" x2="794.7" y2="302.6" stroke="#007D78" stroke-width="2"/>
               <rect x="795.45" y="279.25" width="70.03" height="46.7" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
@@ -109,7 +109,7 @@
               <text x="804.2" y="298.17" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">VLAN 30</text>
               <text x="816.68" y="315.77" xml:space="preserve" font-family="Inter" font-size="12" font-weight="600" fill="#5F6368">DMZ</text>
             </g>
-            <g data-id="/body/0/children/0/children/3/children/1" data-tag="Pipe" data-kind="solid-4">
+            <g id="_body_0_children_0_children_3_children_1" data-id="/body/0/children/0/children/3/children/1" data-tag="Pipe" data-kind="solid-4" data-from="/body/0/children/0/children/2/children/0" data-to="/body/0/children/0/children/4">
               <circle cx="776.7" cy="362.8" r="4" fill="#A36E14"/>
               <line x1="780.7" y1="362.8" x2="794.83" y2="362.8" stroke="#A36E14" stroke-width="2"/>
               <rect x="795.58" y="339.45" width="69.78" height="46.7" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
@@ -119,10 +119,10 @@
               <text x="811.92" y="375.97" xml:space="preserve" font-family="Inter" font-size="12" font-weight="600" fill="#5F6368">transit</text>
             </g>
           </g>
-          <g data-id="/body/0/children/0/children/4" data-tag="Zone" data-kind="boundary">
+          <g id="_body_0_children_0_children_4" data-id="/body/0/children/0/children/4" data-tag="Zone" data-kind="boundary">
             <rect x="897.23" y="157.2" width="384.77" height="351" rx="7" fill="none" stroke="#5F6368" stroke-width="2" stroke-dasharray="6 5"/>
             <text x="908.23" y="179.77" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#5F6368">DMZ</text>
-            <g data-id="/body/0/children/0/children/4/children/0" data-tag="Zone" data-kind="group-c">
+            <g id="_body_0_children_0_children_4_children_0" data-id="/body/0/children/0/children/4/children/0" data-tag="Zone" data-kind="group-c">
               <rect x="908.98" y="191.35" width="361.27" height="106.7" rx="7.25" fill="#E1FCFD" stroke="#BDC1C6" stroke-width="1.5"/>
               <text x="921.73" y="215.67" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#004845">VLAN 30 · public services</text>
               <g data-id="/body/0/children/0/children/4/children/0/children/0" data-tag="Row">
@@ -138,7 +138,7 @@
                 </g>
               </g>
             </g>
-            <g data-id="/body/0/children/0/children/4/children/1" data-tag="Zone" data-kind="group-d">
+            <g id="_body_0_children_0_children_4_children_1" data-id="/body/0/children/0/children/4/children/1" data-tag="Zone" data-kind="group-d">
               <rect x="908.98" y="307.55" width="361.27" height="122.1" rx="7.25" fill="#FAF9CA" stroke="#BDC1C6" stroke-width="1.5"/>
               <text x="921.73" y="331.87" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#5A3900">VLAN 99 · transit</text>
               <g id="_body_0_children_0_children_4_children_1_children_0" data-id="/body/0/children/0/children/4/children/1/children/0" data-tag="Pcard">
@@ -153,27 +153,27 @@
       </g>
     </g>
     <g data-id="/legend" data-tag="Legend">
-      <g data-id="/legend/0" data-tag="LegendEntry" data-kind="blue">
+      <g id="_legend_0" data-id="/legend/0" data-tag="LegendEntry" data-kind="blue">
         <line x1="20" y1="543.4" x2="46" y2="543.4" stroke="#1A73E8" stroke-width="2"/>
         <text x="52" y="547.77" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">Solid blue</text>
         <text x="115.56" y="547.77" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">VLAN 10, staff</text>
       </g>
-      <g data-id="/legend/1" data-tag="LegendEntry" data-kind="pink">
+      <g id="_legend_1" data-id="/legend/1" data-tag="LegendEntry" data-kind="pink">
         <line x1="211.77" y1="543.4" x2="237.77" y2="543.4" stroke="#C2185B" stroke-width="2"/>
         <text x="243.77" y="547.77" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">Solid pink</text>
         <text x="307.15" y="547.77" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">VLAN 20, servers</text>
       </g>
-      <g data-id="/legend/2" data-tag="LegendEntry" data-kind="solid-3">
+      <g id="_legend_2" data-id="/legend/2" data-tag="LegendEntry" data-kind="solid-3">
         <line x1="422.71" y1="543.4" x2="448.71" y2="543.4" stroke="#007D78" stroke-width="2"/>
         <text x="454.71" y="547.77" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">Solid teal</text>
         <text x="514.6" y="547.77" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">VLAN 30, DMZ</text>
       </g>
-      <g data-id="/legend/3" data-tag="LegendEntry" data-kind="solid-4">
+      <g id="_legend_3" data-id="/legend/3" data-tag="LegendEntry" data-kind="solid-4">
         <line x1="614.92" y1="543.4" x2="640.92" y2="543.4" stroke="#A36E14" stroke-width="2"/>
         <text x="646.92" y="547.77" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">Solid amber</text>
         <text x="722.56" y="547.77" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">VLAN 99, transit</text>
       </g>
-      <g data-id="/legend/4" data-tag="LegendEntry" data-kind="deny">
+      <g id="_legend_4" data-id="/legend/4" data-tag="LegendEntry" data-kind="deny">
         <line x1="831.17" y1="543.4" x2="857.17" y2="543.4" stroke="#C5221F" stroke-width="2" stroke-dasharray="6 5"/>
         <rect x="854.17" y="537.4" width="3" height="12" fill="#C5221F"/>
         <text x="863.17" y="547.77" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">Dashed red</text>

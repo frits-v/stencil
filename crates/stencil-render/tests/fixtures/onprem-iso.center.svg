@@ -14,7 +14,7 @@
       <text x="20" y="82.53" xml:space="preserve" font-family="Inter" font-size="13" font-weight="400" fill="#5F6368">The core switch trunks VLAN 10 and VLAN 20 to the edge firewall, which carries them on to the DMZ and the transit VLAN. Traffic from the DMZ never reaches the inside zone.</text>
     </g>
     <g data-id="/body" data-tag="Body">
-      <g data-id="/body/0" data-tag="Zone" data-kind="system">
+      <g id="_body_0" data-id="/body/0" data-tag="Zone" data-kind="system">
         <polygon points="20,719.34 1492.24,1569.34 1492.24,1563.34 20,713.34" fill="#1A73E8"/>
         <polygon points="2551.81,957.6 1492.24,1569.34 1492.24,1563.34 2551.81,951.6" fill="#1257B3"/>
         <polygon points="1079.56,101.6 2551.81,951.6 1492.24,1563.34 20,713.34" fill="#FAFBFC" stroke="#1A73E8" stroke-width="1.5" stroke-linejoin="round"/>
@@ -22,13 +22,13 @@
           <text x="69" y="159.14" xml:space="preserve" font-family="Inter" font-size="25.2" font-weight="700" letter-spacing="0.25" fill="#1257B3">Head office site</text>
         </g>
         <g data-id="/body/0/children/0" data-tag="Row">
-          <g data-id="/body/0/children/0/children/0" data-tag="Zone" data-kind="boundary">
+          <g id="_body_0_children_0_children_0" data-id="/body/0/children/0/children/0" data-tag="Zone" data-kind="boundary">
             <polygon points="991.02,216.22 1352.58,424.97 460.37,940.09 98.81,731.34" fill="none" stroke="#5F6368" stroke-width="2" stroke-dasharray="6 5" stroke-linejoin="round"/>
             <g data-plane="6" data-axis="x" transform="matrix(0.87 0.5 -0.87 0.5 1150.23 40.8)">
               <text x="121" y="319.3" xml:space="preserve" font-family="Inter" font-size="15" font-weight="700" fill="#5F6368">Inside zone</text>
             </g>
             <g data-id="/body/0/children/0/children/0/children/0" data-tag="Col">
-              <g data-id="/body/0/children/0/children/0/children/0/children/0" data-tag="Zone" data-kind="group-a">
+              <g id="vlan10" data-id="/body/0/children/0/children/0/children/0/children/0" data-tag="Zone" data-kind="group-a">
                 <polygon points="654.28,448.14 966.47,628.39 966.47,622.39 654.28,442.14" fill="#ACCBF9"/>
                 <polygon points="1237.4,471.97 966.47,628.39 966.47,622.39 1237.4,465.97" fill="#85B3F7"/>
                 <polygon points="925.2,285.72 1237.4,465.97 966.47,622.39 654.28,442.14" fill="#D2E3FC"/>
@@ -69,7 +69,7 @@
                   <text x="251.99" y="853.38" xml:space="preserve" font-family="Inter" font-size="15.6" font-weight="600" fill="#5F6368">• sw-core-01</text>
                 </g>
               </g>
-              <g data-id="/body/0/children/0/children/0/children/0/children/2" data-tag="Zone" data-kind="group-b">
+              <g id="vlan20" data-id="/body/0/children/0/children/0/children/0/children/2" data-tag="Zone" data-kind="group-b">
                 <polygon points="148.17,740.34 460.37,920.59 460.37,914.59 148.17,734.34" fill="#F8BFD2"/>
                 <polygon points="746.88,755.17 460.37,920.59 460.37,914.59 746.88,749.17" fill="#F49BB8"/>
                 <polygon points="434.69,568.92 746.88,749.17 460.37,914.59 148.17,734.34" fill="#FCE4EC"/>
@@ -103,7 +103,7 @@
           </g>
           <g data-id="/body/0/children/0/children/1" data-tag="Col">
             <g data-id="/body/0/children/0/children/1/children/0" data-tag="Col">
-              <g data-id="/body/0/children/0/children/1/children/0/children/0" data-tag="Pipe" data-kind="blue">
+              <g id="_body_0_children_0_children_1_children_0_children_0" data-id="/body/0/children/0/children/1/children/0/children/0" data-tag="Pipe" data-kind="blue" data-from="/body/0/children/0/children/0/children/0/children/1" data-to="/body/0/children/0/children/2/children/0">
                 <polygon points="820.89,567.19 824.35,569.19 812.23,576.19 808.76,574.19" fill="#202124" fill-opacity="0.2" filter="url(#stencil-shadow)"/>
                 <polygon points="808.76,564.19 808.97,562.26 809.58,560.22 810.54,558.22 811.8,556.38 813.26,554.84 814.83,553.69 816.4,553.03 817.86,552.88 819.11,553.27 820.08,554.16 820.68,555.5 820.89,557.19 820.68,559.12 820.08,561.16 819.11,563.17 817.86,565.01 816.4,566.55 814.83,567.69 813.26,568.36 811.8,568.51 810.54,568.12 809.58,567.22 808.97,565.89" fill="#1A73E8"/>
                 <polygon points="819.11,553.27 822.58,555.27 818.29,562.69 814.83,560.69" fill="#5295EE"/>
@@ -123,7 +123,7 @@
                   <text x="592.04" y="724.21" xml:space="preserve" font-family="Inter" font-size="15.6" font-weight="700" fill="#202124">VLAN 10</text>
                 </g>
               </g>
-              <g data-id="/body/0/children/0/children/1/children/0/children/1" data-tag="Pipe" data-kind="pink">
+              <g id="_body_0_children_0_children_1_children_0_children_1" data-id="/body/0/children/0/children/1/children/0/children/1" data-tag="Pipe" data-kind="pink" data-from="/body/0/children/0/children/0/children/0/children/1" data-to="/body/0/children/0/children/2/children/0">
                 <polygon points="772.15,595.33 775.61,597.33 763.49,604.33 760.02,602.33" fill="#202124" fill-opacity="0.2" filter="url(#stencil-shadow)"/>
                 <polygon points="760.02,592.33 760.23,590.4 760.84,588.36 761.8,586.36 763.06,584.52 764.52,582.98 766.09,581.83 767.66,581.17 769.12,581.02 770.37,581.41 771.34,582.3 771.94,583.64 772.15,585.33 771.94,587.26 771.34,589.3 770.37,591.31 769.12,593.15 767.66,594.69 766.09,595.83 764.52,596.5 763.06,596.65 761.8,596.26 760.84,595.36 760.23,594.03" fill="#C2185B"/>
                 <polygon points="770.37,581.41 773.84,583.41 769.55,590.83 766.09,588.83" fill="#E63279"/>
@@ -163,7 +163,7 @@
           </g>
           <g data-id="/body/0/children/0/children/3" data-tag="Col">
             <g data-id="/body/0/children/0/children/3/children/0" data-tag="Col">
-              <g data-id="/body/0/children/0/children/3/children/0/children/0" data-tag="Pipe" data-kind="solid-3">
+              <g id="_body_0_children_0_children_3_children_0_children_0" data-id="/body/0/children/0/children/3/children/0/children/0" data-tag="Pipe" data-kind="solid-3" data-from="/body/0/children/0/children/2/children/0" data-to="/body/0/children/0/children/4/children/1">
                 <polygon points="1348.94,920.38 1352.41,922.38 1340.28,929.38 1336.82,927.38" fill="#202124" fill-opacity="0.2" filter="url(#stencil-shadow)"/>
                 <polygon points="1336.82,917.38 1337.03,915.44 1337.63,913.41 1338.59,911.4 1339.85,909.56 1341.31,908.02 1342.88,906.88 1344.45,906.21 1345.91,906.06 1347.17,906.45 1348.13,907.34 1348.74,908.68 1348.94,910.38 1348.74,912.31 1348.13,914.34 1347.17,916.35 1345.91,918.19 1344.45,919.73 1342.88,920.88 1341.31,921.54 1339.85,921.69 1338.59,921.3 1337.63,920.41 1337.03,919.07" fill="#007D78"/>
                 <polygon points="1347.17,906.45 1350.63,908.45 1346.35,915.88 1342.88,913.88" fill="#00BAB3"/>
@@ -183,7 +183,7 @@
                   <text x="1099.01" y="772.52" xml:space="preserve" font-family="Inter" font-size="15.6" font-weight="700" fill="#202124">VLAN 30</text>
                 </g>
               </g>
-              <g data-id="/body/0/children/0/children/3/children/0/children/1" data-tag="Pipe" data-kind="deny">
+              <g id="_body_0_children_0_children_3_children_0_children_1" data-id="/body/0/children/0/children/3/children/0/children/1" data-tag="Pipe" data-kind="deny" data-from="/body/0/children/0/children/2/children/0" data-to="/body/0/children/0/children/4/children/1">
                 <polygon points="1307.13,952.52 1578.38,1109.12 1569.72,1114.12 1298.47,957.52" fill="#202124" fill-opacity="0.2" filter="url(#stencil-shadow)"/>
                 <polygon points="1298.47,949.52 1298.62,948.14 1299.05,946.68 1299.74,945.25 1300.64,943.94 1301.68,942.83 1302.8,942.02 1303.92,941.54 1304.97,941.44 1305.86,941.71 1306.55,942.35 1306.98,943.31 1307.13,944.52 1306.98,945.89 1306.55,947.35 1305.86,948.78 1304.97,950.1 1303.92,951.2 1302.8,952.02 1301.68,952.49 1300.64,952.6 1299.74,952.32 1299.05,951.68 1298.62,950.72" fill="#FFFFFF" stroke="#C5221F" stroke-width="1.5" stroke-dasharray="6 5"/>
                 <polygon points="1305.86,941.71 1577.11,1098.32 1570.98,1108.92 1299.74,952.32" fill="#FFFFFF" stroke="#C5221F" stroke-width="1.5" stroke-dasharray="6 5"/>
@@ -198,12 +198,12 @@
               </g>
             </g>
           </g>
-          <g data-id="/body/0/children/0/children/4" data-tag="Zone" data-kind="boundary">
+          <g id="dmz" data-id="/body/0/children/0/children/4" data-tag="Zone" data-kind="boundary">
             <polygon points="2022.9,811.97 2384.46,1020.72 1492.24,1535.84 1130.68,1327.09" fill="none" stroke="#5F6368" stroke-width="2" stroke-dasharray="6 5" stroke-linejoin="round"/>
             <g data-plane="6" data-axis="x" transform="matrix(0.87 0.5 -0.87 0.5 1150.23 40.8)">
               <text x="1312.51" y="319.3" xml:space="preserve" font-family="Inter" font-size="15" font-weight="700" fill="#5F6368">DMZ</text>
             </g>
-            <g data-id="/body/0/children/0/children/4/children/0" data-tag="Zone" data-kind="group-d">
+            <g id="vlan99" data-id="/body/0/children/0/children/4/children/0" data-tag="Zone" data-kind="group-d">
               <polygon points="1684.66,1044.75 1996.86,1225 1996.86,1219 1684.66,1038.75" fill="#F6F5A5"/>
               <polygon points="2284.86,1058.72 1996.86,1225 1996.86,1219 2284.86,1052.72" fill="#F3F17F"/>
               <polygon points="1972.67,872.47 2284.86,1052.72 1996.86,1219 1684.66,1038.75" fill="#FAF9CA"/>
@@ -222,7 +222,7 @@
                 </g>
               </g>
             </g>
-            <g data-id="/body/0/children/0/children/4/children/1" data-tag="Zone" data-kind="group-c">
+            <g id="vlan30" data-id="/body/0/children/0/children/4/children/1" data-tag="Zone" data-kind="group-c">
               <polygon points="1401.61,1208.17 1713.81,1388.42 1713.81,1382.42 1401.61,1202.17" fill="#BBF8FA"/>
               <polygon points="1984.73,1232 1713.81,1388.42 1713.81,1382.42 1984.73,1226" fill="#94F4F8"/>
               <polygon points="1672.54,1045.75 1984.73,1226 1713.81,1382.42 1401.61,1202.17" fill="#E1FCFD"/>
@@ -257,27 +257,27 @@
       </g>
     </g>
     <g data-id="/legend" data-tag="Legend">
-      <g data-id="/legend/0" data-tag="LegendEntry" data-kind="blue">
+      <g id="_legend_0" data-id="/legend/0" data-tag="LegendEntry" data-kind="blue">
         <line x1="20" y1="1666.54" x2="46" y2="1666.54" stroke="#1A73E8" stroke-width="3.75"/>
         <text x="52" y="1670.91" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">Solid blue</text>
         <text x="115.56" y="1670.91" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">VLAN 10, staff</text>
       </g>
-      <g data-id="/legend/1" data-tag="LegendEntry" data-kind="pink">
+      <g id="_legend_1" data-id="/legend/1" data-tag="LegendEntry" data-kind="pink">
         <line x1="211.77" y1="1666.54" x2="237.77" y2="1666.54" stroke="#C2185B" stroke-width="2.5"/>
         <text x="243.77" y="1670.91" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">Solid pink</text>
         <text x="307.15" y="1670.91" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">VLAN 20, servers</text>
       </g>
-      <g data-id="/legend/2" data-tag="LegendEntry" data-kind="solid-3">
+      <g id="_legend_2" data-id="/legend/2" data-tag="LegendEntry" data-kind="solid-3">
         <line x1="422.71" y1="1666.54" x2="448.71" y2="1666.54" stroke="#007D78" stroke-width="2.5"/>
         <text x="454.71" y="1670.91" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">Solid teal</text>
         <text x="514.6" y="1670.91" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">VLAN 30, DMZ</text>
       </g>
-      <g data-id="/legend/3" data-tag="LegendEntry" data-kind="solid-4">
+      <g id="_legend_3" data-id="/legend/3" data-tag="LegendEntry" data-kind="solid-4">
         <line x1="614.92" y1="1666.54" x2="640.92" y2="1666.54" stroke="#A36E14" stroke-width="2.5"/>
         <text x="646.92" y="1670.91" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">Solid amber</text>
         <text x="722.56" y="1670.91" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">VLAN 99, transit</text>
       </g>
-      <g data-id="/legend/4" data-tag="LegendEntry" data-kind="deny">
+      <g id="_legend_4" data-id="/legend/4" data-tag="LegendEntry" data-kind="deny">
         <line x1="831.17" y1="1666.54" x2="857.17" y2="1666.54" stroke="#C5221F" stroke-width="2.5" stroke-dasharray="6 5"/>
         <rect x="854.17" y="1660.54" width="3" height="12" fill="#C5221F"/>
         <text x="863.17" y="1670.91" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">Dashed red</text>
@@ -285,7 +285,7 @@
       </g>
     </g>
   </g>
-  <g data-id="/links/0" data-tag="Link" data-kind="solid-4" data-from="/body/0/children/0/children/2/children/0" data-to="/body/0/children/0/children/4/children/0/children/0">
+  <g id="_links_0" data-id="/links/0" data-tag="Link" data-kind="solid-4" data-from="/body/0/children/0/children/2/children/0" data-to="/body/0/children/0/children/4/children/0/children/0">
     <polygon points="1318.96,807.55 1473.98,718.05 1478.31,720.55 1323.29,810.05" fill="#202124" fill-opacity="0.2" filter="url(#stencil-shadow)"/>
     <polygon points="1478.31,715.05 1478.23,714.36 1478.02,713.64 1477.67,712.92 1477.23,712.26 1476.7,711.71 1476.14,711.3 1475.58,711.07 1475.06,711.01 1474.61,711.15 1474.27,711.47 1474.05,711.95 1473.98,712.55 1474.05,713.24 1474.27,713.97 1474.61,714.69 1475.06,715.34 1475.58,715.9 1476.14,716.3 1476.7,716.54 1477.23,716.59 1477.67,716.46 1478.02,716.14 1478.23,715.66" fill="#A36E14"/>
     <polygon points="1319.59,800.65 1474.61,711.15 1476.14,713.8 1321.12,803.3" fill="#DA931B"/>

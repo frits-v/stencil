@@ -330,42 +330,49 @@ pub fn entry_key(entry: &crate::document::LegendEntry) -> LegendKey {
     key.with_planned(entry.planned)
 }
 
-/// Each line use (every Pipe, Tee arm and Tee spine, and each of the first LINKS_MAX + 1
-/// links) and each of the first LEGEND_ENTRIES_MAX + 1 legend entries is one examined
-/// relation, keyed on (line, effective tint). Defects are listed uses first, in body order
-/// and then link order, then legend entries. The bounds cap the scans on a page that was
-/// never vetted. A `chrome: none` page whose uses share one key may leave the legend empty
-/// (section 13.7 rule 3).
-pub fn legend_consistency(page: &Page) -> CheckReport {
+/// One line use a legend entry keys: a Pipe, Tee arm, Tee spine or Link.
+#[derive(Debug, Clone, PartialEq)]
+pub struct LegendUse {
+    /// The Pipe, Tee arm or Tee node, or `/links/<i>`.
+    pub pointer: NodePointer,
+    pub key: LegendKey,
+    /// `Pipe`, `Tee arm`, `Tee spine` or `Link`.
+    pub user: &'static str,
+}
+
+/// Every line use of the page in body order, then link order: each Pipe, Tee arm and Tee
+/// spine, and each of the first LINKS_MAX + 1 links, keyed on its line, colour, form and
+/// planned state.
+pub fn line_uses(page: &Page) -> Vec<LegendUse> {
     let actors = PageActors::of(page);
-    let mut uses: Vec<(NodePointer, LegendKey, &'static str)> = Vec::new();
+    let mut uses: Vec<LegendUse> = Vec::new();
     let mut tee: Option<&crate::document::Tee> = None;
     for entry in body_nodes(page) {
         match entry.node {
             NodeRef::Node(Node::Pipe(pipe)) => {
                 let actor = actors.slot(actors.pipe_actor(pipe));
-                uses.push((
-                    entry.pointer,
-                    use_key(pipe.line, pipe.tint, pipe.form, actor).with_planned(pipe.planned),
-                    "Pipe",
-                ));
+                uses.push(LegendUse {
+                    pointer: entry.pointer,
+                    key: use_key(pipe.line, pipe.tint, pipe.form, actor).with_planned(pipe.planned),
+                    user: "Pipe",
+                });
             }
             NodeRef::TeeArm(arm) => {
                 let actor = tee.and_then(|tee| actors.slot(actors.arm_actor(tee, arm)));
-                uses.push((
-                    entry.pointer,
-                    use_key(arm.line, arm.tint, arm.form, actor).with_planned(arm.planned),
-                    "Tee arm",
-                ));
+                uses.push(LegendUse {
+                    pointer: entry.pointer,
+                    key: use_key(arm.line, arm.tint, arm.form, actor).with_planned(arm.planned),
+                    user: "Tee arm",
+                });
             }
             NodeRef::Node(Node::Tee(tee_node)) => {
                 tee = Some(tee_node);
                 let actor = actors.slot(actors.tee_actor(tee_node));
-                uses.push((
-                    entry.pointer,
-                    use_key(tee_node.line, tee_node.tint, PipeForm::Tube, actor),
-                    "Tee spine",
-                ));
+                uses.push(LegendUse {
+                    pointer: entry.pointer,
+                    key: use_key(tee_node.line, tee_node.tint, PipeForm::Tube, actor),
+                    user: "Tee spine",
+                });
             }
             NodeRef::Node(
                 Node::Row(_)
@@ -391,12 +398,26 @@ pub fn legend_consistency(page: &Page) -> CheckReport {
     let links_pointer = NodePointer::root().child("links");
     for (index, link) in page.links.iter().enumerate().take(LINKS_MAX + 1) {
         let actor = actors.slot(actors.link_actor(link));
-        uses.push((
-            links_pointer.index(index),
-            use_key(link.line, link.tint, PipeForm::Tube, actor).with_planned(link.planned),
-            "Link",
-        ));
+        uses.push(LegendUse {
+            pointer: links_pointer.index(index),
+            key: use_key(link.line, link.tint, PipeForm::Tube, actor).with_planned(link.planned),
+            user: "Link",
+        });
     }
+    uses
+}
+
+/// Each line use (every Pipe, Tee arm and Tee spine, and each of the first LINKS_MAX + 1
+/// links) and each of the first LEGEND_ENTRIES_MAX + 1 legend entries is one examined
+/// relation, keyed on (line, effective tint). Defects are listed uses first, in body order
+/// and then link order, then legend entries. The bounds cap the scans on a page that was
+/// never vetted. A `chrome: none` page whose uses share one key may leave the legend empty
+/// (section 13.7 rule 3).
+pub fn legend_consistency(page: &Page) -> CheckReport {
+    let uses: Vec<(NodePointer, LegendKey, &'static str)> = line_uses(page)
+        .into_iter()
+        .map(|legend_use| (legend_use.pointer, legend_use.key, legend_use.user))
+        .collect();
 
     let legend_examined = page.legend.len().min(LEGEND_ENTRIES_MAX + 1);
     let legend_keys: Vec<LegendKey> = page

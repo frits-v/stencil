@@ -760,3 +760,21 @@ fn neighbour_landing(
         None => (None, ""),
     }
 }
+
+/// The node the spine of the Tee at geometry index `tee` stands on: what `landing_box`
+/// finds across the spine's center in the Tee's left neighbour, else the neighbour itself,
+/// as the iso spine reach does; None when the Tee has no left neighbour.
+pub fn tee_spine_landing(geometry: &PageGeometry, tee: usize) -> Option<NodePointer> {
+    let children = children_by_parent(geometry);
+    let node = geometry.nodes.get(tee)?;
+    let center = node.bounds.y + node.bounds.height / 2.0;
+    let neighbours = pipe_ends(geometry, &children, tee, PipeDir::Horizontal);
+    neighbour_landing(
+        geometry,
+        &children,
+        (tee, PipeDir::Horizontal, center),
+        PipeEndSide::Start,
+        &neighbours,
+    )
+    .0
+}
