@@ -1,6 +1,6 @@
 # AWS icon pack provenance
 
-Where the files in `assets/icons/aws/` came from and what may be done with them.
+Where each file under `assets/icons/aws/` came from, so its bytes can be re-verified.
 
 ## Icons (`assets/icons/aws/*.svg`)
 
@@ -82,63 +82,3 @@ Mapping, verified 2026-10-25:
 
 Regenerate the check by unzipping the archive and comparing SHA-256 sums against
 this directory.
-
-### Stated terms
-
-The ZIP contains no LICENSE, README, or terms file. The usage guidance is in the
-companion PowerPoint toolkit the icons page links,
-`Microsoft-PPTx-toolkits_07312026.zip`, whose deck
-`AWS-Architecture-Icons-Deck_For-Light-BG_07312026.pptx` (Release
-24-2026.07.31) was read as slide text. Both sources were fetched 2026-10-25.
-
-<https://aws.amazon.com/architecture/icons/>, on the purpose of the download:
-
-> Architecture diagrams are a great way to communicate your design, deployment,
-> and topology. To help you build diagrams, this page has Amazon Web Services
-> (AWS) product icons, resources, and tools you can use. We allow customers and
-> partners to use these toolkits and assets to create architecture diagrams.
-> AWS architecture icons are designed to be simple, so you can easily use them
-> in diagrams. You can also put icons in materials like whitepapers,
-> presentations, data sheets, and posters.
-
-The icons deck, slide 5 ("About AWS Architecture Icons"):
-
-> Customers and partners can use AWS icons to create architecture diagrams. The
-> icons are basic in design so that you can incorporate them directly into your
-> whitepapers, presentations, datasheets, posters, or any technical material
-> that you want.
-
-The icons deck, slide 15 ("Icons"), on unaltered use:
-
-> DO: Use icons at their predefined size, color and format in diagrams. Scale
-> icons as needed for use in presentations. Hold down Shift while resizing.
-> DON'T: Crop service icons. Flip or rotate icons. Change icon shapes.
-
-The icons deck, slide 13, for training and certification diagrams:
-
-> All icon sizes are fixed and should not be altered. All colors for icons have
-> been accessibility tested and should not be altered.
-
-The icons deck, slide 17, on naming:
-
-> AWS or Amazon should always be accompanied by the service name.
->
-> DON'T: Use short forms without first mentioning the full service name
-> somewhere in the document.
-
-### Conclusion
-
-The terms let customers and partners use the icons to create architecture
-diagrams and to place them in whitepapers, presentations, data sheets, posters
-and other technical material, with each icon kept at its color and shape,
-uncropped, unflipped and unrotated, and scaled only in proportion. Stencil keeps
-the 46 files unaltered, places each one's original bytes in a data URI and
-scales it with the `<image>` element's equal width and height, on a product item
-whose subtitle names the service. The aws grammar's products table lists each
-service's full name before its short form, as slide 17 asks of a document.
-
-The terms grant use in diagrams and give no separate licence to redistribute the
-files on their own. The files are kept in this repository as the pack the aws
-grammar draws from, the same footing as the gcp pack. Re-check the icons page
-and the deck before any use outside architecture and technical figures; the
-package is reissued each quarter and icons are renamed between releases.
