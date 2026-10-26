@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Runs scripts/land.sh against a stub gh for each mergeable, draft and signature state it
+# Runs scripts/land.sh against a stub gh for each mergeable, draft, signature and behind-base state it
 # reads, and checks its exit status and the gh calls it made. Run from the repository root. Fails
 # when a case does not hold, and when no case ran.
 set -euo pipefail
