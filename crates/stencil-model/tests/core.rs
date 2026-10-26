@@ -18,20 +18,12 @@ use stencil_model::{
     validate_page,
 };
 
-const EXAMPLES: [(&str, &str); 7] = [
+const EXAMPLES: [(&str, &str); 5] = [
     ("g7", include_str!("../../../examples/g7.json")),
     ("hero-iso", include_str!("../../../examples/hero-iso.json")),
     (
         "hybrid-ai",
         include_str!("../../../examples/hybrid-ai.json"),
-    ),
-    (
-        "network-hub-spoke",
-        include_str!("../../../examples/network-hub-spoke.json"),
-    ),
-    (
-        "platform-iso",
-        include_str!("../../../examples/platform-iso.json"),
     ),
     (
         "stress-dense",
@@ -573,7 +565,7 @@ fn corner_parses_vets_from_0_to_16_and_is_not_serialized_when_absent() {
 }
 
 /// Plain-grammar examples, each with Lanes or links, vetted under the grammar they name.
-const PLAIN_EXAMPLES: [(&str, &str); 5] = [
+const PLAIN_EXAMPLES: [(&str, &str); 7] = [
     ("sequence", include_str!("../../../examples/sequence.json")),
     ("org", include_str!("../../../examples/org.json")),
     (
@@ -587,6 +579,14 @@ const PLAIN_EXAMPLES: [(&str, &str); 5] = [
     (
         "people-iso",
         include_str!("../../../examples/people-iso.json"),
+    ),
+    (
+        "network-hub-spoke",
+        include_str!("../../../examples/network-hub-spoke.json"),
+    ),
+    (
+        "platform-iso",
+        include_str!("../../../examples/platform-iso.json"),
     ),
 ];
 

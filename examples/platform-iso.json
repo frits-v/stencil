@@ -1,16 +1,16 @@
 {
-  "title": "One web path from the load balancer to the data layer.",
-  "kicker": "Data platform · cover figure",
-  "lede": "Requests enter at the load balancer, run through the web tier to the API, and land in the database, reached over private services access, and the object store.",
+  "title": "Match requests pass the edge proxy and the lobby tier, then the match API reads players and writes events.",
+  "kicker": "Multiplayer game backend",
+  "lede": "Players connect through the edge proxy to the lobby web tier, which hands each match request to the match API. The API reads player records from the database and writes every match event to a stream.",
   "width": 1100,
-  "badge": "Customer",
-  "grammar": "gcp",
+  "badge": "Internal",
+  "grammar": "plain",
   "projection": "iso",
   "body": [
     {
       "tag": "Box",
-      "kind": "gcp",
-      "label": "Google Cloud",
+      "kind": "system",
+      "label": "Game backend",
       "children": [
         {
           "tag": "Row",
@@ -29,10 +29,15 @@
                 {
                   "tag": "Item",
                   "id": "lb",
-                  "kind": "product",
-                  "icon": "networking",
-                  "title": "Edge",
-                  "subtitle": "Cloud Load Balancing"
+                  "kind": "network",
+                  "title": "Edge proxy",
+                  "subtitle": "ends TLS",
+                  "facts": [
+                    {
+                      "text": "Envoy",
+                      "source": "built"
+                    }
+                  ]
                 }
               ]
             },
@@ -42,8 +47,8 @@
               "children": [
                 {
                   "tag": "Box",
-                  "kind": "vpc",
-                  "label": "Shared VPC · europe-west4",
+                  "kind": "boundary",
+                  "label": "Lobby zone",
                   "children": [
                     {
                       "tag": "Row",
@@ -55,10 +60,10 @@
                         {
                           "tag": "Item",
                           "id": "web",
-                          "kind": "product",
-                          "icon": "compute-engine",
-                          "title": "Web tier",
-                          "subtitle": "Compute Engine"
+                          "kind": "service",
+                          "shape": "tower",
+                          "title": "Lobby web tier",
+                          "subtitle": "matchmaking"
                         }
                       ]
                     }
@@ -71,13 +76,12 @@
                     {
                       "tag": "Item",
                       "id": "db",
-                      "kind": "product",
-                      "icon": "cloud-sql",
-                      "title": "Database",
-                      "subtitle": "Cloud SQL",
+                      "kind": "store",
+                      "title": "Player database",
+                      "subtitle": "profiles and ratings",
                       "facts": [
                         {
-                          "text": "private services access",
+                          "text": "PostgreSQL · primary, replica",
                           "source": "built"
                         }
                       ]
@@ -93,10 +97,9 @@
                 {
                   "tag": "Item",
                   "id": "api",
-                  "kind": "product",
-                  "icon": "cloud-run",
-                  "title": "API",
-                  "subtitle": "Cloud Run"
+                  "kind": "service",
+                  "title": "Match API",
+                  "subtitle": "match state"
                 }
               ]
             },
@@ -106,16 +109,21 @@
               "children": [
                 {
                   "tag": "Box",
-                  "kind": "apis",
-                  "label": "Google APIs",
+                  "kind": "group",
+                  "label": "Event pipeline",
                   "children": [
                     {
                       "tag": "Item",
                       "id": "store",
-                      "kind": "product",
-                      "icon": "cloud-storage",
-                      "title": "Object store",
-                      "subtitle": "Cloud Storage"
+                      "kind": "queue",
+                      "title": "Match events",
+                      "subtitle": "one stream per match",
+                      "facts": [
+                        {
+                          "text": "NATS JetStream",
+                          "source": "built"
+                        }
+                      ]
                     }
                   ]
                 }
@@ -130,11 +138,11 @@
     {
       "line": "solid",
       "tint": 1,
-      "text": "request path"
+      "text": "player request path"
     },
     {
       "line": "gray",
-      "text": "service call"
+      "text": "reads and writes"
     }
   ],
   "links": [
