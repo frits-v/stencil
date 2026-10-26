@@ -107,7 +107,7 @@ _itemKinds: [
 			{icon: "argo", class: "product", names: ["Argo", "Argo CD", "Argo Workflows"]},
 			{icon: "docker", class: "product", names: ["Docker", "Docker Engine", "Docker Compose"], shape: "tower"},
 			{icon: "grafana", class: "product", names: ["Grafana", "Grafana OSS"]},
-			{icon: "helm", class: "product", names: ["Helm"]},
+			{class: "product", names: ["Helm"]},
 			{icon: "jaeger", class: "product", names: ["Jaeger"]},
 			{icon: "jenkins", class: "product", names: ["Jenkins"]},
 			{icon: "keycloak", class: "product", names: ["Keycloak"]},

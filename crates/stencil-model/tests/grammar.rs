@@ -1001,7 +1001,7 @@ const OSS_ROWS: [(&str, &[(Option<&str>, Option<Shape>)]); 4] = [
             (Some("argo"), None),
             (Some("docker"), Some(Shape::Tower)),
             (Some("grafana"), None),
-            (Some("helm"), None),
+            (None, None),
             (Some("jaeger"), None),
             (Some("jenkins"), None),
             (Some("keycloak"), None),

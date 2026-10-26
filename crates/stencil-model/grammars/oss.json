@@ -156,7 +156,6 @@
                     ]
                 },
                 {
-                    "icon": "helm",
                     "class": "product",
                     "names": [
                         "Helm"

@@ -1873,7 +1873,7 @@ The 23 Google Cloud icons in `assets/icons/gcp/`, from the two ZIP archives link
 
 #### Pack oss
 
-The 30 open-source project symbols in `assets/icons/oss/`, each the project's or its steward's own published SVG file of the symbol alone, with no wordmark beside or under it. `assets/icons/oss/PROVENANCE.md` records each file's source URL, the path and commit of a file taken from a git repository, and the fetch date. Apache Pulsar, Apache Spark, MariaDB, MinIO, MySQL and Elasticsearch have no file; the oss grammar lists them in products rows without an icon (section 13.10).
+The 29 open-source project symbols in `assets/icons/oss/`, each the project's or its steward's own published SVG file of the symbol alone, with no wordmark beside or under it. `assets/icons/oss/PROVENANCE.md` records each file's source URL, the path and commit of a file taken from a git repository, and the fetch date. Helm, Apache Pulsar, Apache Spark, MariaDB, MinIO, MySQL and Elasticsearch have no file; the oss grammar lists them in products rows without an icon (section 13.10).
 
 | Local file | Product | SHA-256 |
 |---|---|---|
@@ -1886,7 +1886,6 @@ The 30 open-source project symbols in `assets/icons/oss/`, each the project's or
 | `etcd.svg` | etcd | `67535552e9930d1b0b9fb76db7bfe4367ec9e644badce29fb4534c05685fb723` |
 | `grafana.svg` | Grafana | `50806d5a65779e79f746398570e0fc322d5de55e19f0be87a275963f0947bb5e` |
 | `haproxy.svg` | HAProxy | `5b09f3fc5a0c12d4a2ff6db9fbaa9753e408db10b882d06a624a491bcb718241` |
-| `helm.svg` | Helm | `ad04fbc7841a55023ad7806aa133a86ebd0aab21c2179be97f9048617138e7b1` |
 | `istio.svg` | Istio | `f5d5e6e64b794721fc698e05fd64004f73efbe2a3bdedf3a20394db44b71c889` |
 | `jaeger.svg` | Jaeger | `8a0405c39367a378e9e2626dbd1a5c13a613f9e148cb2360c094ccc50c348ae1` |
 | `jenkins.svg` | Jenkins | `5afd00080797a0568f7305696775e53a2d1fb88c59c054ebc554b3d284b5d230` |
@@ -4890,7 +4889,7 @@ icon-matches-product:
    | service | argo | product | Argo, Argo CD, Argo Workflows |
    | service | docker | product | Docker, Docker Engine, Docker Compose |
    | service | grafana | product | Grafana, Grafana OSS |
-   | service | helm | product | Helm |
+   | service |  | product | Helm |
    | service | jaeger | product | Jaeger |
    | service | jenkins | product | Jenkins |
    | service | keycloak | product | Keycloak |

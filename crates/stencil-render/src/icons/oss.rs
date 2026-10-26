@@ -13,7 +13,6 @@ pub(super) fn svg_bytes(icon: OssIcon) -> &'static [u8] {
         OssIcon::Etcd => include_bytes!("../../../../assets/icons/oss/etcd.svg"),
         OssIcon::Grafana => include_bytes!("../../../../assets/icons/oss/grafana.svg"),
         OssIcon::Haproxy => include_bytes!("../../../../assets/icons/oss/haproxy.svg"),
-        OssIcon::Helm => include_bytes!("../../../../assets/icons/oss/helm.svg"),
         OssIcon::Istio => include_bytes!("../../../../assets/icons/oss/istio.svg"),
         OssIcon::Jaeger => include_bytes!("../../../../assets/icons/oss/jaeger.svg"),
         OssIcon::Jenkins => include_bytes!("../../../../assets/icons/oss/jenkins.svg"),

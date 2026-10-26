@@ -25,7 +25,6 @@ Fetched 2026-10-25 (16 files) and 2026-10-26 (14 files), as the Fetched column s
 | `etcd.svg` | etcd | <https://github.com/cncf/artwork> | `projects/etcd/icon/color/etcd-icon-color.svg` at `b4b5989332c822ef09d5b38a512e2b39c63e32f2` | 2026-10-25 |
 | `grafana.svg` | Grafana | <https://github.com/grafana/grafana> | `public/img/grafana_icon.svg` at `299371878b4bbd2651759ff9f4f7a56360959415` | 2026-10-26 |
 | `haproxy.svg` | HAProxy | <https://cdn.haproxy.com/assets/our_logos/haproxy-icon.svg> | website file, not pinnable | 2026-10-26 |
-| `helm.svg` | Helm | <https://github.com/cncf/artwork> | `projects/helm/icon/color/helm-icon-color.svg` at `b4b5989332c822ef09d5b38a512e2b39c63e32f2` | 2026-10-25 |
 | `istio.svg` | Istio | <https://github.com/cncf/artwork> | `projects/istio/icon/color/istio-icon-color.svg` at `b4b5989332c822ef09d5b38a512e2b39c63e32f2` | 2026-10-25 |
 | `jaeger.svg` | Jaeger | <https://github.com/cncf/artwork> | `projects/jaeger/icon/color/jaeger-icon-color.svg` at `b4b5989332c822ef09d5b38a512e2b39c63e32f2` | 2026-10-25 |
 | `jenkins.svg` | Jenkins | <https://github.com/jenkins-infra/jenkins.io> | `content/images/logos/jenkins/jenkins.svg` at `2888b59262a95fddb6ae02733abd2a94ebc66974` | 2026-10-25 |

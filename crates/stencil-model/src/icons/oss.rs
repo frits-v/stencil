@@ -11,7 +11,6 @@ pub enum OssIcon {
     Etcd,
     Grafana,
     Haproxy,
-    Helm,
     Istio,
     Jaeger,
     Jenkins,
@@ -35,7 +34,7 @@ pub enum OssIcon {
 }
 
 impl OssIcon {
-    pub const ALL: [OssIcon; 30] = [
+    pub const ALL: [OssIcon; 29] = [
         OssIcon::Airflow,
         OssIcon::Argo,
         OssIcon::Cassandra,
@@ -45,7 +44,6 @@ impl OssIcon {
         OssIcon::Etcd,
         OssIcon::Grafana,
         OssIcon::Haproxy,
-        OssIcon::Helm,
         OssIcon::Istio,
         OssIcon::Jaeger,
         OssIcon::Jenkins,
@@ -80,7 +78,6 @@ impl OssIcon {
             OssIcon::Etcd => "etcd.svg",
             OssIcon::Grafana => "grafana.svg",
             OssIcon::Haproxy => "haproxy.svg",
-            OssIcon::Helm => "helm.svg",
             OssIcon::Istio => "istio.svg",
             OssIcon::Jaeger => "jaeger.svg",
             OssIcon::Jenkins => "jenkins.svg",
