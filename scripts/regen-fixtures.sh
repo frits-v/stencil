@@ -2,7 +2,9 @@
 # Regenerates the committed fixtures of the given example stems (every example when none
 # is named): the center SVG, measured JSON and description under
 # crates/stencil-render/tests/fixtures, the corner-0 SVG for the stems that have one, and
-# the check and vet lines under crates/stencil-cli/tests/fixtures for the stems that have them.
+# the check and vet lines under crates/stencil-cli/tests/fixtures. With no stem named, the
+# check and vet lines are rewritten only for the stems that already have them; a stem named on
+# the command line always gets both, so a new example gets its fixtures.
 # The SVG fixture is the font-free document render_svg returns, so the @font-face block the
 # written file carries is removed; the measured JSON fixture leaves out the document key.
 # Run from the repository root. The first argument is the stencil binary.
@@ -14,7 +16,8 @@ render_fixtures=crates/stencil-render/tests/fixtures
 cli_fixtures=crates/stencil-cli/tests/fixtures
 
 stems=("$@")
-if (( ${#stems[@]} == 0 )); then
+named=${#stems[@]}
+if (( named == 0 )); then
   for example in examples/*.json; do
     stems+=("$(basename "$example" .json)")
   done
@@ -61,7 +64,7 @@ if lines[1] == "  <defs>" and lines[2] == "    <style>":
 open(sys.argv[2], "w", encoding="utf-8").write("\n".join(lines))
 PY
   fi
-  if [[ -e "$cli_fixtures/$stem.check.txt" ]]; then
+  if (( named > 0 )) || [[ -e "$cli_fixtures/$stem.check.txt" ]]; then
     "$stencil" check "examples/$stem.json" >| "$cli_fixtures/$stem.check.txt" || true
     "$stencil" vet "examples/$stem.json" >| "$cli_fixtures/$stem.vet.txt" || true
   fi
