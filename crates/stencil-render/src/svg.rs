@@ -134,13 +134,15 @@ pub fn render_svg(
             writer.palette.page_background()
         ),
     );
+    let highlights = related::highlights(page, geometry);
+    writer.rule_sources = highlights.rule_sources();
+    writer.write_unpin_floor(1, geometry.canvas);
     let arrow_kinds = arrow_kinds(page, geometry, &expected);
     if !arrow_kinds.is_empty() {
         writer.write_arrow_markers(1, &arrow_kinds);
     }
 
     // Geometry order is pre-order, so a stack of open groups reproduces the nesting.
-    let highlights = related::highlights(page, geometry);
     let mut open_groups: Vec<usize> = Vec::new();
     for (index, (node, (_, document_node))) in geometry.nodes.iter().zip(&expected).enumerate() {
         close_groups_until_parent(&mut writer, &mut open_groups, geometry, index)?;
@@ -148,11 +150,20 @@ pub fn render_svg(
         writer.line(depth, &group_open_tag(node, &highlights, index));
         let relabeled = relabeler.relabeled(writer.palette, node, *document_node)?;
         writer.part_keys = highlights.part_keys.get(index).cloned().unwrap_or_default();
+        if let Some(anchor) = highlights.anchors.get(index).cloned().flatten() {
+            writer.begin_own(
+                depth + 1,
+                node.pointer.as_str(),
+                &anchor,
+                &[hit_rect(node.bounds)],
+            );
+        }
         writer.write_node(
             depth + 1,
             relabeled.as_ref().unwrap_or(node),
             *document_node,
         )?;
+        writer.end_own();
         writer.part_keys.clear();
         open_groups.push(index);
     }
@@ -589,6 +600,56 @@ fn group_open_tag(node: &NodeGeometry, highlights: &related::Highlights, index: 
     )
 }
 
+/// The smallest box holding both.
+fn union_box(first: BoxRect, second: BoxRect) -> BoxRect {
+    let x = first.x.min(second.x);
+    let y = first.y.min(second.y);
+    BoxRect {
+        x,
+        y,
+        width: first.right().max(second.right()) - x,
+        height: first.bottom().max(second.bottom()) - y,
+    }
+}
+
+/// An unpainted rect over `bounds` that takes the pointer in the written file, so the gaps
+/// between a unit's elements hover and click as the unit.
+fn hit_rect(bounds: BoxRect) -> String {
+    format!(
+        r#"<rect data-hit="" x="{}" y="{}" width="{}" height="{}" fill="none"/>"#,
+        format_number(bounds.x),
+        format_number(bounds.y),
+        format_number(bounds.width),
+        format_number(bounds.height)
+    )
+}
+
+/// An unpainted copy of a line's path that takes the pointer along a wide stroke, so a long
+/// diagonal does not capture the floor around it.
+fn hit_path(data: &str) -> String {
+    format!(r#"<path data-hit="" d="{data}" fill="none"/>"#)
+}
+
+/// True for a page colour darker than mid grey: its relative luminance under 0.2. A colour
+/// that is not `#RRGGBB` reads as light.
+fn is_dark_colour(colour: &str) -> bool {
+    let Some(hex) = colour.strip_prefix('#').filter(|hex| hex.len() == 6) else {
+        return false;
+    };
+    let channel = |range: std::ops::Range<usize>| -> Option<f32> {
+        let value = f32::from(u8::from_str_radix(hex.get(range)?, 16).ok()?) / 255.0;
+        Some(if value <= 0.04045 {
+            value / 12.92
+        } else {
+            ((value + 0.055) / 1.055).powf(2.4)
+        })
+    };
+    match (channel(0..2), channel(2..4), channel(4..6)) {
+        (Some(red), Some(green), Some(blue)) => 0.2126 * red + 0.7152 * green + 0.0722 * blue < 0.2,
+        _ => false,
+    }
+}
+
 /// A link's group: its `id`, and the pointer of the node at each end in `data-from` and
 /// `data-to`.
 fn link_group_open_tag(geometry: &PageGeometry, route: &LinkRoute) -> Result<String, RenderError> {
@@ -728,15 +789,28 @@ struct SvgWriter<'a> {
     /// The key of each part of the node or link tag being written, aligned with its parts;
     /// empty off a design sheet.
     part_keys: Vec<Option<related::ElementKey>>,
-    /// The attribute every element written at `element_depth` carries while a part with
-    /// a key is written.
+    /// The attribute every element written at `element_depth` carries while a mark's part
+    /// is written, and the row of its key.
     element_attribute: Option<String>,
+    element_mark_row: Option<String>,
     element_depth: usize,
-    /// The rows whose first element already carries the row's `id`.
-    anchored_rows: BTreeSet<String>,
-    /// The row of the part being written; its first element written carries the row's
-    /// `id`.
-    pending_row: Option<String>,
+    /// The written file: `output` with the elements only a browser reads, the anchors that
+    /// pin a highlight on click and the hit areas, which resvg never sees.
+    written: String,
+    /// The own drawn elements of the rule source being written, wrapped in the written file.
+    own: Option<OwnContent>,
+    /// The sources with a rule: group `data-id`s and row pointers.
+    rule_sources: BTreeSet<String>,
+}
+
+/// The wrapper of a rule source's own elements in the written file: a `<g data-own>` whose
+/// elements sit in `<a href="#anchor">` runs, broken around each mark, which links to its
+/// key's row instead.
+#[derive(Debug, Clone)]
+struct OwnContent {
+    depth: usize,
+    anchor: String,
+    anchor_open: bool,
 }
 
 /// The kind and key actor slot of every glyph the page draws, read from the document
@@ -858,58 +932,127 @@ impl<'a> SvgWriter<'a> {
             hover_rules: Vec::new(),
             part_keys: Vec::new(),
             element_attribute: None,
+            element_mark_row: None,
             element_depth: 0,
-            anchored_rows: BTreeSet::new(),
-            pending_row: None,
+            written: String::new(),
+            own: None,
+            rule_sources: BTreeSet::new(),
         }
     }
 
     fn line(&mut self, depth: usize, content: &str) {
-        for _ in 0..depth {
-            self.output.push_str("  ");
-        }
-        let keyed = depth == self.element_depth && !content.starts_with("</");
-        match (&self.element_attribute, keyed) {
+        let indent = "  ".repeat(depth);
+        let opening = !content.starts_with("</");
+        let keyed = depth == self.element_depth && opening;
+        let text = match (&self.element_attribute, keyed) {
             (Some(attribute), true) => {
                 let name_length = content.find([' ', '>', '/']).unwrap_or(content.len());
                 let (name, rest) = content.split_at(name_length);
-                self.output.push_str(name);
-                if let Some(row) = self.pending_row.take()
-                    && self.anchored_rows.insert(row.clone())
-                {
-                    let anchor = related::pointer_anchor(&row);
-                    self.output
-                        .push_str(&format!(r#" id="{}""#, escape_xml(&anchor)));
-                }
-                self.output.push_str(attribute);
-                self.output.push_str(rest);
+                format!("{name}{attribute}{rest}")
             }
-            _ => self.output.push_str(content),
-        }
+            _ => content.to_string(),
+        };
+        self.output.push_str(&indent);
+        self.output.push_str(&text);
         self.output.push('\n');
+
+        let own_depth = self.own.as_ref().map(|own| own.depth);
+        if own_depth != Some(depth) || !opening {
+            self.written_line(depth, &text);
+            return;
+        }
+        let single = text.ends_with("/>") || text.ends_with("</text>");
+        let mark_row = self
+            .element_mark_row
+            .clone()
+            .filter(|row| keyed && single && self.rule_sources.contains(row));
+        match mark_row {
+            Some(row) => {
+                self.close_own_anchor(depth);
+                let href = format!("#{}", related::pointer_anchor(&row));
+                self.written_line(depth, &format!(r#"<a href="{}">"#, escape_xml(&href)));
+                self.written_line(depth, &text);
+                self.written_line(depth, "</a>");
+            }
+            None => {
+                self.open_own_anchor(depth);
+                self.written_line(depth, &text);
+            }
+        }
     }
 
-    /// Every element the part at `index` of `part_keys` writes at `depth` carries its key
-    /// until `end_part`: `data-row` for a row, with the row's `id` on its first element,
-    /// or `data-mark` for a glyph and its numeral.
-    fn begin_part(&mut self, index: usize, depth: usize) {
-        let Some(Some(key)) = self.part_keys.get(index) else {
+    /// One line of the written file only.
+    fn written_line(&mut self, depth: usize, content: &str) {
+        for _ in 0..depth {
+            self.written.push_str("  ");
+        }
+        self.written.push_str(content);
+        self.written.push('\n');
+    }
+
+    fn open_own_anchor(&mut self, depth: usize) {
+        let Some(own) = self.own.as_mut() else {
             return;
         };
-        let attribute = match key {
-            related::ElementKey::Row(row) => {
-                self.pending_row = Some(row.clone());
-                format!(r#" data-row="{}""#, escape_xml(row))
-            }
-            related::ElementKey::Mark(row) => format!(r#" data-mark="{}""#, escape_xml(row)),
+        if own.anchor_open {
+            return;
+        }
+        own.anchor_open = true;
+        let href = format!("#{}", own.anchor);
+        self.written_line(depth, &format!(r#"<a href="{}">"#, escape_xml(&href)));
+    }
+
+    fn close_own_anchor(&mut self, depth: usize) {
+        if let Some(own) = self.own.as_mut()
+            && own.anchor_open
+        {
+            own.anchor_open = false;
+            self.written_line(depth, "</a>");
+        }
+    }
+
+    /// Starts the own elements of `source` at `depth`: in the written file a `<g data-own>`
+    /// and its first anchor, which holds the hit area. A source without a rule writes
+    /// nothing, so a click on it pins nothing.
+    fn begin_own(&mut self, depth: usize, source: &str, anchor: &str, hit_area: &[String]) {
+        if !self.rule_sources.contains(source) {
+            return;
+        }
+        self.written_line(depth, r#"<g data-own="">"#);
+        self.own = Some(OwnContent {
+            depth,
+            anchor: anchor.to_string(),
+            anchor_open: false,
+        });
+        self.open_own_anchor(depth);
+        for element in hit_area {
+            self.written_line(depth, element);
+        }
+    }
+
+    fn end_own(&mut self) {
+        let Some(depth) = self.own.as_ref().map(|own| own.depth) else {
+            return;
         };
-        self.element_attribute = Some(attribute);
+        self.close_own_anchor(depth);
+        self.own = None;
+        self.written_line(depth, "</g>");
+    }
+
+    /// Every element the part at `index` of `part_keys` writes at `depth` carries
+    /// `data-mark` until `end_part` when the part is a glyph or its numeral.
+    fn begin_part(&mut self, index: usize, depth: usize) {
+        let Some(Some(related::ElementKey::Mark(row))) = self.part_keys.get(index) else {
+            return;
+        };
+        self.element_attribute = Some(format!(r#" data-mark="{}""#, escape_xml(row)));
+        self.element_mark_row = Some(row.clone());
         self.element_depth = depth;
     }
 
     fn end_part(&mut self) {
         self.element_attribute = None;
-        self.pending_row = None;
+        self.element_mark_row = None;
     }
 
     /// The written SVG, with its faces ordered by family name and then weight.
@@ -917,14 +1060,18 @@ impl<'a> SvgWriter<'a> {
         let mut font_faces = self.font_faces;
         font_faces.sort_by_key(|(family, weight)| (family.css_name(), weight.css_value()));
         SvgDocument {
+            dark_page: is_dark_colour(self.palette.page_background()),
             svg: self.output,
+            written: self.written,
             text_elements: self.text_elements,
             font_faces,
             hover_rules: self.hover_rules,
         }
     }
 
-    /// Shapes first, then the node's text; child groups follow from the caller.
+    /// Shapes first, then the node's text; child groups follow from the caller. On a node
+    /// that draws keyed rows, the parts outside a row come first and each row follows as its
+    /// own group, so the row fades as one image.
     fn write_node(
         &mut self,
         depth: usize,
@@ -933,12 +1080,81 @@ impl<'a> SvgWriter<'a> {
     ) -> Result<(), RenderError> {
         let context = self.write_node_box(depth, node, document_node)?;
         let slots = self.part_slots(node, document_node);
-        for (index, (part, slot)) in node.parts.iter().zip(&slots).enumerate() {
+        let mut rows: Vec<String> = Vec::new();
+        for key in self.part_keys.iter().flatten() {
+            if let related::ElementKey::Row(row) = key
+                && !rows.contains(row)
+            {
+                rows.push(row.clone());
+            }
+        }
+        self.write_parts(depth, node, document_node, (context, &slots), None)?;
+        for row in rows {
+            let anchor = related::pointer_anchor(&row);
+            self.line(
+                depth,
+                &format!(
+                    r#"<g id="{}" data-row="{}">"#,
+                    escape_xml(&anchor),
+                    escape_xml(&row)
+                ),
+            );
+            let linked = self.rule_sources.contains(&row);
+            if linked {
+                let href = format!("#{anchor}");
+                self.written_line(depth + 1, &format!(r#"<a href="{}">"#, escape_xml(&href)));
+                let bounds = node
+                    .parts
+                    .iter()
+                    .zip(&self.part_keys)
+                    .filter(|(_, key)| *key == &Some(related::ElementKey::Row(row.clone())))
+                    .map(|(part, _)| part.bounds)
+                    .reduce(union_box);
+                if let Some(bounds) = bounds {
+                    self.written_line(depth + 1, &hit_rect(bounds));
+                }
+            }
+            self.write_parts(
+                depth + 1,
+                node,
+                document_node,
+                (context, &slots),
+                Some(&row),
+            )?;
+            if linked {
+                self.written_line(depth + 1, "</a>");
+            }
+            self.line(depth, "</g>");
+        }
+        Ok(())
+    }
+
+    /// The shapes and then the text of the parts in `row`, or of the parts in no row.
+    fn write_parts(
+        &mut self,
+        depth: usize,
+        node: &NodeGeometry,
+        document_node: DocumentNode<'_>,
+        (context, slots): (PartContext<'a>, &[Option<u8>]),
+        row: Option<&str>,
+    ) -> Result<(), RenderError> {
+        let in_row = |keys: &[Option<related::ElementKey>], index: usize| -> bool {
+            let part_row = match keys.get(index) {
+                Some(Some(related::ElementKey::Row(part_row))) => Some(part_row.as_str()),
+                _ => None,
+            };
+            part_row == row
+        };
+        for (index, (part, slot)) in node.parts.iter().zip(slots).enumerate() {
+            if !in_row(&self.part_keys, index) {
+                continue;
+            }
             self.begin_part(index, depth);
             self.write_part_shape(depth, node, part, (context, *slot))?;
             self.end_part();
         }
-        if let DocumentNode::Content(NodeRef::Node(Node::Box(_))) = document_node
+        if row.is_none()
+            && let DocumentNode::Content(NodeRef::Node(Node::Box(_))) = document_node
             && let Some(look) = node.container
             && look.role == Role::Frame
         {
@@ -946,14 +1162,22 @@ impl<'a> SvgWriter<'a> {
         }
         let glyph_kinds = self.glyph_kinds(node);
         let mut numerals = 0;
-        for (index, (part, slot)) in node.parts.iter().zip(&slots).enumerate() {
+        for (index, (part, slot)) in node.parts.iter().zip(slots).enumerate() {
+            let numeral = matches!(
+                part.name,
+                PartName::MarkNumeral | PartName::MarkSampleNumeral
+            );
+            // A numeral takes the kind of the glyph it sits in, counted over every part.
+            let numeral_index = numerals;
+            if numeral && part.text.is_some() {
+                numerals += 1;
+            }
+            if !in_row(&self.part_keys, index) {
+                continue;
+            }
             if let Some(run) = &part.text {
-                let fill = if matches!(
-                    part.name,
-                    PartName::MarkNumeral | PartName::MarkSampleNumeral
-                ) {
-                    let kind = glyph_kinds.get(numerals).copied().flatten();
-                    numerals += 1;
+                let fill = if numeral {
+                    let kind = glyph_kinds.get(numeral_index).copied().flatten();
                     let kind = kind.ok_or_else(|| part_mismatch(node, part))?;
                     self.palette.sheet_color(palette::numeral_ink(kind), None)
                 } else {
@@ -2254,6 +2478,12 @@ impl<'a> SvgWriter<'a> {
         self.line(depth, &link_group_open_tag(geometry, route)?);
         let line_use = LineUse::new(route.line, route.tint);
         let drawn = drawn_link(geometry, route);
+        self.begin_own(
+            depth + 1,
+            pointer.as_str(),
+            &related::pointer_anchor(pointer.as_str()),
+            &[hit_path(&link_path(&drawn))],
+        );
         if self.sheet.is_some() {
             self.write_sheet_link_line(depth + 1, &drawn, line_use, assembly::is_planned(link));
         } else {
@@ -2329,8 +2559,27 @@ impl<'a> SvgWriter<'a> {
             }
             self.end_part();
         }
+        self.end_own();
         self.line(depth, "</g>");
         Ok(())
+    }
+
+    /// In the written file, an unpainted rect over the whole canvas behind every drawing,
+    /// linked to `#`, so a click on empty floor clears a pinned highlight. A page without a
+    /// rule has nothing to pin and writes none.
+    fn write_unpin_floor(&mut self, depth: usize, canvas: stencil_layout::Size) {
+        if self.rule_sources.is_empty() {
+            return;
+        }
+        let floor = BoxRect {
+            x: 0.0,
+            y: 0.0,
+            width: canvas.width,
+            height: canvas.height,
+        };
+        self.written_line(depth, r##"<a href="#">"##);
+        self.written_line(depth + 1, &hit_rect(floor));
+        self.written_line(depth, "</a>");
     }
 
     /// An unstroked line from the arrowhead's base to its tip that only places the marker.
@@ -2838,23 +3087,27 @@ fn left_rounded_strip_path(bounds: BoxRect, radius: f32) -> String {
     )
 }
 
-/// How far a faded unit drops while another element is highlighted (section 5.2).
-const HOVER_FADED_OPACITY: &str = "0.2";
+/// How far a faded unit drops while another element is highlighted (section 5.2), on a
+/// light page and on a dark one.
+const HOVER_FLOOR_LIGHT: &str = "0.3";
+const HOVER_FLOOR_DARK: &str = "0.35";
 /// The families the written file's text falls back through when the embedded faces do not
 /// load (section 5.2).
 const TEXT_FONT_STACK: &str =
     r#"Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif"#;
-/// How long the fade takes each way.
-const HOVER_TRANSITION: &str = "opacity 0.15s ease-out";
+/// Fading waits 120 ms, so a pointer crossing an element on its way elsewhere does not
+/// flash the sheet; returning is immediate.
+const HOVER_FADE_IN: &str = "opacity 220ms ease-out 120ms";
+const HOVER_FADE_OUT: &str = "opacity 160ms ease-out 0ms";
 
 impl SvgDocument {
-    /// The SVG with one `@font-face` per entry of `font_faces`, its bundled file as a `data:`
-    /// URI, and one rule per entry of `hover_rules`, in a `<style>` right after the opening
-    /// `<svg>` tag, so the file renders in Inter where Inter is not installed and highlights
-    /// what an element refers to under the pointer (section 5.2). A document with no text and
-    /// no rule is returned as is.
+    /// `written` with one `@font-face` per entry of `font_faces`, its bundled file as a
+    /// `data:` URI, a fallback stack for its text, and the hover rules, in a `<style>` right
+    /// after the opening `<svg>` tag, so the file renders in Inter where Inter is not
+    /// installed and highlights what an element refers to under the pointer or on a click
+    /// (section 5.2). A document with no text and no rule is returned as is.
     pub fn self_contained(&self) -> Result<String, RenderError> {
-        let Some((open_tag, rest)) = self.svg.split_once('\n') else {
+        let Some((open_tag, rest)) = self.written.split_once('\n') else {
             return Err(RenderError::Svg {
                 message: "SVG has no line after its opening tag".to_string(),
             });
@@ -2865,7 +3118,7 @@ impl SvgDocument {
             });
         }
         if self.font_faces.is_empty() && self.hover_rules.is_empty() {
-            return Ok(self.svg.clone());
+            return Ok(self.written.clone());
         }
         let mut output = String::new();
         output.push_str(open_tag);
@@ -2888,14 +3141,25 @@ impl SvgDocument {
             ));
         }
         if !self.hover_rules.is_empty() {
-            output.push_str(&format!(
-                "      {} > :not([data-id]), [data-row] {{ transition: {HOVER_TRANSITION}; }}\n",
-                fade_groups_selector()
-            ));
+            for line in hover_preamble() {
+                output.push_str("      ");
+                output.push_str(&line);
+                output.push('\n');
+            }
         }
+        let floor = if self.dark_page {
+            HOVER_FLOOR_DARK
+        } else {
+            HOVER_FLOOR_LIGHT
+        };
         for rule in &self.hover_rules {
             output.push_str("      ");
-            output.push_str(&escape_xml_text(&hover_rule(rule)));
+            output.push_str(&escape_xml_text(&hover_rule(rule, floor)));
+            output.push('\n');
+        }
+        if !self.hover_rules.is_empty() {
+            output.push_str("      ");
+            output.push_str(&hover_pinned_rule());
             output.push('\n');
         }
         output.push_str("    </style>\n  </defs>\n");
@@ -2904,34 +3168,89 @@ impl SvgDocument {
     }
 }
 
-/// Every group that fades: the groups of the tags in `related::FADE_TAGS`, and links.
-fn fade_groups_selector() -> String {
-    let tags: Vec<String> = related::FADE_TAGS
+/// `:is(...)` over the `data-tag` of each of `tags`.
+fn tags_selector(tags: &[&str]) -> String {
+    let tags: Vec<String> = tags
         .iter()
-        .map(|tag| tag.as_str())
-        .chain(["Link"])
         .map(|tag| format!(r#"[data-tag="{tag}"]"#))
         .collect();
     format!(":is({})", tags.join(","))
 }
 
-/// One rule that fades every group and row outside the rule's kept sets while the pointer
-/// rests on the source or the URL fragment names its anchor. A group fades its own drawn
-/// elements, not its child groups; a group source is hovered through those elements and a
-/// row through its own or through any mark of its key.
-fn hover_rule(rule: &HoverRule) -> String {
+/// The groups that fade as one image: every fading group with no child group, links
+/// included, so a tag pill still covers the line under it while both fade.
+fn leaf_groups_selector() -> String {
+    let tags: Vec<&str> = related::FADE_TAGS
+        .iter()
+        .filter(|tag| !related::CONTAINER_TAGS.contains(tag))
+        .map(|tag| tag.as_str())
+        .chain(["Link"])
+        .collect();
+    tags_selector(&tags)
+}
+
+/// The groups that hold other units, a Box and a Tee, which fade their own elements as one
+/// image and leave their child groups alone.
+fn container_groups_selector() -> String {
+    let tags: Vec<&str> = related::CONTAINER_TAGS
+        .iter()
+        .map(|tag| tag.as_str())
+        .collect();
+    tags_selector(&tags)
+}
+
+/// Every image that fades: a leaf group, a container's own elements, a row.
+fn faded_images_selector() -> String {
+    format!(
+        "{}, {} > [data-own], [data-row]",
+        leaf_groups_selector(),
+        container_groups_selector()
+    )
+}
+
+/// The rules before the per-source ones: the hit areas take the pointer, an anchor shows a
+/// hand, and every image returns from a fade quickly.
+fn hover_preamble() -> Vec<String> {
+    vec![
+        "[data-hit] { pointer-events: all; }".to_string(),
+        "path[data-hit] { pointer-events: stroke; stroke-width: 12px; }".to_string(),
+        r##"a:not([href="#"]) { cursor: pointer; }"##.to_string(),
+        format!(
+            "{} {{ transition: {HOVER_FADE_OUT}; }}",
+            faded_images_selector()
+        ),
+    ]
+}
+
+/// A pinned highlight, set by a click or the URL fragment, takes its state at once.
+/// `!important` lets this one rule outrank the per-source rules, whose kept lists make
+/// their selectors more specific.
+fn hover_pinned_rule() -> String {
+    format!(
+        "svg:has(:target) :is({}) {{ transition: none !important; }}",
+        faded_images_selector()
+    )
+}
+
+/// One rule that fades every leaf group, container's own elements and row outside the
+/// rule's kept sets to `floor`, while the pointer rests on the source and nothing is
+/// pinned, or while the source is pinned. A group source is hovered through its own
+/// anchors, a row through itself or any mark of its key.
+fn hover_rule(rule: &HoverRule, floor: &str) -> String {
     let anchor = css_string(&rule.anchor);
-    let source = match &rule.source {
+    let hovered = match &rule.source {
         HoverSource::Group(pointer) => format!(
-            "[data-id={}] > :not([data-id], [data-mark]):hover, [id={anchor}]:target",
-            css_string(pointer)
+            "[data-id={}] > [data-own] > a[href={}]:hover",
+            css_string(pointer),
+            css_string(&format!("#{}", rule.anchor))
         ),
         HoverSource::Row(pointer) => {
             let pointer = css_string(pointer);
-            format!("[data-row={pointer}]:hover, [data-mark={pointer}]:hover, [id={anchor}]:target")
+            format!("[data-row={pointer}]:hover, [data-mark={pointer}]:hover")
         }
     };
-    let highlighted = format!("svg:has({source})");
+    let highlighted =
+        format!(":is(svg:not(:has(:target)):has({hovered}), svg:has([id={anchor}]:target))");
     let kept_groups: String = rule
         .kept_groups
         .iter()
@@ -2943,8 +3262,9 @@ fn hover_rule(rule: &HoverRule) -> String {
         .map(|pointer| format!(":not([data-row={}])", css_string(pointer)))
         .collect();
     format!(
-        "{highlighted} {}{kept_groups} > :not([data-id]), {highlighted} [data-row]{kept_rows} {{ opacity: {HOVER_FADED_OPACITY}; }}",
-        fade_groups_selector()
+        "{highlighted} {}{kept_groups}, {highlighted} {}{kept_groups} > [data-own], {highlighted} [data-row]{kept_rows} {{ opacity: {floor}; transition: {HOVER_FADE_IN}; }}",
+        leaf_groups_selector(),
+        container_groups_selector()
     )
 }
 
@@ -3012,25 +3332,39 @@ fn sheet_in_front_of(node: &NodeGeometry, part: &Part) -> Option<BoxRect> {
 mod tests {
     use super::*;
 
+    /// A document whose resvg input and written file are `svg`.
+    fn document(
+        svg: &str,
+        font_faces: Vec<(FontFamily, FontWeight)>,
+        hover_rules: Vec<HoverRule>,
+    ) -> SvgDocument {
+        SvgDocument {
+            svg: svg.to_string(),
+            written: svg.to_string(),
+            dark_page: false,
+            text_elements: font_faces.len(),
+            font_faces,
+            hover_rules,
+        }
+    }
+
     #[test]
     fn a_document_without_text_is_self_contained_as_written() {
-        let document = SvgDocument {
-            svg: "<svg xmlns=\"http://www.w3.org/2000/svg\">\n</svg>\n".to_string(),
-            text_elements: 0,
-            font_faces: Vec::new(),
-            hover_rules: Vec::new(),
-        };
-        assert_eq!(document.self_contained().unwrap(), document.svg);
+        let document = document(
+            "<svg xmlns=\"http://www.w3.org/2000/svg\">\n</svg>\n",
+            Vec::new(),
+            Vec::new(),
+        );
+        assert_eq!(document.self_contained().unwrap(), document.written);
     }
 
     #[test]
     fn self_contained_rejects_a_document_that_does_not_open_with_svg() {
-        let document = SvgDocument {
-            svg: "<g>\n</g>\n".to_string(),
-            text_elements: 1,
-            font_faces: vec![(FontFamily::Inter, FontWeight::Bold)],
-            hover_rules: Vec::new(),
-        };
+        let document = document(
+            "<g>\n</g>\n",
+            vec![(FontFamily::Inter, FontWeight::Bold)],
+            Vec::new(),
+        );
         assert!(matches!(
             document.self_contained(),
             Err(RenderError::Svg { .. })
@@ -3044,18 +3378,19 @@ mod tests {
     }
 
     #[test]
-    fn a_group_rule_fades_every_unit_outside_its_kept_sets() {
+    fn a_group_rule_fades_leaves_whole_and_containers_by_their_own_elements() {
         let rule = HoverRule {
             source: HoverSource::Group("/body/0".to_string()),
             anchor: "api".to_string(),
             kept_groups: vec!["/body/0".to_string(), "/links/1".to_string()],
             kept_rows: vec!["/body/2/parts/0".to_string()],
         };
-        let highlighted = r#"svg:has([data-id="/body/0"] > :not([data-id], [data-mark]):hover, [id="api"]:target)"#;
+        let highlighted = r##":is(svg:not(:has(:target)):has([data-id="/body/0"] > [data-own] > a[href="#api"]:hover), svg:has([id="api"]:target))"##;
+        let kept = r#":not([data-id="/body/0"]):not([data-id="/links/1"])"#;
         assert_eq!(
-            hover_rule(&rule),
+            hover_rule(&rule, "0.3"),
             format!(
-                r#"{highlighted} :is([data-tag="Pcard"],[data-tag="Zone"],[data-tag="Pipe"],[data-tag="Tee"],[data-tag="Step"],[data-tag="Rung"],[data-tag="ProblemPoint"],[data-tag="ActorChip"],[data-tag="LegendEntry"],[data-tag="HowToItem"],[data-tag="Link"]):not([data-id="/body/0"]):not([data-id="/links/1"]) > :not([data-id]), {highlighted} [data-row]:not([data-row="/body/2/parts/0"]) {{ opacity: 0.2; }}"#
+                r#"{highlighted} :is([data-tag="Pcard"],[data-tag="Pipe"],[data-tag="Step"],[data-tag="Rung"],[data-tag="ProblemPoint"],[data-tag="ActorChip"],[data-tag="LegendEntry"],[data-tag="HowToItem"],[data-tag="Link"]){kept}, {highlighted} :is([data-tag="Zone"],[data-tag="Tee"]){kept} > [data-own], {highlighted} [data-row]:not([data-row="/body/2/parts/0"]) {{ opacity: 0.3; transition: opacity 220ms ease-out 120ms; }}"#
             )
         );
     }
@@ -3068,36 +3403,62 @@ mod tests {
             kept_groups: vec!["/body/0".to_string()],
             kept_rows: vec!["/body/2/notes/1".to_string()],
         };
-        let written = hover_rule(&rule);
-        assert!(written.starts_with(r#"svg:has([data-row="/body/2/notes/1"]:hover, [data-mark="/body/2/notes/1"]:hover, [id="_body_2_notes_1"]:target) "#));
-        assert!(
-            written.ends_with(r#"[data-row]:not([data-row="/body/2/notes/1"]) { opacity: 0.2; }"#)
-        );
+        let written = hover_rule(&rule, "0.35");
+        assert!(written.starts_with(r#":is(svg:not(:has(:target)):has([data-row="/body/2/notes/1"]:hover, [data-mark="/body/2/notes/1"]:hover), svg:has([id="_body_2_notes_1"]:target)) "#));
+        assert!(written.ends_with(
+            r#"[data-row]:not([data-row="/body/2/notes/1"]) { opacity: 0.35; transition: opacity 220ms ease-out 120ms; }"#
+        ));
     }
 
     #[test]
-    fn a_document_with_a_rule_and_no_text_still_gets_its_style_block() {
-        let document = SvgDocument {
-            svg: "<svg xmlns=\"http://www.w3.org/2000/svg\">\n</svg>\n".to_string(),
-            text_elements: 0,
-            font_faces: Vec::new(),
-            hover_rules: vec![HoverRule {
+    fn a_document_with_a_rule_and_no_text_gets_the_rest_and_pinned_transitions() {
+        let mut document = document(
+            "<svg xmlns=\"http://www.w3.org/2000/svg\">\n</svg>\n",
+            Vec::new(),
+            vec![HoverRule {
                 source: HoverSource::Group("/body/0".to_string()),
                 anchor: "_body_0".to_string(),
                 kept_groups: vec!["/body/0".to_string(), "/body/1".to_string()],
                 kept_rows: Vec::new(),
             }],
-        };
+        );
+        document.dark_page = true;
         let written = document.self_contained().unwrap();
+        let lines: Vec<&str> = written.lines().map(str::trim_start).collect();
         assert_eq!(
-            written
-                .lines()
-                .filter(|line| line.contains(":hover"))
-                .count(),
+            lines.iter().filter(|line| line.contains(":hover")).count(),
             1
         );
         assert!(!written.contains("@font-face"));
-        assert!(written.contains(r#"svg:has([data-id="/body/0"] > "#));
+        assert!(written.contains("opacity: 0.35;"));
+        let rest = format!(
+            r#":is([data-tag="Pcard"],[data-tag="Pipe"],[data-tag="Step"],[data-tag="Rung"],[data-tag="ProblemPoint"],[data-tag="ActorChip"],[data-tag="LegendEntry"],[data-tag="HowToItem"],[data-tag="Link"]), :is([data-tag="Zone"],[data-tag="Tee"]) > [data-own], [data-row] {{ transition: opacity 160ms ease-out 0ms; }}"#
+        );
+        assert!(lines.contains(&rest.as_str()), "{written}");
+        let pinned = format!(
+            r#"svg:has(:target) :is(:is([data-tag="Pcard"],[data-tag="Pipe"],[data-tag="Step"],[data-tag="Rung"],[data-tag="ProblemPoint"],[data-tag="ActorChip"],[data-tag="LegendEntry"],[data-tag="HowToItem"],[data-tag="Link"]), :is([data-tag="Zone"],[data-tag="Tee"]) > [data-own], [data-row]) {{ transition: none !important; }}"#
+        );
+        assert_eq!(
+            lines.iter().rposition(|line| line.starts_with("</style>")),
+            Some(lines.iter().position(|line| **line == pinned).unwrap() + 1)
+        );
+    }
+
+    #[test]
+    fn a_dark_page_colour_is_told_from_a_light_one() {
+        let page = |name: &str| {
+            crate::builtin_theme(name)
+                .unwrap()
+                .unwrap()
+                .page
+                .as_str()
+                .to_string()
+        };
+        assert!(is_dark_colour(&page("dusk")));
+        assert!(is_dark_colour(&page("clear-dark")));
+        assert!(!is_dark_colour(&page("center")));
+        assert!(!is_dark_colour(&page("paper")));
+        assert!(!is_dark_colour("white"));
     }
 
     #[test]

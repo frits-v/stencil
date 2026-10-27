@@ -654,9 +654,9 @@ fn an_oss_project_without_a_bundled_logo_is_clean_without_an_icon_and_a_defect_w
         );
     }
     assert_eq!(
-        oss_defects_for("store", Some("MySQL"), Some("mariadb")),
+        oss_defects_for("store", Some("MySQL"), Some("postgresql")),
         [
-            "subtitle names MySQL, which has no product icon; the item carries the product icon mariadb"
+            "subtitle names MySQL, which has no product icon; the item carries the product icon postgresql"
         ]
     );
     assert_eq!(

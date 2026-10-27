@@ -35,7 +35,7 @@ Drawn elements: 33 (27 nodes, 6 links). Canvas 1540 x 562.6 px, projection flat,
             - Item Catalog: MySQL; kind store, product MySQL. `/body/0/children/1/children/0/children/0/children/0/children/1/children/1`
             - Item Orders: PostgreSQL; kind store, icon postgresql, product PostgreSQL. `/body/0/children/1/children/0/children/0/children/0/children/1/children/2`
               - Fact, built: one primary, two replicas.
-            - Item Receipts: MinIO; kind store, icon minio, product MinIO. `/body/0/children/1/children/0/children/0/children/0/children/1/children/3`
+            - Item Receipts: MinIO; kind store, product MinIO. `/body/0/children/1/children/0/children/0/children/0/children/1/children/3`
         - Row, left to right. `/body/0/children/1/children/0/children/0/children/1`
           - Item Orchestrator: Kubernetes; kind service, icon kubernetes, product Kubernetes. `/body/0/children/1/children/0/children/0/children/1/children/0`
           - Item Delivery: Argo CD; kind service, icon argo, product Argo CD. `/body/0/children/1/children/0/children/0/children/1/children/1`

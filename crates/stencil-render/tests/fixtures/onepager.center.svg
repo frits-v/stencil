@@ -139,25 +139,31 @@
         <text x="828.38" y="248.57" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">busy branch never holds a patron&apos;s request open.</text>
       </g>
       <g data-id="/sheet/attention" data-tag="TitleCell">
-        <path id="_sheet_attention_items_0" data-row="/sheet/attention/items/0" d="M1231.84 84.4 L1241.14 93.7 L1231.84 103 L1222.54 93.7 Z" fill="#FAF9CA" stroke="#A36E14" stroke-width="1.4" stroke-linejoin="round"/>
-        <path id="_sheet_attention_items_1" data-row="/sheet/attention/items/1" d="M1231.84 141.2 L1241.14 150.5 L1231.84 159.8 L1222.54 150.5 Z" fill="#FAF9CA" stroke="#A36E14" stroke-width="1.4" stroke-linejoin="round"/>
-        <path id="_sheet_attention_items_2" data-row="/sheet/attention/items/2" d="M1231.84 198 L1241.14 207.3 L1231.84 216.6 L1222.54 207.3 Z" fill="#FAF9CA" stroke="#A36E14" stroke-width="1.4" stroke-linejoin="round"/>
         <text x="1221.84" y="73.1" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">THE PATRON&apos;S PART, AND ONLY THIS</text>
-        <text data-row="/sheet/attention/items/0" x="1229.79" y="97.16" xml:space="preserve" font-family="Inter" font-size="9.5" font-weight="700" fill="#202124">1</text>
-        <text data-row="/sheet/attention/items/0" x="1247.84" y="96.77" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">Pickup branch.</text>
-        <text data-row="/sheet/attention/items/0" x="1339.4" y="96.77" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#202124">The patron confirms the branch</text>
-        <text data-row="/sheet/attention/items/0" x="1247.84" y="114.17" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#202124">before a copy is set aside.</text>
-        <text data-row="/sheet/attention/items/0" x="1247.84" y="131.18" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">marked at B4</text>
-        <text data-row="/sheet/attention/items/1" x="1228.85" y="153.96" xml:space="preserve" font-family="Inter" font-size="9.5" font-weight="700" fill="#202124">2</text>
-        <text data-row="/sheet/attention/items/1" x="1247.84" y="153.57" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">Collection.</text>
-        <text data-row="/sheet/attention/items/1" x="1314.65" y="153.57" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#202124">A ready copy waits seven days on the</text>
-        <text data-row="/sheet/attention/items/1" x="1247.84" y="170.97" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#202124">hold shelf at that branch.</text>
-        <text data-row="/sheet/attention/items/1" x="1247.84" y="187.98" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">marked at B8 C2</text>
-        <text data-row="/sheet/attention/items/2" x="1228.77" y="210.76" xml:space="preserve" font-family="Inter" font-size="9.5" font-weight="700" fill="#202124">3</text>
-        <text data-row="/sheet/attention/items/2" x="1247.84" y="210.37" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">Contact details.</text>
-        <text data-row="/sheet/attention/items/2" x="1344" y="210.37" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#202124">Notices go to the email or phone</text>
-        <text data-row="/sheet/attention/items/2" x="1247.84" y="227.77" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#202124">on the card, so the patron keeps them current.</text>
-        <text data-row="/sheet/attention/items/2" x="1247.84" y="244.78" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">marked at A4 B8</text>
+        <g id="_sheet_attention_items_0" data-row="/sheet/attention/items/0">
+          <path d="M1231.84 84.4 L1241.14 93.7 L1231.84 103 L1222.54 93.7 Z" fill="#FAF9CA" stroke="#A36E14" stroke-width="1.4" stroke-linejoin="round"/>
+          <text x="1229.79" y="97.16" xml:space="preserve" font-family="Inter" font-size="9.5" font-weight="700" fill="#202124">1</text>
+          <text x="1247.84" y="96.77" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">Pickup branch.</text>
+          <text x="1339.4" y="96.77" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#202124">The patron confirms the branch</text>
+          <text x="1247.84" y="114.17" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#202124">before a copy is set aside.</text>
+          <text x="1247.84" y="131.18" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">marked at B4</text>
+        </g>
+        <g id="_sheet_attention_items_1" data-row="/sheet/attention/items/1">
+          <path d="M1231.84 141.2 L1241.14 150.5 L1231.84 159.8 L1222.54 150.5 Z" fill="#FAF9CA" stroke="#A36E14" stroke-width="1.4" stroke-linejoin="round"/>
+          <text x="1228.85" y="153.96" xml:space="preserve" font-family="Inter" font-size="9.5" font-weight="700" fill="#202124">2</text>
+          <text x="1247.84" y="153.57" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">Collection.</text>
+          <text x="1314.65" y="153.57" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#202124">A ready copy waits seven days on the</text>
+          <text x="1247.84" y="170.97" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#202124">hold shelf at that branch.</text>
+          <text x="1247.84" y="187.98" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">marked at B8 C2</text>
+        </g>
+        <g id="_sheet_attention_items_2" data-row="/sheet/attention/items/2">
+          <path d="M1231.84 198 L1241.14 207.3 L1231.84 216.6 L1222.54 207.3 Z" fill="#FAF9CA" stroke="#A36E14" stroke-width="1.4" stroke-linejoin="round"/>
+          <text x="1228.77" y="210.76" xml:space="preserve" font-family="Inter" font-size="9.5" font-weight="700" fill="#202124">3</text>
+          <text x="1247.84" y="210.37" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">Contact details.</text>
+          <text x="1344" y="210.37" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#202124">Notices go to the email or phone</text>
+          <text x="1247.84" y="227.77" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#202124">on the card, so the patron keeps them current.</text>
+          <text x="1247.84" y="244.78" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">marked at A4 B8</text>
+        </g>
       </g>
       <g data-id="/legend" data-tag="Legend">
         <line x1="51.5" y1="265.6" x2="1548.5" y2="265.6" stroke="#DADCE0" stroke-width="1"/>
@@ -576,30 +582,38 @@
             </g>
             <g data-id="/body/1/children/0/children/0/children/1" data-tag="GeneralNotes">
               <rect x="50.5" y="1823.1" width="1056.14" height="299.8" fill="#FFFFFF" stroke="#202124" stroke-width="1"/>
-              <path id="_body_1_children_0_children_0_children_1_notes_0" data-row="/body/1/children/0/children/0/children/1/notes/0" d="M73 1857.2 L83 1874.2 L63 1874.2 Z" fill="#202124"/>
-              <path id="_body_1_children_0_children_0_children_1_notes_1" data-row="/body/1/children/0/children/0/children/1/notes/1" d="M73 1914.6 L83 1931.6 L63 1931.6 Z" fill="#202124"/>
-              <path id="_body_1_children_0_children_0_children_1_notes_2" data-row="/body/1/children/0/children/0/children/1/notes/2" d="M73 1972 L83 1989 L63 1989 Z" fill="#202124"/>
-              <path id="_body_1_children_0_children_0_children_1_notes_3" data-row="/body/1/children/0/children/0/children/1/notes/3" d="M73 2029.4 L83 2046.4 L63 2046.4 Z" fill="#202124"/>
               <line x1="63" y1="2087.3" x2="1094.14" y2="2087.3" stroke="#DADCE0" stroke-width="1" stroke-dasharray="3 3"/>
               <text x="63" y="1846.13" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" letter-spacing="1.56" fill="#202124">GENERAL NOTES</text>
               <text x="204.01" y="1845.77" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">what the service asks of its patrons</text>
-              <text data-row="/body/1/children/0/children/0/children/1/notes/0" x="71.06" y="1871.47" xml:space="preserve" font-family="Inter" font-size="9" font-weight="700" fill="#FFFFFF">1</text>
-              <text data-row="/body/1/children/0/children/0/children/1/notes/0" x="89" y="1870.27" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#202124">A hold reaches the pick queue only once its patron has confirmed the branch.</text>
-              <text data-row="/body/1/children/0/children/0/children/1/notes/0" x="89" y="1887.28" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">The worker never sets a copy aside for an unconfirmed hold.</text>
-              <text data-row="/body/1/children/0/children/0/children/1/notes/0" x="89" y="1903.28" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">marked at A4 B4 D4</text>
-              <text data-row="/body/1/children/0/children/0/children/1/notes/1" x="70.17" y="1928.87" xml:space="preserve" font-family="Inter" font-size="9" font-weight="700" fill="#FFFFFF">2</text>
-              <text data-row="/body/1/children/0/children/0/children/1/notes/1" x="89" y="1927.67" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#202124">A hold stores a reference to the copy record, never a copy of it.</text>
-              <text data-row="/body/1/children/0/children/0/children/1/notes/1" x="89" y="1944.68" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">Copy details follow the catalogue.</text>
-              <text data-row="/body/1/children/0/children/0/children/1/notes/1" x="89" y="1960.68" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">marked at A4 B7 E4</text>
-              <text data-row="/body/1/children/0/children/0/children/1/notes/2" x="70.1" y="1986.27" xml:space="preserve" font-family="Inter" font-size="9" font-weight="700" fill="#FFFFFF">3</text>
-              <text data-row="/body/1/children/0/children/0/children/1/notes/2" x="89" y="1985.07" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#202124">The notifier holds no credentials for the holds store.</text>
-              <text data-row="/body/1/children/0/children/0/children/1/notes/2" x="89" y="2002.08" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">The blocked line in view 3 is a database grant, not a convention.</text>
-              <text data-row="/body/1/children/0/children/0/children/1/notes/2" x="89" y="2018.08" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">marked at B7 D5</text>
-              <text data-row="/body/1/children/0/children/0/children/1/notes/3" x="69.96" y="2043.67" xml:space="preserve" font-family="Inter" font-size="9" font-weight="700" fill="#FFFFFF">4</text>
-              <text data-row="/body/1/children/0/children/0/children/1/notes/3" x="89" y="2042.47" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#202124">Out of scope: interlibrary loans, fines, and holds on e-books.</text>
-              <text data-row="/body/1/children/0/children/0/children/1/notes/3" x="89" y="2059.48" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">The service fills holds with copies this library owns.</text>
-              <text data-row="/body/1/children/0/children/0/children/1/notes/3" x="89" y="2075.48" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">marked at B5</text>
               <text x="63" y="2107.97" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">Each flag on the drawings marks where its note applies.</text>
+              <g id="_body_1_children_0_children_0_children_1_notes_0" data-row="/body/1/children/0/children/0/children/1/notes/0">
+                <path d="M73 1857.2 L83 1874.2 L63 1874.2 Z" fill="#202124"/>
+                <text x="71.06" y="1871.47" xml:space="preserve" font-family="Inter" font-size="9" font-weight="700" fill="#FFFFFF">1</text>
+                <text x="89" y="1870.27" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#202124">A hold reaches the pick queue only once its patron has confirmed the branch.</text>
+                <text x="89" y="1887.28" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">The worker never sets a copy aside for an unconfirmed hold.</text>
+                <text x="89" y="1903.28" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">marked at A4 B4 D4</text>
+              </g>
+              <g id="_body_1_children_0_children_0_children_1_notes_1" data-row="/body/1/children/0/children/0/children/1/notes/1">
+                <path d="M73 1914.6 L83 1931.6 L63 1931.6 Z" fill="#202124"/>
+                <text x="70.17" y="1928.87" xml:space="preserve" font-family="Inter" font-size="9" font-weight="700" fill="#FFFFFF">2</text>
+                <text x="89" y="1927.67" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#202124">A hold stores a reference to the copy record, never a copy of it.</text>
+                <text x="89" y="1944.68" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">Copy details follow the catalogue.</text>
+                <text x="89" y="1960.68" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">marked at A4 B7 E4</text>
+              </g>
+              <g id="_body_1_children_0_children_0_children_1_notes_2" data-row="/body/1/children/0/children/0/children/1/notes/2">
+                <path d="M73 1972 L83 1989 L63 1989 Z" fill="#202124"/>
+                <text x="70.1" y="1986.27" xml:space="preserve" font-family="Inter" font-size="9" font-weight="700" fill="#FFFFFF">3</text>
+                <text x="89" y="1985.07" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#202124">The notifier holds no credentials for the holds store.</text>
+                <text x="89" y="2002.08" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">The blocked line in view 3 is a database grant, not a convention.</text>
+                <text x="89" y="2018.08" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">marked at B7 D5</text>
+              </g>
+              <g id="_body_1_children_0_children_0_children_1_notes_3" data-row="/body/1/children/0/children/0/children/1/notes/3">
+                <path d="M73 2029.4 L83 2046.4 L63 2046.4 Z" fill="#202124"/>
+                <text x="69.96" y="2043.67" xml:space="preserve" font-family="Inter" font-size="9" font-weight="700" fill="#FFFFFF">4</text>
+                <text x="89" y="2042.47" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#202124">Out of scope: interlibrary loans, fines, and holds on e-books.</text>
+                <text x="89" y="2059.48" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">The service fills holds with copies this library owns.</text>
+                <text x="89" y="2075.48" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">marked at B5</text>
+              </g>
             </g>
           </g>
           <g data-id="/body/1/children/0/children/1" data-tag="Col">
@@ -607,32 +621,14 @@
               <rect x="1127.89" y="1216.55" width="421.36" height="617.3" fill="#FFFFFF" stroke="#202124" stroke-width="1.5"/>
               <line x1="1128.64" y1="1265" x2="1548.5" y2="1265" stroke="#202124" stroke-width="1"/>
               <line x1="1128.64" y1="1287.2" x2="1548.5" y2="1287.2" stroke="#DADCE0" stroke-width="1"/>
-              <circle id="_body_1_children_0_children_1_children_0_parts_0" data-row="/body/1/children/0/children/1/children/0/parts/0" cx="1145.64" cy="1302.7" r="8.35" fill="#FFFFFF" stroke="#A36E14" stroke-width="1.3"/>
-              <line data-row="/body/1/children/0/children/1/children/0/parts/0" x1="1313.14" y1="1293.7" x2="1313.14" y2="1338.7" stroke="#DADCE0" stroke-width="1"/>
               <line x1="1128.64" y1="1345.2" x2="1548.5" y2="1345.2" stroke="#DADCE0" stroke-width="1"/>
-              <circle id="_body_1_children_0_children_1_children_0_parts_1" data-row="/body/1/children/0/children/1/children/0/parts/1" cx="1145.64" cy="1360.7" r="8.35" fill="#FFFFFF" stroke="#1A73E8" stroke-width="1.3"/>
-              <line data-row="/body/1/children/0/children/1/children/0/parts/1" x1="1313.14" y1="1351.7" x2="1313.14" y2="1396.7" stroke="#DADCE0" stroke-width="1"/>
               <line x1="1128.64" y1="1403.2" x2="1548.5" y2="1403.2" stroke="#DADCE0" stroke-width="1"/>
-              <circle id="_body_1_children_0_children_1_children_0_parts_2" data-row="/body/1/children/0/children/1/children/0/parts/2" cx="1145.64" cy="1418.7" r="8.35" fill="#FFFFFF" stroke="#1A73E8" stroke-width="1.3"/>
-              <line data-row="/body/1/children/0/children/1/children/0/parts/2" x1="1313.14" y1="1409.7" x2="1313.14" y2="1469.7" stroke="#DADCE0" stroke-width="1"/>
               <line x1="1128.64" y1="1476.2" x2="1548.5" y2="1476.2" stroke="#DADCE0" stroke-width="1"/>
-              <circle id="_body_1_children_0_children_1_children_0_parts_3" data-row="/body/1/children/0/children/1/children/0/parts/3" cx="1145.64" cy="1491.7" r="8.35" fill="#FFFFFF" stroke="#1A73E8" stroke-width="1.3"/>
-              <line data-row="/body/1/children/0/children/1/children/0/parts/3" x1="1313.14" y1="1482.7" x2="1313.14" y2="1542.7" stroke="#DADCE0" stroke-width="1"/>
               <line x1="1128.64" y1="1549.2" x2="1548.5" y2="1549.2" stroke="#DADCE0" stroke-width="1"/>
-              <circle id="_body_1_children_0_children_1_children_0_parts_4" data-row="/body/1/children/0/children/1/children/0/parts/4" cx="1145.64" cy="1564.7" r="8.35" fill="#FFFFFF" stroke="#202124" stroke-width="1.3"/>
-              <line data-row="/body/1/children/0/children/1/children/0/parts/4" x1="1313.14" y1="1555.7" x2="1313.14" y2="1600.7" stroke="#DADCE0" stroke-width="1"/>
               <line x1="1128.64" y1="1607.2" x2="1548.5" y2="1607.2" stroke="#DADCE0" stroke-width="1"/>
-              <circle id="_body_1_children_0_children_1_children_0_parts_5" data-row="/body/1/children/0/children/1/children/0/parts/5" cx="1145.64" cy="1622.7" r="8.35" fill="#FFFFFF" stroke="#497938" stroke-width="1.3"/>
-              <line data-row="/body/1/children/0/children/1/children/0/parts/5" x1="1313.14" y1="1613.7" x2="1313.14" y2="1646.1" stroke="#DADCE0" stroke-width="1"/>
               <line x1="1128.64" y1="1652.6" x2="1548.5" y2="1652.6" stroke="#DADCE0" stroke-width="1"/>
-              <circle id="_body_1_children_0_children_1_children_0_parts_6" data-row="/body/1/children/0/children/1/children/0/parts/6" cx="1145.64" cy="1668.1" r="8.35" fill="#FFFFFF" stroke="#593894" stroke-width="1.3"/>
-              <line data-row="/body/1/children/0/children/1/children/0/parts/6" x1="1313.14" y1="1659.1" x2="1313.14" y2="1706.5" stroke="#DADCE0" stroke-width="1"/>
               <line x1="1128.64" y1="1713" x2="1548.5" y2="1713" stroke="#DADCE0" stroke-width="1"/>
-              <circle id="_body_1_children_0_children_1_children_0_parts_7" data-row="/body/1/children/0/children/1/children/0/parts/7" cx="1145.64" cy="1728.5" r="8.35" fill="#FFFFFF" stroke="#497938" stroke-width="1.3"/>
-              <line data-row="/body/1/children/0/children/1/children/0/parts/7" x1="1313.14" y1="1719.5" x2="1313.14" y2="1764.5" stroke="#DADCE0" stroke-width="1"/>
               <line x1="1128.64" y1="1771" x2="1548.5" y2="1771" stroke="#DADCE0" stroke-width="1"/>
-              <circle id="_body_1_children_0_children_1_children_0_parts_8" data-row="/body/1/children/0/children/1/children/0/parts/8" cx="1145.64" cy="1786.5" r="8.35" fill="#FFFFFF" stroke="#1A73E8" stroke-width="1.3"/>
-              <line data-row="/body/1/children/0/children/1/children/0/parts/8" x1="1313.14" y1="1777.5" x2="1313.14" y2="1827.1" stroke="#DADCE0" stroke-width="1"/>
               <text x="1140.64" y="1245.63" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" letter-spacing="1.56" fill="#202124">PARTS LIST</text>
               <text x="1242.12" y="1237.47" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">what the service is made of, and why each part</text>
               <text x="1242.12" y="1253.07" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">exists</text>
@@ -640,73 +636,109 @@
               <text x="1176.64" y="1282.1" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">PART · WHAT IT IS</text>
               <text x="1321.64" y="1282.1" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">WHY IT EXISTS</text>
               <text x="1476.5" y="1282.1" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">ZONES</text>
-              <text data-row="/body/1/children/0/children/1/children/0/parts/0" x="1143.49" y="1306.34" xml:space="preserve" font-family="Inter" font-size="10" font-weight="700" fill="#202124">1</text>
-              <text data-row="/body/1/children/0/children/1/children/0/parts/0" x="1176.64" y="1306.77" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#5A3900">Catalogue app</text>
-              <text data-row="/body/1/children/0/children/1/children/0/parts/0" x="1176.64" y="1322.78" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">web and mobile</text>
-              <text data-row="/body/1/children/0/children/1/children/0/parts/0" x="1321.64" y="1305.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">Patrons place and track</text>
-              <text data-row="/body/1/children/0/children/1/children/0/parts/0" x="1321.64" y="1320.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">holds without a call to the</text>
-              <text data-row="/body/1/children/0/children/1/children/0/parts/0" x="1321.64" y="1335.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">branch.</text>
-              <text data-row="/body/1/children/0/children/1/children/0/parts/0" x="1476.5" y="1305.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">A4 B2 D1</text>
-              <text data-row="/body/1/children/0/children/1/children/0/parts/1" x="1142.49" y="1364.34" xml:space="preserve" font-family="Inter" font-size="10" font-weight="700" fill="#202124">2</text>
-              <text data-row="/body/1/children/0/children/1/children/0/parts/1" x="1176.64" y="1364.77" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#5F6368">Gateway</text>
-              <text data-row="/body/1/children/0/children/1/children/0/parts/1" x="1176.64" y="1380.78" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">checks library cards</text>
-              <text data-row="/body/1/children/0/children/1/children/0/parts/1" x="1321.64" y="1363.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">One signed-in entry point;</text>
-              <text data-row="/body/1/children/0/children/1/children/0/parts/1" x="1321.64" y="1378.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">the API never sees a call</text>
-              <text data-row="/body/1/children/0/children/1/children/0/parts/1" x="1321.64" y="1393.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">without a card.</text>
-              <text data-row="/body/1/children/0/children/1/children/0/parts/1" x="1476.5" y="1363.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">C3</text>
-              <text data-row="/body/1/children/0/children/1/children/0/parts/2" x="1142.42" y="1422.34" xml:space="preserve" font-family="Inter" font-size="10" font-weight="700" fill="#202124">3</text>
-              <text data-row="/body/1/children/0/children/1/children/0/parts/2" x="1176.64" y="1422.77" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#5F6368">Holds API</text>
-              <text data-row="/body/1/children/0/children/1/children/0/parts/2" x="1176.64" y="1438.78" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">keeps the lines</text>
-              <text data-row="/body/1/children/0/children/1/children/0/parts/2" x="1321.64" y="1421.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">Keeps one line per title</text>
-              <text data-row="/body/1/children/0/children/1/children/0/parts/2" x="1321.64" y="1436.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">and refuses to queue a</text>
-              <text data-row="/body/1/children/0/children/1/children/0/parts/2" x="1321.64" y="1451.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">hold nobody has</text>
-              <text data-row="/body/1/children/0/children/1/children/0/parts/2" x="1321.64" y="1466.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">confirmed.</text>
-              <text data-row="/body/1/children/0/children/1/children/0/parts/2" x="1476.5" y="1421.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">A4 B3 C5</text>
-              <text data-row="/body/1/children/0/children/1/children/0/parts/3" x="1142.26" y="1495.34" xml:space="preserve" font-family="Inter" font-size="10" font-weight="700" fill="#202124">4</text>
-              <text data-row="/body/1/children/0/children/1/children/0/parts/3" x="1176.64" y="1495.77" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#5F6368">Pick queue</text>
-              <text data-row="/body/1/children/0/children/1/children/0/parts/3" x="1176.64" y="1511.78" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">at-least-once delivery</text>
-              <text data-row="/body/1/children/0/children/1/children/0/parts/3" x="1321.64" y="1494.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">The API returns once a job</text>
-              <text data-row="/body/1/children/0/children/1/children/0/parts/3" x="1321.64" y="1509.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">is queued, so a busy</text>
-              <text data-row="/body/1/children/0/children/1/children/0/parts/3" x="1321.64" y="1524.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">branch never holds a</text>
-              <text data-row="/body/1/children/0/children/1/children/0/parts/3" x="1321.64" y="1539.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">request open.</text>
-              <text data-row="/body/1/children/0/children/1/children/0/parts/3" x="1476.5" y="1494.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">B6 D3</text>
-              <text data-row="/body/1/children/0/children/1/children/0/parts/4" x="1142.53" y="1568.34" xml:space="preserve" font-family="Inter" font-size="10" font-weight="700" fill="#202124">5</text>
-              <text data-row="/body/1/children/0/children/1/children/0/parts/4" x="1176.64" y="1568.77" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">Copy catalogue</text>
-              <text data-row="/body/1/children/0/children/1/children/0/parts/4" x="1176.64" y="1584.78" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">circulation records</text>
-              <text data-row="/body/1/children/0/children/1/children/0/parts/4" x="1321.64" y="1567.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">A hold is filled only from a</text>
-              <text data-row="/body/1/children/0/children/1/children/0/parts/4" x="1321.64" y="1582.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">copy on the shelf, and the</text>
-              <text data-row="/body/1/children/0/children/1/children/0/parts/4" x="1321.64" y="1597.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">check-in event names it.</text>
-              <text data-row="/body/1/children/0/children/1/children/0/parts/4" x="1476.5" y="1567.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">B5 D3</text>
-              <text data-row="/body/1/children/0/children/1/children/0/parts/5" x="1142.4" y="1626.34" xml:space="preserve" font-family="Inter" font-size="10" font-weight="700" fill="#202124">6</text>
-              <text data-row="/body/1/children/0/children/1/children/0/parts/5" x="1176.64" y="1626.77" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#26481B">Pickup worker</text>
-              <text data-row="/body/1/children/0/children/1/children/0/parts/5" x="1176.64" y="1642.78" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">one job per hold</text>
-              <text data-row="/body/1/children/0/children/1/children/0/parts/5" x="1321.64" y="1625.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">Holds are independent, so</text>
-              <text data-row="/body/1/children/0/children/1/children/0/parts/5" x="1321.64" y="1640.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">a failed pick retries alone.</text>
-              <text data-row="/body/1/children/0/children/1/children/0/parts/5" x="1476.5" y="1625.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">B6 D5</text>
-              <text data-row="/body/1/children/0/children/1/children/0/parts/6" x="1142.74" y="1671.74" xml:space="preserve" font-family="Inter" font-size="10" font-weight="700" fill="#202124">7</text>
-              <text data-row="/body/1/children/0/children/1/children/0/parts/6" x="1176.64" y="1672.17" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#4B3275">Notifier</text>
-              <text data-row="/body/1/children/0/children/1/children/0/parts/6" x="1176.64" y="1688.18" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">hosted messaging</text>
-              <text data-row="/body/1/children/0/children/1/children/0/parts/6" x="1176.64" y="1703.18" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">service</text>
-              <text data-row="/body/1/children/0/children/1/children/0/parts/6" x="1321.64" y="1670.78" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">Sends the ready notice,</text>
-              <text data-row="/body/1/children/0/children/1/children/0/parts/6" x="1321.64" y="1685.78" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">and has no write path to</text>
-              <text data-row="/body/1/children/0/children/1/children/0/parts/6" x="1321.64" y="1700.78" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">the store.</text>
-              <text data-row="/body/1/children/0/children/1/children/0/parts/6" x="1476.5" y="1670.78" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">A4 B7 D5</text>
-              <text data-row="/body/1/children/0/children/1/children/0/parts/7" x="1142.39" y="1732.14" xml:space="preserve" font-family="Inter" font-size="10" font-weight="700" fill="#202124">8</text>
-              <text data-row="/body/1/children/0/children/1/children/0/parts/7" x="1176.64" y="1732.57" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#26481B">Holds store</text>
-              <text data-row="/body/1/children/0/children/1/children/0/parts/7" x="1176.64" y="1748.58" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">relational database</text>
-              <text data-row="/body/1/children/0/children/1/children/0/parts/7" x="1321.64" y="1731.18" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">Every hold keeps its place</text>
-              <text data-row="/body/1/children/0/children/1/children/0/parts/7" x="1321.64" y="1746.18" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">in line, its branch and the</text>
-              <text data-row="/body/1/children/0/children/1/children/0/parts/7" x="1321.64" y="1761.18" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">notices sent for it.</text>
-              <text data-row="/body/1/children/0/children/1/children/0/parts/7" x="1476.5" y="1731.18" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">A4 B4 B7</text>
-              <text data-row="/body/1/children/0/children/1/children/0/parts/7" x="1476.5" y="1746.18" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">D4</text>
-              <text data-row="/body/1/children/0/children/1/children/0/parts/8" x="1142.4" y="1790.14" xml:space="preserve" font-family="Inter" font-size="10" font-weight="700" fill="#202124">9</text>
-              <text data-row="/body/1/children/0/children/1/children/0/parts/8" x="1176.64" y="1790.57" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#5F6368">Expiry scheduler</text>
-              <text data-row="/body/1/children/0/children/1/children/0/parts/8" x="1176.64" y="1806.58" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">hosted scheduler</text>
-              <text data-row="/body/1/children/0/children/1/children/0/parts/8" x="1176.64" y="1824.5" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">PLANNED</text>
-              <text data-row="/body/1/children/0/children/1/children/0/parts/8" x="1321.64" y="1789.18" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">Releases a copy left on the</text>
-              <text data-row="/body/1/children/0/children/1/children/0/parts/8" x="1321.64" y="1804.18" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">shelf past its date, so the</text>
-              <text data-row="/body/1/children/0/children/1/children/0/parts/8" x="1321.64" y="1819.18" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">next patron in line gets it.</text>
-              <text data-row="/body/1/children/0/children/1/children/0/parts/8" x="1476.5" y="1789.18" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">B8 D6</text>
+              <g id="_body_1_children_0_children_1_children_0_parts_0" data-row="/body/1/children/0/children/1/children/0/parts/0">
+                <circle cx="1145.64" cy="1302.7" r="8.35" fill="#FFFFFF" stroke="#A36E14" stroke-width="1.3"/>
+                <line x1="1313.14" y1="1293.7" x2="1313.14" y2="1338.7" stroke="#DADCE0" stroke-width="1"/>
+                <text x="1143.49" y="1306.34" xml:space="preserve" font-family="Inter" font-size="10" font-weight="700" fill="#202124">1</text>
+                <text x="1176.64" y="1306.77" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#5A3900">Catalogue app</text>
+                <text x="1176.64" y="1322.78" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">web and mobile</text>
+                <text x="1321.64" y="1305.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">Patrons place and track</text>
+                <text x="1321.64" y="1320.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">holds without a call to the</text>
+                <text x="1321.64" y="1335.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">branch.</text>
+                <text x="1476.5" y="1305.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">A4 B2 D1</text>
+              </g>
+              <g id="_body_1_children_0_children_1_children_0_parts_1" data-row="/body/1/children/0/children/1/children/0/parts/1">
+                <circle cx="1145.64" cy="1360.7" r="8.35" fill="#FFFFFF" stroke="#1A73E8" stroke-width="1.3"/>
+                <line x1="1313.14" y1="1351.7" x2="1313.14" y2="1396.7" stroke="#DADCE0" stroke-width="1"/>
+                <text x="1142.49" y="1364.34" xml:space="preserve" font-family="Inter" font-size="10" font-weight="700" fill="#202124">2</text>
+                <text x="1176.64" y="1364.77" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#5F6368">Gateway</text>
+                <text x="1176.64" y="1380.78" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">checks library cards</text>
+                <text x="1321.64" y="1363.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">One signed-in entry point;</text>
+                <text x="1321.64" y="1378.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">the API never sees a call</text>
+                <text x="1321.64" y="1393.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">without a card.</text>
+                <text x="1476.5" y="1363.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">C3</text>
+              </g>
+              <g id="_body_1_children_0_children_1_children_0_parts_2" data-row="/body/1/children/0/children/1/children/0/parts/2">
+                <circle cx="1145.64" cy="1418.7" r="8.35" fill="#FFFFFF" stroke="#1A73E8" stroke-width="1.3"/>
+                <line x1="1313.14" y1="1409.7" x2="1313.14" y2="1469.7" stroke="#DADCE0" stroke-width="1"/>
+                <text x="1142.42" y="1422.34" xml:space="preserve" font-family="Inter" font-size="10" font-weight="700" fill="#202124">3</text>
+                <text x="1176.64" y="1422.77" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#5F6368">Holds API</text>
+                <text x="1176.64" y="1438.78" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">keeps the lines</text>
+                <text x="1321.64" y="1421.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">Keeps one line per title</text>
+                <text x="1321.64" y="1436.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">and refuses to queue a</text>
+                <text x="1321.64" y="1451.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">hold nobody has</text>
+                <text x="1321.64" y="1466.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">confirmed.</text>
+                <text x="1476.5" y="1421.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">A4 B3 C5</text>
+              </g>
+              <g id="_body_1_children_0_children_1_children_0_parts_3" data-row="/body/1/children/0/children/1/children/0/parts/3">
+                <circle cx="1145.64" cy="1491.7" r="8.35" fill="#FFFFFF" stroke="#1A73E8" stroke-width="1.3"/>
+                <line x1="1313.14" y1="1482.7" x2="1313.14" y2="1542.7" stroke="#DADCE0" stroke-width="1"/>
+                <text x="1142.26" y="1495.34" xml:space="preserve" font-family="Inter" font-size="10" font-weight="700" fill="#202124">4</text>
+                <text x="1176.64" y="1495.77" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#5F6368">Pick queue</text>
+                <text x="1176.64" y="1511.78" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">at-least-once delivery</text>
+                <text x="1321.64" y="1494.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">The API returns once a job</text>
+                <text x="1321.64" y="1509.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">is queued, so a busy</text>
+                <text x="1321.64" y="1524.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">branch never holds a</text>
+                <text x="1321.64" y="1539.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">request open.</text>
+                <text x="1476.5" y="1494.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">B6 D3</text>
+              </g>
+              <g id="_body_1_children_0_children_1_children_0_parts_4" data-row="/body/1/children/0/children/1/children/0/parts/4">
+                <circle cx="1145.64" cy="1564.7" r="8.35" fill="#FFFFFF" stroke="#202124" stroke-width="1.3"/>
+                <line x1="1313.14" y1="1555.7" x2="1313.14" y2="1600.7" stroke="#DADCE0" stroke-width="1"/>
+                <text x="1142.53" y="1568.34" xml:space="preserve" font-family="Inter" font-size="10" font-weight="700" fill="#202124">5</text>
+                <text x="1176.64" y="1568.77" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">Copy catalogue</text>
+                <text x="1176.64" y="1584.78" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">circulation records</text>
+                <text x="1321.64" y="1567.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">A hold is filled only from a</text>
+                <text x="1321.64" y="1582.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">copy on the shelf, and the</text>
+                <text x="1321.64" y="1597.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">check-in event names it.</text>
+                <text x="1476.5" y="1567.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">B5 D3</text>
+              </g>
+              <g id="_body_1_children_0_children_1_children_0_parts_5" data-row="/body/1/children/0/children/1/children/0/parts/5">
+                <circle cx="1145.64" cy="1622.7" r="8.35" fill="#FFFFFF" stroke="#497938" stroke-width="1.3"/>
+                <line x1="1313.14" y1="1613.7" x2="1313.14" y2="1646.1" stroke="#DADCE0" stroke-width="1"/>
+                <text x="1142.4" y="1626.34" xml:space="preserve" font-family="Inter" font-size="10" font-weight="700" fill="#202124">6</text>
+                <text x="1176.64" y="1626.77" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#26481B">Pickup worker</text>
+                <text x="1176.64" y="1642.78" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">one job per hold</text>
+                <text x="1321.64" y="1625.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">Holds are independent, so</text>
+                <text x="1321.64" y="1640.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">a failed pick retries alone.</text>
+                <text x="1476.5" y="1625.38" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">B6 D5</text>
+              </g>
+              <g id="_body_1_children_0_children_1_children_0_parts_6" data-row="/body/1/children/0/children/1/children/0/parts/6">
+                <circle cx="1145.64" cy="1668.1" r="8.35" fill="#FFFFFF" stroke="#593894" stroke-width="1.3"/>
+                <line x1="1313.14" y1="1659.1" x2="1313.14" y2="1706.5" stroke="#DADCE0" stroke-width="1"/>
+                <text x="1142.74" y="1671.74" xml:space="preserve" font-family="Inter" font-size="10" font-weight="700" fill="#202124">7</text>
+                <text x="1176.64" y="1672.17" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#4B3275">Notifier</text>
+                <text x="1176.64" y="1688.18" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">hosted messaging</text>
+                <text x="1176.64" y="1703.18" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">service</text>
+                <text x="1321.64" y="1670.78" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">Sends the ready notice,</text>
+                <text x="1321.64" y="1685.78" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">and has no write path to</text>
+                <text x="1321.64" y="1700.78" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">the store.</text>
+                <text x="1476.5" y="1670.78" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">A4 B7 D5</text>
+              </g>
+              <g id="_body_1_children_0_children_1_children_0_parts_7" data-row="/body/1/children/0/children/1/children/0/parts/7">
+                <circle cx="1145.64" cy="1728.5" r="8.35" fill="#FFFFFF" stroke="#497938" stroke-width="1.3"/>
+                <line x1="1313.14" y1="1719.5" x2="1313.14" y2="1764.5" stroke="#DADCE0" stroke-width="1"/>
+                <text x="1142.39" y="1732.14" xml:space="preserve" font-family="Inter" font-size="10" font-weight="700" fill="#202124">8</text>
+                <text x="1176.64" y="1732.57" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#26481B">Holds store</text>
+                <text x="1176.64" y="1748.58" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">relational database</text>
+                <text x="1321.64" y="1731.18" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">Every hold keeps its place</text>
+                <text x="1321.64" y="1746.18" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">in line, its branch and the</text>
+                <text x="1321.64" y="1761.18" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">notices sent for it.</text>
+                <text x="1476.5" y="1731.18" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">A4 B4 B7</text>
+                <text x="1476.5" y="1746.18" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">D4</text>
+              </g>
+              <g id="_body_1_children_0_children_1_children_0_parts_8" data-row="/body/1/children/0/children/1/children/0/parts/8">
+                <circle cx="1145.64" cy="1786.5" r="8.35" fill="#FFFFFF" stroke="#1A73E8" stroke-width="1.3"/>
+                <line x1="1313.14" y1="1777.5" x2="1313.14" y2="1827.1" stroke="#DADCE0" stroke-width="1"/>
+                <text x="1142.4" y="1790.14" xml:space="preserve" font-family="Inter" font-size="10" font-weight="700" fill="#202124">9</text>
+                <text x="1176.64" y="1790.57" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#5F6368">Expiry scheduler</text>
+                <text x="1176.64" y="1806.58" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">hosted scheduler</text>
+                <text x="1176.64" y="1824.5" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">PLANNED</text>
+                <text x="1321.64" y="1789.18" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">Releases a copy left on the</text>
+                <text x="1321.64" y="1804.18" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">shelf past its date, so the</text>
+                <text x="1321.64" y="1819.18" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">next patron in line gets it.</text>
+                <text x="1476.5" y="1789.18" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">B8 D6</text>
+              </g>
             </g>
             <g data-id="/body/1/children/0/children/1/children/1" data-tag="Frame">
               <line x1="1129.2" y1="1856.66" x2="1547.94" y2="2092.54" stroke="#5F6368" stroke-width="1"/>

@@ -31,7 +31,7 @@ Drawn elements: 31 (23 nodes, 8 links). Laid out at 1740 x 1040.24 px, projectio
           - Col, top to bottom. `/body/0/children/1/children/0/children/0/children/0/children/4`
             - Item Orders: PostgreSQL; kind store, icon postgresql, product PostgreSQL, shape cylinder. `/body/0/children/1/children/0/children/0/children/0/children/4/children/0`
           - Col, top to bottom. `/body/0/children/1/children/0/children/0/children/0/children/5`
-            - Item Backups: MinIO; kind store, icon minio, product MinIO, shape stack. `/body/0/children/1/children/0/children/0/children/0/children/5/children/0`
+            - Item Backups: MinIO; kind store, product MinIO, shape stack. `/body/0/children/1/children/0/children/0/children/0/children/5/children/0`
         - Row, left to right. `/body/0/children/1/children/0/children/0/children/1`
           - Item Orchestrator: Kubernetes; kind service, icon kubernetes, product Kubernetes, shape tower. `/body/0/children/1/children/0/children/0/children/1/children/0`
           - Item Sessions: Redis; kind store, icon redis, product Redis, shape cylinder. `/body/0/children/1/children/0/children/0/children/1/children/1`
