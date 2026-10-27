@@ -82,6 +82,8 @@ pub(super) fn render_iso(
             writer.palette.page_background()
         ),
     );
+    writer.rule_sources = highlights.rule_sources();
+    writer.write_unpin_floor(1, scene.canvas);
     if let Some(shadow) = writer.palette.iso_block_shadow() {
         writer.line(
             1,
@@ -123,6 +125,18 @@ pub(super) fn render_iso(
             writer.line(depth, &group_open_tag(node, &highlights, index));
         }
         let solid = solids.get(index).copied().flatten();
+        if let Some(anchor) = highlights.anchors.get(index).cloned().flatten() {
+            let hit_area = iso_hit_area(
+                node,
+                solid,
+                node_labels
+                    .get(index)
+                    .map(Vec::as_slice)
+                    .unwrap_or_default(),
+                scene.footer_shift,
+            );
+            writer.begin_own(depth + 1, node.pointer.as_str(), &anchor, &hit_area);
+        }
         match (node.tag, solid, document_node) {
             (NodeTag::LegendEntry, _, DocumentNode::LegendEntry(_)) => {
                 let shifted = shifted_node(node, 0.0, scene.footer_shift);
@@ -147,6 +161,7 @@ pub(super) fn render_iso(
                 writer.write_node(depth + 1, node, *document_node)?;
             }
         }
+        writer.end_own();
         open_groups.push(index);
     }
     for depth in (1..=open_groups.len()).rev() {
@@ -161,13 +176,50 @@ pub(super) fn render_iso(
         let pointer = NodePointer::root().child("links").index(route.index);
         let tag = scene.labels.iter().find(|label| label.owner == pointer);
         writer.line(1, &link_group_open_tag(geometry, route)?);
+        let lift = link_tube_radius(route.line, route.tint) * zoom;
+        let centre = iso_link_path(path, (route.corner * zoom, route.bend), lift, scene.offset);
+        writer.begin_own(
+            2,
+            pointer.as_str(),
+            &super::related::pointer_anchor(pointer.as_str()),
+            &[super::hit_path(&centre)],
+        );
         writer.write_iso_link(1, route, link, path, scene.offset, tag)?;
+        writer.end_own();
         writer.line(1, "</g>");
     }
     writer.line(0, "</svg>");
     writer.hover_rules = highlights.rules;
 
     Ok(writer.into_document())
+}
+
+/// The hit area of a node's own elements on screen: the outline of its solid and the quad
+/// of each of its labels, else its box, moved with the footer for the legend and foot.
+fn iso_hit_area(
+    node: &NodeGeometry,
+    solid: Option<&Solid>,
+    labels: &[&Label],
+    footer_shift: f32,
+) -> Vec<String> {
+    let polygon = |points: &[ScreenPoint]| {
+        format!(
+            r#"<polygon data-hit="" points="{}" fill="none"/>"#,
+            points_attribute(points)
+        )
+    };
+    match solid {
+        Some(solid) => std::iter::once(polygon(&solid.outline))
+            .chain(labels.iter().map(|label| polygon(&label.corners)))
+            .collect(),
+        None => {
+            let shift = match node.tag {
+                NodeTag::Legend | NodeTag::LegendEntry | NodeTag::Foot => footer_shift,
+                _ => 0.0,
+            };
+            vec![super::hit_rect(shifted_box(node.bounds, 0.0, shift))]
+        }
+    }
 }
 
 fn shifted_box(bounds: BoxRect, delta_x: f32, delta_y: f32) -> BoxRect {

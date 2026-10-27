@@ -5,8 +5,9 @@
 # the check and vet lines under crates/stencil-cli/tests/fixtures. With no stem named, the
 # check and vet lines are rewritten only for the stems that already have them; a stem named on
 # the command line always gets both, so a new example gets its fixtures.
-# The SVG fixture is the font-free document render_svg returns, so the @font-face block the
-# written file carries is removed; the measured JSON fixture leaves out the document key.
+# The SVG fixture is the document render_svg returns, so scripts/resvg-input.py removes the
+# style block and the browser-only elements the written file carries; the measured JSON
+# fixture leaves out the document key.
 # Run from the repository root. The first argument is the stencil binary.
 set -euo pipefail
 
@@ -30,13 +31,7 @@ count=0
 for stem in "${stems[@]}"; do
   out=$scratch/$stem
   "$stencil" render "examples/$stem.json" --out-dir "$out" --scale 2 --theme center >/dev/null
-  python3 - "$out/$stem.svg" "$render_fixtures/$stem.center.svg" <<'PY'
-import sys
-lines = open(sys.argv[1], encoding="utf-8").read().split("\n")
-if lines[1] == "  <defs>" and lines[2] == "    <style>":
-    lines = lines[:1] + lines[lines.index("  </defs>") + 1:]
-open(sys.argv[2], "w", encoding="utf-8").write("\n".join(lines))
-PY
+  python3 scripts/resvg-input.py "$out/$stem.svg" "$render_fixtures/$stem.center.svg"
   python3 - "$out/$stem.measured.json" "$render_fixtures/$stem.center.geometry.json" <<'PY'
 import sys
 lines = open(sys.argv[1], encoding="utf-8").read().split("\n")
@@ -56,13 +51,7 @@ document["corner"] = 0
 json.dump(document, open(sys.argv[2], "w", encoding="utf-8"), ensure_ascii=False)
 PY
     "$stencil" render "$out/$stem.square.json" --out-dir "$out/square" --scale 2 --theme center >/dev/null
-    python3 - "$out/square/$stem.square.svg" "$render_fixtures/$stem.square.svg" <<'PY'
-import sys
-lines = open(sys.argv[1], encoding="utf-8").read().split("\n")
-if lines[1] == "  <defs>" and lines[2] == "    <style>":
-    lines = lines[:1] + lines[lines.index("  </defs>") + 1:]
-open(sys.argv[2], "w", encoding="utf-8").write("\n".join(lines))
-PY
+    python3 scripts/resvg-input.py "$out/square/$stem.square.svg" "$render_fixtures/$stem.square.svg"
   fi
   if (( named > 0 )) || [[ -e "$cli_fixtures/$stem.check.txt" ]]; then
     "$stencil" check "examples/$stem.json" >| "$cli_fixtures/$stem.check.txt" || true
