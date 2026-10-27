@@ -105,7 +105,8 @@ pub fn render_exit_code(error: &RenderError) -> ExitCode {
         | RenderError::FontNotResolved { .. }
         | RenderError::PixmapAllocation { .. }
         | RenderError::PngEncode { .. }
-        | RenderError::SheetSurface { .. } => ExitCode::CouldNotRun,
+        | RenderError::SheetSurface { .. }
+        | RenderError::Portable { .. } => ExitCode::CouldNotRun,
     }
 }
 
