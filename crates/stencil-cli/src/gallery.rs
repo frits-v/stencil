@@ -13,7 +13,7 @@ use stencil_render::DeviceScale;
 
 use crate::exit::{ExitCode, failure_exit_code, reports_exit_code};
 use crate::pipeline::{
-    Failure, LoadedDocument, OutputNames, ThemeChoice, all_checks, grammar_violations,
+    Failure, LoadedDocument, OutputNames, SvgForm, ThemeChoice, all_checks, grammar_violations,
     load_document_from, load_theme, output_names, read_input, render_page, theme_violations,
     write_outputs,
 };
@@ -354,7 +354,13 @@ fn render_theme(
         rendered.scene.as_ref(),
         None,
     );
-    write_outputs(&out_dir.join(name).join(theme_name), names, &rendered, path)?;
+    write_outputs(
+        &out_dir.join(name).join(theme_name),
+        names,
+        &rendered,
+        path,
+        SvgForm::SelfContained,
+    )?;
 
     let passed = reports_exit_code(&reports) == ExitCode::Clean;
     let summary = check_counts_text(&reports);

@@ -25,7 +25,7 @@ pub use exit::ExitCode;
 
 use exit::{clap_exit_code, failure_exit_code, prime_exit_code, reports_exit_code};
 use pipeline::{
-    Failure, LoadedDocument, OutputPaths, ThemeChoice, all_checks, grammar_violations,
+    Failure, LoadedDocument, OutputPaths, SvgForm, ThemeChoice, all_checks, grammar_violations,
     load_document_from, model_checks, output_names, print_fit_report, read_input, render_page,
     render_page_sized, theme_violations, write_outputs,
 };
@@ -82,6 +82,10 @@ enum Command {
         /// Print width in inches, 0.5 to 200; runs print-fit after the files are written
         #[arg(long, value_name = "INCHES", value_parser = parse_print_width)]
         print_width: Option<PrintWidth>,
+        /// Write the SVG with its text as glyph outlines and its icons inlined, so it draws
+        /// the same where fonts and data: images are blocked, as on a GitHub attachment
+        #[arg(long)]
+        portable: bool,
     },
     /// Lay out and render in memory, then run every check
     Check {
@@ -198,6 +202,13 @@ impl PngArguments {
     }
 }
 
+/// How `render` writes its files: the PNG size and the SVG form.
+#[derive(Debug, Clone, Copy)]
+struct OutputArguments {
+    png: PngArguments,
+    svg_form: SvgForm,
+}
+
 /// The `--projection` values, one per `Projection` variant (section 12.9).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, ValueEnum)]
 enum ProjectionArgument {
@@ -281,12 +292,20 @@ fn run_command(
             theme,
             projection,
             print_width,
+            portable,
         } => render(
             &json,
             &out_dir,
-            PngArguments {
-                scale,
-                width: png_width,
+            OutputArguments {
+                png: PngArguments {
+                    scale,
+                    width: png_width,
+                },
+                svg_form: if portable {
+                    SvgForm::Portable
+                } else {
+                    SvgForm::SelfContained
+                },
             },
             print_width,
             &Overrides { theme, projection },
@@ -372,13 +391,13 @@ fn vet(path: &Path, stdout: &mut dyn Write, stderr: &mut dyn Write) -> io::Resul
 fn render(
     path: &Path,
     out_dir: &Path,
-    png: PngArguments,
+    outputs: OutputArguments,
     print_width: Option<PrintWidth>,
     overrides: &Overrides,
     stdout: &mut dyn Write,
     stderr: &mut dyn Write,
 ) -> io::Result<ExitCode> {
-    match render_to_disk(path, out_dir, png, overrides, print_width) {
+    match render_to_disk(path, out_dir, outputs, overrides, print_width) {
         Ok((paths, print_report)) => {
             for written in [&paths.svg, &paths.png, &paths.measured, &paths.description] {
                 writeln!(stdout, "{}", written.display())?;
@@ -400,15 +419,15 @@ fn render(
 fn render_to_disk(
     path: &Path,
     out_dir: &Path,
-    png: PngArguments,
+    outputs: OutputArguments,
     overrides: &Overrides,
     print_width: Option<PrintWidth>,
 ) -> Result<(OutputPaths, Option<CheckReport>), Failure> {
-    let png = png.size()?;
+    let png = outputs.png.size()?;
     let names = output_names(path)?;
     let loaded = load_overridden_document(path, overrides)?;
     let rendered = render_page_sized(&loaded, png)?;
-    let paths = write_outputs(out_dir, &names, &rendered, path)?;
+    let paths = write_outputs(out_dir, &names, &rendered, path, outputs.svg_form)?;
     let print_report = print_width
         .map(|width| print_fit_report(&rendered.geometry, rendered.scene.as_ref(), Some(width)));
     Ok((paths, print_report))
