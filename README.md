@@ -40,11 +40,11 @@ Five item shapes on one floor, under the isometric projection:
 
 Pipes as tubes on the floor, with flange rings and cones at their ends:
 
-![Two firewall zones and four VLANs at the head office](docs/gallery/onprem-iso.png)
+![Building management network of an office tower](docs/gallery/onprem-iso.png)
 
 People and client devices as drawn sprites, a figure, a laptop and a phone:
 
-![Staff and customers reach the API from their own devices](docs/gallery/people-iso.png)
+![Reception and patients book through one booking API](docs/gallery/people-iso.png)
 
 Narrow regions with long product names, a Tee with a band arm and a figure on the branch slab:
 
@@ -70,9 +70,9 @@ The next four figures also use the `plain` grammar.
 
 `examples/org.json`: an organization chart with divisions as tiles, teams as tinted groups of people, and reporting links.
 
-![Two firewall zones and four VLANs at a head office](docs/gallery/onprem-network.png)
+![Treatment plant network of a water utility](docs/gallery/onprem-network.png)
 
-`examples/onprem-network.json`: an on-prem site with two firewall zones, a tinted group and a pipe per VLAN, and a blocked path between the zones.
+`examples/onprem-network.json`: a water treatment plant's network with two firewall zones, a tinted group and a pipe per VLAN, and a blocked path from the DMZ to the plant controllers.
 
 These PNGs are the center theme at scale 1, regenerated with `mise run gallery-docs`; CI fails when they drift from the examples. The full gallery, every example in all six themes with its SVG, 2x PNG and measured JSON, is the `gallery` artifact of the CI run on main, and `gallery.zip` plus the center PNGs are attached to the release of every `v*` tag.
 
