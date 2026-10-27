@@ -886,27 +886,21 @@
         "function_name": {
           "height": 15.6,
           "line_count": 1,
-          "width": 214.41,
-          "x": 1265.09,
-          "y": 358.6
-        },
-        "icon": {
-          "height": 28,
-          "width": 28,
+          "width": 252.41,
           "x": 1227.09,
-          "y": 360.1
+          "y": 358.6
         },
         "product_name": {
           "height": 14.4,
           "line_count": 1,
-          "width": 214.41,
-          "x": 1265.09,
+          "width": 252.41,
+          "x": 1227.09,
           "y": 375.2
         },
         "text": {
           "height": 31,
-          "width": 214.41,
-          "x": 1265.09,
+          "width": 252.41,
+          "x": 1227.09,
           "y": 358.6
         }
       },
