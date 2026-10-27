@@ -525,7 +525,7 @@ fn text_faces_and_font_faces(svg: &str) -> (BTreeSet<Face>, BTreeMap<Face, Vec<u
 /// hybrid-ai, g7 and the onepager sheet set text in all four Inter weights (the sheet's
 /// captions and grid references are SemiBold), and design-brief and the iso hero in 400, 700
 /// and 800 only. Only onepager holds a how-to, so only its file sets text in JetBrains Mono
-/// NL, embeds that face and writes its monospace fallback rule.
+/// NL and embeds that face.
 #[test]
 fn the_svg_embeds_a_font_face_for_each_family_and_weight_its_text_uses_and_no_other() {
     let out_dir = scratch_directory("render_embeds_fonts");
@@ -577,12 +577,6 @@ fn the_svg_embeds_a_font_face_for_each_family_and_weight_its_text_uses_and_no_ot
                 "{stem}: {family} {weight}"
             );
         }
-        let monospace_rule = r#"text[font-family="JetBrains Mono NL"] { font-family: "JetBrains Mono NL", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }"#;
-        assert_eq!(
-            svg.contains(monospace_rule),
-            text_faces.contains(&monospace),
-            "{stem}"
-        );
         examined += 1;
     }
     assert_eq!(examined, 5);
@@ -877,17 +871,33 @@ fn onepager_keeps_the_related_set_of_each_kind_of_element() {
     assert!(svg.contains(&format!(r#"data-id="{how_to}""#)));
 }
 
+/// Each family the text uses gets one fallback rule keyed on its `font-family` attribute,
+/// after the faces and before the hover rules; a rule on every `text` would outrank the
+/// monospace attribute and draw a how-to's terminal in Inter. Only onepager has a how-to.
 #[test]
-fn the_written_svg_gives_its_text_a_fallback_stack_after_the_faces_and_the_resvg_input_does_not() {
-    let rule = r#"text { font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }"#;
+fn the_written_svg_gives_each_family_its_own_fallback_stack_and_the_resvg_input_none() {
+    let sans = r#"text[font-family="Inter"] { font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }"#;
+    let monospace = r#"text[font-family="JetBrains Mono NL"] { font-family: "JetBrains Mono NL", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }"#;
     let mut examined = 0;
-    for stem in ["hybrid-ai", "design-brief", "onepager", "hero-iso"] {
+    for (stem, expected) in [
+        ("hybrid-ai", vec![sans]),
+        ("design-brief", vec![sans]),
+        ("onepager", vec![sans, monospace]),
+        ("hero-iso", vec![sans]),
+        ("g7", vec![sans]),
+    ] {
         let (svg, resvg_input) = written_and_resvg_svg(stem);
         let lines: Vec<&str> = svg.lines().map(str::trim_start).collect();
-        let at: Vec<usize> = (0..lines.len())
-            .filter(|index| lines[*index] == rule)
+        let rules: Vec<&str> = lines
+            .iter()
+            .copied()
+            .filter(|line| line.starts_with("text"))
             .collect();
-        assert_eq!(at.len(), 1, "{stem}");
+        assert_eq!(rules, expected, "{stem}");
+        assert!(
+            !lines.iter().any(|line| line.starts_with("text {")),
+            "{stem}: a rule on every text element"
+        );
         let last_face = lines
             .iter()
             .rposition(|line| line.starts_with("@font-face"))
@@ -896,12 +906,15 @@ fn the_written_svg_gives_its_text_a_fallback_stack_after_the_faces_and_the_resvg
             .iter()
             .position(|line| line.contains(":hover"))
             .unwrap_or(lines.len());
-        assert!(last_face < at[0] && at[0] < first_hover, "{stem}");
+        for rule in &expected {
+            let at = lines.iter().position(|line| line == rule).unwrap();
+            assert!(last_face < at && at < first_hover, "{stem}");
+        }
         assert!(!resvg_input.svg.contains("font-family: Inter,"), "{stem}");
         assert!(!resvg_input.svg.contains("<style"), "{stem}");
         examined += 1;
     }
-    assert_eq!(examined, 4);
+    assert_eq!(examined, 5);
 }
 
 #[test]

@@ -2840,23 +2840,29 @@ fn left_rounded_strip_path(bounds: BoxRect, radius: f32) -> String {
 
 /// How far a faded unit drops while another element is highlighted (section 5.2).
 const HOVER_FADED_OPACITY: &str = "0.2";
-/// The families the written file's text falls back through when the embedded faces do not
-/// load (section 5.2).
-const TEXT_FONT_STACK: &str =
-    r#"Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif"#;
 /// How long the fade takes each way.
 const HOVER_TRANSITION: &str = "opacity 0.15s ease-out";
-/// The families a how-to's terminal text falls back through when the embedded monospace
-/// face does not load (section 5.2).
-const MONOSPACE_FONT_STACK: &str =
-    r#""JetBrains Mono NL", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace"#;
+
+/// The families text set in `family` falls back through when the embedded faces do not load
+/// and the family is not installed (section 5.2): a sans stack for Inter, a monospace stack
+/// for a how-to's terminal face.
+fn fallback_stack(family: FontFamily) -> &'static str {
+    match family {
+        FontFamily::Inter => {
+            r#"Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif"#
+        }
+        FontFamily::JetBrainsMonoNl => {
+            r#""JetBrains Mono NL", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace"#
+        }
+    }
+}
 
 impl SvgDocument {
     /// The SVG with one `@font-face` per entry of `font_faces`, its bundled file as a `data:`
-    /// URI, a monospace fallback rule when a how-to's terminal text uses JetBrains Mono NL,
-    /// and one rule per entry of `hover_rules`, in a `<style>` right after the opening `<svg>`
-    /// tag, so the file renders in its own faces where they are not installed and highlights
-    /// what an element refers to under the pointer (section 5.2). A document with no text and
+    /// URI, one fallback rule per family its text uses, and one rule per entry of
+    /// `hover_rules`, in a `<style>` right after the opening `<svg>` tag, so the file renders
+    /// in its own faces where they are not installed and highlights what an element refers
+    /// to under the pointer (section 5.2). A document with no text and
     /// no rule is returned as is.
     pub fn self_contained(&self) -> Result<String, RenderError> {
         let Some((open_tag, rest)) = self.svg.split_once('\n') else {
@@ -2885,25 +2891,16 @@ impl SvgDocument {
             ));
             output.push('\n');
         }
-        if !self.font_faces.is_empty() {
-            // A style rule outranks the `font-family` attribute, so where the embedded faces
-            // are blocked and Inter is not installed the text falls back to a sans face.
-            output.push_str(&format!(
-                "      text {{ font-family: {TEXT_FONT_STACK}; }}\n"
-            ));
-        }
-        if self
-            .font_faces
-            .iter()
-            .any(|(family, _)| *family == FontFamily::JetBrainsMonoNl)
-        {
-            // The attribute selector outranks a rule on every `text`, so terminal lines keep a
-            // monospace face where the embedded faces are blocked and the family is not
-            // installed.
-            output.push_str(&format!(
-                "      text[font-family=\"{}\"] {{ font-family: {MONOSPACE_FONT_STACK}; }}\n",
-                FontFamily::JetBrainsMonoNl.css_name()
-            ));
+        // A style rule outranks the `font-family` attribute, so each rule is keyed on the
+        // attribute it replaces and a family keeps its own stack.
+        for family in FontFamily::ALL {
+            if self.font_faces.iter().any(|(used, _)| *used == family) {
+                output.push_str(&format!(
+                    "      text[font-family=\"{}\"] {{ font-family: {}; }}\n",
+                    family.css_name(),
+                    fallback_stack(family)
+                ));
+            }
         }
         if !self.hover_rules.is_empty() {
             output.push_str(&format!(
