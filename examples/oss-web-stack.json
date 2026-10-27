@@ -182,7 +182,7 @@
                               "kind": "store",
                               "id": "receipts",
                               "title": "Receipts",
-                              "icon": "minio",
+                              "shape": "stack",
                               "subtitle": "MinIO"
                             }
                           ]
