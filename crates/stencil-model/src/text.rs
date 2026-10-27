@@ -232,6 +232,27 @@ const fn inter(
     }
 }
 
+const fn mono(
+    name: TextStyleName,
+    weight: FontWeight,
+    size_px: f32,
+    line_height_px: f32,
+    letter_spacing_em: f32,
+    uppercase: bool,
+) -> NamedTextStyle {
+    NamedTextStyle {
+        name,
+        style: TextStyle {
+            family: FontFamily::JetBrainsMonoNl,
+            weight,
+            size_px,
+            line_height_px,
+            letter_spacing_em,
+        },
+        uppercase,
+    }
+}
+
 const BADGE: NamedTextStyle = inter(
     TextStyleName::Badge,
     FontWeight::ExtraBold,
@@ -573,8 +594,9 @@ const HOW_TO_TITLE: NamedTextStyle = inter(
     0.08,
     true,
 );
-/// Terminal lines and command chips: Inter Regular, so terminal columns do not align.
-const TERMINAL_TEXT: NamedTextStyle = inter(
+/// Terminal lines and command chips: JetBrains Mono NL Regular, so every character is one
+/// advance and terminal columns align.
+const TERMINAL_TEXT: NamedTextStyle = mono(
     TextStyleName::TerminalText,
     FontWeight::Regular,
     11.5,

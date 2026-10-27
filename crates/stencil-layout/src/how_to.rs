@@ -38,9 +38,9 @@ pub(crate) const TERMINAL_BORDER_PX: f32 = 1.0;
 /// The column every terminal line starts after, and the width of one indent level.
 #[derive(Debug, Clone, Copy, Default)]
 pub(crate) struct TerminalMetrics {
-    /// The wider of the two prompts plus one space.
+    /// The widest prompt in whole advances, plus one advance for the space after it.
     pub prompt_column_px: f32,
-    /// Two spaces.
+    /// Two advances.
     pub indent_px: f32,
 }
 
@@ -120,21 +120,24 @@ pub(crate) fn columns_for(count: usize, widest: f32, content_width: f32) -> usiz
     count.div_ceil(rows)
 }
 
+/// The terminal face is monospace, so one advance is measured on a single character and
+/// the prompt column and the indent step are whole advances: an indented line starts on a
+/// column of the line above it.
 fn terminal_metrics(measurer: &mut dyn TextMeasurer) -> Result<TerminalMetrics, MeasureError> {
     let style = text_style_for(TextStyleName::TerminalText, false);
     let mut width = |text: &str| -> Result<f32, MeasureError> {
         Ok(measurer.measure(text, &style, None)?.width_px)
     };
-    let space = width("x x")? - width("xx")?;
-    let mut prompt: f32 = 0.0;
+    let advance = width("x")?;
+    let mut prompt_advances: f32 = 0.0;
     for kind in TerminalKind::ALL {
         if let Some(text) = kind.prompt() {
-            prompt = prompt.max(width(text)?);
+            prompt_advances = prompt_advances.max((width(text)? / advance).ceil());
         }
     }
     Ok(TerminalMetrics {
-        prompt_column_px: (prompt + space).ceil(),
-        indent_px: 2.0 * space,
+        prompt_column_px: (prompt_advances + 1.0) * advance,
+        indent_px: 2.0 * advance,
     })
 }
 
