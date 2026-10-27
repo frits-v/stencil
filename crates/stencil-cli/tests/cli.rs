@@ -481,21 +481,25 @@ fn describe_exits_2_for_a_missing_file() {
     );
 }
 
-/// The `font-weight` values of every `<text>` element, and of every `@font-face` rule with
-/// the bytes its `data:` URI decodes to.
-fn text_weights_and_font_faces(svg: &str) -> (BTreeSet<u16>, BTreeMap<u16, Vec<u8>>) {
-    let text_weights = svg
+/// A text face as the written SVG names it: family and weight.
+type Face = (String, u16);
+
+/// The `font-family` and `font-weight` of every `<text>` element, and of every `@font-face`
+/// rule with the bytes its `data:` URI decodes to.
+fn text_faces_and_font_faces(svg: &str) -> (BTreeSet<Face>, BTreeMap<Face, Vec<u8>>) {
+    let text_faces = svg
         .lines()
         .filter(|line| line.trim_start().starts_with("<text "))
         .map(|line| {
-            let after = line.split_once(r#" font-weight=""#).unwrap().1;
-            after.split_once('"').unwrap().0.parse().unwrap()
+            let family = attribute(line, "font-family").unwrap().to_string();
+            let weight = attribute(line, "font-weight").unwrap().parse().unwrap();
+            (family, weight)
         })
         .collect();
     let mut faces = BTreeMap::new();
     for rule in svg.split("@font-face").skip(1) {
         let rule = rule.split_once('}').unwrap().0;
-        assert!(rule.contains(r#"font-family: "Inter";"#), "{rule:.120}");
+        let family = quoted_after(rule, r#"font-family: ""#).to_string();
         let weight: u16 = rule
             .split_once("font-weight: ")
             .unwrap()
@@ -505,35 +509,42 @@ fn text_weights_and_font_faces(svg: &str) -> (BTreeSet<u16>, BTreeMap<u16, Vec<u
             .0
             .parse()
             .unwrap();
-        let payload = rule
-            .split_once(r#"url("data:font/ttf;base64,"#)
-            .unwrap()
-            .1
-            .split_once('"')
-            .unwrap()
-            .0;
+        let payload = quoted_after(rule, r#"url("data:font/ttf;base64,"#);
         let bytes = base64::engine::general_purpose::STANDARD
             .decode(payload)
             .unwrap();
+        let face = (family, weight);
         assert!(
-            faces.insert(weight, bytes).is_none(),
-            "weight {weight} twice"
+            faces.insert(face.clone(), bytes).is_none(),
+            "{face:?} twice"
         );
     }
-    (text_weights, faces)
+    (text_faces, faces)
 }
 
-/// hybrid-ai and the onepager sheet set text in all four weights (the sheet's captions and
-/// grid references are SemiBold), and design-brief and the iso hero in 400, 700 and 800 only.
+/// hybrid-ai, g7 and the onepager sheet set text in all four Inter weights (the sheet's
+/// captions and grid references are SemiBold), and design-brief and the iso hero in 400, 700
+/// and 800 only. Only onepager holds a how-to, so only its file sets text in JetBrains Mono
+/// NL and embeds that face.
 #[test]
-fn the_svg_embeds_a_font_face_for_each_weight_its_text_uses_and_no_other() {
+fn the_svg_embeds_a_font_face_for_each_family_and_weight_its_text_uses_and_no_other() {
     let out_dir = scratch_directory("render_embeds_fonts");
+    let inter = |weights: &[u16]| -> Vec<Face> {
+        weights
+            .iter()
+            .map(|weight| ("Inter".to_string(), *weight))
+            .collect()
+    };
+    let monospace: Face = ("JetBrains Mono NL".to_string(), 400);
+    let mut onepager = inter(&[400, 600, 700, 800]);
+    onepager.push(monospace.clone());
     let mut examined = 0;
-    for (stem, expected_weights) in [
-        ("hybrid-ai", vec![400, 600, 700, 800]),
-        ("design-brief", vec![400, 700, 800]),
-        ("onepager", vec![400, 600, 700, 800]),
-        ("hero-iso", vec![400, 700, 800]),
+    for (stem, expected_faces) in [
+        ("hybrid-ai", inter(&[400, 600, 700, 800])),
+        ("design-brief", inter(&[400, 700, 800])),
+        ("onepager", onepager),
+        ("hero-iso", inter(&[400, 700, 800])),
+        ("g7", inter(&[400, 600, 700, 800])),
     ] {
         let input = repository_path(&format!("examples/{stem}.json"));
         let outcome = run_stencil(&[
@@ -545,27 +556,30 @@ fn the_svg_embeds_a_font_face_for_each_weight_its_text_uses_and_no_other() {
         assert_eq!(outcome.code, ExitCode::Clean, "{}", outcome.stderr);
 
         let svg = fs::read_to_string(out_dir.join(format!("{stem}.svg"))).unwrap();
-        let (text_weights, faces) = text_weights_and_font_faces(&svg);
+        let (text_faces, faces) = text_faces_and_font_faces(&svg);
         assert_eq!(
-            text_weights.iter().copied().collect::<Vec<_>>(),
-            expected_weights,
+            text_faces.iter().cloned().collect::<Vec<_>>(),
+            expected_faces,
             "{stem}"
         );
         assert_eq!(
-            faces.keys().copied().collect::<BTreeSet<_>>(),
-            text_weights,
+            faces.keys().cloned().collect::<BTreeSet<_>>(),
+            text_faces,
             "{stem}"
         );
-        for (weight, bytes) in &faces {
+        for ((family, weight), bytes) in &faces {
             let bundled = BUNDLED_FONTS
                 .iter()
-                .find(|file| file.weight.css_value() == *weight)
+                .find(|file| file.family.css_name() == family && file.weight.css_value() == *weight)
                 .unwrap();
-            assert!(bytes.as_slice() == bundled.bytes, "{stem}: {weight}");
+            assert!(
+                bytes.as_slice() == bundled.bytes,
+                "{stem}: {family} {weight}"
+            );
         }
         examined += 1;
     }
-    assert_eq!(examined, 4);
+    assert_eq!(examined, 5);
 }
 
 /// The value of attribute `name` in the tag on `line`, when the tag has it.
@@ -954,17 +968,33 @@ fn onepager_keeps_the_related_set_of_each_kind_of_element() {
     assert!(svg.contains(&format!(r#"data-id="{how_to}""#)));
 }
 
+/// Each family the text uses gets one fallback rule keyed on its `font-family` attribute,
+/// after the faces and before the hover rules; a rule on every `text` would outrank the
+/// monospace attribute and draw a how-to's terminal in Inter. Only onepager has a how-to.
 #[test]
-fn the_written_svg_gives_its_text_a_fallback_stack_after_the_faces_and_the_resvg_input_does_not() {
-    let rule = r#"text { font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }"#;
+fn the_written_svg_gives_each_family_its_own_fallback_stack_and_the_resvg_input_none() {
+    let sans = r#"text[font-family="Inter"] { font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }"#;
+    let monospace = r#"text[font-family="JetBrains Mono NL"] { font-family: "JetBrains Mono NL", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }"#;
     let mut examined = 0;
-    for stem in ["hybrid-ai", "design-brief", "onepager", "hero-iso"] {
+    for (stem, expected) in [
+        ("hybrid-ai", vec![sans]),
+        ("design-brief", vec![sans]),
+        ("onepager", vec![sans, monospace]),
+        ("hero-iso", vec![sans]),
+        ("g7", vec![sans]),
+    ] {
         let (svg, resvg_input) = written_and_resvg_svg(stem);
         let lines: Vec<&str> = svg.lines().map(str::trim_start).collect();
-        let at: Vec<usize> = (0..lines.len())
-            .filter(|index| lines[*index] == rule)
+        let rules: Vec<&str> = lines
+            .iter()
+            .copied()
+            .filter(|line| line.starts_with("text"))
             .collect();
-        assert_eq!(at.len(), 1, "{stem}");
+        assert_eq!(rules, expected, "{stem}");
+        assert!(
+            !lines.iter().any(|line| line.starts_with("text {")),
+            "{stem}: a rule on every text element"
+        );
         let last_face = lines
             .iter()
             .rposition(|line| line.starts_with("@font-face"))
@@ -973,12 +1003,15 @@ fn the_written_svg_gives_its_text_a_fallback_stack_after_the_faces_and_the_resvg
             .iter()
             .position(|line| line.contains(":hover"))
             .unwrap_or(lines.len());
-        assert!(last_face < at[0] && at[0] < first_hover, "{stem}");
+        for rule in &expected {
+            let at = lines.iter().position(|line| line == rule).unwrap();
+            assert!(last_face < at && at < first_hover, "{stem}");
+        }
         assert!(!resvg_input.svg.contains("font-family: Inter,"), "{stem}");
         assert!(!resvg_input.svg.contains("<style"), "{stem}");
         examined += 1;
     }
-    assert_eq!(examined, 4);
+    assert_eq!(examined, 5);
 }
 
 #[test]

@@ -49,14 +49,16 @@ fn render_example(stem: &str) -> RenderedPage {
     render_page(&loaded, DeviceScale::DEFAULT).unwrap()
 }
 
-/// The lines of the `<style>` other than the `@font-face` rules and the text fallback rule,
+/// The lines of the `<style>` other than the `@font-face` rules and the text fallback rules,
 /// which name faces: the transition and the hover rules.
 fn hover_lines(svg: &str) -> Vec<&str> {
     let style = svg.split_once("<style>").unwrap().1;
     let style = style.split_once("</style>").unwrap().0;
     let lines: Vec<&str> = style
         .lines()
-        .filter(|line| !line.contains("@font-face") && !line.trim_start().starts_with("text {"))
+        .filter(|line| {
+            !line.contains("@font-face") && !line.trim_start().starts_with("text[font-family=")
+        })
         .collect();
     assert!(lines.iter().any(|line| line.contains(":hover")));
     lines
