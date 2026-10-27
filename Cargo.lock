@@ -1557,6 +1557,7 @@ dependencies = [
  "resvg",
  "serde_json",
  "sha2",
+ "skrifa 0.44.0",
  "stencil-layout",
  "stencil-model",
  "stencil-text",
