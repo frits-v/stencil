@@ -8,6 +8,7 @@ pub mod themes;
 mod icons;
 mod measured;
 mod png;
+mod portable;
 mod svg;
 
 use std::fmt;
@@ -174,6 +175,8 @@ pub enum RenderError {
     Fonts(#[from] FontError),
     #[error("{pointer} is a design sheet surface, which is drawn flat only")]
     SheetSurface { pointer: NodePointer },
+    #[error("portable SVG: {message}")]
+    Portable { message: String },
 }
 
 #[cfg(test)]

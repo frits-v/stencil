@@ -112,7 +112,12 @@ fn text_styles_match_section_2_9() {
     for (named, expected) in TEXT_STYLES.iter().zip(SECTION_2_9) {
         let (name, weight, size_px, line_height_px, letter_spacing_em, uppercase) = expected;
         assert_eq!(named.name.as_str(), name);
-        assert_eq!(named.style.family, FontFamily::Inter);
+        let family = if name == "terminal_text" {
+            FontFamily::JetBrainsMonoNl
+        } else {
+            FontFamily::Inter
+        };
+        assert_eq!(named.style.family, family, "{name}");
         assert_eq!(named.style.weight.css_value(), weight, "{name}");
         assert_eq!(named.style.size_px, size_px, "{name}");
         assert_eq!(named.style.line_height_px, line_height_px, "{name}");
@@ -124,6 +129,7 @@ fn text_styles_match_section_2_9() {
 #[test]
 fn font_values() {
     assert_eq!(FontFamily::Inter.css_name(), "Inter");
+    assert_eq!(FontFamily::JetBrainsMonoNl.css_name(), "JetBrains Mono NL");
     let weights = [
         (FontWeight::Regular, 400),
         (FontWeight::SemiBold, 600),

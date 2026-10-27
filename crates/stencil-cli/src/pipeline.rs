@@ -139,6 +139,16 @@ pub struct RenderedPage {
 }
 
 /// The file names `render` writes, derived from the input's file stem.
+/// How the written SVG carries its text (section 5.2).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum SvgForm {
+    /// Text as `<text>` in the bundled faces, embedded as `@font-face` rules.
+    SelfContained,
+    /// Text as glyph outlines and icons inlined, for a page that blocks fonts and `data:`
+    /// images (`SvgDocument::portable`).
+    Portable,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct OutputNames {
     pub svg: OsString,
@@ -467,6 +477,7 @@ pub fn write_outputs(
     names: &OutputNames,
     rendered: &RenderedPage,
     input: &Path,
+    svg_form: SvgForm,
 ) -> Result<OutputPaths, Failure> {
     let mut measured_bytes =
         serde_json::to_vec_pretty(&rendered.measured).map_err(|source| Failure::Serialize {
@@ -488,7 +499,10 @@ pub fn write_outputs(
         measured: directory.join(&names.measured),
         description: directory.join(&names.description),
     };
-    let svg = rendered.svg.self_contained()?;
+    let svg = match svg_form {
+        SvgForm::SelfContained => rendered.svg.self_contained()?,
+        SvgForm::Portable => rendered.svg.portable()?,
+    };
     let outputs = [
         (&names.svg, &paths.svg, svg.as_bytes()),
         (&names.png, &paths.png, rendered.png.as_slice()),

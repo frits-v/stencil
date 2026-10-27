@@ -18,6 +18,8 @@ publish = false
 taffy = "=0.14.0"
 cosmic-text = { version = "=0.19.0", default-features = false, features = ["std", "swash"] }
 resvg = { version = "=0.48.1", default-features = false, features = ["text"] }
+# The glyph outline reader usvg uses, at its version, for the portable SVG's glyph defs.
+skrifa = { version = "=0.44.0", default-features = false, features = ["std"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 schemars = "1.2"

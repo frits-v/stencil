@@ -243,7 +243,7 @@ fn a_rounded_bend_is_one_joint_and_every_onepager_bend_is_drawn() {
 /// period and its air of a bend is a links-routed defect; as laid out neither is.
 #[test]
 fn a_tag_or_a_valve_on_a_bend_is_a_links_routed_defect() {
-    // Leaving the Trigger API to its right, as on the mockup, the planned line bends.
+    // Leaving the Holds API to its right, as on the mockup, the planned line bends.
     let mut document: Value = serde_json::from_str(ONEPAGER).unwrap();
     let planned = link_index(&page_from(document.clone()), "schedule expiry");
     document["links"][planned]["from_side"] = json!("right");

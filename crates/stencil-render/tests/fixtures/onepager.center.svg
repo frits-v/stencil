@@ -759,70 +759,70 @@
         <text x="1435.3" y="2154.77" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">real output, trimmed</text>
         <g data-id="/body/2/children/0" data-tag="HowTo">
           <g id="_body_2_children_0_items_0" data-id="/body/2/children/0/items/0" data-tag="HowToItem">
-            <rect x="610.44" y="2172.9" width="65.32" height="21.5" fill="#F1F3F4" stroke="#DADCE0" stroke-width="1"/>
-            <rect x="709.86" y="2172.9" width="77.64" height="21.5" fill="#F1F3F4" stroke="#DADCE0" stroke-width="1"/>
+            <rect x="583.59" y="2172.9" width="78" height="21.5" fill="#F1F3F4" stroke="#DADCE0" stroke-width="1"/>
+            <rect x="695.7" y="2172.9" width="91.8" height="21.5" fill="#F1F3F4" stroke="#DADCE0" stroke-width="1"/>
             <line x1="50" y1="2201.4" x2="788" y2="2201.4" stroke="#DADCE0" stroke-width="1"/>
             <rect x="50.5" y="2233.8" width="737" height="113" fill="#F1F3F4" stroke="#DADCE0" stroke-width="1"/>
             <text x="50" y="2187.65" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">4.1</text>
             <text x="76.1" y="2188.38" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" letter-spacing="1.04" fill="#202124">PLACE A HOLD</text>
-            <text x="614.94" y="2187.83" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">hold place</text>
-            <text x="680.25" y="2188.02" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">then</text>
-            <text x="714.36" y="2187.83" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">hold confirm</text>
+            <text x="588.09" y="2187.79" xml:space="preserve" font-family="JetBrains Mono NL" font-size="11.5" font-weight="400" fill="#202124">hold place</text>
+            <text x="666.09" y="2188.02" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">then</text>
+            <text x="700.2" y="2187.79" xml:space="preserve" font-family="JetBrains Mono NL" font-size="11.5" font-weight="400" fill="#202124">hold confirm</text>
             <text x="50" y="2222.97" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">Place the hold for the patron, check the branch it names, then confirm it. No copy is set aside before that.</text>
-            <text x="61" y="2252.73" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#174EA6">$</text>
-            <text x="75" y="2252.73" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">hold place --card 2104-8831 --branch east &quot;Rivers of the North&quot;</text>
-            <text x="75" y="2269.23" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">hold h-5120 placed, 3 of 5 in line</text>
-            <text x="75" y="2285.73" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">title: Rivers of the North; branch: East; notice: text message</text>
-            <text x="61" y="2302.23" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">#</text>
-            <text x="75" y="2302.23" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">the hold waits for confirmation</text>
-            <text x="61" y="2318.73" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#174EA6">$</text>
-            <text x="75" y="2318.73" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">hold confirm h-5120</text>
-            <text x="61" y="2335.23" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#174EA6">✓</text>
-            <text x="75" y="2335.23" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#174EA6">h-5120 confirmed for East branch</text>
+            <text x="61" y="2252.69" xml:space="preserve" font-family="JetBrains Mono NL" font-size="11.5" font-weight="400" fill="#174EA6">$</text>
+            <text x="74.8" y="2252.69" xml:space="preserve" font-family="JetBrains Mono NL" font-size="11.5" font-weight="400" fill="#202124">hold place --card 2104-8831 --branch east &quot;Rivers of the North&quot;</text>
+            <text x="74.8" y="2269.19" xml:space="preserve" font-family="JetBrains Mono NL" font-size="11.5" font-weight="400" fill="#202124">hold h-5120 placed, 3 of 5 in line</text>
+            <text x="74.8" y="2285.69" xml:space="preserve" font-family="JetBrains Mono NL" font-size="11.5" font-weight="400" fill="#202124">title: Rivers of the North; branch: East; notice: text message</text>
+            <text x="61" y="2302.19" xml:space="preserve" font-family="JetBrains Mono NL" font-size="11.5" font-weight="400" fill="#5F6368">#</text>
+            <text x="74.8" y="2302.19" xml:space="preserve" font-family="JetBrains Mono NL" font-size="11.5" font-weight="400" fill="#5F6368">the hold waits for confirmation</text>
+            <text x="61" y="2318.69" xml:space="preserve" font-family="JetBrains Mono NL" font-size="11.5" font-weight="400" fill="#174EA6">$</text>
+            <text x="74.8" y="2318.69" xml:space="preserve" font-family="JetBrains Mono NL" font-size="11.5" font-weight="400" fill="#202124">hold confirm h-5120</text>
+            <text x="61" y="2335.19" xml:space="preserve" font-family="JetBrains Mono NL" font-size="11.5" font-weight="400" fill="#174EA6">✓</text>
+            <text x="74.8" y="2335.19" xml:space="preserve" font-family="JetBrains Mono NL" font-size="11.5" font-weight="400" fill="#174EA6">h-5120 confirmed for East branch</text>
           </g>
           <g id="_body_2_children_0_items_1" data-id="/body/2/children/0/items/1" data-tag="HowToItem">
-            <rect x="1476.6" y="2172.9" width="72.9" height="21.5" fill="#F1F3F4" stroke="#DADCE0" stroke-width="1"/>
+            <rect x="1464.6" y="2172.9" width="84.9" height="21.5" fill="#F1F3F4" stroke="#DADCE0" stroke-width="1"/>
             <line x1="812" y1="2201.4" x2="1550" y2="2201.4" stroke="#DADCE0" stroke-width="1"/>
             <rect x="812.5" y="2233.8" width="737" height="63.5" fill="#F1F3F4" stroke="#DADCE0" stroke-width="1"/>
             <text x="812" y="2187.65" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">4.2</text>
             <text x="841.28" y="2188.38" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" letter-spacing="1.04" fill="#202124">EXTEND A HOLD</text>
-            <text x="1481.1" y="2187.83" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">hold extend</text>
+            <text x="1469.1" y="2187.79" xml:space="preserve" font-family="JetBrains Mono NL" font-size="11.5" font-weight="400" fill="#202124">hold extend</text>
             <text x="812" y="2222.97" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">Adds seven days to a ready hold; the patron gets the new collect-by date by text.</text>
-            <text x="823" y="2252.73" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#174EA6">$</text>
-            <text x="837" y="2252.73" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">hold extend h-5120 --days 7</text>
-            <text x="837" y="2269.23" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">h-5120 collect-by date moved to 2026-11-09</text>
-            <text x="823" y="2285.73" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#174EA6">✓</text>
-            <text x="837" y="2285.73" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#174EA6">notice sent by text message</text>
+            <text x="823" y="2252.69" xml:space="preserve" font-family="JetBrains Mono NL" font-size="11.5" font-weight="400" fill="#174EA6">$</text>
+            <text x="836.8" y="2252.69" xml:space="preserve" font-family="JetBrains Mono NL" font-size="11.5" font-weight="400" fill="#202124">hold extend h-5120 --days 7</text>
+            <text x="836.8" y="2269.19" xml:space="preserve" font-family="JetBrains Mono NL" font-size="11.5" font-weight="400" fill="#202124">h-5120 collect-by date moved to 2026-11-09</text>
+            <text x="823" y="2285.69" xml:space="preserve" font-family="JetBrains Mono NL" font-size="11.5" font-weight="400" fill="#174EA6">✓</text>
+            <text x="836.8" y="2285.69" xml:space="preserve" font-family="JetBrains Mono NL" font-size="11.5" font-weight="400" fill="#174EA6">notice sent by text message</text>
           </g>
           <g id="_body_2_children_0_items_2" data-id="/body/2/children/0/items/2" data-tag="HowToItem">
-            <rect x="715.75" y="2367.8" width="71.75" height="21.5" fill="#F1F3F4" stroke="#DADCE0" stroke-width="1"/>
+            <rect x="702.6" y="2367.8" width="84.9" height="21.5" fill="#F1F3F4" stroke="#DADCE0" stroke-width="1"/>
             <line x1="50" y1="2396.3" x2="788" y2="2396.3" stroke="#DADCE0" stroke-width="1"/>
             <rect x="50.5" y="2428.7" width="737" height="63.5" fill="#F1F3F4" stroke="#DADCE0" stroke-width="1"/>
             <text x="50" y="2382.55" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">4.3</text>
             <text x="79.15" y="2383.28" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" letter-spacing="1.04" fill="#202124">CANCEL A HOLD</text>
-            <text x="720.25" y="2382.73" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">hold cancel</text>
+            <text x="707.1" y="2382.69" xml:space="preserve" font-family="JetBrains Mono NL" font-size="11.5" font-weight="400" fill="#202124">hold cancel</text>
             <text x="50" y="2417.86" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">Releases the hold and its place in line. A copy already set aside goes to the next hold.</text>
-            <text x="61" y="2447.63" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#174EA6">$</text>
-            <text x="75" y="2447.63" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">hold cancel h-5141 --reason &quot;bought a copy&quot;</text>
-            <text x="75" y="2464.13" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">hold h-5141 cancelled, 4 holds left in line</text>
-            <text x="61" y="2480.63" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">#</text>
-            <text x="75" y="2480.63" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#5F6368">the next hold in line moves up one place</text>
+            <text x="61" y="2447.59" xml:space="preserve" font-family="JetBrains Mono NL" font-size="11.5" font-weight="400" fill="#174EA6">$</text>
+            <text x="74.8" y="2447.59" xml:space="preserve" font-family="JetBrains Mono NL" font-size="11.5" font-weight="400" fill="#202124">hold cancel h-5141 --reason &quot;bought a copy&quot;</text>
+            <text x="74.8" y="2464.09" xml:space="preserve" font-family="JetBrains Mono NL" font-size="11.5" font-weight="400" fill="#202124">hold h-5141 cancelled, 4 holds left in line</text>
+            <text x="61" y="2480.59" xml:space="preserve" font-family="JetBrains Mono NL" font-size="11.5" font-weight="400" fill="#5F6368">#</text>
+            <text x="74.8" y="2480.59" xml:space="preserve" font-family="JetBrains Mono NL" font-size="11.5" font-weight="400" fill="#5F6368">the next hold in line moves up one place</text>
           </g>
           <g id="_body_2_children_0_items_3" data-id="/body/2/children/0/items/3" data-tag="HowToItem">
-            <rect x="1498.34" y="2367.8" width="51.16" height="21.5" fill="#F1F3F4" stroke="#DADCE0" stroke-width="1"/>
+            <rect x="1478.4" y="2367.8" width="71.1" height="21.5" fill="#F1F3F4" stroke="#DADCE0" stroke-width="1"/>
             <line x1="812" y1="2396.3" x2="1550" y2="2396.3" stroke="#DADCE0" stroke-width="1"/>
-            <rect x="812.5" y="2405.3" width="278.41" height="96.5" fill="#F1F3F4" stroke="#DADCE0" stroke-width="1"/>
+            <rect x="812.5" y="2405.3" width="345.3" height="96.5" fill="#F1F3F4" stroke="#DADCE0" stroke-width="1"/>
             <text x="812" y="2382.55" xml:space="preserve" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.32" fill="#5F6368">4.4</text>
             <text x="841.75" y="2383.28" xml:space="preserve" font-family="Inter" font-size="13" font-weight="700" letter-spacing="1.04" fill="#202124">LIST HOLDS</text>
-            <text x="1502.84" y="2382.73" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">hold list</text>
-            <text x="823" y="2424.23" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#174EA6">$</text>
-            <text x="837" y="2424.23" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">hold list --card 2104-8831</text>
-            <text x="837" y="2440.73" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">3 holds on card 2104-8831</text>
-            <text x="843.47" y="2457.23" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">h-5120 ready at East, collect by 2026-11-02</text>
-            <text x="843.47" y="2473.73" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">h-5133 in line, 2 of 4</text>
-            <text x="843.47" y="2490.23" xml:space="preserve" font-family="Inter" font-size="11.5" font-weight="400" fill="#202124">h-5141 waiting for a free copy</text>
-            <text x="1103.41" y="2417.86" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">Filters by card, title and branch. A ready hold stays listed until it is collected or</text>
-            <text x="1103.41" y="2435.27" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">expires.</text>
+            <text x="1482.9" y="2382.69" xml:space="preserve" font-family="JetBrains Mono NL" font-size="11.5" font-weight="400" fill="#202124">hold list</text>
+            <text x="823" y="2424.19" xml:space="preserve" font-family="JetBrains Mono NL" font-size="11.5" font-weight="400" fill="#174EA6">$</text>
+            <text x="836.8" y="2424.19" xml:space="preserve" font-family="JetBrains Mono NL" font-size="11.5" font-weight="400" fill="#202124">hold list --card 2104-8831</text>
+            <text x="836.8" y="2440.69" xml:space="preserve" font-family="JetBrains Mono NL" font-size="11.5" font-weight="400" fill="#202124">3 holds on card 2104-8831</text>
+            <text x="850.6" y="2457.19" xml:space="preserve" font-family="JetBrains Mono NL" font-size="11.5" font-weight="400" fill="#202124">h-5120 ready at East, collect by 2026-11-02</text>
+            <text x="850.6" y="2473.69" xml:space="preserve" font-family="JetBrains Mono NL" font-size="11.5" font-weight="400" fill="#202124">h-5133 in line, 2 of 4</text>
+            <text x="850.6" y="2490.19" xml:space="preserve" font-family="JetBrains Mono NL" font-size="11.5" font-weight="400" fill="#202124">h-5141 waiting for a free copy</text>
+            <text x="1170.3" y="2417.86" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">Filters by card, title and branch. A ready hold stays listed until it is</text>
+            <text x="1170.3" y="2435.27" xml:space="preserve" font-family="Inter" font-size="12" font-weight="400" fill="#5F6368">collected or expires.</text>
           </g>
         </g>
       </g>

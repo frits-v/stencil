@@ -162,7 +162,7 @@ fn saturating_pixels(extent: f64) -> u32 {
 
 /// Decodes `data:` hrefs, which is how the SVG writer embeds icons, and resolves every other
 /// href to nothing, so parsing never reads a file.
-fn data_only_image_resolver() -> ImageHrefResolver<'static> {
+pub(crate) fn data_only_image_resolver() -> ImageHrefResolver<'static> {
     ImageHrefResolver {
         resolve_data: ImageHrefResolver::default_data_resolver(),
         resolve_string: Box::new(|_href, _options| None),
@@ -171,7 +171,7 @@ fn data_only_image_resolver() -> ImageHrefResolver<'static> {
 
 /// A usvg database holding the six bundled faces and nothing else. System fonts are
 /// never loaded and no generic family is pointed at a bundled face.
-fn bundled_font_database() -> Result<fontdb::Database, RenderError> {
+pub(crate) fn bundled_font_database() -> Result<fontdb::Database, RenderError> {
     let mut database = fontdb::Database::new();
     for (index, file) in BUNDLED_FONTS.iter().enumerate() {
         database.load_font_data(file.bytes.to_vec());
@@ -187,7 +187,7 @@ fn bundled_font_database() -> Result<fontdb::Database, RenderError> {
 /// usvg's default selector appends the Serif generic to every query and its fallback
 /// selector substitutes any loaded face that covers a glyph. This resolver does neither:
 /// a family or glyph that does not resolve is counted in `misses` and yields no font.
-fn strict_font_resolver(misses: Arc<AtomicUsize>) -> FontResolver<'static> {
+pub(crate) fn strict_font_resolver(misses: Arc<AtomicUsize>) -> FontResolver<'static> {
     let fallback_misses = Arc::clone(&misses);
     FontResolver {
         select_font: Box::new(move |font, database| {

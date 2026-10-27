@@ -4824,35 +4824,35 @@
       "parts": {
         "command_chip/0": {
           "height": 22.5,
-          "width": 66.32,
-          "x": 609.94,
+          "width": 79,
+          "x": 583.09,
           "y": 2172.4
         },
         "command_chip/2": {
           "height": 22.5,
-          "width": 78.64,
-          "x": 709.36,
+          "width": 92.8,
+          "x": 695.2,
           "y": 2172.4
         },
         "command_text/0": {
           "height": 16.5,
           "line_count": 1,
-          "width": 56.32,
-          "x": 614.94,
+          "width": 69,
+          "x": 588.09,
           "y": 2175.4
         },
         "command_text/2": {
           "height": 16.5,
           "line_count": 1,
-          "width": 68.64,
-          "x": 714.36,
+          "width": 82.8,
+          "x": 700.2,
           "y": 2175.4
         },
         "command_word/1": {
           "height": 15.6,
           "line_count": 1,
           "width": 25.11,
-          "x": 680.25,
+          "x": 666.09,
           "y": 2175.85
         },
         "how_to_number": {
@@ -4878,7 +4878,7 @@
         "how_to_title": {
           "height": 15.6,
           "line_count": 1,
-          "width": 525.84,
+          "width": 499,
           "x": 76.1,
           "y": 2175.85
         },
@@ -4891,70 +4891,70 @@
         "terminal_line/0": {
           "height": 16.5,
           "line_count": 1,
-          "width": 349.73,
-          "x": 75,
+          "width": 434.7,
+          "x": 74.8,
           "y": 2240.3
         },
         "terminal_line/1": {
           "height": 16.5,
           "line_count": 1,
-          "width": 177.66,
-          "x": 75,
+          "width": 234.6,
+          "x": 74.8,
           "y": 2256.8
         },
         "terminal_line/2": {
           "height": 16.5,
           "line_count": 1,
-          "width": 322.57,
-          "x": 75,
+          "width": 427.8,
+          "x": 74.8,
           "y": 2273.3
         },
         "terminal_line/3": {
           "height": 16.5,
           "line_count": 1,
-          "width": 165.82,
-          "x": 75,
+          "width": 213.9,
+          "x": 74.8,
           "y": 2289.8
         },
         "terminal_line/4": {
           "height": 16.5,
           "line_count": 1,
-          "width": 109.73,
-          "x": 75,
+          "width": 131.1,
+          "x": 74.8,
           "y": 2306.3
         },
         "terminal_line/5": {
           "height": 16.5,
           "line_count": 1,
-          "width": 182.76,
-          "x": 75,
+          "width": 220.8,
+          "x": 74.8,
           "y": 2322.8
         },
         "terminal_prompt/0": {
           "height": 16.5,
           "line_count": 1,
-          "width": 7.38,
+          "width": 6.9,
           "x": 61,
           "y": 2240.3
         },
         "terminal_prompt/3": {
           "height": 16.5,
           "line_count": 1,
-          "width": 7.28,
+          "width": 6.9,
           "x": 61,
           "y": 2289.8
         },
         "terminal_prompt/4": {
           "height": 16.5,
           "line_count": 1,
-          "width": 7.38,
+          "width": 6.9,
           "x": 61,
           "y": 2306.3
         },
         "terminal_prompt/5": {
           "height": 16.5,
           "line_count": 1,
-          "width": 10.17,
+          "width": 6.9,
           "x": 61,
           "y": 2322.8
         }
@@ -4970,15 +4970,15 @@
       "parts": {
         "command_chip/0": {
           "height": 22.5,
-          "width": 73.9,
-          "x": 1476.1,
+          "width": 85.9,
+          "x": 1464.1,
           "y": 2172.4
         },
         "command_text/0": {
           "height": 16.5,
           "line_count": 1,
-          "width": 63.9,
-          "x": 1481.1,
+          "width": 75.9,
+          "x": 1469.1,
           "y": 2175.4
         },
         "how_to_number": {
@@ -5004,7 +5004,7 @@
         "how_to_title": {
           "height": 15.6,
           "line_count": 1,
-          "width": 626.83,
+          "width": 614.82,
           "x": 841.28,
           "y": 2175.85
         },
@@ -5017,35 +5017,35 @@
         "terminal_line/0": {
           "height": 16.5,
           "line_count": 1,
-          "width": 154.41,
-          "x": 837,
+          "width": 186.3,
+          "x": 836.8,
           "y": 2240.3
         },
         "terminal_line/1": {
           "height": 16.5,
           "line_count": 1,
-          "width": 242.31,
-          "x": 837,
+          "width": 289.8,
+          "x": 836.8,
           "y": 2256.8
         },
         "terminal_line/2": {
           "height": 16.5,
           "line_count": 1,
-          "width": 152.55,
-          "x": 837,
+          "width": 186.3,
+          "x": 836.8,
           "y": 2273.3
         },
         "terminal_prompt/0": {
           "height": 16.5,
           "line_count": 1,
-          "width": 7.38,
+          "width": 6.9,
           "x": 823,
           "y": 2240.3
         },
         "terminal_prompt/2": {
           "height": 16.5,
           "line_count": 1,
-          "width": 10.17,
+          "width": 6.9,
           "x": 823,
           "y": 2273.3
         }
@@ -5061,15 +5061,15 @@
       "parts": {
         "command_chip/0": {
           "height": 22.5,
-          "width": 72.75,
-          "x": 715.25,
+          "width": 85.9,
+          "x": 702.1,
           "y": 2367.3
         },
         "command_text/0": {
           "height": 16.5,
           "line_count": 1,
-          "width": 62.75,
-          "x": 720.25,
+          "width": 75.9,
+          "x": 707.1,
           "y": 2370.3
         },
         "how_to_number": {
@@ -5095,7 +5095,7 @@
         "how_to_title": {
           "height": 15.6,
           "line_count": 1,
-          "width": 628.1,
+          "width": 614.95,
           "x": 79.15,
           "y": 2370.75
         },
@@ -5108,35 +5108,35 @@
         "terminal_line/0": {
           "height": 16.5,
           "line_count": 1,
-          "width": 244.41,
-          "x": 75,
+          "width": 296.7,
+          "x": 74.8,
           "y": 2435.2
         },
         "terminal_line/1": {
           "height": 16.5,
           "line_count": 1,
-          "width": 220.26,
-          "x": 75,
+          "width": 296.7,
+          "x": 74.8,
           "y": 2451.7
         },
         "terminal_line/2": {
           "height": 16.5,
           "line_count": 1,
-          "width": 218.37,
-          "x": 75,
+          "width": 276,
+          "x": 74.8,
           "y": 2468.2
         },
         "terminal_prompt/0": {
           "height": 16.5,
           "line_count": 1,
-          "width": 7.38,
+          "width": 6.9,
           "x": 61,
           "y": 2435.2
         },
         "terminal_prompt/2": {
           "height": 16.5,
           "line_count": 1,
-          "width": 7.28,
+          "width": 6.9,
           "x": 61,
           "y": 2468.2
         }
@@ -5152,15 +5152,15 @@
       "parts": {
         "command_chip/0": {
           "height": 22.5,
-          "width": 52.16,
-          "x": 1497.84,
+          "width": 72.1,
+          "x": 1477.9,
           "y": 2367.3
         },
         "command_text/0": {
           "height": 16.5,
           "line_count": 1,
-          "width": 42.16,
-          "x": 1502.84,
+          "width": 62.1,
+          "x": 1482.9,
           "y": 2370.3
         },
         "how_to_number": {
@@ -5179,62 +5179,62 @@
         "how_to_text": {
           "height": 34.8,
           "line_count": 2,
-          "width": 446.59,
-          "x": 1103.41,
+          "width": 379.7,
+          "x": 1170.3,
           "y": 2404.8
         },
         "how_to_title": {
           "height": 15.6,
           "line_count": 1,
-          "width": 648.09,
+          "width": 628.15,
           "x": 841.75,
           "y": 2370.75
         },
         "terminal": {
           "height": 97.5,
-          "width": 279.41,
+          "width": 346.3,
           "x": 812,
           "y": 2404.8
         },
         "terminal_line/0": {
           "height": 16.5,
           "line_count": 1,
-          "width": 141.2,
-          "x": 837,
+          "width": 179.4,
+          "x": 836.8,
           "y": 2411.8
         },
         "terminal_line/1": {
           "height": 16.5,
           "line_count": 1,
-          "width": 145.32,
-          "x": 837,
+          "width": 172.5,
+          "x": 836.8,
           "y": 2428.3
         },
         "terminal_line/2": {
           "height": 16.5,
           "line_count": 1,
-          "width": 236.94,
-          "x": 843.47,
+          "width": 296.7,
+          "x": 850.6,
           "y": 2444.8
         },
         "terminal_line/3": {
           "height": 16.5,
           "line_count": 1,
-          "width": 111.52,
-          "x": 843.47,
+          "width": 151.8,
+          "x": 850.6,
           "y": 2461.3
         },
         "terminal_line/4": {
           "height": 16.5,
           "line_count": 1,
-          "width": 160.84,
-          "x": 843.47,
+          "width": 207,
+          "x": 850.6,
           "y": 2477.8
         },
         "terminal_prompt/0": {
           "height": 16.5,
           "line_count": 1,
-          "width": 7.38,
+          "width": 6.9,
           "x": 823,
           "y": 2411.8
         }
