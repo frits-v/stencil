@@ -147,7 +147,7 @@
                               "kind": "store",
                               "id": "backups",
                               "title": "Backups",
-                              "icon": "minio",
+                              "shape": "stack",
                               "subtitle": "MinIO"
                             }
                           ]

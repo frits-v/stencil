@@ -1261,7 +1261,13 @@ pub fn render_svg(page: &Page, geometry: &PageGeometry) -> Result<SvgDocument, R
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct SvgDocument {
+    /// The SVG resvg parses: no style, no anchor and no hit area.
     pub svg: String,
+    /// `svg` with the anchors, own-element wrappers, hit areas and unpin floor a browser
+    /// reads (section 5.2).
+    pub written: String,
+    /// True when the theme's page colour is dark.
+    pub dark_page: bool,
     /// Number of <text> elements written: one per line of every TextRun.
     pub text_elements: usize,
     /// The family and weight of the <text> elements, each once, ordered by family name and
@@ -1437,7 +1443,7 @@ The coordinates in this example are illustrative.
 Structure:
 
 - One `<g>` per node, nested the same way as the node tree and in section 4.4 geometry order. Each carries `data-id` (the node pointer) and `data-tag` (the `NodeTag` name). Zones, Pipes (Tee arms included), Tees and legend entries also carry `data-kind`, taken from `NodeGeometry.kind`. The group of every fading node (an Item, Box, Pipe, Tee, Step, rung, problem point, actor chip, legend entry or how-to) also carries `id`, written before `data-id`: the node's own `id`, else its pointer with each `/` replaced by `_` (`_body_0_children_3`), which no `id` can spell since `ID_PATTERN` has no `_`. An own `id` that starts `arrow-` or equals `stencil-shadow`, the prefix and name the writer gives its markers and its shadow filter, takes the pointer form, so every `url(#…)` keeps its target. A Pipe's group carries `data-from` and `data-to`, the pointers of the nodes its ends meet (its targets, else what each end lands on, as the description names them); a Tee arm's names its Tee and the node its end meets, and a Tee's `data-from` names the node its spine stands on. An end that meets nothing writes no attribute. A `<g>` has no transform.
-- On a design sheet every element of a parts-list row, a general-notes row or an attention item carries `data-row`, the row's pointer (`/…/parts/2`, `/…/notes/0`, `/sheet/attention/items/1`), and the first of them carries the row's `id` in the pointer form. Every element of a balloon, flag or diamond and its numeral carries `data-mark`, the pointer of the row of the key it names. A row rule between rows carries neither. Every coordinate is absolute canvas px.
+- On a design sheet each parts-list row, general-notes row and attention item is a `<g id data-row>` inside the node that draws the list, after that node's other elements: `data-row` is the row's pointer (`/…/parts/2`, `/…/notes/0`, `/sheet/attention/items/1`) and `id` its pointer form. The row holds its own parts, shapes then text; the PNG is the same as with the parts in node order, since rows do not overlap. Every element of a balloon, flag or diamond and its numeral carries `data-mark`, the pointer of the row of its key. A row rule between rows belongs to no row.
 - Inside a node's group, shapes come first, then that node's text, then the child groups. Inside a Tee the order is spine, hub, then arm groups.
 - Boxes are `<rect>` with `rx` for the radius and fill and stroke from the tables in section 2. A stroke of width `w` is drawn on a rect inset by `w / 2`, so it stays inside the border box as a CSS border does. The gcp frame uses a `<path>` for its 4 4 10 10 corners and draws the bar before the frame stroke.
 - Dashed borders and dashed wires use `stroke-dasharray="6 5"`.
@@ -1463,7 +1469,7 @@ The only `http` string in the SVG is the SVG namespace URI. There are no externa
 
 The payload is the base64 of the `BUNDLED_FONTS` file that `stencil_text::bundled_font` returns for that family and weight, unmodified, so a browser, a slide or document import or any other rasterizer draws the SVG in the faces the PNG was rendered and measured with, whether or not Inter is installed. A figure using all four weights grows by about 2.2 MB. The `data:` URIs are not external references. After the faces the block holds `text { font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }`, written whenever it holds a face. A style rule outranks the `font-family="Inter"` attribute, so where a page forbids `data:` fonts (GitHub's user content policy does) and Inter is not installed, the text falls back to a sans face instead of the browser's default serif; the attribute stays as it is, so `render_svg` and the PNG do not change.
 
-The hover rules highlight an element and what it refers to where the file is opened in a browser or inlined in a page; an `<img>` gets no pointer events and draws the figure as the PNG does. A fading unit is the group of a fading node or a link, which fades its own drawn elements and never its child groups, so a kept unit inside a faded one stays drawn and no element fades twice, or a row, whose elements fade. Each source, a fading unit or a row, has a related set that stays drawn while the pointer rests on one of its own elements, on a row through any mark of its key as well, or while the URL fragment names its `id` (`figure.svg#api` opens with `api` highlighted). Every other fading unit drops to opacity 0.2. Grid references, the title block head, captions, view headings, lane heads and the parts-list and notes heads never fade. The sets are read from the model and the geometry: line ends from routes and pipe landings, marks from `PageMarks`, actors from `PageActors`, legend keys from `line_uses`.
+The hover rules highlight an element and what it refers to where the file is opened in a browser or inlined in a page; an `<img>` gets no pointer events and draws the figure as the PNG does. A fading unit is the group of a fading node or a link, or a row. A leaf unit (an Item, Pipe, Tee arm, Step, rung, problem point, actor chip, legend entry, how-to, link or row) fades as one image, so a link's tag still covers the line under it. A container (a Box or a Tee) fades only its own elements, as one image, so a kept unit inside a faded Box stays drawn and nothing fades twice. Each source, a fading unit or a row, has a related set that stays drawn while the pointer rests on its own elements, on a row through any mark of its key as well, or while it is pinned. Every other fading unit drops to opacity 0.3, or 0.35 when the theme's page colour is dark (relative luminance under 0.2). Grid references, the title block head, captions, view headings, lane heads and the parts-list and notes heads never fade. The sets are read from the model and the geometry: line ends from routes and pipe landings, marks from `PageMarks`, actors from `PageActors`, legend keys from `line_uses`.
 
 | Source | Related set, the source included |
 |---|---|
@@ -1476,13 +1482,22 @@ The hover rules highlight an element and what it refers to where the file is ope
 | Actor chip | every Item, Box, Pipe, Tee arm, Tee, Link, Step (by lane), rung, attention row and parts row that acts for the actor |
 | Legend entry | every line use whose legend key is the entry's (section 13.1 rule 8) |
 
-A source whose set holds nothing beyond itself and its framing Boxes has no rule, so hovering a how-to, or an Item with no line, mark or part, changes nothing. When `hover_rules` is not empty the block then holds `F > :not([data-id]), [data-row] { transition: opacity 0.15s ease-out; }`, where `F` is `:is([data-tag="Pcard"],[data-tag="Zone"],…,[data-tag="Link"])` over the fading tags, and then one rule per entry on one line, sources in geometry order, then links, then rows in list order:
+A source whose set holds nothing beyond itself and its framing Boxes has no rule, so hovering a how-to, or an Item with no line, mark or part, changes nothing.
+
+`render_svg` returns the SVG resvg parses; `SvgDocument.written` adds the elements only a browser reads, and `self_contained` writes it. In the written file each rule source's own elements sit in a `<g data-own="">` directly inside its group, as runs of `<a href="#A">` broken around each mark, which sits in an `<a>` to its key's row instead; a row's elements sit in an `<a>` to its own `id`. A click sets the URL fragment, which pins the highlight; an `<a href="#">` round an unpainted canvas rect behind every drawing clears it on a click on empty floor. Each source's first anchor starts with an unpainted hit area, so the gaps between its elements hover and click as the unit: a `<rect data-hit>` over a node's box or a row's parts, under iso a `<polygon data-hit>` over the solid's outline and one over each of its labels, and for a link a `<path data-hit>` copy of its drawn path. A source without a rule gets none of these. The fixtures are made from a written file by `scripts/resvg-input.py`, which drops the style block and these elements.
+
+When `hover_rules` is not empty the style block then holds, in order, where `L` is `:is([data-tag="Pcard"],…,[data-tag="Link"])` over the leaf tags and `C` is `:is([data-tag="Zone"],[data-tag="Tee"])`:
 
 ```css
-svg:has(S) F:not([data-id="G1"]):not([data-id="G2"]) > :not([data-id]), svg:has(S) [data-row]:not([data-row="R1"]) { opacity: 0.2; }
+[data-hit] { pointer-events: all; }
+path[data-hit] { pointer-events: stroke; stroke-width: 12px; }
+a:not([href="#"]) { cursor: pointer; }
+L, C > [data-own], [data-row] { transition: opacity 160ms ease-out 0ms; }
+:is(svg:not(:has(:target)):has(S), svg:has([id="A"]:target)) L:not([data-id="G1"])…, :is(…) C:not([data-id="G1"])… > [data-own], :is(…) [data-row]:not([data-row="R1"])… { opacity: 0.3; transition: opacity 220ms ease-out 120ms; }
+svg:has(:target) :is(L, C > [data-own], [data-row]) { transition: none !important; }
 ```
 
-`S` is `[data-id="H"] > :not([data-id], [data-mark]):hover, [id="A"]:target` for a group source `H` and `[data-row="R"]:hover, [data-mark="R"]:hover, [id="A"]:target` for a row `R`; binding to the source's own elements keeps a Box from firing when one of its Items is hovered. `G1`, `G2` and so on are the kept groups and `R1` the kept rows, sorted, one `:not()` each. Every value is a CSS string with `"`, `\` and newline escaped, and the line is escaped for XML content (`&` and `<`). The block is 9 KB to 68 KB without the fonts across the examples, onepager the largest. A document with no text and no rule is written as `render_svg` returned it. Neither block reaches the PNG, the measured JSON or a center fixture.
+The per-source rule comes once per entry on one line, sources in geometry order, then links, then rows in list order. `S` is `[data-id="H"] > [data-own] > a[href="#A"]:hover` for a group source `H`, so a Box does not fire while one of its Items is hovered and a carrier does not fire while one of its marks is, and `[data-row="R"]:hover, [data-mark="R"]:hover` for a row `R`. `G1` and so on are the kept groups and `R1` the kept rows, sorted, one `:not()` each. A fade starts 120 ms after the pointer arrives, so crossing an element on the way elsewhere does not flash the sheet, and a return starts at once. While anything is pinned no hover rule applies, so the pinned view holds while the pointer moves, and a pinned state takes effect without a transition; the last rule's `!important` outranks the per-source rules, whose kept lists make them more specific. Every value is a CSS string with `"`, `\` and newline escaped, and the line is escaped for XML content (`&` and `<`). Without the fonts the block is 112 KB on onepager, the largest, and 15 KB to 71 KB on the other examples. A document with no text and no rule is written as `render_svg` returned it. Neither block reaches the PNG, the measured JSON or a center fixture.
 
 ### 5.3 PNG
 
@@ -1873,7 +1888,7 @@ The 23 Google Cloud icons in `assets/icons/gcp/`, from the two ZIP archives link
 
 #### Pack oss
 
-The 34 open-source project logos in `assets/icons/oss/`, each the project's or its steward's own published SVG file. `assets/icons/oss/PROVENANCE.md` records each file's source URL, the path and commit of a file taken from a git repository, and the fetch date. MySQL and Elasticsearch have no file; the oss grammar lists them in products rows without an icon (section 13.10).
+The 29 open-source project symbols in `assets/icons/oss/`, each the project's or its steward's own published SVG file of the symbol alone, with no wordmark beside or under it. `assets/icons/oss/PROVENANCE.md` records each file's source URL, the path and commit of a file taken from a git repository, and the fetch date. Helm, Apache Pulsar, Apache Spark, MariaDB, MinIO, MySQL and Elasticsearch have no file; the oss grammar lists them in products rows without an icon (section 13.10).
 
 | Local file | Product | SHA-256 |
 |---|---|---|
@@ -1886,7 +1901,6 @@ The 34 open-source project logos in `assets/icons/oss/`, each the project's or i
 | `etcd.svg` | etcd | `67535552e9930d1b0b9fb76db7bfe4367ec9e644badce29fb4534c05685fb723` |
 | `grafana.svg` | Grafana | `50806d5a65779e79f746398570e0fc322d5de55e19f0be87a275963f0947bb5e` |
 | `haproxy.svg` | HAProxy | `5b09f3fc5a0c12d4a2ff6db9fbaa9753e408db10b882d06a624a491bcb718241` |
-| `helm.svg` | Helm | `ad04fbc7841a55023ad7806aa133a86ebd0aab21c2179be97f9048617138e7b1` |
 | `istio.svg` | Istio | `f5d5e6e64b794721fc698e05fd64004f73efbe2a3bdedf3a20394db44b71c889` |
 | `jaeger.svg` | Jaeger | `8a0405c39367a378e9e2626dbd1a5c13a613f9e148cb2360c094ccc50c348ae1` |
 | `jenkins.svg` | Jenkins | `5afd00080797a0568f7305696775e53a2d1fb88c59c054ebc554b3d284b5d230` |
@@ -1895,19 +1909,15 @@ The 34 open-source project logos in `assets/icons/oss/`, each the project's or i
 | `kubernetes.svg` | Kubernetes | `ff5427cfeeff39e82834ab1b4fe3ed61fc08596225a17eed56adc04f7cc1f712` |
 | `linkerd.svg` | Linkerd | `e43dda1077018cb44d0dc7bc8d3183aa05ddfa85f7544371475efaa0878c1764` |
 | `loki.svg` | Grafana Loki | `1d3087c3acefcd556eeb11f8de85f289913d87338fe8dae04cc844fb0785f4e9` |
-| `mariadb.svg` | MariaDB Server | `14258ff8e2ff7f7c831f36619ff0503c8861cdb5c3f8d4905edbdb58c18c88fb` |
-| `minio.svg` | MinIO | `a29fb599d75725713f09d83429b729ee7272fb6ac9294184ceb16dbb49efc983` |
-| `mongodb.svg` | MongoDB | `9f5435c8be18a834b2c2f8c4c03f117a997646c660fd6f28e3b6869a1bc2fcc1` |
+| `mongodb.svg` | MongoDB | `4d317a269829991627b78d100c241baa3fe227a816e7dc0f6a37234a53f7be24` |
 | `nats.svg` | NATS | `aeac64fac2ef4226a921508afc8097bd6300cdc9361779acdd19ec650a961992` |
-| `nginx.svg` | NGINX | `9bd543826050ee506dd234f03fbbe972444bb20d9d4854ba7b0e1cf71ef28f07` |
+| `nginx.svg` | NGINX | `0649a956be406cf5944b9f91f44c842e4ec3a8eeeade81e310e33ed311ab3292` |
 | `opensearch.svg` | OpenSearch | `d89d0555a75fa2c745bfdd782589cc17ce596d3fd41e5008bef8ff3fec695bc8` |
 | `opentelemetry.svg` | OpenTelemetry | `f19d3aa81895ba0d2102df6bbd76371e55664f8f6714c6ed355f971b7b013906` |
 | `postgresql.svg` | PostgreSQL | `51f93e19516081fc7d6fe6ab9bbab07abe5f7819e28016eefacea6dea691bc54` |
 | `prometheus.svg` | Prometheus | `a96d48cc7f1c91de940dacbf30581850fd2c0ed4afaf1b0b94fb86eb1d0aef6e` |
-| `pulsar.svg` | Apache Pulsar | `9a541b47e11703dd80b2660401c988f01e0c1728cf38ee7463a38897b0cbbdfd` |
 | `rabbitmq.svg` | RabbitMQ | `5c83f8a9819ca280dd32eef7e79c567a071dddc6a66a120b5d1511f286766749` |
 | `redis.svg` | Redis | `46b9de6d80f089580210f14d2c25f712ab90d831f94d96f67f22920ebccc015f` |
-| `spark.svg` | Apache Spark | `19f38764a2d20e3cc24e7b57acf1fb16bc8a3711437232ab20f452d5bca7fdac` |
 | `traefik.svg` | Traefik Proxy | `e2885459d44d08f4debd515f1ad0399710902302af1e6691d851544b5ad01bee` |
 | `valkey.svg` | Valkey | `36a2375e56420a570f6a0346dde019314204c05f5326c0f00d39114e63397f37` |
 | `vault.svg` | HashiCorp Vault | `1f4f0003f7317dba29fe34cb0aa1041b9da0d6dc29167896dbc434b1e78d1271` |
@@ -2173,7 +2183,8 @@ All tests except the wrap-epsilon regression use `FixedMetricsMeasurer::default(
 - Every `<text>` has `xml:space="preserve"` and `font-family="Inter"` with no fallback list. `letter-spacing` is present exactly for the styles with nonzero spacing.
 - The SVG `render` writes holds one `@font-face` per weight its `<text>` elements use and none for another, each decoding to the bundled file of that weight: hybrid-ai uses 400, 600, 700 and 800, design-brief and hero-iso 400, 700 and 800 (`the_svg_embeds_a_font_face_for_each_weight_its_text_uses_and_no_other` in `crates/stencil-cli/tests/cli.rs`).
 - The SVG `render` writes holds the `text` fallback rule once, after the last `@font-face` and before the hover rules, for hybrid-ai, design-brief, onepager and hero-iso, and the SVG `render_svg` returns holds no style (`the_written_svg_gives_its_text_a_fallback_stack_after_the_faces_and_the_resvg_input_does_not` in `crates/stencil-cli/tests/cli.rs`).
-- Across every example, at least 16 holding at least 376 hover rules, the written SVG holds one rule per source at most: each source exists with the `id` its rule names, keeps itself, and keeps only groups and rows the SVG holds; every `id` is unique, every `data-from`, `data-to` and `data-mark` names a group or row the SVG holds, no how-to has a rule, and the SVG `render_svg` returns holds no `<style>` (`every_hover_rule_names_units_the_written_svg_holds_and_the_resvg_input_has_none` in `crates/stencil-cli/tests/cli.rs`). On onepager the item `api`, its parts row, the first attention item, the second actor chip, the first legend entry, the Box `evaluation-path` and the first general note keep the exact sets the section 5.2 table gives, 72 kept units in all (`onepager_keeps_the_related_set_of_each_kind_of_element`). On a small page an Item keeps its own `id`, an Item without one or with the id `arrow-center-blue` takes the pointer form, the marker keeps its id, an item keeps its links and their far ends, and the item with no link has no rule (`each_link_group_names_its_end_pointers_and_each_item_group_its_anchor_and_far_ends` in `crates/stencil-render/tests/links.rs`).
+- Across every example, at least 16 holding at least 376 hover rules, the written SVG holds one rule per source at most: each source exists with the `id` its rule names, keeps itself, and keeps only groups and rows the SVG holds; every `id` is unique, every `data-from`, `data-to` and `data-mark` names a group or row the SVG holds, no how-to has a rule, and the SVG `render_svg` returns holds no `<style>` (`every_hover_rule_names_units_the_written_svg_holds_and_the_resvg_input_has_none` in `crates/stencil-cli/tests/cli.rs`). On onepager the item `api`, its parts row, the first attention item, the second actor chip, the first legend entry, the Box `evaluation-path` and the first general note keep the exact sets the section 5.2 table gives, 72 kept units in all (`onepager_keeps_the_related_set_of_each_kind_of_element`).
+- Every selector of every hover rule ends on a leaf group, a Box's or Tee's `[data-own]` wrapper or a row, never on a group's paths or rects, and every link with a tag is a `Link` group, so the tag still covers its line while both fade (`every_rule_fades_a_link_and_its_tag_as_one_group`). Each group source's group opens with its `<g data-own="">` and an `<a>` to its `id`, each row source with that `<a>`, a page with rules has one unpin floor, and the SVG `render_svg` returns holds no `<a>`, wrapper or hit area (`a_click_pins_each_source_and_the_floor_clears_it_in_the_written_svg_only`, both in `crates/stencil-cli/tests/cli.rs`). On a small page an Item keeps its own `id`, an Item without one or with the id `arrow-center-blue` takes the pointer form, the marker keeps its id, an item keeps its links and their far ends, and the item with no link has no rule (`each_link_group_names_its_end_pointers_and_each_item_group_its_anchor_and_far_ends` in `crates/stencil-render/tests/links.rs`).
 - Icons: for every bundled pack, each data URI decodes to bytes whose SHA-256 equals the pack's section 8.2 table, which has one row per icon of the pack and fails when it has none. A render of a Pcard for each gcp icon parses.
 - Colors: for each ZoneKind the rect fill, stroke, stroke width and dasharray match section 2.4. For each PipeKind the wire color and dasharray match section 5.2, and a Tee of that kind draws its spine, and a legend entry of that kind its swatch `<line>`, in the same color and dasharray. A `deny` Tee's hub has stroke #F4C7C3 and text fill #C5221F.
 - Numbers: no attribute value has more than 2 decimals, and `-0` never appears. `format_number` gives `Integer(0)` for -0.0 and -0.001, `Integer(1320)` for 1320.0, `Integer(652)` for 652.004 and `Decimal(652.4)` for 652.4.
@@ -3950,7 +3961,7 @@ The eight item kinds are plain's, in plain's order, with plain's shapes and ever
 |---|---|---|---|
 | service | oss | Apache Airflow, Argo CD, Docker, Grafana, Helm, Jaeger, Jenkins, Keycloak, Kubernetes, Grafana Loki, OpenTelemetry, Prometheus, Apache Spark, HashiCorp Vault | block; Docker and Kubernetes a tower |
 | managed | none | | block |
-| store | oss | Apache Cassandra, ClickHouse, Elasticsearch, etcd, MariaDB, MinIO, MongoDB, MySQL, OpenSearch, PostgreSQL, Redis, Valkey | cylinder; MinIO a stack |
+| store | oss | Apache Cassandra, ClickHouse, Elasticsearch, etcd, MariaDB, MinIO, MongoDB, MySQL, OpenSearch, PostgreSQL, Redis, Valkey | cylinder |
 | queue | oss | Apache Kafka, NATS, Apache Pulsar, RabbitMQ | stack |
 | network | oss | Envoy, HAProxy, Istio, Linkerd, NGINX, Traefik | tile |
 | external | none | | block |
@@ -4894,7 +4905,7 @@ icon-matches-product:
    | service | argo | product | Argo, Argo CD, Argo Workflows |
    | service | docker | product | Docker, Docker Engine, Docker Compose |
    | service | grafana | product | Grafana, Grafana OSS |
-   | service | helm | product | Helm |
+   | service |  | product | Helm |
    | service | jaeger | product | Jaeger |
    | service | jenkins | product | Jenkins |
    | service | keycloak | product | Keycloak |
@@ -4902,14 +4913,14 @@ icon-matches-product:
    | service | loki | product | Grafana Loki, Loki |
    | service | opentelemetry | product | OpenTelemetry, OTel, OpenTelemetry Collector |
    | service | prometheus | product | Prometheus |
-   | service | spark | product | Apache Spark, Spark |
+   | service |  | product | Apache Spark, Spark |
    | service | vault | product | HashiCorp Vault, Vault |
    | store | cassandra | product | Apache Cassandra, Cassandra |
    | store | clickhouse | product | ClickHouse |
    | store |  | product | Elasticsearch |
    | store | etcd | product | etcd |
-   | store | mariadb | product | MariaDB Server, MariaDB |
-   | store | minio | product | MinIO, MinIO AIStor |
+   | store |  | product | MariaDB Server, MariaDB |
+   | store |  | product | MinIO, MinIO AIStor |
    | store | mongodb | product | MongoDB, MongoDB Community Edition, MongoDB Atlas |
    | store |  | product | MySQL |
    | store | opensearch | product | OpenSearch, OpenSearch Dashboards |
@@ -4918,7 +4929,7 @@ icon-matches-product:
    | store | valkey | product | Valkey |
    | queue | kafka | product | Apache Kafka, Kafka |
    | queue | nats | product | NATS, NATS JetStream |
-   | queue | pulsar | product | Apache Pulsar, Pulsar |
+   | queue |  | product | Apache Pulsar, Pulsar |
    | queue | rabbitmq | product | RabbitMQ |
    | network | envoy | product | Envoy Proxy, Envoy |
    | network | haproxy | product | HAProxy |

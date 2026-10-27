@@ -845,12 +845,6 @@
           "x": 1540.71,
           "y": 464.84
         },
-        "icon": {
-          "height": 28,
-          "width": 28,
-          "x": 1562.4,
-          "y": 412.34
-        },
         "product_name": {
           "height": 18.72,
           "line_count": 1,
@@ -1510,29 +1504,6 @@
         ],
         "id": "/body/0/children/1/children/0/children/0/children/0/children/4/children/0",
         "z": 12
-      },
-      {
-        "axis": "x",
-        "corners": [
-          {
-            "x": 1693.73,
-            "y": 992.17
-          },
-          {
-            "x": 1717.98,
-            "y": 1006.17
-          },
-          {
-            "x": 1693.73,
-            "y": 1020.17
-          },
-          {
-            "x": 1669.48,
-            "y": 1006.17
-          }
-        ],
-        "id": "/body/0/children/1/children/0/children/0/children/0/children/5/children/0",
-        "z": 42
       },
       {
         "axis": "x",
