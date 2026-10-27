@@ -2,7 +2,7 @@
 
 A link is a routed orthogonal line between two nodes, drawn after layout on top of everything. It takes no space and moves nothing. Use it where a gutter Pipe cannot go: between items in different columns, down a stack, or a numbered request trace. A hop between two adjacent boxes reads better as a Pipe.
 
-{ "from": "api", "to": "queue", "line": "solid", "tint": 1, "label": "3 queue plan", "from_side": "bottom", "to_side": "top" }
+{ "from": "api", "to": "queue", "line": "solid", "tint": 1, "label": "3 queue hold", "from_side": "bottom", "to_side": "top" }
 
 | Field | Meaning |
 |---|---|

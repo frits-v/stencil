@@ -26,7 +26,7 @@ its rules; a figure file writes one topology against a grammar's `#Page`.
 | `figures/oss.cue` | `oss` | a web stack on Kubernetes with an identity provider beside the platform: `figure`, the base of the oss negative cases |
 | `figures/g7.cue` | `gcp` | g7, Dedicated Interconnect at 99.99%: `customer` and `internal: customer & {...}` |
 | `figures/sequence.cue` | `plain` | a request flow in five lanes with ten ordered messages: `figure`, exported as `examples/sequence.json` |
-| `figures/sheet.cue` | `plain` | the trigger evaluation design sheet, a title block, four actors, a Workflow view with a detail ladder, a System view (an assembly, a rail, a store with compartments, step badges, a valve and planned work) with its parts list, general notes and a console screen, and a How-tos view of four terminals: `onepager`, exported as `examples/onepager.json` |
+| `figures/sheet.cue` | `plain` | the library hold-and-pickup design sheet, a title block, four actors, a Workflow view with a detail ladder, a System view (an assembly, a rail, a store with compartments, step badges, a valve and planned work) with its parts list, general notes and a desk screen, and a How-tos view of four terminals: `onepager`, exported as `examples/onepager.json` |
 | `figures/sheet-small.cue` | `plain` | the smallest design sheet, with a parts list and general notes whose every key is marked once, and a link whose via lies in the sheet's wider margin: `small`, the base of the sheet negative cases |
 | `figures/sheet-gcp.cue` | `gcp` | the smallest design sheet under gcp, a person and a Google Cloud frame holding a region and a product with an icon: `cloud`, the base of the sheet negative cases that need a gcp kind |
 | `check.sh` | | the gate, below |

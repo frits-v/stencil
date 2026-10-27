@@ -1,4 +1,4 @@
-// onepager: the design sheet of the trigger evaluation service: a title block,
+// onepager: the design sheet of a library's hold-and-pickup service: a title block,
 // its actors, a Workflow view of who does what in which phase, and a System
 // view of the parts as built (an assembly, a rail, a store and planned work)
 // with its parts list and general notes. examples/onepager.json is this figure
@@ -10,81 +10,81 @@ import (
 )
 
 onepager: plain.#Page & {
-	title:   "Plain-language event triggers, evaluated over video clips"
-	kicker:  "Premise · trigger evaluation"
-	lede:    "An operator describes an event in their own words. The service turns the description into an evaluation plan, runs the plan over each new clip, and stores a verdict with the frames that support it."
+	title:   "Library holds, from the catalogue to the pickup shelf"
+	kicker:  "Library · hold and pickup"
+	lede:    "A patron places a hold in the catalogue app. The service keeps a line of holds for each title, sets a returned copy aside at the patron's branch, and tells the patron it is ready to collect."
 	foot:    "Balloons key the drawings to the parts list, flags to the general notes, diamonds to the attention items in the title block."
 	width:   1500
 	badge:   "Internal"
 	grammar: "plain"
 	sheet: {
-		wordmark: "trig"
+		wordmark: "holds"
 		problem: {
-			caption: "Problem · rules written as code"
-			lead:    "Operators review long stretches of video to find a few events."
+			caption: "Problem · holds kept on paper"
+			lead:    "Branch staff track holds on paper slips and by phone."
 			points: [
-				{text: "A rule written as code needs an engineer for every change.", marks: [{part: "console"}, {part: "trigger-api"}]},
-				{text: "A reviewer watches hours of footage to confirm a few seconds of it.", marks: [{part: "evaluator"}]},
-				{text: "A verdict without its frames cannot be checked a month later.", marks: [{part: "verdict-store"}, {note: "evidence-by-reference"}]},
-				{text: "A model update can quietly change what a trigger means.", marks: [{attention: "model-updates"}, {note: "approved-plans-only"}]},
+				{text: "A patron must call or visit a branch to place a hold.", marks: [{part: "console"}, {part: "trigger-api"}]},
+				{text: "Staff phone each patron when a held copy comes in.", marks: [{part: "evaluator"}]},
+				{text: "A lost slip takes the patron's place in line with it.", marks: [{part: "verdict-store"}, {note: "evidence-by-reference"}]},
+				{text: "A hold with no branch or an old phone number strands the copy.", marks: [{attention: "model-updates"}, {note: "approved-plans-only"}]},
 			]
 		}
 		answer: {
-			caption:   "Answer · triggers in plain language"
-			statement: "The operator writes the event; the service plans it, runs it on every clip, and keeps the frames that decide it."
+			caption:   "Answer · holds placed online"
+			statement: "The patron places the hold in the app; the service keeps the line, sets the copy aside and sends the notice."
 			paragraphs: [
 				{
-					lead: "Versioned plans."
-					text: "Each trigger compiles to an evaluation plan with a version. A verdict records that version, so a changed plan shows in the history and is never applied silently."
+					lead: "One line per title."
+					text: "Each hold takes a place in its title's line. A returned copy goes to the first confirmed hold, and the app shows each patron their place."
 				},
 				{
-					lead: "Asynchronous evaluation."
-					text: "The API returns once a job is queued, and a slow clip never holds an operator request open."
+					lead: "Queued work."
+					text: "The API returns once a hold is queued, and a busy branch never holds a patron's request open."
 				},
 			]
 		}
 		attention: {
-			caption: "Your attention goes here, and only here"
+			caption: "The patron's part, and only this"
 			items: [
 				{
 					id:    "plan-approval"
-					lead:  "Plan approval."
-					text:  "You confirm each new or changed plan before it runs."
+					lead:  "Pickup branch."
+					text:  "The patron confirms the branch before a copy is set aside."
 					actor: "operator"
 				},
 				{
 					id:    "disputed-verdicts"
-					lead:  "Disputed verdicts."
-					text:  "A verdict you mark wrong comes back with its frames and plan version."
+					lead:  "Collection."
+					text:  "A ready copy waits seven days on the hold shelf at that branch."
 					actor: "operator"
 				},
 				{
 					id:    "model-updates"
-					lead:  "Model updates."
-					text:  "A new evaluator version re-plans every active trigger and waits for your approval."
+					lead:  "Contact details."
+					text:  "Notices go to the email or phone on the card, so the patron keeps them current."
 					actor: "operator"
 				},
 			]
 		}
 		marks: {
 			part:      "a piece of the service"
-			note:      "asked of an operator"
-			attention: "your attention"
+			note:      "asked of a patron"
+			attention: "the patron's part"
 			step:      "a numbered request step"
 		}
 	}
 	actors: [
-		{id: "operator", name: "Operator", text: "writes triggers, reviews verdicts", tint: 4},
-		{id: "api", name: "Trigger API", text: "plans, versions, queues", tint: 1},
-		{id: "worker", name: "Clip worker", text: "one job per clip", tint: 6},
-		{id: "model", name: "Evaluator", text: "reads frames against a plan", tint: 5},
+		{id: "operator", name: "Patron", text: "places and collects holds", tint: 4},
+		{id: "api", name: "Holds API", text: "keeps lines, queues jobs", tint: 1},
+		{id: "worker", name: "Pickup worker", text: "one job per hold", tint: 6},
+		{id: "model", name: "Notifier", text: "sends ready notices", tint: 5},
 	]
 	body: [
 		{
 			tag:      "View"
 			id:       "workflow"
 			title:    "Workflow"
-			subtitle: "one trigger, from description to stored verdict"
+			subtitle: "one hold, from placing it to pickup"
 			note:     "a lane for each actor; time runs left to right"
 			children: [
 				{
@@ -92,10 +92,10 @@ onepager: plain.#Page & {
 					id:  "trigger-life"
 					lanes: ["operator", "api", "worker", "model"]
 					phases: [
-						{id: "describe", title: "Describe"},
-						{id: "plan", title: "Plan and approve"},
-						{id: "evaluate", title: "Evaluate each clip"},
-						{id: "review", title: "Review"},
+						{id: "describe", title: "Place"},
+						{id: "plan", title: "Wait in line"},
+						{id: "evaluate", title: "Set aside and notify"},
+						{id: "review", title: "Collect"},
 					]
 					step_fill: "cell"
 					children: [
@@ -104,8 +104,8 @@ onepager: plain.#Page & {
 							id:    "s-describe"
 							lane:  "operator"
 							phase: "describe"
-							title: "Describe the event"
-							lines: ["in plain language", "camera and hours"]
+							title: "Place a hold"
+							lines: ["from the catalogue app", "pickup branch"]
 							marks: [{part: "console"}]
 						},
 						{
@@ -113,7 +113,7 @@ onepager: plain.#Page & {
 							id:    "s-idle"
 							lane:  "api"
 							phase: "describe"
-							title: "nothing runs yet"
+							title: "no copy is free yet"
 							look:  "text"
 						},
 						{
@@ -121,8 +121,8 @@ onepager: plain.#Page & {
 							id:    "s-compile"
 							lane:  "api"
 							phase: "plan"
-							title: "Compile a plan"
-							lines: ["objects, conditions, frame rate", "plan version 1"]
+							title: "Join the title's line"
+							lines: ["one line per title", "place 3 of 5"]
 							marks: [{part: "trigger-api"}]
 						},
 						{
@@ -131,8 +131,8 @@ onepager: plain.#Page & {
 							lane:  "operator"
 							phase: "plan"
 							col:   2
-							title: "Approve the plan"
-							lines: ["reads the plan, not the prompt"]
+							title: "Confirm the branch"
+							lines: ["or suspend while away"]
 							marks: [{attention: "plan-approval"}, {note: "approved-plans-only"}]
 						},
 						{
@@ -141,7 +141,7 @@ onepager: plain.#Page & {
 							lane:  "api"
 							phase: "plan"
 							col:   2
-							title: "Store plan version"
+							title: "Store the hold"
 							look:  "chip"
 							fill:  "tint"
 							marks: [{part: "verdict-store"}]
@@ -151,8 +151,8 @@ onepager: plain.#Page & {
 							id:    "s-arrive"
 							lane:  "worker"
 							phase: "evaluate"
-							title: "Clip arrives"
-							lines: [{text: "the arrival event names a finished clip", marks: [{note: "out-of-scope"}]}]
+							title: "Copy checked in"
+							lines: [{text: "the check-in event names a returned copy", marks: [{note: "out-of-scope"}]}]
 							marks: [{part: "clip-bucket"}]
 						},
 						{
@@ -161,9 +161,9 @@ onepager: plain.#Page & {
 							lane:  "worker"
 							phase: "evaluate"
 							col:   2
-							title: "One job per clip"
+							title: "One job per hold"
 							look:  "stack"
-							lines: ["fetch frames", "call the evaluator"]
+							lines: ["set the copy aside", "call the notifier"]
 							marks: [{part: "worker"}, {part: "queue"}]
 						},
 						{
@@ -173,8 +173,8 @@ onepager: plain.#Page & {
 							phase: "evaluate"
 							col:   2
 							span:  2
-							title: "Judge the frames"
-							lines: ["against the approved plan"]
+							title: "Send the ready notice"
+							lines: ["by email or text message"]
 							marks: [{part: "evaluator"}, {note: "no-store-credentials"}]
 						},
 						{
@@ -183,8 +183,8 @@ onepager: plain.#Page & {
 							lane:  "worker"
 							phase: "evaluate"
 							col:   3
-							title: "Write the verdict"
-							lines: ["verdict, frames, plan version"]
+							title: "Mark the hold ready"
+							lines: ["shelf slot, collect-by date"]
 							marks: [{part: "verdict-store"}, {note: "evidence-by-reference"}]
 						},
 						{
@@ -192,8 +192,8 @@ onepager: plain.#Page & {
 							id:    "s-review"
 							lane:  "operator"
 							phase: "review"
-							title: "Review verdicts"
-							lines: ["filter by trigger and time"]
+							title: "Collect the copy"
+							lines: ["at the confirmed branch"]
 							marks: [{attention: "disputed-verdicts"}]
 						},
 						{
@@ -201,7 +201,7 @@ onepager: plain.#Page & {
 							id:    "s-replay"
 							lane:  "api"
 							phase: "review"
-							title: "Replay over earlier clips"
+							title: "Expire uncollected holds"
 							look:  "planned"
 							marks: [{part: "replay"}]
 						},
@@ -210,7 +210,7 @@ onepager: plain.#Page & {
 							id:    "s-model-update"
 							lane:  "model"
 							phase: "review"
-							title: "A new model version re-plans every trigger"
+							title: "A bounced notice flags the card for the desk"
 							look:  "note"
 							marks: [{attention: "model-updates"}]
 						},
@@ -219,34 +219,34 @@ onepager: plain.#Page & {
 				{
 					tag:   "Ladder"
 					id:    "failure-ladder"
-					title: "When a clip fails or a verdict is disputed"
-					note:  "a failed clip never blocks the queue"
+					title: "When a pick fails or a hold goes unclaimed"
+					note:  "a failed pick never blocks the queue"
 					around: ["s-evaluate", "s-judge", "s-write"]
 					rung_fill: "none"
 					rungs: [
 						{
 							title: "Retry"
-							who:   "the clip worker"
-							text:  "A failed frame fetch or evaluator call retries the clip job with backoff, three attempts in all."
+							who:   "the pickup worker"
+							text:  "A failed copy lookup or notifier call retries the hold job with backoff, three attempts in all."
 							actor: "worker"
 						},
 						{
 							title: "Dead letter"
-							who:   "the Trigger API"
-							text:  "After the third failure the job moves to a dead-letter subscription and the trigger lists the clip as unevaluated."
+							who:   "the Holds API"
+							text:  "After the third failure the job moves to a dead-letter subscription and the desk lists the hold as stuck."
 							actor: "api"
 						},
 						{
-							title: "Ask the operator"
-							who:   "you"
-							text:  "A disputed verdict returns with its frames and plan version; a confirmed dispute opens a plan change for approval."
+							title: "Ask the patron"
+							who:   "the patron"
+							text:  "An unclaimed copy sends a reminder on day five; the patron can extend the hold once or cancel it."
 							actor: "operator"
 							marks: [{attention: "disputed-verdicts"}]
 						},
 						{
 							title:   "Page the owner"
 							who:     "the service owner"
-							text:    "A trigger with more than ten dead-lettered clips in an hour pages the service owner."
+							text:    "A branch with more than ten stuck holds in an hour pages the service owner."
 							planned: true
 						},
 					]
@@ -289,8 +289,8 @@ onepager: plain.#Page & {
 															id:       "operator-person"
 															kind:     "person"
 															outline:  "person"
-															title:    "Operator"
-															subtitle: "one per site"
+															title:    "Patron"
+															subtitle: "one library card"
 															actor:    "operator"
 														},
 													]
@@ -304,8 +304,8 @@ onepager: plain.#Page & {
 															tag:      "Item"
 															id:       "console"
 															kind:     "service"
-															title:    "Operator console"
-															subtitle: "web client"
+															title:    "Catalogue app"
+															subtitle: "web and mobile"
 															actor:    "operator"
 														},
 													]
@@ -316,7 +316,7 @@ onepager: plain.#Page & {
 											tag:   "Box"
 											id:    "cloud"
 											kind:  "system"
-											label: "Trigger evaluation service"
+											label: "Hold and pickup service"
 											children: [
 												{
 													tag: "Col"
@@ -336,7 +336,7 @@ onepager: plain.#Page & {
 																			id:       "gateway"
 																			kind:     "network"
 																			title:    "Gateway"
-																			subtitle: "authenticates calls"
+																			subtitle: "checks library cards"
 																			actor:    "api"
 																		},
 																	]
@@ -350,8 +350,8 @@ onepager: plain.#Page & {
 																			tag:      "Item"
 																			id:       "api"
 																			kind:     "service"
-																			title:    "Trigger API"
-																			subtitle: "compiles plans"
+																			title:    "Holds API"
+																			subtitle: "keeps the lines"
 																			actor:    "api"
 																		},
 																	]
@@ -371,7 +371,7 @@ onepager: plain.#Page & {
 																	form:  "rail"
 																	line:  "solid"
 																	actor: "api"
-																	label: "Evaluation queue"
+																	label: "Pick queue"
 																	sub:   "at-least-once delivery"
 																},
 																{
@@ -383,7 +383,7 @@ onepager: plain.#Page & {
 																			tag:   "Box"
 																			id:    "evaluation-path"
 																			kind:  "assembly"
-																			label: "Evaluation path · one job per clip"
+																			label: "Pickup path · one job per hold"
 																			actor: "worker"
 																			children: [
 																				{
@@ -400,8 +400,8 @@ onepager: plain.#Page & {
 																									id:       "worker"
 																									kind:     "service"
 																									outline:  "stack"
-																									title:    "Clip worker"
-																									subtitle: "one job per clip"
+																									title:    "Pickup worker"
+																									subtitle: "one job per hold"
 																									actor:    "worker"
 																								},
 																							]
@@ -415,8 +415,8 @@ onepager: plain.#Page & {
 																									tag:      "Item"
 																									id:       "evaluator"
 																									kind:     "managed"
-																									title:    "Clip evaluator"
-																									subtitle: "hosted model endpoint"
+																									title:    "Notifier"
+																									subtitle: "hosted messaging service"
 																									actor:    "model"
 																								},
 																							]
@@ -446,8 +446,8 @@ onepager: plain.#Page & {
 																					tag:      "Item"
 																					id:       "bucket"
 																					kind:     "store"
-																					title:    "Clip bucket"
-																					subtitle: "object store"
+																					title:    "Copy catalogue"
+																					subtitle: "circulation records"
 																				},
 																			]
 																		},
@@ -463,13 +463,13 @@ onepager: plain.#Page & {
 																			id:       "verdict-store"
 																			kind:     "store"
 																			outline:  "store"
-																			title:    "Verdict store"
+																			title:    "Holds store"
 																			subtitle: "relational database"
 																			compartments: [
-																				"Triggers",
-																				"Plan versions",
-																				"Verdicts",
-																				{text: "Evidence refs", marks: [{note: "evidence-by-reference"}]},
+																				"Holds",
+																				"Title lines",
+																				"Notices",
+																				{text: "Copy refs", marks: [{note: "evidence-by-reference"}]},
 																			]
 																			actor: "worker"
 																		},
@@ -488,7 +488,7 @@ onepager: plain.#Page & {
 																					tag:      "Item"
 																					id:       "replay"
 																					kind:     "managed"
-																					title:    "Replay scheduler"
+																					title:    "Expiry scheduler"
 																					subtitle: "hosted scheduler"
 																					planned:  true
 																					actor:    "api"
@@ -509,27 +509,27 @@ onepager: plain.#Page & {
 									tag:   "GeneralNotes"
 									id:    "notes"
 									title: "General notes"
-									note:  "what the service asks of its operators"
+									note:  "what the service asks of its patrons"
 									notes: [
 										{
 											id:     "approved-plans-only"
-											text:   "A plan change never reaches a running trigger until an operator approves it."
-											detail: "The worker reads the approved version only."
+											text:   "A hold reaches the pick queue only once its patron has confirmed the branch."
+											detail: "The worker never sets a copy aside for an unconfirmed hold."
 										},
 										{
 											id:     "evidence-by-reference"
-											text:   "Evidence frames are stored as references into the clip, never copied."
-											detail: "Retention follows the clip bucket."
+											text:   "A hold stores a reference to the copy record, never a copy of it."
+											detail: "Copy details follow the catalogue."
 										},
 										{
 											id:     "no-store-credentials"
-											text:   "The evaluator holds no credentials for the verdict store."
-											detail: "The blocked line in view 3 is an IAM binding, not a convention."
+											text:   "The notifier holds no credentials for the holds store."
+											detail: "The blocked line in view 3 is a database grant, not a convention."
 										},
 										{
 											id:     "out-of-scope"
-											text:   "Out of scope: live streams, identifying people, and training a model per customer."
-											detail: "The service evaluates finished clips with one shared model."
+											text:   "Out of scope: interlibrary loans, fines, and holds on e-books."
+											detail: "The service fills holds with copies this library owns."
 										},
 									]
 									foot: "Each flag on the drawings marks where its note applies."
@@ -546,37 +546,37 @@ onepager: plain.#Page & {
 									title: "Parts list"
 									note:  "what the service is made of, and why each part exists"
 									parts: [
-										{id: "console", node: "console", why: "Operators write triggers and judge verdicts without an engineer in the loop."},
-										{id: "gateway", node: "gateway", why: "One authenticated entry point; the API never sees an anonymous call."},
+										{id: "console", node: "console", why: "Patrons place and track holds without a call to the branch."},
+										{id: "gateway", node: "gateway", why: "One signed-in entry point; the API never sees a call without a card."},
 										{
 											id:   "trigger-api"
 											node: "api"
-											why:  "Turns a description into a versioned plan and refuses to queue a plan nobody approved."
+											why:  "Keeps one line per title and refuses to queue a hold nobody has confirmed."
 										},
-										{id: "queue", node: "queue", why: "The API returns once a job is queued, so a slow clip never holds a request open."},
+										{id: "queue", node: "queue", why: "The API returns once a job is queued, so a busy branch never holds a request open."},
 										{
 											id:   "clip-bucket"
 											node: "bucket"
-											why:  "A clip is evaluated only once it is complete, and the arrival event names it."
+											why:  "A hold is filled only from a copy on the shelf, and the check-in event names it."
 										},
-										{id: "worker", node: "worker", why: "Clips are independent, so a failed clip retries alone."},
-										{id: "evaluator", node: "evaluator", why: "Reads frames against the plan, and has no write path to the store."},
+										{id: "worker", node: "worker", why: "Holds are independent, so a failed pick retries alone."},
+										{id: "evaluator", node: "evaluator", why: "Sends the ready notice, and has no write path to the store."},
 										{
 											id:   "verdict-store"
 											node: "verdict-store"
-											why:  "Every verdict keeps its evidence frames and the plan version that produced it."
+											why:  "Every hold keeps its place in line, its branch and the notices sent for it."
 										},
 										{
 											id:   "replay"
 											node: "replay"
-											why:  "Runs a trigger over earlier clips on a schedule, so the operator does not wait on a replay."
+											why:  "Releases a copy left on the shelf past its date, so the next patron in line gets it."
 										},
 									]
 								},
 								{
 									tag:    "Frame"
 									id:     "screen-review"
-									label:  "Verdict review in the console: clip, evidence frames, verdict and plan version"
+									label:  "Hold shelf at the desk: title, library card, slot and collect-by date"
 									height: 240
 								},
 							]
@@ -589,7 +589,7 @@ onepager: plain.#Page & {
 			tag:      "View"
 			id:       "how-tos"
 			title:    "How-tos"
-			subtitle: "what an operator types"
+			subtitle: "what desk staff type"
 			note:     "real output, trimmed"
 			children: [
 				{
@@ -597,53 +597,53 @@ onepager: plain.#Page & {
 					id:  "operator-commands"
 					items: [
 						{
-							title: "Write a trigger"
+							title: "Place a hold"
 							commands: [
-								"trig create",
+								"hold place",
 								{words: "then"},
-								"trig approve",
+								"hold confirm",
 							]
-							text: "Describe the event, read the plan the service returns, then approve it. Nothing runs before the approval."
+							text: "Place the hold for the patron, check the branch it names, then confirm it. No copy is set aside before that."
 							terminal: [
-								{kind: "command", text: "trig create --camera dock-4 \"a forklift enters while the bay door is open\""},
-								{kind: "output", text: "trigger t-31 created, plan version 1"},
-								{kind: "output", text: "objects: forklift, bay door; condition: door open while a forklift is in the bay"},
-								{kind: "comment", text: "the plan waits for approval"},
-								{kind: "command", text: "trig approve t-31 --version 1"},
-								{kind: "ok", text: "t-31 live from plan version 1"},
+								{kind: "command", text: "hold place --card 2104-8831 --branch east \"Rivers of the North\""},
+								{kind: "output", text: "hold h-5120 placed, 3 of 5 in line"},
+								{kind: "output", text: "title: Rivers of the North; branch: East; notice: text message"},
+								{kind: "comment", text: "the hold waits for confirmation"},
+								{kind: "command", text: "hold confirm h-5120"},
+								{kind: "ok", text: "h-5120 confirmed for East branch"},
 							]
 						},
 						{
-							title: "Replay a trigger"
-							commands: ["trig replay"]
-							text: "Queues every stored clip in the range; verdicts arrive as the jobs finish."
+							title: "Extend a hold"
+							commands: ["hold extend"]
+							text: "Adds seven days to a ready hold; the patron gets the new collect-by date by text."
 							terminal: [
-								{kind: "command", text: "trig replay t-31 --from 2026-10-01 --to 2026-10-07"},
-								{kind: "output", text: "412 clips queued under plan version 1"},
-								{kind: "ok", text: "verdicts: 409 written, 3 retrying"},
+								{kind: "command", text: "hold extend h-5120 --days 7"},
+								{kind: "output", text: "h-5120 collect-by date moved to 2026-11-09"},
+								{kind: "ok", text: "notice sent by text message"},
 							]
 						},
 						{
-							title: "Dispute a verdict"
-							commands: ["trig dispute"]
-							text: "Sends the verdict back with its frames. A confirmed dispute opens a plan change."
+							title: "Cancel a hold"
+							commands: ["hold cancel"]
+							text: "Releases the hold and its place in line. A copy already set aside goes to the next hold."
 							terminal: [
-								{kind: "command", text: "trig dispute v-88201 --reason \"the door was closed\""},
-								{kind: "output", text: "verdict v-88201 returned to t-31 with 6 frames"},
-								{kind: "comment", text: "a confirmed dispute opens plan version 2 for approval"},
+								{kind: "command", text: "hold cancel h-5141 --reason \"bought a copy\""},
+								{kind: "output", text: "hold h-5141 cancelled, 4 holds left in line"},
+								{kind: "comment", text: "the next hold in line moves up one place"},
 							]
 						},
 						{
-							title: "List verdicts"
-							commands: ["trig verdicts"]
-							text:   "Filters by trigger, clip and capture time. A disputed verdict stays listed until its dispute closes."
+							title: "List holds"
+							commands: ["hold list"]
+							text:   "Filters by card, title and branch. A ready hold stays listed until it is collected or expires."
 							beside: true
 							terminal: [
-								{kind: "command", text: "trig verdicts t-31 --since 2026-10-07"},
-								{kind: "output", text: "3 verdicts for t-31 under plan version 1"},
-								{kind: "output", indent: 1, text: "v-88201 match, 6 frames, disputed"},
-								{kind: "output", indent: 1, text: "v-88202 no match"},
-								{kind: "output", indent: 1, text: "v-88203 match, 4 frames"},
+								{kind: "command", text: "hold list --card 2104-8831"},
+								{kind: "output", text: "3 holds on card 2104-8831"},
+								{kind: "output", indent: 1, text: "h-5120 ready at East, collect by 2026-11-02"},
+								{kind: "output", indent: 1, text: "h-5133 in line, 2 of 4"},
+								{kind: "output", indent: 1, text: "h-5141 waiting for a free copy"},
 							]
 						},
 					]
@@ -653,23 +653,23 @@ onepager: plain.#Page & {
 	]
 	legend: [
 		{line: "solid", by_actor: true, text: "work moves, in the colour of the actor that sends it"},
-		{line: "dash", by_actor: true, text: "reads or writes the verdict store"},
+		{line: "dash", by_actor: true, text: "reads or writes the holds store"},
 		{line: "solid", by_actor: true, form: "rail", text: "one topic that every job passes through"},
 		{line: "solid", by_actor: true, planned: true, text: "planned, not built yet"},
-		{line: "gray", text: "event from the platform"},
+		{line: "gray", text: "event from the library system"},
 		{line: "deny", text: "blocked path"},
 	]
 	links: [
 		{from: "s-describe", to: "s-compile", line: "solid"},
-		{from: "s-compile", to: "s-approve", line: "solid", label: "plan", from_side: "top", to_side: "left"},
+		{from: "s-compile", to: "s-approve", line: "solid", label: "in line", from_side: "top", to_side: "left"},
 		{from: "s-approve", to: "s-store-plan", line: "solid"},
-		{from: "s-store-plan", to: "s-evaluate", line: "dash", actor: "worker", label: "reads approved version", to_side: "top"},
+		{from: "s-store-plan", to: "s-evaluate", line: "dash", actor: "worker", label: "reads confirmed holds", to_side: "top"},
 		{from: "s-arrive", to: "s-evaluate", line: "solid"},
 		{from: "s-evaluate", to: "s-judge", line: "solid"},
 		{from: "s-judge", to: "s-write", line: "solid"},
 		{from: "s-write", to: "s-review", line: "solid"},
-		{from: "operator-person", to: "console", line: "solid", label: "writes, reviews"},
-		{from: "console", to: "gateway", line: "solid", step: 1, label: "submit trigger"},
+		{from: "operator-person", to: "console", line: "solid", label: "places, tracks"},
+		{from: "console", to: "gateway", line: "solid", step: 1, label: "place hold"},
 		{from: "gateway", to: "api", line: "solid", step: 2, label: "authorized call"},
 		{
 			from:  "api"
@@ -677,17 +677,17 @@ onepager: plain.#Page & {
 			line:  "solid"
 			step:  3
 			label: "queue job"
-			sub:   "approved plans only"
+			sub:   "confirmed holds only"
 			valve: true
 			marks: [{note: "approved-plans-only"}]
 			from_side: "bottom"
 			to_side:   "right"
 		},
 		{from: "queue", to: "worker", line: "solid", step: 4, label: "deliver job"},
-		{from: "worker", to: "evaluator", line: "solid", step: 5, label: "evaluate clip"},
-		{from: "worker", to: "verdict-store", line: "dash", step: 6, label: "write verdict"},
-		{from: "api", to: "replay", line: "solid", planned: true, label: "schedule replays", from_side: "bottom", to_side: "top"},
-		{from: "bucket", to: "queue", line: "gray", label: "clip finished"},
+		{from: "worker", to: "evaluator", line: "solid", step: 5, label: "send notice"},
+		{from: "worker", to: "verdict-store", line: "dash", step: 6, label: "mark ready"},
+		{from: "api", to: "replay", line: "solid", planned: true, label: "schedule expiry", from_side: "bottom", to_side: "top"},
+		{from: "bucket", to: "queue", line: "gray", label: "copy returned"},
 		{
 			from:  "evaluator"
 			to:    "verdict-store"
