@@ -2175,9 +2175,17 @@ All tests except the wrap-epsilon regression use `FixedMetricsMeasurer::default(
 - Checks on hand-built `PageGeometry`: overlap by 0.02 px is a defect and touching edges are not; a child 0.02 px outside its parent is a defect; a text run 0.02 px wider than its part is a defect; geometry with only the root gives examined 0 and fails for each geometry check.
 - Checks on laid-out documents: a Pcard with a single 120-character word in a Row of three at width 640 produces `child-inside-container` defects for the three cards and no `text-fits-box` defect, because the min-content floor of section 2.5 widens the card to the word. A `/title` of one 200-character word at width 640 produces one `text-fits-box` defect at `/title` and no `child-inside-container` defect, because the root stretches the title leaf to the content width with no min-content floor. A small document of five nodes has hand-derived examined counts.
 - Dense stress (`examples/stress-dense.json`, written by the stencil-layout implementer). Layout completes, all five checks and `pipes-land` pass, `pipes-land` examining 22 pipe ends (two Pipe h per Row with a card on each side, and the Pipe v between Row 1 and Row 2; the Tee arms have no Row ancestor), and `body_nodes(page).len()` is 37. A test compares the file, parsed as a `serde_json::Value`, with the document below built field for field, so any drift fails. The document is exactly:
-  - Page: title `Fifteen Cloud Run services in five rows behind one service perimeter`, kicker `Service perimeter · Cloud Run`, lede `Five rows of cards and pipes inside a service perimeter.`, canvas `internal`, no `foot`, no `width`, and legend entries `gray` `internal call`, `blue` `request path`, `pink` `reply path`, `dash` `failover` and `deny` `blocked egress`, in that order.
+  - Page: title `A parcel carrier tracks every shipment through five stages behind one service perimeter`, kicker `Parcel tracking · Cloud Run`, lede `Each parcel moves from intake through sorting, linehaul and last-mile delivery to returns, and the perimeter blocks egress from every stage.`, canvas `internal`, no `foot`, no `width`, and legend entries `gray` `internal call`, `blue` `request path`, `pink` `reply path`, `dash` `failover` and `deny` `blocked egress`, in that order.
   - `body` holds one Zone, kind `gcp`, label `Google Cloud`. Its one child is a Zone of kind `perimeter`, label `Service perimeter`. Its one child is a Col with no `gap`, `grow` or `justify` and seven children in this order: Row 1, the Pipe v, Row 2, Row 3, the Tee, Row 4, Row 5.
-  - Row r, for r from 1 to 5, has no `gap`, `grow` or `justify` and five children: Pcard, Pipe h, Pcard, Pipe h, Pcard. Card c, for c from 1 to 3, has icon `cloud-run`, fn `Service r.c` with r and c as digits (`Service 2.3`), pn `Cloud Run` and fact `Reads its config from a bucket in the same project`. The first Pipe h has kind `blue` and label `step r.1`, the second kind `gray` and label `step r.2`. Neither has a `sub`.
+  - Row r, for r from 1 to 5, is one stage of a parcel's route and has no `gap`, `grow` or `justify` and five children: Pcard, Pipe h, Pcard, Pipe h, Pcard. Every card has icon `cloud-run`, pn `Cloud Run` and fact `Publishes each parcel event to the tracking topic`. The first Pipe h has kind `blue`, the second kind `gray`, and neither has a `sub`. The cards' fn and the two pipe labels, by row:
+
+    | Row | Stage | Card 1 | Pipe 1 | Card 2 | Pipe 2 | Card 3 |
+    |---|---|---|---|---|---|---|
+    | 1 | intake | `Shipment booking` | `label` | `Label printing` | `pickup` | `Pickup scan` |
+    | 2 | sorting | `Hub arrival` | `arrival` | `Sort planner` | `sort plan` | `Chute assignment` |
+    | 3 | linehaul | `Trailer loading` | `load list` | `Route tracker` | `position` | `Depot arrival` |
+    | 4 | last mile | `Courier manifest` | `manifest` | `Delivery tracker` | `status` | `Proof of delivery` |
+    | 5 | returns | `Return request` | `return` | `Return label` | `refund` | `Refund trigger` |
   - The Pipe v has kind `dash` and label `failover`.
   - The Tee has kind `deny`, hub `egress`, and arms Pipe h `blue` with label `allowed` and Pipe h `pink` with label `reply`.
   - Node count: gcp zone 1, perimeter zone 1, Col 1, Rows 5, Row children 25, Pipe v 1, Tee 1, Tee arms 2, which is 37. Every PipeKind is used and listed once, so legend-consistency passes, and no text holds a remembered constant. The facts wrap to two lines in the default measurer, so wrapping is exercised in every card.
@@ -2960,205 +2968,9 @@ The numbers in this example are illustrative.
 
 ### 12.10 Example and tests
 
-`examples/hero-iso.json` is a cover-slide figure of 16 body nodes and six links at width 1600: an on-prem Box with the Edge router inside a Col with `justify: center`, and a gcp Box holding a Row of a vpc ring labeled `Shared VPC · europe-west4`, two centered Cols with the API gateway (Cloud Run) and Model serving (Vertex AI), and an apis Box labeled `Google APIs`. The ring holds a Row of two networking tiles, the Cloud Router the attachments land on and a Private Service Connect endpoint; the serverless products stand beside the ring, since they are not addresses in a VPC, and the apis Box holds Warehouse, a BigQuery product (section 13.3, rule 4). Every Row has `grow: [0, …]`, so every Box and item takes its content width, and the Col keeps the on-prem Box to the router and its margin instead of the Row's height and centers it. Every item carries a subtitle naming what it is, as the gcp hop-fact rule asks. VLAN 1 (solid tint 1) runs from the router's right side to the Cloud Router's left side, VLAN 2 (dash) through a via point in the gap between the sites; gray service calls run from the Cloud Router to the endpoint, the endpoint to the gateway, the gateway to the model and the model to the warehouse.
+`examples/hero-iso.json` is a vehicle assembly plant sending line-camera frames to defect inspection in Google Cloud: 16 body nodes and six links at width 1600. A Plant floor onprem Box (tint 1) holds the Plant router, a hybrid tile, inside a Col with `justify: center`, and a gcp Box holds a Row of a vpc ring labeled `Plant VPC · europe-west4`, two centered Cols with the Inspection API (Cloud Run) and the Defect model (Vertex AI), and an apis Box labeled `Google APIs`. The ring holds a Row of two networking tiles, the Attachments (Cloud Router) the VLANs land on and a Service endpoint (Private Service Connect); the serverless products stand beside the ring, since they are not addresses in a VPC, and the apis Box holds the Quality warehouse, a BigQuery product (section 13.3, rule 4). Every Row has `grow: [0, …]`, so every Box and item takes its content width, and the Col keeps the plant Box to the router and its margin instead of the Row's height and centers it. Every item carries a subtitle naming what it is, as the gcp hop-fact rule asks. VLAN 1 (solid tint 1) runs from the router's right side to the Attachments' left side, VLAN 2 (dash) through a via point in the gap between the sites; gray service calls run from the Attachments to the endpoint, the endpoint to the Inspection API, the API to the model and the model to the warehouse.
 
-```json
-{
-  "title": "On-prem data reaches three managed services over two private paths.",
-  "kicker": "Hybrid platform · cover figure",
-  "lede": "Two Interconnect attachments carry on-prem traffic into the Shared VPC, which reaches the API gateway, model serving and the warehouse as managed services beside it.",
-  "width": 1600,
-  "badge": "Customer",
-  "grammar": "gcp",
-  "projection": "iso",
-  "body": [
-    {
-      "tag": "Row",
-      "gap": 64,
-      "grow": [
-        0,
-        0
-      ],
-      "children": [
-        {
-          "tag": "Col",
-          "justify": "center",
-          "children": [
-            {
-              "tag": "Box",
-              "kind": "onprem",
-              "tint": 1,
-              "label": "On-prem",
-              "children": [
-                {
-                  "tag": "Item",
-                  "id": "router",
-                  "kind": "product",
-                  "icon": "hybrid",
-                  "title": "Edge router",
-                  "subtitle": "on-prem · BGP"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "tag": "Box",
-          "kind": "gcp",
-          "label": "Google Cloud",
-          "children": [
-            {
-              "tag": "Row",
-              "gap": 64,
-              "grow": [
-                0,
-                0,
-                0,
-                0
-              ],
-              "children": [
-                {
-                  "tag": "Box",
-                  "kind": "vpc",
-                  "label": "Shared VPC · europe-west4",
-                  "children": [
-                    {
-                      "tag": "Row",
-                      "gap": 48,
-                      "grow": [
-                        0,
-                        0
-                      ],
-                      "children": [
-                        {
-                          "tag": "Item",
-                          "id": "attachments",
-                          "kind": "product",
-                          "icon": "networking",
-                          "title": "Cloud Router",
-                          "subtitle": "VLAN attachments"
-                        },
-                        {
-                          "tag": "Item",
-                          "id": "psc",
-                          "kind": "product",
-                          "icon": "networking",
-                          "title": "Service endpoint",
-                          "subtitle": "Private Service Connect"
-                        }
-                      ]
-                    }
-                  ]
-                },
-                {
-                  "tag": "Col",
-                  "justify": "center",
-                  "children": [
-                    {
-                      "tag": "Item",
-                      "id": "gateway",
-                      "kind": "product",
-                      "icon": "cloud-run",
-                      "title": "API gateway",
-                      "subtitle": "Cloud Run"
-                    }
-                  ]
-                },
-                {
-                  "tag": "Col",
-                  "justify": "center",
-                  "children": [
-                    {
-                      "tag": "Item",
-                      "id": "model",
-                      "kind": "product",
-                      "icon": "vertex-ai",
-                      "title": "Model serving",
-                      "subtitle": "Vertex AI"
-                    }
-                  ]
-                },
-                {
-                  "tag": "Box",
-                  "kind": "apis",
-                  "label": "Google APIs",
-                  "children": [
-                    {
-                      "tag": "Item",
-                      "id": "warehouse",
-                      "kind": "product",
-                      "icon": "bigquery",
-                      "title": "Warehouse",
-                      "subtitle": "BigQuery"
-                    }
-                  ]
-                }
-              ]
-            }
-          ]
-        }
-      ]
-    }
-  ],
-  "legend": [
-    {
-      "line": "solid",
-      "tint": 1,
-      "text": "primary attachment"
-    },
-    {
-      "line": "dash",
-      "text": "failover attachment"
-    },
-    {
-      "line": "gray",
-      "text": "service call"
-    }
-  ],
-  "links": [
-    {
-      "from": "router",
-      "to": "attachments",
-      "line": "solid",
-      "tint": 1,
-      "label": "VLAN 1",
-      "to_side": "left"
-    },
-    {
-      "from": "router",
-      "to": "attachments",
-      "line": "dash",
-      "label": "VLAN 2",
-      "via": [
-        {
-          "x": 300,
-          "y": 480
-        }
-      ]
-    },
-    {
-      "from": "attachments",
-      "to": "psc",
-      "line": "gray"
-    },
-    {
-      "from": "psc",
-      "to": "gateway",
-      "line": "gray"
-    },
-    {
-      "from": "gateway",
-      "to": "model",
-      "line": "gray"
-    },
-    {
-      "from": "model",
-      "to": "warehouse",
-      "line": "gray"
-    }
-  ]
-}
-```
+The JSON is the file; this section keeps no copy of it. The via at (300, 480) clears both VLAN tags while the router tile is between 105.8 and 109.3 px wide in layout (it is 107.4, set by its floor text `plant OT · BGP`); at 100 or 112 px VLAN 2's tag lands under VLAN 1 or on its tag, and iso-labels-clear reports it.
 
 Its check counts are the captured lines in `crates/stencil-cli/tests/fixtures/hero-iso.check.txt`, which `crates/stencil-cli/tests/example_lines.rs` compares with `check` output; the pairs of `iso-labels-clear` are the label pairs, the (label, later opaque solid) pairs of section 12.7 rule 3, the non-opaque labels against the slabs and link tubes, the tags against the links they do not own and for lying nearest their own path, the (block, slab) pairs and the contained item labels; the page has no pipes, so no surface pairs. The `iso-links-clear` legs include the approach stubs. The page has no pipes, so `pipes-land` is not applicable. Without `projection` the document passes the flat checks with `iso-labels-clear` and `iso-links-clear` not applicable.
 
@@ -3166,7 +2978,7 @@ Its check counts are the captured lines in `crates/stencil-cli/tests/fixtures/he
 
 `examples/people-iso.json` is the sprite figure under the plain grammar at width 1200: a Row weighted 3 to 1 of a system Box holding a group Box with a Row of a `person` (Receptionist), a `device` (Admin console, a laptop) and a `service` (Booking API, a block), and a centered group Box of patients holding a Row, gap 32, of a `device` with `"shape": "phone"` (Clinic app) and a `person` (Patient); the receptionist links to the laptop, the patient to the phone, the laptop and the phone to the API. Every sprite of rule 9 is in its center SVG, `check` passes every check that applies to it, and its gallery PNG stands in the README.
 
-`examples/transit-iso.json` is the narrow-zone, long-name figure under gcp at width 1800, the top Row growing its gcp Box: an onprem Box (a networking tile and a person) beside a centered gutter Col holding one slot with a Pipe named `from` the Edge router and `to` the transit hub, labeled Dedicated Interconnect with both VLAN attachments in its sub and an end arrow, then a gcp Box with a Col at `justify: start` holding the Network Connectivity Center hub, which is global and so sits outside every region (section 13.3 rule 4), a narrow tinted region (Google Cloud VMware Engine) and a second narrow region of two items (Certificate Authority Service above Database Migration Service), with one gray link from the hub to Migration. The hub stands at the top of the Row so its footprint overlaps the router's on the cross axis, which is what the slot of section 13.8 aims at. It exercises the pipe tube with a ring and a cone, the zone label reserve under a tower and floor text wrapped to three lines;
+`examples/transit-iso.json` is a university's enrolment platform under gcp at width 1800, the top Row growing its gcp Box: an Admissions project Box (the Admissions VPC, a networking tile, and Admissions staff, a person) beside a centered gutter Col holding one slot with a Pipe named `from` the Admissions VPC and `to` the transit hub, labeled VPC spoke with its sub naming the attachment and an end arrow, then a gcp Box with a Col at `justify: start` holding the Network Connectivity Center hub, which is global and so sits outside every region (section 13.3 rule 4), a narrow tinted region holding Student records (Google Cloud VMware Engine) and a second narrow region of two items, Wi-Fi certificates (Certificate Authority Service) above Records migration (Database Migration Service), with one gray link from the hub to Records migration. One pipe enters the hub and there is no Tee. The hub stands at the top of the Row so its footprint overlaps the VPC tile's on the cross axis, which is what the slot of section 13.8 aims at. It exercises the pipe tube with a ring and a cone, the zone label reserve under a tower and floor text wrapped to three lines.
 
 Tests:
 
@@ -3183,9 +2995,9 @@ Tests:
 - stencil-render, links clear: a V of 600 px between ends 100 px apart is a detour, a 6 px inner leg is a jog, and a hand-built leg over the two-zone page's right block is reported with that block unless the block is one of the link's endpoints.
 - stencil-render, bundles: two links between the same two blocks, routed along one line, are drawn two cone bases apart along the sides they share, the pair hanging toward the back from the attach point on the right block's hidden left side, with their tags at a quarter and three quarters of the leg; two links that share a start side but not a route move their start legs apart; a second path stacked on the first produces the shared-stretch message and the two shared-end messages, a path 3 px beside it the crowding message, and the check is not applicable under flat and short of two links.
 - stencil-render, deny: the on-prem deny pipe's group holds a hollow tube, a hollow cone and the plate's top and face, and no ring; a deny link between two blocks draws its cone and the plate.
-- stencil-render, labels: touching pills are a gap defect and pills 4 px apart pass; a link under another owner's tag is reported and under its own is not; a pipe's surface through floor text, a tag nearer another pipe than its own, and a contained label with no block each produce their message; the hero examines 242 pairs and the platform 237.
-- stencil-render, check: every hero link end lands on its node (`iso-link-ends` examines 8 and passes), hand-built ends off a block's outline, on its corner, outside a zone and without a solid produce their four messages, and a link from the people figure starts on the figure's hull inside its footprint; the hero passes `iso-labels-clear` with 0 defects; hand-built scenes produce each of the five defect kinds of section 12.7 with its message: two labels overlapping, a mark covered by a later block, a slab edge crossing a mark, a link crossing a mark, and a contained label leaving its block.
-- stencil-render, measured JSON: for the hero, `projection.labels` has 14 entries with `id`, `axis`, `corners` and `z` and no `billboards` key, and the whole output is byte-identical under the three themes while the SVG bytes differ.
+- stencil-render, labels: touching pills are a gap defect and pills 4 px apart pass; a link under another owner's tag is reported and under its own is not; a pipe's surface through floor text, a tag nearer another pipe than its own, and a contained label with no block each produce their message; the hero examines 417 pairs and the platform 131.
+- stencil-render, check: every hero link end lands on its node (`iso-link-ends` examines 12 and passes), hand-built ends off a block's outline, on its corner, outside a zone and without a solid produce their four messages, and a link from the people figure starts on the figure's hull inside its footprint; the hero passes `iso-labels-clear` with 0 defects; hand-built scenes produce each of the five defect kinds of section 12.7 with its message: two labels overlapping, a mark covered by a later block, a slab edge crossing a mark, a link crossing a mark, and a contained label leaving its block.
+- stencil-render, measured JSON: for the hero, `projection.labels` has 18 entries with `id`, `axis`, `corners` and `z` and no `billboards` key, and the whole output is byte-identical under the three themes while the SVG bytes differ.
 - stencil-cli: `check examples/hero-iso.json` under `--theme center`, `dusk` and `wire` exits 0 with the same four iso check lines, the pipes-land and print-fit not-applicable lines and no failure; the counts and the summary are the captured lines of `crates/stencil-cli/tests/fixtures/hero-iso.check.txt`. With `--projection flat` it prints the four iso not-applicable lines. `render examples/hero-iso.json` under each theme writes four files, and the PNG width is `ceil(projection.canvas.width * 2)`. `render examples/g7.json --projection iso` writes an iso SVG whose measured JSON `nodes` differ from the flat run's (section 12.4 rule 4) on the same canvas width. `vet --projection iso` exits 2.
 
 ## 13. Core and grammars
@@ -5238,7 +5050,7 @@ pub enum PipeEndSide { Start, End }
    - Markdown reads as written in both cases, its tables carry lines and the legend, and it diffs line by line.
 
    A later `--format json` can print the same `DescriptionUnits` with the writer's sentences as fields.
-3. Sources. Text, kinds, icons and legend meaning come from the vetted page after any `--projection` override. Geometry supplies the layout canvas size, the node order and parents, which nodes draw parts, the node an untargeted pipe end lands on (rule 11) and each link's route status. The writer never reads a theme, the palette, the iso scene or the SVG. Under iso the drawn canvas is the projected one, whose size depends on the theme's slab thickness (hero-iso: layout 1640 x 728.74, SVG 1725.38 x 1205.05 in center), so the iso figure paragraph gives the layout size and says the drawing is larger (rule 7).
+3. Sources. Text, kinds, icons and legend meaning come from the vetted page after any `--projection` override. Geometry supplies the layout canvas size, the node order and parents, which nodes draw parts, the node an untargeted pipe end lands on (rule 11) and each link's route status. The writer never reads a theme, the palette, the iso scene or the SVG. Under iso the drawn canvas is the projected one, whose size depends on the theme's slab thickness (hero-iso: layout 1640 x 728.74, SVG 1757.46 x 1223.57 in center), so the iso figure paragraph gives the layout size and says the drawing is larger (rule 7).
 4. Outputs and commands.
    - `render` writes `<stem>.description.md` as its fourth output. `RenderedPage` carries `description: String`, which `render_page_sized` fills with `describe(&loaded.page, &loaded.grammar, &geometry).text` after layout. `OutputNames` and `OutputPaths` carry `description`, and `write_outputs` stages it and renames it with the other three, so nothing is written when any output fails, and it is refused like the others when it resolves to the input or names a directory. The command prints four absolute paths, the description last. Render never writes `<stem>.md`, so a hand-written `design.md` beside `design.json` is never touched.
    - `stencil describe <page.json> [--projection flat|iso]` loads the page as `check` does with the projection override only, lays it out with `CosmicTextMeasurer`, and prints the bytes `render` would write to stdout. It renders nothing and runs no checks. Exit codes follow section 7: 0 when printed; 1 for a parse error, a vet violation, a grammar or theme defect, or a missing glyph, with the `error` and `violation` lines `check` prints on stdout; 2 when the input cannot be read, the arguments are wrong or the fonts fail, with the error chain on stderr and stdout empty.

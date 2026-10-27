@@ -55,6 +55,15 @@ fn text(path: &Path) -> &str {
     path.to_str().unwrap()
 }
 
+/// Copy as the index writes it: the five markup characters as entities.
+fn escaped(copy: &str) -> String {
+    copy.replace('&', "&amp;")
+        .replace('<', "&lt;")
+        .replace('>', "&gt;")
+        .replace('"', "&quot;")
+        .replace('\'', "&#39;")
+}
+
 /// A Row of three cards and one Pipe with its legend entry. With a long word in the first
 /// card at width 640, child-inside-container fails; otherwise every check passes or does
 /// not apply.
@@ -170,8 +179,8 @@ fn gallery_renders_every_example_under_every_theme() {
     for example in manifest["examples"].as_array().unwrap() {
         let title = example["title"].as_str().unwrap();
         let kicker = example["kicker"].as_str().unwrap();
-        assert!(index.contains(title), "{title}");
-        assert!(index.contains(kicker), "{kicker}");
+        assert!(index.contains(&escaped(title)), "{title}");
+        assert!(index.contains(&escaped(kicker)), "{kicker}");
         assert_eq!(example["renders"].as_array().unwrap().len(), THEMES.len());
     }
 

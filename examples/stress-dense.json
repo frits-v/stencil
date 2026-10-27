@@ -1,7 +1,7 @@
 {
-  "title": "Fifteen Cloud Run services in five rows behind one service perimeter",
-  "kicker": "Service perimeter · Cloud Run",
-  "lede": "Five rows of cards and pipes inside a service perimeter.",
+  "title": "A parcel carrier tracks every shipment through five stages behind one service perimeter",
+  "kicker": "Parcel tracking · Cloud Run",
+  "lede": "Each parcel moves from intake through sorting, linehaul and last-mile delivery to returns, and the perimeter blocks egress from every stage.",
   "badge": "Internal",
   "grammar": "gcp",
   "body": [
@@ -25,11 +25,11 @@
                       "tag": "Item",
                       "kind": "product",
                       "icon": "cloud-run",
-                      "title": "Service 1.1",
+                      "title": "Shipment booking",
                       "subtitle": "Cloud Run",
                       "facts": [
                         {
-                          "text": "Reads its config from a bucket in the same project"
+                          "text": "Publishes each parcel event to the tracking topic"
                         }
                       ]
                     },
@@ -38,17 +38,17 @@
                       "dir": "h",
                       "line": "solid",
                       "tint": 1,
-                      "label": "step 1.1"
+                      "label": "label"
                     },
                     {
                       "tag": "Item",
                       "kind": "product",
                       "icon": "cloud-run",
-                      "title": "Service 1.2",
+                      "title": "Label printing",
                       "subtitle": "Cloud Run",
                       "facts": [
                         {
-                          "text": "Reads its config from a bucket in the same project"
+                          "text": "Publishes each parcel event to the tracking topic"
                         }
                       ]
                     },
@@ -56,17 +56,17 @@
                       "tag": "Pipe",
                       "dir": "h",
                       "line": "gray",
-                      "label": "step 1.2"
+                      "label": "pickup"
                     },
                     {
                       "tag": "Item",
                       "kind": "product",
                       "icon": "cloud-run",
-                      "title": "Service 1.3",
+                      "title": "Pickup scan",
                       "subtitle": "Cloud Run",
                       "facts": [
                         {
-                          "text": "Reads its config from a bucket in the same project"
+                          "text": "Publishes each parcel event to the tracking topic"
                         }
                       ]
                     }
@@ -85,11 +85,11 @@
                       "tag": "Item",
                       "kind": "product",
                       "icon": "cloud-run",
-                      "title": "Service 2.1",
+                      "title": "Hub arrival",
                       "subtitle": "Cloud Run",
                       "facts": [
                         {
-                          "text": "Reads its config from a bucket in the same project"
+                          "text": "Publishes each parcel event to the tracking topic"
                         }
                       ]
                     },
@@ -98,17 +98,17 @@
                       "dir": "h",
                       "line": "solid",
                       "tint": 1,
-                      "label": "step 2.1"
+                      "label": "arrival"
                     },
                     {
                       "tag": "Item",
                       "kind": "product",
                       "icon": "cloud-run",
-                      "title": "Service 2.2",
+                      "title": "Sort planner",
                       "subtitle": "Cloud Run",
                       "facts": [
                         {
-                          "text": "Reads its config from a bucket in the same project"
+                          "text": "Publishes each parcel event to the tracking topic"
                         }
                       ]
                     },
@@ -116,17 +116,17 @@
                       "tag": "Pipe",
                       "dir": "h",
                       "line": "gray",
-                      "label": "step 2.2"
+                      "label": "sort plan"
                     },
                     {
                       "tag": "Item",
                       "kind": "product",
                       "icon": "cloud-run",
-                      "title": "Service 2.3",
+                      "title": "Chute assignment",
                       "subtitle": "Cloud Run",
                       "facts": [
                         {
-                          "text": "Reads its config from a bucket in the same project"
+                          "text": "Publishes each parcel event to the tracking topic"
                         }
                       ]
                     }
@@ -139,11 +139,11 @@
                       "tag": "Item",
                       "kind": "product",
                       "icon": "cloud-run",
-                      "title": "Service 3.1",
+                      "title": "Trailer loading",
                       "subtitle": "Cloud Run",
                       "facts": [
                         {
-                          "text": "Reads its config from a bucket in the same project"
+                          "text": "Publishes each parcel event to the tracking topic"
                         }
                       ]
                     },
@@ -152,17 +152,17 @@
                       "dir": "h",
                       "line": "solid",
                       "tint": 1,
-                      "label": "step 3.1"
+                      "label": "load list"
                     },
                     {
                       "tag": "Item",
                       "kind": "product",
                       "icon": "cloud-run",
-                      "title": "Service 3.2",
+                      "title": "Route tracker",
                       "subtitle": "Cloud Run",
                       "facts": [
                         {
-                          "text": "Reads its config from a bucket in the same project"
+                          "text": "Publishes each parcel event to the tracking topic"
                         }
                       ]
                     },
@@ -170,17 +170,17 @@
                       "tag": "Pipe",
                       "dir": "h",
                       "line": "gray",
-                      "label": "step 3.2"
+                      "label": "position"
                     },
                     {
                       "tag": "Item",
                       "kind": "product",
                       "icon": "cloud-run",
-                      "title": "Service 3.3",
+                      "title": "Depot arrival",
                       "subtitle": "Cloud Run",
                       "facts": [
                         {
-                          "text": "Reads its config from a bucket in the same project"
+                          "text": "Publishes each parcel event to the tracking topic"
                         }
                       ]
                     }
@@ -214,11 +214,11 @@
                       "tag": "Item",
                       "kind": "product",
                       "icon": "cloud-run",
-                      "title": "Service 4.1",
+                      "title": "Courier manifest",
                       "subtitle": "Cloud Run",
                       "facts": [
                         {
-                          "text": "Reads its config from a bucket in the same project"
+                          "text": "Publishes each parcel event to the tracking topic"
                         }
                       ]
                     },
@@ -227,17 +227,17 @@
                       "dir": "h",
                       "line": "solid",
                       "tint": 1,
-                      "label": "step 4.1"
+                      "label": "manifest"
                     },
                     {
                       "tag": "Item",
                       "kind": "product",
                       "icon": "cloud-run",
-                      "title": "Service 4.2",
+                      "title": "Delivery tracker",
                       "subtitle": "Cloud Run",
                       "facts": [
                         {
-                          "text": "Reads its config from a bucket in the same project"
+                          "text": "Publishes each parcel event to the tracking topic"
                         }
                       ]
                     },
@@ -245,17 +245,17 @@
                       "tag": "Pipe",
                       "dir": "h",
                       "line": "gray",
-                      "label": "step 4.2"
+                      "label": "status"
                     },
                     {
                       "tag": "Item",
                       "kind": "product",
                       "icon": "cloud-run",
-                      "title": "Service 4.3",
+                      "title": "Proof of delivery",
                       "subtitle": "Cloud Run",
                       "facts": [
                         {
-                          "text": "Reads its config from a bucket in the same project"
+                          "text": "Publishes each parcel event to the tracking topic"
                         }
                       ]
                     }
@@ -268,11 +268,11 @@
                       "tag": "Item",
                       "kind": "product",
                       "icon": "cloud-run",
-                      "title": "Service 5.1",
+                      "title": "Return request",
                       "subtitle": "Cloud Run",
                       "facts": [
                         {
-                          "text": "Reads its config from a bucket in the same project"
+                          "text": "Publishes each parcel event to the tracking topic"
                         }
                       ]
                     },
@@ -281,17 +281,17 @@
                       "dir": "h",
                       "line": "solid",
                       "tint": 1,
-                      "label": "step 5.1"
+                      "label": "return"
                     },
                     {
                       "tag": "Item",
                       "kind": "product",
                       "icon": "cloud-run",
-                      "title": "Service 5.2",
+                      "title": "Return label",
                       "subtitle": "Cloud Run",
                       "facts": [
                         {
-                          "text": "Reads its config from a bucket in the same project"
+                          "text": "Publishes each parcel event to the tracking topic"
                         }
                       ]
                     },
@@ -299,17 +299,17 @@
                       "tag": "Pipe",
                       "dir": "h",
                       "line": "gray",
-                      "label": "step 5.2"
+                      "label": "refund"
                     },
                     {
                       "tag": "Item",
                       "kind": "product",
                       "icon": "cloud-run",
-                      "title": "Service 5.3",
+                      "title": "Refund trigger",
                       "subtitle": "Cloud Run",
                       "facts": [
                         {
-                          "text": "Reads its config from a bucket in the same project"
+                          "text": "Publishes each parcel event to the tracking topic"
                         }
                       ]
                     }
