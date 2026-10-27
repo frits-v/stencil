@@ -481,21 +481,25 @@ fn describe_exits_2_for_a_missing_file() {
     );
 }
 
-/// The `font-weight` values of every `<text>` element, and of every `@font-face` rule with
-/// the bytes its `data:` URI decodes to.
-fn text_weights_and_font_faces(svg: &str) -> (BTreeSet<u16>, BTreeMap<u16, Vec<u8>>) {
-    let text_weights = svg
+/// A text face as the written SVG names it: family and weight.
+type Face = (String, u16);
+
+/// The `font-family` and `font-weight` of every `<text>` element, and of every `@font-face`
+/// rule with the bytes its `data:` URI decodes to.
+fn text_faces_and_font_faces(svg: &str) -> (BTreeSet<Face>, BTreeMap<Face, Vec<u8>>) {
+    let text_faces = svg
         .lines()
         .filter(|line| line.trim_start().starts_with("<text "))
         .map(|line| {
-            let after = line.split_once(r#" font-weight=""#).unwrap().1;
-            after.split_once('"').unwrap().0.parse().unwrap()
+            let family = attribute(line, "font-family").unwrap().to_string();
+            let weight = attribute(line, "font-weight").unwrap().parse().unwrap();
+            (family, weight)
         })
         .collect();
     let mut faces = BTreeMap::new();
     for rule in svg.split("@font-face").skip(1) {
         let rule = rule.split_once('}').unwrap().0;
-        assert!(rule.contains(r#"font-family: "Inter";"#), "{rule:.120}");
+        let family = quoted_after(rule, r#"font-family: ""#).to_string();
         let weight: u16 = rule
             .split_once("font-weight: ")
             .unwrap()
@@ -505,35 +509,42 @@ fn text_weights_and_font_faces(svg: &str) -> (BTreeSet<u16>, BTreeMap<u16, Vec<u
             .0
             .parse()
             .unwrap();
-        let payload = rule
-            .split_once(r#"url("data:font/ttf;base64,"#)
-            .unwrap()
-            .1
-            .split_once('"')
-            .unwrap()
-            .0;
+        let payload = quoted_after(rule, r#"url("data:font/ttf;base64,"#);
         let bytes = base64::engine::general_purpose::STANDARD
             .decode(payload)
             .unwrap();
+        let face = (family, weight);
         assert!(
-            faces.insert(weight, bytes).is_none(),
-            "weight {weight} twice"
+            faces.insert(face.clone(), bytes).is_none(),
+            "{face:?} twice"
         );
     }
-    (text_weights, faces)
+    (text_faces, faces)
 }
 
-/// hybrid-ai and the onepager sheet set text in all four weights (the sheet's captions and
-/// grid references are SemiBold), and design-brief and the iso hero in 400, 700 and 800 only.
+/// hybrid-ai, g7 and the onepager sheet set text in all four Inter weights (the sheet's
+/// captions and grid references are SemiBold), and design-brief and the iso hero in 400, 700
+/// and 800 only. Only onepager holds a how-to, so only its file sets text in JetBrains Mono
+/// NL and embeds that face.
 #[test]
-fn the_svg_embeds_a_font_face_for_each_weight_its_text_uses_and_no_other() {
+fn the_svg_embeds_a_font_face_for_each_family_and_weight_its_text_uses_and_no_other() {
     let out_dir = scratch_directory("render_embeds_fonts");
+    let inter = |weights: &[u16]| -> Vec<Face> {
+        weights
+            .iter()
+            .map(|weight| ("Inter".to_string(), *weight))
+            .collect()
+    };
+    let monospace: Face = ("JetBrains Mono NL".to_string(), 400);
+    let mut onepager = inter(&[400, 600, 700, 800]);
+    onepager.push(monospace.clone());
     let mut examined = 0;
-    for (stem, expected_weights) in [
-        ("hybrid-ai", vec![400, 600, 700, 800]),
-        ("design-brief", vec![400, 700, 800]),
-        ("onepager", vec![400, 600, 700, 800]),
-        ("hero-iso", vec![400, 700, 800]),
+    for (stem, expected_faces) in [
+        ("hybrid-ai", inter(&[400, 600, 700, 800])),
+        ("design-brief", inter(&[400, 700, 800])),
+        ("onepager", onepager),
+        ("hero-iso", inter(&[400, 700, 800])),
+        ("g7", inter(&[400, 600, 700, 800])),
     ] {
         let input = repository_path(&format!("examples/{stem}.json"));
         let outcome = run_stencil(&[
@@ -545,27 +556,30 @@ fn the_svg_embeds_a_font_face_for_each_weight_its_text_uses_and_no_other() {
         assert_eq!(outcome.code, ExitCode::Clean, "{}", outcome.stderr);
 
         let svg = fs::read_to_string(out_dir.join(format!("{stem}.svg"))).unwrap();
-        let (text_weights, faces) = text_weights_and_font_faces(&svg);
+        let (text_faces, faces) = text_faces_and_font_faces(&svg);
         assert_eq!(
-            text_weights.iter().copied().collect::<Vec<_>>(),
-            expected_weights,
+            text_faces.iter().cloned().collect::<Vec<_>>(),
+            expected_faces,
             "{stem}"
         );
         assert_eq!(
-            faces.keys().copied().collect::<BTreeSet<_>>(),
-            text_weights,
+            faces.keys().cloned().collect::<BTreeSet<_>>(),
+            text_faces,
             "{stem}"
         );
-        for (weight, bytes) in &faces {
+        for ((family, weight), bytes) in &faces {
             let bundled = BUNDLED_FONTS
                 .iter()
-                .find(|file| file.weight.css_value() == *weight)
+                .find(|file| file.family.css_name() == family && file.weight.css_value() == *weight)
                 .unwrap();
-            assert!(bytes.as_slice() == bundled.bytes, "{stem}: {weight}");
+            assert!(
+                bytes.as_slice() == bundled.bytes,
+                "{stem}: {family} {weight}"
+            );
         }
         examined += 1;
     }
-    assert_eq!(examined, 4);
+    assert_eq!(examined, 5);
 }
 
 /// The value of attribute `name` in the tag on `line`, when the tag has it.
@@ -600,16 +614,15 @@ fn not_values(text: &str, name: &str) -> BTreeSet<String> {
 fn hover_rules(svg: &str) -> BTreeMap<String, ParsedRule> {
     let mut rules = BTreeMap::new();
     for line in svg.lines().filter(|line| line.contains(":hover")) {
-        let source = if line.trim_start().starts_with(r#"svg:has([data-id=""#) {
-            quoted_after(line, r#"svg:has([data-id=""#)
+        let source = if line.contains(r#":has([data-id=""#) {
+            quoted_after(line, r#":has([data-id=""#)
         } else {
-            quoted_after(line, r#"svg:has([data-row=""#)
+            quoted_after(line, r#":has([data-row=""#)
         };
-        let (groups, rows) = line.split_once(" > :not([data-id]), ").unwrap();
         let rule = ParsedRule {
             anchor: quoted_after(line, r#"[id=""#).to_string(),
-            groups: not_values(groups, "data-id"),
-            rows: not_values(rows, "data-row"),
+            groups: not_values(line, "data-id"),
+            rows: not_values(line, "data-row"),
         };
         assert!(
             rules.insert(source.to_string(), rule).is_none(),
@@ -720,6 +733,104 @@ fn every_hover_rule_names_units_the_written_svg_holds_and_the_resvg_input_has_no
     assert!(examples >= 16, "{examples} examples");
     assert!(rules_examined >= 376, "{rules_examined} rules");
     assert!(names_examined > rules_examined, "{names_examined} names");
+}
+
+/// Every example's file stem.
+fn example_stems() -> Vec<String> {
+    let mut stems: Vec<String> = fs::read_dir(repository_path("examples"))
+        .unwrap()
+        .map(|entry| entry.unwrap().path())
+        .filter(|path| path.extension().and_then(|extension| extension.to_str()) == Some("json"))
+        .map(|path| path.file_stem().unwrap().to_str().unwrap().to_string())
+        .collect();
+    stems.sort();
+    stems
+}
+
+#[test]
+fn every_rule_fades_a_link_and_its_tag_as_one_group() {
+    let leaf = r#":is([data-tag="Pcard"],[data-tag="Pipe"],[data-tag="Step"],[data-tag="Rung"],[data-tag="ProblemPoint"],[data-tag="ActorChip"],[data-tag="LegendEntry"],[data-tag="HowToItem"],[data-tag="Link"])"#;
+    let container = r#":is([data-tag="Zone"],[data-tag="Tee"])"#;
+    let mut tagged_links = 0;
+    let mut rules_examined = 0;
+    for stem in example_stems() {
+        let input = repository_path(&format!("examples/{stem}.json"));
+        let json_text = read_input(&input).unwrap();
+        let loaded = load_document_from(&json_text, input.parent().unwrap(), None).unwrap();
+        let rendered = render_page(&loaded, DeviceScale::DEFAULT).unwrap();
+        let svg = rendered.svg.self_contained().unwrap();
+        for line in svg.lines().filter(|line| line.contains(":hover")) {
+            // Each selector of the rule ends on a group: a leaf group, a container's own
+            // wrapper, or a row; none reaches into a group for its paths or rects.
+            let selectors = line.split_once(" { ").unwrap().0;
+            for selector in selectors.split(", :is(svg:not(") {
+                let target = selector.split_once(":target)) ").unwrap().1;
+                assert!(
+                    target.starts_with(leaf)
+                        || (target.starts_with(container) && target.ends_with("> [data-own]"))
+                        || target.starts_with("[data-row]"),
+                    "{stem}: {target:.120}"
+                );
+                assert!(!target.contains(":not([data-id]) >"), "{stem}");
+            }
+            rules_examined += 1;
+        }
+        for route in rendered
+            .geometry
+            .links
+            .iter()
+            .filter(|route| route.tag.is_some())
+        {
+            let open = format!(r#" data-id="/links/{}" data-tag="Link""#, route.index);
+            assert!(svg.contains(&open), "{stem}: link {}", route.index);
+            tagged_links += 1;
+        }
+    }
+    assert!(rules_examined >= 376, "{rules_examined} rules");
+    assert!(tagged_links > 0, "no link with a tag");
+}
+
+#[test]
+fn a_click_pins_each_source_and_the_floor_clears_it_in_the_written_svg_only() {
+    let mut sources_examined = 0;
+    for stem in example_stems() {
+        let (svg, resvg_input) = written_and_resvg_svg(&stem);
+        for marker in ["<a ", "data-own", "data-hit"] {
+            assert!(!resvg_input.svg.contains(marker), "{stem}: {marker}");
+        }
+        let lines: Vec<&str> = svg.lines().map(str::trim_start).collect();
+        assert_eq!(
+            lines
+                .iter()
+                .filter(|line| **line == r##"<a href="#">"##)
+                .count(),
+            usize::from(!resvg_input.hover_rules.is_empty()),
+            "{stem}"
+        );
+        for rule in &resvg_input.hover_rules {
+            let (attribute, pointer) = match &rule.source {
+                stencil_render::HoverSource::Group(pointer) => ("data-id", pointer),
+                stencil_render::HoverSource::Row(pointer) => ("data-row", pointer),
+            };
+            let open = lines
+                .iter()
+                .position(|line| line.starts_with("<g ") && attribute_is(line, attribute, pointer))
+                .unwrap_or_else(|| panic!("{stem}: no group {pointer}"));
+            let link = format!(r##"<a href="#{}">"##, rule.anchor);
+            let following: Vec<&str> = lines.iter().skip(open + 1).take(2).copied().collect();
+            match attribute {
+                "data-id" => assert_eq!(following, [r#"<g data-own="">"#, link.as_str()], "{stem}"),
+                _ => assert_eq!(following.first(), Some(&link.as_str()), "{stem}"),
+            }
+            sources_examined += 1;
+        }
+    }
+    assert!(sources_examined >= 376, "{sources_examined} sources");
+}
+
+/// True when the tag on `line` has attribute `name` equal to `value`.
+fn attribute_is(line: &str, name: &str, value: &str) -> bool {
+    attribute(line, name) == Some(value)
 }
 
 /// The pointer of every body node of a document that carries an `id`.
@@ -857,17 +968,33 @@ fn onepager_keeps_the_related_set_of_each_kind_of_element() {
     assert!(svg.contains(&format!(r#"data-id="{how_to}""#)));
 }
 
+/// Each family the text uses gets one fallback rule keyed on its `font-family` attribute,
+/// after the faces and before the hover rules; a rule on every `text` would outrank the
+/// monospace attribute and draw a how-to's terminal in Inter. Only onepager has a how-to.
 #[test]
-fn the_written_svg_gives_its_text_a_fallback_stack_after_the_faces_and_the_resvg_input_does_not() {
-    let rule = r#"text { font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }"#;
+fn the_written_svg_gives_each_family_its_own_fallback_stack_and_the_resvg_input_none() {
+    let sans = r#"text[font-family="Inter"] { font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }"#;
+    let monospace = r#"text[font-family="JetBrains Mono NL"] { font-family: "JetBrains Mono NL", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }"#;
     let mut examined = 0;
-    for stem in ["hybrid-ai", "design-brief", "onepager", "hero-iso"] {
+    for (stem, expected) in [
+        ("hybrid-ai", vec![sans]),
+        ("design-brief", vec![sans]),
+        ("onepager", vec![sans, monospace]),
+        ("hero-iso", vec![sans]),
+        ("g7", vec![sans]),
+    ] {
         let (svg, resvg_input) = written_and_resvg_svg(stem);
         let lines: Vec<&str> = svg.lines().map(str::trim_start).collect();
-        let at: Vec<usize> = (0..lines.len())
-            .filter(|index| lines[*index] == rule)
+        let rules: Vec<&str> = lines
+            .iter()
+            .copied()
+            .filter(|line| line.starts_with("text"))
             .collect();
-        assert_eq!(at.len(), 1, "{stem}");
+        assert_eq!(rules, expected, "{stem}");
+        assert!(
+            !lines.iter().any(|line| line.starts_with("text {")),
+            "{stem}: a rule on every text element"
+        );
         let last_face = lines
             .iter()
             .rposition(|line| line.starts_with("@font-face"))
@@ -876,12 +1003,15 @@ fn the_written_svg_gives_its_text_a_fallback_stack_after_the_faces_and_the_resvg
             .iter()
             .position(|line| line.contains(":hover"))
             .unwrap_or(lines.len());
-        assert!(last_face < at[0] && at[0] < first_hover, "{stem}");
+        for rule in &expected {
+            let at = lines.iter().position(|line| line == rule).unwrap();
+            assert!(last_face < at && at < first_hover, "{stem}");
+        }
         assert!(!resvg_input.svg.contains("font-family: Inter,"), "{stem}");
         assert!(!resvg_input.svg.contains("<style"), "{stem}");
         examined += 1;
     }
-    assert_eq!(examined, 4);
+    assert_eq!(examined, 5);
 }
 
 #[test]

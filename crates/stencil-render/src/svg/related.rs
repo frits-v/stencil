@@ -36,6 +36,10 @@ pub(crate) const FADE_TAGS: [NodeTag; 10] = [
 /// The key of each part of one node or link tag, aligned with its parts.
 pub(crate) type PartKeys = Vec<Option<ElementKey>>;
 
+/// The fading tags whose groups hold other units: a Box holds its children and a Tee its
+/// arms. Every other fading group, and a link, is a leaf.
+pub(crate) const CONTAINER_TAGS: [NodeTag; 2] = [NodeTag::Zone, NodeTag::Tee];
+
 /// The key a drawn element of a row or a mark carries.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) enum ElementKey {
@@ -59,6 +63,18 @@ pub(crate) struct Highlights {
     /// Per link route index, the key of each part of its tag.
     pub link_part_keys: HashMap<usize, PartKeys>,
     pub rules: Vec<HoverRule>,
+}
+
+impl Highlights {
+    /// The source of every rule: group `data-id`s and row pointers.
+    pub(crate) fn rule_sources(&self) -> BTreeSet<String> {
+        self.rules
+            .iter()
+            .map(|rule| match &rule.source {
+                HoverSource::Group(pointer) | HoverSource::Row(pointer) => pointer.clone(),
+            })
+            .collect()
+    }
 }
 
 /// A line and everything drawn with it: a Link, a Pipe, or a Tee with its arms, and the

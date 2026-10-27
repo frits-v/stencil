@@ -1,7 +1,7 @@
 {
-  "title": "Staff and customers reach the API from their own devices.",
-  "kicker": "Front door · cover figure",
-  "lede": "The operator runs the API from the shop; customers reach it from their phones.",
+  "title": "Reception and patients book through one booking API",
+  "kicker": "Appointment booking · clinic",
+  "lede": "Reception staff book and move appointments from the admin console on a laptop. Patients book from the clinic's phone app, and both reach the same booking API.",
   "width": 1200,
   "badge": "Customer",
   "grammar": "plain",
@@ -14,12 +14,12 @@
         {
           "tag": "Box",
           "kind": "system",
-          "label": "Shop",
+          "label": "Clinic",
           "children": [
             {
               "tag": "Box",
               "kind": "group",
-              "label": "Front door",
+              "label": "Front desk",
               "children": [
                 {
                   "tag": "Row",
@@ -28,8 +28,8 @@
                       "tag": "Item",
                       "kind": "person",
                       "id": "ops",
-                      "title": "Operator",
-                      "subtitle": "on call"
+                      "title": "Receptionist",
+                      "subtitle": "checks patients in"
                     },
                     {
                       "tag": "Item",
@@ -42,8 +42,8 @@
                       "tag": "Item",
                       "kind": "service",
                       "id": "api",
-                      "title": "API",
-                      "subtitle": "gateway"
+                      "title": "Booking API",
+                      "subtitle": "appointments"
                     }
                   ]
                 }
@@ -58,7 +58,7 @@
             {
               "tag": "Box",
               "kind": "group",
-              "label": "Customers",
+              "label": "Patients",
               "children": [
                 {
                   "tag": "Row",
@@ -67,7 +67,7 @@
                       "tag": "Item",
                       "kind": "device",
                       "id": "phone",
-                      "title": "Shop app",
+                      "title": "Clinic app",
                       "subtitle": "phone",
                       "shape": "phone"
                     },
@@ -75,8 +75,8 @@
                       "tag": "Item",
                       "kind": "person",
                       "id": "customer",
-                      "title": "Customer",
-                      "subtitle": "shopping"
+                      "title": "Patient",
+                      "subtitle": "books a visit"
                     }
                   ],
                   "gap": 32
@@ -120,7 +120,7 @@
     {
       "line": "solid",
       "tint": 1,
-      "text": "request path"
+      "text": "booking request"
     },
     {
       "line": "gray",
