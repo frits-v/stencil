@@ -77,27 +77,24 @@ fn assert_first_item_paint(theme: &Theme, svg: &str, label: &str) -> usize {
 
     let expected = [
         ("4.1", sheet.label_ink.as_str()),
-        ("WRITE A TRIGGER", sheet.frame.as_str()),
-        ("trig create", terminal.text.as_str()),
+        ("PLACE A HOLD", sheet.frame.as_str()),
+        ("hold place", terminal.text.as_str()),
         ("then", theme.ink.secondary.as_str()),
-        ("trig approve", terminal.text.as_str()),
+        ("hold confirm", terminal.text.as_str()),
         (
-            "Describe the event, read the plan the service returns, then approve it. Nothing runs before the approval.",
+            "Place the hold for the patron, check the branch it names, then confirm it. No copy is set aside before that.",
             theme.ink.secondary.as_str(),
         ),
         ("$", terminal.prompt.as_str()),
         (
-            "trig create --camera dock-4 \"a forklift enters while the bay door is open\"",
+            "hold place --card 2104-8831 --branch east \"Rivers of the North\"",
             terminal.text.as_str(),
         ),
-        (
-            "trigger t-31 created, plan version 1",
-            terminal.text.as_str(),
-        ),
+        ("hold h-5120 placed, 3 of 5 in line", terminal.text.as_str()),
         ("#", terminal.comment.as_str()),
-        ("the plan waits for approval", terminal.comment.as_str()),
+        ("the hold waits for confirmation", terminal.comment.as_str()),
         ("\u{2713}", terminal.prompt.as_str()),
-        ("t-31 live from plan version 1", terminal.prompt.as_str()),
+        ("h-5120 confirmed for East branch", terminal.prompt.as_str()),
     ];
     for (content, ink) in expected {
         assert_eq!(text_fill(item, content), ink, "{label}: {content}");
@@ -231,11 +228,11 @@ fn a_theme_without_the_terminal_role_draws_the_derived_colours() {
     assert_eq!(rects[2].attribute("fill"), Some(theme.fact.fill.as_str()));
     assert_eq!(text_fill(item, "$"), theme.ink.primary.as_str());
     assert_eq!(
-        text_fill(item, "t-31 live from plan version 1"),
+        text_fill(item, "h-5120 confirmed for East branch"),
         theme.ink.primary.as_str()
     );
     assert_eq!(
-        text_fill(item, "the plan waits for approval"),
+        text_fill(item, "the hold waits for confirmation"),
         theme.ink.secondary.as_str()
     );
     assert_eq!(

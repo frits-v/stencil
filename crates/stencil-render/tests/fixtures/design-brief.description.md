@@ -1,8 +1,8 @@
-# Plain-language event triggers, evaluated over video clips `/title`
+# Library holds, from the catalogue to the pickup shelf `/title`
 
-Internal · Design one-pager · trigger evaluation service `/kicker`
+Internal · Design one-pager · hold and pickup service `/kicker`
 
-An operator describes an event in their own words. The service turns the description into an evaluation plan, runs the plan over each new clip, and stores a verdict with the frames that support it. `/lede`
+A patron places a hold in the catalogue app. The service keeps a line of holds for each title, sets a returned copy aside at the patron's branch, and tells the patron it is ready to collect. `/lede`
 
 ## Figure
 
@@ -13,55 +13,55 @@ Drawn elements: 29 (22 nodes, 7 links). Canvas 1480 x 1042.8 px, projection flat
 - Row, left to right. `/body/0`
   - Col, top to bottom. `/body/0/children/0`
     - Text Problem. `/body/0/children/0/children/0`
-      - Operators review long stretches of video to find a few events. Rules written as code need an engineer for every change.
-      - Operators need to describe an event in plain language and get a verdict per clip, with the frames that support it.
+      - Branch staff track holds on paper slips and by phone. A patron has to call or visit a branch to place one.
+      - Patrons need to place a hold online, keep their place in line, and hear when a copy is ready to collect.
     - Text Goals. `/body/0/children/0/children/1`
-      1. Accept a trigger written in plain language and show its evaluation plan before it runs.
-      2. Evaluate every new clip against each active trigger.
-      3. Store each verdict with its evidence frames and the plan version that produced it.
-      4. Let an operator replay a trigger over earlier clips.
+      1. Accept a hold placed in the catalogue app and show the patron their place in line.
+      2. Set each returned copy aside for the first confirmed hold on its title.
+      3. Tell the patron by email or text when the copy is ready, with a collect-by date.
+      4. Release a copy nobody collects in seven days to the next hold in line.
     - Text Non-goals. `/body/0/children/0/children/2`
-      - Live stream analysis: the service works on finished clips.
-      - Identifying people.
-      - Training or tuning a model per customer.
+      - Interlibrary loans: the service fills holds with copies this library owns.
+      - Fines and fees.
+      - Holds on e-books.
     - Text Interfaces. `/body/0/children/0/children/3`
-      - Create trigger: takes the description, returns the trigger and its plan.
-      - Replay trigger: queues an evaluation over a range of stored clips.
-      - List verdicts: filters by trigger, clip and capture time.
-      - Clip arrival event: carries the clip location and capture time.
-    - Callout, risk: Risk: plan drift. A model update can change how a description is read. Each verdict records the plan version, and a changed plan waits for operator approval before it runs. `/body/0/children/0/children/4`
-    - Callout, decision: Decision: queue between API and worker. Evaluation runs asynchronously. The API returns once the plan is queued, so a slow clip never holds an operator request open. `/body/0/children/0/children/5`
+      - Place hold: takes the card, the title and the branch, returns the hold.
+      - Cancel hold: releases the hold and its place in line.
+      - List holds: filters by card, title and branch.
+      - Copy check-in event: carries the copy and the branch that received it.
+    - Callout, risk: Risk: stale contact details. A notice sent to an old address or number leaves the copy unclaimed. A bounced notice flags the card for the desk, and the copy still expires after seven days. `/body/0/children/0/children/4`
+    - Callout, decision: Decision: queue between API and worker. Pickup runs asynchronously. The API returns once the hold is queued, so a busy branch never holds a patron's request open. `/body/0/children/0/children/5`
   - Col, top to bottom. `/body/0/children/1`
     - Row, left to right. `/body/0/children/1/children/0`
-      - Item Operator console: web client; kind service. `/body/0/children/1/children/0/children/0`
-    - Box Trigger evaluation service; kind system. `/body/0/children/1/children/1`
+      - Item Catalogue app: web and mobile; kind service. `/body/0/children/1/children/0/children/0`
+    - Box Hold and pickup service; kind system. `/body/0/children/1/children/1`
       - Col, top to bottom. `/body/0/children/1/children/1/children/0`
         - Row, left to right. `/body/0/children/1/children/1/children/0/children/0`
-          - Item Gateway: authenticates calls; kind network. `/body/0/children/1/children/1/children/0/children/0/children/0`
+          - Item Gateway: checks library cards; kind network. `/body/0/children/1/children/1/children/0/children/0/children/0`
         - Row, left to right. `/body/0/children/1/children/1/children/0/children/1`
-          - Item Trigger API: compiles plans; kind service. `/body/0/children/1/children/1/children/0/children/1/children/0`
+          - Item Holds API: keeps the lines; kind service. `/body/0/children/1/children/1/children/0/children/1/children/0`
         - Row, left to right. `/body/0/children/1/children/1/children/0/children/2`
-          - Item Evaluation queue: at-least-once delivery; kind queue. `/body/0/children/1/children/1/children/0/children/2/children/0`
+          - Item Pick queue: at-least-once delivery; kind queue. `/body/0/children/1/children/1/children/0/children/2/children/0`
         - Row, left to right. `/body/0/children/1/children/1/children/0/children/3`
-          - Item Clip worker: one job per clip; kind service. `/body/0/children/1/children/1/children/0/children/3/children/0`
+          - Item Pickup worker: one job per hold; kind service. `/body/0/children/1/children/1/children/0/children/3/children/0`
         - Row, left to right. `/body/0/children/1/children/1/children/0/children/4`
-          - Item Clip evaluator: hosted model endpoint; kind managed. `/body/0/children/1/children/1/children/0/children/4/children/0`
-          - Item Verdict store: relational database; kind store. `/body/0/children/1/children/1/children/0/children/4/children/1`
+          - Item Notifier: hosted messaging service; kind managed. `/body/0/children/1/children/1/children/0/children/4/children/0`
+          - Item Holds store: relational database; kind store. `/body/0/children/1/children/1/children/0/children/4/children/1`
 - Row, left to right. `/body/1`
-  - Frame Trigger editor: description, generated plan, approve: 200 px placeholder. `/body/1/children/0`
-  - Frame Verdict review: clip, evidence frames, verdict: 200 px placeholder. `/body/1/children/1`
+  - Frame Place a hold: title, pickup branch, notice channel, confirm: 200 px placeholder. `/body/1/children/0`
+  - Frame Hold shelf: title, library card, slot, collect-by date: 200 px placeholder. `/body/1/children/1`
 
 ## Lines
 
 | Line | Kind | From | To | Style | Ends | Means | Pointer |
 |---|---|---|---|---|---|---|---|
-| 1 submit trigger | link | Operator console (console) | Gateway (gateway) | solid, tint 1; blue in center | arrow end | request path, numbered in order | `/links/0` |
-| 2 authorized call | link | Gateway (gateway) | Trigger API (api) | solid, tint 1; blue in center | arrow end | request path, numbered in order | `/links/1` |
-| 3 queue plan | link | Trigger API (api) | Evaluation queue (queue) | solid, tint 1; blue in center | arrow end | request path, numbered in order | `/links/2` |
-| 4 deliver job | link | Evaluation queue (queue) | Clip worker (worker) | solid, tint 1; blue in center | arrow end | request path, numbered in order | `/links/3` |
-| 5 evaluate clip | link | Clip worker (worker) | Clip evaluator (evaluator) | solid, tint 1; blue in center | arrow end | request path, numbered in order | `/links/4` |
-| 6 write verdict | link | Clip worker (worker) | Verdict store (database) | solid, tint 1; blue in center | arrow end | request path, numbered in order | `/links/5` |
-| no direct write | link | Clip evaluator (evaluator) | Verdict store (database) | deny; red in center | stop plate end | blocked path | `/links/6` |
+| 1 place hold | link | Catalogue app (console) | Gateway (gateway) | solid, tint 1; blue in center | arrow end | request path, numbered in order | `/links/0` |
+| 2 authorized call | link | Gateway (gateway) | Holds API (api) | solid, tint 1; blue in center | arrow end | request path, numbered in order | `/links/1` |
+| 3 queue hold | link | Holds API (api) | Pick queue (queue) | solid, tint 1; blue in center | arrow end | request path, numbered in order | `/links/2` |
+| 4 deliver job | link | Pick queue (queue) | Pickup worker (worker) | solid, tint 1; blue in center | arrow end | request path, numbered in order | `/links/3` |
+| 5 send notice | link | Pickup worker (worker) | Notifier (evaluator) | solid, tint 1; blue in center | arrow end | request path, numbered in order | `/links/4` |
+| 6 mark ready | link | Pickup worker (worker) | Holds store (database) | solid, tint 1; blue in center | arrow end | request path, numbered in order | `/links/5` |
+| no direct write | link | Notifier (evaluator) | Holds store (database) | deny; red in center | stop plate end | blocked path | `/links/6` |
 
 ## Legend `/legend`
 
@@ -70,4 +70,4 @@ Drawn elements: 29 (22 nodes, 7 links). Canvas 1480 x 1042.8 px, projection flat
 | blue | Solid blue | request path, numbered in order | 6 | `/legend/0` |
 | deny | Dashed red | blocked path | 1 | `/legend/1` |
 
-Foot: The numbered links follow one request from the console to a stored verdict. `/foot`
+Foot: The numbered links follow one hold from the catalogue app to the holds store. `/foot`
