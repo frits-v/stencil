@@ -1,14 +1,14 @@
 {
-  "title": "Two firewall zones and four VLANs at the head office",
-  "kicker": "On-prem network · head office site",
-  "lede": "The core switch trunks the staff and server VLANs to the edge firewall, which routes them to the DMZ and the transit VLAN. Traffic that starts in the DMZ never reaches the inside zone.",
+  "title": "Treatment plant network of a water utility",
+  "kicker": "Water treatment · plant network",
+  "lede": "The core switch trunks the office and control VLANs to the edge firewall, which routes them to the DMZ and the transit VLAN. The public outage map runs in the DMZ, and traffic that starts there never reaches the plant controllers.",
   "badge": "Internal",
   "grammar": "plain",
   "body": [
     {
       "tag": "Box",
       "kind": "system",
-      "label": "Head office site",
+      "label": "Treatment plant",
       "children": [
         {
           "tag": "Row",
@@ -24,7 +24,7 @@
                   "tag": "Box",
                   "kind": "group",
                   "tint": 1,
-                  "label": "VLAN 10 · staff",
+                  "label": "VLAN 10 · office",
                   "children": [
                     {
                       "tag": "Row",
@@ -39,13 +39,13 @@
                   "tag": "Box",
                   "kind": "group",
                   "tint": 2,
-                  "label": "VLAN 20 · servers",
+                  "label": "VLAN 20 · control",
                   "children": [
                     {
                       "tag": "Row",
                       "children": [
-                        { "tag": "Item", "kind": "service", "title": "Application server", "facts": [{ "text": "app-01", "source": "built" }] },
-                        { "tag": "Item", "kind": "store", "title": "File server", "facts": [{ "text": "fs-01", "source": "built" }] }
+                        { "tag": "Item", "kind": "service", "title": "Plant controller", "facts": [{ "text": "plc-01", "source": "built" }] },
+                        { "tag": "Item", "kind": "store", "title": "Historian", "facts": [{ "text": "hist-01", "source": "built" }] }
                       ]
                     }
                   ]
@@ -57,8 +57,8 @@
               "justify": "center",
               "gap": 12,
               "children": [
-                { "tag": "Pipe", "dir": "h", "line": "solid", "tint": 1, "label": "VLAN 10", "sub": "staff trunk" },
-                { "tag": "Pipe", "dir": "h", "line": "solid", "tint": 2, "label": "VLAN 20", "sub": "server trunk" },
+                { "tag": "Pipe", "dir": "h", "line": "solid", "tint": 1, "label": "VLAN 10", "sub": "office trunk" },
+                { "tag": "Pipe", "dir": "h", "line": "solid", "tint": 2, "label": "VLAN 20", "sub": "control trunk" },
                 { "tag": "Pipe", "dir": "h", "line": "deny", "label": "DMZ to inside", "arrow": "start" }
               ]
             },
@@ -92,7 +92,7 @@
                     {
                       "tag": "Row",
                       "children": [
-                        { "tag": "Item", "kind": "service", "title": "Web server", "facts": [{ "text": "web-01", "source": "built" }] },
+                        { "tag": "Item", "kind": "service", "title": "Outage map", "facts": [{ "text": "web-01", "source": "built" }] },
                         { "tag": "Item", "kind": "service", "title": "Mail relay", "facts": [{ "text": "mx-01", "source": "built" }] }
                       ]
                     }
@@ -115,8 +115,8 @@
     }
   ],
   "legend": [
-    { "line": "solid", "tint": 1, "text": "VLAN 10, staff" },
-    { "line": "solid", "tint": 2, "text": "VLAN 20, servers" },
+    { "line": "solid", "tint": 1, "text": "VLAN 10, office" },
+    { "line": "solid", "tint": 2, "text": "VLAN 20, control" },
     { "line": "solid", "tint": 3, "text": "VLAN 30, DMZ" },
     { "line": "solid", "tint": 4, "text": "VLAN 99, transit" },
     { "line": "deny", "text": "blocked by the firewall" }
