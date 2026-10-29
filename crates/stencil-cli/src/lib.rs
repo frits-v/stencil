@@ -17,7 +17,8 @@ use clap::{Parser, Subcommand, ValueEnum};
 use stencil_layout::checks::PrintWidth;
 use stencil_layout::{LayoutError, layout_page};
 use stencil_model::checks::CheckReport;
-use stencil_model::{ModelError, Projection};
+use stencil_model::theme::ThemeReport;
+use stencil_model::{ModelError, Projection, Theme, theme_quality};
 use stencil_render::{DeviceScale, PngSize, RenderError};
 use stencil_text::CosmicTextMeasurer;
 
@@ -25,13 +26,14 @@ pub use exit::ExitCode;
 
 use exit::{clap_exit_code, failure_exit_code, prime_exit_code, reports_exit_code};
 use pipeline::{
-    Failure, LoadedDocument, OutputPaths, SvgForm, ThemeChoice, all_checks, grammar_violations,
-    load_document_from, model_checks, output_names, print_fit_report, read_input, render_page,
-    render_page_sized, theme_violations, write_outputs,
+    Failure, LoadedDocument, OutputPaths, SvgForm, ThemeChoice, all_checks, bundled_svg,
+    grammar_violations, load_bundle_themes, load_document_from, model_checks, output_names,
+    print_fit_report, read_input, render_page, render_page_sized, theme_violations, write_outputs,
+    written_svg,
 };
 use report::{
-    check_counts_text, grammar_violation_line, report_lines, theme_violation_line,
-    violation_count_text, violation_line,
+    check_counts_text, grammar_violation_line, quality_row_line, report_lines,
+    theme_violation_line, violation_count_text, violation_line,
 };
 
 mod theme_command;
@@ -86,6 +88,16 @@ enum Command {
         /// the same where fonts and data: images are blocked, as on a GitHub attachment
         #[arg(long)]
         portable: bool,
+        /// Write one SVG that carries every listed theme, the first as its default; a
+        /// built-in name or a theme file path each, two or more. The file follows the
+        /// reader's color scheme and switches on data-theme on its root
+        #[arg(
+            long,
+            value_name = "THEMES",
+            value_delimiter = ',',
+            conflicts_with = "theme"
+        )]
+        themes: Option<Vec<String>>,
     },
     /// Lay out and render in memory, then run every check
     Check {
@@ -202,11 +214,14 @@ impl PngArguments {
     }
 }
 
-/// How `render` writes its files: the PNG size and the SVG form.
-#[derive(Debug, Clone, Copy)]
+/// How `render` writes its files: the PNG size, the SVG form and the themes of a bundle.
+#[derive(Debug, Clone)]
 struct OutputArguments {
     png: PngArguments,
     svg_form: SvgForm,
+    /// `--themes`: empty without the flag, else at least two references, the first the
+    /// default theme.
+    themes: Vec<String>,
 }
 
 /// The `--projection` values, one per `Projection` variant (section 12.9).
@@ -293,25 +308,34 @@ fn run_command(
             projection,
             print_width,
             portable,
-        } => render(
-            &json,
-            &out_dir,
-            OutputArguments {
-                png: PngArguments {
-                    scale,
-                    width: png_width,
+            themes,
+        } => {
+            let themes = themes.unwrap_or_default();
+            if themes.len() == 1 {
+                writeln!(stderr, "stencil render: --themes needs at least two themes")?;
+                return Ok(ExitCode::CouldNotRun);
+            }
+            render(
+                &json,
+                &out_dir,
+                OutputArguments {
+                    png: PngArguments {
+                        scale,
+                        width: png_width,
+                    },
+                    svg_form: if portable {
+                        SvgForm::Portable
+                    } else {
+                        SvgForm::SelfContained
+                    },
+                    themes,
                 },
-                svg_form: if portable {
-                    SvgForm::Portable
-                } else {
-                    SvgForm::SelfContained
-                },
-            },
-            print_width,
-            &Overrides { theme, projection },
-            stdout,
-            stderr,
-        ),
+                print_width,
+                &Overrides { theme, projection },
+                stdout,
+                stderr,
+            )
+        }
         Command::Check {
             json,
             theme,
@@ -387,7 +411,10 @@ fn vet(path: &Path, stdout: &mut dyn Write, stderr: &mut dyn Write) -> io::Resul
 
 /// Writes the four outputs and prints their paths. With a print width, print-fit runs
 /// after the files are written: its check and defect lines follow the paths, and a failing
-/// report exits 1 with the files kept (section 13.10).
+/// report exits 1 with the files kept (section 13.10). With `--themes`, the quality rows
+/// of `stencil theme check` follow for every bundled theme, the failing rows and the
+/// summary each; they never change the exit code, since render does not fail on contrast
+/// and `stencil theme check` stays the gate (section 5.2).
 fn render(
     path: &Path,
     out_dir: &Path,
@@ -398,21 +425,50 @@ fn render(
     stderr: &mut dyn Write,
 ) -> io::Result<ExitCode> {
     match render_to_disk(path, out_dir, outputs, overrides, print_width) {
-        Ok((paths, print_report)) => {
-            for written in [&paths.svg, &paths.png, &paths.measured, &paths.description] {
-                writeln!(stdout, "{}", written.display())?;
+        Ok(written) => {
+            let paths = &written.paths;
+            for path in [&paths.svg, &paths.png, &paths.measured, &paths.description] {
+                writeln!(stdout, "{}", path.display())?;
             }
-            let Some(report) = print_report else {
-                return Ok(ExitCode::Clean);
-            };
-            let reports = [report];
-            for line in report_lines(&reports) {
-                writeln!(stdout, "{line}")?;
+            let mut code = ExitCode::Clean;
+            if let Some(report) = written.print_report {
+                let reports = [report];
+                for line in report_lines(&reports) {
+                    writeln!(stdout, "{line}")?;
+                }
+                code = reports_exit_code(&reports);
             }
-            Ok(reports_exit_code(&reports))
+            for report in &written.theme_reports {
+                for line in failing_quality_lines(report) {
+                    writeln!(stdout, "{line}")?;
+                }
+            }
+            Ok(code)
         }
         Err(failure) => report_failure("render", &failure, stdout, stderr),
     }
+}
+
+/// The quality rows of a bundled theme that fail, then the summary line, as `stencil
+/// theme check <name>` prints them.
+fn failing_quality_lines(report: &ThemeReport) -> Vec<String> {
+    let mut kept: Vec<String> = report
+        .rows
+        .iter()
+        .filter(|row| row.passed() == Some(false))
+        .map(quality_row_line)
+        .collect();
+    let lines = theme_command::quality_report_lines(report, &report.theme);
+    kept.extend(lines.last().cloned());
+    kept
+}
+
+/// What `render_to_disk` wrote and the reports that follow the paths.
+struct Written {
+    paths: OutputPaths,
+    print_report: Option<CheckReport>,
+    /// One per bundled theme, in `--themes` order; empty without the flag.
+    theme_reports: Vec<ThemeReport>,
 }
 
 /// Everything is computed before the first write, so a failing document leaves no files.
@@ -422,15 +478,58 @@ fn render_to_disk(
     outputs: OutputArguments,
     overrides: &Overrides,
     print_width: Option<PrintWidth>,
-) -> Result<(OutputPaths, Option<CheckReport>), Failure> {
+) -> Result<Written, Failure> {
     let png = outputs.png.size()?;
     let names = output_names(path)?;
-    let loaded = load_overridden_document(path, overrides)?;
+    let (loaded, further_themes) = if outputs.themes.is_empty() {
+        (load_overridden_document(path, overrides)?, Vec::new())
+    } else {
+        load_bundle_document(path, overrides, &outputs.themes)?
+    };
     let rendered = render_page_sized(&loaded, png)?;
-    let paths = write_outputs(out_dir, &names, &rendered, path, outputs.svg_form)?;
+    let svg = if outputs.themes.is_empty() {
+        written_svg(&rendered, outputs.svg_form)?
+    } else {
+        bundled_svg(&loaded, &rendered, &further_themes, outputs.svg_form)?
+    };
+    let paths = write_outputs(out_dir, &names, &rendered, path, &svg)?;
     let print_report = print_width
         .map(|width| print_fit_report(&rendered.geometry, rendered.scene.as_ref(), Some(width)));
-    Ok((paths, print_report))
+    let theme_reports = if outputs.themes.is_empty() {
+        Vec::new()
+    } else {
+        std::iter::once(&loaded.theme)
+            .chain(further_themes.iter())
+            .map(theme_quality)
+            .collect()
+    };
+    Ok(Written {
+        paths,
+        print_report,
+        theme_reports,
+    })
+}
+
+/// The document with the first of `themes` as its theme, as `--theme` would set it, and
+/// the remaining themes loaded the same way.
+fn load_bundle_document(
+    path: &Path,
+    overrides: &Overrides,
+    themes: &[String],
+) -> Result<(LoadedDocument, Vec<Theme>), Failure> {
+    let (first, rest) = themes.split_first().ok_or_else(|| {
+        Failure::Render(RenderError::Bundle {
+            theme: String::new(),
+            message: "a bundle needs at least two themes".to_string(),
+        })
+    })?;
+    let bundle_overrides = Overrides {
+        theme: Some(first.clone()),
+        projection: overrides.projection,
+    };
+    let loaded = load_overridden_document(path, &bundle_overrides)?;
+    let further_themes = load_bundle_themes(&loaded.page, rest)?;
+    Ok((loaded, further_themes))
 }
 
 fn check(

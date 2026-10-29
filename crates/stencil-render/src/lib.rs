@@ -5,6 +5,7 @@ pub mod iso;
 pub mod palette;
 pub mod themes;
 
+mod bundle;
 mod icons;
 mod measured;
 mod png;
@@ -17,13 +18,14 @@ use stencil_model::pointer::NodePointer;
 use stencil_model::text::{FontFamily, FontWeight};
 use stencil_text::FontError;
 
+pub use bundle::{ThemeFile, bundle_themes};
 pub use describe::{
     Description, describe, description_covers_drawing, escape_markdown, legend_output_key,
 };
 pub use icons::{icon_data_uri, icon_svg_bytes};
 pub use measured::measured_json;
 pub use png::{PNG_PIXELS_MAX, PNG_WIDTH_SCALE_MIN, render_png, render_png_sized};
-pub use svg::render_svg;
+pub use svg::{FADE_VARIABLE, FadeFloor, fade_floor_of_page, render_svg};
 pub use themes::{builtin_theme, builtin_theme_json};
 
 #[derive(Debug, Clone, PartialEq)]
@@ -177,6 +179,8 @@ pub enum RenderError {
     SheetSurface { pointer: NodePointer },
     #[error("portable SVG: {message}")]
     Portable { message: String },
+    #[error("theme {theme} cannot be bundled: {message}")]
+    Bundle { theme: String, message: String },
 }
 
 #[cfg(test)]

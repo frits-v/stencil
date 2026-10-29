@@ -2,9 +2,10 @@
 # Regenerates the committed fixtures of the given example stems (every example when none
 # is named): the center SVG, measured JSON and description under
 # crates/stencil-render/tests/fixtures, the corner-0 SVG for the stems that have one, and
-# the check and vet lines under crates/stencil-cli/tests/fixtures. With no stem named, the
-# check and vet lines are rewritten only for the stems that already have them; a stem named on
-# the command line always gets both, so a new example gets its fixtures.
+# the check and vet lines under crates/stencil-cli/tests/fixtures, and for g7 the theme
+# bundle golden (center, clear-dark and wire, the @font-face rules dropped). With no stem
+# named, the check and vet lines are rewritten only for the stems that already have them; a
+# stem named on the command line always gets both, so a new example gets its fixtures.
 # The SVG fixture is the document render_svg returns, so scripts/resvg-input.py removes the
 # style block and the browser-only elements the written file carries; the measured JSON
 # fixture leaves out the document key.
@@ -56,6 +57,10 @@ PY
   if (( named > 0 )) || [[ -e "$cli_fixtures/$stem.check.txt" ]]; then
     "$stencil" check "examples/$stem.json" >| "$cli_fixtures/$stem.check.txt" || true
     "$stencil" vet "examples/$stem.json" >| "$cli_fixtures/$stem.vet.txt" || true
+  fi
+  if [[ "$stem" == g7 ]]; then
+    "$stencil" render "examples/$stem.json" --out-dir "$out/themes" --themes center,clear-dark,wire >/dev/null
+    grep -v '@font-face' "$out/themes/$stem.svg" >| "$cli_fixtures/$stem.themes.svg"
   fi
   count=$((count + 1))
 done

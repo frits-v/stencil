@@ -15,7 +15,7 @@ use crate::exit::{ExitCode, failure_exit_code, reports_exit_code};
 use crate::pipeline::{
     Failure, LoadedDocument, OutputNames, SvgForm, ThemeChoice, all_checks, grammar_violations,
     load_document_from, load_theme, output_names, read_input, render_page, theme_violations,
-    write_outputs,
+    write_outputs, written_svg,
 };
 use crate::report::{
     check_counts_text, count_text, grammar_violation_line, report_lines, theme_violation_line,
@@ -354,12 +354,13 @@ fn render_theme(
         rendered.scene.as_ref(),
         None,
     );
+    let svg = written_svg(&rendered, SvgForm::SelfContained)?;
     write_outputs(
         &out_dir.join(name).join(theme_name),
         names,
         &rendered,
         path,
-        SvgForm::SelfContained,
+        &svg,
     )?;
 
     let passed = reports_exit_code(&reports) == ExitCode::Clean;
