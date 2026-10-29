@@ -3091,6 +3091,26 @@ fn left_rounded_strip_path(bounds: BoxRect, radius: f32) -> String {
 /// light page and on a dark one.
 const HOVER_FLOOR_LIGHT: &str = "0.3";
 const HOVER_FLOOR_DARK: &str = "0.35";
+/// The custom property a theme bundle sets per theme in place of the floor literal.
+pub const FADE_VARIABLE: &str = "--stencil-fade";
+
+/// How a written file states its hover floor (section 5.2).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum FadeFloor {
+    /// The page's own literal: 0.3, or 0.35 on a dark page.
+    OfPage,
+    /// `var(--stencil-fade)`, which a theme bundle declares per theme.
+    Variable,
+}
+
+/// The floor literal of a page, which a bundle writes as the value of `FADE_VARIABLE`.
+pub fn fade_floor_of_page(dark_page: bool) -> &'static str {
+    if dark_page {
+        HOVER_FLOOR_DARK
+    } else {
+        HOVER_FLOOR_LIGHT
+    }
+}
 /// Fading waits 120 ms, so a pointer crossing an element on its way elsewhere does not
 /// flash the sheet; returning is immediate.
 const HOVER_FADE_IN: &str = "opacity 220ms ease-out 120ms";
@@ -3118,6 +3138,11 @@ impl SvgDocument {
     /// pointer or on a click (section 5.2). A document with no text and no rule is returned
     /// as is.
     pub fn self_contained(&self) -> Result<String, RenderError> {
+        self.self_contained_with(FadeFloor::OfPage)
+    }
+
+    /// `self_contained` with the hover floor stated as `floor`.
+    pub fn self_contained_with(&self, floor: FadeFloor) -> Result<String, RenderError> {
         let Some((open_tag, rest)) = self.written.split_once('\n') else {
             return Err(RenderError::Svg {
                 message: "SVG has no line after its opening tag".to_string(),
@@ -3162,10 +3187,10 @@ impl SvgDocument {
                 output.push('\n');
             }
         }
-        let floor = if self.dark_page {
-            HOVER_FLOOR_DARK
-        } else {
-            HOVER_FLOOR_LIGHT
+        let floor_variable = format!("var({FADE_VARIABLE})");
+        let floor = match floor {
+            FadeFloor::OfPage => fade_floor_of_page(self.dark_page),
+            FadeFloor::Variable => floor_variable.as_str(),
         };
         for rule in &self.hover_rules {
             output.push_str("      ");
@@ -3446,17 +3471,51 @@ mod tests {
         );
         assert!(!written.contains("@font-face"));
         assert!(written.contains("opacity: 0.35;"));
-        let rest = format!(
-            r#":is([data-tag="Pcard"],[data-tag="Pipe"],[data-tag="Step"],[data-tag="Rung"],[data-tag="ProblemPoint"],[data-tag="ActorChip"],[data-tag="LegendEntry"],[data-tag="HowToItem"],[data-tag="Link"]), :is([data-tag="Zone"],[data-tag="Tee"]) > [data-own], [data-row] {{ transition: opacity 160ms ease-out 0ms; }}"#
-        );
-        assert!(lines.contains(&rest.as_str()), "{written}");
-        let pinned = format!(
-            r#"svg:has(:target) :is(:is([data-tag="Pcard"],[data-tag="Pipe"],[data-tag="Step"],[data-tag="Rung"],[data-tag="ProblemPoint"],[data-tag="ActorChip"],[data-tag="LegendEntry"],[data-tag="HowToItem"],[data-tag="Link"]), :is([data-tag="Zone"],[data-tag="Tee"]) > [data-own], [data-row]) {{ transition: none !important; }}"#
-        );
+        let rest = r#":is([data-tag="Pcard"],[data-tag="Pipe"],[data-tag="Step"],[data-tag="Rung"],[data-tag="ProblemPoint"],[data-tag="ActorChip"],[data-tag="LegendEntry"],[data-tag="HowToItem"],[data-tag="Link"]), :is([data-tag="Zone"],[data-tag="Tee"]) > [data-own], [data-row] { transition: opacity 160ms ease-out 0ms; }"#;
+        assert!(lines.contains(&rest), "{written}");
+        let pinned = r#"svg:has(:target) :is(:is([data-tag="Pcard"],[data-tag="Pipe"],[data-tag="Step"],[data-tag="Rung"],[data-tag="ProblemPoint"],[data-tag="ActorChip"],[data-tag="LegendEntry"],[data-tag="HowToItem"],[data-tag="Link"]), :is([data-tag="Zone"],[data-tag="Tee"]) > [data-own], [data-row]) { transition: none !important; }"#;
         assert_eq!(
             lines.iter().rposition(|line| line.starts_with("</style>")),
-            Some(lines.iter().position(|line| **line == pinned).unwrap() + 1)
+            Some(lines.iter().position(|line| *line == pinned).unwrap() + 1)
         );
+    }
+
+    #[test]
+    fn the_variable_floor_writes_the_fade_variable_in_every_hover_rule() {
+        let rule = |anchor: &str| HoverRule {
+            source: HoverSource::Group(format!("/body/{anchor}")),
+            anchor: anchor.to_string(),
+            kept_groups: vec![format!("/body/{anchor}")],
+            kept_rows: Vec::new(),
+        };
+        let mut document = document(
+            "<svg xmlns=\"http://www.w3.org/2000/svg\">\n</svg>\n",
+            Vec::new(),
+            vec![rule("0"), rule("1")],
+        );
+        let variable = document.self_contained_with(FadeFloor::Variable).unwrap();
+        let rules: Vec<&str> = variable
+            .lines()
+            .filter(|line| line.contains(":hover"))
+            .collect();
+        assert_eq!(rules.len(), 2);
+        assert!(
+            rules
+                .iter()
+                .all(|line| line.contains("opacity: var(--stencil-fade);")),
+            "{variable}"
+        );
+        assert!(!variable.contains("opacity: 0.3;"));
+        assert!(document.self_contained().unwrap().contains("opacity: 0.3;"));
+        document.dark_page = true;
+        assert!(
+            document
+                .self_contained()
+                .unwrap()
+                .contains("opacity: 0.35;")
+        );
+        assert_eq!(fade_floor_of_page(false), "0.3");
+        assert_eq!(fade_floor_of_page(true), "0.35");
     }
 
     #[test]

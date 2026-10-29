@@ -1302,7 +1302,31 @@ impl SvgDocument {
     /// The hover rules with text as glyph outlines and icons inlined (section 5.2).
     /// `render --portable` writes this.
     pub fn portable(&self) -> Result<String, RenderError>;
+    /// `self_contained` with the hover fade floor stated as `floor` (section 5.2).
+    pub fn self_contained_with(&self, floor: FadeFloor) -> Result<String, RenderError>;
+    /// `portable` with the hover fade floor stated as `floor`.
+    pub fn portable_with(&self, floor: FadeFloor) -> Result<String, RenderError>;
 }
+
+/// How a written file states the floor every fading unit drops to (section 5.2).
+pub enum FadeFloor {
+    /// The page's own: 0.3, or 0.35 on a dark page.
+    OfPage,
+    /// `var(--stencil-fade)`, which a theme bundle sets per theme.
+    Variable,
+}
+
+/// One theme's written file, as `bundle_themes` takes it: the theme, its written SVG
+/// with the fade floor as `FadeFloor::Variable`, and whether its page is dark.
+pub struct ThemeFile<'a> {
+    pub theme: &'a Theme,
+    pub svg: &'a str,
+    pub dark_page: bool,
+}
+
+/// One SVG carrying every theme of `files`, the first the default (section 5.2).
+/// A theme the drawing cannot share is a `RenderError::Bundle`.
+pub fn bundle_themes(files: &[ThemeFile<'_>]) -> Result<String, RenderError>;
 
 /// Largest pixmap render_png allocates, in pixels (section 5.3, step 5).
 pub const PNG_PIXELS_MAX: u64 = 1 << 27;
@@ -1504,6 +1528,12 @@ The per-source rule comes once per entry on one line, sources in geometry order,
 
 `render --portable` writes `SvgDocument::portable` instead: the hover rules without the `@font-face` rules and the text fallback rule, each `<text>` drawn as its glyph outlines and each icon `<image>` inlined, so the file draws the same where a content security policy blocks fonts and `data:` images. GitHub serves a raw file under `default-src 'none'; style-src 'unsafe-inline'; sandbox` and a proxied `<img>` under `default-src 'none'; img-src data:; style-src 'unsafe-inline'`: the self-contained file falls back to a serif under both and loses its icons under the first, while inline styles, and so the hover rules, still run. Each `<text>` line becomes a `<g>` carrying the text's `fill`, `data-row` and `data-mark`, holding one `<use href="#stencil-glyph-N" transform="translate(X Y) scale(S -S)"/>` per glyph usvg places, at the position and size usvg lays it out over the bundled faces for the PNG; the text follows it unchanged but for `fill-opacity="0"`, which keeps it selectable and searchable and is left alone by the hover fade, which sets `opacity`. Each glyph is one `<path id="stencil-glyph-N">` in font units in a `<defs>` before the closing tag, read with skrifa unhinted at the default location, as usvg reads it. Each icon becomes a nested `<svg>` on the image's box with a viewBox of the icon's size, holding the icon as usvg normalizes and writes it: its styles resolved to attributes, so no icon `<style>` reaches the page, and its ids prefixed `stencil-icon-<n>-`, so two copies of one icon share no id. A `<text>` or `<image>` attribute outside the ones the writer emits, an element that does not close on its line, a decoration, a rotated glyph or an icon that is not a base64 SVG is a `RenderError::Portable`. onepager is 0.9 MB portable against 2.4 MB self-contained, aws-hybrid 0.27 MB against 2.3 MB.
 
+`render --themes <a>,<b>[,…]` writes a theme bundle: one SVG that carries every listed theme and repaints itself in a browser. The flag is refused together with `--theme`, takes two or more built-in names or theme file paths resolved as `--theme` resolves them, and the page's `theme_overrides` apply to each. The first theme is the default: the PNG, the measured JSON and the description are its single-theme outputs, and the description's colour words name center as they always do (section 14.1). `--portable` applies to the bundle as to a single file. The page is laid out once, as section 13.4 promises, and written once per theme in the chosen form, with the hover fade floor stated as `var(--stencil-fade)` so the files differ in paint alone; `bundle_themes` then aligns the files line by line and merges them. Every paint value that differs between themes, in `fill`, `stroke`, `stroke-width`, `stroke-dasharray`, `fill-opacity`, `stroke-opacity`, `opacity`, `stop-color`, `stop-opacity`, `flood-color`, `flood-opacity`, `filter` or a `marker-*` reference, becomes a CSS custom property, `fill="var(--stencil-ink-primary)"`, named after the theme role whose values it carries (`--stencil-ink-primary`, `--stencil-tints-3-fill`) or, for a paint derived from a role such as a shaded iso face, after the attribute and a number (`--stencil-fill-12`). A shape one theme draws and another does not, an icon chip, an end dot of another style, a box inset for another border width or a legend label with another word, is written once per variant and switched with `display`. A referenced element that differs, the iso shadow filter or a portable glyph def, is kept once per theme under its id suffixed with the theme name, and the references follow. A theme the drawing cannot share is refused with an error that names it and the first line it cannot share: a theme laid out differently (an iso slab thickness other than the default's changes the projected canvas, and the error names the two thicknesses: tokyo-night and dracula, at 8, cannot bundle with the other built-ins, at 6, on an iso figure), a group one theme draws and another does not, or a drawn element with an id that not every theme draws, either of which would have to be switched; such themes need their own renders. The bundle carries no id twice: a definition that differs is renamed against every theme before it, and a repeated id refuses the bundle. A difference is a variable, a switched shape or a refusal, so no theme renders wrong silently.
+
+The bundle's style block sits in its own `<defs><style>` directly after the root tag, before the font and hover block, and the root `<svg>` carries `data-themes="a b c"`, the bundled names in order. The block holds, in order, `svg[data-themes] { … }` with the default theme's values; `@media (prefers-color-scheme: dark) { svg[data-themes]:not([data-theme]) { … } }` with the values of the first listed theme whose page is dark (relative luminance under 0.2), the mirror `light` rule when the default's page is dark and a light theme is listed, or no media rule when every theme is on the default's side; then `svg[data-themes][data-theme="<name>"] { … }` for each theme. Every rule sets every property, `--stencil-fade` among them, so a switch is total. A reader's colour scheme therefore switches the figure even inside an `<img>`, and an embedding page sets `data-theme` on the root `<svg>`, inline or through an `<object>`'s `contentDocument`, to pick any bundled theme; the attribute wins over the media query, and a `data-theme` naming a theme the bundle does not carry falls to the default theme and ignores the reader's colour scheme. The file needs CSS custom properties: resvg and any other renderer without them draws it wrong, which is why the PNG is the default theme's and why the mode is opt-in.
+
+After the four files are written, `render` runs the checks of `stencil theme check` (section 13.12) on every bundled theme and prints the rows that fail and a summary line per theme after the paths. The rows do not change the exit code: `render` never fails on contrast (section 13.4), `stencil theme check` stays the gate, and a bundle holding a theme of the imported tier (section 13.9) prints that theme's failing rows and exits 0. Only `--print-width` exits 1.
+
 ### 5.3 PNG
 
 `render_png` works in this order:
@@ -1644,7 +1674,7 @@ Exit codes: `stencil vet` and `stencil check` exit 1 when any report fails, incl
 
 ```
 stencil vet <json>
-stencil render <json> --out-dir <dir> [--scale <1-4> | --png-width <px>] [--print-width <inches>] [--portable]
+stencil render <json> --out-dir <dir> [--scale <1-4> | --png-width <px>] [--print-width <inches>] [--portable] [--themes <a>,<b>,…]
 stencil check <json> [--print-width <inches>]
 stencil describe <json> [--projection flat|iso]
 stencil schema
@@ -1655,7 +1685,7 @@ stencil gallery <out-dir> [--examples <dir>]
 | Command | Does | Output on stdout |
 |---|---|---|
 | `vet` | parse, `validate_page`, then, only when there is no violation, `remembered-constants`, `legend-consistency` and `icon-matches-product` | one line per violation, or one line per check and one line per defect; one summary line |
-| `render` | parse and `validate_page` only (violations stop the command with exit 1; the model checks do not run, so a legend inconsistency does not stop a render), layout with `CosmicTextMeasurer`, SVG, PNG at `--scale` (default 2) or `--png-width` px wide (0.5 to 4 times the drawn canvas width, the two flags refused together), measured JSON, description; creates `--out-dir` if missing and overwrites existing outputs; `--portable` writes the portable SVG of section 5.2 | the four written paths, absolute |
+| `render` | parse and `validate_page` only (violations stop the command with exit 1; the model checks do not run, so a legend inconsistency does not stop a render), layout with `CosmicTextMeasurer`, SVG, PNG at `--scale` (default 2) or `--png-width` px wide (0.5 to 4 times the drawn canvas width, the two flags refused together), measured JSON, description; creates `--out-dir` if missing and overwrites existing outputs; `--portable` writes the portable SVG of section 5.2; `--themes <a>,<b>,…` writes the theme bundle of section 5.2, refused together with `--theme`, and then prints the failing `theme check` rows and a summary line per bundled theme, which do not change the exit code | the four written paths, absolute; with `--themes`, the theme check lines after them |
 | `check` | everything `render` does, held in memory without writing files, then every check of section 6 | one line per check, one line per defect, one summary line; or an `error` line and the summary line when layout or render fails with exit 1 |
 | `describe` | parse, `validate_page` and the `--projection` override as `check` does, layout with `CosmicTextMeasurer`, then `describe` (section 14.1); renders nothing and runs no checks | the description, byte for byte what `render` writes; a document defect prints the `error` or `violation` lines `check` prints and exits 1 |
 | `schema` | prints `page_schema()` as pretty JSON | the schema |
@@ -2198,6 +2228,8 @@ All tests except the wrap-epsilon regression use `FixedMetricsMeasurer::default(
 - The SVG `render` writes holds one fallback rule per family its text uses, keyed on the `font-family` attribute, after the last `@font-face` and before the hover rules, and no rule on every `text`: the Inter rule alone for hybrid-ai, design-brief, hero-iso and g7, the Inter rule and then the JetBrains Mono NL rule for onepager; the SVG `render_svg` returns holds no style (`the_written_svg_gives_each_family_its_own_fallback_stack_and_the_resvg_input_none` in `crates/stencil-cli/tests/cli.rs`).
 - Across every example, at least 16 holding at least 376 hover rules, the written SVG holds one rule per source at most: each source exists with the `id` its rule names, keeps itself, and keeps only groups and rows the SVG holds; every `id` is unique, every `data-from`, `data-to` and `data-mark` names a group or row the SVG holds, no how-to has a rule, and the SVG `render_svg` returns holds no `<style>` (`every_hover_rule_names_units_the_written_svg_holds_and_the_resvg_input_has_none` in `crates/stencil-cli/tests/cli.rs`). On onepager the item `api`, its parts row, the first attention item, the second actor chip, the first legend entry, the Box `evaluation-path` and the first general note keep the exact sets the section 5.2 table gives, 72 kept units in all (`onepager_keeps_the_related_set_of_each_kind_of_element`).
 - For every example the portable SVG holds no `@font-face`, no `<image>` and no `data:` href, the transition and hover rule lines of the self-contained file unchanged, one glyph `<g>` and one hidden `<text>` per text element and one nested `<svg>` per icon (`the_portable_svg_needs_no_font_or_data_image_and_keeps_the_hover_rules`), and usvg with an empty font database and no image loader draws it within 0.0002 of the canvas of the PNG, where the self-contained file drawn the same way differs by at least 0.002 (`every_example_draws_its_png_from_the_portable_svg_with_no_font_and_no_image_loader`, both in `crates/stencil-cli/tests/portable.rs`).
+- For every built-in theme, a bundle of center and that theme on a flat example resolves, by reading the theme's rule of the style block, substituting each `var()`, dropping the lines its `display` hides and the bundle's own block and attribute, to a file that rasterizes to the bytes of that theme's single-theme written file, in both forms, and the bundle's PNG is the default's (`every_builtin_theme_resolves_from_a_bundle_to_its_own_render`); the six designed themes bundle the same way on an iso example (`the_designed_themes_bundle_on_an_iso_figure`). Both report how many themes they examined.
+- The bundle of one small example matches its golden with the `@font-face` rules dropped (`a_theme_bundle_matches_its_golden`), and a theme file whose iso slab thickness differs from the default's is refused by name with the two thicknesses, no file written (`a_theme_that_lays_out_differently_is_refused`), all in `crates/stencil-cli/tests/bundle.rs`.
 - Every selector of every hover rule ends on a leaf group, a Box's or Tee's `[data-own]` wrapper or a row, never on a group's paths or rects, and every link with a tag is a `Link` group, so the tag still covers its line while both fade (`every_rule_fades_a_link_and_its_tag_as_one_group`). Each group source's group opens with its `<g data-own="">` and an `<a>` to its `id`, each row source with that `<a>`, a page with rules has one unpin floor, and the SVG `render_svg` returns holds no `<a>`, wrapper or hit area (`a_click_pins_each_source_and_the_floor_clears_it_in_the_written_svg_only`, both in `crates/stencil-cli/tests/cli.rs`). On a small page an Item keeps its own `id`, an Item without one or with the id `arrow-center-blue` takes the pointer form, the marker keeps its id, an item keeps its links and their far ends, and the item with no link has no rule (`each_link_group_names_its_end_pointers_and_each_item_group_its_anchor_and_far_ends` in `crates/stencil-render/tests/links.rs`).
 - Icons: for every bundled pack, each data URI decodes to bytes whose SHA-256 equals the pack's section 8.2 table, which has one row per icon of the pack and fails when it has none. A render of a Pcard for each gcp icon parses.
 - Colors: for each ZoneKind the rect fill, stroke, stroke width and dasharray match section 2.4. For each PipeKind the wire color and dasharray match section 5.2, and a Tee of that kind draws its spine, and a legend entry of that kind its swatch `<line>`, in the same color and dasharray. A `deny` Tee's hub has stroke #F4C7C3 and text fill #C5221F.
@@ -4787,7 +4819,7 @@ Step (e) changes every iso render: hero-iso in every theme but wire gains block 
 
 ```
 stencil vet <json>
-stencil render <json> --out-dir <dir> [--scale <1-4> | --png-width <px>] [--theme <theme>] [--projection flat|iso] [--print-width <inches>] [--portable]
+stencil render <json> --out-dir <dir> [--scale <1-4> | --png-width <px>] [--theme <theme> | --themes <a>,<b>,…] [--projection flat|iso] [--print-width <inches>] [--portable]
 stencil check <json> [--theme <theme>] [--projection flat|iso] [--print-width <inches>]
 stencil describe <json> [--projection flat|iso]
 stencil gallery <out-dir> [--examples <dir>]

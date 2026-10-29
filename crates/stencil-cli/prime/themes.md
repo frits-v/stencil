@@ -33,4 +33,6 @@ Overrides. "theme_overrides" on the Page is a partial theme merged onto the chos
 
 Under wire, links have no end dots, so two link tints draw the same; tell them apart by label. A Callout shows its kind only through the title you write: "Risk: ...", "Decision: ...".
 
+Bundle. `stencil render fig.json --out-dir out --themes center,clear-dark` writes one SVG carrying both themes: it follows the reader's prefers-color-scheme even in an <img>, and a page sets data-theme="clear-dark" on the root <svg> to pick one. The first theme is the default and gives the PNG. A theme the drawing cannot share is refused by name: tokyo-night and dracula, with an iso slab thickness of 8, cannot bundle with the other built-ins on an iso figure; `theme check` then runs on each bundled theme and prints its failing rows, which do not change the exit code.
+
 Projection: "projection": "iso" draws the body as an isometric floor plan with the same theme; see stencil prime iso.

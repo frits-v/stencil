@@ -106,7 +106,8 @@ pub fn render_exit_code(error: &RenderError) -> ExitCode {
         | RenderError::PixmapAllocation { .. }
         | RenderError::PngEncode { .. }
         | RenderError::SheetSurface { .. }
-        | RenderError::Portable { .. } => ExitCode::CouldNotRun,
+        | RenderError::Portable { .. }
+        | RenderError::Bundle { .. } => ExitCode::CouldNotRun,
     }
 }
 
@@ -279,6 +280,10 @@ mod tests {
             },
             RenderError::PngEncode {
                 message: "encoder failed".to_string(),
+            },
+            RenderError::Bundle {
+                theme: "wire".to_string(),
+                message: "its drawing is laid out differently".to_string(),
             },
         ] {
             assert_eq!(render_exit_code(&render_error), ExitCode::CouldNotRun);

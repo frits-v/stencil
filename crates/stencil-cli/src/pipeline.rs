@@ -28,8 +28,9 @@ use stencil_render::iso::{
     project_page,
 };
 use stencil_render::{
-    DeviceScale, PngSize, RenderError, SvgDocument, builtin_theme, describe,
-    description_covers_drawing, measured_json, render_png_sized, render_svg,
+    DeviceScale, FadeFloor, PngSize, RenderError, SvgDocument, ThemeFile, builtin_theme,
+    bundle_themes, describe, description_covers_drawing, measured_json, render_png_sized,
+    render_svg,
 };
 use stencil_text::{CosmicTextMeasurer, FontError};
 
@@ -467,17 +468,74 @@ pub fn all_checks(
     ]
 }
 
-/// Creates `out_dir` when missing and writes SVG, PNG, measured JSON and the description,
-/// replacing existing files. The measured JSON is serialized before anything touches the
-/// disk, an output that resolves to `input` or an output name that is a directory is
-/// refused, and the files are staged under temporary names and renamed only after every
-/// write succeeded (section 7).
+/// The SVG `render` writes without `--themes`: the written file in `form`.
+pub fn written_svg(rendered: &RenderedPage, form: SvgForm) -> Result<String, Failure> {
+    Ok(match form {
+        SvgForm::SelfContained => rendered.svg.self_contained()?,
+        SvgForm::Portable => rendered.svg.portable()?,
+    })
+}
+
+/// The themes of `render --themes` after the first: each loaded as `--theme` loads one,
+/// with the page's overrides applied (section 13.4).
+pub fn load_bundle_themes(page: &Page, references: &[String]) -> Result<Vec<Theme>, Failure> {
+    let mut themes = Vec::with_capacity(references.len());
+    for reference in references {
+        let choice = ThemeChoice {
+            reference,
+            directory: Path::new("."),
+        };
+        themes.push(load_theme(page, choice)?);
+    }
+    Ok(themes)
+}
+
+/// The SVG `render --themes` writes (section 5.2): the page drawn once per theme, the
+/// loaded document's theme first, each written in `form` with the variable fade floor,
+/// then bundled.
+pub fn bundled_svg(
+    loaded: &LoadedDocument,
+    rendered: &RenderedPage,
+    further_themes: &[Theme],
+    form: SvgForm,
+) -> Result<String, Failure> {
+    let mut further_documents: Vec<SvgDocument> = Vec::with_capacity(further_themes.len());
+    for theme in further_themes {
+        further_documents.push(render_svg(&loaded.page, theme, &rendered.geometry)?);
+    }
+    let documents: Vec<(&Theme, &SvgDocument)> = std::iter::once((&loaded.theme, &rendered.svg))
+        .chain(further_themes.iter().zip(further_documents.iter()))
+        .collect();
+    let mut written: Vec<String> = Vec::with_capacity(documents.len());
+    for (_, document) in &documents {
+        written.push(match form {
+            SvgForm::SelfContained => document.self_contained_with(FadeFloor::Variable)?,
+            SvgForm::Portable => document.portable_with(FadeFloor::Variable)?,
+        });
+    }
+    let files: Vec<ThemeFile<'_>> = documents
+        .iter()
+        .zip(written.iter())
+        .map(|((theme, document), svg)| ThemeFile {
+            theme,
+            svg,
+            dark_page: document.dark_page,
+        })
+        .collect();
+    Ok(bundle_themes(&files)?)
+}
+
+/// Creates `out_dir` when missing and writes `svg`, the PNG, measured JSON and the
+/// description, replacing existing files. The caller computes `svg` (`written_svg` or
+/// `bundled_svg`) and the measured JSON is serialized before anything touches the disk, an output that resolves to `input` or an output name that is a
+/// directory is refused, and the files are staged under temporary names and renamed only
+/// after every write succeeded (section 7).
 pub fn write_outputs(
     out_dir: &Path,
     names: &OutputNames,
     rendered: &RenderedPage,
     input: &Path,
-    svg_form: SvgForm,
+    svg: &str,
 ) -> Result<OutputPaths, Failure> {
     let mut measured_bytes =
         serde_json::to_vec_pretty(&rendered.measured).map_err(|source| Failure::Serialize {
@@ -498,10 +556,6 @@ pub fn write_outputs(
         png: directory.join(&names.png),
         measured: directory.join(&names.measured),
         description: directory.join(&names.description),
-    };
-    let svg = match svg_form {
-        SvgForm::SelfContained => rendered.svg.self_contained()?,
-        SvgForm::Portable => rendered.svg.portable()?,
     };
     let outputs = [
         (&names.svg, &paths.svg, svg.as_bytes()),

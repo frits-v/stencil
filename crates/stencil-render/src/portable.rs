@@ -17,7 +17,7 @@ use skrifa::prelude::LocationRef;
 use stencil_text::verify_bundled_fonts;
 
 use crate::png::{bundled_font_database, data_only_image_resolver, strict_font_resolver};
-use crate::{RenderError, SvgDocument, format_number};
+use crate::{FadeFloor, RenderError, SvgDocument, format_number};
 
 /// Attributes of a `<text>` that only place or shape its glyphs; the outline carries none.
 const TEXT_LAYOUT_ATTRIBUTES: [&str; 7] = [
@@ -46,11 +46,16 @@ impl SvgDocument {
     /// `<image>` replaced by its icon as a nested `<svg>`. The outlines are the ones the
     /// PNG rasterizes: usvg lays the text out over the bundled faces only.
     pub fn portable(&self) -> Result<String, RenderError> {
+        self.portable_with(FadeFloor::OfPage)
+    }
+
+    /// `portable` with the hover floor stated as `floor`.
+    pub fn portable_with(&self, floor: FadeFloor) -> Result<String, RenderError> {
         let fontless = SvgDocument {
             font_faces: Vec::new(),
             ..self.clone()
         };
-        let written = fontless.self_contained()?;
+        let written = fontless.self_contained_with(floor)?;
         let outlined = outline_svg(&written)?;
         if outlined.texts != self.text_elements {
             return Err(RenderError::Portable {
