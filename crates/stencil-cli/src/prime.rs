@@ -83,12 +83,13 @@ pub enum Topic {
     Marks,
     Assembly,
     HowTo,
+    Artifact,
     Example,
     Onepager,
 }
 
 impl Topic {
-    pub const ALL: [Topic; 14] = [
+    pub const ALL: [Topic; 15] = [
         Topic::Themes,
         Topic::Links,
         Topic::Blocks,
@@ -101,6 +102,7 @@ impl Topic {
         Topic::Marks,
         Topic::Assembly,
         Topic::HowTo,
+        Topic::Artifact,
         Topic::Example,
         Topic::Onepager,
     ];
@@ -119,6 +121,7 @@ impl Topic {
             Topic::Marks => "marks",
             Topic::Assembly => "assembly",
             Topic::HowTo => "howto",
+            Topic::Artifact => "artifact",
             Topic::Example => "example",
             Topic::Onepager => "onepager",
         }
@@ -175,6 +178,7 @@ impl Topic {
             Topic::Marks => include_str!("../prime/marks.md"),
             Topic::Assembly => include_str!("../prime/assembly.md"),
             Topic::HowTo => include_str!("../prime/howto.md"),
+            Topic::Artifact => include_str!("../prime/artifact.md"),
             Topic::Example => include_str!("../../../examples/g7.json"),
             Topic::Onepager => include_str!("../../../examples/onepager.json"),
         }
@@ -194,7 +198,8 @@ impl Topic {
             | Topic::Phases
             | Topic::Marks
             | Topic::Assembly
-            | Topic::HowTo => true,
+            | Topic::HowTo
+            | Topic::Artifact => true,
             Topic::Example | Topic::Onepager => false,
         }
     }
