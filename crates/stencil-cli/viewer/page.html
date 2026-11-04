@@ -1,0 +1,1046 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>{{title}}</title>
+<style>
+  /* A full-height tool: a control bar, the figure filling the rest, a side panel that is a
+     column at desktop width and a bottom drawer on a phone. Colors are tokens; the figure's
+     own ground comes from the SVG's theme. */
+  :root {
+    --bg: #EEF1F5;
+    --fg: #1A1E24;
+    --muted: #4B5361;
+    --line: #CED3DA;
+    --panel: #FFFFFF;
+    --field: #F4F6F9;
+    --accent: #1A6FD6;
+    --accent-ink: #FFFFFF;
+    --flash: #D98A00;
+    --font-ui: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --font-mono: "JetBrains Mono NL", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0F1319; --fg: #E9EDF2; --muted: #A8B1BD; --line: #2F3641; --panel: #171C24; --field: #1F252F;
+      --accent: #7FB0F5; --accent-ink: #0F1319; --flash: #F2B134; color-scheme: dark;
+    }
+  }
+  html, body { height: 100%; margin: 0; }
+  body { background: var(--bg); color: var(--fg); font-family: var(--font-ui); font-size: 13px; line-height: 1.4; overflow: hidden; }
+  *, *::before, *::after { box-sizing: border-box; }
+  button, input, select { font: inherit; color: inherit; }
+  [hidden] { display: none !important; }
+
+  .sv-app {
+    height: 100%;
+    display: grid;
+    grid-template-rows: auto 1fr;
+    grid-template-columns: minmax(0, 1fr) 0;
+    grid-template-areas: "bar bar" "stage panel";
+  }
+  .sv-app.sv-panel-open { grid-template-columns: minmax(0, 1fr) 360px; }
+
+  .sv-bar {
+    grid-area: bar; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px;
+    padding: 8px max(16px, env(safe-area-inset-right, 0px)) 8px max(16px, env(safe-area-inset-left, 0px));
+    border-bottom: 1px solid var(--line); background: var(--panel); min-width: 0;
+  }
+  .sv-brand { display: flex; align-items: baseline; gap: 8px; margin-right: 6px; min-width: 0; }
+  .sv-wordmark { font-weight: 700; font-size: 15px; letter-spacing: -0.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 32ch; }
+  .sv-kicker { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; white-space: nowrap; }
+  .sv-group { display: flex; align-items: center; gap: 4px; }
+  .sv-group + .sv-group { padding-left: 10px; border-left: 1px solid var(--line); }
+  .sv-btn, .sv-select, .sv-input {
+    height: 28px; padding: 0 9px; border: 1px solid var(--line); border-radius: 6px;
+    background: var(--field); cursor: pointer; white-space: nowrap;
+  }
+  .sv-btn:hover, .sv-select:hover { border-color: var(--accent); }
+  .sv-btn:focus-visible, .sv-select:focus-visible, .sv-input:focus-visible, .sv-tab:focus-visible, .sv-code:focus-visible {
+    outline: 2px solid var(--accent); outline-offset: 1px;
+  }
+  .sv-btn[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+  .sv-input { cursor: text; width: 9.5em; }
+  .sv-input.sv-narrow { width: 5.5em; font-family: var(--font-mono); text-transform: uppercase; }
+  .sv-zoom { min-width: 4.2em; text-align: center; font-variant-numeric: tabular-nums; color: var(--muted); }
+  .sv-count { color: var(--muted); font-variant-numeric: tabular-nums; min-width: 4em; }
+  kbd { font-family: var(--font-mono); font-size: 11px; padding: 1px 5px; border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 4px; background: var(--field); }
+
+  .sv-stage {
+    grid-area: stage; position: relative; overflow: hidden; min-width: 0; min-height: 0;
+    touch-action: none; cursor: grab; background: var(--sheet-ground, var(--bg));
+  }
+  .sv-stage.sv-dragging { cursor: grabbing; }
+  .sv-stage > svg { display: block; width: 100%; height: 100%; }
+  .sv-notice {
+    position: absolute; left: 12px; bottom: 12px; max-width: min(70%, 520px);
+    padding: 6px 10px; border-radius: 6px; background: var(--panel); border: 1px solid var(--line);
+    color: var(--muted); font-size: 11.5px; font-variant-numeric: tabular-nums;
+  }
+  .sv-notice.sv-warn { border-color: var(--flash); color: var(--fg); }
+  .sv-map {
+    position: absolute; right: 12px; bottom: 12px; width: 76px; z-index: 4; cursor: pointer;
+    border: 1px solid var(--line); border-radius: 6px; background: var(--panel); overflow: hidden; touch-action: none;
+  }
+  .sv-map svg { display: block; width: 100%; height: 100%; }
+  .sv-map .sv-map-band { fill: var(--field); stroke: var(--line); stroke-width: 12px; }
+  .sv-map .sv-map-label { fill: var(--muted); font-size: 180px; text-anchor: middle; font-family: var(--font-ui); }
+  .sv-map .sv-map-viewport { fill: var(--accent); fill-opacity: 0.18; stroke: var(--accent); stroke-width: 18px; }
+  .sv-tip {
+    position: absolute; z-index: 5; pointer-events: none; max-width: 320px;
+    padding: 7px 10px; border-radius: 6px; background: var(--panel); border: 1px solid var(--line);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18); font-size: 12px;
+  }
+  .sv-tip strong { display: block; margin-bottom: 2px; }
+  .sv-tip span { display: block; color: var(--muted); }
+
+  /* Selection, hover preview, legend filters and focus, driven by the script below. */
+  .sv-stage svg .sv-dim { opacity: var(--stencil-fade, 0.3); }
+  .sv-stage svg .sv-off { opacity: 0.08; }
+  .sv-stage svg a:focus { outline: none; }
+  .sv-stage svg a:focus-visible > [data-hit] { stroke: var(--accent); stroke-width: 2.5px; stroke-dasharray: 6 4; }
+  .sv-stage svg .sv-flash { fill: var(--flash); fill-opacity: 0.18; stroke: var(--flash); stroke-width: 2px; pointer-events: none; }
+  .sv-stage svg .sv-hit { fill: var(--flash); fill-opacity: 0.35; stroke: var(--flash); stroke-width: 1.5px; pointer-events: none; }
+  @media (prefers-reduced-motion: no-preference) {
+    .sv-stage svg .sv-flash { animation: sv-pulse 1.2s ease-out forwards; }
+    @keyframes sv-pulse { from { fill-opacity: 0.35; } to { fill-opacity: 0.08; } }
+  }
+
+  .sv-panel {
+    grid-area: panel; min-width: 0; min-height: 0; overflow: hidden; display: flex; flex-direction: column;
+    border-left: 1px solid var(--line); background: var(--panel);
+  }
+  .sv-app:not(.sv-panel-open) .sv-panel { display: none; }
+  .sv-tabs { display: flex; border-bottom: 1px solid var(--line); }
+  .sv-tab {
+    flex: 1; height: 34px; border: 0; background: none; cursor: pointer; color: var(--muted);
+    border-bottom: 2px solid transparent; margin-bottom: -1px;
+  }
+  .sv-tab[aria-selected="true"] { color: var(--fg); border-bottom-color: var(--accent); font-weight: 600; }
+  .sv-pane { flex: 1; overflow: auto; padding: 12px 14px; min-height: 0; }
+  .sv-pane h3 { margin: 0 0 8px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
+  .sv-pane h3:not(:first-child) { margin-top: 16px; }
+  .sv-empty { color: var(--muted); }
+  .sv-sel { display: flex; flex-direction: column; gap: 8px; }
+  .sv-card { border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; display: grid; gap: 4px; }
+  .sv-card strong { font-size: 12.5px; }
+  .sv-card span { color: var(--muted); font-size: 12px; }
+  .sv-card .sv-row { display: flex; gap: 6px; margin-top: 2px; }
+  .sv-card .sv-btn { height: 24px; padding: 0 8px; font-size: 12px; }
+  .sv-check { display: flex; align-items: center; gap: 8px; padding: 4px 0; cursor: pointer; }
+  .sv-check input { accent-color: var(--accent); margin: 0; }
+  .sv-text { font-size: 12.5px; line-height: 1.5; max-width: 60ch; }
+  .sv-text h1, .sv-text h2, .sv-text h3 { font-size: 13px; margin: 14px 0 6px; }
+  .sv-text h1 { font-size: 14px; }
+  .sv-text p { margin: 0 0 8px; }
+  .sv-text ul { margin: 0 0 8px; padding-left: 18px; }
+  .sv-text table { border-collapse: collapse; width: 100%; margin: 0 0 10px; font-size: 12px; }
+  .sv-text th, .sv-text td { text-align: left; vertical-align: top; padding: 4px 6px; border-bottom: 1px solid var(--line); }
+  .sv-text pre { overflow-x: auto; font-family: var(--font-mono); font-size: 11.5px; padding: 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--field); }
+  .sv-text code { font-family: var(--font-mono); font-size: 11.5px; }
+  .sv-code { display: inline; border: 0; padding: 0 3px; border-radius: 4px; background: var(--field); color: var(--accent); cursor: pointer; font-family: var(--font-mono); font-size: 11.5px; }
+  .sv-code:hover { text-decoration: underline; }
+  .sv-keys { display: grid; grid-template-columns: auto 1fr; gap: 6px 12px; align-items: center; }
+
+  @media (max-width: 760px) {
+    .sv-app, .sv-app.sv-panel-open {
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-rows: auto 1fr auto;
+      grid-template-areas: "bar" "stage" "panel";
+    }
+    .sv-app.sv-panel-open .sv-panel { max-height: 45vh; border-left: 0; border-top: 1px solid var(--line); }
+    .sv-kicker { display: none; }
+    .sv-input { width: 7em; }
+  }
+</style>
+</head>
+<body>
+<div class="sv-app" id="sv-app">
+  <header class="sv-bar">
+    <div class="sv-brand">
+      <span class="sv-wordmark" id="sv-wordmark">{{title}}</span>
+      <span class="sv-kicker">{{kicker}}</span>
+    </div>
+    <div class="sv-group" id="sv-theme-group" hidden>
+      <label for="sv-theme" class="sv-kicker">Theme</label>
+      <select class="sv-select" id="sv-theme" aria-label="Figure theme"><option value="auto">System</option></select>
+    </div>
+    <div class="sv-group">
+      <button class="sv-btn" id="sv-zoom-out" title="Zoom out (−)" aria-label="Zoom out">−</button>
+      <span class="sv-zoom" id="sv-zoom">100%</span>
+      <button class="sv-btn" id="sv-zoom-in" title="Zoom in (+)" aria-label="Zoom in">+</button>
+      <button class="sv-btn" id="sv-fit-width" title="Fit width (F)">Width</button>
+      <button class="sv-btn" id="sv-fit-page" title="Fit page (0)">Page</button>
+    </div>
+    <div class="sv-group" id="sv-views" aria-label="Jump to a view" hidden></div>
+    <div class="sv-group">
+      <input class="sv-input" id="sv-search" type="search" placeholder="Find text (/)" aria-label="Find text in the figure">
+      <span class="sv-count" id="sv-search-count"></span>
+      <input class="sv-input sv-narrow" id="sv-grid" type="text" placeholder="B6" aria-label="Go to a grid cell such as B6 or B2-C5" maxlength="5" hidden>
+    </div>
+    <div class="sv-group">
+      <button class="sv-btn" id="sv-fullscreen" title="Full screen">Full screen</button>
+      <button class="sv-btn" id="sv-panel-toggle" aria-pressed="true" title="Side panel (P)">Panel</button>
+    </div>
+  </header>
+
+  <main class="sv-stage" id="sv-stage" aria-label="The figure. Drag to pan, scroll to pan, hold Ctrl and scroll to zoom.">
+{{svg}}
+    <div class="sv-tip" id="sv-tip" hidden></div>
+    <div class="sv-notice" id="sv-notice" hidden></div>
+    <div class="sv-map" id="sv-map" hidden title="Where you are on the figure; click to move">
+      <svg viewBox="0 0 1 1" aria-hidden="true"><g id="sv-map-bands"></g><rect id="sv-map-viewport" class="sv-map-viewport" x="0" y="0" width="0" height="0"></rect></svg>
+    </div>
+  </main>
+
+  <aside class="sv-panel" id="sv-panel" aria-label="Side panel">
+    <div class="sv-tabs" role="tablist">
+      <button class="sv-tab" role="tab" data-tab="selection" aria-selected="true">Selection</button>
+      <button class="sv-tab" role="tab" data-tab="filters" aria-selected="false">Filters</button>
+      <button class="sv-tab" role="tab" data-tab="text" aria-selected="false">Text</button>
+      <button class="sv-tab" role="tab" data-tab="keys" aria-selected="false">Keys</button>
+    </div>
+    <section class="sv-pane" id="sv-pane-selection" role="tabpanel">
+      <h3>Pinned</h3>
+      <div class="sv-sel" id="sv-selection"></div>
+    </section>
+    <section class="sv-pane" id="sv-pane-filters" role="tabpanel" hidden>
+      <h3>Legend</h3>
+      <div id="sv-filter-lines"></div>
+      <h3>Actors</h3>
+      <div id="sv-filter-actors"></div>
+    </section>
+    <section class="sv-pane" id="sv-pane-text" role="tabpanel" hidden>
+      <div class="sv-text" id="sv-description"></div>
+    </section>
+    <section class="sv-pane" id="sv-pane-keys" role="tabpanel" hidden>
+      <h3>Mouse and touch</h3>
+      <div class="sv-keys">
+        <span>Drag, scroll</span><span>Pan</span>
+        <span><kbd>Ctrl</kbd> scroll, pinch</span><span>Zoom at the pointer</span>
+        <span>Hover</span><span>Preview what an element refers to</span>
+        <span>Click</span><span>Pin it; <kbd>Shift</kbd> click adds</span>
+        <span>Click empty space</span><span>Clear the pins</span>
+      </div>
+      <h3>Keyboard</h3>
+      <div class="sv-keys">
+        <span><kbd>Tab</kbd></span><span>Walk the figure in reading order; <kbd>Enter</kbd> pins</span>
+        <span><kbd>Esc</kbd></span><span>Clear pins and close the tooltip</span>
+        <span><kbd>+</kbd> <kbd>−</kbd></span><span>Zoom</span>
+        <span><kbd>F</kbd> <kbd>0</kbd></span><span>Fit width, fit page</span>
+        <span><kbd>1</kbd> to <kbd>9</kbd></span><span>Jump to a view</span>
+        <span><kbd>/</kbd></span><span>Find text; <kbd>Enter</kbd> next, <kbd>Shift</kbd> <kbd>Enter</kbd> previous</span>
+        <span><kbd>G</kbd></span><span>Go to a grid cell</span>
+        <span><kbd>T</kbd></span><span>Next theme</span>
+        <span><kbd>P</kbd></span><span>Side panel</span>
+      </div>
+    </section>
+  </aside>
+</div>
+
+<script type="application/json" id="stencil-data">{{data}}</script>
+<script>
+(function () {
+  'use strict';
+  const FADE_TAGS = ['Pcard', 'Pipe', 'Step', 'Rung', 'ProblemPoint', 'ActorChip', 'LegendEntry', 'HowToItem', 'Link'];
+  const OWN_TAGS = ['Zone', 'Tee'];
+  const MIN_SCALE = 0.05;
+  const MAX_SCALE = 6;
+  const EMPTY_SELECTION = 'Click a box, a line, a legend entry, a balloon or a parts-list row to pin it. Shift-click pins several. Everything the pinned items do not refer to fades.';
+
+  const app = document.getElementById('sv-app');
+  const stage = document.getElementById('sv-stage');
+  const tip = document.getElementById('sv-tip');
+  const notice = document.getElementById('sv-notice');
+  const zoomLabel = document.getElementById('sv-zoom');
+  const themeGroup = document.getElementById('sv-theme-group');
+  const themeSelect = document.getElementById('sv-theme');
+  const searchInput = document.getElementById('sv-search');
+  const searchCount = document.getElementById('sv-search-count');
+  const gridInput = document.getElementById('sv-grid');
+  const selectionBox = document.getElementById('sv-selection');
+  const viewsGroup = document.getElementById('sv-views');
+  const map = document.getElementById('sv-map');
+  const mapSvg = map.querySelector('svg');
+  const mapViewport = document.getElementById('sv-map-viewport');
+
+  const svg = stage.querySelector(':scope > svg');
+  const data = readData();
+  const measured = data.measured || null;
+  const description = data.description || '';
+  const canvas = measured && measured.canvas ? { width: measured.canvas.width, height: measured.canvas.height } : viewBoxSize();
+  const pageNode = measured ? measured.nodes.find((entry) => entry.id === '') : null;
+  const gridFrame = pageNode && pageNode.parts && pageNode.parts.grid ? pageNode.parts.grid : null;
+  const views = measured ? measured.nodes.filter((entry) => entry.tag === 'TitleBlock' || entry.tag === 'View') : [];
+  const themes = (svg.getAttribute('data-themes') || '').split(' ').filter(Boolean);
+
+  const byPointer = new Map();
+  const rowByPointer = new Map();
+  const rules = new Map();
+  let fadeables = [];
+  let owns = [];
+  let rows = [];
+  const pinned = new Map();
+  let hovered = null;
+  const filtered = new Set();
+  let textRuns = [];
+  let searchHits = [];
+  let searchIndex = -1;
+  let hitMark = null;
+  const view = { scale: 1, x: 0, y: 0 };
+
+  function readData() {
+    try { return JSON.parse(document.getElementById('stencil-data').textContent); } catch (error) { return {}; }
+  }
+  function viewBoxSize() {
+    const box = svg.viewBox.baseVal;
+    return { width: box.width || 1, height: box.height || 1 };
+  }
+  function store(key, value) {
+    try { localStorage.setItem('stencil-viewer:' + key, value); } catch (error) { /* storage may be unavailable */ }
+  }
+  function recall(key) {
+    try { return localStorage.getItem('stencil-viewer:' + key); } catch (error) { return null; }
+  }
+  function showNotice(text, warn) {
+    notice.textContent = text;
+    notice.classList.toggle('sv-warn', Boolean(warn));
+    notice.hidden = false;
+  }
+  function stageSize() {
+    const rect = stage.getBoundingClientRect();
+    return { width: Math.max(rect.width, 1), height: Math.max(rect.height, 1), left: rect.left, top: rect.top };
+  }
+
+  // Pan and zoom through the viewBox: the SVG fills the stage and the viewBox names the
+  // window onto the canvas.
+  function applyView() {
+    const size = stageSize();
+    const width = size.width / view.scale;
+    const height = size.height / view.scale;
+    const margin = 0.6;
+    view.x = Math.min(Math.max(view.x, -width * margin), canvas.width - width * (1 - margin));
+    view.y = Math.min(Math.max(view.y, -height * margin), canvas.height - height * (1 - margin));
+    svg.setAttribute('viewBox', view.x + ' ' + view.y + ' ' + width + ' ' + height);
+    zoomLabel.textContent = Math.round(view.scale * 100) + '%';
+    updateMap();
+  }
+  function zoomTo(scale, clientX, clientY) {
+    const size = stageSize();
+    const next = Math.min(Math.max(scale, MIN_SCALE), MAX_SCALE);
+    const px = clientX === undefined ? size.width / 2 : clientX - size.left;
+    const py = clientY === undefined ? size.height / 2 : clientY - size.top;
+    const ux = view.x + px / view.scale;
+    const uy = view.y + py / view.scale;
+    view.scale = next;
+    view.x = ux - px / next;
+    view.y = uy - py / next;
+    applyView();
+  }
+  function fitRect(x, y, width, height, pad) {
+    const size = stageSize();
+    const padding = pad === undefined ? 24 : pad;
+    const scale = Math.min(size.width / (width + padding * 2), size.height / (height + padding * 2));
+    view.scale = Math.min(Math.max(scale, MIN_SCALE), MAX_SCALE);
+    view.x = x + width / 2 - size.width / (2 * view.scale);
+    view.y = y + height / 2 - size.height / (2 * view.scale);
+    applyView();
+  }
+  function fitWidth() {
+    const size = stageSize();
+    view.scale = size.width / canvas.width;
+    view.x = 0;
+    applyView();
+  }
+  function fitPage() { fitRect(0, 0, canvas.width, canvas.height, 0); }
+  function centerOn(x, y, width, height, minScale) {
+    const size = stageSize();
+    if (minScale && view.scale < minScale) view.scale = Math.min(minScale, MAX_SCALE);
+    view.x = x + width / 2 - size.width / (2 * view.scale);
+    view.y = y + height / 2 - size.height / (2 * view.scale);
+    applyView();
+  }
+  function bboxOf(element) {
+    try {
+      const box = element.getBBox();
+      if (box.width > 0 || box.height > 0) return box;
+    } catch (error) { /* not a graphical element */ }
+    const node = measured && measured.nodes.find((entry) => entry.id === element.dataset.id);
+    return node ? { x: node.x, y: node.y, width: node.width, height: node.height } : null;
+  }
+  function flash(x, y, width, height, persistent) {
+    const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    rect.setAttribute('x', x);
+    rect.setAttribute('y', y);
+    rect.setAttribute('width', width);
+    rect.setAttribute('height', height);
+    rect.setAttribute('rx', 4);
+    rect.setAttribute('class', persistent ? 'sv-hit' : 'sv-flash');
+    svg.appendChild(rect);
+    if (!persistent) setTimeout(() => rect.remove(), 1300);
+    return rect;
+  }
+
+  // Grid references name the frame's cells, columns 1 to 8 and rows A to F, as the sheet draws them.
+  function parseGridRef(text) {
+    const match = /^([A-F])([1-8])(?:-([A-F])([1-8]))?$/.exec(text.trim().toUpperCase());
+    if (!match || !gridFrame) return null;
+    const colWidth = gridFrame.width / 8;
+    const rowHeight = gridFrame.height / 6;
+    const rowPair = [match[1].charCodeAt(0) - 65, (match[3] || match[1]).charCodeAt(0) - 65];
+    const colPair = [Number(match[2]) - 1, Number(match[4] || match[2]) - 1];
+    const top = Math.min(rowPair[0], rowPair[1]);
+    const bottom = Math.max(rowPair[0], rowPair[1]);
+    const left = Math.min(colPair[0], colPair[1]);
+    const right = Math.max(colPair[0], colPair[1]);
+    return { x: gridFrame.x + left * colWidth, y: gridFrame.y + top * rowHeight, width: (right - left + 1) * colWidth, height: (bottom - top + 1) * rowHeight };
+  }
+  function goToGrid(text) {
+    const cell = parseGridRef(text);
+    if (!cell) return false;
+    fitRect(cell.x, cell.y, cell.width, cell.height, 30);
+    flash(cell.x, cell.y, cell.width, cell.height, false);
+    return true;
+  }
+  function goToView(index) {
+    const node = views[index];
+    if (node) fitRect(node.x, node.y, node.width, node.height, 20);
+  }
+
+  // Theme: a bundled SVG lists its themes on its root and switches on data-theme; "System"
+  // removes the attribute so the SVG follows the reader's color scheme itself.
+  function applyTheme() {
+    const choice = themeSelect.value;
+    if (choice === 'auto') svg.removeAttribute('data-theme'); else svg.setAttribute('data-theme', choice);
+    const ground = getComputedStyle(svg).getPropertyValue('--stencil-page').trim();
+    const firstRect = svg.querySelector('rect');
+    const fallback = firstRect ? firstRect.getAttribute('fill') : '';
+    stage.style.setProperty('--sheet-ground', ground || (fallback && !fallback.startsWith('var(') ? fallback : 'var(--bg)'));
+  }
+  function cycleTheme() {
+    if (themes.length === 0) return;
+    const options = Array.from(themeSelect.options).map((option) => option.value);
+    themeSelect.value = options[(options.indexOf(themeSelect.value) + 1) % options.length];
+    themeSelect.dispatchEvent(new Event('change'));
+  }
+
+  // The SVG ships one hover rule per element, each listing what stays opaque while that
+  // element is hovered. The page reads those lists, drops the rules, and drives hover and
+  // pins itself so several elements can be pinned at once and hover keeps working.
+  function harvestRules() {
+    let parsed = 0;
+    svg.querySelectorAll('style').forEach((styleElement) => {
+      const sheet = styleElement.sheet;
+      if (!sheet) return;
+      for (let index = sheet.cssRules.length - 1; index >= 0; index -= 1) {
+        const rule = sheet.cssRules[index];
+        const selector = rule.selectorText || '';
+        if (!selector.includes(':hover') && !selector.includes(':target')) continue;
+        const trigger = /a\[href="#([^"]+)"\]:hover/.exec(selector);
+        const rowTrigger = /\[data-row="([^"]+)"\]:hover/.exec(selector);
+        if (trigger || rowTrigger) {
+          const key = trigger ? 'id:' + trigger[1] : 'row:' + rowTrigger[1];
+          const keptIds = new Set();
+          const keptRows = new Set();
+          for (const found of selector.matchAll(/:not\(\[data-id="([^"]+)"\]\)/g)) keptIds.add(found[1]);
+          for (const found of selector.matchAll(/:not\(\[data-row="([^"]+)"\]\)/g)) keptRows.add(found[1]);
+          rules.set(key, { ids: keptIds, rows: keptRows });
+          parsed += 1;
+        }
+        sheet.deleteRule(index);
+      }
+    });
+    return parsed;
+  }
+  function indexElements() {
+    svg.querySelectorAll('[data-id]').forEach((element) => {
+      if (!byPointer.has(element.dataset.id)) byPointer.set(element.dataset.id, element);
+    });
+    fadeables = Array.from(svg.querySelectorAll(FADE_TAGS.map((tag) => '[data-tag="' + tag + '"]').join(',')))
+      .map((element) => ({ element, pointer: element.dataset.id }));
+    owns = Array.from(svg.querySelectorAll(OWN_TAGS.map((tag) => '[data-tag="' + tag + '"] > [data-own]').join(',')))
+      .map((element) => ({ element, pointer: element.parentElement.dataset.id }));
+    rows = Array.from(svg.querySelectorAll('[data-row]')).map((element) => ({ element, pointer: element.dataset.row }));
+    rows.forEach((entry) => { if (!rowByPointer.has(entry.pointer)) rowByPointer.set(entry.pointer, entry.element); });
+    textRuns = Array.from(svg.querySelectorAll('text')).map((element) => ({ element, text: element.textContent.trim() }))
+      .filter((entry) => entry.text.length > 0);
+  }
+  function keyOf(target) {
+    if (!target || !target.closest) return null;
+    const anchor = target.closest('a[href^="#"]');
+    if (anchor) {
+      const id = anchor.getAttribute('href').slice(1);
+      if (rules.has('id:' + id)) return 'id:' + id;
+    }
+    const rowOrMark = target.closest('[data-row], [data-mark]');
+    if (rowOrMark) {
+      const pointer = rowOrMark.dataset.row || rowOrMark.dataset.mark;
+      if (rules.has('row:' + pointer)) return 'row:' + pointer;
+    }
+    return null;
+  }
+  function elementOfKey(key) {
+    if (key.startsWith('id:')) return svg.querySelector('[id="' + key.slice(3) + '"]');
+    return rowByPointer.get(key.slice(4)) || null;
+  }
+  function render() {
+    const active = new Set(pinned.keys());
+    if (hovered) active.add(hovered);
+    const fading = active.size > 0;
+    const keptIds = new Set();
+    const keptRows = new Set();
+    active.forEach((key) => {
+      const rule = rules.get(key);
+      if (!rule) return;
+      rule.ids.forEach((pointer) => keptIds.add(pointer));
+      rule.rows.forEach((pointer) => keptRows.add(pointer));
+    });
+    fadeables.forEach((entry) => {
+      entry.element.classList.toggle('sv-dim', fading && !keptIds.has(entry.pointer));
+      entry.element.classList.toggle('sv-off', filtered.has(entry.pointer));
+    });
+    owns.forEach((entry) => entry.element.classList.toggle('sv-dim', fading && !keptIds.has(entry.pointer)));
+    rows.forEach((entry) => entry.element.classList.toggle('sv-dim', fading && !keptRows.has(entry.pointer)));
+  }
+  function linesOf(element) {
+    const seen = [];
+    element.querySelectorAll('text').forEach((text) => {
+      const value = text.textContent.trim();
+      if (value && seen[seen.length - 1] !== value) seen.push(value);
+    });
+    return seen;
+  }
+  function describe(key) {
+    const element = elementOfKey(key);
+    if (!element) return { title: key, lines: [] };
+    const lines = linesOf(element);
+    if (lines.length === 0 && element.dataset.tag === 'Link') {
+      const name = (node) => (node ? linesOf(node)[0] || node.id : '?');
+      return { title: 'Line ' + name(byPointer.get(element.dataset.from)) + ' to ' + name(byPointer.get(element.dataset.to)), lines: [element.dataset.kind || ''] };
+    }
+    return { title: lines[0] || element.id || key, lines: lines.slice(1, 7) };
+  }
+  function renderSelection() {
+    selectionBox.replaceChildren();
+    if (pinned.size === 0) {
+      const empty = document.createElement('p');
+      empty.className = 'sv-empty';
+      empty.textContent = EMPTY_SELECTION;
+      selectionBox.appendChild(empty);
+      return;
+    }
+    pinned.forEach((info, key) => {
+      const card = document.createElement('div');
+      card.className = 'sv-card';
+      const title = document.createElement('strong');
+      title.textContent = info.title;
+      card.appendChild(title);
+      info.lines.forEach((line) => {
+        const span = document.createElement('span');
+        span.textContent = line;
+        card.appendChild(span);
+      });
+      const actions = document.createElement('div');
+      actions.className = 'sv-row';
+      const go = document.createElement('button');
+      go.className = 'sv-btn';
+      go.textContent = 'Go to';
+      go.addEventListener('click', () => revealKey(key));
+      const drop = document.createElement('button');
+      drop.className = 'sv-btn';
+      drop.textContent = 'Unpin';
+      drop.addEventListener('click', () => { pinned.delete(key); render(); renderSelection(); });
+      actions.append(go, drop);
+      card.appendChild(actions);
+      selectionBox.appendChild(card);
+    });
+  }
+  function revealKey(key) {
+    const element = elementOfKey(key);
+    const box = element && bboxOf(element);
+    if (!box) return;
+    centerOn(box.x, box.y, box.width, box.height, 0.9);
+    flash(box.x - 6, box.y - 6, box.width + 12, box.height + 12, false);
+  }
+  function pin(key, additive) {
+    if (!rules.has(key)) return;
+    if (!additive) {
+      const only = pinned.size === 1 && pinned.has(key);
+      pinned.clear();
+      if (!only) pinned.set(key, describe(key));
+    } else if (pinned.has(key)) {
+      pinned.delete(key);
+    } else {
+      pinned.set(key, describe(key));
+    }
+    render();
+    renderSelection();
+  }
+  function clearPins() {
+    if (pinned.size === 0) return;
+    pinned.clear();
+    render();
+    renderSelection();
+  }
+
+  // A pointer to a mark or a part inside a node falls back to the nearest ancestor the
+  // drawing carries.
+  function keyForPointer(pointer) {
+    let current = pointer;
+    while (current) {
+      if (rules.has('row:' + current)) return 'row:' + current;
+      const element = byPointer.get(current);
+      if (element) {
+        const anchor = element.querySelector(':scope > [data-own] > a[href^="#"]');
+        if (anchor && rules.has('id:' + anchor.getAttribute('href').slice(1))) return 'id:' + anchor.getAttribute('href').slice(1);
+        if (element.id && rules.has('id:' + element.id)) return 'id:' + element.id;
+      }
+      const cut = current.lastIndexOf('/');
+      if (cut <= 0) break;
+      current = current.slice(0, cut);
+    }
+    return null;
+  }
+  function revealPointer(pointer) {
+    const key = keyForPointer(pointer);
+    if (key) {
+      pin(key, false);
+      revealKey(key);
+      return;
+    }
+    const node = measured && measured.nodes.find((entry) => entry.id === pointer);
+    if (node) {
+      fitRect(node.x, node.y, node.width, node.height, 20);
+      flash(node.x, node.y, node.width, node.height, false);
+    }
+  }
+
+  // Tooltip
+  function showTip(element, clientX, clientY) {
+    const lines = linesOf(element);
+    if (lines.length === 0) { tip.hidden = true; return; }
+    tip.replaceChildren();
+    const title = document.createElement('strong');
+    title.textContent = lines[0];
+    tip.appendChild(title);
+    lines.slice(1, 7).forEach((line) => {
+      const span = document.createElement('span');
+      span.textContent = line;
+      tip.appendChild(span);
+    });
+    tip.hidden = false;
+    const size = stageSize();
+    const width = tip.offsetWidth;
+    const height = tip.offsetHeight;
+    let left = clientX - size.left + 14;
+    let top = clientY - size.top + 14;
+    if (left + width > size.width - 8) left = Math.max(8, clientX - size.left - width - 14);
+    if (top + height > size.height - 8) top = Math.max(8, clientY - size.top - height - 14);
+    tip.style.left = left + 'px';
+    tip.style.top = top + 'px';
+  }
+  function hoverTargetOf(target) {
+    if (!target || !target.closest) return null;
+    const anchor = target.closest('a[href^="#"]');
+    if (anchor) return anchor.closest('[data-tag]');
+    return target.closest('[data-row]');
+  }
+
+  // Pointer handling. Pointer capture sends the later click to the stage, so selection reads
+  // the pressed target on release instead.
+  const pointers = new Map();
+  let drag = null;
+  let pinch = null;
+  stage.addEventListener('pointerdown', (event) => {
+    if (event.pointerType === 'mouse' && event.button !== 0) return;
+    pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+    stage.setPointerCapture(event.pointerId);
+    if (pointers.size === 1) {
+      drag = { startX: event.clientX, startY: event.clientY, x: view.x, y: view.y, moved: false, target: event.target, additive: event.shiftKey || event.ctrlKey || event.metaKey };
+    } else if (pointers.size === 2) {
+      const [first, second] = Array.from(pointers.values());
+      pinch = { distance: Math.hypot(first.x - second.x, first.y - second.y), scale: view.scale };
+      drag = null;
+    }
+    stage.classList.add('sv-dragging');
+  });
+  stage.addEventListener('pointermove', (event) => {
+    if (pointers.has(event.pointerId)) {
+      pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+      if (pointers.size === 2 && pinch) {
+        const [first, second] = Array.from(pointers.values());
+        const distance = Math.hypot(first.x - second.x, first.y - second.y);
+        zoomTo(pinch.scale * (distance / pinch.distance), (first.x + second.x) / 2, (first.y + second.y) / 2);
+        return;
+      }
+      if (drag) {
+        const dx = event.clientX - drag.startX;
+        const dy = event.clientY - drag.startY;
+        if (Math.abs(dx) > 4 || Math.abs(dy) > 4) drag.moved = true;
+        if (drag.moved) {
+          view.x = drag.x - dx / view.scale;
+          view.y = drag.y - dy / view.scale;
+          applyView();
+          tip.hidden = true;
+        }
+      }
+      return;
+    }
+    const target = hoverTargetOf(event.target);
+    if (target) showTip(target, event.clientX, event.clientY); else tip.hidden = true;
+  });
+  function endPointer(event) {
+    if (!pointers.has(event.pointerId)) return;
+    pointers.delete(event.pointerId);
+    if (drag && !drag.moved && pointers.size === 0) {
+      const key = keyOf(drag.target);
+      if (key) pin(key, drag.additive); else clearPins();
+    }
+    if (pointers.size === 0) { drag = null; pinch = null; stage.classList.remove('sv-dragging'); }
+    else if (pointers.size === 1) { pinch = null; const [left] = Array.from(pointers.values()); drag = { startX: left.x, startY: left.y, x: view.x, y: view.y, moved: true }; }
+  }
+  stage.addEventListener('pointerup', endPointer);
+  stage.addEventListener('pointercancel', endPointer);
+  stage.addEventListener('wheel', (event) => {
+    event.preventDefault();
+    if (event.ctrlKey || event.metaKey) {
+      zoomTo(view.scale * Math.exp(-event.deltaY * 0.01), event.clientX, event.clientY);
+    } else {
+      view.x += event.deltaX / view.scale;
+      view.y += event.deltaY / view.scale;
+      applyView();
+    }
+    tip.hidden = true;
+  }, { passive: false });
+  stage.addEventListener('click', (event) => {
+    // The figure's own anchors would move the page hash and pin through :target.
+    const anchor = event.target.closest && event.target.closest('a[href^="#"]');
+    if (anchor) event.preventDefault();
+    if (event.detail === 0 && anchor) {
+      const key = keyOf(anchor);
+      if (key) pin(key, event.shiftKey);
+    }
+  });
+  // Safari reports a trackpad pinch as gesture events and would otherwise zoom the whole page.
+  let gestureScale = 1;
+  stage.addEventListener('gesturestart', (event) => { event.preventDefault(); gestureScale = view.scale; });
+  stage.addEventListener('gesturechange', (event) => { event.preventDefault(); zoomTo(gestureScale * event.scale, event.clientX, event.clientY); });
+  stage.addEventListener('gestureend', (event) => event.preventDefault());
+  document.addEventListener('gesturestart', (event) => event.preventDefault());
+  document.addEventListener('wheel', (event) => { if (event.ctrlKey) event.preventDefault(); }, { passive: false });
+
+  stage.addEventListener('pointerover', (event) => {
+    if (pointers.size > 0) return;
+    const key = keyOf(event.target);
+    if (key !== hovered) { hovered = key; render(); }
+  });
+  stage.addEventListener('pointerleave', () => { hovered = null; tip.hidden = true; render(); });
+  stage.addEventListener('focusin', (event) => {
+    const key = keyOf(event.target);
+    if (!key) return;
+    hovered = key;
+    render();
+    const element = elementOfKey(key);
+    const box = element && bboxOf(element);
+    if (!box) return;
+    const size = stageSize();
+    const inside = box.x >= view.x && box.y >= view.y && box.x + box.width <= view.x + size.width / view.scale && box.y + box.height <= view.y + size.height / view.scale;
+    if (!inside) centerOn(box.x, box.y, box.width, box.height, 0.6);
+    showTip(element.closest('[data-tag]') || element, size.left + (box.x + box.width - view.x) * view.scale, size.top + (box.y - view.y) * view.scale);
+  });
+  stage.addEventListener('focusout', () => { hovered = null; tip.hidden = true; render(); });
+
+  // Minimap: the views as bands and the current viewport, in the stage's corner.
+  function buildMap() {
+    mapSvg.setAttribute('viewBox', '0 0 ' + canvas.width + ' ' + canvas.height);
+    map.style.height = Math.round(map.clientWidth * canvas.height / canvas.width) + 'px';
+    const bands = mapSvg.querySelector('#sv-map-bands');
+    bands.replaceChildren();
+    views.forEach((node, index) => {
+      const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+      rect.setAttribute('x', node.x); rect.setAttribute('y', node.y);
+      rect.setAttribute('width', node.width); rect.setAttribute('height', node.height);
+      rect.setAttribute('class', 'sv-map-band');
+      const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      label.setAttribute('x', node.x + node.width / 2); label.setAttribute('y', node.y + node.height / 2 + 60);
+      label.setAttribute('class', 'sv-map-label');
+      label.textContent = String(index + 1);
+      bands.append(rect, label);
+    });
+    map.hidden = false;
+  }
+  function updateMap() {
+    const size = stageSize();
+    mapViewport.setAttribute('x', view.x); mapViewport.setAttribute('y', view.y);
+    mapViewport.setAttribute('width', size.width / view.scale); mapViewport.setAttribute('height', size.height / view.scale);
+  }
+  function mapNavigate(event) {
+    const rect = map.getBoundingClientRect();
+    const size = stageSize();
+    view.x = (event.clientX - rect.left) / rect.width * canvas.width - size.width / (2 * view.scale);
+    view.y = (event.clientY - rect.top) / rect.height * canvas.height - size.height / (2 * view.scale);
+    applyView();
+  }
+  map.addEventListener('pointerdown', (event) => { event.stopPropagation(); map.setPointerCapture(event.pointerId); mapNavigate(event); });
+  map.addEventListener('pointermove', (event) => { event.stopPropagation(); if (event.buttons & 1) mapNavigate(event); });
+  map.addEventListener('pointerup', (event) => event.stopPropagation());
+  map.addEventListener('wheel', (event) => event.stopPropagation());
+
+  // Search
+  function clearHit() { if (hitMark) { hitMark.remove(); hitMark = null; } }
+  function runSearch(direction) {
+    const query = searchInput.value.trim().toLowerCase();
+    clearHit();
+    if (!query) { searchHits = []; searchIndex = -1; searchCount.textContent = ''; return; }
+    if (searchHits.query !== query) {
+      searchHits = textRuns.filter((entry) => entry.text.toLowerCase().includes(query));
+      searchHits.query = query;
+      searchIndex = -1;
+    }
+    if (searchHits.length === 0) { searchCount.textContent = '0 hits'; return; }
+    searchIndex = (searchIndex + direction + searchHits.length) % searchHits.length;
+    const box = bboxOf(searchHits[searchIndex].element);
+    if (box) {
+      centerOn(box.x, box.y, box.width, box.height, 1);
+      hitMark = flash(box.x - 4, box.y - 3, box.width + 8, box.height + 6, true);
+    }
+    searchCount.textContent = (searchIndex + 1) + ' of ' + searchHits.length;
+  }
+  searchInput.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter') { event.preventDefault(); runSearch(event.shiftKey ? -1 : 1); }
+    if (event.key === 'Escape') { searchInput.value = ''; runSearch(1); searchInput.blur(); }
+  });
+  searchInput.addEventListener('input', () => { searchHits = []; searchIndex = -1; clearHit(); searchCount.textContent = ''; });
+  gridInput.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      if (goToGrid(gridInput.value)) gridInput.blur(); else gridInput.select();
+    }
+  });
+
+  // Filters: each legend entry and actor chip carries the set of elements it refers to.
+  function buildFilters() {
+    const lines = document.getElementById('sv-filter-lines');
+    const actors = document.getElementById('sv-filter-actors');
+    let count = 0;
+    svg.querySelectorAll('[data-tag="LegendEntry"], [data-tag="ActorChip"]').forEach((element) => {
+      const anchor = element.querySelector('a[href^="#"]');
+      if (!anchor) return;
+      const rule = rules.get('id:' + anchor.getAttribute('href').slice(1));
+      if (!rule) return;
+      const members = Array.from(rule.ids).filter((pointer) => {
+        const member = byPointer.get(pointer);
+        return pointer !== element.dataset.id && member && FADE_TAGS.includes(member.dataset.tag);
+      });
+      if (members.length === 0) return;
+      const label = document.createElement('label');
+      label.className = 'sv-check';
+      const input = document.createElement('input');
+      input.type = 'checkbox';
+      input.checked = true;
+      input.id = 'sv-filter-' + count;
+      input.addEventListener('change', () => {
+        members.forEach((pointer) => { if (input.checked) filtered.delete(pointer); else filtered.add(pointer); });
+        render();
+      });
+      const text = document.createElement('span');
+      text.textContent = linesOf(element).slice(0, 2).join(' · ') + ' (' + members.length + ')';
+      label.append(input, text);
+      (element.dataset.tag === 'LegendEntry' ? lines : actors).appendChild(label);
+      count += 1;
+    });
+    if (lines.children.length === 0) lines.textContent = 'No legend entry refers to drawn elements.';
+    if (actors.children.length === 0) actors.textContent = 'No actors on this figure.';
+  }
+
+  // The description is Markdown of a known shape: headings, paragraphs, tables, fenced code
+  // and bullets. Pointers and grid references in it become buttons.
+  function escapeHtml(text) {
+    return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+  function inline(text) {
+    return text.split('`').map((part, index) => {
+      if (index % 2 === 1) return '<code>' + escapeHtml(part) + '</code>';
+      return escapeHtml(part.replace(/\\([;|])/g, '$1')).replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+    }).join('');
+  }
+  function renderMarkdown(markdown) {
+    const lines = markdown.split('\n');
+    const out = [];
+    let paragraph = [];
+    let list = [];
+    const flush = () => {
+      if (paragraph.length > 0) { out.push('<p>' + inline(paragraph.join(' ')) + '</p>'); paragraph = []; }
+      if (list.length > 0) { out.push('<ul>' + list.map((item) => '<li>' + inline(item) + '</li>').join('') + '</ul>'); list = []; }
+    };
+    for (let index = 0; index < lines.length; index += 1) {
+      const line = lines[index];
+      if (line.startsWith('```')) {
+        flush();
+        const code = [];
+        index += 1;
+        while (index < lines.length && !lines[index].startsWith('```')) { code.push(lines[index]); index += 1; }
+        out.push('<pre><code>' + escapeHtml(code.join('\n')) + '</code></pre>');
+        continue;
+      }
+      const heading = /^(#{1,6}) (.*)$/.exec(line);
+      if (heading) {
+        flush();
+        const level = Math.min(heading[1].length, 3);
+        out.push('<h' + level + '>' + inline(heading[2]) + '</h' + level + '>');
+        continue;
+      }
+      if (line.startsWith('|')) {
+        flush();
+        const tableRows = [];
+        while (index < lines.length && lines[index].startsWith('|')) { tableRows.push(lines[index]); index += 1; }
+        index -= 1;
+        const cells = (row) => row.replace(/^\||\|$/g, '').split(/(?<!\\)\|/).map((cell) => cell.trim());
+        let html = '<table>';
+        tableRows.forEach((row, rowIndex) => {
+          if (rowIndex === 1 && /^\|?\s*:?-+/.test(row)) return;
+          const tag = rowIndex === 0 ? 'th' : 'td';
+          html += '<tr>' + cells(row).map((cell) => '<' + tag + '>' + inline(cell) + '</' + tag + '>').join('') + '</tr>';
+        });
+        out.push(html + '</table>');
+        continue;
+      }
+      if (/^[-*] /.test(line)) { if (paragraph.length > 0) flush(); list.push(line.slice(2)); continue; }
+      if (line.trim() === '') { flush(); continue; }
+      if (list.length > 0) flush();
+      paragraph.push(line);
+    }
+    flush();
+    return out.join('\n');
+  }
+  function renderDescription(markdown) {
+    const box = document.getElementById('sv-description');
+    if (!markdown) { box.textContent = 'This page carries no description.'; return; }
+    box.innerHTML = renderMarkdown(markdown);
+    box.querySelectorAll('code').forEach((code) => {
+      if (code.parentElement.tagName === 'PRE') return;
+      const value = code.textContent.trim();
+      const isPointer = value.length > 1 && /^\/[A-Za-z0-9_\/-]*$/.test(value);
+      const isGrid = Boolean(gridFrame) && /^[A-F][1-8](-[A-F][1-8])?$/.test(value);
+      if (!isPointer && !isGrid) return;
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'sv-code';
+      button.textContent = value;
+      button.title = isPointer ? 'Pin and show this element' : 'Show this cell';
+      button.addEventListener('click', () => { if (isPointer) revealPointer(value); else goToGrid(value); });
+      code.replaceWith(button);
+    });
+  }
+
+  // Panel and bar
+  const tabs = Array.from(document.querySelectorAll('.sv-tab'));
+  function selectTab(name) {
+    tabs.forEach((tab) => tab.setAttribute('aria-selected', String(tab.dataset.tab === name)));
+    ['selection', 'filters', 'text', 'keys'].forEach((pane) => { document.getElementById('sv-pane-' + pane).hidden = pane !== name; });
+    store('tab', name);
+  }
+  tabs.forEach((tab) => tab.addEventListener('click', () => selectTab(tab.dataset.tab)));
+  const panelToggle = document.getElementById('sv-panel-toggle');
+  function setPanel(open) {
+    app.classList.toggle('sv-panel-open', open);
+    panelToggle.setAttribute('aria-pressed', String(open));
+    store('panel', open ? '1' : '0');
+    requestAnimationFrame(applyView);
+  }
+  panelToggle.addEventListener('click', () => setPanel(!app.classList.contains('sv-panel-open')));
+  document.getElementById('sv-zoom-in').addEventListener('click', () => zoomTo(view.scale * 1.25));
+  document.getElementById('sv-zoom-out').addEventListener('click', () => zoomTo(view.scale / 1.25));
+  document.getElementById('sv-fit-width').addEventListener('click', fitWidth);
+  document.getElementById('sv-fit-page').addEventListener('click', fitPage);
+  document.getElementById('sv-fullscreen').addEventListener('click', () => {
+    const request = document.fullscreenElement ? document.exitFullscreen() : app.requestFullscreen();
+    if (request && request.catch) request.catch(() => showNotice('Full screen is not available here.', false));
+  });
+  themeSelect.addEventListener('change', () => { store('theme', themeSelect.value); applyTheme(); });
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyTheme);
+  window.addEventListener('resize', applyView);
+  document.addEventListener('keydown', (event) => {
+    const typing = ['INPUT', 'SELECT', 'TEXTAREA'].includes((document.activeElement || {}).tagName);
+    if (event.key === 'Escape') {
+      if (typing) return;
+      clearPins();
+      tip.hidden = true;
+      if (document.activeElement && stage.contains(document.activeElement)) document.activeElement.blur();
+      return;
+    }
+    if (typing || event.ctrlKey || event.metaKey || event.altKey) return;
+    if (/^[1-9]$/.test(event.key)) { goToView(Number(event.key) - 1); return; }
+    switch (event.key) {
+      case '+': case '=': zoomTo(view.scale * 1.25); break;
+      case '-': case '_': zoomTo(view.scale / 1.25); break;
+      case '0': fitPage(); break;
+      case 'f': case 'F': fitWidth(); break;
+      case '/': event.preventDefault(); searchInput.focus(); searchInput.select(); break;
+      case 'g': case 'G': if (!gridInput.hidden) { event.preventDefault(); gridInput.focus(); gridInput.select(); } break;
+      case 't': case 'T': cycleTheme(); break;
+      case 'p': case 'P': setPanel(!app.classList.contains('sv-panel-open')); break;
+      default: return;
+    }
+  });
+
+  // Boot
+  svg.removeAttribute('width');
+  svg.removeAttribute('height');
+  svg.setAttribute('preserveAspectRatio', 'xMinYMin meet');
+  if (themes.length > 0) {
+    themes.forEach((name) => {
+      const option = document.createElement('option');
+      option.value = name;
+      option.textContent = name;
+      themeSelect.appendChild(option);
+    });
+    themeGroup.hidden = false;
+    const savedTheme = recall('theme');
+    if (savedTheme && (savedTheme === 'auto' || themes.includes(savedTheme))) themeSelect.value = savedTheme;
+  }
+  if (views.length > 0) {
+    views.forEach((node, index) => {
+      const button = document.createElement('button');
+      button.className = 'sv-btn';
+      const element = byPointerLookup(node.id);
+      const words = element ? linesOf(element).find((line) => /[A-Za-z]{3,}/.test(line)) : '';
+      button.textContent = (index + 1) + ' ' + (words ? words.split(/\s+/).slice(0, 2).join(' ') : (node.tag === 'TitleBlock' ? 'Title' : 'View'));
+      button.title = 'Jump to view ' + (index + 1) + ' (' + (index + 1) + ')';
+      button.addEventListener('click', () => goToView(index));
+      viewsGroup.appendChild(button);
+    });
+    viewsGroup.hidden = false;
+  }
+  function byPointerLookup(pointer) { return svg.querySelector('[data-id="' + pointer + '"]'); }
+  gridInput.hidden = !gridFrame;
+  const savedTab = recall('tab');
+  if (savedTab && document.getElementById('sv-pane-' + savedTab)) selectTab(savedTab);
+  const savedPanel = recall('panel');
+  setPanel(savedPanel === null ? window.innerWidth > 760 : savedPanel === '1');
+  const ruleCount = harvestRules();
+  indexElements();
+  buildFilters();
+  buildMap();
+  renderSelection();
+  renderDescription(description);
+  applyTheme();
+  fitWidth();
+  const nodeCount = measured ? measured.nodes.length : 0;
+  const problems = [];
+  if (ruleCount === 0) problems.push('no hover rules found, so hover and pins are off');
+  if (nodeCount === 0) problems.push('no measured nodes, so view jumps and grid cells are off');
+  if (problems.length > 0) showNotice('Loaded with limits: ' + problems.join('; ') + '.', true);
+  else showNotice(ruleCount + ' hover rules read, ' + nodeCount + ' nodes measured, ' + textRuns.length + ' text runs indexed.', false);
+  const hash = decodeURIComponent(location.hash.slice(1));
+  if (hash && rules.has('id:' + hash)) {
+    pin('id:' + hash, false);
+    revealKey('id:' + hash);
+    try { history.replaceState(null, '', location.pathname + location.search); } catch (error) { /* keep the hash */ }
+  }
+})();
+</script>
+</body>
+</html>

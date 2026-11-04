@@ -156,6 +156,7 @@ pub struct OutputNames {
     pub png: OsString,
     pub measured: OsString,
     pub description: OsString,
+    pub html: OsString,
 }
 
 /// Absolute paths of the written files, in the order `render` prints them.
@@ -165,6 +166,8 @@ pub struct OutputPaths {
     pub png: PathBuf,
     pub measured: PathBuf,
     pub description: PathBuf,
+    /// The viewer page, written with `--html` only.
+    pub html: Option<PathBuf>,
 }
 
 /// Largest input `read_input` accepts, in bytes (section 7). A vetted page holds at most
@@ -374,6 +377,7 @@ pub fn output_names(input: &Path) -> Result<OutputNames, Failure> {
         png: with_suffix(".png"),
         measured: with_suffix(".measured.json"),
         description: with_suffix(".description.md"),
+        html: with_suffix(".html"),
     })
 }
 
@@ -525,17 +529,19 @@ pub fn bundled_svg(
     Ok(bundle_themes(&files)?)
 }
 
-/// Creates `out_dir` when missing and writes `svg`, the PNG, measured JSON and the
-/// description, replacing existing files. The caller computes `svg` (`written_svg` or
-/// `bundled_svg`) and the measured JSON is serialized before anything touches the disk, an output that resolves to `input` or an output name that is a
-/// directory is refused, and the files are staged under temporary names and renamed only
-/// after every write succeeded (section 7).
+/// Creates `out_dir` when missing and writes `svg`, the PNG, measured JSON, the
+/// description and, when given, the viewer page `html`, replacing existing files. The
+/// caller computes `svg` (`written_svg` or `bundled_svg`) and `html` (`viewer::page`), the
+/// measured JSON is serialized before anything touches the disk, an output that resolves
+/// to `input` or an output name that is a directory is refused, and the files are staged
+/// under temporary names and renamed only after every write succeeded (section 7).
 pub fn write_outputs(
     out_dir: &Path,
     names: &OutputNames,
     rendered: &RenderedPage,
     input: &Path,
     svg: &str,
+    html: Option<&str>,
 ) -> Result<OutputPaths, Failure> {
     let mut measured_bytes =
         serde_json::to_vec_pretty(&rendered.measured).map_err(|source| Failure::Serialize {
@@ -556,8 +562,9 @@ pub fn write_outputs(
         png: directory.join(&names.png),
         measured: directory.join(&names.measured),
         description: directory.join(&names.description),
+        html: html.map(|_| directory.join(&names.html)),
     };
-    let outputs = [
+    let mut outputs: Vec<(&OsString, &PathBuf, &[u8])> = vec![
         (&names.svg, &paths.svg, svg.as_bytes()),
         (&names.png, &paths.png, rendered.png.as_slice()),
         (&names.measured, &paths.measured, measured_bytes.as_slice()),
@@ -567,6 +574,9 @@ pub fn write_outputs(
             rendered.description.as_bytes(),
         ),
     ];
+    if let (Some(page), Some(path)) = (html, paths.html.as_ref()) {
+        outputs.push((&names.html, path, page.as_bytes()));
+    }
 
     let input = fs::canonicalize(input).map_err(|source| Failure::ReadInput {
         path: input.to_path_buf(),
