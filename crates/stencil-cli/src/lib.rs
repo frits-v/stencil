@@ -38,6 +38,7 @@ use report::{
 
 mod theme_command;
 mod theme_import;
+mod viewer;
 
 /// Upper bound on the `source()` links printed for one error.
 const ERROR_CHAIN_MAX: usize = 16;
@@ -60,11 +61,12 @@ enum Command {
         /// Document to vet
         json: PathBuf,
     },
-    /// Write <stem>.svg, <stem>.png, <stem>.measured.json and <stem>.description.md
+    /// Write <stem>.svg, <stem>.png, <stem>.measured.json, <stem>.description.md and,
+    /// with --html, <stem>.html
     Render {
         /// Document to render
         json: PathBuf,
-        /// Directory for the four outputs, created when missing
+        /// Directory for the outputs, created when missing
         #[arg(long, value_name = "DIR")]
         out_dir: PathBuf,
         /// PNG device scale, 1 to 4
@@ -98,6 +100,11 @@ enum Command {
             conflicts_with = "theme"
         )]
         themes: Option<Vec<String>>,
+        /// Also write <stem>.html: the SVG in a self-contained page with pan and zoom,
+        /// pinned selections, legend filters, text search, grid references and, for a
+        /// --themes bundle, a theme menu
+        #[arg(long)]
+        html: bool,
     },
     /// Lay out and render in memory, then run every check
     Check {
@@ -222,6 +229,8 @@ struct OutputArguments {
     /// `--themes`: empty without the flag, else at least two references, the first the
     /// default theme.
     themes: Vec<String>,
+    /// `--html`: also write the viewer page.
+    html: bool,
 }
 
 /// The `--projection` values, one per `Projection` variant (section 12.9).
@@ -309,6 +318,7 @@ fn run_command(
             print_width,
             portable,
             themes,
+            html,
         } => {
             let themes = themes.unwrap_or_default();
             if themes.len() == 1 {
@@ -329,6 +339,7 @@ fn run_command(
                         SvgForm::SelfContained
                     },
                     themes,
+                    html,
                 },
                 print_width,
                 &Overrides { theme, projection },
@@ -409,7 +420,8 @@ fn vet(path: &Path, stdout: &mut dyn Write, stderr: &mut dyn Write) -> io::Resul
     Ok(reports_exit_code(&reports))
 }
 
-/// Writes the four outputs and prints their paths. With a print width, print-fit runs
+/// Writes the outputs and prints their paths, the viewer page last when `--html` asked for
+/// it. With a print width, print-fit runs
 /// after the files are written: its check and defect lines follow the paths, and a failing
 /// report exits 1 with the files kept (section 13.10). With `--themes`, the quality rows
 /// of `stencil theme check` follow for every bundled theme, the failing rows and the
@@ -427,7 +439,10 @@ fn render(
     match render_to_disk(path, out_dir, outputs, overrides, print_width) {
         Ok(written) => {
             let paths = &written.paths;
-            for path in [&paths.svg, &paths.png, &paths.measured, &paths.description] {
+            for path in [&paths.svg, &paths.png, &paths.measured, &paths.description]
+                .into_iter()
+                .chain(paths.html.as_ref())
+            {
                 writeln!(stdout, "{}", path.display())?;
             }
             let mut code = ExitCode::Clean;
@@ -492,7 +507,19 @@ fn render_to_disk(
     } else {
         bundled_svg(&loaded, &rendered, &further_themes, outputs.svg_form)?
     };
-    let paths = write_outputs(out_dir, &names, &rendered, path, &svg)?;
+    let page = if outputs.html {
+        Some(
+            viewer::page(&rendered.measured, &rendered.description, &svg).map_err(|source| {
+                Failure::Serialize {
+                    what: "viewer data",
+                    source,
+                }
+            })?,
+        )
+    } else {
+        None
+    };
+    let paths = write_outputs(out_dir, &names, &rendered, path, &svg, page.as_deref())?;
     let print_report = print_width
         .map(|width| print_fit_report(&rendered.geometry, rendered.scene.as_ref(), Some(width)));
     let theme_reports = if outputs.themes.is_empty() {

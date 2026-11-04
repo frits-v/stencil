@@ -361,6 +361,7 @@ fn render_theme(
         &rendered,
         path,
         &svg,
+        None,
     )?;
 
     let passed = reports_exit_code(&reports) == ExitCode::Clean;

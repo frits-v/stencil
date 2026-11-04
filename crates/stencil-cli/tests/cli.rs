@@ -1750,3 +1750,85 @@ fn a_captioned_page_with_one_line_and_no_legend_checks_clean_without_chrome() {
     assert_eq!(measured["nodes"][1]["y"].as_f64(), Some(20.0));
     assert_eq!(measured["document"]["title"], json!("Minimal figure"));
 }
+
+fn html_data_block(html: &str) -> Value {
+    let marker = "<script type=\"application/json\" id=\"stencil-data\">";
+    let start = html.find(marker).expect("the page carries a data block") + marker.len();
+    let end = html[start..]
+        .find("</script>")
+        .expect("the data block ends")
+        + start;
+    serde_json::from_str(&html[start..end]).expect("the data block is JSON")
+}
+
+#[test]
+fn render_html_writes_a_page_around_the_same_svg_and_prints_its_path_last() {
+    let out_dir = scratch_directory("render_html");
+
+    let outcome = run_stencil(&[
+        "render",
+        &g7_path(),
+        "--out-dir",
+        out_dir.to_str().unwrap(),
+        "--html",
+    ]);
+
+    assert_eq!(outcome.code, ExitCode::Clean, "{}", outcome.stderr);
+    let printed = outcome.stdout_lines();
+    assert_eq!(printed.len(), 5, "{printed:?}");
+    assert!(printed[4].ends_with("g7.html"), "{}", printed[4]);
+    assert_eq!(outcome.stderr, "");
+    let html = fs::read_to_string(out_dir.join("g7.html")).unwrap();
+    let svg = fs::read_to_string(out_dir.join("g7.svg")).unwrap();
+    assert!(
+        html.contains(&svg),
+        "the page inlines the written SVG byte for byte"
+    );
+    assert!(html.starts_with("<!doctype html>"));
+    assert!(html.contains(
+        "<title>Four lines. Two metros. Two regions. Failover sits between the regions.</title>"
+    ));
+    assert!(
+        !html.contains("src=\"http"),
+        "the page makes no external request"
+    );
+    let data = html_data_block(&html);
+    let measured: Value =
+        serde_json::from_slice(&fs::read(out_dir.join("g7.measured.json")).unwrap()).unwrap();
+    assert_eq!(data["measured"], measured);
+    assert_eq!(
+        data["description"],
+        json!(fs::read_to_string(out_dir.join("g7.description.md")).unwrap())
+    );
+}
+
+#[test]
+fn render_without_html_writes_no_page() {
+    let out_dir = scratch_directory("render_no_html");
+
+    let outcome = run_stencil(&["render", &g7_path(), "--out-dir", out_dir.to_str().unwrap()]);
+
+    assert_eq!(outcome.code, ExitCode::Clean, "{}", outcome.stderr);
+    assert_eq!(outcome.stdout_lines().len(), 4);
+    assert!(!out_dir.join("g7.html").exists());
+}
+
+#[test]
+fn render_html_with_a_bundle_carries_the_themes_for_the_menu() {
+    let out_dir = scratch_directory("render_html_bundle");
+
+    let outcome = run_stencil(&[
+        "render",
+        &g7_path(),
+        "--out-dir",
+        out_dir.to_str().unwrap(),
+        "--themes",
+        "center,clear-dark",
+        "--html",
+    ]);
+
+    assert_eq!(outcome.code, ExitCode::Clean, "{}", outcome.stderr);
+    let html = fs::read_to_string(out_dir.join("g7.html")).unwrap();
+    assert!(html.contains("data-themes=\"center clear-dark\""));
+    assert!(html.contains("<svg xmlns=\"http://www.w3.org/2000/svg\""));
+}
