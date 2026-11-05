@@ -258,27 +258,27 @@
         "step_badge": {
           "height": 18,
           "width": 18,
-          "x": 294.45,
+          "x": 295.45,
           "y": 1277.2
         },
         "step_numeral": {
           "height": 10,
           "line_count": 1,
           "width": 4.31,
-          "x": 301.3,
+          "x": 302.3,
           "y": 1281.2
         },
         "tag": {
           "height": 30.6,
           "width": 103.48,
-          "x": 284.95,
+          "x": 285.95,
           "y": 1270.9
         },
         "tag_label": {
           "height": 15.6,
           "line_count": 1,
           "width": 60.48,
-          "x": 318.45,
+          "x": 319.45,
           "y": 1278.4
         }
       },
@@ -288,11 +288,11 @@
           "y": 1594.7
         },
         {
-          "x": 230.1,
+          "x": 232.1,
           "y": 1594.7
         },
         {
-          "x": 230.1,
+          "x": 232.1,
           "y": 1286.2
         },
         {
@@ -304,7 +304,7 @@
       "tag": {
         "height": 30.6,
         "width": 103.48,
-        "x": 284.95,
+        "x": 285.95,
         "y": 1270.9
       },
       "to": "/body/1/children/0/children/0/children/0/children/1/children/0/children/0/children/0/children/0"

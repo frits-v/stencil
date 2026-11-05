@@ -821,9 +821,10 @@ fn resolve(
 }
 
 /// The boxes a link between `from` and `to` must avoid: every leaf block (Pcard, Fact, Note,
-/// Text, Callout, Frame), every Tee, the tag of every Pipe, the label of every Zone and the
-/// page-level text (kicker, title, lede, legend entries, foot). The endpoints and every
-/// node that contains one are left out. Order is geometry order.
+/// Text, Callout, Frame), every Tee, the tag of every Pipe, the page-level text (kicker,
+/// title, lede, legend entries, foot) and the label of every Zone. The endpoints and every
+/// node that contains one are left out, except for their labels: a Box's label is text a
+/// link inside the Box must keep off as much as one outside it. Order is geometry order.
 pub(crate) fn link_obstacles(geometry: &PageGeometry, from: usize, to: usize) -> Vec<Obstacle> {
     let mut excluded = vec![false; geometry.nodes.len()];
     for endpoint in [from, to] {
@@ -866,7 +867,7 @@ pub(crate) fn link_obstacles(geometry: &PageGeometry, from: usize, to: usize) ->
             }
         }
     }
-    // A View contains every link inside it, so its heading is never excluded with it.
+    // A View or a Box contains the links inside it, so its heading is never excluded with it.
     for (index, node) in geometry.nodes.iter().enumerate() {
         obstacles.extend(label_boxes(node).into_iter().map(|bounds| Obstacle {
             node: index,
@@ -925,7 +926,8 @@ pub(crate) fn block_shadows(geometry: &PageGeometry, obstacles: &[Obstacle]) -> 
 
 /// The heading parts of a node that contains the links it labels (section 14.4 rule 15):
 /// for a View its number, title, subtitle and note; for a Phases node its lane names and
-/// captions, its phase heads and titles and its detail tags; nothing for every other tag.
+/// captions, its phase heads and titles and its detail tags; for a Zone its tab or the ink
+/// box of its label; nothing for every other tag.
 pub(crate) fn label_boxes(node: &NodeGeometry) -> Vec<BoxRect> {
     match node.tag {
         NodeTag::Phases => node
@@ -957,10 +959,16 @@ pub(crate) fn label_boxes(node: &NodeGeometry) -> Vec<BoxRect> {
             })
             .map(|part| part.bounds)
             .collect(),
-        // An assembly's tab names the links inside it, so it is an obstacle to them too.
+        // A Box's tab or label names the links inside it, so it is an obstacle to them too:
+        // the tab with its border, the label as the text it draws, since the label part
+        // spans the Box and a link beside the text covers nothing.
         NodeTag::Zone => node
             .part(PartName::Tab)
-            .map(|part| vec![part.bounds])
+            .map(|tab| vec![tab.bounds])
+            .or_else(|| {
+                node.part(PartName::Label)
+                    .map(|label| vec![label.ink_box()])
+            })
             .unwrap_or_default(),
         NodeTag::Page
         | NodeTag::Kicker
@@ -1019,13 +1027,11 @@ fn obstacle_box(node: &NodeGeometry) -> Option<BoxRect> {
         // No link crosses a rail it does not attach to (section 14.4 rule 15).
         NodeTag::Pipe if rail_bar(node).is_some() => Some(node.bounds),
         NodeTag::Pipe => node.part(PartName::Tag).map(|part| part.bounds),
-        NodeTag::Zone => node
-            .part(PartName::Tab)
-            .or_else(|| node.part(PartName::Label))
-            .map(|part| part.bounds),
         // An enclosing node already blocks a title block's points and the block itself
-        // holds nothing a link reaches; a View's heading is a label obstacle.
-        NodeTag::Page
+        // holds nothing a link reaches; a View's heading and a Zone's label are label
+        // obstacles.
+        NodeTag::Zone
+        | NodeTag::Page
         | NodeTag::Body
         | NodeTag::Legend
         | NodeTag::Row

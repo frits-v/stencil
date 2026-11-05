@@ -4,7 +4,7 @@ check text-fits-box: examined 49 text runs, 0 defects
 check remembered-constants: examined 0 text fields, not applicable: grammar has no remembered constants
 check legend-consistency: examined 13 relations, 0 defects
 check links-routed: examined 6 links, 0 defects
-check links-avoid-boxes: examined 432 pairs, 0 defects
+check links-avoid-boxes: examined 477 pairs, 0 defects
 check pipes-land: examined 6 pipe ends, 0 defects
 check iso-labels-clear: examined 0 pairs, not applicable: projection is flat
 check iso-links-clear: examined 0 link legs, not applicable: projection is flat

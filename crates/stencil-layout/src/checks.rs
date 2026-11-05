@@ -10,7 +10,7 @@ use stencil_model::{Arrow, Node, NodeRef, Page, PipeDir, Projection, body_nodes}
 use crate::compute::{PipeTarget, move_extent, targeted_pipes};
 use crate::drawn::{EndCap, chain_enters, drawn_link, push_flattened};
 use crate::route::attach_box;
-use crate::route::link_obstacles;
+use crate::route::{label_boxes, link_obstacles};
 use crate::sheet_lines::{OUTLINE_AIR_PX, OutlineEdge, crowds, outline_edges};
 use crate::{
     BoxRect, GEOMETRY_EPSILON_PX, LINK_ARROW_STUB_PX, LinkRoute, NodeTag, PageGeometry, Part,
@@ -596,9 +596,10 @@ fn short_arrow_legs(route: &LinkRoute) -> Vec<(&'static str, f32)> {
 
 /// Each (segment, obstacle) pair of every link, with the obstacles the router avoided for
 /// that link, plus each (tag, node) pair for every node that is not an ancestor of an
-/// endpoint. A segment entering an obstacle's interior or a tag overlapping such a node by
-/// more than the epsilon on both axes is a defect at `/links/<i>`. Not applicable on a page
-/// without links.
+/// endpoint, and each (tag, label box) pair of every ancestor and every container, since
+/// a Box's label is text whether or not the link lies inside the Box. A segment entering an
+/// obstacle's interior or a tag overlapping such a box by more than the epsilon on both axes
+/// is a defect at `/links/<i>`. Not applicable on a page without links.
 pub fn links_avoid_boxes(geometry: &PageGeometry) -> CheckReport {
     if geometry.links.is_empty() {
         return CheckReport::not_applicable(CheckName::LinksAvoidBoxes, NO_LINKS);
@@ -637,12 +638,24 @@ pub fn links_avoid_boxes(geometry: &PageGeometry) -> CheckReport {
         };
         let ancestors = endpoint_ancestors(geometry, route.from_node, route.to_node);
         for (index, node) in geometry.nodes.iter().enumerate() {
-            if ancestors.get(index).copied().unwrap_or(true) {
-                continue;
-            }
-            // A container draws no box of its own: a tag inside a gutter column lies on
-            // open floor unless it meets one of the column's children.
-            if node.tag.is_container_for_tags() {
+            // An ancestor's box holds the link by design, and a container draws no box of
+            // its own, so a tag inside a gutter column lies on open floor; either one's
+            // label is text the tag must keep off.
+            if ancestors.get(index).copied().unwrap_or(true) || node.tag.is_container_for_tags() {
+                for label in label_boxes(node) {
+                    examined += 1;
+                    if overlap_both_axes(&tag, &label) {
+                        defects.push(Defect {
+                            pointer: pointer.clone(),
+                            message: format!(
+                                "tag {} overlaps label of {} {}",
+                                describe(&tag),
+                                node.pointer,
+                                describe(&label)
+                            ),
+                        });
+                    }
+                }
                 continue;
             }
             examined += 1;
