@@ -1,10 +1,12 @@
-//! GitHub App installation tokens: the review App's, for the code review.
+//! GitHub App installation tokens: the release App's for the release pull request, the
+//! review App's for the code review.
 //!
 //! The App's private key signs a short JWT, sent as a bearer token to trade for an installation
 //! token scoped to one repository and two permissions. Every call is made in process
 //! (`github_api`), so the JWT and the token never reach a child process, its arguments, output
 //! or error text.
 
+use std::ffi::OsString;
 use std::fmt;
 use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -23,6 +25,15 @@ pub struct AppSpec {
     /// The grant requested; GitHub adds `metadata: read` to every installation token.
     pub permissions: &'static [(&'static str, &'static str)],
 }
+
+pub const RELEASE: AppSpec = AppSpec {
+    client_id_variable: "STENCIL_RELEASE_CLIENT_ID",
+    app_id_variable: "STENCIL_RELEASE_APP_ID",
+    key_variable: "STENCIL_RELEASE_APP_PRIVATE_KEY",
+    setup: "of the `release` environment must be set: the release pull request is opened with \
+            a GitHub App installation token (docs/release.md)",
+    permissions: &[("contents", "write"), ("pull_requests", "write")],
+};
 
 pub const REVIEW: AppSpec = AppSpec {
     client_id_variable: "FRITS_CODE_REVIEW_CLIENT_ID",
@@ -193,6 +204,21 @@ pub fn read_credentials(
         ));
     };
     Ok(AppCredentials { spec, issuer, key })
+}
+
+/// The parent environment without the App's ids and key, for a child that must never see them.
+pub fn without_app_credentials(
+    spec: &AppSpec,
+    parent: impl IntoIterator<Item = (OsString, OsString)>,
+) -> Vec<(OsString, OsString)> {
+    parent
+        .into_iter()
+        .filter(|(name, _)| {
+            name != spec.client_id_variable
+                && name != spec.app_id_variable
+                && name != spec.key_variable
+        })
+        .collect()
 }
 
 /// `owner/name` from the Actions environment, bounded and limited to GitHub's name characters:
@@ -1044,5 +1070,29 @@ mod tests {
         );
         assert!(!error.contains(&jwt), "{error}");
         assert!(!error.contains("eyJ"), "{error}");
+    }
+
+    #[test]
+    fn the_release_credentials_are_stripped_and_everything_else_kept() {
+        let parent: Vec<(OsString, OsString)> = [
+            ("PATH", "/usr/bin"),
+            ("HOME", "/home/runner"),
+            ("GITHUB_TOKEN", "ghs_job"),
+            (RELEASE.client_id_variable, "Iv23liExample"),
+            (RELEASE.app_id_variable, "1"),
+            (RELEASE.key_variable, "key-material"),
+            (REVIEW.key_variable, "other-key"),
+        ]
+        .into_iter()
+        .map(|(name, value)| (name.into(), value.into()))
+        .collect();
+        let names: Vec<OsString> = without_app_credentials(&RELEASE, parent)
+            .into_iter()
+            .map(|(name, _)| name)
+            .collect();
+        assert_eq!(
+            names,
+            ["PATH", "HOME", "GITHUB_TOKEN", REVIEW.key_variable].map(OsString::from)
+        );
     }
 }

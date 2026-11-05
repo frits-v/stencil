@@ -9,6 +9,7 @@ mod child;
 mod decode;
 mod github_api;
 mod process;
+mod release;
 mod review;
 mod secrets;
 
@@ -40,7 +41,12 @@ const USAGE: &str = "usage: xtask <command>
   opengrep        the opengrep rules against their fixtures, then over the repository
   workflows       the CUE workflow policy, then zizmor and jactionlint over .github at pedantic
   gallery <dir>   build the release binary and render every example into <dir>
-  release         publish the GitHub release of tag GITHUB_REF_NAME with the gallery attached
+  release-pr [--dry-run]
+                  open or update the release pull request; --dry-run shows it locally
+  release         tag a merged release pull request, create its GitHub release and attach
+                  the gallery; on any other commit do nothing
+  release-binaries [tag]
+                  build this host's archives with dist and upload them to the release
   review --dry-run | --post
                   Claude reviews this branch and prints the findings, or reviews the pull
                   request of the triggering event and posts the verdict as the review App";
@@ -57,7 +63,11 @@ fn main() -> ExitCode {
         ["opengrep"] => opengrep().map(|summary| println!("{summary}")),
         ["workflows"] => workflows().map(|summary| println!("{summary}")),
         ["gallery", dir] => gallery(dir),
-        ["release"] => release(),
+        ["release-pr"] => release::release_pr(false),
+        ["release-pr", "--dry-run"] => release::release_pr(true),
+        ["release"] => release::release(),
+        ["release-binaries"] => release::release_binaries(None),
+        ["release-binaries", tag] => release::release_binaries(Some((*tag).to_string())),
         _ => {
             eprintln!("{USAGE}");
             return ExitCode::from(2);
@@ -472,28 +482,4 @@ fn center_images(dir: &Path) -> Result<Vec<PathBuf>, String> {
     }
     images.sort();
     Ok(images)
-}
-
-fn release() -> Result<(), String> {
-    let tag = env::var("GITHUB_REF_NAME")
-        .map_err(|_| "GITHUB_REF_NAME is not set; a release runs on a tag push".to_string())?;
-    let gallery_dir = "target/gallery";
-    gallery(gallery_dir)?;
-    run(Command::new("zip")
-        .args(["-r", "-X", "../gallery.zip", "gallery"])
-        .current_dir("target"))?;
-    let images = center_images(Path::new(gallery_dir))?;
-    if images.is_empty() {
-        return Err(format!("{gallery_dir} holds no center images"));
-    }
-    run(Command::new("gh")
-        .args([
-            "release",
-            "create",
-            &tag,
-            "--verify-tag",
-            "--generate-notes",
-            "gallery.zip",
-        ])
-        .args(&images))
 }

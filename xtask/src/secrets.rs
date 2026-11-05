@@ -1,15 +1,17 @@
-//! The secrets the review reads from its environment. They stay in this process's
-//! environment; `child` starts every child without them.
+//! The secrets the review and the release read from their environment. They stay in this
+//! process's environment; `child` starts every review child without them, and the release
+//! pull request's children get the environment without the App's credentials.
 
 use std::env;
 
 use crate::anthropic_token::{REQUEST_TOKEN_VARIABLE, REQUEST_URL_VARIABLE};
-use crate::app_token::REVIEW;
+use crate::app_token::{RELEASE, REVIEW};
 
-/// Every variable that holds a secret a review run may see: the App key, the Langfuse secret
+/// Every variable that holds a secret a run may see: the two App keys, the Langfuse secret
 /// key, the Actions OIDC request pair, which together mint tokens for the job, the Actions
 /// runtime token and a job token.
-pub const SECRET_VARIABLES: [&str; 6] = [
+pub const SECRET_VARIABLES: [&str; 7] = [
+    RELEASE.key_variable,
     REVIEW.key_variable,
     "LANGFUSE_SECRET_KEY",
     REQUEST_TOKEN_VARIABLE,
@@ -33,6 +35,7 @@ mod tests {
     #[test]
     fn every_secret_variable_the_review_reads_is_listed() {
         for name in [
+            "STENCIL_RELEASE_APP_PRIVATE_KEY",
             "FRITS_CODE_REVIEW_APP_PRIVATE_KEY",
             "LANGFUSE_SECRET_KEY",
             "ACTIONS_ID_TOKEN_REQUEST_TOKEN",
