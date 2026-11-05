@@ -807,3 +807,172 @@ fn a_link_through_a_gutter_narrower_than_twice_the_air_is_a_defect() {
         "{messages:?}"
     );
 }
+
+/// A plain page at width 640: a Box labeled `label` holding a Row of `inside`, then
+/// `beside` to its right, every Row child at its content width, with the given links.
+fn labeled_box_page_with(
+    label: &str,
+    inside: Vec<Value>,
+    beside: Vec<Value>,
+    links: Value,
+) -> Value {
+    let inner_grow = vec![0; inside.len()];
+    let zone = json!({ "tag": "Box", "kind": "boundary", "label": label,
+        "children": [{ "tag": "Row", "gap": 64, "grow": inner_grow, "children": inside }] });
+    let mut row: Vec<Value> = vec![zone];
+    row.extend(beside);
+    let outer_grow = vec![0; row.len()];
+    json!({
+        "title": "Title",
+        "kicker": "Kicker",
+        "lede": "Lede",
+        "width": 640,
+        "body": [{ "tag": "Row", "grow": outer_grow, "children": row }],
+        "legend": [{ "line": "deny", "text": "blocked path" }],
+        "links": links
+    })
+}
+
+fn labeled_box_page(inside: Vec<Value>, beside: Vec<Value>, links: Value) -> Value {
+    labeled_box_page_with("SHARED VPC · US-CENTRAL1", inside, beside, links)
+}
+
+fn service(id: &str) -> Value {
+    json!({ "tag": "Item", "kind": "service", "id": id, "title": id })
+}
+
+/// Two items in a labeled Box linked top to top with no arrow: the leg runs along the
+/// label's bottom edge and the tag, centered on it, lies over the label. The Box is an
+/// ancestor of both ends, and its label is still text the tag must keep off.
+#[test]
+fn a_tag_over_the_label_of_the_box_that_holds_both_ends_is_a_defect() {
+    let geometry = layout(&page_from(labeled_box_page(
+        vec![service("api"), service("worker")],
+        vec![],
+        json!([{ "from": "api", "to": "worker", "line": "deny", "arrow": "none",
+                 "label": "no person", "from_side": "top", "to_side": "top" }]),
+    )));
+    let label = node(&geometry, "/body/0/children/0")
+        .part(PartName::Label)
+        .expect("a labeled Box has a label part")
+        .bounds;
+    let route = route_of(&geometry, 0);
+    assert_eq!(route.status, RouteStatus::Routed);
+    for pair in route.points.windows(2) {
+        assert!(
+            !segment_enters(pair[0], pair[1], &label),
+            "segment {pair:?} enters the label {label:?}"
+        );
+    }
+    let tag = route.tag.expect("a labeled link has a tag");
+    assert!(
+        tag.x < label.right()
+            && tag.right() > label.x
+            && tag.y < label.bottom()
+            && tag.bottom() > label.y,
+        "the tag {tag:?} lies over the label {label:?}"
+    );
+    let report = links_avoid_boxes(&geometry);
+    let messages: Vec<&str> = report
+        .defects
+        .iter()
+        .map(|defect| defect.message.as_str())
+        .collect();
+    assert!(
+        messages
+            .iter()
+            .any(|message| message.contains("overlaps label of /body/0/children/0")),
+        "{messages:?}"
+    );
+    assert!(
+        report
+            .defects
+            .iter()
+            .all(|defect| defect.pointer.to_string() == "/links/0"),
+        "{report:?}"
+    );
+}
+
+/// The same two items linked top to top with an arrowed end: the arrow stub out of the
+/// item's top reaches into the Box's label, so the link falls back and links-routed says so.
+#[test]
+fn an_arrow_stub_into_the_label_of_the_box_that_holds_both_ends_falls_back() {
+    let page = page_from(labeled_box_page(
+        vec![service("api"), service("worker")],
+        vec![],
+        json!([{ "from": "api", "to": "worker", "line": "deny", "label": "no person",
+                 "from_side": "top", "to_side": "top" }]),
+    ));
+    let geometry = layout(&page);
+    assert_eq!(route_of(&geometry, 0).status, RouteStatus::Fallback);
+    let report = links_routed(&page, &geometry);
+    assert!(!report.passed(), "{report:?}");
+    assert_eq!(report.defects[0].pointer.to_string(), "/links/0");
+}
+
+/// The same two items linked right to left run straight between them, under the label: the
+/// label pair is examined for the segment and for the tag, and neither is a defect.
+#[test]
+fn a_link_under_the_label_of_the_box_that_holds_both_ends_passes_with_the_label_examined() {
+    let geometry = layout(&page_from(labeled_box_page(
+        vec![service("api"), service("worker")],
+        vec![],
+        json!([{ "from": "api", "to": "worker", "line": "deny", "label": "deny" }]),
+    )));
+    let route = route_of(&geometry, 0);
+    assert_eq!(route.status, RouteStatus::Routed);
+    assert_eq!(route.points.len(), 2, "adjacent items link straight across");
+    let report = links_avoid_boxes(&geometry);
+    assert!(report.passed(), "{report:?}");
+    // One segment against the kicker, title, lede, legend entry and the Box label; the tag
+    // against the same four text nodes, the two items and the Box label.
+    assert_eq!(report.examined, 5 + 7);
+}
+
+/// The label obstacle is the text the label draws, not its part, which spans the Box: two
+/// items standing right of a short label, linked top to top, route through the label band
+/// beside the text.
+#[test]
+fn a_link_passes_through_the_label_band_beside_the_label_text() {
+    let page = page_from(labeled_box_page_with(
+        "VPC",
+        vec![
+            json!({ "tag": "Fact", "text": "a fact wide enough to push both items past the label" }),
+            service("api"),
+            service("worker"),
+        ],
+        vec![],
+        json!([{ "from": "api", "to": "worker", "line": "deny", "label": "deny",
+                 "from_side": "top", "to_side": "top" }]),
+    ));
+    let geometry = layout(&page);
+    let label = node(&geometry, "/body/0/children/0")
+        .part(PartName::Label)
+        .expect("a labeled Box has a label part");
+    let ink = label.ink_box();
+    assert!(
+        ink.width < label.bounds.width / 2.0,
+        "{ink:?} inside {:?}",
+        label.bounds
+    );
+    let route = route_of(&geometry, 0);
+    assert_eq!(route.status, RouteStatus::Routed);
+    let across = route
+        .points
+        .windows(2)
+        .find(|pair| pair[0].y == pair[1].y)
+        .expect("a top-to-top link has a leg across");
+    assert!(
+        across[0].y > label.bounds.y && across[0].y < label.bounds.bottom(),
+        "the leg {across:?} lies in the label band {:?}",
+        label.bounds
+    );
+    assert!(
+        across[0].x.min(across[1].x) > ink.right(),
+        "the leg {across:?} lies right of the label text {ink:?}"
+    );
+    let report = links_avoid_boxes(&geometry);
+    assert!(report.passed(), "{report:?}");
+    let report = links_routed(&page, &geometry);
+    assert!(report.passed(), "{report:?}");
+}

@@ -876,12 +876,12 @@
     <text x="77.35" y="1542.87" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">places, tracks</text>
   </g>
   <g id="_links_9" data-id="/links/9" data-tag="Link" data-kind="solid-4" data-from="/body/1/children/0/children/0/children/0/children/0/children/1/children/0" data-to="/body/1/children/0/children/0/children/0/children/1/children/0/children/0/children/0/children/0">
-    <path d="M 187.1 1594.7 L 224.1 1594.7 A 6 6 0 0 0 230.1 1588.7 L 230.1 1292.2 A 6 6 0 0 1 236.1 1286.2 L 433.29 1286.2" fill="none" stroke="#A36E14" stroke-width="2" stroke-linejoin="round"/>
+    <path d="M 187.1 1594.7 L 226.1 1594.7 A 6 6 0 0 0 232.1 1588.7 L 232.1 1292.2 A 6 6 0 0 1 238.1 1286.2 L 433.29 1286.2" fill="none" stroke="#A36E14" stroke-width="2" stroke-linejoin="round"/>
     <line x1="433.29" y1="1286.2" x2="443.29" y2="1286.2" stroke="none" marker-end="url(#arrow-center-solid-4)"/>
-    <rect x="285.7" y="1271.65" width="101.98" height="29.1" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
-    <rect x="295.2" y="1277.95" width="16.5" height="16.5" rx="2.25" fill="#FFFFFF" stroke="#A36E14" stroke-width="1.5"/>
-    <text x="301.3" y="1289.84" xml:space="preserve" font-family="Inter" font-size="10" font-weight="700" fill="#202124">1</text>
-    <text x="318.45" y="1290.57" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">place hold</text>
+    <rect x="286.7" y="1271.65" width="101.98" height="29.1" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
+    <rect x="296.2" y="1277.95" width="16.5" height="16.5" rx="2.25" fill="#FFFFFF" stroke="#A36E14" stroke-width="1.5"/>
+    <text x="302.3" y="1289.84" xml:space="preserve" font-family="Inter" font-size="10" font-weight="700" fill="#202124">1</text>
+    <text x="319.45" y="1290.57" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">place hold</text>
   </g>
   <g id="_links_10" data-id="/links/10" data-tag="Link" data-kind="blue" data-from="/body/1/children/0/children/0/children/0/children/1/children/0/children/0/children/0/children/0" data-to="/body/1/children/0/children/0/children/0/children/1/children/0/children/0/children/1/children/0">
     <path d="M 581.34 1286.2 L 863.34 1286.2" fill="none" stroke="#1A73E8" stroke-width="2" stroke-linejoin="round"/>

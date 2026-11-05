@@ -11,7 +11,7 @@ pub use tube::ISO_TUBE_RADIUS_PX;
 mod zoom;
 
 use stencil_layout::{
-    BoxRect, LinkRoute, NodeGeometry, NodeTag, PageGeometry, Part, PartName, Size, TextAlign,
+    BoxRect, LinkRoute, NodeGeometry, NodeTag, PageGeometry, Part, PartName, Size,
 };
 use stencil_model::checks::{CheckName, CheckReport, Defect};
 use stencil_model::pointer::NodePointer;
@@ -374,23 +374,6 @@ pub(crate) fn plane_member(tag: NodeTag, part: PartName) -> bool {
     }
 }
 
-/// A run's ink box (section 12.4, rule 1), or the part box for a part without a run.
-pub(crate) fn member_box(part: &Part) -> BoxRect {
-    let Some(run) = &part.text else {
-        return part.bounds;
-    };
-    let align_offset = match run.align {
-        TextAlign::Start => 0.0,
-        TextAlign::Center => (part.bounds.width - run.metrics.width_px) / 2.0,
-    };
-    BoxRect {
-        x: part.bounds.x + align_offset,
-        y: part.bounds.y,
-        width: run.metrics.width_px,
-        height: run.metrics.height_px,
-    }
-}
-
 fn union(first: BoxRect, second: BoxRect) -> BoxRect {
     let left = first.x.min(second.x);
     let top = first.y.min(second.y);
@@ -660,7 +643,7 @@ fn parts_label(
         .iter()
         .map(|part| local_part(part, axis, pivot))
         .collect();
-    let flat = local.iter().map(member_box).reduce(union)?;
+    let flat = local.iter().map(Part::ink_box).reduce(union)?;
     let map = match axis {
         Axis::X => plane(z),
         Axis::Y => plane(z).turned_about(pivot),
@@ -676,7 +659,7 @@ fn parts_label(
         marks: local
             .iter()
             .filter(|part| part.text.is_some())
-            .map(|part| map.corners(member_box(part)))
+            .map(|part| map.corners(part.ink_box()))
             .collect(),
         opaque,
         contained,
@@ -856,7 +839,7 @@ fn link_label(
         .iter()
         .map(|part| local_part(part, axis, pivot))
         .collect();
-    let flat = local.iter().map(member_box).reduce(union)?;
+    let flat = local.iter().map(Part::ink_box).reduce(union)?;
     let map = match axis {
         Axis::X => plane(z).shifted_layout(shift),
         Axis::Y => plane(z).shifted_layout(shift).turned_about(pivot),
@@ -864,7 +847,7 @@ fn link_label(
     let marks = local
         .iter()
         .filter(|part| part.text.is_some())
-        .map(|part| map.corners(member_box(part)))
+        .map(|part| map.corners(part.ink_box()))
         .collect();
     Some(Label {
         owner: NodePointer::root().child("links").index(route.index),

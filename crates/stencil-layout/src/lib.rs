@@ -474,6 +474,26 @@ pub struct Part {
     pub text: Option<TextRun>,
 }
 
+impl Part {
+    /// The box the part's ink covers: a run's text at its alignment inside the part, or
+    /// the part box for a part without a run.
+    pub fn ink_box(&self) -> BoxRect {
+        let Some(run) = &self.text else {
+            return self.bounds;
+        };
+        let align_offset = match run.align {
+            TextAlign::Start => 0.0,
+            TextAlign::Center => (self.bounds.width - run.metrics.width_px) / 2.0,
+        };
+        BoxRect {
+            x: self.bounds.x + align_offset,
+            y: self.bounds.y,
+            width: run.metrics.width_px,
+            height: run.metrics.height_px,
+        }
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum PartName {
     Badge,
