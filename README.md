@@ -4,7 +4,7 @@ Stencil turns a JSON description of an architecture figure into an SVG, a PNG, a
 
 The vocabulary splits into a core and grammars (`docs/SPEC.md` section 13). The core is what every figure shares: `Row`, `Col`, `Lanes`, a generic container `Box`, a generic named leaf `Item` with facts whose `source` is `doc`, `built` or `ask`, notes and text blocks, and pipes, tees and links drawn with a `line` (`gray`, `solid`, `dash`, `deny`) and an optional `tint` slot 1 to 8. A grammar is a data module that gives a domain its kinds: which container kinds a `Box` may take, how each is drawn, where each may sit, which item kinds exist and which icons they carry. Five grammars ship. `plain`, the default, is vendor-neutral (`system`, `boundary`, `group`, `tile`, and the items `service`, `managed`, `store`, `queue`, `network`, `external`, `person`, `device`). `aws` is the AWS vocabulary (`aws`, `account`, `region`, `vpc`, `az`, `subnet`, `onprem`, `optional`, `k8s`, `services`, and the `product` item). `azure` is the Azure Architecture Center vocabulary (`azure`, `subscription`, `resource-group`, `region`, `vnet`, `subnet`, `onprem`, `optional`, `k8s`, `services`, and the `product` item). `gcp` is the Google Cloud Architecture Center vocabulary (`gcp`, `vpc`, `region`, `subnet`, `onprem`, `project`, `optional`, `k8s`, `perimeter`, `apis`, and the `product` item). `oss` is plain's vocabulary plus a `cluster` container, with each open-source project's own logo on `service`, `store`, `queue` and `network` items (Kubernetes, PostgreSQL, Kafka, NGINX and others), so a plain page becomes an oss page by naming the grammar and adding icons. A `Lanes` node lays its children out as lane heads, and a link with `order` between two of them is a message drawn across the band below, in order, with a lifeline under each head. A page names its grammar with `"grammar"`, a built-in name or a path to a grammar `.json` file beside the document.
 
-Build the binary with `cargo build --release`; it lands at `target/release/stencil`.
+Build the binary with `cargo build --release`; it lands at `target/release/stencil`. Each GitHub release carries it built for macOS (Apple silicon and Intel) and Linux x86_64 as `stencil-cli-<target>.tar.xz`, with a `.sha256` beside each archive; releases are cut by release-plz from the conventional commits since the last tag (`docs/release.md`).
 
 ## Examples
 
@@ -74,7 +74,7 @@ The next four figures also use the `plain` grammar.
 
 `examples/onprem-network.json`: a water treatment plant's network with two firewall zones, a tinted group and a pipe per VLAN, and a blocked path from the DMZ to the plant controllers.
 
-These PNGs are the center theme at scale 1, regenerated with `mise run gallery-docs`; CI fails when they drift from the examples. The full gallery, every example in all six themes with its SVG, 2x PNG and measured JSON, is the `gallery` artifact of the CI run on main, and `gallery.zip` plus the center PNGs are attached to the release of every `v*` tag.
+These PNGs are the center theme at scale 1, regenerated with `mise run gallery-docs`; CI fails when they drift from the examples. The full gallery, every example in all six themes with its SVG, 2x PNG and measured JSON, is the `gallery` artifact of the CI run on main, and `gallery.zip` plus the center PNGs are attached to every GitHub release.
 
 ## Commands
 

@@ -9,6 +9,9 @@ opengrep = "1.30.2"
 zizmor = "1.30.1"
 "github:jdx/jactionlint" = "2.0.2"
 claude = "2.1.280"
+release-plz = "0.3.170"
+cargo-dist = "0.33.0"
+gh = "2.103.3"
 
 [tasks.ci]
 description = "Every check CI runs: fmt, clippy, tests, CUE, gallery docs, the land script, opengrep, zizmor and jactionlint"
@@ -30,9 +33,17 @@ run = "cargo run -q -p xtask -- review --dry-run"
 description = "Build the release binary and render every example into target/gallery"
 run = "cargo run -q -p xtask -- gallery target/gallery"
 
+[tasks.release-pr]
+description = "Open or update the release pull request; --dry-run shows it locally"
+run = "cargo run -q -p xtask -- release-pr"
+
 [tasks.release]
-description = "Publish the GitHub release of tag GITHUB_REF_NAME with the gallery attached"
+description = "Tag a merged release pull request, create its GitHub release and attach the gallery"
 run = "cargo run -q -p xtask -- release"
+
+[tasks.release-binaries]
+description = "Build this host's stencil archives with dist and upload them to the release"
+run = "cargo run -q -p xtask -- release-binaries"
 
 [tasks.cache-trim]
 description = "Collect the mbx store down to the size CI saves"

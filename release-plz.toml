@@ -1,0 +1,39 @@
+[workspace]
+git_only = true
+release_always = false
+release = false
+changelog_update = false
+git_release_enable = false
+git_tag_enable = true
+git_tag_name = "{{ package }}-v{{ version }}"
+semver_check = false
+dependencies_update = false
+pr_branch_prefix = "release-plz-"
+release_commits = "^(feat|fix|perf|refactor|revert)(\\(.*\\))?!?:"
+
+# Every library crate is released with its own tag, so a change in one bumps the crates that
+# depend on it and the binary with them; only the binary gets a GitHub release and a changelog.
+[[package]]
+name = "stencil-model"
+release = true
+
+[[package]]
+name = "stencil-text"
+release = true
+
+[[package]]
+name = "stencil-layout"
+release = true
+
+[[package]]
+name = "stencil-render"
+release = true
+
+[[package]]
+name = "stencil-cli"
+release = true
+changelog_update = true
+changelog_path = "CHANGELOG.md"
+changelog_include = ["stencil-model", "stencil-text", "stencil-layout", "stencil-render"]
+git_tag_name = "v{{ version }}"
+git_release_enable = true
