@@ -463,33 +463,48 @@ pub fn legs_shared(a: (PagePoint, PagePoint), b: (PagePoint, PagePoint)) -> bool
     }
 }
 
-fn segments(points: &[PagePoint]) -> Vec<(PagePoint, PagePoint)> {
+/// The stretch two legs that `legs_shared` share: the overlap of their extents on the
+/// first leg's line.
+pub fn shared_stretch(
+    a: (PagePoint, PagePoint),
+    b: (PagePoint, PagePoint),
+) -> (PagePoint, PagePoint) {
+    let horizontal = (a.0.y - a.1.y).abs() < GEOMETRY_EPSILON_PX;
+    if horizontal {
+        let low = a.0.x.min(a.1.x).max(b.0.x.min(b.1.x));
+        let high = a.0.x.max(a.1.x).min(b.0.x.max(b.1.x));
+        (
+            PagePoint { x: low, y: a.0.y },
+            PagePoint { x: high, y: a.0.y },
+        )
+    } else {
+        let low = a.0.y.min(a.1.y).max(b.0.y.min(b.1.y));
+        let high = a.0.y.max(a.1.y).min(b.0.y.max(b.1.y));
+        (
+            PagePoint { x: a.0.x, y: low },
+            PagePoint { x: a.0.x, y: high },
+        )
+    }
+}
+
+pub(crate) fn segments(points: &[PagePoint]) -> Vec<(PagePoint, PagePoint)> {
     points
         .windows(2)
         .filter_map(|pair| Some((*pair.first()?, *pair.get(1)?)))
         .collect()
 }
 
-/// On a flat page a leg that runs along a drawn outline moves off it, and on a design sheet
-/// also a leg that runs along another link's leg (section 11.2, section 14.4 rule 24 of the
-/// lines), through `legs_moved_off`.
-pub(crate) fn separate_legs(
-    geometry: &PageGeometry,
-    paths: &mut [crate::route::RoutedPath],
-    sheet: bool,
-) {
+/// On a flat page a leg that runs along a drawn outline or along another link's leg moves
+/// off it (section 11.2, section 14.4 rule 24 of the lines), through `legs_moved_off`.
+pub(crate) fn separate_legs(geometry: &PageGeometry, paths: &mut [crate::route::RoutedPath]) {
     let edges = outline_edges(geometry);
     for later in 0..paths.len() {
-        let others: Vec<(PagePoint, PagePoint)> = if sheet {
-            paths
-                .iter()
-                .enumerate()
-                .filter(|(index, _)| *index != later)
-                .flat_map(|(_, other)| segments(&other.points))
-                .collect()
-        } else {
-            Vec::new()
-        };
+        let others: Vec<(PagePoint, PagePoint)> = paths
+            .iter()
+            .enumerate()
+            .filter(|(index, _)| *index != later)
+            .flat_map(|(_, other)| segments(&other.points))
+            .collect();
         let Some(path) = paths.get(later) else {
             continue;
         };

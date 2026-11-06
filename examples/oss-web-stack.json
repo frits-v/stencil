@@ -233,7 +233,6 @@
       "to": "ingress",
       "line": "solid",
       "tint": 1,
-      "label": "HTTPS",
       "from_side": "right",
       "to_side": "left"
     },

@@ -1,7 +1,9 @@
 //! The design sheet's additions to `links-routed` and `marks-clear` (section 14.6 rule 4):
 //! what a sheet line draws is read back from the geometry, so a tag on a bend, a bend in a
-//! dash gap, two links on one line, two ends at one point, a rail end off its bar, a step
-//! badge, a valve or a hop out of place, and a glyph on an arrival are defects.
+//! dash gap, two ends at one point, a rail end off its bar, a step badge, a valve or a hop
+//! out of place, and a glyph on an arrival are defects. What two lines make together, one
+//! along the other or a tag over the other, is a defect on every flat page
+//! (`line_pair_defects`, section 11.2).
 
 use stencil_model::checks::Defect;
 use stencil_model::pointer::NodePointer;
@@ -11,7 +13,7 @@ use crate::drawn::{dash_runs, drawn_link, stroke_on_at, turn_positions};
 use crate::route::{RAIL_END_CLEARANCE_PX, rail_bar};
 use crate::sheet_lines::{
     HOP_END_CLEARANCE_PX, HOP_END_STUB_PX, bend_keep_out, bends, covers_a_bend, hop_point,
-    legs_shared, valve_box,
+    legs_shared, shared_stretch, valve_box,
 };
 use crate::{BoxRect, GEOMETRY_EPSILON_PX, LinkRoute, NodeTag, PageGeometry, Part, PartName};
 
@@ -107,6 +109,53 @@ pub(crate) fn sheet_route_defects(
             ));
         }
     }
+    // Two ends on one node closer than `ENDS_APART_PX` read as one; a flat page's items
+    // are too short for the rule once three ends spread along one 44 px side.
+    let at = |point: PagePoint| format!("({:.2}, {:.2})", point.x, point.y);
+    for other in routes.iter().take(LINKS_MAX + 1) {
+        if other.index >= route.index {
+            continue;
+        }
+        let other_pointer = NodePointer::root().child("links").index(other.index);
+        for (mine, node) in [
+            (route.points.first(), route.from_node),
+            (route.points.last(), route.to_node),
+        ] {
+            for (theirs, other_node) in [
+                (other.points.first(), other.from_node),
+                (other.points.last(), other.to_node),
+            ] {
+                let (Some(mine), Some(theirs)) = (mine, theirs) else {
+                    continue;
+                };
+                if node == other_node
+                    && (mine.x - theirs.x).hypot(mine.y - theirs.y) < ENDS_APART_PX
+                {
+                    push(format!(
+                        "end {} lies within {ENDS_APART_PX:.2} px of an end of {other_pointer} on one node",
+                        at(*mine)
+                    ));
+                }
+            }
+        }
+    }
+    defects.extend(rail_end_defects(geometry, route, &pointer));
+    defects
+}
+
+/// What two drawn lines make together, on every flat page (section 11.2): a leg of `route`
+/// along a leg of an earlier link, its tag over an earlier link's tag, and its tag over any
+/// other link's leg.
+pub(crate) fn line_pair_defects(route: &LinkRoute, routes: &[LinkRoute]) -> Vec<Defect> {
+    let pointer = NodePointer::root().child("links").index(route.index);
+    let mut defects = Vec::new();
+    let mut push = |message: String| {
+        defects.push(Defect {
+            pointer: pointer.clone(),
+            message,
+        });
+    };
+    let at = |point: PagePoint| format!("({:.2}, {:.2})", point.x, point.y);
     for other in routes.iter().take(LINKS_MAX + 1) {
         if other.index == route.index {
             continue;
@@ -119,11 +168,15 @@ pub(crate) fn sheet_route_defects(
                 .find_map(|(leg, mine)| {
                     segments(&other.points)
                         .iter()
-                        .any(|theirs| legs_shared(*mine, *theirs))
-                        .then_some(leg)
+                        .find(|theirs| legs_shared(*mine, **theirs))
+                        .map(|theirs| (leg, shared_stretch(*mine, *theirs)))
                 });
-            if let Some(leg) = shared {
-                push(format!("leg {leg} runs along a leg of {other_pointer}"));
+            if let Some((leg, (start, end))) = shared {
+                push(format!(
+                    "leg {leg} runs along a leg of {other_pointer} from {} to {}",
+                    at(start),
+                    at(end)
+                ));
             }
             if let (Some(tag), Some(theirs)) = (route.tag, other.tag)
                 && overlap(&tag, &theirs)
@@ -149,30 +202,7 @@ pub(crate) fn sheet_route_defects(
                 at(b)
             ));
         }
-        for (mine, node) in [
-            (route.points.first(), route.from_node),
-            (route.points.last(), route.to_node),
-        ] {
-            for (theirs, other_node) in [
-                (other.points.first(), other.from_node),
-                (other.points.last(), other.to_node),
-            ] {
-                let (Some(mine), Some(theirs)) = (mine, theirs) else {
-                    continue;
-                };
-                if node == other_node
-                    && other.index < route.index
-                    && (mine.x - theirs.x).hypot(mine.y - theirs.y) < ENDS_APART_PX
-                {
-                    push(format!(
-                        "end {} lies within {ENDS_APART_PX:.2} px of an end of {other_pointer} on one node",
-                        at(*mine)
-                    ));
-                }
-            }
-        }
     }
-    defects.extend(rail_end_defects(geometry, route, &pointer));
     defects
 }
 
