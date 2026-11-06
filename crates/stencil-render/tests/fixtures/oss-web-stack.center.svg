@@ -179,29 +179,27 @@
     </g>
   </g>
   <g id="_links_0" data-id="/links/0" data-tag="Link" data-kind="blue" data-from="/body/0/children/0/children/0/children/0" data-to="/body/0/children/1/children/0/children/0/children/0/children/0/children/0">
-    <path d="M 258.85 160.5 L 317.35 160.5 A 6 6 0 0 1 323.35 166.5 L 323.35 229.8 A 6 6 0 0 0 329.35 235.8 L 355.35 235.8" fill="none" stroke="#1A73E8" stroke-width="2" stroke-linejoin="round"/>
-    <line x1="355.35" y1="235.8" x2="365.35" y2="235.8" stroke="none" marker-end="url(#arrow-center-blue)"/>
-    <rect x="294.29" y="183.6" width="58.12" height="29.1" rx="5.25" fill="#FFFFFF" stroke="#DADCE0" stroke-width="1.5"/>
-    <text x="303.04" y="202.52" xml:space="preserve" font-family="Inter" font-size="12" font-weight="700" fill="#202124">HTTPS</text>
+    <path d="M 258.85 160.5 L 317.35 160.5 A 6 6 0 0 1 323.35 166.5 L 323.35 214.73 A 6 6 0 0 0 329.35 220.73 L 355.35 220.73" fill="none" stroke="#1A73E8" stroke-width="2" stroke-linejoin="round"/>
+    <line x1="355.35" y1="220.73" x2="365.35" y2="220.73" stroke="none" marker-end="url(#arrow-center-blue)"/>
   </g>
   <g id="_links_1" data-id="/links/1" data-tag="Link" data-kind="dash" data-from="/body/0/children/1/children/0/children/0/children/0/children/0/children/0" data-to="/body/0/children/0/children/1/children/0">
-    <path d="M 365.35 235.8 L 296.85 235.8 A 6 6 0 0 0 290.85 241.8 L 290.85 265.9 A 6 6 0 0 1 284.85 271.9 L 268.85 271.9" fill="none" stroke="#1A73E8" stroke-width="2" stroke-dasharray="6 5" stroke-linejoin="round"/>
+    <path d="M 365.35 250.87 L 296.85 250.87 A 6 6 0 0 0 290.85 256.87 L 290.85 265.9 A 6 6 0 0 1 284.85 271.9 L 268.85 271.9" fill="none" stroke="#1A73E8" stroke-width="2" stroke-dasharray="6 5" stroke-linejoin="round"/>
     <line x1="268.85" y1="271.9" x2="258.85" y2="271.9" stroke="none" marker-end="url(#arrow-center-dash)"/>
   </g>
   <g id="_links_2" data-id="/links/2" data-tag="Link" data-kind="gray" data-from="/body/0/children/1/children/0/children/0/children/0/children/0/children/2" data-to="/body/0/children/1/children/0/children/0/children/0/children/1/children/0">
-    <path d="M 760.32 281 L 760.32 309 A 6 6 0 0 1 754.32 315 L 509.06 315 A 6 6 0 0 0 503.06 321 L 503.06 327" fill="none" stroke="#5F6368" stroke-width="2" stroke-linejoin="round"/>
+    <path d="M 728.64 281 L 728.64 309 A 6 6 0 0 1 722.64 315 L 509.06 315 A 6 6 0 0 0 503.06 321 L 503.06 327" fill="none" stroke="#5F6368" stroke-width="2" stroke-linejoin="round"/>
     <line x1="503.06" y1="327" x2="503.06" y2="337" stroke="none" marker-end="url(#arrow-center-gray)"/>
   </g>
   <g id="_links_3" data-id="/links/3" data-tag="Link" data-kind="gray" data-from="/body/0/children/1/children/0/children/0/children/0/children/0/children/2" data-to="/body/0/children/1/children/0/children/0/children/0/children/1/children/1">
-    <path d="M 760.32 281 L 760.32 309 A 6 6 0 0 0 766.32 315 L 780.47 315 A 6 6 0 0 1 786.47 321 L 786.47 327" fill="none" stroke="#5F6368" stroke-width="2" stroke-linejoin="round"/>
-    <line x1="786.47" y1="327" x2="786.47" y2="337" stroke="none" marker-end="url(#arrow-center-gray)"/>
+    <path d="M 792 281 L 792 327" fill="none" stroke="#5F6368" stroke-width="2" stroke-linejoin="round"/>
+    <line x1="792" y1="327" x2="792" y2="337" stroke="none" marker-end="url(#arrow-center-gray)"/>
   </g>
   <g id="_links_4" data-id="/links/4" data-tag="Link" data-kind="pink" data-from="/body/0/children/1/children/0/children/0/children/0/children/0/children/6" data-to="/body/0/children/1/children/0/children/0/children/0/children/1/children/2">
-    <path d="M 1395.96 281 L 1395.96 309 A 6 6 0 0 1 1389.96 315 L 1075.88 315 A 6 6 0 0 0 1069.88 321 L 1069.88 327" fill="none" stroke="#C2185B" stroke-width="2" stroke-linejoin="round"/>
+    <path d="M 1364.28 281 L 1364.28 309 A 6 6 0 0 1 1358.28 315 L 1075.88 315 A 6 6 0 0 0 1069.88 321 L 1069.88 327" fill="none" stroke="#C2185B" stroke-width="2" stroke-linejoin="round"/>
     <line x1="1069.88" y1="327" x2="1069.88" y2="337" stroke="none" marker-end="url(#arrow-center-pink)"/>
   </g>
   <g id="_links_5" data-id="/links/5" data-tag="Link" data-kind="pink" data-from="/body/0/children/1/children/0/children/0/children/0/children/0/children/6" data-to="/body/0/children/1/children/0/children/0/children/0/children/1/children/3">
-    <path d="M 1395.96 281 L 1395.96 309 A 6 6 0 0 1 1389.96 315 L 1359.29 315 A 6 6 0 0 0 1353.29 321 L 1353.29 327" fill="none" stroke="#C2185B" stroke-width="2" stroke-linejoin="round"/>
-    <line x1="1353.29" y1="327" x2="1353.29" y2="337" stroke="none" marker-end="url(#arrow-center-pink)"/>
+    <path d="M 1427.64 281 L 1427.64 327" fill="none" stroke="#C2185B" stroke-width="2" stroke-linejoin="round"/>
+    <line x1="1427.64" y1="327" x2="1427.64" y2="337" stroke="none" marker-end="url(#arrow-center-pink)"/>
   </g>
 </svg>

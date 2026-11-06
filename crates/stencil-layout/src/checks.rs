@@ -477,6 +477,10 @@ pub fn links_routed(page: &Page, geometry: &PageGeometry) -> CheckReport {
                     ),
                 });
             }
+            defects.extend(crate::sheet_checks::line_pair_defects(
+                route,
+                &geometry.links,
+            ));
         }
         if page.sheet.is_some() {
             defects.extend(crate::sheet_checks::sheet_route_defects(

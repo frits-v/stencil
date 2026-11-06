@@ -59,13 +59,14 @@ pub(crate) fn route_links(
     let actors = stencil_model::PageActors::of(page);
     let page_marks = stencil_model::PageMarks::of(page);
     let links_pointer = NodePointer::root().child("links");
-    let spread = if page.sheet.is_some() {
+    // Under iso the renderer spreads ends along their sides itself (section 12.4 rule 8).
+    let spread = if page.projection == Projection::Flat {
         spread_ends(page, geometry, &nodes_by_id, lanes_plan)
     } else {
         Vec::new()
     };
-    // First every route, so a leg can move off an outline, and on a sheet off another
-    // link's leg, before any tag is placed.
+    // First every route, so a leg can move off an outline and off another link's leg
+    // before any tag is placed.
     let mut paths: Vec<RoutedPath> = Vec::with_capacity(page.links.len().min(LINKS_MAX));
     for (index, link) in page.links.iter().enumerate().take(LINKS_MAX) {
         let link_pointer = links_pointer.index(index);
@@ -106,7 +107,7 @@ pub(crate) fn route_links(
         });
     }
     if page.projection == Projection::Flat {
-        crate::sheet_lines::separate_legs(geometry, &mut paths, page.sheet.is_some());
+        crate::sheet_lines::separate_legs(geometry, &mut paths);
     }
     let all_points: Vec<Vec<PagePoint>> = paths.iter().map(|path| path.points.clone()).collect();
     let mut routes: Vec<LinkRoute> = Vec::with_capacity(paths.len());
@@ -685,6 +686,21 @@ pub fn reroute_link(
         .last()
         .and_then(|end| side_holding(&attach_box(to), *end))
         .unwrap_or_else(|| facing_side(from_side));
+    // The ends spread as layout spread them, with this link's from end on its new side.
+    let fractions = if iso {
+        (None, None)
+    } else {
+        let count = geometry
+            .links
+            .iter()
+            .map(|other| other.index + 1)
+            .max()
+            .unwrap_or(0);
+        spread_fractions(count, routed_ends(geometry, (index, from_side)))
+            .get(index)
+            .copied()
+            .unwrap_or((None, None))
+    };
     let (points, status) = route_between(
         geometry,
         (route.from_node, from),
@@ -693,7 +709,7 @@ pub fn reroute_link(
         via,
         RouteEnds {
             stubs: stubs(route.arrow, (from, to), iso),
-            fractions: (None, None),
+            fractions,
             stub_px: (LINK_ARROW_STUB_PX, LINK_ARROW_STUB_PX),
         },
         iso,
@@ -702,16 +718,22 @@ pub fn reroute_link(
         points
     } else {
         let edges = crate::sheet_lines::outline_edges(geometry);
-        let no_lines = crate::sheet_lines::OtherLines {
-            legs: &[],
-            moves_off: false,
+        let others: Vec<(PagePoint, PagePoint)> = geometry
+            .links
+            .iter()
+            .filter(|other| other.index != index)
+            .flat_map(|other| crate::sheet_lines::segments(&other.points))
+            .collect();
+        let lines = crate::sheet_lines::OtherLines {
+            legs: &others,
+            moves_off: index > 0,
         };
         crate::sheet_lines::legs_moved_off(
             geometry,
             (route.from_node, route.to_node, route.arrow),
             &points,
             &edges,
-            no_lines,
+            lines,
         )
         .unwrap_or(points)
     };
@@ -1158,7 +1180,19 @@ pub(crate) fn on_store_outline(bounds: &BoxRect, side: Side, point: PagePoint) -
     }
 }
 
-/// On a design sheet, the ends that share a side of one node spread along it, in the order
+/// One link end to spread: (link, end is `to`, node, side, the other end's centre along
+/// the side).
+type SpreadEnd = (usize, bool, usize, Side, f32);
+
+/// Where the other end's box centre lies along `side`.
+fn spread_along(side: Side, other: &BoxRect) -> f32 {
+    match side {
+        Side::Top | Side::Bottom => other.x + other.width / 2.0,
+        Side::Left | Side::Right => other.y + other.height / 2.0,
+    }
+}
+
+/// On a flat page, the ends that share a side of one node spread along it, in the order
 /// of what they face, so no two meet at one point (section 14.4 rule 23 of the ends). Rail
 /// ends attach level with what they face and are not spread. Returns, per link, the
 /// fraction along its side of its from and to ends.
@@ -1169,9 +1203,7 @@ fn spread_ends(
     lanes_plan: &LanesPlan,
 ) -> Vec<(Option<f32>, Option<f32>)> {
     let count = page.links.len().min(LINKS_MAX);
-    let mut fractions = vec![(None, None); count];
-    // (link, end is `to`, node, side, the other end's centre along the side).
-    let mut ends: Vec<(usize, bool, usize, Side, f32)> = Vec::new();
+    let mut ends: Vec<SpreadEnd> = Vec::new();
     for (index, link) in page.links.iter().enumerate().take(count) {
         if lanes_plan.message(index).is_some() {
             continue;
@@ -1192,23 +1224,104 @@ fn spread_ends(
             (&from_box, allowed_sides(from)),
             (&to_box, allowed_sides(to)),
         );
-        let along = |side: Side, other: &BoxRect| match side {
-            Side::Top | Side::Bottom => other.x + other.width / 2.0,
-            Side::Left | Side::Right => other.y + other.height / 2.0,
-        };
         if rail_bar(from).is_none() {
             ends.push((
                 index,
                 false,
                 from_node,
                 from_side,
-                along(from_side, &to_box),
+                spread_along(from_side, &to_box),
             ));
         }
         if rail_bar(to).is_none() {
-            ends.push((index, true, to_node, to_side, along(to_side, &from_box)));
+            ends.push((
+                index,
+                true,
+                to_node,
+                to_side,
+                spread_along(to_side, &from_box),
+            ));
         }
     }
+    spread_fractions(count, ends)
+}
+
+/// The ends of every routed link as laid out, each on the side its drawn end lies nearest,
+/// with the from end of `changed.0` on the side `changed.1`: what `reroute_link` spreads so
+/// an unchanged request gives back layout's ends. A Lanes message end lies on no side of
+/// its head and is left out, as layout leaves it out.
+fn routed_ends(geometry: &PageGeometry, changed: (usize, Side)) -> Vec<SpreadEnd> {
+    let mut ends = Vec::new();
+    for route in &geometry.links {
+        let (Some(from), Some(to)) = (
+            geometry.nodes.get(route.from_node),
+            geometry.nodes.get(route.to_node),
+        ) else {
+            continue;
+        };
+        let (from_box, to_box) = (attach_box(from), attach_box(to));
+        let from_side = if route.index == changed.0 {
+            Some(changed.1)
+        } else {
+            route
+                .points
+                .first()
+                .and_then(|point| nearest_side(&from_box, *point))
+        };
+        let to_side = route
+            .points
+            .last()
+            .and_then(|point| nearest_side(&to_box, *point));
+        if let Some(side) = from_side
+            && rail_bar(from).is_none()
+        {
+            ends.push((
+                route.index,
+                false,
+                route.from_node,
+                side,
+                spread_along(side, &to_box),
+            ));
+        }
+        if let Some(side) = to_side
+            && rail_bar(to).is_none()
+        {
+            ends.push((
+                route.index,
+                true,
+                route.to_node,
+                side,
+                spread_along(side, &from_box),
+            ));
+        }
+    }
+    ends
+}
+
+/// The side of `bounds` whose edge `point` lies nearest, within `OUTLINE_AIR_PX` of it and
+/// along it; None for a point off the box, such as a Lanes message end at its head's
+/// centre.
+fn nearest_side(bounds: &BoxRect, point: PagePoint) -> Option<Side> {
+    let air = crate::sheet_lines::OUTLINE_AIR_PX;
+    let within_x = point.x >= bounds.x - air && point.x <= bounds.right() + air;
+    let within_y = point.y >= bounds.y - air && point.y <= bounds.bottom() + air;
+    let distances = [
+        (Side::Right, (point.x - bounds.right()).abs(), within_y),
+        (Side::Bottom, (point.y - bounds.bottom()).abs(), within_x),
+        (Side::Left, (point.x - bounds.x).abs(), within_y),
+        (Side::Top, (point.y - bounds.y).abs(), within_x),
+    ];
+    distances
+        .into_iter()
+        .filter(|(_, distance, along)| *along && *distance <= air)
+        .min_by(|a, b| a.1.total_cmp(&b.1))
+        .map(|(side, _, _)| side)
+}
+
+/// The fraction along its side of every end in `ends` that shares a (node, side) with
+/// another, at `(k + 1) / (n + 1)` in the order of what the ends face; `count` links.
+fn spread_fractions(count: usize, ends: Vec<SpreadEnd>) -> Vec<(Option<f32>, Option<f32>)> {
+    let mut fractions = vec![(None, None); count];
     // Each (node, side) with the (link index, whether the end is the link's to end, place
     // along the side) of every end that meets it.
     type SideEnds = ((usize, Side), Vec<(usize, bool, f32)>);

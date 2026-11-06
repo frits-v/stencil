@@ -10,7 +10,7 @@ mod common;
 use common::{assert_close, layout, node, page_from};
 use serde_json::{Value, json};
 use stencil_layout::checks::{links_avoid_boxes, links_routed, text_fits_box};
-use stencil_layout::sheet_lines::OUTLINE_AIR_PX;
+use stencil_layout::sheet_lines::{OUTLINE_AIR_PX, legs_shared};
 use stencil_layout::{
     BoxRect, LINK_ARROW_STUB_PX, LinkRoute, OBSTACLE_CLEARANCE_PX, PageGeometry, PartName,
     RouteStatus, shape_height_px,
@@ -349,6 +349,19 @@ fn reroute_link_with_an_unchanged_request_returns_the_layout_route() {
         assert_eq!(&rerouted, routed, "link {index}");
     }
     assert!(reroute_link(&geometry, 3, Side::Right, &[], false).is_none());
+
+    // Two links leaving one side spread along it; an unchanged request keeps each end.
+    let geometry = layout(&page_from(fan_out_page(json!([
+        { "from": "front", "to": "alpha", "line": "solid", "tint": 1, "label": "1",
+          "from_side": "right", "to_side": "left" },
+        { "from": "front", "to": "beta", "line": "solid", "tint": 1, "label": "2",
+          "from_side": "right", "to_side": "left" }
+    ]))));
+    for index in 0..2 {
+        let routed = route_of(&geometry, index);
+        let rerouted = reroute_link(&geometry, index, Side::Right, &[], false).unwrap();
+        assert_eq!(&rerouted, routed, "fan-out link {index}");
+    }
 }
 
 /// A different request routes through the given via point, leaves from the given side and
@@ -660,28 +673,33 @@ fn an_arrow_stub_into_an_obstacle_or_past_the_other_stub_falls_back() {
 }
 
 /// Section 11.2: on a flat page each drawn end mark of a link, an arrowhead or a deny line's
-/// stop plate, is clear of every tag and of every other link's end mark.
+/// stop plate, is clear of every tag and of every other link's end mark. Three ends spread
+/// along a card's 44 px side sit 11 px apart, and a 16 px plate reaches the arrowhead
+/// beside it.
 #[test]
 fn a_stop_plate_over_another_links_arrowhead_is_a_links_routed_defect() {
     let page = page_from(linked_page(
         json!([{ "tag": "Row", "gap": 64, "children": [
-            { "tag": "Col", "gap": 24, "children": [card("a"), card("b")] },
-            card("c")
+            { "tag": "Col", "gap": 24, "children": [card("a"), card("b"), card("d")] },
+            { "tag": "Col", "justify": "center", "children": [card("c")] }
         ] }]),
         json!([
-            { "from": "a", "to": "c", "line": "deny" },
-            { "from": "b", "to": "c", "line": "solid", "tint": 1 }
+            { "from": "a", "to": "c", "line": "deny", "from_side": "right", "to_side": "left" },
+            { "from": "b", "to": "c", "line": "solid", "tint": 1, "from_side": "right", "to_side": "left" },
+            { "from": "d", "to": "c", "line": "solid", "tint": 1, "from_side": "right", "to_side": "left" }
         ]),
     ));
     let geometry = layout(&page);
     let (deny, solid) = (route_of(&geometry, 0), route_of(&geometry, 1));
-    assert_eq!(
-        deny.points.last(),
-        solid.points.last(),
-        "both end on c's one attach point"
+    let (deny_end, solid_end) = (deny.points.last().unwrap(), solid.points.last().unwrap());
+    assert_close(deny_end.x, solid_end.x, "both end on c's left side");
+    assert_close(
+        solid_end.y - deny_end.y,
+        11.0,
+        "a quarter of the side apart",
     );
     let report = links_routed(&page, &geometry);
-    assert_eq!(report.examined, 2);
+    assert_eq!(report.examined, 3);
     let messages: Vec<&str> = report
         .defects
         .iter()
@@ -975,4 +993,107 @@ fn a_link_passes_through_the_label_band_beside_the_label_text() {
     assert!(report.passed(), "{report:?}");
     let report = links_routed(&page, &geometry);
     assert!(report.passed(), "{report:?}");
+}
+
+/// A customer page: `front` in a Row with a Col of `alpha` over `beta`, at gap 64, with the
+/// given links.
+fn fan_out_page(links: Value) -> Value {
+    linked_page(
+        json!([{ "tag": "Row", "gap": 64, "children": [
+            card("front"),
+            { "tag": "Col", "gap": 64, "children": [card("alpha"), card("beta")] }
+        ] }]),
+        links,
+    )
+}
+
+/// Two links that leave one side of a node spread along it, at a third and two thirds, so
+/// their first legs run apart instead of as one wire that forks; one link alone leaves from
+/// the side's middle.
+#[test]
+fn two_links_leaving_one_side_spread_along_it_and_one_alone_leaves_its_middle() {
+    let page = page_from(fan_out_page(json!([
+        { "from": "front", "to": "alpha", "line": "solid", "tint": 1, "label": "1",
+          "from_side": "right", "to_side": "left" },
+        { "from": "front", "to": "beta", "line": "solid", "tint": 1, "label": "2",
+          "from_side": "right", "to_side": "left" }
+    ])));
+    let geometry = layout(&page);
+    let front = node(&geometry, "/body/0/children/0").bounds;
+    let (first, second) = (route_of(&geometry, 0), route_of(&geometry, 1));
+    assert_close(
+        first.points[0].y,
+        front.y + front.height / 3.0,
+        "first at a third",
+    );
+    assert_close(
+        second.points[0].y,
+        front.y + front.height * 2.0 / 3.0,
+        "second at two thirds",
+    );
+    for (mine, theirs) in first.points.windows(2).zip(second.points.windows(2)) {
+        assert!(
+            !legs_shared((mine[0], mine[1]), (theirs[0], theirs[1])),
+            "{mine:?} shares a line with {theirs:?}"
+        );
+    }
+    let report = links_routed(&page, &geometry);
+    assert!(report.passed(), "{report:?}");
+
+    let alone = layout(&page_from(fan_out_page(json!([
+        { "from": "front", "to": "alpha", "line": "solid", "tint": 1,
+          "from_side": "right", "to_side": "left" }
+    ]))));
+    assert_close(
+        route_of(&alone, 0).points[0].y,
+        front.y + front.height / 2.0,
+        "alone at the middle",
+    );
+}
+
+/// Two links whose drawn legs run along one line are a links-routed defect on a flat page,
+/// at the later link, naming the earlier one and the shared stretch.
+#[test]
+fn a_leg_along_another_links_leg_is_a_links_routed_defect_on_a_flat_page() {
+    let page = page_from(fan_out_page(json!([
+        { "from": "front", "to": "alpha", "line": "solid", "tint": 1,
+          "from_side": "right", "to_side": "left" },
+        { "from": "front", "to": "beta", "line": "solid", "tint": 1,
+          "from_side": "right", "to_side": "left" }
+    ])));
+    let mut geometry = layout(&page);
+    assert!(links_routed(&page, &geometry).passed());
+    // The second link's first leg drawn over the first's, as a fork no move freed would be.
+    let shared = route_of(&geometry, 0).points.clone();
+    let second = geometry
+        .links
+        .iter_mut()
+        .find(|route| route.index == 1)
+        .unwrap();
+    let end = *second.points.last().unwrap();
+    second.points = vec![
+        shared[0],
+        shared[1],
+        PagePoint {
+            x: shared[1].x,
+            y: end.y,
+        },
+        end,
+    ];
+    let report = links_routed(&page, &geometry);
+    assert_eq!(report.examined, 2);
+    let messages: Vec<&str> = report
+        .defects
+        .iter()
+        .map(|defect| defect.message.as_str())
+        .collect();
+    assert_eq!(messages.len(), 1, "{messages:?}");
+    assert_eq!(report.defects[0].pointer.as_str(), "/links/1");
+    assert_eq!(
+        messages[0],
+        format!(
+            "leg 0 runs along a leg of /links/0 from ({:.2}, {:.2}) to ({:.2}, {:.2})",
+            shared[0].x, shared[0].y, shared[1].x, shared[1].y
+        )
+    );
 }

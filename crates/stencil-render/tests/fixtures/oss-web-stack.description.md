@@ -48,7 +48,7 @@ Drawn elements: 33 (27 nodes, 6 links). Canvas 1540 x 562.6 px, projection flat,
 | route | pipe h | Ingress (left neighbour) | Storefront (right neighbour) | solid, tint 1; blue in center | no arrowheads | request path | `/body/0/children/1/children/0/children/0/children/0/children/0/children/1` |
 | publish | pipe h | Storefront (left neighbour) | Order events (right neighbour) | solid, tint 2; pink in center | no arrowheads | order events | `/body/0/children/1/children/0/children/0/children/0/children/0/children/3` |
 | consume | pipe h | Order events (left neighbour) | Order worker (right neighbour) | solid, tint 2; pink in center | no arrowheads | order events | `/body/0/children/1/children/0/children/0/children/0/children/0/children/5` |
-| HTTPS | link | Branch staff (staff) | Ingress (ingress) | solid, tint 1; blue in center | arrow end | request path | `/links/0` |
+| unlabelled | link | Branch staff (staff) | Ingress (ingress) | solid, tint 1; blue in center | arrow end | request path | `/links/0` |
 | unlabelled | link | Ingress (ingress) | Identity provider (idp) | dash, tint 1; blue in center | arrow end | identity | `/links/1` |
 | unlabelled | link | Storefront (storefront) | Sessions (sessions) | gray; gray in center | arrow end | uses | `/links/2` |
 | unlabelled | link | Storefront (storefront) | Catalog (catalog) | gray; gray in center | arrow end | uses | `/links/3` |
