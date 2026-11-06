@@ -1512,7 +1512,7 @@ checksum = "4aaa7368fcf4852a4c2dd92df0cace6a71f2091ca0a23391ce7f3a31833f1523"
 
 [[package]]
 name = "stencil-cli"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "base64 0.23.1",
  "clap",
@@ -1529,7 +1529,7 @@ dependencies = [
 
 [[package]]
 name = "stencil-layout"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "serde_json",
  "stencil-model",
@@ -1550,7 +1550,7 @@ dependencies = [
 
 [[package]]
 name = "stencil-render"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "base64 0.23.1",
  "pulldown-cmark",
