@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.1](https://github.com/frits-v/stencil/compare/v0.1.0...v0.1.1) - 2026-11-09
+
+### Fixed
+
+- *(layout)* spread link ends along a shared side and report shared legs on every flat page ([#151](https://github.com/frits-v/stencil/pull/151))
+- *(layout)* keep links and tags off the label of the Box that holds them ([#148](https://github.com/frits-v/stencil/pull/148))
+
 ## [0.1.0](https://github.com/frits-v/stencil/releases/tag/v0.1.0) - 2026-11-05
 
 ### Added
