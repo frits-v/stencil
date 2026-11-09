@@ -5607,6 +5607,8 @@ The `howto` topic carries the HowTo, its items, terminal lines and line kinds, t
 
 The `assembly` topic carries outlines, compartments, assemblies, rails, step badges, valves, planned work and sheet lines, the `Outline` enum line and the sheet fields of Item, Box, Pipe, Link and LegendEntry, the ten vet rows and the sheet additions to `links-routed`, `marks-clear` and `pipes-land`; it is its own topic because the phases topic has no room under its budget. The base PipeForm line lists `PipeForm::ISO`, the values no sheet surface names, and so does the iso topic; the links.md row reads `actor, marks, step, valve, planned`; each grammar topic gains the `assembly` kind and a Means row.
 
+The `artifact` topic carries the `--html` page as a hosted figure: the render command, publishing the page as a Claude artifact (the page alone, no supporting files, the title in its first 8 KB), what the reader gets from the page, and when to offer it over the PNG or the SVG. It has no vocabulary rows. The base loop sentence points at it, since the base budget held one byte; the base Topics line names it.
+
 ## Conventions
 
 - TigerStyle, adapted: bounded loops over document content, assertions at public entry points and at every external-tool boundary (serde input, cosmic-text output, usvg output), specific names without abbreviations, and a test for every behavior.
